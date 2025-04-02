@@ -1,10 +1,9 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Home, BookOpen, Users, Calendar, User, Settings, LogOut, Edit, Phone, MapPin, Award } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
+import { Home, BookOpen, Users, Calendar, User, Settings, LogOut, Edit, Phone, MapPin, Award, CheckCircle2, CircleDashed } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 import TeacherProfileForm from "@/components/teacher/TeacherProfileForm";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -74,7 +73,6 @@ const TeacherDashboard = () => {
         setHasProfile(false);
         setProfileData(null);
       } else {
-        // Type assertions for the JSON fields
         type ContactType = {
           phone: string;
           email: string;
@@ -107,7 +105,6 @@ const TeacherDashboard = () => {
           institution: string;
         };
         
-        // Cast the Json types to our specific types
         const contactData = data.contact as unknown as ContactType;
         const locationData = data.location as unknown as LocationType;
         const nextOfKinData = data.next_of_kin as unknown as NextOfKinType;
@@ -525,7 +522,7 @@ const TeacherDashboard = () => {
                   <CardTitle>Welcome, {user?.user_metadata?.full_name || "Teacher"}!</CardTitle>
                   <CardDescription>
                     {hasProfile 
-                      ? "Your profile is complete. You can now start accepting students."
+                      ? "Your profile is partially complete. Continue with the next steps to start accepting students."
                       : "Complete your profile to start accepting students."}
                   </CardDescription>
                 </CardHeader>
@@ -546,18 +543,57 @@ const TeacherDashboard = () => {
                     </div>
                   )}
                   {hasProfile && (
-                    <div className="p-4 bg-green-50 text-green-800 rounded-md border border-green-200">
-                      <p className="font-medium">Your profile is complete!</p>
-                      <p className="text-sm mt-1">You are now visible to students looking for tutors.</p>
-                      <Button 
-                        className="mt-3 bg-green-600 hover:bg-green-700 text-white"
-                        onClick={() => {
-                          setActiveTab("settings");
-                          setIsEditing(false);
-                        }}
-                      >
-                        View Profile
-                      </Button>
+                    <div className="space-y-6">
+                      <div className="p-4 bg-blue-50 text-blue-800 rounded-md border border-blue-200">
+                        <h3 className="font-medium text-lg mb-3">Your Teacher Journey</h3>
+                        <div className="space-y-4">
+                          <div className="flex items-start gap-3">
+                            <div className="flex-shrink-0 h-7 w-7 rounded-full bg-green-100 flex items-center justify-center">
+                              <CheckCircle2 className="h-4 w-4 text-green-600" />
+                            </div>
+                            <div>
+                              <p className="font-medium">Step 1: Basic Profile</p>
+                              <p className="text-sm text-blue-700">Complete! You've set up your basic teacher profile.</p>
+                            </div>
+                          </div>
+                          
+                          <div className="flex items-start gap-3">
+                            <div className="flex-shrink-0 h-7 w-7 rounded-full bg-amber-100 flex items-center justify-center">
+                              <CircleDashed className="h-4 w-4 text-amber-600" />
+                            </div>
+                            <div>
+                              <p className="font-medium">Step 2: Professional Profile</p>
+                              <p className="text-sm text-blue-700">Add your teaching experience, education, and specialties.</p>
+                              <Button 
+                                className="mt-2 bg-amber-600 hover:bg-amber-700 text-white"
+                                size="sm"
+                              >
+                                Complete Now
+                              </Button>
+                            </div>
+                          </div>
+                          
+                          <div className="flex items-start gap-3">
+                            <div className="flex-shrink-0 h-7 w-7 rounded-full bg-gray-100 flex items-center justify-center">
+                              <CircleDashed className="h-4 w-4 text-gray-400" />
+                            </div>
+                            <div>
+                              <p className="font-medium text-gray-600">Step 3: Create Your First Class</p>
+                              <p className="text-sm text-gray-500">Set up your schedule and teaching materials.</p>
+                            </div>
+                          </div>
+                          
+                          <div className="flex items-start gap-3">
+                            <div className="flex-shrink-0 h-7 w-7 rounded-full bg-gray-100 flex items-center justify-center">
+                              <CircleDashed className="h-4 w-4 text-gray-400" />
+                            </div>
+                            <div>
+                              <p className="font-medium text-gray-600">Step 4: Get Student Enrollments</p>
+                              <p className="text-sm text-gray-500">Start teaching and earning income.</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   )}
                 </CardContent>
