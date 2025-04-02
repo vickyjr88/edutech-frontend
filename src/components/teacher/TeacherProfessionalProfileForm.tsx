@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,9 +10,10 @@ import {
   SubjectExpertiseStep,
   CertificationsStep,
   VideoStep,
-  ProgressIndicator
+  ProgressIndicator,
+  EducationItem,
+  InstitutionType
 } from "./professional-profile";
-import { EducationItem, InstitutionType } from "./professional-profile/EducationStep";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
