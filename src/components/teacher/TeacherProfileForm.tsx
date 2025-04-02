@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -10,6 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { Separator } from "@/components/ui/separator";
 import { Phone, Mail, MapPin, User, Users, Bookmark, Award } from "lucide-react";
+import LocationPicker from "./LocationPicker";
 
 interface TeacherProfileFormProps {
   onSubmit: (data: any) => void;
@@ -34,6 +35,7 @@ const TeacherProfileForm = ({
   const [city, setCity] = useState("");
   const [county, setCounty] = useState("");
   const [postalCode, setPostalCode] = useState("");
+  const [coordinates, setCoordinates] = useState({ latitude: 0, longitude: 0 });
   
   // Next of Kin Information
   const [kinName, setKinName] = useState("");
@@ -45,6 +47,22 @@ const TeacherProfileForm = ({
   const [certificationDetails, setCertificationDetails] = useState("");
   const [certificationYear, setCertificationYear] = useState("");
   const [institution, setInstitution] = useState("");
+
+  const handleLocationSelect = (location: any) => {
+    setAddress(location.address);
+    setCity(location.city);
+    setCounty(location.county);
+    setPostalCode(location.postalCode);
+    setCoordinates({
+      latitude: location.latitude,
+      longitude: location.longitude
+    });
+    
+    toast({
+      title: "Location updated",
+      description: `Selected: ${location.address}, ${location.city}`,
+    });
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -59,7 +77,8 @@ const TeacherProfileForm = ({
         address,
         city,
         county,
-        postalCode
+        postalCode,
+        coordinates
       },
       nextOfKin: {
         name: kinName,
@@ -138,48 +157,22 @@ const TeacherProfileForm = ({
             </div>
             <Separator />
             
-            <div>
-              <Label htmlFor="address">Street Address</Label>
-              <Textarea
-                id="address"
-                value={address}
-                onChange={(e) => setAddress(e.target.value)}
-                placeholder="Your street address"
-                required
-              />
-            </div>
+            <LocationPicker 
+              onLocationSelect={handleLocationSelect}
+              initialAddress={address}
+              initialCity={city}
+              initialCounty={county}
+              initialPostalCode={postalCode}
+            />
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <Label htmlFor="city">City/Town</Label>
-                <Input
-                  id="city"
-                  value={city}
-                  onChange={(e) => setCity(e.target.value)}
-                  placeholder="City or Town"
-                  required
-                />
-              </div>
-              <div>
-                <Label htmlFor="county">County</Label>
-                <Input
-                  id="county"
-                  value={county}
-                  onChange={(e) => setCounty(e.target.value)}
-                  placeholder="County"
-                  required
-                />
-              </div>
-              <div>
-                <Label htmlFor="postalCode">Postal Code</Label>
-                <Input
-                  id="postalCode"
-                  value={postalCode}
-                  onChange={(e) => setPostalCode(e.target.value)}
-                  placeholder="Postal Code"
-                  required
-                />
-              </div>
+            {/* Hidden inputs to store the location data */}
+            <div className="hidden">
+              <Input type="hidden" value={address} />
+              <Input type="hidden" value={city} />
+              <Input type="hidden" value={county} />
+              <Input type="hidden" value={postalCode} />
+              <Input type="hidden" value={coordinates.latitude.toString()} />
+              <Input type="hidden" value={coordinates.longitude.toString()} />
             </div>
           </div>
           
