@@ -7,7 +7,7 @@ import SubjectExpertiseStep from "./SubjectExpertiseStep";
 import CertificationsStep from "./CertificationsStep";
 import VideoStep from "./VideoStep";
 import ProgressIndicator from "./ProgressIndicator";
-import { EducationItem, InstitutionType, ExperienceItem } from "./types";
+import type { EducationItem, InstitutionType, ExperienceItem } from "./types";
 
 // Export all components and types
 export {
@@ -18,8 +18,7 @@ export {
   CertificationsStep,
   VideoStep,
   ProgressIndicator,
-  // Types
-  EducationItem,
-  InstitutionType,
-  ExperienceItem
 };
+
+// Export types with the 'export type' syntax
+export type { EducationItem, InstitutionType, ExperienceItem };
