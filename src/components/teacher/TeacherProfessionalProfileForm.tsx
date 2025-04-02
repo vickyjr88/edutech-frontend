@@ -55,7 +55,10 @@ const TeacherProfessionalProfileForm = ({
     startDate: "",
     endDate: "",
     currentlyWorking: false,
-    subjects: []
+    subjects: [],
+    curriculums: [],
+    grades: [],
+    achievements: []
   }]);
   const [strategies, setStrategies] = useState<FormItem[]>([{ id: "1", value: "" }]);
   const [methodologies, setMethodologies] = useState<FormItem[]>([{ id: "1", value: "" }]);
