@@ -1,9 +1,10 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Home, BookOpen, Users, Calendar, User, Settings, LogOut } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import TeacherProfileForm from "@/components/teacher/TeacherProfileForm";
 
 const TeacherDashboard = () => {
