@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,10 +5,12 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { PlusCircle, Trash2, Save, Pencil, Plus, X } from "lucide-react";
+import { PlusCircle, Trash2, Save, Pencil, Plus, X, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { ExperienceItem, InstitutionType } from "./types";
+import { useAuth } from "@/contexts/AuthContext";
+import { saveExperienceRecord, deleteExperienceRecord, validateExperienceData } from "./utils/experienceUtils";
 
 type ExperienceStepProps = {
   experience: ExperienceItem[];
@@ -18,9 +19,10 @@ type ExperienceStepProps = {
 
 const ExperienceStep = ({ experience, setExperience }: ExperienceStepProps) => {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [currentItem, setCurrentItem] = useState<ExperienceItem>({
-    id: Date.now().toString(),
+    id: `temp_${Date.now()}`,
     position: "",
     institution: "",
     institutionType: "",
@@ -35,11 +37,13 @@ const ExperienceStep = ({ experience, setExperience }: ExperienceStepProps) => {
   const [newSubject, setNewSubject] = useState("");
   const [newCurriculum, setNewCurriculum] = useState("");
   const [newGrade, setNewGrade] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState<{[key: string]: boolean}>({});
 
   const addItem = () => {
     setEditingId(null);
     setCurrentItem({
-      id: Date.now().toString(),
+      id: `temp_${Date.now()}`,
       position: "",
       institution: "",
       institutionType: "",
@@ -56,17 +60,39 @@ const ExperienceStep = ({ experience, setExperience }: ExperienceStepProps) => {
     setNewGrade("");
   };
 
-  const removeItem = (id: string) => {
-    setExperience(experience.filter(item => item.id !== id));
-    toast({
-      title: "Experience removed",
-      description: "Experience entry has been removed successfully",
-    });
+  const removeItem = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this experience entry?")) {
+      return;
+    }
     
-    // If we're removing the item we're currently editing, reset the form
-    if (editingId === id) {
-      setEditingId(null);
-      addItem();
+    try {
+      setIsDeleting(prev => ({ ...prev, [id]: true }));
+      
+      // Only attempt to delete from DB if it's not a temporary ID
+      if (!id.startsWith("temp_")) {
+        await deleteExperienceRecord(id);
+      }
+      
+      setExperience(experience.filter(item => item.id !== id));
+      toast({
+        title: "Experience removed",
+        description: "Experience entry has been removed successfully",
+      });
+      
+      // If we're removing the item we're currently editing, reset the form
+      if (editingId === id) {
+        setEditingId(null);
+        addItem();
+      }
+    } catch (error: any) {
+      console.error("Error deleting experience:", error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete experience entry",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeleting(prev => ({ ...prev, [id]: false }));
     }
   };
 
@@ -143,57 +169,73 @@ const ExperienceStep = ({ experience, setExperience }: ExperienceStepProps) => {
     }));
   };
 
-  const saveItem = () => {
-    if (!currentItem.position.trim()) {
+  const saveItem = async () => {
+    if (!user) {
       toast({
         title: "Error",
-        description: "Position is required",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    if (!currentItem.institution.trim()) {
-      toast({
-        title: "Error",
-        description: "Institution is required",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    if (!currentItem.startDate) {
-      toast({
-        title: "Error",
-        description: "Start date is required",
+        description: "You must be logged in to save experience",
         variant: "destructive"
       });
       return;
     }
     
-    if (editingId) {
-      // Update existing item
-      setExperience(experience.map(item => 
-        item.id === editingId 
-          ? { ...currentItem, id: editingId, saved: true } 
-          : item
-      ));
-      toast({
-        title: "Experience updated",
-        description: "Experience entry has been updated successfully",
-      });
-    } else {
-      // Add new item
-      setExperience([...experience, { ...currentItem, saved: true }]);
-      toast({
-        title: "Experience added",
-        description: "New experience entry has been added successfully",
-      });
-    }
+    const errors = validateExperienceData(
+      currentItem.position,
+      currentItem.institution,
+      currentItem.institutionType,
+      currentItem.startDate
+    );
     
-    // Reset the form
-    setEditingId(null);
-    addItem();
+    if (errors.length > 0) {
+      toast({
+        title: "Error",
+        description: errors.join(", "),
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      setIsSaving(true);
+      
+      const result = await saveExperienceRecord(user.id, currentItem);
+      const savedExperience = {
+        ...currentItem,
+        id: result[0]?.id || currentItem.id,
+        saved: true
+      };
+      
+      if (editingId) {
+        // Update existing item
+        setExperience(experience.map(item => 
+          item.id === editingId ? savedExperience : item
+        ));
+        toast({
+          title: "Experience updated",
+          description: "Experience entry has been updated successfully",
+        });
+      } else {
+        // Add new item
+        setExperience([...experience, savedExperience]);
+        toast({
+          title: "Experience added",
+          description: "New experience entry has been added successfully",
+        });
+      }
+      
+      // Reset the form
+      setEditingId(null);
+      addItem();
+    } catch (error: any) {
+      console.error("Error saving experience:", error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to save experience entry",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const editItem = (id: string) => {
@@ -298,8 +340,12 @@ const ExperienceStep = ({ experience, setExperience }: ExperienceStepProps) => {
                       variant="ghost" 
                       size="sm"
                       onClick={() => removeItem(exp.id)}
+                      disabled={isDeleting[exp.id]}
                     >
-                      <Trash2 className="h-4 w-4 text-red-500" />
+                      {isDeleting[exp.id] ? 
+                        <Loader2 className="h-4 w-4 text-red-500 animate-spin" /> : 
+                        <Trash2 className="h-4 w-4 text-red-500" />
+                      }
                     </Button>
                   </td>
                 </tr>
@@ -569,9 +615,19 @@ const ExperienceStep = ({ experience, setExperience }: ExperienceStepProps) => {
             )}
             <Button
               onClick={saveItem}
+              disabled={isSaving}
             >
-              <Save className="mr-2 h-4 w-4" />
-              {editingId ? "Update Experience" : "Save Experience"}
+              {isSaving ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  {editingId ? "Updating..." : "Saving..."}
+                </>
+              ) : (
+                <>
+                  <Save className="mr-2 h-4 w-4" />
+                  {editingId ? "Update Experience" : "Save Experience"}
+                </>
+              )}
             </Button>
           </div>
         </div>

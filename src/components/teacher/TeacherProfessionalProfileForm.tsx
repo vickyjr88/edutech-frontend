@@ -17,6 +17,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { fetchExperienceRecords } from "./professional-profile/utils/experienceUtils";
 
 type FormItem = {
   id: string;
@@ -73,6 +74,7 @@ const TeacherProfessionalProfileForm = ({
   useEffect(() => {
     if (user) {
       fetchEducationRecords();
+      fetchTeacherExperience();
     } else {
       setIsLoading(false);
     }
@@ -113,6 +115,28 @@ const TeacherProfessionalProfileForm = ({
       toast({
         title: "Error",
         description: "Failed to load existing education records",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const fetchTeacherExperience = async () => {
+    try {
+      if (!user) return;
+      
+      const experienceRecords = await fetchExperienceRecords(user.id);
+      
+      if (experienceRecords.length > 0) {
+        setExperience(experienceRecords);
+        console.log("Loaded experience records:", experienceRecords);
+      }
+    } catch (error) {
+      console.error("Error fetching experience records:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load existing experience records",
         variant: "destructive"
       });
     } finally {

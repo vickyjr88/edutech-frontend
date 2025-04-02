@@ -51,6 +51,63 @@ export type Database = {
         }
         Relationships: []
       }
+      teacher_experience: {
+        Row: {
+          created_at: string
+          currently_working: boolean
+          curriculums: string[] | null
+          details: string | null
+          end_date: string | null
+          grades: string[] | null
+          id: string
+          institution: string
+          institution_type: string
+          position: string
+          reporting_manager_name: string | null
+          reporting_manager_phone: string | null
+          start_date: string
+          subjects: string[] | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          currently_working?: boolean
+          curriculums?: string[] | null
+          details?: string | null
+          end_date?: string | null
+          grades?: string[] | null
+          id?: string
+          institution: string
+          institution_type: string
+          position: string
+          reporting_manager_name?: string | null
+          reporting_manager_phone?: string | null
+          start_date: string
+          subjects?: string[] | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          currently_working?: boolean
+          curriculums?: string[] | null
+          details?: string | null
+          end_date?: string | null
+          grades?: string[] | null
+          id?: string
+          institution?: string
+          institution_type?: string
+          position?: string
+          reporting_manager_name?: string | null
+          reporting_manager_phone?: string | null
+          start_date?: string
+          subjects?: string[] | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       teacher_profiles: {
         Row: {
           certification: Json | null
