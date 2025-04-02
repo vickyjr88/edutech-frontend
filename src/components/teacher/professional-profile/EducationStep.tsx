@@ -1,9 +1,17 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { PlusCircle } from "lucide-react";
+import { PlusCircle, Pencil, Trash2 } from "lucide-react";
 import { EducationItem } from "./types";
 import EducationItemComponent from "./education/EducationItemComponent";
+import { 
+  Table,
+  TableHeader,
+  TableBody,
+  TableHead,
+  TableRow,
+  TableCell
+} from "@/components/ui/table";
 
 type EducationStepProps = {
   education: EducationItem[];
@@ -11,6 +19,8 @@ type EducationStepProps = {
 };
 
 const EducationStep = ({ education, setEducation }: EducationStepProps) => {
+  const [editingId, setEditingId] = useState<string | null>(null);
+  
   const addItem = () => {
     const newItem = {
       id: Date.now().toString(),
@@ -24,11 +34,13 @@ const EducationStep = ({ education, setEducation }: EducationStepProps) => {
       institutionType: "" as const
     };
     setEducation([...education, newItem]);
+    setEditingId(newItem.id);
   };
 
   const removeItem = (id: string) => {
-    if (education.length === 1) return;
+    if (education.length === 1 && editingId === id) return;
     setEducation(education.filter(item => item.id !== id));
+    if (editingId === id) setEditingId(null);
   };
 
   const updateItem = (id: string, field: keyof EducationItem, value: any) => {
@@ -36,28 +48,98 @@ const EducationStep = ({ education, setEducation }: EducationStepProps) => {
       item.id === id ? { ...item, [field]: value } : item
     ));
   };
+  
+  const getStatus = (item: EducationItem): string => {
+    if (item.currentlyStudying) return "Currently Studying";
+    if (!item.institution || !item.startDate) return "Incomplete";
+    return "Completed";
+  };
+  
+  const handleEdit = (id: string) => {
+    setEditingId(id);
+  };
+
+  // Filter out items with empty institution for the table
+  const completedEducation = education.filter(edu => edu.institution && edu.institution.trim() !== "");
+  
+  // Show form only for items being edited or new items
+  const itemsToShow = education.filter(edu => editingId === edu.id || !completedEducation.some(c => c.id === edu.id));
 
   return (
-    <div className="space-y-4">
-      {education.map((edu, index) => (
-        <EducationItemComponent
-          key={edu.id}
-          item={edu}
-          index={index}
-          onRemove={removeItem}
-          onUpdate={updateItem}
-          isRemoveDisabled={education.length === 1}
-        />
-      ))}
+    <div className="space-y-6">
+      {completedEducation.length > 0 && (
+        <div className="rounded-md border">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Institution</TableHead>
+                <TableHead>Degree</TableHead>
+                <TableHead>Duration</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {completedEducation.map((edu) => (
+                <TableRow key={edu.id}>
+                  <TableCell className="font-medium">{edu.institution}</TableCell>
+                  <TableCell>{edu.degree || "—"}</TableCell>
+                  <TableCell>
+                    {edu.startDate ? 
+                      edu.currentlyStudying ? 
+                        `${edu.startDate} - Present` : 
+                        `${edu.startDate}${edu.endDate ? ` - ${edu.endDate}` : ''}` 
+                      : "—"}
+                  </TableCell>
+                  <TableCell>{getStatus(edu)}</TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex justify-end gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleEdit(edu.id)}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeItem(edu.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      )}
       
-      <Button
-        variant="outline"
-        className="w-full"
-        onClick={addItem}
-      >
-        <PlusCircle className="mr-2 h-4 w-4" />
-        Add Another Education
-      </Button>
+      <div className="space-y-4">
+        {itemsToShow.map((edu, index) => (
+          <EducationItemComponent
+            key={edu.id}
+            item={edu}
+            index={index}
+            onRemove={removeItem}
+            onUpdate={updateItem}
+            isRemoveDisabled={education.length === 1 && completedEducation.length === 0}
+          />
+        ))}
+        
+        {editingId === null && (
+          <Button
+            variant="outline"
+            className="w-full"
+            onClick={addItem}
+          >
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Add Another Education
+          </Button>
+        )}
+      </div>
     </div>
   );
 };
