@@ -9,6 +9,48 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      teacher_education: {
+        Row: {
+          created_at: string
+          currently_studying: boolean
+          degree: string | null
+          details: string | null
+          end_date: string | null
+          id: string
+          institution_name: string
+          institution_type: string
+          start_date: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          currently_studying?: boolean
+          degree?: string | null
+          details?: string | null
+          end_date?: string | null
+          id?: string
+          institution_name: string
+          institution_type: string
+          start_date: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          currently_studying?: boolean
+          degree?: string | null
+          details?: string | null
+          end_date?: string | null
+          id?: string
+          institution_name?: string
+          institution_type?: string
+          start_date?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       teacher_profiles: {
         Row: {
           certification: Json | null

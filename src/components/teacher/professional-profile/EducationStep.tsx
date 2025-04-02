@@ -7,6 +7,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { PlusCircle, Trash2, Save } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 
 export type InstitutionType = "primary" | "secondary" | "college" | "university" | "vocational" | "other";
 
@@ -20,6 +23,9 @@ export type EducationItem = {
   endDate: string;
   currentlyStudying: boolean;
   institutionType: InstitutionType | "";
+  isSaving?: boolean;
+  isError?: boolean;
+  isSuccess?: boolean;
 };
 
 type EducationStepProps = {
@@ -28,6 +34,9 @@ type EducationStepProps = {
 };
 
 const EducationStep = ({ education, setEducation }: EducationStepProps) => {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  
   const addItem = () => {
     const newItem = {
       id: Date.now().toString(),
@@ -62,9 +71,111 @@ const EducationStep = ({ education, setEducation }: EducationStepProps) => {
     ));
   };
 
-  const handleSave = (id: string) => {
-    console.log(`Saving education item ${id}:`, education.find(item => item.id === id));
-    // In a real implementation, this would save to the database
+  const handleSave = async (id: string) => {
+    try {
+      if (!user) {
+        toast({
+          title: "Authentication required",
+          description: "You need to be logged in to save education records",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      const eduItem = education.find(item => item.id === id);
+      
+      if (!eduItem) {
+        throw new Error("Education item not found");
+      }
+      
+      if (!eduItem.institutionType) {
+        toast({
+          title: "Validation Error",
+          description: "Institution type is required",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      if (!eduItem.institution) {
+        toast({
+          title: "Validation Error",
+          description: "Institution name is required",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      if (!eduItem.startDate) {
+        toast({
+          title: "Validation Error",
+          description: "Start date is required",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Set saving state
+      updateItem(id, 'isSaving', true);
+      
+      // Format data for database
+      const educationData = {
+        user_id: user.id,
+        institution_type: eduItem.institutionType,
+        institution_name: eduItem.institution,
+        degree: eduItem.degree || null,
+        details: eduItem.details || null,
+        start_date: eduItem.startDate,
+        end_date: eduItem.currentlyStudying ? null : (eduItem.endDate || null),
+        currently_studying: eduItem.currentlyStudying
+      };
+      
+      console.log("Saving education data:", educationData);
+      
+      // Insert or update record in database
+      const { data, error } = await supabase
+        .from('teacher_education')
+        .upsert(educationData)
+        .select();
+      
+      if (error) {
+        throw error;
+      }
+      
+      toast({
+        title: "Success",
+        description: "Education record saved successfully",
+      });
+      
+      // Update state with success indicator
+      updateItem(id, 'isSuccess', true);
+      updateItem(id, 'isError', false);
+      
+      console.log("Education saved successfully:", data);
+      
+    } catch (error) {
+      console.error("Error saving education:", error);
+      
+      // Update state with error indicator
+      updateItem(id, 'isError', true);
+      updateItem(id, 'isSuccess', false);
+      
+      toast({
+        title: "Error",
+        description: "Failed to save education record. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      // Reset saving state
+      updateItem(id, 'isSaving', false);
+      
+      // Reset success indicator after a delay
+      if (!education.find(item => item.id === id)?.isError) {
+        setTimeout(() => {
+          updateItem(id, 'isSuccess', false);
+        }, 3000);
+      }
+    }
   };
 
   return (
@@ -173,10 +284,22 @@ const EducationStep = ({ education, setEducation }: EducationStepProps) => {
             
             <Button 
               onClick={() => handleSave(edu.id)}
-              className="w-full mt-2"
+              className={`w-full mt-2 ${edu.isSuccess ? 'bg-green-500 hover:bg-green-600' : edu.isError ? 'bg-red-500 hover:bg-red-600' : ''}`}
+              disabled={edu.isSaving}
             >
-              <Save className="mr-2 h-4 w-4" />
-              Save Education
+              {edu.isSaving ? (
+                <>Saving...</>
+              ) : edu.isSuccess ? (
+                <>
+                  <Save className="mr-2 h-4 w-4" />
+                  Saved!
+                </>
+              ) : (
+                <>
+                  <Save className="mr-2 h-4 w-4" />
+                  Save Education
+                </>
+              )}
             </Button>
           </div>
         </div>

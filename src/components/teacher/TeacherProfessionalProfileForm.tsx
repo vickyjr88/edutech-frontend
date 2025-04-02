@@ -1,4 +1,5 @@
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChevronRight, ChevronLeft } from "lucide-react";
@@ -12,6 +13,9 @@ import {
   ProgressIndicator
 } from "./professional-profile";
 import { EducationItem, InstitutionType } from "./professional-profile/EducationStep";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 
 type FormItem = {
   id: string;
@@ -26,8 +30,11 @@ const TeacherProfessionalProfileForm = ({
   onComplete: () => void;
   onCancel: () => void;
 }) => {
+  const { user } = useAuth();
+  const { toast } = useToast();
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   
   const [education, setEducation] = useState<EducationItem[]>([{ 
     id: "1", 
@@ -49,6 +56,58 @@ const TeacherProfessionalProfileForm = ({
   const [languages, setLanguages] = useState<FormItem[]>([{ id: "1", value: "" }]);
   const [certifications, setCertifications] = useState<FormItem[]>([{ id: "1", value: "", details: "" }]);
   const [videoUrl, setVideoUrl] = useState("");
+
+  // Fetch existing education records when the component loads
+  useEffect(() => {
+    if (user) {
+      fetchEducationRecords();
+    } else {
+      setIsLoading(false);
+    }
+  }, [user]);
+
+  const fetchEducationRecords = async () => {
+    try {
+      setIsLoading(true);
+      
+      const { data, error } = await supabase
+        .from('teacher_education')
+        .select('*')
+        .eq('user_id', user?.id)
+        .order('created_at', { ascending: false });
+      
+      if (error) {
+        throw error;
+      }
+      
+      if (data && data.length > 0) {
+        // Map database records to component state format
+        const educationItems: EducationItem[] = data.map(record => ({
+          id: record.id,
+          value: record.institution_name,
+          institution: record.institution_name,
+          degree: record.degree || "",
+          details: record.details || "",
+          startDate: record.start_date,
+          endDate: record.end_date || "",
+          currentlyStudying: record.currently_studying,
+          institutionType: record.institution_type as InstitutionType
+        }));
+        
+        setEducation(educationItems);
+        console.log("Loaded education records:", educationItems);
+      }
+    } catch (error) {
+      console.error("Error fetching education records:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load existing education records",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const totalSteps = 9;
 
@@ -117,6 +176,14 @@ const TeacherProfessionalProfileForm = ({
   };
 
   const renderCurrentStep = () => {
+    if (isLoading) {
+      return (
+        <div className="py-8 flex justify-center">
+          <p>Loading...</p>
+        </div>
+      );
+    }
+    
     switch (currentStep) {
       case 1: 
         return <EducationStep 
