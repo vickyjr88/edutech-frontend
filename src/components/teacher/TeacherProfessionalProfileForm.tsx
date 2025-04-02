@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -81,15 +80,14 @@ const TeacherProfessionalProfileForm = ({
       }
       
       if (data && data.length > 0) {
-        // Map database records to component state format
         const educationItems: EducationItem[] = data.map(record => ({
           id: record.id,
           value: record.institution_name,
           institution: record.institution_name,
           degree: record.degree || "",
           details: record.details || "",
-          startDate: record.start_date,
-          endDate: record.end_date || "",
+          startDate: record.start_date.substring(0, 7),
+          endDate: record.end_date ? record.end_date.substring(0, 7) : "",
           currentlyStudying: record.currently_studying,
           institutionType: record.institution_type as InstitutionType
         }));

@@ -71,6 +71,13 @@ const EducationStep = ({ education, setEducation }: EducationStepProps) => {
     ));
   };
 
+  // Function to format date from YYYY-MM to YYYY-MM-DD
+  const formatDateForDatabase = (dateString: string): string => {
+    if (!dateString) return "";
+    // Append day "01" to make it a valid date for PostgreSQL
+    return `${dateString}-01`;
+  };
+
   const handleSave = async (id: string) => {
     try {
       if (!user) {
@@ -125,8 +132,8 @@ const EducationStep = ({ education, setEducation }: EducationStepProps) => {
         institution_name: eduItem.institution,
         degree: eduItem.degree || null,
         details: eduItem.details || null,
-        start_date: eduItem.startDate,
-        end_date: eduItem.currentlyStudying ? null : (eduItem.endDate || null),
+        start_date: formatDateForDatabase(eduItem.startDate),
+        end_date: eduItem.currentlyStudying ? null : (eduItem.endDate ? formatDateForDatabase(eduItem.endDate) : null),
         currently_studying: eduItem.currentlyStudying
       };
       
