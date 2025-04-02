@@ -1,11 +1,17 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { PlusCircle, Trash2, ChevronRight, ChevronLeft, CheckCircle, Upload } from "lucide-react";
-import { Progress } from "@/components/ui/progress";
+import { ChevronRight, ChevronLeft } from "lucide-react";
+import { 
+  EducationStep, 
+  ExperienceStep,
+  SimpleListStep,
+  SubjectExpertiseStep,
+  CertificationsStep,
+  VideoStep,
+  ProgressIndicator
+} from "./professional-profile";
 
 type FormItem = {
   id: string;
@@ -78,26 +84,6 @@ const TeacherProfessionalProfileForm = ({
     }
   };
 
-  const addItem = (items: FormItem[], setItems: React.Dispatch<React.SetStateAction<FormItem[]>>) => {
-    const newItem = {
-      id: Date.now().toString(),
-      value: "",
-      details: items[0].details !== undefined ? "" : undefined
-    };
-    setItems([...items, newItem]);
-  };
-
-  const removeItem = (id: string, items: FormItem[], setItems: React.Dispatch<React.SetStateAction<FormItem[]>>) => {
-    if (items.length === 1) return;
-    setItems(items.filter(item => item.id !== id));
-  };
-
-  const updateItem = (id: string, field: 'value' | 'details', value: string, items: FormItem[], setItems: React.Dispatch<React.SetStateAction<FormItem[]>>) => {
-    setItems(items.map(item => 
-      item.id === id ? { ...item, [field]: value } : item
-    ));
-  };
-
   const handleNext = () => {
     if (currentStep < totalSteps) {
       setCurrentStep(currentStep + 1);
@@ -120,312 +106,63 @@ const TeacherProfessionalProfileForm = ({
     }, 1000);
   };
 
-  const renderEducationForm = () => (
-    <div className="space-y-4">
-      {education.map((edu, index) => (
-        <div key={edu.id} className="p-4 border rounded-md bg-white">
-          <div className="flex justify-between items-start mb-4">
-            <h4 className="font-medium text-sm">Education {index + 1}</h4>
-            <Button 
-              variant="ghost" 
-              size="sm"
-              onClick={() => removeItem(edu.id, education, setEducation)}
-              disabled={education.length === 1}
-            >
-              <Trash2 className="h-4 w-4 text-red-500" />
-            </Button>
-          </div>
-          
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor={`edu-institution-${edu.id}`}>Institution/Degree</Label>
-              <Input 
-                id={`edu-institution-${edu.id}`}
-                value={edu.value}
-                onChange={(e) => updateItem(edu.id, 'value', e.target.value, education, setEducation)}
-                placeholder="e.g., University of Nairobi, Bachelor of Education"
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor={`edu-details-${edu.id}`}>Years & Details</Label>
-              <Textarea
-                id={`edu-details-${edu.id}`}
-                value={edu.details || ""}
-                onChange={(e) => updateItem(edu.id, 'details', e.target.value, education, setEducation)}
-                placeholder="e.g., 2015-2019, Graduated with honors, specialized in Mathematics"
-              />
-            </div>
-          </div>
-        </div>
-      ))}
-      
-      <Button
-        variant="outline"
-        className="w-full"
-        onClick={() => addItem(education, setEducation)}
-      >
-        <PlusCircle className="mr-2 h-4 w-4" />
-        Add Another Education
-      </Button>
-    </div>
-  );
-
-  const renderExperienceForm = () => (
-    <div className="space-y-4">
-      {experience.map((exp, index) => (
-        <div key={exp.id} className="p-4 border rounded-md bg-white">
-          <div className="flex justify-between items-start mb-4">
-            <h4 className="font-medium text-sm">Experience {index + 1}</h4>
-            <Button 
-              variant="ghost" 
-              size="sm"
-              onClick={() => removeItem(exp.id, experience, setExperience)}
-              disabled={experience.length === 1}
-            >
-              <Trash2 className="h-4 w-4 text-red-500" />
-            </Button>
-          </div>
-          
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor={`exp-position-${exp.id}`}>Position/Institution</Label>
-              <Input 
-                id={`exp-position-${exp.id}`}
-                value={exp.value}
-                onChange={(e) => updateItem(exp.id, 'value', e.target.value, experience, setExperience)}
-                placeholder="e.g., Mathematics Teacher at ABC School"
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor={`exp-details-${exp.id}`}>Years & Details</Label>
-              <Textarea
-                id={`exp-details-${exp.id}`}
-                value={exp.details || ""}
-                onChange={(e) => updateItem(exp.id, 'details', e.target.value, experience, setExperience)}
-                placeholder="e.g., 2019-2022, Taught Grade 9-12 Mathematics, improved class average by 15%"
-              />
-            </div>
-          </div>
-        </div>
-      ))}
-      
-      <Button
-        variant="outline"
-        className="w-full"
-        onClick={() => addItem(experience, setExperience)}
-      >
-        <PlusCircle className="mr-2 h-4 w-4" />
-        Add Another Experience
-      </Button>
-    </div>
-  );
-
-  const renderSimpleListForm = (
-    items: FormItem[], 
-    setItems: React.Dispatch<React.SetStateAction<FormItem[]>>,
-    label: string,
-    placeholder: string
-  ) => (
-    <div className="space-y-4">
-      {items.map((item, index) => (
-        <div key={item.id} className="flex items-center space-x-2">
-          <Input 
-            value={item.value}
-            onChange={(e) => updateItem(item.id, 'value', e.target.value, items, setItems)}
-            placeholder={`${placeholder} ${index + 1}`}
-            className="flex-1"
-          />
-          <Button 
-            variant="ghost" 
-            size="sm"
-            onClick={() => removeItem(item.id, items, setItems)}
-            disabled={items.length === 1}
-          >
-            <Trash2 className="h-4 w-4 text-red-500" />
-          </Button>
-        </div>
-      ))}
-      
-      <Button
-        variant="outline"
-        className="w-full"
-        onClick={() => addItem(items, setItems)}
-      >
-        <PlusCircle className="mr-2 h-4 w-4" />
-        Add Another {label}
-      </Button>
-    </div>
-  );
-
-  const renderSubjectExpertiseForm = () => (
-    <div className="space-y-6">
-      <div>
-        <h4 className="font-medium text-sm mb-3">Academic Subjects</h4>
-        {renderSimpleListForm(
-          academicSubjects, 
-          setAcademicSubjects, 
-          "Academic Subject", 
-          "e.g., Mathematics, Science, English"
-        )}
-      </div>
-      
-      <div>
-        <h4 className="font-medium text-sm mb-3">After-School Subjects</h4>
-        {renderSimpleListForm(
-          afterSchoolSubjects, 
-          setAfterSchoolSubjects, 
-          "After-School Subject", 
-          "e.g., Art, Music, Coding"
-        )}
-      </div>
-    </div>
-  );
-
-  const renderCertificationsForm = () => (
-    <div className="space-y-4">
-      {certifications.map((cert, index) => (
-        <div key={cert.id} className="p-4 border rounded-md bg-white">
-          <div className="flex justify-between items-start mb-4">
-            <h4 className="font-medium text-sm">Certification {index + 1}</h4>
-            <Button 
-              variant="ghost" 
-              size="sm"
-              onClick={() => removeItem(cert.id, certifications, setCertifications)}
-              disabled={certifications.length === 1}
-            >
-              <Trash2 className="h-4 w-4 text-red-500" />
-            </Button>
-          </div>
-          
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor={`cert-name-${cert.id}`}>Certification Name</Label>
-              <Input 
-                id={`cert-name-${cert.id}`}
-                value={cert.value}
-                onChange={(e) => updateItem(cert.id, 'value', e.target.value, certifications, setCertifications)}
-                placeholder="e.g., Certified Teacher, First Aid Training"
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor={`cert-details-${cert.id}`}>Issuing Organization & Date</Label>
-              <Input
-                id={`cert-details-${cert.id}`}
-                value={cert.details || ""}
-                onChange={(e) => updateItem(cert.id, 'details', e.target.value, certifications, setCertifications)}
-                placeholder="e.g., Kenya Education Board, 2020"
-              />
-            </div>
-          </div>
-        </div>
-      ))}
-      
-      <Button
-        variant="outline"
-        className="w-full"
-        onClick={() => addItem(certifications, setCertifications)}
-      >
-        <PlusCircle className="mr-2 h-4 w-4" />
-        Add Another Certification
-      </Button>
-    </div>
-  );
-
-  const renderVideoForm = () => (
-    <div className="space-y-6">
-      <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-        <div className="flex flex-col items-center justify-center space-y-2">
-          <Upload className="h-10 w-10 text-gray-400" />
-          <h3 className="font-medium">Upload or Record Video</h3>
-          <p className="text-sm text-gray-500">
-            Upload a 1-2 minute video introducing yourself to potential students
-          </p>
-          <Button variant="outline" className="mt-2">
-            Choose File
-          </Button>
-        </div>
-      </div>
-      
-      <div>
-        <Label htmlFor="video-url">Or Provide a YouTube/Vimeo URL</Label>
-        <Input 
-          id="video-url"
-          value={videoUrl}
-          onChange={(e) => setVideoUrl(e.target.value)}
-          placeholder="e.g., https://youtube.com/watch?v=..."
-        />
-      </div>
-    </div>
-  );
-
-  const renderProgressIndicator = () => (
-    <div className="mb-8">
-      <div className="flex items-center justify-between mb-2 overflow-x-auto">
-        <div className="w-full flex items-center justify-between">
-          {Array.from({ length: totalSteps }).map((_, index) => (
-            <div 
-              key={index}
-              className="flex flex-col items-center"
-            >
-              <div className={`flex items-center ${index !== 0 && index !== totalSteps - 1 ? 'w-full' : ''}`}>
-                {index !== 0 && (
-                  <div 
-                    className={`h-1 w-full max-w-12 sm:max-w-16 md:max-w-24 ${
-                      currentStep > index ? 'bg-green-500' : 'bg-gray-200'
-                    }`}
-                  />
-                )}
-                <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
-                    currentStep > index + 1 
-                      ? 'bg-green-500 text-white' 
-                      : currentStep === index + 1 
-                      ? 'bg-blue-500 text-white border-2 border-blue-300' 
-                      : 'bg-gray-200 text-gray-500'
-                  } transition-colors duration-200`}
-                >
-                  {currentStep > index + 1 ? (
-                    <CheckCircle className="h-4 w-4" />
-                  ) : (
-                    <span className="text-xs">{index + 1}</span>
-                  )}
-                </div>
-                {index !== totalSteps - 1 && (
-                  <div 
-                    className={`h-1 w-full max-w-12 sm:max-w-16 md:max-w-24 ${
-                      currentStep > index + 1 ? 'bg-green-500' : 'bg-gray-200'
-                    }`}
-                  />
-                )}
-              </div>
-              <span className="text-[10px] mt-1.5 text-gray-500 font-medium whitespace-nowrap">{stepLabels[index]}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-      <div className="w-full bg-gray-100 h-2 rounded-full mt-4">
-        <div 
-          className="bg-blue-500 h-2 rounded-full transition-all duration-300 ease-in-out"
-          style={{ width: `${((currentStep - 1) / (totalSteps - 1)) * 100}%` }}
-        ></div>
-      </div>
-    </div>
-  );
-
   const renderCurrentStep = () => {
     switch (currentStep) {
-      case 1: return renderEducationForm();
-      case 2: return renderExperienceForm();
-      case 3: return renderSimpleListForm(strategies, setStrategies, "Strategy", "e.g., Collaborative Learning");
-      case 4: return renderSimpleListForm(methodologies, setMethodologies, "Methodology", "e.g., Project-based Learning");
-      case 5: return renderSubjectExpertiseForm();
-      case 6: return renderSimpleListForm(technicalSkills, setTechnicalSkills, "Technical Skill", "e.g., Microsoft Office, Programming");
-      case 7: return renderSimpleListForm(languages, setLanguages, "Language", "e.g., English, Swahili");
-      case 8: return renderCertificationsForm();
-      case 9: return renderVideoForm();
+      case 1: 
+        return <EducationStep 
+          education={education} 
+          setEducation={setEducation} 
+        />;
+      case 2: 
+        return <ExperienceStep 
+          experience={experience} 
+          setExperience={setExperience} 
+        />;
+      case 3: 
+        return <SimpleListStep 
+          items={strategies} 
+          setItems={setStrategies} 
+          label="Strategy" 
+          placeholder="e.g., Collaborative Learning" 
+        />;
+      case 4: 
+        return <SimpleListStep 
+          items={methodologies} 
+          setItems={setMethodologies} 
+          label="Methodology" 
+          placeholder="e.g., Project-based Learning" 
+        />;
+      case 5: 
+        return <SubjectExpertiseStep 
+          academicSubjects={academicSubjects} 
+          setAcademicSubjects={setAcademicSubjects}
+          afterSchoolSubjects={afterSchoolSubjects}
+          setAfterSchoolSubjects={setAfterSchoolSubjects}
+        />;
+      case 6: 
+        return <SimpleListStep 
+          items={technicalSkills} 
+          setItems={setTechnicalSkills} 
+          label="Technical Skill" 
+          placeholder="e.g., Microsoft Office, Programming" 
+        />;
+      case 7: 
+        return <SimpleListStep 
+          items={languages} 
+          setItems={setLanguages} 
+          label="Language" 
+          placeholder="e.g., English, Swahili" 
+        />;
+      case 8: 
+        return <CertificationsStep 
+          certifications={certifications} 
+          setCertifications={setCertifications} 
+        />;
+      case 9: 
+        return <VideoStep 
+          videoUrl={videoUrl} 
+          setVideoUrl={setVideoUrl} 
+        />;
       default: return null;
     }
   };
@@ -437,7 +174,11 @@ const TeacherProfessionalProfileForm = ({
         <CardDescription>{getStepDescription()}</CardDescription>
       </CardHeader>
       <CardContent>
-        {renderProgressIndicator()}
+        <ProgressIndicator 
+          currentStep={currentStep} 
+          totalSteps={totalSteps} 
+          stepLabels={stepLabels} 
+        />
         {renderCurrentStep()}
       </CardContent>
       <CardFooter className="flex justify-between">
