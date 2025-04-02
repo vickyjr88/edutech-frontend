@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -44,7 +45,7 @@ const TeacherDashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user, signOut } = useAuth();
-  const [activeTab, setActiveTab] = useState("profile");
+  const [activeTab, setActiveTab] = useState("dashboard");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasProfile, setHasProfile] = useState(false);
   const [profileData, setProfileData] = useState<TeacherProfileData | null>(null);
@@ -73,47 +74,78 @@ const TeacherDashboard = () => {
         setHasProfile(false);
         setProfileData(null);
       } else {
-        const contactData = data.contact as Json;
-        const locationData = data.location as Json;
-        const nextOfKinData = data.next_of_kin as Json;
-        const certificationData = data.certification as Json;
+        // Type assertions for the JSON fields
+        type ContactType = {
+          phone: string;
+          email: string;
+          alternativePhone: string;
+        };
+        
+        type LocationType = {
+          address: string;
+          apartment: string;
+          houseNumber: string;
+          city: string;
+          county: string;
+          postalCode: string;
+          coordinates: {
+            latitude: number;
+            longitude: number;
+          };
+        };
+        
+        type NextOfKinType = {
+          name: string;
+          relationship: string;
+          phone: string;
+        };
+        
+        type CertificationType = {
+          isCertified: boolean;
+          details: string;
+          year: string;
+          institution: string;
+        };
+        
+        // Cast the Json types to our specific types
+        const contactData = data.contact as unknown as ContactType;
+        const locationData = data.location as unknown as LocationType;
+        const nextOfKinData = data.next_of_kin as unknown as NextOfKinType;
+        const certificationData = data.certification as unknown as CertificationType;
         
         const formattedData: TeacherProfileData = {
           contact: {
-            phone: contactData?.phone as string || "",
-            email: contactData?.email as string || "",
-            alternativePhone: contactData?.alternativePhone as string || "",
+            phone: contactData?.phone || "",
+            email: contactData?.email || "",
+            alternativePhone: contactData?.alternativePhone || "",
           },
           location: {
-            address: locationData?.address as string || "",
-            apartment: locationData?.apartment as string || "",
-            houseNumber: locationData?.houseNumber as string || "",
-            city: locationData?.city as string || "",
-            county: locationData?.county as string || "",
-            postalCode: locationData?.postalCode as string || "",
+            address: locationData?.address || "",
+            apartment: locationData?.apartment || "",
+            houseNumber: locationData?.houseNumber || "",
+            city: locationData?.city || "",
+            county: locationData?.county || "",
+            postalCode: locationData?.postalCode || "",
             coordinates: {
-              latitude: locationData?.coordinates?.latitude as number || 0,
-              longitude: locationData?.coordinates?.longitude as number || 0,
+              latitude: locationData?.coordinates?.latitude || 0,
+              longitude: locationData?.coordinates?.longitude || 0,
             },
           },
           nextOfKin: {
-            name: nextOfKinData?.name as string || "",
-            relationship: nextOfKinData?.relationship as string || "",
-            phone: nextOfKinData?.phone as string || "",
+            name: nextOfKinData?.name || "",
+            relationship: nextOfKinData?.relationship || "",
+            phone: nextOfKinData?.phone || "",
           },
           certification: {
-            isCertified: certificationData?.isCertified as boolean || false,
-            details: certificationData?.details as string || "",
-            year: certificationData?.year as string || "",
-            institution: certificationData?.institution as string || "",
+            isCertified: certificationData?.isCertified || false,
+            details: certificationData?.details || "",
+            year: certificationData?.year || "",
+            institution: certificationData?.institution || "",
           },
         };
         
         setProfileData(formattedData);
         setHasProfile(true);
-        if (activeTab === "profile" && !isEditing) {
-          setActiveTab("dashboard");
-        }
       }
     } catch (err) {
       console.error("Error checking profile:", err);
@@ -190,7 +222,7 @@ const TeacherDashboard = () => {
       
       setHasProfile(false);
       setProfileData(null);
-      setActiveTab("profile");
+      setActiveTab("dashboard");
     } catch (err: any) {
       console.error("Error deleting profile:", err);
       toast({
@@ -203,7 +235,7 @@ const TeacherDashboard = () => {
 
   const handleEditProfile = () => {
     setIsEditing(true);
-    setActiveTab("profile");
+    setActiveTab("settings");
   };
 
   const handleSignOut = async () => {
@@ -323,35 +355,6 @@ const TeacherDashboard = () => {
         </div>
         <nav className="flex-1 px-4 py-6 space-y-1">
           <button 
-            onClick={() => {
-              setActiveTab("profile");
-              setIsEditing(true);
-            }}
-            className={`flex items-center px-4 py-3 text-sm font-medium rounded-md w-full text-left ${
-              activeTab === "profile" && isEditing
-                ? "bg-kidato-light-blue text-kidato-blue" 
-                : "text-gray-700 hover:bg-gray-100"
-            }`}
-          >
-            <User className="mr-3 h-5 w-5" />
-            {hasProfile ? "Update Profile" : "Complete Profile"}
-          </button>
-          <button 
-            onClick={() => {
-              setActiveTab("profile");
-              setIsEditing(false);
-            }}
-            className={`flex items-center px-4 py-3 text-sm font-medium rounded-md w-full text-left ${
-              activeTab === "profile" && !isEditing
-                ? "bg-kidato-light-blue text-kidato-blue" 
-                : "text-gray-700 hover:bg-gray-100"
-            }`}
-            disabled={!hasProfile}
-          >
-            <User className="mr-3 h-5 w-5" />
-            View Profile
-          </button>
-          <button 
             onClick={() => setActiveTab("dashboard")}
             className={`flex items-center px-4 py-3 text-sm font-medium rounded-md w-full text-left ${
               activeTab === "dashboard" 
@@ -423,14 +426,11 @@ const TeacherDashboard = () => {
         <header className="bg-white shadow">
           <div className="px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
             <h1 className="text-xl font-semibold text-gray-900">
-              {activeTab === "profile" ? 
-                (isEditing ? 
-                  (hasProfile ? "Update Your Profile" : "Complete Your Profile") : 
-                  "Your Profile") : 
-               activeTab === "dashboard" ? "Dashboard" :
+              {activeTab === "dashboard" ? "Dashboard" :
                activeTab === "classes" ? "My Classes" :
                activeTab === "students" ? "Students" :
-               activeTab === "schedule" ? "Schedule" : "Settings"}
+               activeTab === "schedule" ? "Schedule" : 
+               isEditing ? "Update Your Profile" : "Settings"}
             </h1>
             <div className="flex md:hidden">
               <Button variant="outline" size="sm">
@@ -447,7 +447,7 @@ const TeacherDashboard = () => {
             </div>
           )}
 
-          {!isLoading && activeTab === "profile" && isEditing && (
+          {!isLoading && activeTab === "settings" && isEditing && (
             <div className="max-w-3xl mx-auto">
               <TeacherProfileForm
                 onSubmit={handleProfileSubmit}
@@ -464,9 +464,57 @@ const TeacherDashboard = () => {
             </div>
           )}
 
-          {!isLoading && activeTab === "profile" && !isEditing && hasProfile && (
-            <div className="max-w-3xl mx-auto">
-              {renderProfileView()}
+          {!isLoading && activeTab === "settings" && !isEditing && (
+            <div className="max-w-3xl mx-auto space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Account Settings</CardTitle>
+                  <CardDescription>Manage your account settings and preferences</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="border rounded-md p-4">
+                    <h3 className="text-lg font-medium mb-2">Teacher Profile</h3>
+                    <p className="text-sm text-gray-500 mb-4">
+                      {hasProfile 
+                        ? "Your teacher profile information is used to match you with potential students." 
+                        : "Complete your teacher profile to be visible to students looking for tutors."}
+                    </p>
+                    {hasProfile ? (
+                      <div className="flex flex-col sm:flex-row gap-2">
+                        <Button 
+                          onClick={() => setIsEditing(false)}
+                          variant="outline"
+                          className="flex items-center gap-2"
+                        >
+                          <User className="h-4 w-4" />
+                          View Profile
+                        </Button>
+                        <Button 
+                          onClick={handleEditProfile}
+                          className="flex items-center gap-2"
+                        >
+                          <Edit className="h-4 w-4" />
+                          Edit Profile
+                        </Button>
+                      </div>
+                    ) : (
+                      <Button 
+                        onClick={handleEditProfile}
+                        className="flex items-center gap-2"
+                      >
+                        <User className="h-4 w-4" />
+                        Complete Profile
+                      </Button>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {hasProfile && (
+                <div className="max-w-3xl mx-auto">
+                  {renderProfileView()}
+                </div>
+              )}
             </div>
           )}
 
@@ -489,7 +537,7 @@ const TeacherDashboard = () => {
                       <Button 
                         className="mt-3 bg-amber-600 hover:bg-amber-700"
                         onClick={() => {
-                          setActiveTab("profile");
+                          setActiveTab("settings");
                           setIsEditing(true);
                         }}
                       >
@@ -504,7 +552,7 @@ const TeacherDashboard = () => {
                       <Button 
                         className="mt-3 bg-green-600 hover:bg-green-700 text-white"
                         onClick={() => {
-                          setActiveTab("profile");
+                          setActiveTab("settings");
                           setIsEditing(false);
                         }}
                       >
@@ -547,7 +595,7 @@ const TeacherDashboard = () => {
             </div>
           )}
 
-          {!isLoading && (activeTab === "classes" || activeTab === "students" || activeTab === "schedule" || activeTab === "settings") && !hasProfile && (
+          {!isLoading && (activeTab === "classes" || activeTab === "students" || activeTab === "schedule") && !hasProfile && (
             <div className="flex flex-col items-center justify-center h-64">
               <div className="text-center">
                 <h3 className="text-lg font-medium text-gray-900">Complete your profile first</h3>
@@ -557,7 +605,7 @@ const TeacherDashboard = () => {
                 <Button 
                   className="mt-4 bg-kidato-blue hover:bg-kidato-dark-blue"
                   onClick={() => {
-                    setActiveTab("profile");
+                    setActiveTab("settings");
                     setIsEditing(true);
                   }}
                 >
@@ -567,7 +615,7 @@ const TeacherDashboard = () => {
             </div>
           )}
 
-          {!isLoading && (activeTab === "classes" || activeTab === "students" || activeTab === "schedule" || activeTab === "settings") && hasProfile && (
+          {!isLoading && (activeTab === "classes" || activeTab === "students" || activeTab === "schedule") && hasProfile && (
             <div className="flex flex-col items-center justify-center h-64">
               <div className="text-center">
                 <h3 className="text-lg font-medium text-gray-900">Coming Soon</h3>
