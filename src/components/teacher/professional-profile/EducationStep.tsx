@@ -6,13 +6,15 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { PlusCircle, Trash2 } from "lucide-react";
+import { PlusCircle, Trash2, Save } from "lucide-react";
 
-type InstitutionType = "primary" | "secondary" | "college" | "university" | "vocational" | "other";
+export type InstitutionType = "primary" | "secondary" | "college" | "university" | "vocational" | "other";
 
-type FormItem = {
+export type EducationItem = {
   id: string;
   value: string;
+  institution?: string;
+  degree?: string;
   details?: string;
   startDate: string;
   endDate: string;
@@ -21,8 +23,8 @@ type FormItem = {
 };
 
 type EducationStepProps = {
-  education: FormItem[];
-  setEducation: React.Dispatch<React.SetStateAction<FormItem[]>>;
+  education: EducationItem[];
+  setEducation: React.Dispatch<React.SetStateAction<EducationItem[]>>;
 };
 
 const EducationStep = ({ education, setEducation }: EducationStepProps) => {
@@ -30,11 +32,13 @@ const EducationStep = ({ education, setEducation }: EducationStepProps) => {
     const newItem = {
       id: Date.now().toString(),
       value: "",
+      institution: "",
+      degree: "",
       details: "",
       startDate: "",
       endDate: "",
       currentlyStudying: false,
-      institutionType: ""
+      institutionType: "" as const
     };
     setEducation([...education, newItem]);
   };
@@ -44,7 +48,7 @@ const EducationStep = ({ education, setEducation }: EducationStepProps) => {
     setEducation(education.filter(item => item.id !== id));
   };
 
-  const updateItem = (id: string, field: keyof FormItem, value: any) => {
+  const updateItem = (id: string, field: keyof EducationItem, value: any) => {
     setEducation(education.map(item => 
       item.id === id ? { ...item, [field]: value } : item
     ));
@@ -56,6 +60,11 @@ const EducationStep = ({ education, setEducation }: EducationStepProps) => {
         ? { ...item, currentlyStudying: checked, endDate: checked ? "" : item.endDate } 
         : item
     ));
+  };
+
+  const handleSave = (id: string) => {
+    console.log(`Saving education item ${id}:`, education.find(item => item.id === id));
+    // In a real implementation, this would save to the database
   };
 
   return (
@@ -76,20 +85,10 @@ const EducationStep = ({ education, setEducation }: EducationStepProps) => {
           
           <div className="space-y-4">
             <div>
-              <Label htmlFor={`edu-institution-${edu.id}`}>Institution/Degree</Label>
-              <Input 
-                id={`edu-institution-${edu.id}`}
-                value={edu.value}
-                onChange={(e) => updateItem(edu.id, 'value', e.target.value)}
-                placeholder="e.g., University of Nairobi, Bachelor of Education"
-              />
-            </div>
-            
-            <div>
               <Label htmlFor={`edu-type-${edu.id}`}>Institution Type</Label>
               <Select 
                 value={edu.institutionType} 
-                onValueChange={(value) => updateItem(edu.id, 'institutionType', value)}
+                onValueChange={(value: InstitutionType | "") => updateItem(edu.id, 'institutionType', value)}
               >
                 <SelectTrigger id={`edu-type-${edu.id}`}>
                   <SelectValue placeholder="Select institution type" />
@@ -103,6 +102,26 @@ const EducationStep = ({ education, setEducation }: EducationStepProps) => {
                   <SelectItem value="other">Other</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+            
+            <div>
+              <Label htmlFor={`edu-institution-${edu.id}`}>Institution Name</Label>
+              <Input 
+                id={`edu-institution-${edu.id}`}
+                value={edu.institution || ""}
+                onChange={(e) => updateItem(edu.id, 'institution', e.target.value)}
+                placeholder="e.g., University of Nairobi"
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor={`edu-degree-${edu.id}`}>Degree/Certification</Label>
+              <Input 
+                id={`edu-degree-${edu.id}`}
+                value={edu.degree || ""}
+                onChange={(e) => updateItem(edu.id, 'degree', e.target.value)}
+                placeholder="e.g., Bachelor of Education"
+              />
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -151,6 +170,14 @@ const EducationStep = ({ education, setEducation }: EducationStepProps) => {
                 placeholder="e.g., Graduated with honors, specialized in Mathematics"
               />
             </div>
+            
+            <Button 
+              onClick={() => handleSave(edu.id)}
+              className="w-full mt-2"
+            >
+              <Save className="mr-2 h-4 w-4" />
+              Save Education
+            </Button>
           </div>
         </div>
       ))}

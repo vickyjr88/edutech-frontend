@@ -11,18 +11,12 @@ import {
   VideoStep,
   ProgressIndicator
 } from "./professional-profile";
+import { EducationItem, InstitutionType } from "./professional-profile/EducationStep";
 
 type FormItem = {
   id: string;
   value: string;
   details?: string;
-};
-
-type EducationItem = FormItem & {
-  startDate: string;
-  endDate: string;
-  currentlyStudying: boolean;
-  institutionType: string;
 };
 
 const TeacherProfessionalProfileForm = ({ 
@@ -38,11 +32,13 @@ const TeacherProfessionalProfileForm = ({
   const [education, setEducation] = useState<EducationItem[]>([{ 
     id: "1", 
     value: "", 
+    institution: "",
+    degree: "",
     details: "",
     startDate: "",
     endDate: "",
     currentlyStudying: false,
-    institutionType: ""
+    institutionType: "" as const
   }]);
   const [experience, setExperience] = useState<FormItem[]>([{ id: "1", value: "", details: "" }]);
   const [strategies, setStrategies] = useState<FormItem[]>([{ id: "1", value: "" }]);
