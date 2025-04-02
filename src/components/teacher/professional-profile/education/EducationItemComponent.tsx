@@ -88,6 +88,15 @@ const EducationItemComponent = ({
       // Update state with success indicator
       onUpdate(item.id, 'isSuccess', true);
       onUpdate(item.id, 'isError', false);
+      
+      // Reset the form after successful save by clearing fields
+      // This will effectively reset the form to button state in the parent component
+      setTimeout(() => {
+        onUpdate(item.id, 'isSuccess', false);
+        onUpdate(item.id, 'isSaving', false);
+        setIsSaving(false);
+        onRemove(item.id);
+      }, 1500);
     } catch (error) {
       console.error("Error saving education:", error);
       
@@ -100,32 +109,26 @@ const EducationItemComponent = ({
         description: "Failed to save education record. Please try again.",
         variant: "destructive"
       });
-    } finally {
+      
       // Reset saving state
       onUpdate(item.id, 'isSaving', false);
       setIsSaving(false);
-      
-      // Reset success indicator after a delay
-      if (!item.isError) {
-        setTimeout(() => {
-          onUpdate(item.id, 'isSuccess', false);
-        }, 3000);
-      }
     }
   };
 
   return (
     <div className="p-4 border rounded-md bg-white">
       <div className="flex justify-between items-start mb-4">
-        <h4 className="font-medium text-sm">Education {index + 1}</h4>
-        <Button 
-          variant="ghost" 
-          size="sm"
-          onClick={() => onRemove(item.id)}
-          disabled={isRemoveDisabled}
-        >
-          <Trash2 className="h-4 w-4 text-red-500" />
-        </Button>
+        <h4 className="font-medium text-sm">Add Education</h4>
+        {!isRemoveDisabled && (
+          <Button 
+            variant="ghost" 
+            size="sm"
+            onClick={() => onRemove(item.id)}
+          >
+            <Trash2 className="h-4 w-4 text-red-500" />
+          </Button>
+        )}
       </div>
       
       <div className="space-y-4">
@@ -200,7 +203,7 @@ const EducationItemComponent = ({
           />
           <Label 
             htmlFor={`edu-current-${item.id}`}
-            className="text-sm font-normal"
+            className="text-sm font-normal cursor-pointer"
           >
             I am currently studying here
           </Label>
