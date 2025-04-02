@@ -13,11 +13,13 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
+    // Set isReady to true when the authentication state is loaded
     if (!isLoading) {
       setIsReady(true);
     }
   }, [isLoading]);
 
+  // Show loading indicator while checking authentication
   if (!isReady) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -26,10 +28,12 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
     );
   }
 
+  // Redirect to login if user is not authenticated
   if (!user) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
+  // User is authenticated, render the protected content
   return <>{children}</>;
 };
 
