@@ -1,35 +1,22 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Home, BookOpen, Users, Calendar, User, Settings, LogOut } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import TeacherProfileForm from "@/components/teacher/TeacherProfileForm";
 
 const TeacherDashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("profile");
-  
-  // Profile form state
-  const [fullName, setFullName] = useState("");
-  const [specialization, setSpecialization] = useState("");
-  const [educationLevel, setEducationLevel] = useState("");
-  const [yearsExperience, setYearsExperience] = useState("");
-  const [hourlyRate, setHourlyRate] = useState("");
-  const [bio, setBio] = useState("");
-  const [availability, setAvailability] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleProfileSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleProfileSubmit = async (profileData: any) => {
     setIsSubmitting(true);
     
     // Simulate API call
+    console.log("Submitting profile data:", profileData);
     setTimeout(() => {
       toast({
         title: "Profile updated",
@@ -153,130 +140,13 @@ const TeacherDashboard = () => {
         {/* Content */}
         <main className="flex-1 p-6 overflow-y-auto">
           {activeTab === "profile" && (
-            <Card className="max-w-2xl mx-auto">
-              <CardHeader>
-                <CardTitle>Teacher Profile Information</CardTitle>
-                <CardDescription>
-                  Complete your profile to start teaching on Kidato. This information will be visible to students.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleProfileSubmit} className="space-y-6">
-                  <div className="space-y-4">
-                    <div>
-                      <Label htmlFor="fullName">Full Name</Label>
-                      <Input
-                        id="fullName"
-                        value={fullName}
-                        onChange={(e) => setFullName(e.target.value)}
-                        placeholder="Your full name"
-                        required
-                      />
-                    </div>
-
-                    <div>
-                      <Label htmlFor="specialization">Subject Specialization</Label>
-                      <Select value={specialization} onValueChange={setSpecialization}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select your subject" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="mathematics">Mathematics</SelectItem>
-                          <SelectItem value="science">Science</SelectItem>
-                          <SelectItem value="english">English</SelectItem>
-                          <SelectItem value="history">History</SelectItem>
-                          <SelectItem value="geography">Geography</SelectItem>
-                          <SelectItem value="computer-science">Computer Science</SelectItem>
-                          <SelectItem value="foreign-languages">Foreign Languages</SelectItem>
-                          <SelectItem value="art">Art</SelectItem>
-                          <SelectItem value="music">Music</SelectItem>
-                          <SelectItem value="physical-education">Physical Education</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div>
-                      <Label htmlFor="educationLevel">Education Level</Label>
-                      <Select value={educationLevel} onValueChange={setEducationLevel}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select education level" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="bachelor">Bachelor's Degree</SelectItem>
-                          <SelectItem value="master">Master's Degree</SelectItem>
-                          <SelectItem value="phd">PhD</SelectItem>
-                          <SelectItem value="teaching-certificate">Teaching Certificate</SelectItem>
-                          <SelectItem value="other">Other</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor="yearsExperience">Years of Experience</Label>
-                        <Input
-                          id="yearsExperience"
-                          type="number"
-                          min="0"
-                          value={yearsExperience}
-                          onChange={(e) => setYearsExperience(e.target.value)}
-                          placeholder="Years of teaching experience"
-                          required
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="hourlyRate">Hourly Rate (USD)</Label>
-                        <Input
-                          id="hourlyRate"
-                          type="number"
-                          min="0"
-                          step="0.01"
-                          value={hourlyRate}
-                          onChange={(e) => setHourlyRate(e.target.value)}
-                          placeholder="Your hourly rate"
-                          required
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <Label htmlFor="bio">Biography</Label>
-                      <Textarea
-                        id="bio"
-                        value={bio}
-                        onChange={(e) => setBio(e.target.value)}
-                        placeholder="Tell students about yourself, your teaching experience, and your approach"
-                        className="min-h-[120px]"
-                        required
-                      />
-                    </div>
-
-                    <div>
-                      <Label htmlFor="availability">Availability</Label>
-                      <Textarea
-                        id="availability"
-                        value={availability}
-                        onChange={(e) => setAvailability(e.target.value)}
-                        placeholder="Describe your teaching availability (e.g., weekdays evenings, weekends)"
-                        required
-                      />
-                    </div>
-                  </div>
-                </form>
-              </CardContent>
-              <CardFooter className="flex justify-between">
-                <Button variant="outline" onClick={() => navigate("/dashboard")}>
-                  Skip for Now
-                </Button>
-                <Button 
-                  onClick={handleProfileSubmit} 
-                  disabled={isSubmitting}
-                  className="bg-kidato-blue hover:bg-kidato-dark-blue"
-                >
-                  {isSubmitting ? "Saving..." : "Save Profile"}
-                </Button>
-              </CardFooter>
-            </Card>
+            <div className="max-w-3xl mx-auto">
+              <TeacherProfileForm
+                onSubmit={handleProfileSubmit}
+                onCancel={() => navigate("/dashboard")}
+                isSubmitting={isSubmitting}
+              />
+            </div>
           )}
 
           {activeTab === "dashboard" && (
