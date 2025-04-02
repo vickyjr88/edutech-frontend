@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -23,7 +22,6 @@ const TeacherProfessionalProfileForm = ({
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  // Form state for each section
   const [education, setEducation] = useState<FormItem[]>([{ id: "1", value: "", details: "" }]);
   const [experience, setExperience] = useState<FormItem[]>([{ id: "1", value: "", details: "" }]);
   const [strategies, setStrategies] = useState<FormItem[]>([{ id: "1", value: "" }]);
@@ -36,6 +34,18 @@ const TeacherProfessionalProfileForm = ({
   const [videoUrl, setVideoUrl] = useState("");
 
   const totalSteps = 9;
+
+  const stepLabels = [
+    "Education",
+    "Experience",
+    "Strategies",
+    "Methodologies",
+    "Subjects",
+    "Skills",
+    "Languages",
+    "Certifications",
+    "Video"
+  ];
 
   const getStepTitle = () => {
     switch (currentStep) {
@@ -103,8 +113,6 @@ const TeacherProfessionalProfileForm = ({
 
   const handleSubmit = () => {
     setIsSubmitting(true);
-    // In a real implementation, we would save the data to the database here
-    // For this mockup, we'll just simulate a delay and then call onComplete
     setTimeout(() => {
       setIsSubmitting(false);
       onComplete();
@@ -352,6 +360,58 @@ const TeacherProfessionalProfileForm = ({
     </div>
   );
 
+  const renderProgressIndicator = () => (
+    <div className="mb-8">
+      <div className="flex items-center justify-between mb-2">
+        {Array.from({ length: totalSteps }).map((_, index) => (
+          <div 
+            key={index}
+            className="flex flex-col items-center"
+          >
+            <div className={`flex items-center ${index !== 0 && index !== totalSteps - 1 ? 'w-full' : ''}`}>
+              {index !== 0 && (
+                <div 
+                  className={`h-1 w-12 sm:w-16 md:w-24 ${
+                    currentStep > index ? 'bg-green-500' : 'bg-gray-200'
+                  }`}
+                />
+              )}
+              <div
+                className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
+                  currentStep > index + 1 
+                    ? 'bg-green-500 text-white' 
+                    : currentStep === index + 1 
+                    ? 'bg-blue-500 text-white border-2 border-blue-300' 
+                    : 'bg-gray-200 text-gray-500'
+                } transition-colors duration-200`}
+              >
+                {currentStep > index + 1 ? (
+                  <CheckCircle className="h-4 w-4" />
+                ) : (
+                  <span className="text-xs">{index + 1}</span>
+                )}
+              </div>
+              {index !== totalSteps - 1 && (
+                <div 
+                  className={`h-1 w-12 sm:w-16 md:w-24 ${
+                    currentStep > index + 1 ? 'bg-green-500' : 'bg-gray-200'
+                  }`}
+                />
+              )}
+            </div>
+            <span className="text-[10px] mt-1.5 text-gray-500 font-medium">{stepLabels[index]}</span>
+          </div>
+        ))}
+      </div>
+      <div className="w-full bg-gray-100 h-2 rounded-full mt-4">
+        <div 
+          className="bg-blue-500 h-2 rounded-full transition-all duration-300 ease-in-out"
+          style={{ width: `${((currentStep - 1) / (totalSteps - 1)) * 100}%` }}
+        ></div>
+      </div>
+    </div>
+  );
+
   const renderCurrentStep = () => {
     switch (currentStep) {
       case 1: return renderEducationForm();
@@ -366,40 +426,6 @@ const TeacherProfessionalProfileForm = ({
       default: return null;
     }
   };
-
-  const renderProgressIndicator = () => (
-    <div className="flex items-center justify-between mb-6">
-      {Array.from({ length: totalSteps }).map((_, index) => (
-        <div 
-          key={index}
-          className={`flex items-center ${index !== 0 ? 'w-full' : ''}`}
-        >
-          <div
-            className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 ${
-              currentStep > index + 1 
-                ? 'bg-green-500 text-white' 
-                : currentStep === index + 1 
-                ? 'bg-blue-500 text-white border-2 border-blue-300' 
-                : 'bg-gray-200 text-gray-500'
-            }`}
-          >
-            {currentStep > index + 1 ? (
-              <CheckCircle className="h-4 w-4" />
-            ) : (
-              <span className="text-xs">{index + 1}</span>
-            )}
-          </div>
-          {index < totalSteps - 1 && (
-            <div 
-              className={`h-1 w-full ${
-                currentStep > index + 1 ? 'bg-green-500' : 'bg-gray-200'
-              }`}
-            />
-          )}
-        </div>
-      ))}
-    </div>
-  );
 
   return (
     <Card className="w-full max-w-4xl mx-auto">
