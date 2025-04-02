@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import AuthLayout from "@/components/auth/AuthLayout";
 import { toast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface LocationState {
   from?: {
@@ -24,8 +25,19 @@ const Login = () => {
   
   const navigate = useNavigate();
   const location = useLocation();
+  const { user } = useAuth();
   const state = location.state as LocationState;
   const from = state?.from?.pathname || "/dashboard";
+
+  // If user is already logged in, redirect them
+  if (user) {
+    const userRole = user.user_metadata?.role;
+    if (userRole === "tutor") {
+      navigate("/teacher-dashboard");
+    } else {
+      navigate(from);
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -67,6 +79,30 @@ const Login = () => {
 
   const handleForgotPassword = () => {
     navigate("/forgot-password");
+  };
+
+  // Handle social logins
+  const handleSocialLogin = async (provider: 'google' | 'facebook') => {
+    try {
+      setIsLoading(true);
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: {
+          redirectTo: window.location.origin + '/auth/callback',
+        },
+      });
+      
+      if (error) throw error;
+      
+    } catch (err: any) {
+      console.error(`${provider} login error:`, err);
+      toast({
+        title: "Login failed",
+        description: err.message || `Could not sign in with ${provider}`,
+        variant: "destructive"
+      });
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -159,6 +195,8 @@ const Login = () => {
           <Button
             variant="outline"
             className="w-full border-gray-300 text-gray-700 hover:bg-gray-50"
+            onClick={() => handleSocialLogin('google')}
+            disabled={isLoading}
           >
             <span className="sr-only">Sign in with Google</span>
             <svg className="h-5 w-5 mr-2" viewBox="0 0 24 24">
@@ -173,6 +211,8 @@ const Login = () => {
           <Button
             variant="outline"
             className="w-full border-gray-300 text-gray-700 hover:bg-gray-50"
+            onClick={() => handleSocialLogin('facebook')}
+            disabled={isLoading}
           >
             <span className="sr-only">Sign in with Facebook</span>
             <svg className="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
