@@ -1,30 +1,93 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Home, BookOpen, Users, Calendar, User, Settings, LogOut } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 import TeacherProfileForm from "@/components/teacher/TeacherProfileForm";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 const TeacherDashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user, signOut } = useAuth();
   const [activeTab, setActiveTab] = useState("profile");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [hasProfile, setHasProfile] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      checkProfileExists();
+    }
+  }, [user]);
+
+  const checkProfileExists = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('teacher_profiles')
+        .select('*')
+        .eq('user_id', user?.id)
+        .single();
+
+      if (error) {
+        if (error.code !== 'PGRST116') {
+          console.error("Error checking profile:", error);
+        }
+        setHasProfile(false);
+      } else {
+        setHasProfile(true);
+        if (activeTab === "profile") {
+          setActiveTab("dashboard");
+        }
+      }
+    } catch (err) {
+      console.error("Error checking profile:", err);
+      setHasProfile(false);
+    }
+  };
 
   const handleProfileSubmit = async (profileData: any) => {
     setIsSubmitting(true);
     
-    // Simulate API call
-    console.log("Submitting profile data:", profileData);
-    setTimeout(() => {
+    try {
+      if (!user) throw new Error("User not authenticated");
+
+      const { error } = await supabase
+        .from('teacher_profiles')
+        .upsert({
+          user_id: user.id,
+          contact: profileData.contact,
+          location: profileData.location,
+          next_of_kin: profileData.nextOfKin,
+          certification: profileData.certification,
+          updated_at: new Date()
+        });
+
+      if (error) throw error;
+
       toast({
         title: "Profile updated",
         description: "Your teacher profile has been successfully updated.",
       });
+      
+      setHasProfile(true);
+      setActiveTab("dashboard");
+    } catch (err: any) {
+      console.error("Error saving profile:", err);
+      toast({
+        title: "Error",
+        description: err.message || "An error occurred while saving your profile",
+        variant: "destructive"
+      });
+    } finally {
       setIsSubmitting(false);
-    }, 1500);
+    }
+  };
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/");
   };
 
   return (
@@ -48,7 +111,7 @@ const TeacherDashboard = () => {
             }`}
           >
             <User className="mr-3 h-5 w-5" />
-            Complete Profile
+            {hasProfile ? "Update Profile" : "Complete Profile"}
           </button>
           <button 
             onClick={() => setActiveTab("dashboard")}
@@ -110,7 +173,7 @@ const TeacherDashboard = () => {
           <Button 
             variant="ghost" 
             className="w-full flex items-center justify-center"
-            onClick={() => navigate("/")}
+            onClick={handleSignOut}
           >
             <LogOut className="mr-2 h-4 w-4" />
             Sign Out
@@ -124,7 +187,7 @@ const TeacherDashboard = () => {
         <header className="bg-white shadow">
           <div className="px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
             <h1 className="text-xl font-semibold text-gray-900">
-              {activeTab === "profile" ? "Complete Your Profile" : 
+              {activeTab === "profile" ? (hasProfile ? "Update Your Profile" : "Complete Your Profile") : 
                activeTab === "dashboard" ? "Dashboard" :
                activeTab === "classes" ? "My Classes" :
                activeTab === "students" ? "Students" :
@@ -144,7 +207,7 @@ const TeacherDashboard = () => {
             <div className="max-w-3xl mx-auto">
               <TeacherProfileForm
                 onSubmit={handleProfileSubmit}
-                onCancel={() => navigate("/dashboard")}
+                onCancel={() => hasProfile ? setActiveTab("dashboard") : navigate("/")}
                 isSubmitting={isSubmitting}
               />
             </div>
@@ -154,22 +217,32 @@ const TeacherDashboard = () => {
             <div className="space-y-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>Welcome, Teacher!</CardTitle>
+                  <CardTitle>Welcome, {user?.user_metadata?.full_name || "Teacher"}!</CardTitle>
                   <CardDescription>
-                    Complete your profile to start accepting students.
+                    {hasProfile 
+                      ? "Your profile is complete. You can now start accepting students."
+                      : "Complete your profile to start accepting students."}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="p-4 bg-amber-50 text-amber-800 rounded-md border border-amber-200">
-                    <p className="font-medium">Your profile is incomplete</p>
-                    <p className="text-sm mt-1">Complete your teacher profile to be visible to students.</p>
-                    <Button 
-                      className="mt-3 bg-amber-600 hover:bg-amber-700"
-                      onClick={() => setActiveTab("profile")}
-                    >
-                      Complete Now
-                    </Button>
-                  </div>
+                  {!hasProfile && (
+                    <div className="p-4 bg-amber-50 text-amber-800 rounded-md border border-amber-200">
+                      <p className="font-medium">Your profile is incomplete</p>
+                      <p className="text-sm mt-1">Complete your teacher profile to be visible to students.</p>
+                      <Button 
+                        className="mt-3 bg-amber-600 hover:bg-amber-700"
+                        onClick={() => setActiveTab("profile")}
+                      >
+                        Complete Now
+                      </Button>
+                    </div>
+                  )}
+                  {hasProfile && (
+                    <div className="p-4 bg-green-50 text-green-800 rounded-md border border-green-200">
+                      <p className="font-medium">Your profile is complete!</p>
+                      <p className="text-sm mt-1">You are now visible to students looking for tutors.</p>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
 
@@ -205,7 +278,7 @@ const TeacherDashboard = () => {
             </div>
           )}
 
-          {(activeTab === "classes" || activeTab === "students" || activeTab === "schedule" || activeTab === "settings") && (
+          {(activeTab === "classes" || activeTab === "students" || activeTab === "schedule" || activeTab === "settings") && !hasProfile && (
             <div className="flex flex-col items-center justify-center h-64">
               <div className="text-center">
                 <h3 className="text-lg font-medium text-gray-900">Complete your profile first</h3>
@@ -218,6 +291,17 @@ const TeacherDashboard = () => {
                 >
                   Go to Profile
                 </Button>
+              </div>
+            </div>
+          )}
+
+          {(activeTab === "classes" || activeTab === "students" || activeTab === "schedule" || activeTab === "settings") && hasProfile && (
+            <div className="flex flex-col items-center justify-center h-64">
+              <div className="text-center">
+                <h3 className="text-lg font-medium text-gray-900">Coming Soon</h3>
+                <p className="mt-1 text-sm text-gray-500">
+                  This feature is currently under development
+                </p>
               </div>
             </div>
           )}

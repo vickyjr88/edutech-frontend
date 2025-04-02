@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
@@ -9,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "@/components/ui/use-toast";
 import AuthLayout from "@/components/auth/AuthLayout";
+import { supabase } from "@/integrations/supabase/client";
 
 const SignUp = () => {
   const [name, setName] = useState("");
@@ -18,11 +18,13 @@ const SignUp = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
   
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
     
     if (!agreedToTerms) {
       toast({
@@ -35,13 +37,25 @@ const SignUp = () => {
     
     setIsLoading(true);
     
-    // Simulate signup process
-    setTimeout(() => {
+    try {
+      // Sign up with Supabase
+      const { data, error: signUpError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: name,
+            role: userRole,
+          },
+        },
+      });
+
+      if (signUpError) throw signUpError;
+
       toast({
         title: "Account created!",
         description: "Your account has been created successfully.",
       });
-      setIsLoading(false);
       
       // Redirect based on user role
       if (userRole === "tutor") {
@@ -49,7 +63,17 @@ const SignUp = () => {
       } else {
         navigate("/dashboard");
       }
-    }, 1500);
+    } catch (err: any) {
+      console.error("Signup error:", err);
+      setError(err.message || "An error occurred during signup");
+      toast({
+        title: "Signup failed",
+        description: err.message || "An error occurred during signup",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const roleLabels = {
@@ -65,6 +89,12 @@ const SignUp = () => {
       authType="signup"
     >
       <form className="space-y-6" onSubmit={handleSubmit}>
+        {error && (
+          <div className="p-3 bg-red-50 text-red-700 rounded-md text-sm">
+            {error}
+          </div>
+        )}
+        
         <div>
           <Label htmlFor="name">Full name</Label>
           <div className="mt-1">
