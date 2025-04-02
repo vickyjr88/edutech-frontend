@@ -9,6 +9,8 @@ import { Label } from "@/components/ui/label";
 interface LocationPickerProps {
   onLocationSelect: (location: {
     address: string;
+    apartment: string;
+    houseNumber: string;
     city: string;
     county: string;
     postalCode: string;
@@ -16,6 +18,8 @@ interface LocationPickerProps {
     longitude: number;
   }) => void;
   initialAddress?: string;
+  initialApartment?: string;
+  initialHouseNumber?: string;
   initialCity?: string;
   initialCounty?: string;
   initialPostalCode?: string;
@@ -24,6 +28,8 @@ interface LocationPickerProps {
 const LocationPicker = ({
   onLocationSelect,
   initialAddress = "",
+  initialApartment = "",
+  initialHouseNumber = "",
   initialCity = "",
   initialCounty = "",
   initialPostalCode = "",
@@ -33,6 +39,8 @@ const LocationPicker = ({
   const [mockResults, setMockResults] = useState<any[]>([]);
   const [selectedLocation, setSelectedLocation] = useState({
     address: initialAddress,
+    apartment: initialApartment,
+    houseNumber: initialHouseNumber,
     city: initialCity,
     county: initialCounty,
     postalCode: initialPostalCode,
@@ -44,6 +52,8 @@ const LocationPicker = ({
   const mockLocations = [
     {
       address: "123 Main Street",
+      apartment: "Apt 4B",
+      houseNumber: "123",
       city: "Nairobi",
       county: "Nairobi County",
       postalCode: "00100",
@@ -52,6 +62,8 @@ const LocationPicker = ({
     },
     {
       address: "456 Valley Road",
+      apartment: "Suite 201",
+      houseNumber: "456",
       city: "Nairobi",
       county: "Nairobi County",
       postalCode: "00200",
@@ -60,6 +72,8 @@ const LocationPicker = ({
     },
     {
       address: "789 University Way",
+      apartment: "",
+      houseNumber: "789",
       city: "Nairobi",
       county: "Nairobi County",
       postalCode: "00100",
@@ -68,6 +82,8 @@ const LocationPicker = ({
     },
     {
       address: "321 Mombasa Road",
+      apartment: "Block C, Unit 5",
+      houseNumber: "321",
       city: "Nairobi",
       county: "Nairobi County",
       postalCode: "00500",
@@ -76,6 +92,8 @@ const LocationPicker = ({
     },
     {
       address: "555 Ngong Road",
+      apartment: "Garden Flats",
+      houseNumber: "555",
       city: "Nairobi",
       county: "Nairobi County",
       postalCode: "00200",
@@ -89,6 +107,8 @@ const LocationPicker = ({
     if (initialAddress || initialCity || initialCounty || initialPostalCode) {
       setSelectedLocation({
         address: initialAddress,
+        apartment: initialApartment,
+        houseNumber: initialHouseNumber,
         city: initialCity,
         county: initialCounty,
         postalCode: initialPostalCode,
@@ -96,7 +116,7 @@ const LocationPicker = ({
         longitude: 36.8219,
       });
     }
-  }, [initialAddress, initialCity, initialCounty, initialPostalCode]);
+  }, [initialAddress, initialApartment, initialHouseNumber, initialCity, initialCounty, initialPostalCode]);
 
   const handleSearch = () => {
     setIsSearching(true);
@@ -128,6 +148,18 @@ const LocationPicker = ({
       e.preventDefault();
       handleSearch();
     }
+  };
+
+  const handleApartmentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newLocation = { ...selectedLocation, apartment: e.target.value };
+    setSelectedLocation(newLocation);
+    onLocationSelect(newLocation);
+  };
+
+  const handleHouseNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newLocation = { ...selectedLocation, houseNumber: e.target.value };
+    setSelectedLocation(newLocation);
+    onLocationSelect(newLocation);
   };
 
   return (
@@ -216,13 +248,37 @@ const LocationPicker = ({
             </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-2">
+          <div className="grid grid-cols-1 gap-3">
             <div>
               <Label className="text-xs text-gray-500">Selected Location</Label>
               <p className="text-sm font-medium">{selectedLocation.address}</p>
               <p className="text-xs text-gray-600">
                 {selectedLocation.city}, {selectedLocation.county}, {selectedLocation.postalCode}
               </p>
+            </div>
+            
+            {/* House Number and Apartment Name fields */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2">
+              <div>
+                <Label htmlFor="houseNumber" className="text-xs text-gray-500">House Number</Label>
+                <Input
+                  id="houseNumber"
+                  value={selectedLocation.houseNumber}
+                  onChange={handleHouseNumberChange}
+                  placeholder="Enter house number"
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label htmlFor="apartment" className="text-xs text-gray-500">Apartment Name/Number</Label>
+                <Input
+                  id="apartment"
+                  value={selectedLocation.apartment}
+                  onChange={handleApartmentChange}
+                  placeholder="E.g., Apt 4B, Block C, etc."
+                  className="mt-1"
+                />
+              </div>
             </div>
           </div>
         </div>

@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 import { Separator } from "@/components/ui/separator";
 import { Phone, Mail, MapPin, User, Users, Bookmark, Award } from "lucide-react";
 import LocationPicker from "./LocationPicker";
@@ -32,6 +32,8 @@ const TeacherProfileForm = ({
   
   // Location Information
   const [address, setAddress] = useState("");
+  const [apartment, setApartment] = useState("");
+  const [houseNumber, setHouseNumber] = useState("");
   const [city, setCity] = useState("");
   const [county, setCounty] = useState("");
   const [postalCode, setPostalCode] = useState("");
@@ -50,6 +52,8 @@ const TeacherProfileForm = ({
 
   const handleLocationSelect = (location: any) => {
     setAddress(location.address);
+    setApartment(location.apartment);
+    setHouseNumber(location.houseNumber);
     setCity(location.city);
     setCounty(location.county);
     setPostalCode(location.postalCode);
@@ -75,6 +79,8 @@ const TeacherProfileForm = ({
       },
       location: {
         address,
+        apartment,
+        houseNumber,
         city,
         county,
         postalCode,
