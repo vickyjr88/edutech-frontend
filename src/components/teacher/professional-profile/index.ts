@@ -6,3 +6,4 @@ export { default as SubjectExpertiseStep } from './SubjectExpertiseStep';
 export { default as CertificationsStep } from './CertificationsStep';
 export { default as VideoStep } from './VideoStep';
 export { default as ProgressIndicator } from './ProgressIndicator';
+export type { EducationItem, InstitutionType } from './types';
