@@ -15,3 +15,20 @@ export type EducationItem = {
   isError?: boolean;
   isSuccess?: boolean;
 };
+
+export type ExperienceItem = {
+  id: string;
+  value: string;
+  details?: string;
+  saved?: boolean;
+  startDate: string;
+  endDate: string;
+  currentlyWorking: boolean;
+  curriculum?: string;
+  grade?: string;
+  subjects: string[];
+  reportingManager?: {
+    name: string;
+    email: string;
+  };
+};

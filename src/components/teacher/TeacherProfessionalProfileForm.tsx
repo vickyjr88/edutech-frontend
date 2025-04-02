@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,7 +11,8 @@ import {
   VideoStep,
   ProgressIndicator,
   EducationItem,
-  InstitutionType
+  InstitutionType,
+  ExperienceItem
 } from "./professional-profile";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -48,7 +48,15 @@ const TeacherProfessionalProfileForm = ({
     currentlyStudying: false,
     institutionType: "" as const
   }]);
-  const [experience, setExperience] = useState<FormItem[]>([{ id: "1", value: "", details: "" }]);
+  const [experience, setExperience] = useState<ExperienceItem[]>([{ 
+    id: "1", 
+    value: "", 
+    details: "",
+    startDate: "",
+    endDate: "",
+    currentlyWorking: false,
+    subjects: []
+  }]);
   const [strategies, setStrategies] = useState<FormItem[]>([{ id: "1", value: "" }]);
   const [methodologies, setMethodologies] = useState<FormItem[]>([{ id: "1", value: "" }]);
   const [academicSubjects, setAcademicSubjects] = useState<FormItem[]>([{ id: "1", value: "" }]);
@@ -58,7 +66,6 @@ const TeacherProfessionalProfileForm = ({
   const [certifications, setCertifications] = useState<FormItem[]>([{ id: "1", value: "", details: "" }]);
   const [videoUrl, setVideoUrl] = useState("");
 
-  // Fetch existing education records when the component loads
   useEffect(() => {
     if (user) {
       fetchEducationRecords();
