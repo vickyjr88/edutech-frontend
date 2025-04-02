@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Home, BookOpen, Users, Calendar, User, Settings, LogOut, Edit, Phone, MapPin, Award, CheckCircle2, CircleDashed } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import TeacherProfileForm from "@/components/teacher/TeacherProfileForm";
+import TeacherProfessionalProfileForm from "@/components/teacher/TeacherProfessionalProfileForm";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Json } from "@/integrations/supabase/types";
@@ -50,6 +51,8 @@ const TeacherDashboard = () => {
   const [profileData, setProfileData] = useState<TeacherProfileData | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [showProfessionalForm, setShowProfessionalForm] = useState(false);
+  const [hasProfessionalProfile, setHasProfessionalProfile] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -240,6 +243,26 @@ const TeacherDashboard = () => {
     navigate("/");
   };
 
+  const handleCompleteProfessionalProfile = () => {
+    setShowProfessionalForm(true);
+    setActiveTab("settings");
+  };
+
+  const handleProfessionalProfileComplete = () => {
+    setShowProfessionalForm(false);
+    setHasProfessionalProfile(true);
+    toast({
+      title: "Professional profile completed",
+      description: "Your professional teacher profile has been successfully created.",
+    });
+    setActiveTab("dashboard");
+  };
+
+  const handleCancelProfessionalProfile = () => {
+    setShowProfessionalForm(false);
+    setActiveTab("dashboard");
+  };
+
   const renderProfileView = () => {
     if (!profileData) return null;
     
@@ -427,7 +450,8 @@ const TeacherDashboard = () => {
                activeTab === "classes" ? "My Classes" :
                activeTab === "students" ? "Students" :
                activeTab === "schedule" ? "Schedule" : 
-               isEditing ? "Update Your Profile" : "Settings"}
+               isEditing ? "Update Your Profile" : 
+               showProfessionalForm ? "Complete Professional Profile" : "Settings"}
             </h1>
             <div className="flex md:hidden">
               <Button variant="outline" size="sm">
@@ -461,7 +485,16 @@ const TeacherDashboard = () => {
             </div>
           )}
 
-          {!isLoading && activeTab === "settings" && !isEditing && (
+          {!isLoading && activeTab === "settings" && showProfessionalForm && (
+            <div className="max-w-4xl mx-auto">
+              <TeacherProfessionalProfileForm
+                onComplete={handleProfessionalProfileComplete}
+                onCancel={handleCancelProfessionalProfile}
+              />
+            </div>
+          )}
+
+          {!isLoading && activeTab === "settings" && !isEditing && !showProfessionalForm && (
             <div className="max-w-3xl mx-auto space-y-6">
               <Card>
                 <CardHeader>
@@ -567,6 +600,7 @@ const TeacherDashboard = () => {
                               <Button 
                                 className="mt-2 bg-amber-600 hover:bg-amber-700 text-white"
                                 size="sm"
+                                onClick={handleCompleteProfessionalProfile}
                               >
                                 Complete Now
                               </Button>
