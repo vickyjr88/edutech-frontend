@@ -4,12 +4,20 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { PlusCircle, Trash2 } from "lucide-react";
+
+type InstitutionType = "primary" | "secondary" | "college" | "university" | "vocational" | "other";
 
 type FormItem = {
   id: string;
   value: string;
   details?: string;
+  startDate: string;
+  endDate: string;
+  currentlyStudying: boolean;
+  institutionType: InstitutionType | "";
 };
 
 type EducationStepProps = {
@@ -22,7 +30,11 @@ const EducationStep = ({ education, setEducation }: EducationStepProps) => {
     const newItem = {
       id: Date.now().toString(),
       value: "",
-      details: ""
+      details: "",
+      startDate: "",
+      endDate: "",
+      currentlyStudying: false,
+      institutionType: ""
     };
     setEducation([...education, newItem]);
   };
@@ -32,9 +44,17 @@ const EducationStep = ({ education, setEducation }: EducationStepProps) => {
     setEducation(education.filter(item => item.id !== id));
   };
 
-  const updateItem = (id: string, field: 'value' | 'details', value: string) => {
+  const updateItem = (id: string, field: keyof FormItem, value: any) => {
     setEducation(education.map(item => 
       item.id === id ? { ...item, [field]: value } : item
+    ));
+  };
+
+  const toggleCurrentlyStudying = (id: string, checked: boolean) => {
+    setEducation(education.map(item => 
+      item.id === id 
+        ? { ...item, currentlyStudying: checked, endDate: checked ? "" : item.endDate } 
+        : item
     ));
   };
 
@@ -66,12 +86,69 @@ const EducationStep = ({ education, setEducation }: EducationStepProps) => {
             </div>
             
             <div>
-              <Label htmlFor={`edu-details-${edu.id}`}>Years & Details</Label>
+              <Label htmlFor={`edu-type-${edu.id}`}>Institution Type</Label>
+              <Select 
+                value={edu.institutionType} 
+                onValueChange={(value) => updateItem(edu.id, 'institutionType', value)}
+              >
+                <SelectTrigger id={`edu-type-${edu.id}`}>
+                  <SelectValue placeholder="Select institution type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="primary">Primary School</SelectItem>
+                  <SelectItem value="secondary">Secondary School</SelectItem>
+                  <SelectItem value="college">College</SelectItem>
+                  <SelectItem value="university">University</SelectItem>
+                  <SelectItem value="vocational">Vocational Training</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor={`edu-start-${edu.id}`}>Start Date</Label>
+                <Input 
+                  id={`edu-start-${edu.id}`}
+                  type="month"
+                  value={edu.startDate}
+                  onChange={(e) => updateItem(edu.id, 'startDate', e.target.value)}
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor={`edu-end-${edu.id}`}>End Date</Label>
+                <Input 
+                  id={`edu-end-${edu.id}`}
+                  type="month"
+                  value={edu.endDate}
+                  onChange={(e) => updateItem(edu.id, 'endDate', e.target.value)}
+                  disabled={edu.currentlyStudying}
+                />
+              </div>
+            </div>
+            
+            <div className="flex items-center space-x-2">
+              <Checkbox 
+                id={`edu-current-${edu.id}`} 
+                checked={edu.currentlyStudying}
+                onCheckedChange={(checked) => toggleCurrentlyStudying(edu.id, checked === true)}
+              />
+              <Label 
+                htmlFor={`edu-current-${edu.id}`}
+                className="text-sm font-normal"
+              >
+                I am currently studying here
+              </Label>
+            </div>
+            
+            <div>
+              <Label htmlFor={`edu-details-${edu.id}`}>Additional Details</Label>
               <Textarea
                 id={`edu-details-${edu.id}`}
                 value={edu.details || ""}
                 onChange={(e) => updateItem(edu.id, 'details', e.target.value)}
-                placeholder="e.g., 2015-2019, Graduated with honors, specialized in Mathematics"
+                placeholder="e.g., Graduated with honors, specialized in Mathematics"
               />
             </div>
           </div>

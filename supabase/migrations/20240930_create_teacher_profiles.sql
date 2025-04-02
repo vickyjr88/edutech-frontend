@@ -32,3 +32,6 @@ CREATE POLICY "Users can update their own profile"
 ON public.teacher_profiles 
 FOR UPDATE 
 USING (auth.uid() = user_id);
+
+-- Note: We'll create a separate table for education history in a future migration
+-- This comment is just a placeholder for now

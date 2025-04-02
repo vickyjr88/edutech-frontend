@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,6 +18,13 @@ type FormItem = {
   details?: string;
 };
 
+type EducationItem = FormItem & {
+  startDate: string;
+  endDate: string;
+  currentlyStudying: boolean;
+  institutionType: string;
+};
+
 const TeacherProfessionalProfileForm = ({ 
   onComplete,
   onCancel 
@@ -29,7 +35,15 @@ const TeacherProfessionalProfileForm = ({
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  const [education, setEducation] = useState<FormItem[]>([{ id: "1", value: "", details: "" }]);
+  const [education, setEducation] = useState<EducationItem[]>([{ 
+    id: "1", 
+    value: "", 
+    details: "",
+    startDate: "",
+    endDate: "",
+    currentlyStudying: false,
+    institutionType: ""
+  }]);
   const [experience, setExperience] = useState<FormItem[]>([{ id: "1", value: "", details: "" }]);
   const [strategies, setStrategies] = useState<FormItem[]>([{ id: "1", value: "" }]);
   const [methodologies, setMethodologies] = useState<FormItem[]>([{ id: "1", value: "" }]);
