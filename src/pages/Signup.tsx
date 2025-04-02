@@ -42,7 +42,13 @@ const SignUp = () => {
         description: "Your account has been created successfully.",
       });
       setIsLoading(false);
-      navigate("/dashboard");
+      
+      // Redirect based on user role
+      if (userRole === "tutor") {
+        navigate("/teacher-dashboard");
+      } else {
+        navigate("/dashboard");
+      }
     }, 1500);
   };
 
