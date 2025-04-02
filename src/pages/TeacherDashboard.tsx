@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -24,8 +25,9 @@ const TeacherDashboard = () => {
 
   const checkProfileExists = async () => {
     try {
+      // Use type assertion to fix TS errors
       const { data, error } = await supabase
-        .from('teacher_profiles')
+        .from('teacher_profiles' as any)
         .select('*')
         .eq('user_id', user?.id)
         .single();
@@ -53,16 +55,35 @@ const TeacherDashboard = () => {
     try {
       if (!user) throw new Error("User not authenticated");
 
+      // Use type assertion to fix TS errors
       const { error } = await supabase
-        .from('teacher_profiles')
+        .from('teacher_profiles' as any)
         .upsert({
           user_id: user.id,
-          contact: profileData.contact,
-          location: profileData.location,
-          next_of_kin: profileData.nextOfKin,
-          certification: profileData.certification,
+          phone: profileData.contact.phone,
+          email: profileData.contact.email,
+          alternative_phone: profileData.contact.alternativePhone,
+          
+          address: profileData.location.address,
+          apartment: profileData.location.apartment,
+          house_number: profileData.location.houseNumber,
+          city: profileData.location.city,
+          county: profileData.location.county,
+          postal_code: profileData.location.postalCode,
+          latitude: profileData.location.coordinates.latitude,
+          longitude: profileData.location.coordinates.longitude,
+          
+          kin_name: profileData.nextOfKin.name,
+          kin_relationship: profileData.nextOfKin.relationship,
+          kin_phone: profileData.nextOfKin.phone,
+          
+          is_certified: profileData.certification.isCertified,
+          certification_details: profileData.certification.details,
+          certification_year: profileData.certification.year,
+          institution: profileData.certification.institution,
+          
           updated_at: new Date()
-        });
+        } as any);
 
       if (error) throw error;
 
