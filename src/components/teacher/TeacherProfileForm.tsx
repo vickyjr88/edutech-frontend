@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,43 +11,116 @@ import { Separator } from "@/components/ui/separator";
 import { Phone, Mail, MapPin, User, Users, Bookmark, Award } from "lucide-react";
 import LocationPicker from "./LocationPicker";
 
+interface TeacherProfileData {
+  contact: {
+    phone: string;
+    email: string;
+    alternativePhone: string;
+  };
+  location: {
+    address: string;
+    apartment: string;
+    houseNumber: string;
+    city: string;
+    county: string;
+    postalCode: string;
+    coordinates: {
+      latitude: number;
+      longitude: number;
+    };
+  };
+  nextOfKin: {
+    name: string;
+    relationship: string;
+    phone: string;
+  };
+  certification: {
+    isCertified: boolean;
+    details: string;
+    year: string;
+    institution: string;
+  };
+}
+
 interface TeacherProfileFormProps {
-  onSubmit: (data: any) => void;
+  onSubmit: (data: TeacherProfileData) => void;
   onCancel: () => void;
   isSubmitting?: boolean;
+  initialData?: Partial<TeacherProfileData>;
 }
 
 const TeacherProfileForm = ({ 
   onSubmit, 
   onCancel, 
-  isSubmitting = false 
+  isSubmitting = false,
+  initialData
 }: TeacherProfileFormProps) => {
   const { toast } = useToast();
   
   // Contact Information
-  const [phone, setPhone] = useState("");
-  const [email, setEmail] = useState("");
-  const [alternativePhone, setAlternativePhone] = useState("");
+  const [phone, setPhone] = useState(initialData?.contact?.phone || "");
+  const [email, setEmail] = useState(initialData?.contact?.email || "");
+  const [alternativePhone, setAlternativePhone] = useState(initialData?.contact?.alternativePhone || "");
   
   // Location Information
-  const [address, setAddress] = useState("");
-  const [apartment, setApartment] = useState("");
-  const [houseNumber, setHouseNumber] = useState("");
-  const [city, setCity] = useState("");
-  const [county, setCounty] = useState("");
-  const [postalCode, setPostalCode] = useState("");
-  const [coordinates, setCoordinates] = useState({ latitude: 0, longitude: 0 });
+  const [address, setAddress] = useState(initialData?.location?.address || "");
+  const [apartment, setApartment] = useState(initialData?.location?.apartment || "");
+  const [houseNumber, setHouseNumber] = useState(initialData?.location?.houseNumber || "");
+  const [city, setCity] = useState(initialData?.location?.city || "");
+  const [county, setCounty] = useState(initialData?.location?.county || "");
+  const [postalCode, setPostalCode] = useState(initialData?.location?.postalCode || "");
+  const [coordinates, setCoordinates] = useState(
+    initialData?.location?.coordinates || { latitude: 0, longitude: 0 }
+  );
   
   // Next of Kin Information
-  const [kinName, setKinName] = useState("");
-  const [kinRelationship, setKinRelationship] = useState("");
-  const [kinPhone, setKinPhone] = useState("");
+  const [kinName, setKinName] = useState(initialData?.nextOfKin?.name || "");
+  const [kinRelationship, setKinRelationship] = useState(initialData?.nextOfKin?.relationship || "");
+  const [kinPhone, setKinPhone] = useState(initialData?.nextOfKin?.phone || "");
   
   // Certification Information
-  const [isCertified, setIsCertified] = useState(false);
-  const [certificationDetails, setCertificationDetails] = useState("");
-  const [certificationYear, setCertificationYear] = useState("");
-  const [institution, setInstitution] = useState("");
+  const [isCertified, setIsCertified] = useState(initialData?.certification?.isCertified || false);
+  const [certificationDetails, setCertificationDetails] = useState(initialData?.certification?.details || "");
+  const [certificationYear, setCertificationYear] = useState(initialData?.certification?.year || "");
+  const [institution, setInstitution] = useState(initialData?.certification?.institution || "");
+
+  // Update form values when initialData changes
+  useEffect(() => {
+    if (initialData) {
+      // Contact info
+      if (initialData.contact) {
+        setPhone(initialData.contact.phone || "");
+        setEmail(initialData.contact.email || "");
+        setAlternativePhone(initialData.contact.alternativePhone || "");
+      }
+      
+      // Location info
+      if (initialData.location) {
+        setAddress(initialData.location.address || "");
+        setApartment(initialData.location.apartment || "");
+        setHouseNumber(initialData.location.houseNumber || "");
+        setCity(initialData.location.city || "");
+        setCounty(initialData.location.county || "");
+        setPostalCode(initialData.location.postalCode || "");
+        setCoordinates(initialData.location.coordinates || { latitude: 0, longitude: 0 });
+      }
+      
+      // Next of kin info
+      if (initialData.nextOfKin) {
+        setKinName(initialData.nextOfKin.name || "");
+        setKinRelationship(initialData.nextOfKin.relationship || "");
+        setKinPhone(initialData.nextOfKin.phone || "");
+      }
+      
+      // Certification info
+      if (initialData.certification) {
+        setIsCertified(initialData.certification.isCertified || false);
+        setCertificationDetails(initialData.certification.details || "");
+        setCertificationYear(initialData.certification.year || "");
+        setInstitution(initialData.certification.institution || "");
+      }
+    }
+  }, [initialData]);
 
   const handleLocationSelect = (location: any) => {
     setAddress(location.address);
@@ -71,7 +143,7 @@ const TeacherProfileForm = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    const profileData = {
+    const profileData: TeacherProfileData = {
       contact: {
         phone,
         email,
@@ -107,7 +179,7 @@ const TeacherProfileForm = ({
       <CardHeader>
         <CardTitle>Teacher Profile Information</CardTitle>
         <CardDescription>
-          Please provide your contact details, location, next of kin, and certification information
+          {initialData ? "Update your profile information" : "Please provide your contact details, location, next of kin, and certification information"}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -297,7 +369,7 @@ const TeacherProfileForm = ({
           disabled={isSubmitting}
           className="bg-kidato-blue hover:bg-kidato-dark-blue"
         >
-          {isSubmitting ? "Saving..." : "Save Profile"}
+          {isSubmitting ? "Saving..." : (initialData ? "Update Profile" : "Save Profile")}
         </Button>
       </CardFooter>
     </Card>

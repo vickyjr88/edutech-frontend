@@ -1,13 +1,43 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Home, BookOpen, Users, Calendar, User, Settings, LogOut } from "lucide-react";
+import { Home, BookOpen, Users, Calendar, User, Settings, LogOut, Edit, Phone, MapPin, Award } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import TeacherProfileForm from "@/components/teacher/TeacherProfileForm";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+
+interface TeacherProfileData {
+  contact: {
+    phone: string;
+    email: string;
+    alternativePhone: string;
+  };
+  location: {
+    address: string;
+    apartment: string;
+    houseNumber: string;
+    city: string;
+    county: string;
+    postalCode: string;
+    coordinates: {
+      latitude: number;
+      longitude: number;
+    };
+  };
+  nextOfKin: {
+    name: string;
+    relationship: string;
+    phone: string;
+  };
+  certification: {
+    isCertified: boolean;
+    details: string;
+    year: string;
+    institution: string;
+  };
+}
 
 const TeacherDashboard = () => {
   const navigate = useNavigate();
@@ -16,18 +46,21 @@ const TeacherDashboard = () => {
   const [activeTab, setActiveTab] = useState("profile");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasProfile, setHasProfile] = useState(false);
+  const [profileData, setProfileData] = useState<TeacherProfileData | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     if (user) {
-      checkProfileExists();
+      fetchTeacherProfile();
     }
   }, [user]);
 
-  const checkProfileExists = async () => {
+  const fetchTeacherProfile = async () => {
+    setIsLoading(true);
     try {
-      // Use type assertion to fix TS errors
       const { data, error } = await supabase
-        .from('teacher_profiles' as any)
+        .from('teacher_profiles')
         .select('*')
         .eq('user_id', user?.id)
         .single();
@@ -37,27 +70,62 @@ const TeacherDashboard = () => {
           console.error("Error checking profile:", error);
         }
         setHasProfile(false);
+        setProfileData(null);
       } else {
+        const formattedData: TeacherProfileData = {
+          contact: {
+            phone: data.phone || "",
+            email: data.email || "",
+            alternativePhone: data.alternative_phone || "",
+          },
+          location: {
+            address: data.address || "",
+            apartment: data.apartment || "",
+            houseNumber: data.house_number || "",
+            city: data.city || "",
+            county: data.county || "",
+            postalCode: data.postal_code || "",
+            coordinates: {
+              latitude: data.latitude || 0,
+              longitude: data.longitude || 0,
+            },
+          },
+          nextOfKin: {
+            name: data.kin_name || "",
+            relationship: data.kin_relationship || "",
+            phone: data.kin_phone || "",
+          },
+          certification: {
+            isCertified: data.is_certified || false,
+            details: data.certification_details || "",
+            year: data.certification_year || "",
+            institution: data.institution || "",
+          },
+        };
+        
+        setProfileData(formattedData);
         setHasProfile(true);
-        if (activeTab === "profile") {
+        if (activeTab === "profile" && !isEditing) {
           setActiveTab("dashboard");
         }
       }
     } catch (err) {
       console.error("Error checking profile:", err);
       setHasProfile(false);
+      setProfileData(null);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleProfileSubmit = async (profileData: any) => {
+  const handleProfileSubmit = async (profileData: TeacherProfileData) => {
     setIsSubmitting(true);
     
     try {
       if (!user) throw new Error("User not authenticated");
 
-      // Use type assertion to fix TS errors
       const { error } = await supabase
-        .from('teacher_profiles' as any)
+        .from('teacher_profiles')
         .upsert({
           user_id: user.id,
           phone: profileData.contact.phone,
@@ -83,17 +151,23 @@ const TeacherDashboard = () => {
           institution: profileData.certification.institution,
           
           updated_at: new Date()
-        } as any);
+        });
 
       if (error) throw error;
 
       toast({
-        title: "Profile updated",
-        description: "Your teacher profile has been successfully updated.",
+        title: hasProfile ? "Profile updated" : "Profile created",
+        description: hasProfile 
+          ? "Your teacher profile has been successfully updated." 
+          : "Your teacher profile has been successfully created.",
       });
       
       setHasProfile(true);
+      setProfileData(profileData);
+      setIsEditing(false);
       setActiveTab("dashboard");
+      
+      fetchTeacherProfile();
     } catch (err: any) {
       console.error("Error saving profile:", err);
       toast({
@@ -106,14 +180,151 @@ const TeacherDashboard = () => {
     }
   };
 
+  const handleProfileDelete = async () => {
+    if (!window.confirm("Are you sure you want to delete your profile? This action cannot be undone.")) {
+      return;
+    }
+    
+    try {
+      if (!user) throw new Error("User not authenticated");
+      
+      const { error } = await supabase
+        .from('teacher_profiles')
+        .delete()
+        .eq('user_id', user.id);
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Profile deleted",
+        description: "Your teacher profile has been successfully deleted.",
+      });
+      
+      setHasProfile(false);
+      setProfileData(null);
+      setActiveTab("profile");
+    } catch (err: any) {
+      console.error("Error deleting profile:", err);
+      toast({
+        title: "Error",
+        description: err.message || "An error occurred while deleting your profile",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleEditProfile = () => {
+    setIsEditing(true);
+    setActiveTab("profile");
+  };
+
   const handleSignOut = async () => {
     await signOut();
     navigate("/");
   };
 
+  const renderProfileView = () => {
+    if (!profileData) return null;
+    
+    return (
+      <Card>
+        <CardHeader className="flex flex-row items-start justify-between">
+          <div>
+            <CardTitle>Your Teacher Profile</CardTitle>
+            <CardDescription>
+              This information is visible to potential students
+            </CardDescription>
+          </div>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="flex items-center" 
+            onClick={handleEditProfile}
+          >
+            <Edit className="mr-2 h-4 w-4" />
+            Edit Profile
+          </Button>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div>
+            <h3 className="font-medium flex items-center">
+              <Phone className="mr-2 h-4 w-4 text-muted-foreground" />
+              Contact Information
+            </h3>
+            <div className="mt-2 space-y-1 text-sm">
+              <p><span className="text-muted-foreground">Phone:</span> {profileData.contact.phone}</p>
+              <p><span className="text-muted-foreground">Email:</span> {profileData.contact.email}</p>
+              {profileData.contact.alternativePhone && (
+                <p><span className="text-muted-foreground">Alternative Phone:</span> {profileData.contact.alternativePhone}</p>
+              )}
+            </div>
+          </div>
+          
+          <div>
+            <h3 className="font-medium flex items-center">
+              <MapPin className="mr-2 h-4 w-4 text-muted-foreground" />
+              Location
+            </h3>
+            <div className="mt-2 space-y-1 text-sm">
+              <p>
+                {profileData.location.address}
+                {profileData.location.apartment && `, ${profileData.location.apartment}`}
+                {profileData.location.houseNumber && `, House ${profileData.location.houseNumber}`}
+              </p>
+              <p>
+                {profileData.location.city}{profileData.location.county && `, ${profileData.location.county}`}
+                {profileData.location.postalCode && ` - ${profileData.location.postalCode}`}
+              </p>
+            </div>
+          </div>
+          
+          <div>
+            <h3 className="font-medium flex items-center">
+              <Users className="mr-2 h-4 w-4 text-muted-foreground" />
+              Next of Kin
+            </h3>
+            <div className="mt-2 space-y-1 text-sm">
+              <p><span className="text-muted-foreground">Name:</span> {profileData.nextOfKin.name}</p>
+              <p><span className="text-muted-foreground">Relationship:</span> {profileData.nextOfKin.relationship}</p>
+              <p><span className="text-muted-foreground">Phone:</span> {profileData.nextOfKin.phone}</p>
+            </div>
+          </div>
+          
+          <div>
+            <h3 className="font-medium flex items-center">
+              <Award className="mr-2 h-4 w-4 text-muted-foreground" />
+              Teaching Certification
+            </h3>
+            <div className="mt-2 space-y-1 text-sm">
+              {profileData.certification.isCertified ? (
+                <>
+                  <p><span className="text-muted-foreground">Status:</span> Certified Teacher</p>
+                  <p><span className="text-muted-foreground">Details:</span> {profileData.certification.details}</p>
+                  <p><span className="text-muted-foreground">Institution:</span> {profileData.certification.institution}</p>
+                  <p><span className="text-muted-foreground">Year:</span> {profileData.certification.year}</p>
+                </>
+              ) : (
+                <p>Not certified as a teacher</p>
+              )}
+            </div>
+          </div>
+          
+          <div className="pt-4 border-t">
+            <Button 
+              variant="destructive" 
+              onClick={handleProfileDelete}
+              className="mt-2"
+            >
+              Delete Profile
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  };
+
   return (
     <div className="flex min-h-screen bg-gray-50">
-      {/* Sidebar */}
       <aside className="hidden md:flex flex-col w-64 bg-white border-r border-gray-200">
         <div className="p-6">
           <img 
@@ -124,15 +335,33 @@ const TeacherDashboard = () => {
         </div>
         <nav className="flex-1 px-4 py-6 space-y-1">
           <button 
-            onClick={() => setActiveTab("profile")}
+            onClick={() => {
+              setActiveTab("profile");
+              setIsEditing(true);
+            }}
             className={`flex items-center px-4 py-3 text-sm font-medium rounded-md w-full text-left ${
-              activeTab === "profile" 
+              activeTab === "profile" && isEditing
                 ? "bg-kidato-light-blue text-kidato-blue" 
                 : "text-gray-700 hover:bg-gray-100"
             }`}
           >
             <User className="mr-3 h-5 w-5" />
             {hasProfile ? "Update Profile" : "Complete Profile"}
+          </button>
+          <button 
+            onClick={() => {
+              setActiveTab("profile");
+              setIsEditing(false);
+            }}
+            className={`flex items-center px-4 py-3 text-sm font-medium rounded-md w-full text-left ${
+              activeTab === "profile" && !isEditing
+                ? "bg-kidato-light-blue text-kidato-blue" 
+                : "text-gray-700 hover:bg-gray-100"
+            }`}
+            disabled={!hasProfile}
+          >
+            <User className="mr-3 h-5 w-5" />
+            View Profile
           </button>
           <button 
             onClick={() => setActiveTab("dashboard")}
@@ -202,13 +431,14 @@ const TeacherDashboard = () => {
         </div>
       </aside>
 
-      {/* Main Content */}
       <div className="flex-1 flex flex-col">
-        {/* Top Nav */}
         <header className="bg-white shadow">
           <div className="px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
             <h1 className="text-xl font-semibold text-gray-900">
-              {activeTab === "profile" ? (hasProfile ? "Update Your Profile" : "Complete Your Profile") : 
+              {activeTab === "profile" ? 
+                (isEditing ? 
+                  (hasProfile ? "Update Your Profile" : "Complete Your Profile") : 
+                  "Your Profile") : 
                activeTab === "dashboard" ? "Dashboard" :
                activeTab === "classes" ? "My Classes" :
                activeTab === "students" ? "Students" :
@@ -222,19 +452,37 @@ const TeacherDashboard = () => {
           </div>
         </header>
 
-        {/* Content */}
         <main className="flex-1 p-6 overflow-y-auto">
-          {activeTab === "profile" && (
+          {isLoading && (
+            <div className="flex items-center justify-center h-64">
+              <p className="text-gray-500">Loading...</p>
+            </div>
+          )}
+
+          {!isLoading && activeTab === "profile" && isEditing && (
             <div className="max-w-3xl mx-auto">
               <TeacherProfileForm
                 onSubmit={handleProfileSubmit}
-                onCancel={() => hasProfile ? setActiveTab("dashboard") : navigate("/")}
+                onCancel={() => {
+                  if (hasProfile) {
+                    setIsEditing(false);
+                  } else {
+                    navigate("/");
+                  }
+                }}
                 isSubmitting={isSubmitting}
+                initialData={profileData || undefined}
               />
             </div>
           )}
 
-          {activeTab === "dashboard" && (
+          {!isLoading && activeTab === "profile" && !isEditing && hasProfile && (
+            <div className="max-w-3xl mx-auto">
+              {renderProfileView()}
+            </div>
+          )}
+
+          {!isLoading && activeTab === "dashboard" && (
             <div className="space-y-6">
               <Card>
                 <CardHeader>
@@ -252,7 +500,10 @@ const TeacherDashboard = () => {
                       <p className="text-sm mt-1">Complete your teacher profile to be visible to students.</p>
                       <Button 
                         className="mt-3 bg-amber-600 hover:bg-amber-700"
-                        onClick={() => setActiveTab("profile")}
+                        onClick={() => {
+                          setActiveTab("profile");
+                          setIsEditing(true);
+                        }}
                       >
                         Complete Now
                       </Button>
@@ -262,6 +513,15 @@ const TeacherDashboard = () => {
                     <div className="p-4 bg-green-50 text-green-800 rounded-md border border-green-200">
                       <p className="font-medium">Your profile is complete!</p>
                       <p className="text-sm mt-1">You are now visible to students looking for tutors.</p>
+                      <Button 
+                        className="mt-3 bg-green-600 hover:bg-green-700 text-white"
+                        onClick={() => {
+                          setActiveTab("profile");
+                          setIsEditing(false);
+                        }}
+                      >
+                        View Profile
+                      </Button>
                     </div>
                   )}
                 </CardContent>
@@ -299,7 +559,7 @@ const TeacherDashboard = () => {
             </div>
           )}
 
-          {(activeTab === "classes" || activeTab === "students" || activeTab === "schedule" || activeTab === "settings") && !hasProfile && (
+          {!isLoading && (activeTab === "classes" || activeTab === "students" || activeTab === "schedule" || activeTab === "settings") && !hasProfile && (
             <div className="flex flex-col items-center justify-center h-64">
               <div className="text-center">
                 <h3 className="text-lg font-medium text-gray-900">Complete your profile first</h3>
@@ -308,7 +568,10 @@ const TeacherDashboard = () => {
                 </p>
                 <Button 
                   className="mt-4 bg-kidato-blue hover:bg-kidato-dark-blue"
-                  onClick={() => setActiveTab("profile")}
+                  onClick={() => {
+                    setActiveTab("profile");
+                    setIsEditing(true);
+                  }}
                 >
                   Go to Profile
                 </Button>
@@ -316,7 +579,7 @@ const TeacherDashboard = () => {
             </div>
           )}
 
-          {(activeTab === "classes" || activeTab === "students" || activeTab === "schedule" || activeTab === "settings") && hasProfile && (
+          {!isLoading && (activeTab === "classes" || activeTab === "students" || activeTab === "schedule" || activeTab === "settings") && hasProfile && (
             <div className="flex flex-col items-center justify-center h-64">
               <div className="text-center">
                 <h3 className="text-lg font-medium text-gray-900">Coming Soon</h3>
