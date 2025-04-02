@@ -7,6 +7,7 @@ import { useToast } from "@/components/ui/use-toast";
 import TeacherProfileForm from "@/components/teacher/TeacherProfileForm";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { Json } from "@/integrations/supabase/types";
 
 interface TeacherProfileData {
   contact: {
@@ -72,34 +73,39 @@ const TeacherDashboard = () => {
         setHasProfile(false);
         setProfileData(null);
       } else {
+        const contactData = data.contact as Json;
+        const locationData = data.location as Json;
+        const nextOfKinData = data.next_of_kin as Json;
+        const certificationData = data.certification as Json;
+        
         const formattedData: TeacherProfileData = {
           contact: {
-            phone: data.phone || "",
-            email: data.email || "",
-            alternativePhone: data.alternative_phone || "",
+            phone: contactData?.phone as string || "",
+            email: contactData?.email as string || "",
+            alternativePhone: contactData?.alternativePhone as string || "",
           },
           location: {
-            address: data.address || "",
-            apartment: data.apartment || "",
-            houseNumber: data.house_number || "",
-            city: data.city || "",
-            county: data.county || "",
-            postalCode: data.postal_code || "",
+            address: locationData?.address as string || "",
+            apartment: locationData?.apartment as string || "",
+            houseNumber: locationData?.houseNumber as string || "",
+            city: locationData?.city as string || "",
+            county: locationData?.county as string || "",
+            postalCode: locationData?.postalCode as string || "",
             coordinates: {
-              latitude: data.latitude || 0,
-              longitude: data.longitude || 0,
+              latitude: locationData?.coordinates?.latitude as number || 0,
+              longitude: locationData?.coordinates?.longitude as number || 0,
             },
           },
           nextOfKin: {
-            name: data.kin_name || "",
-            relationship: data.kin_relationship || "",
-            phone: data.kin_phone || "",
+            name: nextOfKinData?.name as string || "",
+            relationship: nextOfKinData?.relationship as string || "",
+            phone: nextOfKinData?.phone as string || "",
           },
           certification: {
-            isCertified: data.is_certified || false,
-            details: data.certification_details || "",
-            year: data.certification_year || "",
-            institution: data.institution || "",
+            isCertified: certificationData?.isCertified as boolean || false,
+            details: certificationData?.details as string || "",
+            year: certificationData?.year as string || "",
+            institution: certificationData?.institution as string || "",
           },
         };
         
@@ -128,29 +134,11 @@ const TeacherDashboard = () => {
         .from('teacher_profiles')
         .upsert({
           user_id: user.id,
-          phone: profileData.contact.phone,
-          email: profileData.contact.email,
-          alternative_phone: profileData.contact.alternativePhone,
-          
-          address: profileData.location.address,
-          apartment: profileData.location.apartment,
-          house_number: profileData.location.houseNumber,
-          city: profileData.location.city,
-          county: profileData.location.county,
-          postal_code: profileData.location.postalCode,
-          latitude: profileData.location.coordinates.latitude,
-          longitude: profileData.location.coordinates.longitude,
-          
-          kin_name: profileData.nextOfKin.name,
-          kin_relationship: profileData.nextOfKin.relationship,
-          kin_phone: profileData.nextOfKin.phone,
-          
-          is_certified: profileData.certification.isCertified,
-          certification_details: profileData.certification.details,
-          certification_year: profileData.certification.year,
-          institution: profileData.certification.institution,
-          
-          updated_at: new Date()
+          contact: profileData.contact,
+          location: profileData.location,
+          next_of_kin: profileData.nextOfKin,
+          certification: profileData.certification,
+          updated_at: new Date().toISOString()
         });
 
       if (error) throw error;
