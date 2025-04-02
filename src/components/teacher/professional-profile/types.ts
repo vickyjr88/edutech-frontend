@@ -16,13 +16,6 @@ export type EducationItem = {
   isSuccess?: boolean;
 };
 
-export type AchievementItem = {
-  id: string;
-  title: string;
-  description?: string;
-  year?: string;
-};
-
 export type ExperienceItem = {
   id: string;
   value: string;
@@ -34,7 +27,6 @@ export type ExperienceItem = {
   curriculums: string[];  // Changed from single curriculum to array
   grades: string[];       // Changed from single grade to array
   subjects: string[];
-  achievements: AchievementItem[];  // Added achievements array
   reportingManager?: {
     name: string;
     phone: string;  // Changed from email to phone

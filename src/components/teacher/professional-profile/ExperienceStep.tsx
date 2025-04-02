@@ -8,7 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { PlusCircle, Trash2, Save, Pencil, Plus, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
-import { ExperienceItem, AchievementItem } from "./types";
+import { ExperienceItem } from "./types";
 
 type ExperienceStepProps = {
   experience: ExperienceItem[];
@@ -27,18 +27,11 @@ const ExperienceStep = ({ experience, setExperience }: ExperienceStepProps) => {
     currentlyWorking: false,
     subjects: [],
     curriculums: [],
-    grades: [],
-    achievements: []
+    grades: []
   });
   const [newSubject, setNewSubject] = useState("");
   const [newCurriculum, setNewCurriculum] = useState("");
   const [newGrade, setNewGrade] = useState("");
-  const [newAchievement, setNewAchievement] = useState<AchievementItem>({
-    id: Date.now().toString(),
-    title: "",
-    description: "",
-    year: ""
-  });
 
   const addItem = () => {
     setEditingId(null);
@@ -51,22 +44,11 @@ const ExperienceStep = ({ experience, setExperience }: ExperienceStepProps) => {
       currentlyWorking: false,
       subjects: [],
       curriculums: [],
-      grades: [],
-      achievements: []
+      grades: []
     });
     setNewSubject("");
     setNewCurriculum("");
     setNewGrade("");
-    resetNewAchievement();
-  };
-
-  const resetNewAchievement = () => {
-    setNewAchievement({
-      id: Date.now().toString(),
-      title: "",
-      description: "",
-      year: ""
-    });
   };
 
   const removeItem = (id: string) => {
@@ -143,31 +125,6 @@ const ExperienceStep = ({ experience, setExperience }: ExperienceStepProps) => {
     setCurrentItem(prev => ({
       ...prev,
       grades: prev.grades.filter(grade => grade !== gradeToRemove)
-    }));
-  };
-
-  const updateAchievementField = (field: keyof AchievementItem, value: string) => {
-    setNewAchievement(prev => ({
-      ...prev,
-      [field]: value
-    }));
-  };
-
-  const addAchievement = () => {
-    if (!newAchievement.title.trim()) return;
-    
-    setCurrentItem(prev => ({
-      ...prev,
-      achievements: [...prev.achievements, { ...newAchievement, id: Date.now().toString() }]
-    }));
-    
-    resetNewAchievement();
-  };
-
-  const removeAchievement = (achievementId: string) => {
-    setCurrentItem(prev => ({
-      ...prev,
-      achievements: prev.achievements.filter(achievement => achievement.id !== achievementId)
     }));
   };
 
@@ -505,77 +462,6 @@ const ExperienceStep = ({ experience, setExperience }: ExperienceStepProps) => {
                 onClick={addSubject}
               >
                 <Plus className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-          
-          {/* Achievements Section */}
-          <div className="border p-4 rounded-md bg-gray-50">
-            <Label className="mb-2 block font-medium">Achievements</Label>
-            
-            {/* List of added achievements */}
-            {currentItem.achievements && currentItem.achievements.length > 0 && (
-              <div className="mb-4 space-y-2">
-                {currentItem.achievements.map((achievement) => (
-                  <div key={achievement.id} className="bg-white p-3 rounded border flex justify-between items-start">
-                    <div>
-                      <div className="font-medium">{achievement.title}</div>
-                      {achievement.year && <div className="text-sm text-gray-500">Year: {achievement.year}</div>}
-                      {achievement.description && <div className="text-sm mt-1">{achievement.description}</div>}
-                    </div>
-                    <Button 
-                      variant="ghost" 
-                      size="sm"
-                      onClick={() => removeAchievement(achievement.id)}
-                    >
-                      <Trash2 className="h-4 w-4 text-red-500" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            )}
-            
-            {/* Form to add a new achievement */}
-            <div className="space-y-3">
-              <div>
-                <Label htmlFor="achievement-title" className="text-xs text-gray-500">Title</Label>
-                <Input 
-                  id="achievement-title"
-                  value={newAchievement.title}
-                  onChange={(e) => updateAchievementField('title', e.target.value)}
-                  placeholder="e.g., Teacher of the Year Award"
-                />
-              </div>
-              
-              <div>
-                <Label htmlFor="achievement-year" className="text-xs text-gray-500">Year</Label>
-                <Input 
-                  id="achievement-year"
-                  value={newAchievement.year || ""}
-                  onChange={(e) => updateAchievementField('year', e.target.value)}
-                  placeholder="e.g., 2023"
-                />
-              </div>
-              
-              <div>
-                <Label htmlFor="achievement-description" className="text-xs text-gray-500">Description</Label>
-                <Textarea
-                  id="achievement-description"
-                  value={newAchievement.description || ""}
-                  onChange={(e) => updateAchievementField('description', e.target.value)}
-                  placeholder="Briefly describe this achievement"
-                  rows={2}
-                />
-              </div>
-              
-              <Button
-                type="button"
-                onClick={addAchievement}
-                className="w-full"
-                variant="outline"
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                Add Achievement
               </Button>
             </div>
           </div>
