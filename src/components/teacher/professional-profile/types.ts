@@ -18,17 +18,19 @@ export type EducationItem = {
 
 export type ExperienceItem = {
   id: string;
-  value: string;
+  position: string;  // Changed from 'value' to 'position'
+  institution: string; // Added separate institution field
+  institutionType: InstitutionType | ""; // Added institution type
   details?: string;
   saved?: boolean;
   startDate: string;
   endDate: string;
   currentlyWorking: boolean;
-  curriculums: string[];  // Changed from single curriculum to array
-  grades: string[];       // Changed from single grade to array
+  curriculums: string[];
+  grades: string[];
   subjects: string[];
   reportingManager?: {
     name: string;
-    phone: string;  // Changed from email to phone
+    phone: string;
   };
 };

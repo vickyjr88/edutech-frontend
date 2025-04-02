@@ -50,15 +50,16 @@ const TeacherProfessionalProfileForm = ({
   }]);
   const [experience, setExperience] = useState<ExperienceItem[]>([{ 
     id: "1", 
-    value: "", 
+    position: "", 
+    institution: "",
+    institutionType: "",
     details: "",
     startDate: "",
     endDate: "",
     currentlyWorking: false,
     subjects: [],
     curriculums: [],
-    grades: [],
-    achievements: []
+    grades: []
   }]);
   const [strategies, setStrategies] = useState<FormItem[]>([{ id: "1", value: "" }]);
   const [methodologies, setMethodologies] = useState<FormItem[]>([{ id: "1", value: "" }]);

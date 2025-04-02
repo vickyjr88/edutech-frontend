@@ -5,10 +5,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PlusCircle, Trash2, Save, Pencil, Plus, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
-import { ExperienceItem } from "./types";
+import { ExperienceItem, InstitutionType } from "./types";
 
 type ExperienceStepProps = {
   experience: ExperienceItem[];
@@ -20,7 +21,9 @@ const ExperienceStep = ({ experience, setExperience }: ExperienceStepProps) => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [currentItem, setCurrentItem] = useState<ExperienceItem>({
     id: Date.now().toString(),
-    value: "",
+    position: "",
+    institution: "",
+    institutionType: "",
     details: "",
     startDate: "",
     endDate: "",
@@ -37,7 +40,9 @@ const ExperienceStep = ({ experience, setExperience }: ExperienceStepProps) => {
     setEditingId(null);
     setCurrentItem({
       id: Date.now().toString(),
-      value: "",
+      position: "",
+      institution: "",
+      institutionType: "",
       details: "",
       startDate: "",
       endDate: "",
@@ -139,10 +144,19 @@ const ExperienceStep = ({ experience, setExperience }: ExperienceStepProps) => {
   };
 
   const saveItem = () => {
-    if (!currentItem.value.trim()) {
+    if (!currentItem.position.trim()) {
       toast({
         title: "Error",
-        description: "Position/Institution is required",
+        description: "Position is required",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!currentItem.institution.trim()) {
+      toast({
+        title: "Error",
+        description: "Institution is required",
         variant: "destructive"
       });
       return;
@@ -213,9 +227,9 @@ const ExperienceStep = ({ experience, setExperience }: ExperienceStepProps) => {
           <table className="w-full bg-white text-sm">
             <thead className="border-b bg-gray-50">
               <tr>
-                <th className="px-4 py-3 text-left font-medium text-gray-500">Position/Institution</th>
+                <th className="px-4 py-3 text-left font-medium text-gray-500">Position</th>
+                <th className="px-4 py-3 text-left font-medium text-gray-500">Institution</th>
                 <th className="px-4 py-3 text-left font-medium text-gray-500">Duration</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-500">Subjects</th>
                 <th className="px-4 py-3 text-left font-medium text-gray-500">Status</th>
                 <th className="px-4 py-3 text-center font-medium text-gray-500 w-24">Actions</th>
               </tr>
@@ -224,7 +238,24 @@ const ExperienceStep = ({ experience, setExperience }: ExperienceStepProps) => {
               {savedExperiences.map((exp) => (
                 <tr key={exp.id} className="border-b">
                   <td className="px-4 py-3">
-                    <div className="font-medium">{exp.value}</div>
+                    <div className="font-medium">{exp.position}</div>
+                    {exp.subjects && exp.subjects.length > 0 && (
+                      <div className="text-xs text-gray-500 flex flex-wrap gap-1 mt-1">
+                        {exp.subjects.map((subject, idx) => (
+                          <Badge key={idx} variant="outline" className="text-xs">
+                            {subject}
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="font-medium">{exp.institution}</div>
+                    {exp.institutionType && (
+                      <div className="text-xs text-gray-500 mt-1">
+                        {exp.institutionType.charAt(0).toUpperCase() + exp.institutionType.slice(1)}
+                      </div>
+                    )}
                     {exp.curriculums && exp.curriculums.length > 0 && (
                       <div className="text-xs text-gray-500 flex flex-wrap gap-1 mt-1">
                         {exp.curriculums.map((curriculum, idx) => (
@@ -247,19 +278,6 @@ const ExperienceStep = ({ experience, setExperience }: ExperienceStepProps) => {
                   </td>
                   <td className="px-4 py-3">
                     {formatDateRange(exp.startDate, exp.endDate, exp.currentlyWorking)}
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex flex-wrap gap-1">
-                      {exp.subjects && exp.subjects.length > 0 ? (
-                        exp.subjects.map((subject, idx) => (
-                          <Badge key={idx} variant="outline" className="text-xs">
-                            {subject}
-                          </Badge>
-                        ))
-                      ) : (
-                        <span className="text-gray-400 text-xs">No subjects</span>
-                      )}
-                    </div>
                   </td>
                   <td className="px-4 py-3">
                     {exp.currentlyWorking ? (
@@ -301,13 +319,45 @@ const ExperienceStep = ({ experience, setExperience }: ExperienceStepProps) => {
         
         <div className="space-y-4">
           <div>
-            <Label htmlFor="exp-position">Position/Institution</Label>
+            <Label htmlFor="exp-position">Position</Label>
             <Input 
               id="exp-position"
-              value={currentItem.value}
-              onChange={(e) => updateCurrentItem('value', e.target.value)}
-              placeholder="e.g., Mathematics Teacher at ABC School"
+              value={currentItem.position}
+              onChange={(e) => updateCurrentItem('position', e.target.value)}
+              placeholder="e.g., Mathematics Teacher"
             />
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="exp-institution">Institution</Label>
+              <Input 
+                id="exp-institution"
+                value={currentItem.institution}
+                onChange={(e) => updateCurrentItem('institution', e.target.value)}
+                placeholder="e.g., ABC School"
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="exp-institution-type">Institution Type</Label>
+              <Select 
+                value={currentItem.institutionType} 
+                onValueChange={(value: InstitutionType | "") => updateCurrentItem('institutionType', value)}
+              >
+                <SelectTrigger id="exp-institution-type">
+                  <SelectValue placeholder="Select institution type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="primary">Primary School</SelectItem>
+                  <SelectItem value="secondary">Secondary School</SelectItem>
+                  <SelectItem value="college">College</SelectItem>
+                  <SelectItem value="university">University</SelectItem>
+                  <SelectItem value="vocational">Vocational Training</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
