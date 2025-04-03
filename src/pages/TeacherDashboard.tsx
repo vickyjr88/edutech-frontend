@@ -332,6 +332,17 @@ const TeacherDashboard = () => {
     setActiveTab("enrollment");
   };
 
+  const handleRequestReviews = () => {
+    setActiveTab("enrollment");
+    setShowEnrollStudents(true);
+    setTimeout(() => {
+      const reviewsTab = document.querySelector('[value="reviews"]') as HTMLElement;
+      if (reviewsTab) {
+        reviewsTab.click();
+      }
+    }, 100);
+  };
+
   const renderProfileView = () => {
     if (!profileData) return null;
     
@@ -785,11 +796,12 @@ const TeacherDashboard = () => {
                             <div>
                               <p className="font-medium">Step 6: Get Reviews</p>
                               <p className="text-sm text-gray-600">
-                                Collect feedback and reviews from your students to improve your profile.
+                                Collect feedback and reviews from your students, parents and supervisors to improve your profile.
                               </p>
                               <Button 
                                 className="mt-2 bg-yellow-600 hover:bg-yellow-700 text-white"
                                 size="sm"
+                                onClick={handleRequestReviews}
                               >
                                 <Star className="mr-2 h-4 w-4" />
                                 Request Reviews

@@ -1,18 +1,11 @@
 
 import React, { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { FormFileUpload } from "@/components/ui/form";
-import { useToast } from "@/hooks/use-toast";
-import { Copy, Send, UploadCloud, Users, UserPlus, Mail, Share2, FileSpreadsheet, Clock } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import WaitingListTab from "./WaitingListTab";
 import EmailInviteTab from "./EmailInviteTab";
 import FileUploadTab from "./FileUploadTab";
 import ShareLinkTab from "./ShareLinkTab";
+import WaitingListTab from "./WaitingListTab";
+import ReviewsTab from "./ReviewsTab";
 
 interface EnrollStudentsPageProps {
   classId?: string;
@@ -20,56 +13,46 @@ interface EnrollStudentsPageProps {
 }
 
 const EnrollStudentsPage = ({ classId, className }: EnrollStudentsPageProps) => {
-  const [activeTab, setActiveTab] = useState("waiting-list");
-  const { toast } = useToast();
-  
+  const [activeTab, setActiveTab] = useState("email");
+
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold">Enroll Students</h1>
-          {className && (
-            <p className="text-gray-500">
-              Class: <span className="font-medium">{className}</span>
-            </p>
-          )}
-        </div>
+      <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+        <h2 className="text-2xl font-bold mb-2">
+          {className ? `Enroll Students for ${className}` : "Enroll Students"}
+        </h2>
+        <p className="text-gray-500">
+          Invite students to join your classes and track their enrollment status.
+        </p>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid grid-cols-4 gap-4">
-          <TabsTrigger value="waiting-list" className="flex items-center gap-2">
-            <Clock className="h-4 w-4" />
-            <span>Waiting List</span>
-          </TabsTrigger>
-          <TabsTrigger value="email-invite" className="flex items-center gap-2">
-            <Mail className="h-4 w-4" />
-            <span>Email Invite</span>
-          </TabsTrigger>
-          <TabsTrigger value="file-upload" className="flex items-center gap-2">
-            <FileSpreadsheet className="h-4 w-4" />
-            <span>File Upload</span>
-          </TabsTrigger>
-          <TabsTrigger value="share-link" className="flex items-center gap-2">
-            <Share2 className="h-4 w-4" />
-            <span>Share Link</span>
-          </TabsTrigger>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid grid-cols-5 mb-6">
+          <TabsTrigger value="email">Email Invite</TabsTrigger>
+          <TabsTrigger value="file">Bulk Upload</TabsTrigger>
+          <TabsTrigger value="link">Share Link</TabsTrigger>
+          <TabsTrigger value="waiting">Waiting List</TabsTrigger>
+          <TabsTrigger value="reviews">Reviews</TabsTrigger>
         </TabsList>
-
-        <TabsContent value="waiting-list">
-          <WaitingListTab classId={classId} />
+        
+        <TabsContent value="email">
+          <EmailInviteTab classId={classId} />
         </TabsContent>
-
-        <TabsContent value="email-invite">
-          <EmailInviteTab classId={classId} className={className} />
-        </TabsContent>
-
-        <TabsContent value="file-upload">
+        
+        <TabsContent value="file">
           <FileUploadTab classId={classId} />
         </TabsContent>
-
-        <TabsContent value="share-link">
-          <ShareLinkTab classId={classId} className={className} />
+        
+        <TabsContent value="link">
+          <ShareLinkTab classId={classId} />
+        </TabsContent>
+        
+        <TabsContent value="waiting">
+          <WaitingListTab classId={classId} />
+        </TabsContent>
+        
+        <TabsContent value="reviews">
+          <ReviewsTab classId={classId} />
         </TabsContent>
       </Tabs>
     </div>
