@@ -48,6 +48,23 @@ const BasicInformationTab = ({ form, onNextTab }: BasicInformationTabProps) => {
 
         <FormField
           control={form.control}
+          name="title"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Class Title</FormLabel>
+              <Input placeholder="Enter a catchy class title" {...field} />
+              <FormDescription>
+                Enter a descriptive title for the class.
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <FormField
+          control={form.control}
           name="subject"
           render={({ field }) => (
             <FormItem>
@@ -60,87 +77,87 @@ const BasicInformationTab = ({ form, onNextTab }: BasicInformationTabProps) => {
             </FormItem>
           )}
         />
-      </div>
 
-      <FormField
-        control={form.control}
-        name="title"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Class Title</FormLabel>
-            <Input placeholder="Enter a catchy class title" {...field} />
-            <FormDescription>
-              Enter a descriptive title for the class.
-            </FormDescription>
-            <FormMessage />
-          </FormItem>
+        <FormField
+          control={form.control}
+          name="curriculum"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Curriculum</FormLabel>
+              <Input placeholder="Enter curriculum" {...field} />
+              <FormDescription>
+                Enter the curriculum used in the class.
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        {classType === "academic" ? (
+          <FormField
+            control={form.control}
+            name="gradeLevel"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Grade Level</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value || ""}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select grade level" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="1">1st Grade</SelectItem>
+                    <SelectItem value="2">2nd Grade</SelectItem>
+                    <SelectItem value="3">3rd Grade</SelectItem>
+                    <SelectItem value="4">4th Grade</SelectItem>
+                    <SelectItem value="5">5th Grade</SelectItem>
+                    <SelectItem value="6">6th Grade</SelectItem>
+                    <SelectItem value="7">7th Grade</SelectItem>
+                    <SelectItem value="8">8th Grade</SelectItem>
+                    <SelectItem value="9">9th Grade</SelectItem>
+                    <SelectItem value="10">10th Grade</SelectItem>
+                    <SelectItem value="11">11th Grade</SelectItem>
+                    <SelectItem value="12">12th Grade</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormDescription>
+                  Select the grade level for this class.
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        ) : (
+          <FormField
+            control={form.control}
+            name="ageRange"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Age Range</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value || ""}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select age range" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="3-5">3-5 years</SelectItem>
+                    <SelectItem value="6-8">6-8 years</SelectItem>
+                    <SelectItem value="9-11">9-11 years</SelectItem>
+                    <SelectItem value="12-14">12-14 years</SelectItem>
+                    <SelectItem value="15-18">15-18 years</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormDescription>
+                  Select the age range for this after-school class.
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
         )}
-      />
-
-      {classType === "academic" ? (
-        <FormField
-          control={form.control}
-          name="gradeLevel"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Grade Level</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value || ""}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select grade level" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="1">1st Grade</SelectItem>
-                  <SelectItem value="2">2nd Grade</SelectItem>
-                  <SelectItem value="3">3rd Grade</SelectItem>
-                  <SelectItem value="4">4th Grade</SelectItem>
-                  <SelectItem value="5">5th Grade</SelectItem>
-                  <SelectItem value="6">6th Grade</SelectItem>
-                  <SelectItem value="7">7th Grade</SelectItem>
-                  <SelectItem value="8">8th Grade</SelectItem>
-                  <SelectItem value="9">9th Grade</SelectItem>
-                  <SelectItem value="10">10th Grade</SelectItem>
-                  <SelectItem value="11">11th Grade</SelectItem>
-                  <SelectItem value="12">12th Grade</SelectItem>
-                </SelectContent>
-              </Select>
-              <FormDescription>
-                Select the grade level for this class.
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      ) : (
-        <FormField
-          control={form.control}
-          name="ageRange"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Age Range</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value || ""}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select age range" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="3-5">3-5 years</SelectItem>
-                  <SelectItem value="6-8">6-8 years</SelectItem>
-                  <SelectItem value="9-11">9-11 years</SelectItem>
-                  <SelectItem value="12-14">12-14 years</SelectItem>
-                  <SelectItem value="15-18">15-18 years</SelectItem>
-                </SelectContent>
-              </Select>
-              <FormDescription>
-                Select the age range for this after-school class.
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      )}
+      </div>
 
       <FormField
         control={form.control}
