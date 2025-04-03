@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -276,7 +275,6 @@ const BasicInformationTab = ({ form, onNextTab }: BasicInformationTabProps) => {
               placeholder="Enter the number of lessons" 
               {...field}
               onChange={(e) => {
-                // Convert string to number before updating the form value
                 const value = parseInt(e.target.value);
                 if (!isNaN(value)) {
                   field.onChange(value);
@@ -317,26 +315,31 @@ const BasicInformationTab = ({ form, onNextTab }: BasicInformationTabProps) => {
           )}
         />
 
-        <FormField
-          control={form.control}
-          name="hasCohorts"
-          render={({ field }) => (
-            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-              <div className="space-y-0.5">
-                <FormLabel className="text-base">Multiple Cohorts</FormLabel>
-                <FormDescription>
-                  Enable multiple cohorts to run different sessions of this class with different schedules and groups of students.
-                </FormDescription>
-              </div>
-              <FormControl>
-                <Switch
-                  checked={field.value}
-                  onCheckedChange={field.onChange}
-                />
-              </FormControl>
-            </FormItem>
-          )}
-        />
+        <div className="space-y-4 pt-4 border-t">
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label htmlFor="hasCohorts">Multiple Cohorts</Label>
+              <FormDescription>
+                Enable multiple cohorts to run different sessions of this class with different schedules and groups of students.
+              </FormDescription>
+            </div>
+            <FormField
+              control={form.control}
+              name="hasCohorts"
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <Switch 
+                      checked={field.value} 
+                      onCheckedChange={field.onChange} 
+                      id="hasCohorts"
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+          </div>
+        </div>
 
         <FormField
           control={form.control}

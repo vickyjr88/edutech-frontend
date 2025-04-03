@@ -53,7 +53,6 @@ interface ClassFormContextType {
   };
 };
 
-// Export the context directly
 export const ClassFormContext = createContext<ClassFormContextType | undefined>(undefined);
 
 export const useClassForm = () => {
@@ -131,7 +130,7 @@ export const ClassFormProvider = ({ children, onSubmit }: ClassFormProviderProps
       missingItems.push(`At least 3 lesson plans (currently has ${futureLessonPlans.length})`);
     }
     
-    const hasMinCohorts = cohorts.length >= 1;
+    const hasMinCohorts = cohorts.length >= (formValues.hasCohorts ? 1 : 1);
     if (!hasMinCohorts) {
       missingItems.push('At least one cohort');
     }
@@ -194,13 +193,18 @@ export const ClassFormProvider = ({ children, onSubmit }: ClassFormProviderProps
   };
 
   const addCohort = () => {
+    const hasCohorts = form.getValues().hasCohorts;
     const newId = Date.now().toString();
     const cohortNumber = cohorts.length + 1;
     const classTitle = form.getValues().title || "Class";
     
+    if (!hasCohorts && cohorts.length > 0) {
+      return;
+    }
+    
     setCohorts([...cohorts, { 
       id: newId, 
-      name: `${classTitle} Cohort ${cohortNumber}`, 
+      name: hasCohorts ? `${classTitle} Cohort ${cohortNumber}` : classTitle, 
       startDate: null,
       endDate: null,
       startTime: "",
@@ -223,6 +227,12 @@ export const ClassFormProvider = ({ children, onSubmit }: ClassFormProviderProps
   };
 
   const removeCohort = (id: string) => {
+    const hasCohorts = form.getValues().hasCohorts;
+    
+    if (!hasCohorts && cohorts.length <= 1) {
+      return;
+    }
+    
     setCohorts(cohorts.filter(cohort => cohort.id !== id));
   };
 
