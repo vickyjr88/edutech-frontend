@@ -28,7 +28,7 @@ export type StrategyItem = {
 export const fetchStrategyRecords = async (userId: string): Promise<StrategyItem[]> => {
   try {
     const { data, error } = await supabase
-      .from('teacher_strategies')
+      .from('teacher_strategies' as any)
       .select('*')
       .eq('user_id', userId)
       .order('created_at', { ascending: false });
@@ -37,7 +37,7 @@ export const fetchStrategyRecords = async (userId: string): Promise<StrategyItem
       throw error;
     }
     
-    return data.map(record => ({
+    return data.map((record: any) => ({
       id: record.id,
       strategy: record.strategy,
       description: record.description || "",
@@ -55,25 +55,25 @@ export const saveStrategyRecord = async (
 ): Promise<StrategyItem | null> => {
   try {
     const { data, error } = await supabase
-      .from('teacher_strategies')
+      .from('teacher_strategies' as any)
       .insert({
         user_id: userId,
         strategy: item.strategy,
         description: item.description || null,
         is_certified: item.is_certified
       })
-      .select()
-      .single();
+      .select();
     
     if (error) {
       throw error;
     }
     
+    const newRecord = data[0] as any;
     return {
-      id: data.id,
-      strategy: data.strategy,
-      description: data.description || "",
-      is_certified: data.is_certified
+      id: newRecord.id,
+      strategy: newRecord.strategy,
+      description: newRecord.description || "",
+      is_certified: newRecord.is_certified
     };
   } catch (error) {
     console.error("Error saving strategy record:", error);
@@ -86,7 +86,7 @@ export const updateStrategyRecord = async (
 ): Promise<boolean> => {
   try {
     const { error } = await supabase
-      .from('teacher_strategies')
+      .from('teacher_strategies' as any)
       .update({
         strategy: item.strategy,
         description: item.description || null,
@@ -108,7 +108,7 @@ export const updateStrategyRecord = async (
 export const deleteStrategyRecord = async (id: string): Promise<boolean> => {
   try {
     const { error } = await supabase
-      .from('teacher_strategies')
+      .from('teacher_strategies' as any)
       .delete()
       .eq('id', id);
     
