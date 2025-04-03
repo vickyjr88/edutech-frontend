@@ -45,6 +45,15 @@ export type CohortData = {
   numberOfLessons: string;
   isActive: boolean;
   students: { id: string; name: string; email: string }[];
+  lessonSchedules: LessonSchedule[];
+  hasFlexibleSchedule: boolean;
+};
+
+export type LessonSchedule = {
+  id: string;
+  lessonNumber: number;
+  time: string;
+  customTime?: string;
 };
 
 export type TeamMember = {

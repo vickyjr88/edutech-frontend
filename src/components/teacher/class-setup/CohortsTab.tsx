@@ -5,14 +5,20 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar as CalendarIcon, Clock, Users, PlusCircle, Trash2, UserPlus } from "lucide-react";
+import { Calendar as CalendarIcon, Clock, Users, PlusCircle, Trash2, UserPlus, AlertCircle } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { UseFormReturn } from "react-hook-form";
-import { ClassFormValues } from "../CreateClassForm";
-import { CohortData } from "../CreateClassForm";
+import { ClassFormValues, CohortData, LessonSchedule } from "./types";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { 
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 interface CohortsTabProps {
   form: UseFormReturn<ClassFormValues>;
@@ -25,6 +31,9 @@ interface CohortsTabProps {
   addStudentToCohort: (cohortId: string) => void;
   removeStudentFromCohort: (cohortId: string, studentId: string) => void;
   updateStudent: (cohortId: string, studentId: string, field: "name" | "email", value: string) => void;
+  addLessonSchedule: (cohortId: string) => void;
+  removeLessonSchedule: (cohortId: string, scheduleId: string) => void;
+  updateLessonSchedule: (cohortId: string, scheduleId: string, field: keyof LessonSchedule, value: any) => void;
 }
 
 const CohortsTab = ({ 
@@ -37,9 +46,13 @@ const CohortsTab = ({
   updateCohort,
   addStudentToCohort,
   removeStudentFromCohort,
-  updateStudent
+  updateStudent,
+  addLessonSchedule,
+  removeLessonSchedule,
+  updateLessonSchedule
 }: CohortsTabProps) => {
   const hasCohorts = form.watch("hasCohorts");
+  const lessonPlans = form.watch("lessonPlans") || [];
 
   return (
     <div className="space-y-6">
@@ -157,9 +170,28 @@ const CohortsTab = ({
                         </p>
                       </div>
                       
-                      {/* Time of day */}
+                      {/* Flexible schedule toggle */}
                       <div className="space-y-2">
-                        <Label htmlFor={`cohort-time-${cohort.id}`}>Class Time</Label>
+                        <div className="flex items-center justify-between">
+                          <Label htmlFor={`flexible-schedule-${cohort.id}`}>Flexible Lesson Schedule</Label>
+                          <div className="flex items-center space-x-2">
+                            <Switch
+                              id={`flexible-schedule-${cohort.id}`}
+                              checked={cohort.hasFlexibleSchedule}
+                              onCheckedChange={(checked) => updateCohort(cohort.id, "hasFlexibleSchedule", checked)}
+                            />
+                          </div>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          Enable to set different times for each lesson
+                        </p>
+                      </div>
+                    </div>
+                    
+                    {!cohort.hasFlexibleSchedule ? (
+                      // Single time for all lessons
+                      <div className="space-y-2">
+                        <Label htmlFor={`cohort-time-${cohort.id}`}>Class Time (All Lessons)</Label>
                         <div className="flex items-center gap-2">
                           <Select
                             value={cohort.scheduleTime}
@@ -191,7 +223,122 @@ const CohortsTab = ({
                           Set the time when this cohort will meet
                         </p>
                       </div>
-                    </div>
+                    ) : (
+                      // Flexible schedule - different times per lesson
+                      <div className="mt-4 border border-gray-200 rounded-md p-4">
+                        <div className="flex justify-between items-center mb-4">
+                          <h5 className="text-sm font-medium">Lesson Schedule</h5>
+                          <Button 
+                            type="button" 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => addLessonSchedule(cohort.id)}
+                          >
+                            <PlusCircle className="mr-2 h-4 w-4" />
+                            Add Lesson Time
+                          </Button>
+                        </div>
+                        
+                        {cohort.lessonSchedules && cohort.lessonSchedules.length > 0 ? (
+                          <Accordion type="single" collapsible className="w-full">
+                            {cohort.lessonSchedules.map((schedule, idx) => (
+                              <AccordionItem key={schedule.id} value={schedule.id}>
+                                <AccordionTrigger>
+                                  <div className="flex items-center">
+                                    <span>Lesson {schedule.lessonNumber}</span>
+                                    <span className="ml-4 text-sm text-gray-500">
+                                      {schedule.time === "custom" 
+                                        ? schedule.customTime 
+                                        : schedule.time === "morning" 
+                                          ? "Morning (8AM-12PM)" 
+                                          : schedule.time === "afternoon" 
+                                            ? "Afternoon (12PM-4PM)" 
+                                            : "Evening (4PM-8PM)"}
+                                    </span>
+                                  </div>
+                                </AccordionTrigger>
+                                <AccordionContent>
+                                  <div className="space-y-4 pt-2">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                      <div className="space-y-2">
+                                        <Label htmlFor={`lesson-number-${schedule.id}`}>Lesson Number</Label>
+                                        <Select
+                                          value={schedule.lessonNumber.toString()}
+                                          onValueChange={(value) => updateLessonSchedule(cohort.id, schedule.id, "lessonNumber", parseInt(value))}
+                                        >
+                                          <SelectTrigger>
+                                            <SelectValue placeholder="Select lesson" />
+                                          </SelectTrigger>
+                                          <SelectContent>
+                                            {Array.from({length: parseInt(cohort.numberOfLessons) || 10}, (_, i) => i + 1).map(num => (
+                                              <SelectItem key={num} value={num.toString()}>
+                                                Lesson {num}
+                                              </SelectItem>
+                                            ))}
+                                          </SelectContent>
+                                        </Select>
+                                      </div>
+                                      <div className="space-y-2">
+                                        <Label htmlFor={`lesson-time-${schedule.id}`}>Time</Label>
+                                        <div className="flex items-center gap-2">
+                                          <Select
+                                            value={schedule.time}
+                                            onValueChange={(value) => updateLessonSchedule(cohort.id, schedule.id, "time", value)}
+                                          >
+                                            <SelectTrigger id={`lesson-time-${schedule.id}`} className="w-full">
+                                              <SelectValue placeholder="Select time" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                              <SelectItem value="morning">Morning (8AM - 12PM)</SelectItem>
+                                              <SelectItem value="afternoon">Afternoon (12PM - 4PM)</SelectItem>
+                                              <SelectItem value="evening">Evening (4PM - 8PM)</SelectItem>
+                                              <SelectItem value="custom">Custom Time</SelectItem>
+                                            </SelectContent>
+                                          </Select>
+                                          {schedule.time === "custom" && (
+                                            <div className="flex items-center space-x-2 ml-2">
+                                              <Clock className="h-4 w-4 text-muted-foreground" />
+                                              <Input
+                                                type="time"
+                                                className="w-32"
+                                                value={schedule.customTime || ""}
+                                                onChange={(e) => 
+                                                  updateLessonSchedule(cohort.id, schedule.id, "customTime", e.target.value)
+                                                }
+                                              />
+                                            </div>
+                                          )}
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <div className="flex justify-end">
+                                      <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => removeLessonSchedule(cohort.id, schedule.id)}
+                                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                      >
+                                        <Trash2 className="h-4 w-4 mr-2" />
+                                        Remove
+                                      </Button>
+                                    </div>
+                                  </div>
+                                </AccordionContent>
+                              </AccordionItem>
+                            ))}
+                          </Accordion>
+                        ) : (
+                          <Alert variant="default" className="bg-yellow-50 border-yellow-200">
+                            <AlertCircle className="h-4 w-4 text-yellow-800" />
+                            <AlertTitle className="text-yellow-800">No lesson times added</AlertTitle>
+                            <AlertDescription className="text-yellow-700">
+                              Add specific times for each lesson in this cohort using the button above.
+                            </AlertDescription>
+                          </Alert>
+                        )}
+                      </div>
+                    )}
                     
                     <div className="space-y-2">
                       <Label htmlFor={`cohort-lessons-${cohort.id}`}>Number of Lessons</Label>

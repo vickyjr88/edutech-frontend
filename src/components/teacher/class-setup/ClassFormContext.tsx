@@ -2,7 +2,7 @@
 import React, { createContext, useContext, useState, ReactNode } from "react";
 import { useForm, UseFormReturn } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ClassFormValues, CohortData, TeamMember, classSchema } from "./types";
+import { ClassFormValues, CohortData, TeamMember, classSchema, LessonSchedule } from "./types";
 
 interface ClassFormContextType {
   form: UseFormReturn<ClassFormValues>;
@@ -24,6 +24,11 @@ interface ClassFormContextType {
   addStudentToCohort: (cohortId: string) => void;
   removeStudentFromCohort: (cohortId: string, studentId: string) => void;
   updateStudent: (cohortId: string, studentId: string, field: "name" | "email", value: string) => void;
+  
+  // Lesson schedule methods
+  addLessonSchedule: (cohortId: string) => void;
+  removeLessonSchedule: (cohortId: string, scheduleId: string) => void;
+  updateLessonSchedule: (cohortId: string, scheduleId: string, field: keyof LessonSchedule, value: any) => void;
   
   addTeamMember: () => void;
   removeTeamMember: (id: string) => void;
@@ -101,7 +106,9 @@ export const ClassFormProvider = ({ children, onSubmit }: ClassFormProviderProps
       friendDiscount: "0",
       numberOfLessons: "8",
       isActive: true,
-      students: []
+      students: [],
+      lessonSchedules: [],
+      hasFlexibleSchedule: false
     }]);
   };
 
@@ -113,6 +120,60 @@ export const ClassFormProvider = ({ children, onSubmit }: ClassFormProviderProps
     setCohorts(cohorts.map(cohort => 
       cohort.id === id ? { ...cohort, [field]: value } : cohort
     ));
+  };
+
+  // Lesson schedule methods
+  const addLessonSchedule = (cohortId: string) => {
+    const cohort = cohorts.find(c => c.id === cohortId);
+    if (!cohort) return;
+    
+    // Find the next available lesson number
+    const existingLessonNumbers = cohort.lessonSchedules.map(ls => ls.lessonNumber);
+    let nextLessonNumber = 1;
+    while (existingLessonNumbers.includes(nextLessonNumber)) {
+      nextLessonNumber++;
+    }
+    
+    const newSchedule: LessonSchedule = {
+      id: Date.now().toString(),
+      lessonNumber: nextLessonNumber,
+      time: "morning"
+    };
+    
+    const updatedCohort = {
+      ...cohort,
+      lessonSchedules: [...cohort.lessonSchedules, newSchedule]
+    };
+    
+    setCohorts(cohorts.map(c => c.id === cohortId ? updatedCohort : c));
+  };
+  
+  const removeLessonSchedule = (cohortId: string, scheduleId: string) => {
+    const cohort = cohorts.find(c => c.id === cohortId);
+    if (!cohort) return;
+    
+    const updatedCohort = {
+      ...cohort,
+      lessonSchedules: cohort.lessonSchedules.filter(schedule => schedule.id !== scheduleId)
+    };
+    
+    setCohorts(cohorts.map(c => c.id === cohortId ? updatedCohort : c));
+  };
+  
+  const updateLessonSchedule = (cohortId: string, scheduleId: string, field: keyof LessonSchedule, value: any) => {
+    const cohort = cohorts.find(c => c.id === cohortId);
+    if (!cohort) return;
+    
+    const updatedSchedules = cohort.lessonSchedules.map(schedule => 
+      schedule.id === scheduleId ? { ...schedule, [field]: value } : schedule
+    );
+    
+    const updatedCohort = {
+      ...cohort,
+      lessonSchedules: updatedSchedules
+    };
+    
+    setCohorts(cohorts.map(c => c.id === cohortId ? updatedCohort : c));
   };
 
   const addStudentToCohort = (cohortId: string) => {
@@ -227,6 +288,10 @@ export const ClassFormProvider = ({ children, onSubmit }: ClassFormProviderProps
     addStudentToCohort,
     removeStudentFromCohort,
     updateStudent,
+    
+    addLessonSchedule,
+    removeLessonSchedule,
+    updateLessonSchedule,
     
     addTeamMember,
     removeTeamMember,
