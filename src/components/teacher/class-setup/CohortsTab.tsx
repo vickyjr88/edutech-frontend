@@ -1,16 +1,15 @@
-
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
-import { Calendar as CalendarIcon, Clock, Users, PlusCircle, Trash2, AlertCircle } from "lucide-react";
+import { Calendar as CalendarIcon, Clock, Users, PlusCircle, Trash2, AlertCircle, Repeat } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { UseFormReturn } from "react-hook-form";
-import { ClassFormValues, CohortData, LessonSchedule } from "./types";
+import { ClassFormValues, CohortData, LessonSchedule, RepeatSchedule } from "./types";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { 
   Accordion,
@@ -18,6 +17,9 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface CohortsTabProps {
   form: UseFormReturn<ClassFormValues>;
@@ -27,10 +29,12 @@ interface CohortsTabProps {
   addCohort: () => void;
   removeCohort: (id: string) => void;
   updateCohort: (id: string, field: keyof CohortData, value: any) => void;
+  updateRepeatSchedule: (cohortId: string, field: keyof RepeatSchedule, value: any) => void;
+  toggleDayOfWeek: (cohortId: string, day: string) => void;
   addLessonSchedule: (cohortId: string) => void;
   removeLessonSchedule: (cohortId: string, scheduleId: string) => void;
   updateLessonSchedule: (cohortId: string, scheduleId: string, field: keyof LessonSchedule, value: any) => void;
-  calculateNumberOfLessons: (startDate: Date | null, endDate: Date | null) => number;
+  calculateNumberOfLessons: (startDate: Date | null, endDate: Date | null, repeatSchedule: RepeatSchedule) => number;
 }
 
 const CohortsTab = ({ 
@@ -41,12 +45,23 @@ const CohortsTab = ({
   addCohort,
   removeCohort,
   updateCohort,
+  updateRepeatSchedule,
+  toggleDayOfWeek,
   addLessonSchedule,
   removeLessonSchedule,
   updateLessonSchedule,
   calculateNumberOfLessons
 }: CohortsTabProps) => {
   const hasCohorts = form.watch("hasCohorts");
+  const daysOfWeek = [
+    { label: "Monday", value: "monday" },
+    { label: "Tuesday", value: "tuesday" },
+    { label: "Wednesday", value: "wednesday" },
+    { label: "Thursday", value: "thursday" },
+    { label: "Friday", value: "friday" },
+    { label: "Saturday", value: "saturday" },
+    { label: "Sunday", value: "sunday" }
+  ];
 
   return (
     <div className="space-y-6">
@@ -225,10 +240,100 @@ const CohortsTab = ({
                       </div>
                     </div>
                     
-                    {/* Flexible schedule toggle */}
+                    {/* Repeating schedule section */}
+                    <div className="space-y-4 border rounded-md p-4 bg-gray-50">
+                      <div className="flex items-center">
+                        <Repeat className="h-4 w-4 mr-2 text-blue-500" />
+                        <h5 className="text-sm font-medium">Repeating Schedule</h5>
+                      </div>
+                      
+                      <div className="space-y-3">
+                        <div className="space-y-2">
+                          <Label>Repeat Pattern</Label>
+                          <RadioGroup 
+                            value={cohort.repeatSchedule.pattern} 
+                            onValueChange={(value: "weekly" | "twice-weekly" | "custom") => 
+                              updateRepeatSchedule(cohort.id, "pattern", value)
+                            }
+                            className="flex flex-col space-y-1"
+                          >
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="weekly" id={`weekly-${cohort.id}`} />
+                              <Label htmlFor={`weekly-${cohort.id}`} className="font-normal">Weekly (once a week)</Label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="twice-weekly" id={`twice-weekly-${cohort.id}`} />
+                              <Label htmlFor={`twice-weekly-${cohort.id}`} className="font-normal">Twice Weekly</Label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="custom" id={`custom-${cohort.id}`} />
+                              <Label htmlFor={`custom-${cohort.id}`} className="font-normal">Custom Schedule</Label>
+                            </div>
+                          </RadioGroup>
+                        </div>
+                        
+                        {cohort.repeatSchedule.pattern === "custom" && (
+                          <div className="space-y-2 pt-2">
+                            <Label className="text-sm">Repeat Every</Label>
+                            <div className="flex items-center space-x-2">
+                              <Select
+                                value={cohort.repeatSchedule.repeatEvery.toString()}
+                                onValueChange={(value) => 
+                                  updateRepeatSchedule(cohort.id, "repeatEvery", parseInt(value))
+                                }
+                              >
+                                <SelectTrigger className="w-32">
+                                  <SelectValue placeholder="Select" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="1">1 week</SelectItem>
+                                  <SelectItem value="2">2 weeks</SelectItem>
+                                  <SelectItem value="3">3 weeks</SelectItem>
+                                  <SelectItem value="4">4 weeks</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </div>
+                        )}
+                        
+                        <div className="space-y-2 pt-2">
+                          <Label className="text-sm">
+                            {cohort.repeatSchedule.pattern === "weekly" ? "Day of Week" :
+                             cohort.repeatSchedule.pattern === "twice-weekly" ? "Select Two Days" :
+                             "Select Days"}
+                          </Label>
+                          <div className="grid grid-cols-4 gap-2">
+                            {daysOfWeek.map((day) => (
+                              <div key={day.value} className="flex items-center space-x-2">
+                                <Checkbox 
+                                  id={`day-${day.value}-${cohort.id}`}
+                                  checked={cohort.repeatSchedule.daysOfWeek.includes(day.value)}
+                                  onCheckedChange={() => toggleDayOfWeek(cohort.id, day.value)}
+                                  className="data-[state=checked]:bg-blue-600"
+                                />
+                                <Label 
+                                  htmlFor={`day-${day.value}-${cohort.id}`}
+                                  className="font-normal text-sm"
+                                >
+                                  {day.label}
+                                </Label>
+                              </div>
+                            ))}
+                          </div>
+                          {cohort.repeatSchedule.pattern === "twice-weekly" && 
+                           cohort.repeatSchedule.daysOfWeek.length !== 2 && (
+                            <p className="text-xs text-amber-600">
+                              Please select exactly two days for twice-weekly schedule
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Flexible schedule section - keep if still needed */}
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
-                        <Label htmlFor={`flexible-schedule-${cohort.id}`}>Flexible Lesson Schedule</Label>
+                        <Label htmlFor={`flexible-schedule-${cohort.id}`}>Custom Lesson Times</Label>
                         <div className="flex items-center space-x-2">
                           <Switch
                             id={`flexible-schedule-${cohort.id}`}
@@ -238,7 +343,7 @@ const CohortsTab = ({
                         </div>
                       </div>
                       <p className="text-xs text-muted-foreground">
-                        Enable to set different times for each lesson
+                        Enable to set different times for specific lessons (overrides the repeat schedule)
                       </p>
                     </div>
                     
@@ -246,7 +351,7 @@ const CohortsTab = ({
                       // Flexible schedule - different times per lesson
                       <div className="mt-4 border border-gray-200 rounded-md p-4">
                         <div className="flex justify-between items-center mb-4">
-                          <h5 className="text-sm font-medium">Lesson Schedule</h5>
+                          <h5 className="text-sm font-medium">Custom Lesson Times</h5>
                           <Button 
                             type="button" 
                             size="sm" 
@@ -254,7 +359,7 @@ const CohortsTab = ({
                             onClick={() => addLessonSchedule(cohort.id)}
                           >
                             <PlusCircle className="mr-2 h-4 w-4" />
-                            Add Lesson Time
+                            Add Custom Time
                           </Button>
                         </div>
                         
@@ -330,9 +435,9 @@ const CohortsTab = ({
                         ) : (
                           <Alert variant="default" className="bg-yellow-50 border-yellow-200">
                             <AlertCircle className="h-4 w-4 text-yellow-800" />
-                            <AlertTitle className="text-yellow-800">No lesson times added</AlertTitle>
+                            <AlertTitle className="text-yellow-800">No custom times added</AlertTitle>
                             <AlertDescription className="text-yellow-700">
-                              Add specific times for each lesson in this cohort using the button above.
+                              Add custom times for specific lessons that don't follow the regular schedule.
                             </AlertDescription>
                           </Alert>
                         )}
@@ -355,7 +460,7 @@ const CohortsTab = ({
                       />
                       <p className="text-xs text-muted-foreground">
                         {cohort.startDate && cohort.endDate 
-                          ? "Auto-calculated from start and end dates" 
+                          ? "Auto-calculated from start/end dates and repeat pattern" 
                           : "Manually set the number of lessons or define start/end dates"}
                       </p>
                     </div>

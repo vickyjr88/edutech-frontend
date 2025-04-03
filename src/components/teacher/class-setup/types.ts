@@ -46,6 +46,15 @@ export type CohortData = {
   isActive: boolean;
   lessonSchedules: LessonSchedule[];
   hasFlexibleSchedule: boolean;
+  
+  // New fields for repeating lessons
+  repeatSchedule: RepeatSchedule;
+};
+
+export type RepeatSchedule = {
+  pattern: "weekly" | "twice-weekly" | "custom";
+  daysOfWeek: string[]; // ["monday", "wednesday", "friday"] etc.
+  repeatEvery: number; // repeat every X weeks
 };
 
 export type LessonSchedule = {
