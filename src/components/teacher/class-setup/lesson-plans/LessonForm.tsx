@@ -38,9 +38,13 @@ const durationOptions = [
   { value: "30m", label: "30 minutes" },
   { value: "45m", label: "45 minutes" },
   { value: "1h", label: "1 hour" },
+  { value: "1h15m", label: "1 hour 15 minutes" },
   { value: "1h30m", label: "1 hour 30 minutes" },
+  { value: "1h45m", label: "1 hour 45 minutes" },
   { value: "2h", label: "2 hours" },
+  { value: "2h15m", label: "2 hours 15 minutes" },
   { value: "2h30m", label: "2 hours 30 minutes" },
+  { value: "2h45m", label: "2 hours 45 minutes" },
   { value: "3h", label: "3 hours" },
   { value: "custom", label: "Custom duration" },
 ];
