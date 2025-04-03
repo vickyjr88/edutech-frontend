@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -7,7 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { BookOpen, List } from "lucide-react";
 import { UseFormReturn } from "react-hook-form";
-import { ClassFormValues } from "../CreateClassForm";
+import { ClassFormValues } from "./types";
+import { Label } from "@/components/ui/label";
 
 interface BasicInformationTabProps {
   form: UseFormReturn<ClassFormValues>;

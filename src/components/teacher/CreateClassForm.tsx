@@ -1,8 +1,8 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { ClassFormProvider } from "./class-setup/ClassFormContext";
-import { ClassFormValues } from "./class-setup/types";
+import { ClassFormValues } from "./class-setup/types"; // Import from types
 import FormTabs from "./class-setup/FormTabs";
 
 type CreateClassFormProps = {

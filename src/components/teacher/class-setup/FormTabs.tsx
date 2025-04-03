@@ -4,6 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BookOpen, FileText, Users, ScrollText, Eye } from "lucide-react";
 import { Form } from "@/components/ui/form";
 import { useClassForm } from "./ClassFormContext";
+import { ClassFormValues } from "./types"; // Import from types
 
 // Import tab components
 import BasicInformationTab from "./BasicInformationTab";
@@ -13,7 +14,7 @@ import TeachingTeamTab from "./TeachingTeamTab";
 import PreviewTab from "./PreviewTab";
 
 interface FormTabsProps {
-  onSubmit: (values: any) => void;
+  onSubmit: (values: ClassFormValues) => void;
 }
 
 const FormTabs = ({ onSubmit }: FormTabsProps) => {
