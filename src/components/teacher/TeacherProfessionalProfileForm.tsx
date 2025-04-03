@@ -19,7 +19,9 @@ import {
   StrategyItem,
   MethodologyItem,
   AcademicSubjectItem,
-  AfterSchoolSubjectItem
+  AfterSchoolSubjectItem,
+  TechnicalSkillsStep,
+  TechnicalSkillItem
 } from "./professional-profile";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -73,7 +75,7 @@ const TeacherProfessionalProfileForm = ({
   const [methodologies, setMethodologies] = useState<MethodologyItem[]>([]);
   const [academicSubjects, setAcademicSubjects] = useState<AcademicSubjectItem[]>([]);
   const [afterSchoolSubjects, setAfterSchoolSubjects] = useState<AfterSchoolSubjectItem[]>([]);
-  const [technicalSkills, setTechnicalSkills] = useState<FormItem[]>([{ id: "1", value: "" }]);
+  const [technicalSkills, setTechnicalSkills] = useState<TechnicalSkillItem[]>([]);
   const [languages, setLanguages] = useState<FormItem[]>([{ id: "1", value: "" }]);
   const [certifications, setCertifications] = useState<FormItem[]>([{ id: "1", value: "", details: "" }]);
   const [videoUrl, setVideoUrl] = useState("");
@@ -255,11 +257,9 @@ const TeacherProfessionalProfileForm = ({
           setAfterSchoolSubjects={setAfterSchoolSubjects}
         />;
       case 6: 
-        return <SimpleListStep 
-          items={technicalSkills} 
-          setItems={setTechnicalSkills} 
-          label="Technical Skill" 
-          placeholder="e.g., Microsoft Office, Programming" 
+        return <TechnicalSkillsStep 
+          skills={technicalSkills} 
+          setSkills={setTechnicalSkills} 
         />;
       case 7: 
         return <SimpleListStep 
