@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Home, BookOpen, Users, Calendar, User, Settings, LogOut, Edit, Phone, MapPin, Award, CheckCircle2, CircleDashed, Video, PlusCircle, Star, UserPlus, BookText, School, UsersRound, ParentChild, ChevronLeft } from "lucide-react";
+import { Home, BookOpen, Users, Calendar, User, Settings, LogOut, Edit, Phone, MapPin, Award, CheckCircle2, CircleDashed, Video, PlusCircle, Star, UserPlus, BookText, School, UsersRound, UserRound, ChevronLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import TeacherProfileForm from "@/components/teacher/TeacherProfileForm";
@@ -967,7 +967,7 @@ const TeacherDashboard = () => {
                         Teaching Team
                       </TabsTrigger>
                       <TabsTrigger value="students" className="flex items-center">
-                        <ParentChild className="h-4 w-4 mr-2" />
+                        <UserRound className="h-4 w-4 mr-2" />
                         Parents & Students
                       </TabsTrigger>
                     </TabsList>
@@ -1097,7 +1097,7 @@ const TeacherDashboard = () => {
                         </div>
                         
                         <div className="bg-gray-50 border rounded-md p-8 text-center">
-                          <ParentChild className="h-12 w-12 mx-auto text-gray-400" />
+                          <UserRound className="h-12 w-12 mx-auto text-gray-400" />
                           <h3 className="mt-4 text-lg font-medium">No Students Enrolled</h3>
                           <p className="mt-2 text-gray-500 max-w-md mx-auto">
                             Invite parents and students to enroll in this class.
