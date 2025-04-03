@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -14,7 +13,7 @@ import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { Calendar, Users, BookOpen, ScrollText, PlusCircle, Trash2, UserPlus } from "lucide-react";
+import { Calendar, Users, BookOpen, ScrollText, PlusCircle, Trash2, UserPlus, BookText, School } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { 
   TEACHING_STRATEGIES 
@@ -24,11 +23,17 @@ import {
 } from "@/components/teacher/professional-profile/utils/methodologyUtils";
 
 const classSchema = z.object({
-  title: z.string().min(3, { message: "Class title must be at least 3 characters" }),
   type: z.enum(["academic", "afterschool"]),
-  description: z.string().min(10, { message: "Description must be at least 10 characters" }),
+  title: z.string().min(3, { message: "Class title must be at least 3 characters" }),
   subject: z.string().min(1, { message: "Subject is required" }),
   gradeLevel: z.string().min(1, { message: "Grade level is required" }),
+  summary: z.string().min(10, { message: "Class summary must be at least 10 characters" }).max(200, { message: "Class summary must be at most 200 characters" }),
+  description: z.string().min(10, { message: "Detailed description must be at least 10 characters" }),
+  objectives: z.string().optional(),
+  assessmentMethods: z.string().optional(),
+  technicalRequirements: z.string().optional(),
+  materialsRequired: z.string().optional(),
+  commitmentRequired: z.string().optional(),
   methodology: z.string().optional(),
   strategy: z.string().optional(),
   maxStudents: z.coerce.number().min(1, { message: "Class must have at least 1 student" }),
@@ -54,11 +59,17 @@ const CreateClassForm = ({ onSubmit, onCancel }: CreateClassFormProps) => {
   const form = useForm<ClassFormValues>({
     resolver: zodResolver(classSchema),
     defaultValues: {
-      title: "",
       type: "academic",
-      description: "",
+      title: "",
       subject: "",
       gradeLevel: "",
+      summary: "",
+      description: "",
+      objectives: "",
+      assessmentMethods: "",
+      technicalRequirements: "",
+      materialsRequired: "",
+      commitmentRequired: "",
       maxStudents: 20,
       isPublic: true,
       hasCohorts: false,
@@ -142,143 +153,276 @@ const CreateClassForm = ({ onSubmit, onCancel }: CreateClassFormProps) => {
             <form onSubmit={form.handleSubmit(handleSubmitForm)}>
               <TabsContent value="basic" className="space-y-6">
                 <div className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <FormField
-                      control={form.control}
-                      name="title"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Class Title</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Enter class title" {...field} />
-                          </FormControl>
-                          <FormDescription>
-                            Give your class a catchy, descriptive title
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="type"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Class Type</FormLabel>
-                          <Select 
-                            onValueChange={field.onChange} 
-                            defaultValue={field.value}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select class type" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="academic">Academic</SelectItem>
-                              <SelectItem value="afterschool">After School</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormDescription>
-                            Academic classes follow curriculum, after-school are extracurricular
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
                   <FormField
                     control={form.control}
-                    name="description"
+                    name="type"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Class Description</FormLabel>
-                        <FormControl>
-                          <Textarea 
-                            placeholder="Describe what students will learn in this class..." 
-                            className="min-h-32"
-                            {...field} 
-                          />
-                        </FormControl>
+                        <FormLabel>Class Type</FormLabel>
+                        <Select 
+                          onValueChange={field.onChange} 
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select class type" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="academic">Academic</SelectItem>
+                            <SelectItem value="afterschool">After School</SelectItem>
+                          </SelectContent>
+                        </Select>
                         <FormDescription>
-                          Provide a detailed description of the class objectives and outcomes
+                          Academic classes follow curriculum, after-school are extracurricular
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <FormField
-                      control={form.control}
-                      name="subject"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Subject</FormLabel>
-                          <Select 
-                            onValueChange={field.onChange}
-                            defaultValue={field.value}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select subject" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {classType === "academic" ? (
-                                <>
-                                  <SelectItem value="mathematics">Mathematics</SelectItem>
-                                  <SelectItem value="english">English</SelectItem>
-                                  <SelectItem value="science">Science</SelectItem>
-                                  <SelectItem value="social_studies">Social Studies</SelectItem>
-                                  <SelectItem value="languages">Languages</SelectItem>
-                                </>
-                              ) : (
-                                <>
-                                  <SelectItem value="art">Art & Crafts</SelectItem>
-                                  <SelectItem value="music">Music</SelectItem>
-                                  <SelectItem value="sports">Sports & Physical Education</SelectItem>
-                                  <SelectItem value="coding">Coding & Technology</SelectItem>
-                                  <SelectItem value="drama">Drama & Theatre</SelectItem>
-                                </>
-                              )}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                  <FormField
+                    control={form.control}
+                    name="title"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Class Title</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter a catchy title for your class" {...field} />
+                        </FormControl>
+                        <FormDescription>
+                          Give your class a catchy, descriptive title
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                    <FormField
-                      control={form.control}
-                      name="gradeLevel"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Grade Level</FormLabel>
-                          <Select 
-                            onValueChange={field.onChange}
-                            defaultValue={field.value}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select grade level" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="elementary_1_3">Elementary (Grades 1-3)</SelectItem>
-                              <SelectItem value="elementary_4_6">Elementary (Grades 4-6)</SelectItem>
-                              <SelectItem value="middle_school">Middle School (Grades 7-8)</SelectItem>
-                              <SelectItem value="high_school">High School (Grades 9-12)</SelectItem>
-                              <SelectItem value="all_ages">All Ages</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
+                  <FormField
+                    control={form.control}
+                    name="subject"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Subject</FormLabel>
+                        <Select 
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select subject" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {classType === "academic" ? (
+                              <>
+                                <SelectItem value="mathematics">Mathematics</SelectItem>
+                                <SelectItem value="english">English</SelectItem>
+                                <SelectItem value="science">Science</SelectItem>
+                                <SelectItem value="social_studies">Social Studies</SelectItem>
+                                <SelectItem value="languages">Languages</SelectItem>
+                              </>
+                            ) : (
+                              <>
+                                <SelectItem value="art">Art & Crafts</SelectItem>
+                                <SelectItem value="music">Music</SelectItem>
+                                <SelectItem value="sports">Sports & Physical Education</SelectItem>
+                                <SelectItem value="coding">Coding & Technology</SelectItem>
+                                <SelectItem value="drama">Drama & Theatre</SelectItem>
+                              </>
+                            )}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="gradeLevel"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{classType === "academic" ? "Grade Level" : "Age Range"}</FormLabel>
+                        <Select 
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder={classType === "academic" ? "Select grade level" : "Select age range"} />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {classType === "academic" ? (
+                              <>
+                                <SelectItem value="elementary_1_3">Elementary (Grades 1-3)</SelectItem>
+                                <SelectItem value="elementary_4_6">Elementary (Grades 4-6)</SelectItem>
+                                <SelectItem value="middle_school">Middle School (Grades 7-8)</SelectItem>
+                                <SelectItem value="high_school">High School (Grades 9-12)</SelectItem>
+                              </>
+                            ) : (
+                              <>
+                                <SelectItem value="ages_5_7">Ages 5-7</SelectItem>
+                                <SelectItem value="ages_8_10">Ages 8-10</SelectItem>
+                                <SelectItem value="ages_11_13">Ages 11-13</SelectItem>
+                                <SelectItem value="ages_14_18">Ages 14-18</SelectItem>
+                              </>
+                            )}
+                            <SelectItem value="all_ages">All Ages</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="summary"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Class Summary</FormLabel>
+                        <FormControl>
+                          <Textarea 
+                            placeholder="Write a brief summary of your class (max 200 characters)..." 
+                            className="resize-none h-20"
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          A short summary that will appear in class listings
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="description"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Detailed Description</FormLabel>
+                        <FormControl>
+                          <Textarea 
+                            placeholder="Provide a comprehensive description of what your class covers..." 
+                            className="min-h-32"
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          Provide a detailed description of what students will learn
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="objectives"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Learning Objectives</FormLabel>
+                        <FormControl>
+                          <Textarea 
+                            placeholder="List the key learning objectives or skills students will gain..." 
+                            className="min-h-24"
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          What will students be able to do after completing this class?
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="assessmentMethods"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Assessment Methods</FormLabel>
+                        <FormControl>
+                          <Textarea 
+                            placeholder="Describe how you will assess student progress..." 
+                            className="min-h-24"
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          How will you evaluate student progress and learning?
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="technicalRequirements"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Technical Requirements</FormLabel>
+                        <FormControl>
+                          <Textarea 
+                            placeholder="List any technical requirements needed (internet speed, software, etc.)..." 
+                            className="min-h-24"
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          What technical setup do students need for this class?
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="materialsRequired"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Materials Required</FormLabel>
+                        <FormControl>
+                          <Textarea 
+                            placeholder="List any materials students will need to participate..." 
+                            className="min-h-24"
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          What supplies or materials should students have ready?
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="commitmentRequired"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Commitment Required</FormLabel>
+                        <FormControl>
+                          <Textarea 
+                            placeholder="Describe the time commitment needed (days/weeks/months)..." 
+                            className="min-h-24"
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          How long will this class run? What time commitment is expected?
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <FormField
