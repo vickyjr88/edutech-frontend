@@ -9,6 +9,7 @@ import TeacherProfileForm from "@/components/teacher/TeacherProfileForm";
 import TeacherProfessionalProfileForm from "@/components/teacher/TeacherProfessionalProfileForm";
 import ClassSetupForm from "@/components/teacher/ClassSetupForm";
 import CreateClassForm from "@/components/teacher/CreateClassForm";
+import EnrollStudentsPage from "@/components/teacher/enrollment/EnrollStudentsPage";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Json } from "@/integrations/supabase/types";
@@ -63,6 +64,7 @@ const TeacherDashboard = () => {
   const [classes, setClasses] = useState([]);
   const [selectedClass, setSelectedClass] = useState<any>(null);
   const [activeClassTab, setActiveClassTab] = useState("basic");
+  const [showEnrollStudents, setShowEnrollStudents] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -324,6 +326,12 @@ const TeacherDashboard = () => {
     setActiveTab("classes");
   };
 
+  const handleEnrollStudents = (classData?: any) => {
+    setSelectedClass(classData || null);
+    setShowEnrollStudents(true);
+    setActiveTab("enrollment");
+  };
+
   const renderProfileView = () => {
     if (!profileData) return null;
     
@@ -460,7 +468,7 @@ const TeacherDashboard = () => {
           <button 
             onClick={() => setActiveTab("students")}
             className={`flex items-center px-4 py-3 text-sm font-medium rounded-md w-full text-left ${
-              activeTab === "students" 
+              activeTab === "students" || activeTab === "enrollment"
                 ? "bg-kidato-light-blue text-kidato-blue" 
                 : "text-gray-700 hover:bg-gray-100"
             }`}
@@ -511,6 +519,7 @@ const TeacherDashboard = () => {
                activeTab === "classes" ? (showCreateClassForm ? "Create New Class" : "My Classes") :
                activeTab === "viewClass" ? "Class Details" :
                activeTab === "students" ? "Students" :
+               activeTab === "enrollment" ? "Enroll Students" :
                activeTab === "schedule" ? "Schedule" : 
                isEditing ? "Update Your Profile" : 
                showProfessionalForm ? "Complete Professional Profile" :
@@ -761,6 +770,7 @@ const TeacherDashboard = () => {
                               <Button 
                                 className="mt-2 bg-purple-600 hover:bg-purple-700 text-white"
                                 size="sm"
+                                onClick={() => handleEnrollStudents()}
                               >
                                 <UserPlus className="mr-2 h-4 w-4" />
                                 Enroll Students
@@ -903,17 +913,48 @@ const TeacherDashboard = () => {
             </div>
           )}
 
-          {!isLoading && activeTab === "students" && (
-            <div className="flex flex-col items-center justify-center bg-white rounded-lg border border-dashed p-12">
-              <Users className="h-16 w-16 text-gray-300 mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-1">No Students Yet</h3>
-              <p className="text-sm text-gray-500 mb-6 text-center max-w-md">
-                You haven't enrolled any students yet. Create a class first, then invite students to join.
-              </p>
-              <Button onClick={handleCreateClass}>
-                <PlusCircle className="mr-2 h-4 w-4" />
-                Create Your First Class
-              </Button>
+          {!isLoading && activeTab === "students" && !showEnrollStudents && (
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <h2 className="text-xl font-bold">My Students</h2>
+                <Button onClick={() => handleEnrollStudents()} className="flex items-center gap-2">
+                  <UserPlus className="h-4 w-4" />
+                  Enroll Students
+                </Button>
+              </div>
+              
+              <div className="flex flex-col items-center justify-center bg-white rounded-lg border border-dashed p-12">
+                <Users className="h-16 w-16 text-gray-300 mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-1">No Students Yet</h3>
+                <p className="text-sm text-gray-500 mb-6 text-center max-w-md">
+                  You haven't enrolled any students yet. Start enrolling students to your classes.
+                </p>
+                <Button onClick={() => handleEnrollStudents()} className="flex items-center gap-2">
+                  <UserPlus className="h-4 w-4" />
+                  Enroll Your First Student
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {!isLoading && activeTab === "enrollment" && (
+            <div className="space-y-6">
+              {selectedClass ? (
+                <>
+                  <div className="flex items-center gap-2 mb-4">
+                    <Button variant="outline" size="sm" onClick={() => {
+                      setShowEnrollStudents(false);
+                      setActiveTab("students");
+                    }}>
+                      <ChevronLeft className="h-4 w-4 mr-1" />
+                      Back to Students
+                    </Button>
+                  </div>
+                  <EnrollStudentsPage classId={selectedClass.id} className={selectedClass.title} />
+                </>
+              ) : (
+                <EnrollStudentsPage />
+              )}
             </div>
           )}
 
