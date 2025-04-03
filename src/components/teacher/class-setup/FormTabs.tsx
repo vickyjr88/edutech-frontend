@@ -35,9 +35,6 @@ const FormTabs = ({ onSubmit }: FormTabsProps) => {
     addCohort,
     removeCohort,
     updateCohort,
-    addStudentToCohort,
-    removeStudentFromCohort,
-    updateStudent,
     
     addLessonSchedule,
     removeLessonSchedule,

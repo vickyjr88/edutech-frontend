@@ -37,7 +37,7 @@ const CreateClassForm = ({ onSubmit, onCancel }: CreateClassFormProps) => {
         </p>
       </div>
       <div className="p-6 pt-0">
-        <ClassFormProvider onSubmit={onSubmit}>
+        <ClassFormProvider onSubmit={handleSubmitForm}>
           <FormTabs onSubmit={handleSubmitForm} />
         </ClassFormProvider>
       </div>
