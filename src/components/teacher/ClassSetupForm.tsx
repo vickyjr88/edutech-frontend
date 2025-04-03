@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChevronRight, ChevronLeft, Video, Users, Monitor, Calendar } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Form } from "@/components/ui/form";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -411,9 +410,9 @@ const ClassSetupForm = ({ onComplete, onCancel }: ClassSetupFormProps) => {
       </CardHeader>
       <CardContent>
         <ProgressIndicator />
-        <Form>
+        <div className="space-y-4">
           {renderCurrentStep()}
-        </Form>
+        </div>
       </CardContent>
       <CardFooter className="flex justify-between">
         <Button 

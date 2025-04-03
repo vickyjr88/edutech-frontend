@@ -2,11 +2,12 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Home, BookOpen, Users, Calendar, User, Settings, LogOut, Edit, Phone, MapPin, Award, CheckCircle2, CircleDashed, Video } from "lucide-react";
+import { Home, BookOpen, Users, Calendar, User, Settings, LogOut, Edit, Phone, MapPin, Award, CheckCircle2, CircleDashed, Video, PlusCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import TeacherProfileForm from "@/components/teacher/TeacherProfileForm";
 import TeacherProfessionalProfileForm from "@/components/teacher/TeacherProfessionalProfileForm";
 import ClassSetupForm from "@/components/teacher/ClassSetupForm";
+import CreateClassForm from "@/components/teacher/CreateClassForm";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Json } from "@/integrations/supabase/types";
@@ -56,6 +57,8 @@ const TeacherDashboard = () => {
   const [hasProfessionalProfile, setHasProfessionalProfile] = useState(false);
   const [showClassSetupForm, setShowClassSetupForm] = useState(false);
   const [hasClassesSetup, setHasClassesSetup] = useState(false);
+  const [showCreateClassForm, setShowCreateClassForm] = useState(false);
+  const [classes, setClasses] = useState([]);
 
   useEffect(() => {
     if (user) {
@@ -286,6 +289,27 @@ const TeacherDashboard = () => {
     setActiveTab("settings");
   };
 
+  const handleCreateClass = () => {
+    setShowCreateClassForm(true);
+    setActiveTab("classes");
+  };
+
+  const handleClassCreated = (classData: any) => {
+    setShowCreateClassForm(false);
+    // Simulate adding the new class to the classes array
+    setClasses([...classes, { id: Date.now(), ...classData }]);
+    toast({
+      title: "Class created successfully",
+      description: "Your new class is now ready for students to enroll.",
+    });
+    setActiveTab("dashboard");
+  };
+
+  const handleCancelClassCreation = () => {
+    setShowCreateClassForm(false);
+    setActiveTab("dashboard");
+  };
+
   const renderProfileView = () => {
     if (!profileData) return null;
     
@@ -470,7 +494,7 @@ const TeacherDashboard = () => {
           <div className="px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
             <h1 className="text-xl font-semibold text-gray-900">
               {activeTab === "dashboard" ? "Dashboard" :
-               activeTab === "classes" ? "My Classes" :
+               activeTab === "classes" ? (showCreateClassForm ? "Create New Class" : "My Classes") :
                activeTab === "students" ? "Students" :
                activeTab === "schedule" ? "Schedule" : 
                isEditing ? "Update Your Profile" : 
@@ -523,6 +547,15 @@ const TeacherDashboard = () => {
               <ClassSetupForm
                 onComplete={handleCompleteClassSetup}
                 onCancel={handleCancelClassSetup}
+              />
+            </div>
+          )}
+
+          {!isLoading && activeTab === "classes" && showCreateClassForm && (
+            <div className="max-w-4xl mx-auto">
+              <CreateClassForm
+                onSubmit={handleClassCreated}
+                onCancel={handleCancelClassCreation}
               />
             </div>
           )}
@@ -658,7 +691,7 @@ const TeacherDashboard = () => {
                               }
                             </div>
                             <div>
-                              <p className="font-medium">Step 3: Create Your First Class</p>
+                              <p className="font-medium">Step 3: Classroom Setup</p>
                               <p className="text-sm text-blue-700">
                                 {hasClassesSetup ? 
                                   "Complete! You've set up your classroom settings." :
@@ -679,11 +712,33 @@ const TeacherDashboard = () => {
                           
                           <div className="flex items-start gap-3">
                             <div className="flex-shrink-0 h-7 w-7 rounded-full bg-gray-100 flex items-center justify-center">
-                              <CircleDashed className="h-4 w-4 text-gray-400" />
+                              {hasClassesSetup ? 
+                                (classes.length > 0 ? 
+                                  <CheckCircle2 className="h-4 w-4 text-green-600" /> : 
+                                  <CircleDashed className="h-4 w-4 text-blue-600" />) : 
+                                <CircleDashed className="h-4 w-4 text-gray-400" />
+                              }
                             </div>
                             <div>
-                              <p className="font-medium text-gray-600">Step 4: Get Student Enrollments</p>
-                              <p className="text-sm text-gray-500">Start teaching and earning income.</p>
+                              <p className="font-medium text-gray-600">Step 4: Create Your First Class</p>
+                              <p className="text-sm text-gray-500">
+                                {hasClassesSetup ? 
+                                  (classes.length > 0 ? 
+                                    "Complete! You've created your first class." : 
+                                    "Create your first class to start teaching.") : 
+                                  "Start teaching and earning income."
+                                }
+                              </p>
+                              {hasClassesSetup && classes.length === 0 && (
+                                <Button 
+                                  className="mt-2 bg-blue-600 hover:bg-blue-700 text-white"
+                                  size="sm"
+                                  onClick={handleCreateClass}
+                                >
+                                  <PlusCircle className="mr-2 h-4 w-4" />
+                                  Create First Class
+                                </Button>
+                              )}
                             </div>
                           </div>
                         </div>
@@ -699,8 +754,18 @@ const TeacherDashboard = () => {
                     <CardTitle className="text-lg">Classes</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-3xl font-bold">0</p>
+                    <p className="text-3xl font-bold">{classes.length}</p>
                     <p className="text-sm text-gray-500">Active classes</p>
+                    {hasClassesSetup && (
+                      <Button 
+                        className="mt-4 w-full" 
+                        variant="outline"
+                        onClick={handleCreateClass}
+                      >
+                        <PlusCircle className="mr-2 h-4 w-4" />
+                        Create New Class
+                      </Button>
+                    )}
                   </CardContent>
                 </Card>
                 <Card>
@@ -725,7 +790,75 @@ const TeacherDashboard = () => {
             </div>
           )}
 
-          {!isLoading && (activeTab === "classes" || activeTab === "students" || activeTab === "schedule") && !hasProfile && (
+          {!isLoading && activeTab === "classes" && !showCreateClassForm && (
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <h2 className="text-xl font-bold">My Classes</h2>
+                {hasClassesSetup && (
+                  <Button onClick={handleCreateClass}>
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Create New Class
+                  </Button>
+                )}
+              </div>
+              
+              {classes.length === 0 ? (
+                <div className="flex flex-col items-center justify-center bg-white rounded-lg border border-dashed p-12">
+                  <BookOpen className="h-16 w-16 text-gray-300 mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-1">No Classes Yet</h3>
+                  <p className="text-sm text-gray-500 mb-6 text-center max-w-md">
+                    You haven't created any classes yet. Create your first class to start teaching and accepting students.
+                  </p>
+                  {hasClassesSetup ? (
+                    <Button onClick={handleCreateClass}>
+                      <PlusCircle className="mr-2 h-4 w-4" />
+                      Create Your First Class
+                    </Button>
+                  ) : (
+                    <Button onClick={handleSetupClassSettings}>
+                      Set Up Your Classroom First
+                    </Button>
+                  )}
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {classes.map((classItem: any) => (
+                    <Card key={classItem.id}>
+                      <CardHeader>
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <CardTitle>{classItem.title}</CardTitle>
+                            <CardDescription>
+                              {classItem.type === "academic" ? "Academic" : "After School"} - {classItem.subject}
+                            </CardDescription>
+                          </div>
+                          <div className="px-2 py-1 rounded-full text-xs uppercase font-semibold bg-blue-100 text-blue-800">
+                            New
+                          </div>
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-sm text-gray-700 line-clamp-3 mb-4">
+                          {classItem.description}
+                        </p>
+                        <div className="flex justify-between text-sm text-gray-500">
+                          <span className="flex items-center">
+                            <Users className="mr-1 h-4 w-4" /> 
+                            0/{classItem.maxStudents}
+                          </span>
+                          <span>
+                            Grade: {classItem.gradeLevel}
+                          </span>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {!isLoading && (activeTab === "students" || activeTab === "schedule") && !hasProfile && (
             <div className="flex flex-col items-center justify-center h-64">
               <div className="text-center">
                 <h3 className="text-lg font-medium text-gray-900">Complete your profile first</h3>
@@ -745,7 +878,7 @@ const TeacherDashboard = () => {
             </div>
           )}
 
-          {!isLoading && (activeTab === "classes" || activeTab === "students" || activeTab === "schedule") && hasProfile && (
+          {!isLoading && (activeTab === "students" || activeTab === "schedule") && hasProfile && (
             <div className="flex flex-col items-center justify-center h-64">
               <div className="text-center">
                 <h3 className="text-lg font-medium text-gray-900">Coming Soon</h3>
@@ -758,7 +891,3 @@ const TeacherDashboard = () => {
         </main>
       </div>
     </div>
-  );
-};
-
-export default TeacherDashboard;
