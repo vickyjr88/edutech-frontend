@@ -14,7 +14,7 @@ import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { Calendar, Users, BookOpen, ScrollText, PlusCircle, Trash2, UserPlus, BookText, School } from "lucide-react";
+import { Calendar, Users, BookOpen, ScrollText, PlusCircle, Trash2, UserPlus, BookText, School, FileText } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { 
   TEACHING_STRATEGIES 
@@ -41,6 +41,13 @@ const classSchema = z.object({
   isPublic: z.boolean().default(true),
   hasCohorts: z.boolean().default(false),
   hasTeamTeaching: z.boolean().default(false),
+  lessonPlans: z.array(z.object({
+    id: z.string(),
+    title: z.string().optional(),
+    description: z.string().optional(),
+    duration: z.string().optional(),
+    resources: z.string().optional(),
+  })).default([]),
 });
 
 type ClassFormValues = z.infer<typeof classSchema>;
@@ -75,12 +82,14 @@ const CreateClassForm = ({ onSubmit, onCancel }: CreateClassFormProps) => {
       isPublic: true,
       hasCohorts: false,
       hasTeamTeaching: false,
+      lessonPlans: [],
     },
   });
 
   const classType = form.watch("type");
   const hasCohorts = form.watch("hasCohorts");
   const hasTeamTeaching = form.watch("hasTeamTeaching");
+  const lessonPlans = form.watch("lessonPlans");
 
   const handleSubmitForm = (values: ClassFormValues) => {
     setIsSubmitting(true);
@@ -126,6 +135,24 @@ const CreateClassForm = ({ onSubmit, onCancel }: CreateClassFormProps) => {
     ));
   };
 
+  const addLessonPlan = () => {
+    const newId = Date.now().toString();
+    const updatedLessonPlans = [...lessonPlans, { id: newId, title: "", description: "", duration: "", resources: "" }];
+    form.setValue("lessonPlans", updatedLessonPlans);
+  };
+
+  const removeLessonPlan = (id: string) => {
+    const updatedLessonPlans = lessonPlans.filter(plan => plan.id !== id);
+    form.setValue("lessonPlans", updatedLessonPlans);
+  };
+
+  const updateLessonPlan = (id: string, field: "title" | "description" | "duration" | "resources", value: string) => {
+    const updatedLessonPlans = lessonPlans.map(plan => 
+      plan.id === id ? { ...plan, [field]: value } : plan
+    );
+    form.setValue("lessonPlans", updatedLessonPlans);
+  };
+
   return (
     <Card className="w-full max-w-4xl mx-auto">
       <CardHeader>
@@ -136,10 +163,14 @@ const CreateClassForm = ({ onSubmit, onCancel }: CreateClassFormProps) => {
       </CardHeader>
       <CardContent>
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid grid-cols-3 mb-8">
+          <TabsList className="grid grid-cols-4 mb-8">
             <TabsTrigger value="basic" className="flex items-center gap-2">
               <BookOpen className="h-4 w-4" />
               Basic Information
+            </TabsTrigger>
+            <TabsTrigger value="lessons" className="flex items-center gap-2">
+              <FileText className="h-4 w-4" />
+              Lesson Plans
             </TabsTrigger>
             <TabsTrigger value="cohorts" className="flex items-center gap-2">
               <Users className="h-4 w-4" />
@@ -591,6 +622,111 @@ const CreateClassForm = ({ onSubmit, onCancel }: CreateClassFormProps) => {
                   </div>
                   
                   <div className="flex justify-between pt-4">
+                    <Button type="button" variant="outline" onClick={() => setActiveTab("lessons")}>
+                      Next: Lesson Plans
+                    </Button>
+                  </div>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="lessons" className="space-y-6">
+                <div className="space-y-6">
+                  <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
+                    <h3 className="text-sm font-medium text-blue-800">Lesson Plans</h3>
+                    <p className="text-xs text-blue-700 mt-1">
+                      Create detailed lesson plans for your class. Each lesson plan should outline what students will learn and what activities they'll engage in.
+                    </p>
+                  </div>
+
+                  {lessonPlans.length === 0 ? (
+                    <div className="text-center py-8 border border-dashed rounded-md">
+                      <FileText className="h-12 w-12 mx-auto text-gray-400" />
+                      <h3 className="mt-2 text-sm font-medium text-gray-900">No lesson plans yet</h3>
+                      <p className="mt-1 text-sm text-gray-500">Get started by creating your first lesson plan</p>
+                      <Button
+                        type="button" 
+                        onClick={addLessonPlan}
+                        className="mt-4"
+                      >
+                        <PlusCircle className="mr-2 h-4 w-4" />
+                        Add First Lesson Plan
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {lessonPlans.map((plan, index) => (
+                        <div key={plan.id} className="border rounded-md p-4 space-y-4">
+                          <div className="flex justify-between items-center">
+                            <h3 className="text-sm font-medium">Lesson {index + 1}</h3>
+                            <Button 
+                              type="button" 
+                              variant="ghost" 
+                              size="sm" 
+                              onClick={() => removeLessonPlan(plan.id)}
+                              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                          <div className="space-y-4">
+                            <div className="space-y-2">
+                              <Label htmlFor={`lesson-title-${plan.id}`}>Lesson Title</Label>
+                              <Input 
+                                id={`lesson-title-${plan.id}`}
+                                value={plan.title}
+                                onChange={(e) => updateLessonPlan(plan.id, "title", e.target.value)}
+                                placeholder="Introduction to Fractions"
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor={`lesson-description-${plan.id}`}>Lesson Description</Label>
+                              <Textarea 
+                                id={`lesson-description-${plan.id}`}
+                                value={plan.description}
+                                onChange={(e) => updateLessonPlan(plan.id, "description", e.target.value)}
+                                placeholder="Describe what students will learn and activities they'll complete"
+                                className="min-h-24"
+                              />
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div className="space-y-2">
+                                <Label htmlFor={`lesson-duration-${plan.id}`}>Duration</Label>
+                                <Input 
+                                  id={`lesson-duration-${plan.id}`}
+                                  value={plan.duration}
+                                  onChange={(e) => updateLessonPlan(plan.id, "duration", e.target.value)}
+                                  placeholder="45 minutes"
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <Label htmlFor={`lesson-resources-${plan.id}`}>Resources & Materials</Label>
+                                <Input 
+                                  id={`lesson-resources-${plan.id}`}
+                                  value={plan.resources}
+                                  onChange={(e) => updateLessonPlan(plan.id, "resources", e.target.value)}
+                                  placeholder="Worksheets, videos, props, etc."
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                      <Button
+                        type="button" 
+                        variant="outline" 
+                        onClick={addLessonPlan}
+                        className="mt-2"
+                      >
+                        <PlusCircle className="mr-2 h-4 w-4" />
+                        Add Another Lesson Plan
+                      </Button>
+                    </div>
+                  )}
+                  
+                  <div className="flex justify-between pt-4">
+                    <Button type="button" variant="outline" onClick={() => setActiveTab("basic")}>
+                      Back: Basic Information
+                    </Button>
                     <Button type="button" variant="outline" onClick={() => setActiveTab("cohorts")}>
                       Next: Cohorts & Students
                     </Button>
@@ -715,8 +851,8 @@ const CreateClassForm = ({ onSubmit, onCancel }: CreateClassFormProps) => {
                 )}
 
                 <div className="flex justify-between pt-4">
-                  <Button type="button" variant="outline" onClick={() => setActiveTab("basic")}>
-                    Back: Basic Information
+                  <Button type="button" variant="outline" onClick={() => setActiveTab("lessons")}>
+                    Back: Lesson Plans
                   </Button>
                   <Button type="button" variant="outline" onClick={() => setActiveTab("teaching")}>
                     Next: Teaching Team
