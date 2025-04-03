@@ -84,7 +84,9 @@ const LanguagesStep = ({ languages, setLanguages }: LanguagesStepProps) => {
         // Update existing language
         const updatedLanguage: LanguageItem = {
           id: editingId,
-          ...values
+          language: values.language, // Ensure language is provided
+          description: values.description,
+          isCertified: values.isCertified
         };
 
         const { success, error } = await updateLanguage(updatedLanguage);
@@ -107,7 +109,9 @@ const LanguagesStep = ({ languages, setLanguages }: LanguagesStepProps) => {
         // Add new language
         const newLanguage: LanguageItem = {
           id: "", // Will be set by the database
-          ...values
+          language: values.language, // Ensure language is provided
+          description: values.description,
+          isCertified: values.isCertified
         };
 
         const { success, id, error } = await saveLanguage(user.id, newLanguage);
