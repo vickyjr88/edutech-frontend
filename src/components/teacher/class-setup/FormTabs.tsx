@@ -35,6 +35,8 @@ const FormTabs = ({ onSubmit }: FormTabsProps) => {
     addCohort,
     removeCohort,
     updateCohort,
+    updateRepeatSchedule,
+    toggleDayOfWeek,
     
     addLessonSchedule,
     removeLessonSchedule,
@@ -100,6 +102,8 @@ const FormTabs = ({ onSubmit }: FormTabsProps) => {
               addCohort={addCohort}
               removeCohort={removeCohort}
               updateCohort={updateCohort}
+              updateRepeatSchedule={updateRepeatSchedule}
+              toggleDayOfWeek={toggleDayOfWeek}
               addLessonSchedule={addLessonSchedule}
               removeLessonSchedule={removeLessonSchedule}
               updateLessonSchedule={updateLessonSchedule}

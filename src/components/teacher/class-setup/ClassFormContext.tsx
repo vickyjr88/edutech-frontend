@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, ReactNode } from "react";
 import { useForm, UseFormReturn } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -42,7 +43,8 @@ interface ClassFormContextType {
   calculateNumberOfLessons: (startDate: Date | null, endDate: Date | null, repeatSchedule: RepeatSchedule) => number;
 };
 
-const ClassFormContext = createContext<ClassFormContextType | undefined>(undefined);
+// Export the context directly
+export const ClassFormContext = createContext<ClassFormContextType | undefined>(undefined);
 
 export const useClassForm = () => {
   const context = useContext(ClassFormContext);
@@ -331,7 +333,7 @@ export const ClassFormProvider = ({ children, onSubmit }: ClassFormProviderProps
     }));
   };
 
-  const contextValue = {
+  const contextValue: ClassFormContextType = {
     form,
     activeTab,
     setActiveTab,
