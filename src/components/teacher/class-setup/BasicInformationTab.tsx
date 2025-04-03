@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { BookOpen } from "lucide-react";
+import { BookOpen, List } from "lucide-react";
 import { UseFormReturn } from "react-hook-form";
 import { ClassFormValues } from "../CreateClassForm";
 
@@ -196,44 +196,54 @@ const BasicInformationTab = ({ form, onNextTab }: BasicInformationTabProps) => {
           </FormItem>
         )}
       />
+      
+      <div className="space-y-4">
+        <div className="flex items-center gap-2">
+          <List className="h-5 w-5 text-muted-foreground" />
+          <h3 className="text-lg font-medium">Technical Requirements</h3>
+        </div>
+        <FormField
+          control={form.control}
+          name="technicalRequirements"
+          render={({ field }) => (
+            <FormItem>
+              <Textarea
+                placeholder="Enter each technical requirement on a new line (internet, devices, etc.)"
+                className="resize-none"
+                {...field}
+              />
+              <FormDescription>
+                List any technical requirements students will need, one per line.
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </div>
 
-      <FormField
-        control={form.control}
-        name="technicalRequirements"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Technical Requirements</FormLabel>
-            <Textarea
-              placeholder="Describe any technical requirements (internet, devices, etc.)"
-              className="resize-none"
-              {...field}
-            />
-            <FormDescription>
-              List any technical requirements students will need.
-            </FormDescription>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-
-      <FormField
-        control={form.control}
-        name="materialsRequired"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Materials Required</FormLabel>
-            <Textarea
-              placeholder="List any materials students will need"
-              className="resize-none"
-              {...field}
-            />
-            <FormDescription>
-              List any materials students will need for the class.
-            </FormDescription>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
+      <div className="space-y-4">
+        <div className="flex items-center gap-2">
+          <List className="h-5 w-5 text-muted-foreground" />
+          <h3 className="text-lg font-medium">Materials Required</h3>
+        </div>
+        <FormField
+          control={form.control}
+          name="materialsRequired"
+          render={({ field }) => (
+            <FormItem>
+              <Textarea
+                placeholder="Enter each required material on a new line"
+                className="resize-none"
+                {...field}
+              />
+              <FormDescription>
+                List any materials students will need for the class, one per line.
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </div>
 
       <FormField
         control={form.control}
@@ -254,7 +264,9 @@ const BasicInformationTab = ({ form, onNextTab }: BasicInformationTabProps) => {
         )}
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="space-y-4 border rounded-lg p-4">
+        <h3 className="text-lg font-medium">Class Settings</h3>
+        
         <FormField
           control={form.control}
           name="isPublic"
@@ -263,7 +275,7 @@ const BasicInformationTab = ({ form, onNextTab }: BasicInformationTabProps) => {
               <div className="space-y-0.5">
                 <FormLabel className="text-base">Public Class</FormLabel>
                 <FormDescription>
-                  Make this class visible to all students.
+                  Make this class visible to all students in the catalog. If disabled, the class will only be visible to invited students.
                 </FormDescription>
               </div>
               <FormControl>
@@ -284,7 +296,7 @@ const BasicInformationTab = ({ form, onNextTab }: BasicInformationTabProps) => {
               <div className="space-y-0.5">
                 <FormLabel className="text-base">Multiple Cohorts</FormLabel>
                 <FormDescription>
-                  Enable multiple cohorts for this class.
+                  Enable multiple cohorts to run different sessions of this class with different schedules and groups of students.
                 </FormDescription>
               </div>
               <FormControl>
@@ -305,7 +317,7 @@ const BasicInformationTab = ({ form, onNextTab }: BasicInformationTabProps) => {
               <div className="space-y-0.5">
                 <FormLabel className="text-base">Team Teaching</FormLabel>
                 <FormDescription>
-                  Enable team teaching for this class.
+                  Enable team teaching to collaborate with other teachers on this class. You'll be able to invite co-teachers in the Teaching Team tab.
                 </FormDescription>
               </div>
               <FormControl>
