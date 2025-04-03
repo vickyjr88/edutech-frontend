@@ -3,7 +3,14 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { 
+  Card, 
+  CardContent, 
+  CardDescription, 
+  CardFooter, 
+  CardHeader, 
+  CardTitle 
+} from "@/components/ui/card";
 import { 
   Form, 
   FormControl, 
@@ -266,14 +273,14 @@ const CreateClassForm = ({ onSubmit, onCancel }: CreateClassFormProps) => {
   };
 
   return (
-    <Card className="w-full max-w-4xl mx-auto">
-      <CardHeader>
-        <CardTitle>Create a New Class</CardTitle>
-        <CardDescription>
+    <div className="w-full max-w-4xl mx-auto border rounded-lg shadow-sm bg-card text-card-foreground">
+      <div className="flex flex-col space-y-1.5 p-6">
+        <h3 className="text-2xl font-semibold leading-none tracking-tight">Create a New Class</h3>
+        <p className="text-sm text-muted-foreground">
           Set up your class details, schedule, and teaching team
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
+        </p>
+      </div>
+      <div className="p-6 pt-0">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid grid-cols-4 mb-8">
             <TabsTrigger value="basic" className="flex items-center gap-2">
@@ -295,6 +302,8 @@ const CreateClassForm = ({ onSubmit, onCancel }: CreateClassFormProps) => {
           </TabsList>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(handleSubmitForm)}>
+              
+              
               <TabsContent value="basic" className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <FormField
@@ -838,11 +847,3 @@ const CreateClassForm = ({ onSubmit, onCancel }: CreateClassFormProps) => {
                                     <Label htmlFor={`cohort-sibling-discount-${cohort.id}`}>Sibling Discount (%)</Label>
                                     <Input
                                       id={`cohort-sibling-discount-${cohort.id}`}
-                                      type="number"
-                                      min="0"
-                                      max="100"
-                                      value={cohort.siblingDiscount}
-                                      onChange={(e) => updateCohort(cohort.id, "siblingDiscount", e.target.value)}
-                                      placeholder="0"
-                                    />
-                                  </div>
