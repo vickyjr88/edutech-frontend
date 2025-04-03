@@ -17,7 +17,9 @@ import {
   StrategiesStep,
   MethodologiesStep,
   StrategyItem,
-  MethodologyItem
+  MethodologyItem,
+  AcademicSubjectItem,
+  AfterSchoolSubjectItem
 } from "./professional-profile";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -69,8 +71,8 @@ const TeacherProfessionalProfileForm = ({
   }]);
   const [strategies, setStrategies] = useState<StrategyItem[]>([]);
   const [methodologies, setMethodologies] = useState<MethodologyItem[]>([]);
-  const [academicSubjects, setAcademicSubjects] = useState<FormItem[]>([{ id: "1", value: "" }]);
-  const [afterSchoolSubjects, setAfterSchoolSubjects] = useState<FormItem[]>([{ id: "1", value: "" }]);
+  const [academicSubjects, setAcademicSubjects] = useState<AcademicSubjectItem[]>([]);
+  const [afterSchoolSubjects, setAfterSchoolSubjects] = useState<AfterSchoolSubjectItem[]>([]);
   const [technicalSkills, setTechnicalSkills] = useState<FormItem[]>([{ id: "1", value: "" }]);
   const [languages, setLanguages] = useState<FormItem[]>([{ id: "1", value: "" }]);
   const [certifications, setCertifications] = useState<FormItem[]>([{ id: "1", value: "", details: "" }]);

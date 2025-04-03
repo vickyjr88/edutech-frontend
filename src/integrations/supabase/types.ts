@@ -9,6 +9,84 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      teacher_academic_subjects: {
+        Row: {
+          created_at: string
+          curriculum: string
+          description: string | null
+          grade: string
+          id: string
+          is_certified: boolean | null
+          proficiency_level: string
+          subject: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          curriculum: string
+          description?: string | null
+          grade: string
+          id?: string
+          is_certified?: boolean | null
+          proficiency_level: string
+          subject: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          curriculum?: string
+          description?: string | null
+          grade?: string
+          id?: string
+          is_certified?: boolean | null
+          proficiency_level?: string
+          subject?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      teacher_afterschool_subjects: {
+        Row: {
+          age_range: string
+          created_at: string
+          description: string | null
+          gender: string | null
+          id: string
+          is_certified: boolean | null
+          religion: string | null
+          subject: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          age_range: string
+          created_at?: string
+          description?: string | null
+          gender?: string | null
+          id?: string
+          is_certified?: boolean | null
+          religion?: string | null
+          subject: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          age_range?: string
+          created_at?: string
+          description?: string | null
+          gender?: string | null
+          id?: string
+          is_certified?: boolean | null
+          religion?: string | null
+          subject?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       teacher_education: {
         Row: {
           created_at: string

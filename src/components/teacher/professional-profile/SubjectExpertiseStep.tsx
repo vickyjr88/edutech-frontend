@@ -1,17 +1,16 @@
 
-import { SimpleListStep } from "./index";
-
-type FormItem = {
-  id: string;
-  value: string;
-  details?: string;
-};
+import { useState } from "react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import AcademicSubjectsStep from "./AcademicSubjectsStep";
+import AfterSchoolSubjectsStep from "./AfterSchoolSubjectsStep";
+import { AcademicSubjectItem } from "./utils/academicSubjectUtils";
+import { AfterSchoolSubjectItem } from "./utils/afterSchoolSubjectUtils";
 
 type SubjectExpertiseStepProps = {
-  academicSubjects: FormItem[];
-  setAcademicSubjects: React.Dispatch<React.SetStateAction<FormItem[]>>;
-  afterSchoolSubjects: FormItem[];
-  setAfterSchoolSubjects: React.Dispatch<React.SetStateAction<FormItem[]>>;
+  academicSubjects: AcademicSubjectItem[];
+  setAcademicSubjects: React.Dispatch<React.SetStateAction<AcademicSubjectItem[]>>;
+  afterSchoolSubjects: AfterSchoolSubjectItem[];
+  setAfterSchoolSubjects: React.Dispatch<React.SetStateAction<AfterSchoolSubjectItem[]>>;
 };
 
 const SubjectExpertiseStep = ({ 
@@ -20,28 +19,27 @@ const SubjectExpertiseStep = ({
   afterSchoolSubjects, 
   setAfterSchoolSubjects 
 }: SubjectExpertiseStepProps) => {
+  const [activeTab, setActiveTab] = useState("academic");
+
   return (
-    <div className="space-y-6">
-      <div>
-        <h4 className="font-medium text-sm mb-3">Academic Subjects</h4>
-        <SimpleListStep
-          items={academicSubjects} 
-          setItems={setAcademicSubjects} 
-          label="Academic Subject" 
-          placeholder="e.g., Mathematics, Science, English"
+    <Tabs defaultValue="academic" value={activeTab} onValueChange={setActiveTab} className="w-full">
+      <TabsList className="grid w-full grid-cols-2">
+        <TabsTrigger value="academic">Academic Subjects</TabsTrigger>
+        <TabsTrigger value="afterschool">After-School Subjects</TabsTrigger>
+      </TabsList>
+      <TabsContent value="academic" className="mt-4">
+        <AcademicSubjectsStep 
+          subjects={academicSubjects}
+          setSubjects={setAcademicSubjects}
         />
-      </div>
-      
-      <div>
-        <h4 className="font-medium text-sm mb-3">After-School Subjects</h4>
-        <SimpleListStep
-          items={afterSchoolSubjects} 
-          setItems={setAfterSchoolSubjects} 
-          label="After-School Subject" 
-          placeholder="e.g., Art, Music, Coding"
+      </TabsContent>
+      <TabsContent value="afterschool" className="mt-4">
+        <AfterSchoolSubjectsStep 
+          subjects={afterSchoolSubjects}
+          setSubjects={setAfterSchoolSubjects}
         />
-      </div>
-    </div>
+      </TabsContent>
+    </Tabs>
   );
 };
 
