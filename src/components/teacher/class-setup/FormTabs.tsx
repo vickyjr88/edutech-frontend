@@ -1,7 +1,7 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BookOpen, FileText, Users, ScrollText } from "lucide-react";
+import { BookOpen, FileText, Users, ScrollText, Eye } from "lucide-react";
 import { Form } from "@/components/ui/form";
 import { useClassForm } from "./ClassFormContext";
 
@@ -10,6 +10,7 @@ import BasicInformationTab from "./BasicInformationTab";
 import LessonPlansTab from "./LessonPlansTab";
 import CohortsTab from "./CohortsTab";
 import TeachingTeamTab from "./TeachingTeamTab";
+import PreviewTab from "./PreviewTab";
 
 interface FormTabsProps {
   onSubmit: (values: any) => void;
@@ -46,14 +47,23 @@ const FormTabs = ({ onSubmit }: FormTabsProps) => {
     removeTeamMember,
     updateTeamMember,
     calculateNumberOfLessons,
-    calculateEndDate
+    calculateEndDate,
+    
+    checkClassCompleteness
   } = useClassForm();
 
   const hasTeamTeaching = form.watch("hasTeamTeaching");
+  
+  // Check if the has cohorts toggle should be automatically set
+  useEffect(() => {
+    if (cohorts.length > 1) {
+      form.setValue("hasCohorts", true);
+    }
+  }, [cohorts.length, form]);
 
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-      <TabsList className="grid grid-cols-4 mb-8">
+      <TabsList className="grid grid-cols-5 mb-8">
         <TabsTrigger value="basic" className="flex items-center gap-2">
           <BookOpen className="h-4 w-4" />
           Basic Information
@@ -69,6 +79,10 @@ const FormTabs = ({ onSubmit }: FormTabsProps) => {
         <TabsTrigger value="teaching" className="flex items-center gap-2">
           <ScrollText className="h-4 w-4" />
           Teaching Team
+        </TabsTrigger>
+        <TabsTrigger value="preview" className="flex items-center gap-2">
+          <Eye className="h-4 w-4" />
+          Preview
         </TabsTrigger>
       </TabsList>
       <Form {...form}>
@@ -117,12 +131,24 @@ const FormTabs = ({ onSubmit }: FormTabsProps) => {
             <TeachingTeamTab 
               form={form}
               onPreviousTab={() => handleNavigateTab("cohorts")}
+              onNextTab={() => handleNavigateTab("preview")}
               isSubmitting={isSubmitting}
               hasTeamTeaching={hasTeamTeaching}
               teamMembers={teamMembers}
               addTeamMember={addTeamMember}
               removeTeamMember={removeTeamMember}
               updateTeamMember={updateTeamMember}
+            />
+          </TabsContent>
+          
+          <TabsContent value="preview">
+            <PreviewTab 
+              form={form}
+              onPreviousTab={() => handleNavigateTab("teaching")}
+              isSubmitting={isSubmitting}
+              cohorts={cohorts}
+              teamMembers={teamMembers}
+              checkClassCompleteness={checkClassCompleteness}
             />
           </TabsContent>
         </form>

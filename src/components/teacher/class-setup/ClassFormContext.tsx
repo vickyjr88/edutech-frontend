@@ -1,9 +1,8 @@
-
 import React, { createContext, useContext, useState, ReactNode } from "react";
 import { useForm, UseFormReturn } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ClassFormValues, CohortData, TeamMember, classSchema, LessonSchedule, RepeatSchedule } from "./types";
-import { addDays, addWeeks } from "date-fns";
+import { addDays, addWeeks, parseISO, isAfter } from "date-fns";
 
 interface ClassFormContextType {
   form: UseFormReturn<ClassFormValues>;
@@ -43,6 +42,15 @@ interface ClassFormContextType {
   handleNavigateTab: (tab: string) => void;
   calculateNumberOfLessons: (startDate: Date | null, endDate: Date | null, repeatSchedule: RepeatSchedule) => number;
   calculateEndDate: (startDate: Date | null, numberOfLessons: number, repeatSchedule: RepeatSchedule) => Date | null;
+  
+  // Class completeness check
+  checkClassCompleteness: () => { 
+    isComplete: boolean; 
+    basicInfoComplete: boolean; 
+    hasMinLessonPlans: boolean; 
+    hasMinCohorts: boolean;
+    missingItems: string[];
+  };
 };
 
 // Export the context directly
@@ -95,6 +103,47 @@ export const ClassFormProvider = ({ children, onSubmit }: ClassFormProviderProps
   const handleNavigateTab = (tab: string) => {
     setActiveTab(tab);
   };
+  
+  const checkClassCompleteness = () => {
+    const formValues = form.getValues();
+    const missingItems: string[] = [];
+    
+    const requiredBasicFields = ['title', 'subject', 'description'];
+    const basicMissing = requiredBasicFields.filter(field => !formValues[field as keyof ClassFormValues]);
+    
+    if (formValues.type === 'academic' && !formValues.gradeLevel) {
+      basicMissing.push('gradeLevel');
+    } else if (formValues.type === 'afterschool' && !formValues.ageRange) {
+      basicMissing.push('ageRange');
+    }
+    
+    const basicInfoComplete = basicMissing.length === 0;
+    if (!basicInfoComplete) {
+      missingItems.push('Basic information (title, subject, description, etc.)');
+    }
+    
+    const futureLessonPlans = formValues.lessonPlans.filter(lesson => 
+      lesson.title && lesson.description
+    );
+    
+    const hasMinLessonPlans = futureLessonPlans.length >= 3;
+    if (!hasMinLessonPlans) {
+      missingItems.push(`At least 3 lesson plans (currently has ${futureLessonPlans.length})`);
+    }
+    
+    const hasMinCohorts = cohorts.length >= 1;
+    if (!hasMinCohorts) {
+      missingItems.push('At least one cohort');
+    }
+    
+    return {
+      isComplete: basicInfoComplete && hasMinLessonPlans && hasMinCohorts,
+      basicInfoComplete,
+      hasMinLessonPlans,
+      hasMinCohorts,
+      missingItems
+    };
+  };
 
   const calculateNumberOfLessons = (
     startDate: Date | null, 
@@ -139,10 +188,8 @@ export const ClassFormProvider = ({ children, onSubmit }: ClassFormProviderProps
     
     if (lessonsPerWeek === 0) return null;
     
-    // Calculate how many weeks we need to cover all lessons
     const weeksNeeded = Math.ceil(numberOfLessons / lessonsPerWeek) * repeatSchedule.repeatEvery;
     
-    // Add the weeks to the start date
     return addWeeks(startDate, weeksNeeded);
   };
 
@@ -184,10 +231,9 @@ export const ClassFormProvider = ({ children, onSubmit }: ClassFormProviderProps
       if (cohort.id === id) {
         const updatedCohort = { ...cohort, [field]: value };
         
-        // If the start date is being updated, recalculate the end date
         if (field === 'startDate') {
           updatedCohort.endDate = calculateEndDate(
-            value, // new start date
+            value,
             form.getValues().numberOfLessons,
             cohort.repeatSchedule
           );
@@ -204,7 +250,6 @@ export const ClassFormProvider = ({ children, onSubmit }: ClassFormProviderProps
       if (cohort.id === cohortId) {
         const updatedRepeatSchedule = { ...cohort.repeatSchedule, [field]: value };
         
-        // Recalculate end date based on the new repeat schedule
         const updatedEndDate = calculateEndDate(
           cohort.startDate,
           form.getValues().numberOfLessons,
@@ -235,7 +280,6 @@ export const ClassFormProvider = ({ children, onSubmit }: ClassFormProviderProps
             daysOfWeek: finalDays 
           };
           
-          // Recalculate end date with the updated days
           const updatedEndDate = calculateEndDate(
             cohort.startDate,
             form.getValues().numberOfLessons,
@@ -253,7 +297,6 @@ export const ClassFormProvider = ({ children, onSubmit }: ClassFormProviderProps
             daysOfWeek: [...daysOfWeek, day] 
           };
           
-          // Recalculate end date with the updated days
           const updatedEndDate = calculateEndDate(
             cohort.startDate,
             form.getValues().numberOfLessons,
@@ -403,7 +446,8 @@ export const ClassFormProvider = ({ children, onSubmit }: ClassFormProviderProps
     
     handleNavigateTab,
     calculateNumberOfLessons,
-    calculateEndDate
+    calculateEndDate,
+    checkClassCompleteness
   };
 
   return (

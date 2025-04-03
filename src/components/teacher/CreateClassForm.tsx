@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { ClassFormProvider } from "./class-setup/ClassFormContext";
 import { ClassFormValues } from "./class-setup/types";
