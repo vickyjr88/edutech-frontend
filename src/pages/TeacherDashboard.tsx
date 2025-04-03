@@ -12,6 +12,7 @@ import CreateClassForm from "@/components/teacher/CreateClassForm";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Json } from "@/integrations/supabase/types";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 interface TeacherProfileData {
   contact: {
@@ -873,7 +874,4 @@ const TeacherDashboard = () => {
                           <div>
                             <CardTitle>{classItem.title}</CardTitle>
                             <CardDescription>
-                              {classItem.type === "academic" ? "Academic" : "After School"} - {classItem.subject}
-                            </CardDescription>
-                          </div>
-                          <div className="px-2 py-1
+                              {classItem.type === "academic" ? "Academic" : "After School"} - {class
