@@ -97,7 +97,7 @@ export const LessonForm = ({
           <Label htmlFor={`lesson-title-${lesson.id}`}>Title</Label>
           <Input 
             id={`lesson-title-${lesson.id}`}
-            placeholder="Enter lesson title"
+            placeholder="Enter a descriptive lesson title"
             value={lesson.title || ""}
             onChange={(e) => onLessonUpdate(lesson.id, "title", e.target.value)}
           />
@@ -142,9 +142,10 @@ export const LessonForm = ({
       </div>
       <div className="space-y-2">
         <Label htmlFor={`lesson-description-${lesson.id}`}>Description</Label>
+        <p className="text-xs text-gray-500 mb-1">Describe the lesson content, learning objectives, and planned activities</p>
         <Textarea 
           id={`lesson-description-${lesson.id}`}
-          placeholder="Enter lesson description"
+          placeholder="Describe what students will learn and do in this lesson"
           className="resize-none"
           value={lesson.description || ""}
           onChange={(e) => onLessonUpdate(lesson.id, "description", e.target.value)}

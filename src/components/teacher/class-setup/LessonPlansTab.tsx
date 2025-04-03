@@ -103,7 +103,7 @@ const LessonPlansTab = ({
                     id={`lesson-title-${lessonPlan.id}`}
                     value={lessonPlan.title || ""}
                     onChange={(e) => updateLessonPlan(lessonPlan.id, "title", e.target.value)}
-                    placeholder="Enter lesson title"
+                    placeholder="Enter a descriptive title for this lesson"
                   />
                 </div>
                 <div>
@@ -112,7 +112,7 @@ const LessonPlansTab = ({
                     id={`lesson-duration-${lessonPlan.id}`}
                     value={lessonPlan.duration || ""}
                     onChange={(e) => updateLessonPlan(lessonPlan.id, "duration", e.target.value)}
-                    placeholder="e.g. 45 minutes"
+                    placeholder="e.g. 45 minutes, 1 hour, etc."
                   />
                 </div>
               </div>
@@ -122,22 +122,24 @@ const LessonPlansTab = ({
                   id={`lesson-description-${lessonPlan.id}`}
                   value={lessonPlan.description || ""}
                   onChange={(e) => updateLessonPlan(lessonPlan.id, "description", e.target.value)}
-                  placeholder="Enter lesson description"
+                  placeholder="Describe what students will learn in this lesson and the activities they'll complete"
                   className="min-h-[100px]"
                 />
               </div>
               <div>
                 <Label htmlFor={`resource-url-${lessonPlan.id}`}>Resource URL</Label>
+                <p className="text-xs text-gray-500 mb-1">Add links to external resources like videos, articles, or interactive content</p>
                 <Input
                   id={`resource-url-${lessonPlan.id}`}
                   value={lessonPlan.resourceUrl || ""}
                   onChange={(e) => updateLessonPlan(lessonPlan.id, "resourceUrl", e.target.value)}
-                  placeholder="Enter resource URL"
+                  placeholder="https://example.com/resource"
                 />
               </div>
 
               <div>
                 <Label>Resource Files</Label>
+                <p className="text-xs text-gray-500 mb-1">Upload handouts, slides, worksheets or other materials for this lesson</p>
                 <FormFileUpload
                   files={lessonFileUploads[lessonPlan.id] || []}
                   onChange={(e) => handleLessonFileChange(lessonPlan.id, e)}

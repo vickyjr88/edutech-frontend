@@ -37,12 +37,16 @@ export const FileUploads = ({
   return (
     <div className="space-y-2 border-t pt-4 mt-4">
       <Label>Resource Files</Label>
+      <p className="text-xs text-gray-500 mb-2">
+        Upload PDFs, worksheets, slides, images or other materials that students will need for this lesson.
+        Files will be available for download by enrolled students.
+      </p>
       <FormFileUpload
         accept="*"
         multiple={true}
         onFilesSelected={handleFilesSelected}
-        label="Upload Documents, Images & Files"
-        description="Drag and drop files here, or click to choose files"
+        label="Upload Lesson Materials"
+        description="Drag and drop files here, or click to browse your files"
       />
       
       {files && files.length > 0 && (
