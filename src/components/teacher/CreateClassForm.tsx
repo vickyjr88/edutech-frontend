@@ -208,14 +208,14 @@ const CreateClassForm = ({ onSubmit, onCancel }: CreateClassFormProps) => {
   };
 
   return (
-    <Card className="w-full max-w-4xl mx-auto">
-      <CardHeader>
-        <CardTitle>Create a New Class</CardTitle>
-        <CardDescription>
+    <div className="w-full max-w-4xl mx-auto border rounded-lg shadow-sm bg-card text-card-foreground">
+      <div className="flex flex-col space-y-1.5 p-6">
+        <h3 className="text-2xl font-semibold leading-none tracking-tight">Create a New Class</h3>
+        <p className="text-sm text-muted-foreground">
           Set up your class details, schedule, and teaching team
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
+        </p>
+      </div>
+      <div className="p-6 pt-0">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid grid-cols-4 mb-8">
             <TabsTrigger value="basic" className="flex items-center gap-2">
@@ -892,9 +892,4 @@ const CreateClassForm = ({ onSubmit, onCancel }: CreateClassFormProps) => {
                                 <Label htmlFor={`cohort-schedule-${cohort.id}`}>Schedule</Label>
                                 <Select 
                                   value={cohort.schedule}
-                                  onValueChange={(value) => updateCohort(cohort.id, "schedule", value)}
-                                >
-                                  <SelectTrigger id={`cohort-schedule-${cohort.id}`}>
-                                    <SelectValue placeholder="Select schedule" />
-                                  </SelectTrigger>
-                                  <SelectContent>
+                                  onValueChange={(value) => updateCohort(cohort
