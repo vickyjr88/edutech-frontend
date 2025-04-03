@@ -3,6 +3,7 @@ import React, { createContext, useContext, useState, ReactNode } from "react";
 import { useForm, UseFormReturn } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ClassFormValues, CohortData, TeamMember, classSchema, LessonSchedule, RepeatSchedule } from "./types";
+import { addDays, addWeeks } from "date-fns";
 
 interface ClassFormContextType {
   form: UseFormReturn<ClassFormValues>;
@@ -41,6 +42,7 @@ interface ClassFormContextType {
   
   handleNavigateTab: (tab: string) => void;
   calculateNumberOfLessons: (startDate: Date | null, endDate: Date | null, repeatSchedule: RepeatSchedule) => number;
+  calculateEndDate: (startDate: Date | null, numberOfLessons: number, repeatSchedule: RepeatSchedule) => Date | null;
 };
 
 // Export the context directly
@@ -118,6 +120,31 @@ export const ClassFormProvider = ({ children, onSubmit }: ClassFormProviderProps
     
     return Math.ceil((weeks * lessonsPerWeek) / repeatSchedule.repeatEvery);
   };
+  
+  const calculateEndDate = (
+    startDate: Date | null,
+    numberOfLessons: number,
+    repeatSchedule: RepeatSchedule
+  ): Date | null => {
+    if (!startDate || numberOfLessons <= 0) return null;
+    
+    let lessonsPerWeek = 0;
+    if (repeatSchedule.pattern === "weekly") {
+      lessonsPerWeek = 1;
+    } else if (repeatSchedule.pattern === "twice-weekly") {
+      lessonsPerWeek = 2;
+    } else if (repeatSchedule.pattern === "custom") {
+      lessonsPerWeek = repeatSchedule.daysOfWeek.length;
+    }
+    
+    if (lessonsPerWeek === 0) return null;
+    
+    // Calculate how many weeks we need to cover all lessons
+    const weeksNeeded = Math.ceil(numberOfLessons / lessonsPerWeek) * repeatSchedule.repeatEvery;
+    
+    // Add the weeks to the start date
+    return addWeeks(startDate, weeksNeeded);
+  };
 
   const addCohort = () => {
     const newId = Date.now().toString();
@@ -131,7 +158,7 @@ export const ClassFormProvider = ({ children, onSubmit }: ClassFormProviderProps
       endDate: null,
       startTime: "",
       endTime: "",
-      numberOfLessons: 0,
+      numberOfLessons: form.getValues().numberOfLessons || 1,
       price: "",
       discount: "0",
       isActive: true,
@@ -157,12 +184,11 @@ export const ClassFormProvider = ({ children, onSubmit }: ClassFormProviderProps
       if (cohort.id === id) {
         const updatedCohort = { ...cohort, [field]: value };
         
-        if (field === 'startDate' || field === 'endDate') {
-          const startDate = field === 'startDate' ? value : cohort.startDate;
-          const endDate = field === 'endDate' ? value : cohort.endDate;
-          updatedCohort.numberOfLessons = calculateNumberOfLessons(
-            startDate, 
-            endDate, 
+        // If the start date is being updated, recalculate the end date
+        if (field === 'startDate') {
+          updatedCohort.endDate = calculateEndDate(
+            value, // new start date
+            form.getValues().numberOfLessons,
             cohort.repeatSchedule
           );
         }
@@ -177,16 +203,19 @@ export const ClassFormProvider = ({ children, onSubmit }: ClassFormProviderProps
     setCohorts(cohorts.map(cohort => {
       if (cohort.id === cohortId) {
         const updatedRepeatSchedule = { ...cohort.repeatSchedule, [field]: value };
-        const updatedCohort = { 
+        
+        // Recalculate end date based on the new repeat schedule
+        const updatedEndDate = calculateEndDate(
+          cohort.startDate,
+          form.getValues().numberOfLessons,
+          updatedRepeatSchedule
+        );
+        
+        return { 
           ...cohort, 
           repeatSchedule: updatedRepeatSchedule,
-          numberOfLessons: calculateNumberOfLessons(
-            cohort.startDate, 
-            cohort.endDate, 
-            updatedRepeatSchedule
-          )
+          endDate: updatedEndDate
         };
-        return updatedCohort;
       }
       return cohort;
     }));
@@ -206,14 +235,17 @@ export const ClassFormProvider = ({ children, onSubmit }: ClassFormProviderProps
             daysOfWeek: finalDays 
           };
           
+          // Recalculate end date with the updated days
+          const updatedEndDate = calculateEndDate(
+            cohort.startDate,
+            form.getValues().numberOfLessons,
+            updatedRepeatSchedule
+          );
+          
           return { 
             ...cohort, 
             repeatSchedule: updatedRepeatSchedule,
-            numberOfLessons: calculateNumberOfLessons(
-              cohort.startDate, 
-              cohort.endDate, 
-              updatedRepeatSchedule
-            )
+            endDate: updatedEndDate
           };
         } else {
           const updatedRepeatSchedule = { 
@@ -221,14 +253,17 @@ export const ClassFormProvider = ({ children, onSubmit }: ClassFormProviderProps
             daysOfWeek: [...daysOfWeek, day] 
           };
           
+          // Recalculate end date with the updated days
+          const updatedEndDate = calculateEndDate(
+            cohort.startDate,
+            form.getValues().numberOfLessons,
+            updatedRepeatSchedule
+          );
+          
           return { 
             ...cohort, 
             repeatSchedule: updatedRepeatSchedule,
-            numberOfLessons: calculateNumberOfLessons(
-              cohort.startDate, 
-              cohort.endDate, 
-              updatedRepeatSchedule
-            )
+            endDate: updatedEndDate
           };
         }
       }
@@ -367,7 +402,8 @@ export const ClassFormProvider = ({ children, onSubmit }: ClassFormProviderProps
     updateLessonPlan,
     
     handleNavigateTab,
-    calculateNumberOfLessons
+    calculateNumberOfLessons,
+    calculateEndDate
   };
 
   return (

@@ -1,10 +1,9 @@
-
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
-import { Calendar as CalendarIcon, Clock, Users, PlusCircle, Trash2, AlertCircle, Repeat } from "lucide-react";
+import { Calendar as CalendarIcon, Clock, Users, PlusCircle, Trash2, AlertCircle, Repeat, Info } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
@@ -22,6 +21,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface CohortsTabProps {
   form: UseFormReturn<ClassFormValues>;
@@ -37,6 +37,7 @@ interface CohortsTabProps {
   removeLessonSchedule: (cohortId: string, scheduleId: string) => void;
   updateLessonSchedule: (cohortId: string, scheduleId: string, field: keyof LessonSchedule, value: any) => void;
   calculateNumberOfLessons: (startDate: Date | null, endDate: Date | null, repeatSchedule: RepeatSchedule) => number;
+  calculateEndDate: (startDate: Date | null, numberOfLessons: number, repeatSchedule: RepeatSchedule) => Date | null;
 }
 
 const CohortsTab = ({ 
@@ -52,9 +53,11 @@ const CohortsTab = ({
   addLessonSchedule,
   removeLessonSchedule,
   updateLessonSchedule,
-  calculateNumberOfLessons
+  calculateEndDate
 }: CohortsTabProps) => {
   const hasCohorts = form.watch("hasCohorts");
+  const totalNumberOfLessons = form.watch("numberOfLessons");
+  
   const daysOfWeek = [
     { label: "Monday", value: "monday" },
     { label: "Tuesday", value: "tuesday" },
@@ -176,39 +179,42 @@ const CohortsTab = ({
                         </Popover>
                       </div>
                       
-                      {/* End Date */}
+                      {/* End Date - Now read-only */}
                       <div className="space-y-2">
-                        <Label>End Date</Label>
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <Button
-                              variant="outline"
-                              className={cn(
-                                "w-full justify-start text-left",
-                                !cohort.endDate && "text-muted-foreground"
-                              )}
-                            >
-                              <CalendarIcon className="mr-2 h-4 w-4" />
-                              {cohort.endDate ? (
-                                format(cohort.endDate, "PPP")
-                              ) : (
-                                <span>Select end date</span>
-                              )}
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0" align="start">
-                            <Calendar
-                              mode="single"
-                              selected={cohort.endDate || undefined}
-                              onSelect={(date) => updateCohort(cohort.id, "endDate", date)}
-                              className="p-3 pointer-events-auto"
-                              initialFocus
-                              disabled={(date) => 
-                                cohort.startDate ? date < cohort.startDate : false
-                              }
-                            />
-                          </PopoverContent>
-                        </Popover>
+                        <div className="flex items-center space-x-2">
+                          <Label>End Date</Label>
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Info className="h-4 w-4 text-blue-500" />
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p className="text-xs">
+                                  End date is calculated based on start date, number of lessons ({totalNumberOfLessons}), 
+                                  and repeat pattern.
+                                </p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        </div>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-full justify-start text-left bg-gray-50",
+                            !cohort.endDate && "text-muted-foreground"
+                          )}
+                          disabled
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {cohort.endDate ? (
+                            format(cohort.endDate, "PPP")
+                          ) : (
+                            <span>Auto-calculated end date</span>
+                          )}
+                        </Button>
+                        <p className="text-xs text-muted-foreground">
+                          Based on {totalNumberOfLessons} lessons from the basic information tab
+                        </p>
                       </div>
                     </div>
                     
@@ -392,7 +398,7 @@ const CohortsTab = ({
                                           id={`lesson-number-${schedule.id}`}
                                           type="number"
                                           min="1"
-                                          max={cohort.numberOfLessons > 0 ? cohort.numberOfLessons.toString() : "10"}
+                                          max={totalNumberOfLessons.toString()}
                                           value={schedule.lessonNumber.toString()}
                                           onChange={(e) => updateLessonSchedule(
                                             cohort.id, 
@@ -446,24 +452,16 @@ const CohortsTab = ({
                       </div>
                     )}
                     
-                    <div className="space-y-2">
-                      <Label htmlFor={`cohort-lessons-${cohort.id}`}>Number of Lessons</Label>
-                      <Input
-                        id={`cohort-lessons-${cohort.id}`}
-                        type="number"
-                        min="1"
-                        max="52"
-                        value={cohort.numberOfLessons}
-                        onChange={(e) => updateCohort(cohort.id, "numberOfLessons", parseInt(e.target.value) || 0)}
-                        readOnly={!!(cohort.startDate && cohort.endDate)}
-                        className={cn(
-                          cohort.startDate && cohort.endDate ? "bg-gray-100" : ""
-                        )}
-                      />
-                      <p className="text-xs text-muted-foreground">
-                        {cohort.startDate && cohort.endDate 
-                          ? "Auto-calculated from start/end dates and repeat pattern" 
-                          : "Manually set the number of lessons or define start/end dates"}
+                    {/* Display the number of lessons from basic info tab - informational only */}
+                    <div className="p-3 bg-blue-50 border border-blue-100 rounded-md">
+                      <div className="flex items-center text-blue-800">
+                        <Info className="h-4 w-4 mr-2" />
+                        <p className="text-sm font-medium">
+                          This cohort will have {totalNumberOfLessons} lessons
+                        </p>
+                      </div>
+                      <p className="text-xs text-blue-700 mt-1 ml-6">
+                        Number of lessons is set in the Basic Information tab
                       </p>
                     </div>
                   </div>
@@ -569,7 +567,7 @@ const CohortsTab = ({
                           />
                         </div>
                         <p className="text-xs text-muted-foreground">
-                          Total price for all {cohort.numberOfLessons || "?"} lessons
+                          Total price for all {totalNumberOfLessons} lessons
                         </p>
                       </div>
                       

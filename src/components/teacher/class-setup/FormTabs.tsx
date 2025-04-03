@@ -45,7 +45,8 @@ const FormTabs = ({ onSubmit }: FormTabsProps) => {
     addTeamMember,
     removeTeamMember,
     updateTeamMember,
-    calculateNumberOfLessons
+    calculateNumberOfLessons,
+    calculateEndDate
   } = useClassForm();
 
   const hasTeamTeaching = form.watch("hasTeamTeaching");
@@ -108,6 +109,7 @@ const FormTabs = ({ onSubmit }: FormTabsProps) => {
               removeLessonSchedule={removeLessonSchedule}
               updateLessonSchedule={updateLessonSchedule}
               calculateNumberOfLessons={calculateNumberOfLessons}
+              calculateEndDate={calculateEndDate}
             />
           </TabsContent>
 
