@@ -68,7 +68,7 @@ const BasicInformationTab = ({ form, onNextTab }: BasicInformationTabProps) => {
         render={({ field }) => (
           <FormItem>
             <FormLabel>Class Title</FormLabel>
-            <Input placeholder="Enter class title" {...field} />
+            <Input placeholder="Enter a catchy class title" {...field} />
             <FormDescription>
               Enter a descriptive title for the class.
             </FormDescription>
@@ -77,7 +77,7 @@ const BasicInformationTab = ({ form, onNextTab }: BasicInformationTabProps) => {
         )}
       />
 
-      {classType === "academic" && (
+      {classType === "academic" ? (
         <FormField
           control={form.control}
           name="gradeLevel"
@@ -112,6 +112,34 @@ const BasicInformationTab = ({ form, onNextTab }: BasicInformationTabProps) => {
             </FormItem>
           )}
         />
+      ) : (
+        <FormField
+          control={form.control}
+          name="ageRange"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Age Range</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value || ""}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select age range" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="3-5">3-5 years</SelectItem>
+                  <SelectItem value="6-8">6-8 years</SelectItem>
+                  <SelectItem value="9-11">9-11 years</SelectItem>
+                  <SelectItem value="12-14">12-14 years</SelectItem>
+                  <SelectItem value="15-18">15-18 years</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormDescription>
+                Select the age range for this after-school class.
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
       )}
 
       <FormField
@@ -126,7 +154,7 @@ const BasicInformationTab = ({ form, onNextTab }: BasicInformationTabProps) => {
               {...field}
             />
             <FormDescription>
-              Write a brief summary of the class.
+              Write a brief summary of the class (max 200 characters).
             </FormDescription>
             <FormMessage />
           </FormItem>
@@ -146,6 +174,63 @@ const BasicInformationTab = ({ form, onNextTab }: BasicInformationTabProps) => {
             />
             <FormDescription>
               Write a detailed description of the class.
+            </FormDescription>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      <FormField
+        control={form.control}
+        name="technicalRequirements"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Technical Requirements</FormLabel>
+            <Textarea
+              placeholder="Describe any technical requirements (internet, devices, etc.)"
+              className="resize-none"
+              {...field}
+            />
+            <FormDescription>
+              List any technical requirements students will need.
+            </FormDescription>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      <FormField
+        control={form.control}
+        name="materialsRequired"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Materials Required</FormLabel>
+            <Textarea
+              placeholder="List any materials students will need"
+              className="resize-none"
+              {...field}
+            />
+            <FormDescription>
+              List any materials students will need for the class.
+            </FormDescription>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      <FormField
+        control={form.control}
+        name="commitmentRequired"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Commitment Required</FormLabel>
+            <Textarea
+              placeholder="Specify the commitment required (days/weeks/months)"
+              className="resize-none"
+              {...field}
+            />
+            <FormDescription>
+              Specify the time commitment required for this class.
             </FormDescription>
             <FormMessage />
           </FormItem>
