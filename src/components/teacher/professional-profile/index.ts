@@ -8,8 +8,10 @@ import CertificationsStep from "./CertificationsStep";
 import VideoStep from "./VideoStep";
 import ProgressIndicator from "./ProgressIndicator";
 import StrategiesStep from "./StrategiesStep";
+import MethodologiesStep from "./MethodologiesStep";
 import type { EducationItem, InstitutionType, ExperienceItem } from "./types";
 import type { StrategyItem } from "./utils/strategyUtils";
+import type { MethodologyItem } from "./utils/methodologyUtils";
 
 // Export all components and types
 export {
@@ -20,8 +22,9 @@ export {
   CertificationsStep,
   VideoStep,
   ProgressIndicator,
-  StrategiesStep
+  StrategiesStep,
+  MethodologiesStep
 };
 
 // Export types with the 'export type' syntax
-export type { EducationItem, InstitutionType, ExperienceItem, StrategyItem };
+export type { EducationItem, InstitutionType, ExperienceItem, StrategyItem, MethodologyItem };

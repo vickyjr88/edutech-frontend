@@ -14,13 +14,15 @@ import {
   EducationItem,
   InstitutionType,
   ExperienceItem,
-  StrategiesStep
+  StrategiesStep,
+  MethodologiesStep,
+  StrategyItem,
+  MethodologyItem
 } from "./professional-profile";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { fetchExperienceRecords } from "./professional-profile/utils/experienceUtils";
-import { StrategyItem } from "./professional-profile/utils/strategyUtils";
 
 type FormItem = {
   id: string;
@@ -66,7 +68,7 @@ const TeacherProfessionalProfileForm = ({
     grades: []
   }]);
   const [strategies, setStrategies] = useState<StrategyItem[]>([]);
-  const [methodologies, setMethodologies] = useState<FormItem[]>([{ id: "1", value: "" }]);
+  const [methodologies, setMethodologies] = useState<MethodologyItem[]>([]);
   const [academicSubjects, setAcademicSubjects] = useState<FormItem[]>([{ id: "1", value: "" }]);
   const [afterSchoolSubjects, setAfterSchoolSubjects] = useState<FormItem[]>([{ id: "1", value: "" }]);
   const [technicalSkills, setTechnicalSkills] = useState<FormItem[]>([{ id: "1", value: "" }]);
@@ -239,11 +241,9 @@ const TeacherProfessionalProfileForm = ({
           setStrategies={setStrategies} 
         />;
       case 4: 
-        return <SimpleListStep 
-          items={methodologies} 
-          setItems={setMethodologies} 
-          label="Methodology" 
-          placeholder="e.g., Project-based Learning" 
+        return <MethodologiesStep 
+          methodologies={methodologies} 
+          setMethodologies={setMethodologies} 
         />;
       case 5: 
         return <SubjectExpertiseStep 

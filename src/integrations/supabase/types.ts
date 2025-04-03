@@ -108,6 +108,36 @@ export type Database = {
         }
         Relationships: []
       }
+      teacher_methodologies: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_certified: boolean | null
+          methodology: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_certified?: boolean | null
+          methodology: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_certified?: boolean | null
+          methodology?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       teacher_profiles: {
         Row: {
           certification: Json | null
