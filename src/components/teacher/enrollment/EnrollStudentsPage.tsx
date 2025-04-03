@@ -19,10 +19,10 @@ const EnrollStudentsPage = ({ classId, className }: EnrollStudentsPageProps) => 
     <div className="space-y-6">
       <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
         <h2 className="text-2xl font-bold mb-2">
-          {className ? `Enroll Students for ${className}` : "Enroll Students"}
+          {className ? `Manage Students for ${className}` : "Student Management"}
         </h2>
         <p className="text-gray-500">
-          Invite students to join your classes and track their enrollment status.
+          Invite students to join your classes, manage enrollments, and collect feedback.
         </p>
       </div>
 
