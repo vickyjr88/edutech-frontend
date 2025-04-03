@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Home, BookOpen, Users, Calendar, User, Settings, LogOut, Edit, Phone, MapPin, Award, CheckCircle2, CircleDashed, Video, PlusCircle, Star, UserPlus, BookText, School, UsersRound, ParentChild } from "lucide-react";
+import { Home, BookOpen, Users, Calendar, User, Settings, LogOut, Edit, Phone, MapPin, Award, CheckCircle2, CircleDashed, Video, PlusCircle, Star, UserPlus, BookText, School, UsersRound, ParentChild, ChevronLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import TeacherProfileForm from "@/components/teacher/TeacherProfileForm";
@@ -58,7 +58,7 @@ const TeacherDashboard = () => {
   const [showProfessionalForm, setShowProfessionalForm] = useState(false);
   const [hasProfessionalProfile, setHasProfessionalProfile] = useState(false);
   const [showClassSetupForm, setShowClassSetupForm] = useState(false);
-  const [hasClassesSetup, setHasClassesSetup] = useState(true); // Changed to true to show buttons by default
+  const [hasClassesSetup, setHasClassesSetup] = useState(true);
   const [showCreateClassForm, setShowCreateClassForm] = useState(false);
   const [classes, setClasses] = useState([]);
   const [selectedClass, setSelectedClass] = useState<any>(null);
@@ -874,4 +874,250 @@ const TeacherDashboard = () => {
                           <div>
                             <CardTitle>{classItem.title}</CardTitle>
                             <CardDescription>
-                              {classItem.type === "academic" ? "Academic" : "After School"} - {class
+                              {classItem.type === "academic" ? "Academic" : "After School"} - {classItem.subject}
+                            </CardDescription>
+                          </div>
+                          <div className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
+                            New
+                          </div>
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-sm text-gray-500 line-clamp-2">
+                          {classItem.description || "No description provided"}
+                        </p>
+                        <div className="mt-4 flex justify-between items-center">
+                          <div className="text-sm">
+                            <span className="text-gray-500">Students: </span>
+                            <span className="font-medium">0</span>
+                          </div>
+                          <div className="text-xs px-2 py-1 bg-gray-100 rounded-full">
+                            {classItem.type === "academic" ? classItem.gradeLevel : classItem.ageRange}
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {!isLoading && activeTab === "students" && (
+            <div className="flex flex-col items-center justify-center bg-white rounded-lg border border-dashed p-12">
+              <Users className="h-16 w-16 text-gray-300 mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-1">No Students Yet</h3>
+              <p className="text-sm text-gray-500 mb-6 text-center max-w-md">
+                You haven't enrolled any students yet. Create a class first, then invite students to join.
+              </p>
+              <Button onClick={handleCreateClass}>
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Create Your First Class
+              </Button>
+            </div>
+          )}
+
+          {!isLoading && activeTab === "schedule" && (
+            <div className="flex flex-col items-center justify-center bg-white rounded-lg border border-dashed p-12">
+              <Calendar className="h-16 w-16 text-gray-300 mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-1">No Schedule Yet</h3>
+              <p className="text-sm text-gray-500 mb-6 text-center max-w-md">
+                You haven't set up your teaching schedule yet. Create a class first, then schedule lessons.
+              </p>
+              <Button onClick={handleCreateClass}>
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Create Your First Class
+              </Button>
+            </div>
+          )}
+
+          {!isLoading && activeTab === "viewClass" && selectedClass && (
+            <div className="space-y-6">
+              <div className="flex items-center gap-2 mb-4">
+                <Button variant="outline" size="sm" onClick={handleBackToClasses}>
+                  <ChevronLeft className="h-4 w-4 mr-1" />
+                  Back to Classes
+                </Button>
+              </div>
+              
+              <Card>
+                <CardHeader>
+                  <CardTitle>{selectedClass.title}</CardTitle>
+                  <CardDescription>
+                    {selectedClass.type === "academic" ? "Academic" : "After School"} - {selectedClass.subject}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Tabs value={activeClassTab} onValueChange={setActiveClassTab}>
+                    <TabsList className="w-full">
+                      <TabsTrigger value="basic" className="flex items-center">
+                        <BookText className="h-4 w-4 mr-2" />
+                        Basic Info
+                      </TabsTrigger>
+                      <TabsTrigger value="lessons" className="flex items-center">
+                        <BookOpen className="h-4 w-4 mr-2" />
+                        Lesson Plans
+                      </TabsTrigger>
+                      <TabsTrigger value="cohorts" className="flex items-center">
+                        <School className="h-4 w-4 mr-2" />
+                        Cohorts
+                      </TabsTrigger>
+                      <TabsTrigger value="team" className="flex items-center">
+                        <UsersRound className="h-4 w-4 mr-2" />
+                        Teaching Team
+                      </TabsTrigger>
+                      <TabsTrigger value="students" className="flex items-center">
+                        <ParentChild className="h-4 w-4 mr-2" />
+                        Parents & Students
+                      </TabsTrigger>
+                    </TabsList>
+                    
+                    <TabsContent value="basic" className="mt-6">
+                      <div className="space-y-6">
+                        <div>
+                          <h3 className="text-lg font-medium">Class Details</h3>
+                          <div className="mt-2 space-y-2">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div>
+                                <p className="text-sm text-gray-500">Class Type</p>
+                                <p className="font-medium">{selectedClass.type === "academic" ? "Academic" : "After School"}</p>
+                              </div>
+                              <div>
+                                <p className="text-sm text-gray-500">Subject</p>
+                                <p className="font-medium">{selectedClass.subject}</p>
+                              </div>
+                              <div>
+                                <p className="text-sm text-gray-500">{selectedClass.type === "academic" ? "Grade Level" : "Age Range"}</p>
+                                <p className="font-medium">{selectedClass.gradeLevel || selectedClass.ageRange || "Not specified"}</p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div>
+                          <h3 className="text-lg font-medium">Class Summary</h3>
+                          <p className="mt-2 text-gray-700">{selectedClass.description || "No summary provided"}</p>
+                        </div>
+                        
+                        <div>
+                          <h3 className="text-lg font-medium">Learning Objectives</h3>
+                          <ul className="mt-2 list-disc pl-5 space-y-1">
+                            {selectedClass.objectives ? (
+                              selectedClass.objectives.map((objective: string, index: number) => (
+                                <li key={index} className="text-gray-700">{objective}</li>
+                              ))
+                            ) : (
+                              <li className="text-gray-500">No learning objectives specified</li>
+                            )}
+                          </ul>
+                        </div>
+                      </div>
+                    </TabsContent>
+                    
+                    <TabsContent value="lessons" className="mt-6">
+                      <div className="space-y-4">
+                        <div className="flex justify-between items-center">
+                          <h3 className="text-lg font-medium">Lesson Plans</h3>
+                          <Button size="sm">
+                            <PlusCircle className="h-4 w-4 mr-2" />
+                            Add Lesson
+                          </Button>
+                        </div>
+                        
+                        <div className="bg-gray-50 border rounded-md p-8 text-center">
+                          <BookOpen className="h-12 w-12 mx-auto text-gray-400" />
+                          <h3 className="mt-4 text-lg font-medium">No Lesson Plans Yet</h3>
+                          <p className="mt-2 text-gray-500 max-w-md mx-auto">
+                            Create lesson plans to organize your teaching curriculum and share with students.
+                          </p>
+                          <Button className="mt-4">
+                            <PlusCircle className="h-4 w-4 mr-2" />
+                            Create First Lesson
+                          </Button>
+                        </div>
+                      </div>
+                    </TabsContent>
+                    
+                    <TabsContent value="cohorts" className="mt-6">
+                      <div className="space-y-4">
+                        <div className="flex justify-between items-center">
+                          <h3 className="text-lg font-medium">Class Cohorts</h3>
+                          <Button size="sm">
+                            <PlusCircle className="h-4 w-4 mr-2" />
+                            Create Cohort
+                          </Button>
+                        </div>
+                        
+                        <div className="bg-gray-50 border rounded-md p-8 text-center">
+                          <School className="h-12 w-12 mx-auto text-gray-400" />
+                          <h3 className="mt-4 text-lg font-medium">No Cohorts Created</h3>
+                          <p className="mt-2 text-gray-500 max-w-md mx-auto">
+                            Organize your students into cohorts for better class management and scheduling.
+                          </p>
+                          <Button className="mt-4">
+                            <PlusCircle className="h-4 w-4 mr-2" />
+                            Create First Cohort
+                          </Button>
+                        </div>
+                      </div>
+                    </TabsContent>
+                    
+                    <TabsContent value="team" className="mt-6">
+                      <div className="space-y-4">
+                        <div className="flex justify-between items-center">
+                          <h3 className="text-lg font-medium">Teaching Team</h3>
+                          <Button size="sm">
+                            <PlusCircle className="h-4 w-4 mr-2" />
+                            Add Team Member
+                          </Button>
+                        </div>
+                        
+                        <div className="bg-gray-50 border rounded-md p-8 text-center">
+                          <UsersRound className="h-12 w-12 mx-auto text-gray-400" />
+                          <h3 className="mt-4 text-lg font-medium">No Team Members Yet</h3>
+                          <p className="mt-2 text-gray-500 max-w-md mx-auto">
+                            Add teaching assistants or co-teachers to help you manage this class.
+                          </p>
+                          <Button className="mt-4">
+                            <PlusCircle className="h-4 w-4 mr-2" />
+                            Add First Team Member
+                          </Button>
+                        </div>
+                      </div>
+                    </TabsContent>
+                    
+                    <TabsContent value="students" className="mt-6">
+                      <div className="space-y-4">
+                        <div className="flex justify-between items-center">
+                          <h3 className="text-lg font-medium">Parents & Students</h3>
+                          <Button size="sm">
+                            <PlusCircle className="h-4 w-4 mr-2" />
+                            Invite Students
+                          </Button>
+                        </div>
+                        
+                        <div className="bg-gray-50 border rounded-md p-8 text-center">
+                          <ParentChild className="h-12 w-12 mx-auto text-gray-400" />
+                          <h3 className="mt-4 text-lg font-medium">No Students Enrolled</h3>
+                          <p className="mt-2 text-gray-500 max-w-md mx-auto">
+                            Invite parents and students to enroll in this class.
+                          </p>
+                          <Button className="mt-4">
+                            <UserPlus className="h-4 w-4 mr-2" />
+                            Invite First Student
+                          </Button>
+                        </div>
+                      </div>
+                    </TabsContent>
+                  </Tabs>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+        </main>
+      </div>
+    </div>
+  );
+};
+
+export default TeacherDashboard;
