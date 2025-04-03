@@ -14,11 +14,19 @@ import {
   FileImage,
   FileVideo,
   Files,
-  Plus
+  Plus,
+  Clock
 } from "lucide-react";
 import { UseFormReturn } from "react-hook-form";
 import { ClassFormValues } from "../CreateClassForm";
 import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface LessonPlansTabProps {
   form: UseFormReturn<ClassFormValues>;
@@ -38,6 +46,18 @@ type ResourceLink = {
   title: string;
 };
 
+const durationOptions = [
+  { value: "15m", label: "15 minutes" },
+  { value: "30m", label: "30 minutes" },
+  { value: "45m", label: "45 minutes" },
+  { value: "1h", label: "1 hour" },
+  { value: "1h30m", label: "1 hour 30 minutes" },
+  { value: "2h", label: "2 hours" },
+  { value: "2h30m", label: "2 hours 30 minutes" },
+  { value: "3h", label: "3 hours" },
+  { value: "custom", label: "Custom duration" },
+];
+
 const LessonPlansTab = ({ 
   form, 
   onPreviousTab, 
@@ -52,6 +72,7 @@ const LessonPlansTab = ({
   const [resourceLinks, setResourceLinks] = useState<Record<string, ResourceLink[]>>({});
   const [newResourceUrl, setNewResourceUrl] = useState<Record<string, string>>({});
   const [newResourceTitle, setNewResourceTitle] = useState<Record<string, string>>({});
+  const [customDuration, setCustomDuration] = useState<Record<string, string>>({});
 
   const handleAddResourceLink = (lessonId: string) => {
     if (!newResourceUrl[lessonId]?.trim()) return;
@@ -81,6 +102,21 @@ const LessonPlansTab = ({
     };
 
     setResourceLinks(updatedLinks);
+  };
+
+  const handleDurationChange = (lessonId: string, value: string) => {
+    if (value === "custom") {
+      // If custom is selected, don't update the lesson plan yet
+      setCustomDuration({ ...customDuration, [lessonId]: customDuration[lessonId] || "" });
+    } else {
+      // For predefined options, update the lesson plan directly
+      updateLessonPlan(lessonId, "duration", value);
+    }
+  };
+
+  const handleCustomDurationChange = (lessonId: string, value: string) => {
+    setCustomDuration({ ...customDuration, [lessonId]: value });
+    updateLessonPlan(lessonId, "duration", value);
   };
 
   const getFileTypeIcon = (file: File) => {
@@ -168,13 +204,41 @@ const LessonPlansTab = ({
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor={`lesson-duration-${lesson.id}`}>Duration</Label>
-                  <Input 
-                    id={`lesson-duration-${lesson.id}`}
-                    placeholder="Enter lesson duration"
-                    value={lesson.duration || ""}
-                    onChange={(e) => updateLessonPlan(lesson.id, "duration", e.target.value)}
-                  />
+                  <Label htmlFor={`lesson-duration-${lesson.id}`}>
+                    <div className="flex items-center gap-1">
+                      <Clock className="h-4 w-4 text-gray-500" />
+                      Duration
+                    </div>
+                  </Label>
+                  <div className="flex gap-2">
+                    <Select 
+                      value={lesson.duration && durationOptions.some(option => option.value === lesson.duration) 
+                        ? lesson.duration 
+                        : "custom"}
+                      onValueChange={(value) => handleDurationChange(lesson.id, value)}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select duration" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {durationOptions.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    
+                    {(lesson.duration === "custom" || 
+                     (lesson.duration && !durationOptions.some(option => option.value === lesson.duration))) && (
+                      <Input
+                        placeholder="e.g. 1 hour 15 min"
+                        value={customDuration[lesson.id] || lesson.duration || ""}
+                        onChange={(e) => handleCustomDurationChange(lesson.id, e.target.value)}
+                        className="flex-1"
+                      />
+                    )}
+                  </div>
                 </div>
               </div>
               <div className="space-y-2">
