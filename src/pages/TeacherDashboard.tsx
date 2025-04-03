@@ -2,10 +2,11 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Home, BookOpen, Users, Calendar, User, Settings, LogOut, Edit, Phone, MapPin, Award, CheckCircle2, CircleDashed } from "lucide-react";
+import { Home, BookOpen, Users, Calendar, User, Settings, LogOut, Edit, Phone, MapPin, Award, CheckCircle2, CircleDashed, Video } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import TeacherProfileForm from "@/components/teacher/TeacherProfileForm";
 import TeacherProfessionalProfileForm from "@/components/teacher/TeacherProfessionalProfileForm";
+import ClassSetupForm from "@/components/teacher/ClassSetupForm";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Json } from "@/integrations/supabase/types";
@@ -53,6 +54,8 @@ const TeacherDashboard = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [showProfessionalForm, setShowProfessionalForm] = useState(false);
   const [hasProfessionalProfile, setHasProfessionalProfile] = useState(false);
+  const [showClassSetupForm, setShowClassSetupForm] = useState(false);
+  const [hasClassesSetup, setHasClassesSetup] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -263,6 +266,26 @@ const TeacherDashboard = () => {
     setActiveTab("dashboard");
   };
 
+  const handleCompleteClassSetup = () => {
+    setShowClassSetupForm(false);
+    setHasClassesSetup(true);
+    toast({
+      title: "Class setup completed",
+      description: "Your class settings have been successfully saved.",
+    });
+    setActiveTab("dashboard");
+  };
+
+  const handleCancelClassSetup = () => {
+    setShowClassSetupForm(false);
+    setActiveTab("dashboard");
+  };
+
+  const handleSetupClassSettings = () => {
+    setShowClassSetupForm(true);
+    setActiveTab("settings");
+  };
+
   const renderProfileView = () => {
     if (!profileData) return null;
     
@@ -451,7 +474,8 @@ const TeacherDashboard = () => {
                activeTab === "students" ? "Students" :
                activeTab === "schedule" ? "Schedule" : 
                isEditing ? "Update Your Profile" : 
-               showProfessionalForm ? "Complete Professional Profile" : "Settings"}
+               showProfessionalForm ? "Complete Professional Profile" :
+               showClassSetupForm ? "Set Up Class Settings" : "Settings"}
             </h1>
             <div className="flex md:hidden">
               <Button variant="outline" size="sm">
@@ -494,7 +518,16 @@ const TeacherDashboard = () => {
             </div>
           )}
 
-          {!isLoading && activeTab === "settings" && !isEditing && !showProfessionalForm && (
+          {!isLoading && activeTab === "settings" && showClassSetupForm && (
+            <div className="max-w-4xl mx-auto">
+              <ClassSetupForm
+                onComplete={handleCompleteClassSetup}
+                onCancel={handleCancelClassSetup}
+              />
+            </div>
+          )}
+
+          {!isLoading && activeTab === "settings" && !isEditing && !showProfessionalForm && !showClassSetupForm && (
             <div className="max-w-3xl mx-auto space-y-6">
               <Card>
                 <CardHeader>
@@ -592,28 +625,55 @@ const TeacherDashboard = () => {
                           
                           <div className="flex items-start gap-3">
                             <div className="flex-shrink-0 h-7 w-7 rounded-full bg-amber-100 flex items-center justify-center">
-                              <CircleDashed className="h-4 w-4 text-amber-600" />
+                              {hasProfessionalProfile ? 
+                                <CheckCircle2 className="h-4 w-4 text-green-600" /> :
+                                <CircleDashed className="h-4 w-4 text-amber-600" />
+                              }
                             </div>
                             <div>
                               <p className="font-medium">Step 2: Professional Profile</p>
-                              <p className="text-sm text-blue-700">Add your teaching experience, education, and specialties.</p>
-                              <Button 
-                                className="mt-2 bg-amber-600 hover:bg-amber-700 text-white"
-                                size="sm"
-                                onClick={handleCompleteProfessionalProfile}
-                              >
-                                Complete Now
-                              </Button>
+                              <p className="text-sm text-blue-700">
+                                {hasProfessionalProfile ? 
+                                  "Complete! You've added your professional qualifications." :
+                                  "Add your teaching experience, education, and specialties."
+                                }
+                              </p>
+                              {!hasProfessionalProfile && (
+                                <Button 
+                                  className="mt-2 bg-amber-600 hover:bg-amber-700 text-white"
+                                  size="sm"
+                                  onClick={handleCompleteProfessionalProfile}
+                                >
+                                  Complete Now
+                                </Button>
+                              )}
                             </div>
                           </div>
                           
                           <div className="flex items-start gap-3">
-                            <div className="flex-shrink-0 h-7 w-7 rounded-full bg-gray-100 flex items-center justify-center">
-                              <CircleDashed className="h-4 w-4 text-gray-400" />
+                            <div className="flex-shrink-0 h-7 w-7 rounded-full bg-amber-100 flex items-center justify-center">
+                              {hasClassesSetup ? 
+                                <CheckCircle2 className="h-4 w-4 text-green-600" /> :
+                                <CircleDashed className="h-4 w-4 text-amber-600" />
+                              }
                             </div>
                             <div>
-                              <p className="font-medium text-gray-600">Step 3: Create Your First Class</p>
-                              <p className="text-sm text-gray-500">Set up your schedule and teaching materials.</p>
+                              <p className="font-medium">Step 3: Create Your First Class</p>
+                              <p className="text-sm text-blue-700">
+                                {hasClassesSetup ? 
+                                  "Complete! You've set up your classroom settings." :
+                                  "Set up your classroom settings for online teaching."
+                                }
+                              </p>
+                              {hasProfile && !hasClassesSetup && (
+                                <Button 
+                                  className="mt-2 bg-amber-600 hover:bg-amber-700 text-white"
+                                  size="sm"
+                                  onClick={handleSetupClassSettings}
+                                >
+                                  Set Up Now
+                                </Button>
+                              )}
                             </div>
                           </div>
                           
