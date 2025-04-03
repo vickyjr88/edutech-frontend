@@ -15,6 +15,16 @@ const CreateClassForm = ({ onSubmit, onCancel }: CreateClassFormProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmitForm = (values: ClassFormValues) => {
+    // Validate minimum lesson plans
+    if (values.lessonPlans.length < 3) {
+      toast({
+        variant: "destructive",
+        title: "Validation Error",
+        description: "You must create at least 3 lesson plans before submitting the class.",
+      });
+      return;
+    }
+    
     setIsSubmitting(true);
     
     // Simulate API call

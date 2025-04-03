@@ -1,12 +1,18 @@
 
-import React, { useState } from "react";
+import React from "react";
 import { Button } from "@/components/ui/button";
-import { PlusCircle } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertCircle, Info, Plus, PlusCircle, Trash2 } from "lucide-react";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
+import { FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { FormFileUpload } from "@/components/ui/form/file-upload";
 import { UseFormReturn } from "react-hook-form";
-import { ClassFormValues } from "../CreateClassForm";
-import { ResourceLink } from "./lesson-plans/ResourceLinks";
-import { LessonForm } from "./lesson-plans/LessonForm";
-import { EmptyState } from "./lesson-plans/EmptyState";
+import { ClassFormValues } from "./types";
 
 interface LessonPlansTabProps {
   form: UseFormReturn<ClassFormValues>;
@@ -20,100 +26,154 @@ interface LessonPlansTabProps {
   updateLessonPlan: (id: string, field: string, value: string) => void;
 }
 
-const LessonPlansTab = ({ 
-  form, 
-  onPreviousTab, 
+const LessonPlansTab = ({
+  form,
+  onPreviousTab,
   onNextTab,
   lessonFileUploads,
   handleLessonFileChange,
   removeLessonFile,
   appendLessonPlan,
   removeLessonPlan,
-  updateLessonPlan
+  updateLessonPlan,
 }: LessonPlansTabProps) => {
-  const [resourceLinks, setResourceLinks] = useState<Record<string, ResourceLink[]>>({});
+  const lessonPlans = form.watch("lessonPlans");
+  const numberOfLessons = form.watch("numberOfLessons");
 
-  const handleAddResourceLink = (lessonId: string, title: string, url: string) => {
-    const newLink = {
-      id: Date.now().toString(),
-      url: url,
-      title: title
-    };
-
-    const updatedLinks = {
-      ...resourceLinks,
-      [lessonId]: [...(resourceLinks[lessonId] || []), newLink]
-    };
-
-    setResourceLinks(updatedLinks);
-  };
-
-  const handleRemoveResourceLink = (lessonId: string, linkId: string) => {
-    if (!resourceLinks[lessonId]) return;
-
-    const updatedLinks = {
-      ...resourceLinks,
-      [lessonId]: resourceLinks[lessonId].filter(link => link.id !== linkId)
-    };
-
-    setResourceLinks(updatedLinks);
-  };
-
-  const handleFilesSelected = (lessonId: string, files: File[]) => {
-    const event = {
-      target: {
-        files: files
-      }
-    } as unknown as React.ChangeEvent<HTMLInputElement>;
-    handleLessonFileChange(lessonId, event);
-  };
-
+  // Calculate completion percentage
+  const percentComplete = Math.min(100, Math.round((lessonPlans.length / numberOfLessons) * 100));
+  
+  // Check if we have at least 3 lesson plans
+  const minimumLessonsCreated = lessonPlans.length >= 3;
+  
   return (
     <div className="space-y-6">
-      <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
-        <h3 className="text-sm font-medium text-blue-800">Lesson Plans</h3>
-        <p className="text-xs text-blue-700 mt-1">
-          Add lesson plans to organize your teaching curriculum and share with students.
-        </p>
+      <Alert variant="info" className="bg-blue-50">
+        <Info className="h-4 w-4" />
+        <AlertTitle>Create lesson plans</AlertTitle>
+        <AlertDescription>
+          Add lesson plans for each session of your class. You can upload resources and add links for each lesson.
+        </AlertDescription>
+      </Alert>
+      
+      <div className="bg-white p-4 rounded-lg border mb-6">
+        <div className="flex items-center justify-between mb-2">
+          <div>
+            <h3 className="text-sm font-medium">Lesson Plans Completion</h3>
+            <p className="text-xs text-muted-foreground">
+              {lessonPlans.length} of {numberOfLessons} lesson plans created ({percentComplete}% complete)
+            </p>
+          </div>
+          <Badge 
+            variant={minimumLessonsCreated ? "success" : "destructive"}
+            className={minimumLessonsCreated ? "bg-green-100 text-green-800" : ""}
+          >
+            {minimumLessonsCreated ? "Minimum requirement met" : "Minimum 3 lessons required"}
+          </Badge>
+        </div>
+        
+        <div className="w-full bg-gray-200 rounded-full h-2">
+          <div 
+            className={`h-2 rounded-full ${minimumLessonsCreated ? "bg-green-500" : "bg-amber-500"}`}
+            style={{ width: `${percentComplete}%` }}
+          ></div>
+        </div>
       </div>
 
-      {form.watch("lessonPlans").length === 0 ? (
-        <EmptyState onAddLesson={appendLessonPlan} />
-      ) : (
-        <div className="space-y-4">
-          {form.watch("lessonPlans").map((lesson, index) => (
-            <LessonForm
-              key={lesson.id}
-              lesson={lesson}
-              lessonIndex={index}
-              files={lessonFileUploads[lesson.id] || []}
-              resourceLinks={resourceLinks[lesson.id] || []}
-              onLessonUpdate={updateLessonPlan}
-              onLessonRemove={removeLessonPlan}
-              onFilesSelected={handleFilesSelected}
-              onFileRemove={removeLessonFile}
-              onAddResourceLink={handleAddResourceLink}
-              onRemoveResourceLink={handleRemoveResourceLink}
-            />
-          ))}
-          <Button
-            type="button" 
-            variant="outline" 
-            onClick={appendLessonPlan}
-            className="mt-2"
-          >
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Add Another Lesson
-          </Button>
-        </div>
-      )}
-      
-      <div className="flex justify-between pt-4">
+      {/* Display lesson plans */}
+      <div className="space-y-6">
+        {lessonPlans.map((lessonPlan, index) => (
+          <Card key={lessonPlan.id} className="relative">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute top-2 right-2 text-destructive"
+              onClick={() => removeLessonPlan(lessonPlan.id)}
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+            <CardHeader className="pb-2">
+              <h3 className="text-lg font-medium">Lesson {index + 1}</h3>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor={`lesson-title-${lessonPlan.id}`}>Lesson Title</Label>
+                  <Input
+                    id={`lesson-title-${lessonPlan.id}`}
+                    value={lessonPlan.title || ""}
+                    onChange={(e) => updateLessonPlan(lessonPlan.id, "title", e.target.value)}
+                    placeholder="Enter lesson title"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor={`lesson-duration-${lessonPlan.id}`}>Duration</Label>
+                  <Input
+                    id={`lesson-duration-${lessonPlan.id}`}
+                    value={lessonPlan.duration || ""}
+                    onChange={(e) => updateLessonPlan(lessonPlan.id, "duration", e.target.value)}
+                    placeholder="e.g. 45 minutes"
+                  />
+                </div>
+              </div>
+              <div>
+                <Label htmlFor={`lesson-description-${lessonPlan.id}`}>Description</Label>
+                <Textarea
+                  id={`lesson-description-${lessonPlan.id}`}
+                  value={lessonPlan.description || ""}
+                  onChange={(e) => updateLessonPlan(lessonPlan.id, "description", e.target.value)}
+                  placeholder="Enter lesson description"
+                  className="min-h-[100px]"
+                />
+              </div>
+              <div>
+                <Label htmlFor={`resource-url-${lessonPlan.id}`}>Resource URL</Label>
+                <Input
+                  id={`resource-url-${lessonPlan.id}`}
+                  value={lessonPlan.resourceUrl || ""}
+                  onChange={(e) => updateLessonPlan(lessonPlan.id, "resourceUrl", e.target.value)}
+                  placeholder="Enter resource URL"
+                />
+              </div>
+
+              <div>
+                <Label>Resource Files</Label>
+                <FormFileUpload
+                  files={lessonFileUploads[lessonPlan.id] || []}
+                  onChange={(e) => handleLessonFileChange(lessonPlan.id, e)}
+                  onRemove={(index) => removeLessonFile(lessonPlan.id, index)}
+                  multiple
+                  acceptedFileTypes="*/*"
+                />
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      <Button
+        type="button"
+        variant="outline"
+        className="w-full"
+        onClick={appendLessonPlan}
+      >
+        <PlusCircle className="mr-2 h-4 w-4" />
+        Add New Lesson Plan
+      </Button>
+
+      <Separator className="my-6" />
+
+      <div className="flex justify-between mt-6">
         <Button type="button" variant="outline" onClick={onPreviousTab}>
-          Back: Basic Information
+          Previous: Basic Information
         </Button>
-        <Button type="button" variant="outline" onClick={onNextTab}>
-          Next: Cohorts & Students
+        <Button 
+          type="button" 
+          variant="outline" 
+          onClick={onNextTab}
+          disabled={!minimumLessonsCreated}
+        >
+          Next: Cohorts & Schedule
         </Button>
       </div>
     </div>
