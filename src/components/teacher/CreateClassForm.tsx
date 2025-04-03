@@ -192,6 +192,30 @@ const CreateClassForm = ({ onSubmit, onCancel }: CreateClassFormProps) => {
     alert(`Invitations would be sent to students in cohort ${cohortId}`);
   };
 
+  const onSubmitHandler = (data: any) => {
+    const formData = {
+      ...data,
+      cohorts: cohorts
+    };
+    onSubmit(formData);
+  };
+
+  const handleObjectiveChange = (index: number, value: string) => {
+    const updatedObjectives = [...getValues("objectives")];
+    updatedObjectives[index] = value;
+    setValue("objectives", updatedObjectives);
+  };
+
+  const addObjective = () => {
+    setValue("objectives", [...getValues("objectives"), ""]);
+  };
+
+  const removeObjective = (index: number) => {
+    const updatedObjectives = [...getValues("objectives")];
+    updatedObjectives.splice(index, 1);
+    setValue("objectives", updatedObjectives);
+  };
+
   return (
     <form onSubmit={handleSubmit(onSubmitHandler)} className="space-y-8">
       <Card>
@@ -773,104 +797,3 @@ const CreateClassForm = ({ onSubmit, onCancel }: CreateClassFormProps) => {
                                 value={inviteEmail}
                                 onChange={(e) => setInviteEmail(e.target.value)}
                                 className="flex-1"
-                              />
-                              <Button 
-                                type="button" 
-                                variant="outline"
-                                disabled={!inviteEmail}
-                                onClick={() => {
-                                  alert(`Invitation would be sent to ${inviteEmail}`);
-                                  setInviteEmail("");
-                                }}
-                              >
-                                Invite
-                              </Button>
-                            </div>
-                            <p className="text-xs text-gray-500 mt-1">
-                              Send an invitation email to a potential student
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                    <Button
-                      type="button" 
-                      variant="outline" 
-                      onClick={addCohort}
-                      className="mt-2"
-                    >
-                      <PlusCircle className="mr-2 h-4 w-4" />
-                      Add Another Cohort
-                    </Button>
-                  </div>
-                )}
-                
-                <div className="flex justify-between pt-4">
-                  <Button type="button" variant="outline" onClick={() => setActiveTab("lessons")}>
-                    Back: Lesson Plans
-                  </Button>
-                  <Button type="button" variant="outline" onClick={() => setActiveTab("teaching")}>
-                    Next: Teaching Team
-                  </Button>
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-6">
-                <div className="bg-gray-50 border border-gray-200 rounded-md p-4">
-                  <h3 className="text-sm font-medium text-gray-800">Multiple Cohorts Disabled</h3>
-                  <p className="text-xs text-gray-700 mt-1">
-                    You've opted not to divide this class into multiple cohorts. If you want to manage separate groups of students, go back to basic settings and enable cohorts.
-                  </p>
-                  <Button
-                    type="button" 
-                    variant="outline" 
-                    className="mt-3"
-                    onClick={() => {
-                      setValue("hasCohorts", true);
-                      setActiveTab("basic");
-                    }}
-                  >
-                    Enable Cohorts
-                  </Button>
-                </div>
-                
-                <div className="flex justify-between pt-4">
-                  <Button type="button" variant="outline" onClick={() => setActiveTab("lessons")}>
-                    Back: Lesson Plans
-                  </Button>
-                  <Button type="button" variant="outline" onClick={() => setActiveTab("teaching")}>
-                    Next: Teaching Team
-                  </Button>
-                </div>
-              </div>
-            )}
-          </TabsContent>
-
-          <TabsContent value="teaching" className="space-y-6">
-            <div>
-              <h3 className="text-lg font-medium">Teaching Team</h3>
-              <p className="text-sm text-gray-500">Add and manage the teaching team for this class.</p>
-            </div>
-
-            <div className="flex justify-between pt-4">
-              <Button type="button" variant="outline" onClick={() => setActiveTab("cohorts")}>
-                Back: Cohorts
-              </Button>
-              <Button type="submit">
-                Create Class
-              </Button>
-            </div>
-          </TabsContent>
-        </CardContent>
-        <CardFooter className="flex justify-between">
-          <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "Creating..." : "Create Class"}
-          </Button>
-        </CardFooter>
-      </Card>
-    </form>
-  );
-};
-
-export default CreateClassForm;
