@@ -1,9 +1,8 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Home, BookOpen, Users, Calendar, User, Settings, LogOut, Edit, Phone, MapPin, Award, CheckCircle2, CircleDashed, Video, PlusCircle } from "lucide-react";
+import { Home, BookOpen, Users, Calendar, User, Settings, LogOut, Edit, Phone, MapPin, Award, CheckCircle2, CircleDashed, Video, PlusCircle, Star, UserPlus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import TeacherProfileForm from "@/components/teacher/TeacherProfileForm";
 import TeacherProfessionalProfileForm from "@/components/teacher/TeacherProfessionalProfileForm";
@@ -297,7 +296,6 @@ const TeacherDashboard = () => {
 
   const handleClassCreated = (classData: any) => {
     setShowCreateClassForm(false);
-    // Simulate adding the new class to the classes array
     setClasses([...classes, { id: Date.now(), ...classData }]);
     toast({
       title: "Class created successfully",
@@ -699,47 +697,77 @@ const TeacherDashboard = () => {
                                   "Set up your classroom settings for online teaching."
                                 }
                               </p>
-                              {hasProfile && !hasClassesSetup && (
-                                <Button 
-                                  className="mt-2 bg-amber-600 hover:bg-amber-700 text-white"
-                                  size="sm"
-                                  onClick={handleSetupClassSettings}
-                                >
-                                  Set Up Now
-                                </Button>
-                              )}
+                              <Button 
+                                className="mt-2 bg-amber-600 hover:bg-amber-700 text-white"
+                                size="sm"
+                                onClick={handleSetupClassSettings}
+                              >
+                                {hasClassesSetup ? "Edit Setup" : "Set Up Now"}
+                              </Button>
+                            </div>
+                          </div>
+                          
+                          <div className="flex items-start gap-3">
+                            <div className="flex-shrink-0 h-7 w-7 rounded-full bg-amber-100 flex items-center justify-center">
+                              {classes.length > 0 ? 
+                                <CheckCircle2 className="h-4 w-4 text-green-600" /> : 
+                                <CircleDashed className="h-4 w-4 text-amber-600" />
+                              }
+                            </div>
+                            <div>
+                              <p className="font-medium">Step 4: Create Your First Class</p>
+                              <p className="text-sm text-blue-700">
+                                {classes.length > 0 ? 
+                                  "Complete! You've created your first class." : 
+                                  "Create your first class to start teaching."
+                                }
+                              </p>
+                              <Button 
+                                className="mt-2 bg-blue-600 hover:bg-blue-700 text-white"
+                                size="sm"
+                                onClick={handleCreateClass}
+                              >
+                                <PlusCircle className="mr-2 h-4 w-4" />
+                                {classes.length > 0 ? "Create Another Class" : "Create First Class"}
+                              </Button>
                             </div>
                           </div>
                           
                           <div className="flex items-start gap-3">
                             <div className="flex-shrink-0 h-7 w-7 rounded-full bg-gray-100 flex items-center justify-center">
-                              {hasClassesSetup ? 
-                                (classes.length > 0 ? 
-                                  <CheckCircle2 className="h-4 w-4 text-green-600" /> : 
-                                  <CircleDashed className="h-4 w-4 text-blue-600" />) : 
-                                <CircleDashed className="h-4 w-4 text-gray-400" />
-                              }
+                              <CircleDashed className="h-4 w-4 text-gray-600" />
                             </div>
                             <div>
-                              <p className="font-medium text-gray-600">Step 4: Create Your First Class</p>
-                              <p className="text-sm text-gray-500">
-                                {hasClassesSetup ? 
-                                  (classes.length > 0 ? 
-                                    "Complete! You've created your first class." : 
-                                    "Create your first class to start teaching.") : 
-                                  "Start teaching and earning income."
-                                }
+                              <p className="font-medium">Step 5: Enroll Your Students</p>
+                              <p className="text-sm text-gray-600">
+                                Invite and enroll students to join your classes.
                               </p>
-                              {hasClassesSetup && classes.length === 0 && (
-                                <Button 
-                                  className="mt-2 bg-blue-600 hover:bg-blue-700 text-white"
-                                  size="sm"
-                                  onClick={handleCreateClass}
-                                >
-                                  <PlusCircle className="mr-2 h-4 w-4" />
-                                  Create First Class
-                                </Button>
-                              )}
+                              <Button 
+                                className="mt-2 bg-purple-600 hover:bg-purple-700 text-white"
+                                size="sm"
+                              >
+                                <UserPlus className="mr-2 h-4 w-4" />
+                                Enroll Students
+                              </Button>
+                            </div>
+                          </div>
+                          
+                          <div className="flex items-start gap-3">
+                            <div className="flex-shrink-0 h-7 w-7 rounded-full bg-gray-100 flex items-center justify-center">
+                              <CircleDashed className="h-4 w-4 text-gray-600" />
+                            </div>
+                            <div>
+                              <p className="font-medium">Step 6: Get Reviews</p>
+                              <p className="text-sm text-gray-600">
+                                Collect feedback and reviews from your students to improve your profile.
+                              </p>
+                              <Button 
+                                className="mt-2 bg-yellow-600 hover:bg-yellow-700 text-white"
+                                size="sm"
+                              >
+                                <Star className="mr-2 h-4 w-4" />
+                                Request Reviews
+                              </Button>
                             </div>
                           </div>
                         </div>
