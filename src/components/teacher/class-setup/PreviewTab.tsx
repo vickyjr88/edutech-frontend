@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { UseFormReturn } from "react-hook-form";
 import { Button } from "@/components/ui/button";
@@ -87,7 +86,7 @@ const PreviewTab = ({
               checked={isPublic}
               onCheckedChange={setIsPublic}
             />
-            <Label htmlFor="isPublic">Make class public</Label>
+            <Label htmlFor="isPublic">Publish class</Label>
           </div>
         </div>
       </div>
@@ -127,7 +126,7 @@ const PreviewTab = ({
               </CardDescription>
             </div>
             <Badge variant={isPublic ? "default" : "outline"}>
-              {isPublic ? "Public" : "Private"}
+              {isPublic ? "Published" : "Draft"}
             </Badge>
           </div>
         </CardHeader>
@@ -302,7 +301,7 @@ const PreviewTab = ({
           type="button"
           className="flex items-center gap-2"
         >
-          {isSubmitting ? 'Publishing...' : (publishRequiresApproval ? 'Request Approval' : 'Publish Now')}
+          {isSubmitting ? 'Publishing...' : (publishRequiresApproval ? 'Request Review' : 'Publish Now')}
           <ChevronRight className="h-4 w-4" />
         </Button>
       </div>
