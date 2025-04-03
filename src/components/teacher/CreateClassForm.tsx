@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,16 +8,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage 
-} from "@/components/ui/form";
-import { PlusCircle, Trash2, Users, Calendar, Clock, Mail, Phone, Book, MapPin, CalendarRange, UserCircle2 } from "lucide-react";
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { PlusCircle, Trash2, Users, Calendar, Clock, Mail, Phone, Book, MapPin, CalendarRange, UserCircle2, UserPlus } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
@@ -59,6 +52,14 @@ type StudentType = {
   enrollmentDate: string;
 };
 
+type TeacherType = {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  role: "lead" | "assistant" | "substitute" | "guest";
+};
+
 interface CreateClassFormProps {
   onSubmit: (data: any) => void;
   onCancel: () => void;
@@ -68,6 +69,14 @@ const CreateClassForm = ({ onSubmit, onCancel }: CreateClassFormProps) => {
   const [cohorts, setCohorts] = useState<CohortType[]>([]);
   const [inviteEmail, setInviteEmail] = useState("");
   const [showAddStudent, setShowAddStudent] = useState<string | null>(null);
+  const [teachers, setTeachers] = useState<TeacherType[]>([]);
+  const [newTeacher, setNewTeacher] = useState<Partial<TeacherType>>({
+    name: "",
+    email: "",
+    phone: "",
+    role: "assistant"
+  });
+  const [showAddTeacher, setShowAddTeacher] = useState(false);
   const [newStudent, setNewStudent] = useState<Partial<StudentType>>({
     name: "",
     email: "",
@@ -102,7 +111,8 @@ const CreateClassForm = ({ onSubmit, onCancel }: CreateClassFormProps) => {
   const onSubmitHandler = (data: any) => {
     const formData = {
       ...data,
-      cohorts: cohorts
+      cohorts: cohorts,
+      teachers: teachers
     };
     onSubmit(formData);
   };
@@ -222,6 +232,39 @@ const CreateClassForm = ({ onSubmit, onCancel }: CreateClassFormProps) => {
     alert(`Invitations would be sent to students in cohort ${cohortId}`);
   };
 
+  const addTeacher = () => {
+    if (!newTeacher.name || !newTeacher.email) return;
+
+    const teacher: TeacherType = {
+      id: Date.now().toString(),
+      name: newTeacher.name || "",
+      email: newTeacher.email || "",
+      phone: newTeacher.phone || "",
+      role: newTeacher.role as "lead" | "assistant" | "substitute" | "guest"
+    };
+
+    setTeachers([...teachers, teacher]);
+    setNewTeacher({
+      name: "",
+      email: "",
+      phone: "",
+      role: "assistant"
+    });
+    setShowAddTeacher(false);
+  };
+
+  const removeTeacher = (teacherId: string) => {
+    setTeachers(teachers.filter(teacher => teacher.id !== teacherId));
+  };
+
+  const updateTeacherRole = (teacherId: string, role: TeacherType["role"]) => {
+    setTeachers(teachers.map(teacher => 
+      teacher.id === teacherId 
+        ? { ...teacher, role } 
+        : teacher
+    ));
+  };
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmitHandler)} className="space-y-8">
@@ -232,9 +275,10 @@ const CreateClassForm = ({ onSubmit, onCancel }: CreateClassFormProps) => {
           </CardHeader>
           <CardContent className="space-y-6">
             <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid w-full grid-cols-3 mb-6">
+              <TabsList className="grid w-full grid-cols-4 mb-6">
                 <TabsTrigger value="basic">Basic Settings</TabsTrigger>
                 <TabsTrigger value="lessons">Lesson Plans</TabsTrigger>
+                <TabsTrigger value="team">Teaching Team</TabsTrigger>
                 <TabsTrigger value="cohorts">Cohorts & Students</TabsTrigger>
               </TabsList>
             
@@ -396,6 +440,195 @@ const CreateClassForm = ({ onSubmit, onCancel }: CreateClassFormProps) => {
                 <div className="flex justify-between pt-4">
                   <Button type="button" variant="outline" onClick={() => setActiveTab("basic")}>
                     Back: Basic Settings
+                  </Button>
+                  <Button type="button" variant="outline" onClick={() => setActiveTab("team")}>
+                    Next: Teaching Team
+                  </Button>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="team" className="space-y-6">
+                <div>
+                  <h3 className="text-lg font-medium">Teaching Team</h3>
+                  <p className="text-sm text-gray-500">Add and manage teachers or assistants for this class.</p>
+                </div>
+
+                {teachers.length === 0 ? (
+                  <div className="text-center py-8 border border-dashed rounded-md">
+                    <UserPlus className="h-12 w-12 mx-auto text-gray-400" />
+                    <h3 className="mt-2 text-sm font-medium text-gray-900">No teachers defined</h3>
+                    <p className="mt-1 text-sm text-gray-500">Get started by adding teachers to this class</p>
+                    <Button
+                      type="button" 
+                      onClick={() => setShowAddTeacher(true)}
+                      className="mt-4"
+                    >
+                      <PlusCircle className="mr-2 h-4 w-4" />
+                      Add First Teacher
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="flex justify-end">
+                      <Button
+                        type="button" 
+                        onClick={() => setShowAddTeacher(true)}
+                        size="sm"
+                      >
+                        <PlusCircle className="mr-2 h-4 w-4" />
+                        Add Teacher
+                      </Button>
+                    </div>
+                    
+                    <div className="border rounded-md overflow-hidden">
+                      <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Name
+                            </th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Contact
+                            </th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Role
+                            </th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Actions
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                          {teachers.map((teacher) => (
+                            <tr key={teacher.id}>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="text-sm font-medium text-gray-900">{teacher.name}</div>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="text-sm text-gray-500">{teacher.email}</div>
+                                {teacher.phone && <div className="text-sm text-gray-500">{teacher.phone}</div>}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <Select 
+                                  value={teacher.role}
+                                  onValueChange={(value: TeacherType["role"]) => 
+                                    updateTeacherRole(teacher.id, value)
+                                  }
+                                >
+                                  <SelectTrigger className="h-8 w-40">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="lead">
+                                      <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100">Lead Teacher</Badge>
+                                    </SelectItem>
+                                    <SelectItem value="assistant">
+                                      <Badge className="bg-green-100 text-green-800 hover:bg-green-100">Assistant</Badge>
+                                    </SelectItem>
+                                    <SelectItem value="substitute">
+                                      <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100">Substitute</Badge>
+                                    </SelectItem>
+                                    <SelectItem value="guest">
+                                      <Badge className="bg-purple-100 text-purple-800 hover:bg-purple-100">Guest</Badge>
+                                    </SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                <Button 
+                                  type="button" 
+                                  variant="ghost" 
+                                  size="sm"
+                                  onClick={() => removeTeacher(teacher.id)}
+                                  className="text-red-600 hover:text-red-900"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+
+                {showAddTeacher && (
+                  <div className="mb-4 p-4 border rounded-md bg-gray-50">
+                    <h5 className="text-sm font-medium mb-3">Add New Teacher</h5>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
+                      <div className="space-y-2">
+                        <Label htmlFor="new-teacher-name">Teacher Name</Label>
+                        <Input 
+                          id="new-teacher-name"
+                          value={newTeacher.name || ""}
+                          onChange={(e) => setNewTeacher({...newTeacher, name: e.target.value})}
+                          placeholder="Enter teacher name"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="new-teacher-email">Email</Label>
+                        <Input 
+                          id="new-teacher-email"
+                          type="email"
+                          value={newTeacher.email || ""}
+                          onChange={(e) => setNewTeacher({...newTeacher, email: e.target.value})}
+                          placeholder="Enter teacher email"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="new-teacher-phone">Phone (Optional)</Label>
+                        <Input 
+                          id="new-teacher-phone"
+                          value={newTeacher.phone || ""}
+                          onChange={(e) => setNewTeacher({...newTeacher, phone: e.target.value})}
+                          placeholder="Enter teacher phone"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="new-teacher-role">Role</Label>
+                        <Select 
+                          value={newTeacher.role as string || "assistant"}
+                          onValueChange={(value: TeacherType["role"]) => 
+                            setNewTeacher({...newTeacher, role: value})
+                          }
+                        >
+                          <SelectTrigger id="new-teacher-role">
+                            <SelectValue placeholder="Select role" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="lead">Lead Teacher</SelectItem>
+                            <SelectItem value="assistant">Assistant</SelectItem>
+                            <SelectItem value="substitute">Substitute</SelectItem>
+                            <SelectItem value="guest">Guest</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    <div className="flex justify-end space-x-2">
+                      <Button 
+                        type="button" 
+                        variant="outline"
+                        onClick={() => setShowAddTeacher(false)}
+                      >
+                        Cancel
+                      </Button>
+                      <Button 
+                        type="button"
+                        onClick={addTeacher}
+                        disabled={!newTeacher.name || !newTeacher.email}
+                      >
+                        Add Teacher
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex justify-between pt-4">
+                  <Button type="button" variant="outline" onClick={() => setActiveTab("lessons")}>
+                    Back: Lesson Plans
                   </Button>
                   <Button type="button" variant="outline" onClick={() => setActiveTab("cohorts")}>
                     Next: Cohorts
@@ -880,7 +1113,7 @@ const CreateClassForm = ({ onSubmit, onCancel }: CreateClassFormProps) => {
                                     variant="outline"
                                     onClick={() => {
                                       if (inviteEmail) {
-                                        addStudent(cohort.id);
+                                        // Implement invitation logic
                                         setInviteEmail("");
                                       }
                                     }}
@@ -920,11 +1153,11 @@ const CreateClassForm = ({ onSubmit, onCancel }: CreateClassFormProps) => {
                 )}
 
                 <div className="flex justify-between pt-4">
-                  <Button type="button" variant="outline" onClick={() => setActiveTab("lessons")}>
-                    Back: Lesson Plans
+                  <Button type="button" variant="outline" onClick={() => setActiveTab("team")}>
+                    Back: Teaching Team
                   </Button>
                   <Button type="submit">
-                    {form.formState.isSubmitting ? "Saving..." : "Save Class"}
+                    Save Class
                   </Button>
                 </div>
               </TabsContent>
@@ -945,17 +1178,26 @@ const CreateClassForm = ({ onSubmit, onCancel }: CreateClassFormProps) => {
                 <Button type="button" variant="outline" onClick={() => setActiveTab("basic")}>
                   Back: Basic Settings
                 </Button>
+                <Button type="button" variant="outline" onClick={() => setActiveTab("team")}>
+                  Next: Teaching Team
+                </Button>
+              </>
+            ) : activeTab === "team" ? (
+              <>
+                <Button type="button" variant="outline" onClick={() => setActiveTab("lessons")}>
+                  Back: Lesson Plans
+                </Button>
                 <Button type="button" variant="outline" onClick={() => setActiveTab("cohorts")}>
                   Next: Cohorts
                 </Button>
               </>
             ) : (
               <>
-                <Button type="button" variant="outline" onClick={() => setActiveTab("lessons")}>
-                  Back: Lesson Plans
+                <Button type="button" variant="outline" onClick={() => setActiveTab("team")}>
+                  Back: Teaching Team
                 </Button>
                 <Button type="submit">
-                  {form.formState.isSubmitting ? "Saving..." : "Save Class"}
+                  Save Class
                 </Button>
               </>
             )}
