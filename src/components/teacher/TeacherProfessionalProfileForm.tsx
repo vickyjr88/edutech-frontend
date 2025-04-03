@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,12 +13,14 @@ import {
   ProgressIndicator,
   EducationItem,
   InstitutionType,
-  ExperienceItem
+  ExperienceItem,
+  StrategiesStep
 } from "./professional-profile";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { fetchExperienceRecords } from "./professional-profile/utils/experienceUtils";
+import { StrategyItem } from "./professional-profile/utils/strategyUtils";
 
 type FormItem = {
   id: string;
@@ -62,7 +65,7 @@ const TeacherProfessionalProfileForm = ({
     curriculums: [],
     grades: []
   }]);
-  const [strategies, setStrategies] = useState<FormItem[]>([{ id: "1", value: "" }]);
+  const [strategies, setStrategies] = useState<StrategyItem[]>([]);
   const [methodologies, setMethodologies] = useState<FormItem[]>([{ id: "1", value: "" }]);
   const [academicSubjects, setAcademicSubjects] = useState<FormItem[]>([{ id: "1", value: "" }]);
   const [afterSchoolSubjects, setAfterSchoolSubjects] = useState<FormItem[]>([{ id: "1", value: "" }]);
@@ -231,11 +234,9 @@ const TeacherProfessionalProfileForm = ({
           setExperience={setExperience} 
         />;
       case 3: 
-        return <SimpleListStep 
-          items={strategies} 
-          setItems={setStrategies} 
-          label="Strategy" 
-          placeholder="e.g., Collaborative Learning" 
+        return <StrategiesStep 
+          strategies={strategies} 
+          setStrategies={setStrategies} 
         />;
       case 4: 
         return <SimpleListStep 
