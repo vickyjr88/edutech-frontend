@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, ReactNode } from "react";
 import { useForm, UseFormReturn } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -81,6 +80,7 @@ export const ClassFormProvider = ({ children, onSubmit }: ClassFormProviderProps
       technicalRequirements: "",
       materialsRequired: "",
       commitmentRequired: "",
+      numberOfLessons: 1,
       isPublic: true,
       hasCohorts: false,
       hasTeamTeaching: false,
@@ -92,7 +92,6 @@ export const ClassFormProvider = ({ children, onSubmit }: ClassFormProviderProps
     setActiveTab(tab);
   };
 
-  // Calculate number of lessons based on start and end date and repeat pattern
   const calculateNumberOfLessons = (
     startDate: Date | null, 
     endDate: Date | null,
@@ -100,14 +99,11 @@ export const ClassFormProvider = ({ children, onSubmit }: ClassFormProviderProps
   ): number => {
     if (!startDate || !endDate) return 0;
     
-    // Get total days between dates
     const millisecondsPerDay = 1000 * 60 * 60 * 24;
     const days = Math.round(Math.abs((endDate.getTime() - startDate.getTime()) / millisecondsPerDay));
     
-    // Calculate number of weeks
     const weeks = Math.ceil(days / 7);
     
-    // Get number of lessons per week based on repeat pattern
     let lessonsPerWeek = 0;
     
     if (repeatSchedule.pattern === "weekly") {
@@ -118,11 +114,9 @@ export const ClassFormProvider = ({ children, onSubmit }: ClassFormProviderProps
       lessonsPerWeek = repeatSchedule.daysOfWeek.length;
     }
     
-    // Calculate total lessons, accounting for repeatEvery
     return Math.ceil((weeks * lessonsPerWeek) / repeatSchedule.repeatEvery);
   };
 
-  // Cohort methods
   const addCohort = () => {
     const newId = Date.now().toString();
     const cohortNumber = cohorts.length + 1;
@@ -158,7 +152,6 @@ export const ClassFormProvider = ({ children, onSubmit }: ClassFormProviderProps
       if (cohort.id === id) {
         const updatedCohort = { ...cohort, [field]: value };
         
-        // If updating start or end date, recalculate number of lessons
         if (field === 'startDate' || field === 'endDate') {
           const startDate = field === 'startDate' ? value : cohort.startDate;
           const endDate = field === 'endDate' ? value : cohort.endDate;
@@ -175,7 +168,6 @@ export const ClassFormProvider = ({ children, onSubmit }: ClassFormProviderProps
     }));
   };
   
-  // Update repeat schedule 
   const updateRepeatSchedule = (cohortId: string, field: keyof RepeatSchedule, value: any) => {
     setCohorts(cohorts.map(cohort => {
       if (cohort.id === cohortId) {
@@ -195,16 +187,13 @@ export const ClassFormProvider = ({ children, onSubmit }: ClassFormProviderProps
     }));
   };
   
-  // Toggle day of week in repeat schedule
   const toggleDayOfWeek = (cohortId: string, day: string) => {
     setCohorts(cohorts.map(cohort => {
       if (cohort.id === cohortId) {
         const daysOfWeek = [...cohort.repeatSchedule.daysOfWeek];
         
         if (daysOfWeek.includes(day)) {
-          // Remove day if already selected
           const updatedDays = daysOfWeek.filter(d => d !== day);
-          // Ensure at least one day is selected
           const finalDays = updatedDays.length > 0 ? updatedDays : daysOfWeek;
           
           const updatedRepeatSchedule = { 
@@ -222,7 +211,6 @@ export const ClassFormProvider = ({ children, onSubmit }: ClassFormProviderProps
             )
           };
         } else {
-          // Add day if not already selected
           const updatedRepeatSchedule = { 
             ...cohort.repeatSchedule, 
             daysOfWeek: [...daysOfWeek, day] 
@@ -243,12 +231,10 @@ export const ClassFormProvider = ({ children, onSubmit }: ClassFormProviderProps
     }));
   };
 
-  // Lesson schedule methods
   const addLessonSchedule = (cohortId: string) => {
     const cohort = cohorts.find(c => c.id === cohortId);
     if (!cohort) return;
     
-    // Find the next available lesson number
     const existingLessonNumbers = cohort.lessonSchedules.map(ls => ls.lessonNumber);
     let nextLessonNumber = 1;
     while (existingLessonNumbers.includes(nextLessonNumber)) {
@@ -297,7 +283,6 @@ export const ClassFormProvider = ({ children, onSubmit }: ClassFormProviderProps
     setCohorts(cohorts.map(c => c.id === cohortId ? updatedCohort : c));
   };
 
-  // Team members methods
   const addTeamMember = () => {
     const newId = Date.now().toString();
     setTeamMembers([...teamMembers, { id: newId, email: "", role: "co-teacher" }]);
@@ -313,7 +298,6 @@ export const ClassFormProvider = ({ children, onSubmit }: ClassFormProviderProps
     ));
   };
 
-  // Lesson plan methods
   const handleLessonFileChange = (lessonId: string, e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     setLessonFileUploads(prev => ({ ...prev, [lessonId]: files }));
@@ -387,4 +371,3 @@ export const ClassFormProvider = ({ children, onSubmit }: ClassFormProviderProps
     </ClassFormContext.Provider>
   );
 };
-

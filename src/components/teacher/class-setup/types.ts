@@ -17,6 +17,7 @@ export const classSchema = z.object({
   commitmentRequired: z.string().optional(),
   methodology: z.string().optional(),
   strategy: z.string().optional(),
+  numberOfLessons: z.number().min(1, { message: "Number of lessons must be at least 1" }).default(1),
   isPublic: z.boolean().default(true),
   hasCohorts: z.boolean().default(false),
   hasTeamTeaching: z.boolean().default(false),

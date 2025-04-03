@@ -264,6 +264,35 @@ const BasicInformationTab = ({ form, onNextTab }: BasicInformationTabProps) => {
         )}
       />
 
+      <FormField
+        control={form.control}
+        name="numberOfLessons"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Number of Lessons</FormLabel>
+            <Input 
+              type="number" 
+              min="1" 
+              placeholder="Enter the number of lessons" 
+              {...field}
+              onChange={(e) => {
+                // Convert string to number before updating the form value
+                const value = parseInt(e.target.value);
+                if (!isNaN(value)) {
+                  field.onChange(value);
+                } else {
+                  field.onChange(1); // Default to 1 if input is invalid
+                }
+              }}
+            />
+            <FormDescription>
+              Set the total number of lessons for this class.
+            </FormDescription>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
       <div className="space-y-4 border rounded-lg p-4">
         <h3 className="text-lg font-medium">Class Settings</h3>
         
