@@ -5,7 +5,16 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { 
+  Form, 
+  FormControl, 
+  FormDescription, 
+  FormField, 
+  FormItem, 
+  FormLabel, 
+  FormMessage,
+  FormFileUpload 
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -14,7 +23,20 @@ import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { Calendar, Users, BookOpen, ScrollText, PlusCircle, Trash2, UserPlus, BookText, School, FileText } from "lucide-react";
+import { 
+  Calendar, 
+  Users, 
+  BookOpen, 
+  ScrollText, 
+  PlusCircle, 
+  Trash2, 
+  UserPlus, 
+  BookText, 
+  School, 
+  FileText, 
+  Link, 
+  FileUp 
+} from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { 
   TEACHING_STRATEGIES 
@@ -47,6 +69,8 @@ const classSchema = z.object({
     description: z.string().optional(),
     duration: z.string().optional(),
     resources: z.string().optional(),
+    resourceUrl: z.string().optional(),
+    resourceFiles: z.array(z.any()).optional(),
   })).default([]),
 });
 
@@ -63,6 +87,7 @@ const CreateClassForm = ({ onSubmit, onCancel }: CreateClassFormProps) => {
   const [cohorts, setCohorts] = useState<{ id: string; name: string; schedule: string }[]>([]);
   const [teamMembers, setTeamMembers] = useState<{ id: string; email: string; role: string }[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [lessonFileUploads, setLessonFileUploads] = useState<Record<string, File[]>>({});
 
   const form = useForm<ClassFormValues>({
     resolver: zodResolver(classSchema),
@@ -137,20 +162,52 @@ const CreateClassForm = ({ onSubmit, onCancel }: CreateClassFormProps) => {
 
   const addLessonPlan = () => {
     const newId = Date.now().toString();
-    const updatedLessonPlans = [...lessonPlans, { id: newId, title: "", description: "", duration: "", resources: "" }];
+    const updatedLessonPlans = [...lessonPlans, { 
+      id: newId, 
+      title: "", 
+      description: "", 
+      duration: "", 
+      resources: "", 
+      resourceUrl: "",
+      resourceFiles: [] 
+    }];
     form.setValue("lessonPlans", updatedLessonPlans);
   };
 
   const removeLessonPlan = (id: string) => {
     const updatedLessonPlans = lessonPlans.filter(plan => plan.id !== id);
     form.setValue("lessonPlans", updatedLessonPlans);
+    // Also clean up any stored files
+    const updatedFileUploads = {...lessonFileUploads};
+    delete updatedFileUploads[id];
+    setLessonFileUploads(updatedFileUploads);
   };
 
-  const updateLessonPlan = (id: string, field: "title" | "description" | "duration" | "resources", value: string) => {
+  const updateLessonPlan = (id: string, field: "title" | "description" | "duration" | "resources" | "resourceUrl", value: string) => {
     const updatedLessonPlans = lessonPlans.map(plan => 
       plan.id === id ? { ...plan, [field]: value } : plan
     );
     form.setValue("lessonPlans", updatedLessonPlans);
+  };
+
+  const handleLessonFileUpload = (id: string, files: File[]) => {
+    // Store the files in state
+    setLessonFileUploads(prev => ({
+      ...prev,
+      [id]: files
+    }));
+    
+    // Update the form value
+    const updatedLessonPlans = lessonPlans.map(plan => 
+      plan.id === id ? { ...plan, resourceFiles: files } : plan
+    );
+    form.setValue("lessonPlans", updatedLessonPlans);
+
+    // Show a toast notification
+    toast({
+      title: "Files uploaded",
+      description: `${files.length} file(s) uploaded for lesson plan.`,
+    });
   };
 
   return (
@@ -707,6 +764,56 @@ const CreateClassForm = ({ onSubmit, onCancel }: CreateClassFormProps) => {
                                   placeholder="Worksheets, videos, props, etc."
                                 />
                               </div>
+                            </div>
+                            
+                            {/* Resource URL and File Upload */}
+                            <div className="space-y-2 pt-2 border-t">
+                              <h4 className="text-sm font-medium">Lesson Resources</h4>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                  <Label htmlFor={`lesson-resource-url-${plan.id}`} className="flex items-center gap-1">
+                                    <Link className="h-4 w-4" />
+                                    Resource URL
+                                  </Label>
+                                  <Input 
+                                    id={`lesson-resource-url-${plan.id}`}
+                                    value={plan.resourceUrl || ""}
+                                    onChange={(e) => updateLessonPlan(plan.id, "resourceUrl", e.target.value)}
+                                    placeholder="https://example.com/resource"
+                                    type="url"
+                                  />
+                                  <p className="text-xs text-muted-foreground">
+                                    Link to online resources like videos or websites
+                                  </p>
+                                </div>
+                                
+                                <div className="space-y-2">
+                                  <FormFileUpload
+                                    label="Upload Files"
+                                    description="Upload worksheets, slides, or other materials"
+                                    accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.jpg,.jpeg,.png"
+                                    multiple={true}
+                                    onFilesSelected={(files) => handleLessonFileUpload(plan.id, files)}
+                                    icon={<FileUp className="h-8 w-8 text-gray-400" />}
+                                    className="h-full"
+                                  />
+                                </div>
+                              </div>
+                              
+                              {/* Show selected files */}
+                              {lessonFileUploads[plan.id] && lessonFileUploads[plan.id].length > 0 && (
+                                <div className="mt-2 p-2 bg-muted rounded-md">
+                                  <p className="text-xs font-medium mb-1">Selected files:</p>
+                                  <div className="space-y-1">
+                                    {lessonFileUploads[plan.id].map((file, fileIndex) => (
+                                      <div key={fileIndex} className="flex items-center text-xs">
+                                        <FileText className="h-3 w-3 mr-1 text-primary" />
+                                        {file.name} ({(file.size / 1024).toFixed(1)} KB)
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
                             </div>
                           </div>
                         </div>
