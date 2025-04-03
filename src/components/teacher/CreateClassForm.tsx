@@ -1,16 +1,10 @@
+
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Button } from "@/components/ui/button";
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardFooter, 
-  CardHeader, 
-  CardTitle 
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
   Form, 
   FormControl, 
@@ -74,6 +68,7 @@ const classSchema = z.object({
     title: z.string().optional(),
     description: z.string().optional(),
     duration: z.string().optional(),
+    resources: z.string().optional(),
     resourceUrl: z.string().optional(),
     resourceFiles: z.array(z.any()).optional(),
   })).default([]),
@@ -169,9 +164,10 @@ const CreateClassForm = ({ onSubmit, onCancel }: CreateClassFormProps) => {
     const newId = Date.now().toString();
     const updatedLessonPlans = [...lessonPlans, { 
       id: newId, 
-      title: form.getValues("title") ? `${form.getValues("title")} - Lesson ${lessonPlans.length + 1}` : `Lesson ${lessonPlans.length + 1}`, 
+      title: "", 
       description: "", 
-      duration: "30", 
+      duration: "", 
+      resources: "", 
       resourceUrl: "",
       resourceFiles: [] 
     }];
@@ -187,7 +183,7 @@ const CreateClassForm = ({ onSubmit, onCancel }: CreateClassFormProps) => {
     setLessonFileUploads(updatedFileUploads);
   };
 
-  const updateLessonPlan = (id: string, field: "title" | "description" | "duration" | "resourceUrl", value: string) => {
+  const updateLessonPlan = (id: string, field: "title" | "description" | "duration" | "resources" | "resourceUrl", value: string) => {
     const updatedLessonPlans = lessonPlans.map(plan => 
       plan.id === id ? { ...plan, [field]: value } : plan
     );
@@ -215,211 +211,61 @@ const CreateClassForm = ({ onSubmit, onCancel }: CreateClassFormProps) => {
   };
 
   return (
-    <div className="w-full">
-      <Card className="max-w-4xl mx-auto">
-        <CardHeader>
-          <CardTitle>Create a New Class</CardTitle>
-          <CardDescription>
-            Set up your class details, schedule, and teaching team
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid grid-cols-4 mb-8">
-              <TabsTrigger value="basic" className="flex items-center gap-2">
-                <BookOpen className="h-4 w-4" />
-                Basic Information
-              </TabsTrigger>
-              <TabsTrigger value="lessons" className="flex items-center gap-2">
-                <FileText className="h-4 w-4" />
-                Lesson Plans
-              </TabsTrigger>
-              <TabsTrigger value="cohorts" className="flex items-center gap-2">
-                <Users className="h-4 w-4" />
-                Cohorts & Students
-              </TabsTrigger>
-              <TabsTrigger value="teaching" className="flex items-center gap-2">
-                <ScrollText className="h-4 w-4" />
-                Teaching Team
-              </TabsTrigger>
-            </TabsList>
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(handleSubmitForm)}>
-                <TabsContent value="basic" className="space-y-6">
-                  <div className="space-y-6">
-                    {/* Class Type and Title in one row */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <FormField
-                        control={form.control}
-                        name="type"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Class Type</FormLabel>
-                            <Select 
-                              onValueChange={field.onChange} 
-                              defaultValue={field.value}
-                            >
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select class type" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                <SelectItem value="academic">Academic</SelectItem>
-                                <SelectItem value="afterschool">After School</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <FormDescription>
-                              Academic classes follow curriculum, after-school are extracurricular
-                            </FormDescription>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="title"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Class Title</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Enter a catchy title for your class" {...field} />
-                            </FormControl>
-                            <FormDescription>
-                              Give your class a catchy, descriptive title
-                            </FormDescription>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-
-                    {/* Curriculum, Grade Level, and Subject in one row */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                      <FormField
-                        control={form.control}
-                        name="curriculum"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Curriculum</FormLabel>
-                            <Select 
-                              onValueChange={field.onChange}
-                              defaultValue={field.value}
-                            >
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select curriculum" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                <SelectItem value="national">National Curriculum</SelectItem>
-                                <SelectItem value="cambridge">Cambridge</SelectItem>
-                                <SelectItem value="ib">International Baccalaureate</SelectItem>
-                                <SelectItem value="american">American Curriculum</SelectItem>
-                                <SelectItem value="other">Other</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="gradeLevel"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>{classType === "academic" ? "Grade Level" : "Age Range"}</FormLabel>
-                            <Select 
-                              onValueChange={field.onChange}
-                              defaultValue={field.value}
-                            >
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder={classType === "academic" ? "Select grade level" : "Select age range"} />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                {classType === "academic" ? (
-                                  <>
-                                    <SelectItem value="elementary_1_3">Elementary (Grades 1-3)</SelectItem>
-                                    <SelectItem value="elementary_4_6">Elementary (Grades 4-6)</SelectItem>
-                                    <SelectItem value="middle_school">Middle School (Grades 7-8)</SelectItem>
-                                    <SelectItem value="high_school">High School (Grades 9-12)</SelectItem>
-                                  </>
-                                ) : (
-                                  <>
-                                    <SelectItem value="ages_5_7">Ages 5-7</SelectItem>
-                                    <SelectItem value="ages_8_10">Ages 8-10</SelectItem>
-                                    <SelectItem value="ages_11_13">Ages 11-13</SelectItem>
-                                    <SelectItem value="ages_14_18">Ages 14-18</SelectItem>
-                                  </>
-                                )}
-                                <SelectItem value="all_ages">All Ages</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="subject"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Subject</FormLabel>
-                            <Select 
-                              onValueChange={field.onChange}
-                              defaultValue={field.value}
-                            >
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select subject" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                {classType === "academic" ? (
-                                  <>
-                                    <SelectItem value="mathematics">Mathematics</SelectItem>
-                                    <SelectItem value="english">English</SelectItem>
-                                    <SelectItem value="science">Science</SelectItem>
-                                    <SelectItem value="social_studies">Social Studies</SelectItem>
-                                    <SelectItem value="languages">Languages</SelectItem>
-                                  </>
-                                ) : (
-                                  <>
-                                    <SelectItem value="art">Art & Crafts</SelectItem>
-                                    <SelectItem value="music">Music</SelectItem>
-                                    <SelectItem value="sports">Sports & Physical Education</SelectItem>
-                                    <SelectItem value="coding">Coding & Technology</SelectItem>
-                                    <SelectItem value="drama">Drama & Theatre</SelectItem>
-                                  </>
-                                )}
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-
+    <Card className="w-full max-w-4xl mx-auto">
+      <CardHeader>
+        <CardTitle>Create a New Class</CardTitle>
+        <CardDescription>
+          Set up your class details, schedule, and teaching team
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid grid-cols-4 mb-8">
+            <TabsTrigger value="basic" className="flex items-center gap-2">
+              <BookOpen className="h-4 w-4" />
+              Basic Information
+            </TabsTrigger>
+            <TabsTrigger value="lessons" className="flex items-center gap-2">
+              <FileText className="h-4 w-4" />
+              Lesson Plans
+            </TabsTrigger>
+            <TabsTrigger value="cohorts" className="flex items-center gap-2">
+              <Users className="h-4 w-4" />
+              Cohorts & Students
+            </TabsTrigger>
+            <TabsTrigger value="teaching" className="flex items-center gap-2">
+              <ScrollText className="h-4 w-4" />
+              Teaching Team
+            </TabsTrigger>
+          </TabsList>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(handleSubmitForm)}>
+              <TabsContent value="basic" className="space-y-6">
+                <div className="space-y-6">
+                  {/* Class Type and Title in one row */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <FormField
                       control={form.control}
-                      name="summary"
+                      name="type"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Class Summary</FormLabel>
-                          <FormControl>
-                            <Textarea 
-                              placeholder="Write a brief summary of your class (max 200 characters)..." 
-                              className="resize-none h-20"
-                              {...field} 
-                            />
-                          </FormControl>
+                          <FormLabel>Class Type</FormLabel>
+                          <Select 
+                            onValueChange={field.onChange} 
+                            defaultValue={field.value}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select class type" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="academic">Academic</SelectItem>
+                              <SelectItem value="afterschool">After School</SelectItem>
+                            </SelectContent>
+                          </Select>
                           <FormDescription>
-                            A short summary that will appear in class listings
+                            Academic classes follow curriculum, after-school are extracurricular
                           </FormDescription>
                           <FormMessage />
                         </FormItem>
@@ -428,81 +274,233 @@ const CreateClassForm = ({ onSubmit, onCancel }: CreateClassFormProps) => {
 
                     <FormField
                       control={form.control}
-                      name="description"
+                      name="title"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Detailed Description</FormLabel>
+                          <FormLabel>Class Title</FormLabel>
                           <FormControl>
-                            <Textarea 
-                              placeholder="Provide a comprehensive description of what your class covers..." 
-                              className="min-h-32"
-                              {...field} 
-                            />
+                            <Input placeholder="Enter a catchy title for your class" {...field} />
                           </FormControl>
                           <FormDescription>
-                            Provide a detailed description of what students will learn
+                            Give your class a catchy, descriptive title
                           </FormDescription>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
+                  </div>
 
+                  {/* Curriculum, Grade Level, and Subject in one row */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <FormField
                       control={form.control}
-                      name="objectives"
+                      name="curriculum"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Learning Objectives</FormLabel>
-                          <FormControl>
-                            <Textarea 
-                              placeholder="List the key learning objectives or skills students will gain..." 
-                              className="min-h-24"
-                              {...field} 
-                            />
-                          </FormControl>
-                          <FormDescription>
-                            What will students be able to do after completing this class?\n                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="assessmentMethods"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Assessment Methods</FormLabel>
-                          <FormControl>
-                            <Textarea 
-                              placeholder="Describe how you will assess student progress..." 
-                              className="min-h-24"
-                              {...field} 
-                            />
-                          </FormControl>
-                          <FormDescription>
-                            How will you evaluate student progress and learning?\n                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <FormField
-                        control={form.control}
-                        name="technicalRequirements"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Technical Requirements</FormLabel>
+                          <FormLabel>Curriculum</FormLabel>
+                          <Select 
+                            onValueChange={field.onChange}
+                            defaultValue={field.value}
+                          >
                             <FormControl>
-                              <Textarea 
-                                placeholder="List technical requirements (internet speed, software, etc.)..." 
-                                className="min-h-24"
-                                {...field} 
-                              />
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select curriculum" />
+                              </SelectTrigger>
                             </FormControl>
-                            <FormDescription>
-                              What technical setup do students need?\n                          </FormDescription>
+                            <SelectContent>
+                              <SelectItem value="national">National Curriculum</SelectItem>
+                              <SelectItem value="cambridge">Cambridge</SelectItem>
+                              <SelectItem value="ib">International Baccalaureate</SelectItem>
+                              <SelectItem value="american">American Curriculum</SelectItem>
+                              <SelectItem value="other">Other</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="gradeLevel"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>{classType === "academic" ? "Grade Level" : "Age Range"}</FormLabel>
+                          <Select 
+                            onValueChange={field.onChange}
+                            defaultValue={field.value}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder={classType === "academic" ? "Select grade level" : "Select age range"} />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {classType === "academic" ? (
+                                <>
+                                  <SelectItem value="elementary_1_3">Elementary (Grades 1-3)</SelectItem>
+                                  <SelectItem value="elementary_4_6">Elementary (Grades 4-6)</SelectItem>
+                                  <SelectItem value="middle_school">Middle School (Grades 7-8)</SelectItem>
+                                  <SelectItem value="high_school">High School (Grades 9-12)</SelectItem>
+                                </>
+                              ) : (
+                                <>
+                                  <SelectItem value="ages_5_7">Ages 5-7</SelectItem>
+                                  <SelectItem value="ages_8_10">Ages 8-10</SelectItem>
+                                  <SelectItem value="ages_11_13">Ages 11-13</SelectItem>
+                                  <SelectItem value="ages_14_18">Ages 14-18</SelectItem>
+                                </>
+                              )}
+                              <SelectItem value="all_ages">All Ages</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="subject"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Subject</FormLabel>
+                          <Select 
+                            onValueChange={field.onChange}
+                            defaultValue={field.value}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select subject" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {classType === "academic" ? (
+                                <>
+                                  <SelectItem value="mathematics">Mathematics</SelectItem>
+                                  <SelectItem value="english">English</SelectItem>
+                                  <SelectItem value="science">Science</SelectItem>
+                                  <SelectItem value="social_studies">Social Studies</SelectItem>
+                                  <SelectItem value="languages">Languages</SelectItem>
+                                </>
+                              ) : (
+                                <>
+                                  <SelectItem value="art">Art & Crafts</SelectItem>
+                                  <SelectItem value="music">Music</SelectItem>
+                                  <SelectItem value="sports">Sports & Physical Education</SelectItem>
+                                  <SelectItem value="coding">Coding & Technology</SelectItem>
+                                  <SelectItem value="drama">Drama & Theatre</SelectItem>
+                                </>
+                              )}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <FormField
+                    control={form.control}
+                    name="summary"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Class Summary</FormLabel>
+                        <FormControl>
+                          <Textarea 
+                            placeholder="Write a brief summary of your class (max 200 characters)..." 
+                            className="resize-none h-20"
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          A short summary that will appear in class listings
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="description"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Detailed Description</FormLabel>
+                        <FormControl>
+                          <Textarea 
+                            placeholder="Provide a comprehensive description of what your class covers..." 
+                            className="min-h-32"
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          Provide a detailed description of what students will learn
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="objectives"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Learning Objectives</FormLabel>
+                        <FormControl>
+                          <Textarea 
+                            placeholder="List the key learning objectives or skills students will gain..." 
+                            className="min-h-24"
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          What will students be able to do after completing this class?
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="assessmentMethods"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Assessment Methods</FormLabel>
+                        <FormControl>
+                          <Textarea 
+                            placeholder="Describe how you will assess student progress..." 
+                            className="min-h-24"
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          How will you evaluate student progress and learning?
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <FormField
+                      control={form.control}
+                      name="technicalRequirements"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Technical Requirements</FormLabel>
+                          <FormControl>
+                            <Textarea 
+                              placeholder="List technical requirements (internet speed, software, etc.)..." 
+                              className="min-h-24"
+                              {...field} 
+                            />
+                          </FormControl>
+                          <FormDescription>
+                            What technical setup do students need?
+                          </FormDescription>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -522,7 +520,8 @@ const CreateClassForm = ({ onSubmit, onCancel }: CreateClassFormProps) => {
                             />
                           </FormControl>
                           <FormDescription>
-                            What supplies should students have ready?\n                          </FormDescription>
+                            What supplies should students have ready?
+                          </FormDescription>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -543,7 +542,8 @@ const CreateClassForm = ({ onSubmit, onCancel }: CreateClassFormProps) => {
                           />
                         </FormControl>
                         <FormDescription>
-                          How long will this class run? What time commitment is expected?\n                        </FormDescription>
+                          How long will this class run? What time commitment is expected?
+                        </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -574,7 +574,8 @@ const CreateClassForm = ({ onSubmit, onCancel }: CreateClassFormProps) => {
                             </SelectContent>
                           </Select>
                           <FormDescription>
-                            Choose your primary teaching methodology\n                          </FormDescription>
+                            Choose your primary teaching methodology
+                          </FormDescription>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -604,7 +605,8 @@ const CreateClassForm = ({ onSubmit, onCancel }: CreateClassFormProps) => {
                             </SelectContent>
                           </Select>
                           <FormDescription>
-                            Select your preferred teaching strategy\n                          </FormDescription>
+                            Select your preferred teaching strategy
+                          </FormDescription>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -620,7 +622,8 @@ const CreateClassForm = ({ onSubmit, onCancel }: CreateClassFormProps) => {
                           <div className="space-y-1">
                             <FormLabel>Public Class</FormLabel>
                             <FormDescription>
-                              Make this class publicly visible to students\n                            </FormDescription>
+                              Make this class publicly visible to students
+                            </FormDescription>
                           </div>
                           <FormControl>
                             <Switch 
@@ -640,7 +643,8 @@ const CreateClassForm = ({ onSubmit, onCancel }: CreateClassFormProps) => {
                           <div className="space-y-1">
                             <FormLabel>Multiple Cohorts</FormLabel>
                             <FormDescription>
-                              Divide this class into multiple student cohorts\n                            </FormDescription>
+                              Divide this class into multiple student cohorts
+                            </FormDescription>
                           </div>
                           <FormControl>
                             <Switch 
@@ -660,7 +664,8 @@ const CreateClassForm = ({ onSubmit, onCancel }: CreateClassFormProps) => {
                           <div className="space-y-1">
                             <FormLabel>Team Teaching</FormLabel>
                             <FormDescription>
-                              Add co-teachers or teaching assistants to this class\n                            </FormDescription>
+                              Add co-teachers or teaching assistants to this class
+                            </FormDescription>
                           </div>
                           <FormControl>
                             <Switch 
@@ -686,7 +691,8 @@ const CreateClassForm = ({ onSubmit, onCancel }: CreateClassFormProps) => {
                   <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
                     <h3 className="text-sm font-medium text-blue-800">Lesson Plans</h3>
                     <p className="text-xs text-blue-700 mt-1">
-                      Create detailed lesson plans for your class. Each lesson plan should outline what students will learn and what activities they'll engage in.\n                    </p>
+                      Create detailed lesson plans for your class. Each lesson plan should outline what students will learn and what activities they'll engage in.
+                    </p>
                   </div>
 
                   {lessonPlans.length === 0 ? (
@@ -726,7 +732,7 @@ const CreateClassForm = ({ onSubmit, onCancel }: CreateClassFormProps) => {
                                 id={`lesson-title-${plan.id}`}
                                 value={plan.title}
                                 onChange={(e) => updateLessonPlan(plan.id, "title", e.target.value)}
-                                placeholder={`${form.getValues("title") || "Class"} - Lesson ${index + 1}`}
+                                placeholder="Introduction to Fractions"
                               />
                             </div>
                             <div className="space-y-2">
@@ -739,25 +745,25 @@ const CreateClassForm = ({ onSubmit, onCancel }: CreateClassFormProps) => {
                                 className="min-h-24"
                               />
                             </div>
-                            <div className="space-y-2">
-                              <Label htmlFor={`lesson-duration-${plan.id}`}>Duration</Label>
-                              <Select
-                                value={plan.duration}
-                                onValueChange={(value) => updateLessonPlan(plan.id, "duration", value)}
-                              >
-                                <SelectTrigger id={`lesson-duration-${plan.id}`}>
-                                  <SelectValue placeholder="Select duration" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="15">15 minutes</SelectItem>
-                                  <SelectItem value="30">30 minutes</SelectItem>
-                                  <SelectItem value="45">45 minutes</SelectItem>
-                                  <SelectItem value="60">60 minutes</SelectItem>
-                                  <SelectItem value="75">75 minutes</SelectItem>
-                                  <SelectItem value="90">90 minutes</SelectItem>
-                                  <SelectItem value="120">2 hours</SelectItem>
-                                </SelectContent>
-                              </Select>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div className="space-y-2">
+                                <Label htmlFor={`lesson-duration-${plan.id}`}>Duration</Label>
+                                <Input 
+                                  id={`lesson-duration-${plan.id}`}
+                                  value={plan.duration}
+                                  onChange={(e) => updateLessonPlan(plan.id, "duration", e.target.value)}
+                                  placeholder="45 minutes"
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <Label htmlFor={`lesson-resources-${plan.id}`}>Resources & Materials</Label>
+                                <Input 
+                                  id={`lesson-resources-${plan.id}`}
+                                  value={plan.resources}
+                                  onChange={(e) => updateLessonPlan(plan.id, "resources", e.target.value)}
+                                  placeholder="Worksheets, videos, props, etc."
+                                />
+                              </div>
                             </div>
                             
                             {/* Resource URL and File Upload */}
@@ -841,7 +847,8 @@ const CreateClassForm = ({ onSubmit, onCancel }: CreateClassFormProps) => {
                     <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
                       <h3 className="text-sm font-medium text-blue-800">Multiple Cohorts Enabled</h3>
                       <p className="text-xs text-blue-700 mt-1">
-                        Create multiple cohorts for this class. Each cohort can have its own schedule and student list.\n                      </p>
+                        Create multiple cohorts for this class. Each cohort can have its own schedule and student list.
+                      </p>
                     </div>
 
                     {cohorts.length === 0 ? (
@@ -888,4 +895,197 @@ const CreateClassForm = ({ onSubmit, onCancel }: CreateClassFormProps) => {
                                 <Label htmlFor={`cohort-schedule-${cohort.id}`}>Schedule</Label>
                                 <Select 
                                   value={cohort.schedule}
-                                  onValueChange={(value) => updateCohort(cohort.id, "schedule", value
+                                  onValueChange={(value) => updateCohort(cohort.id, "schedule", value)}
+                                >
+                                  <SelectTrigger id={`cohort-schedule-${cohort.id}`}>
+                                    <SelectValue placeholder="Select schedule" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="monday">Mondays, 4-5 PM</SelectItem>
+                                    <SelectItem value="tuesday">Tuesdays, 4-5 PM</SelectItem>
+                                    <SelectItem value="wednesday">Wednesdays, 4-5 PM</SelectItem>
+                                    <SelectItem value="thursday">Thursdays, 4-5 PM</SelectItem>
+                                    <SelectItem value="friday">Fridays, 4-5 PM</SelectItem>
+                                    <SelectItem value="saturday">Saturdays, 10-11 AM</SelectItem>
+                                    <SelectItem value="custom">Custom Schedule</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                        <Button
+                          type="button" 
+                          variant="outline" 
+                          onClick={addCohort}
+                          className="mt-2"
+                        >
+                          <PlusCircle className="mr-2 h-4 w-4" />
+                          Add Another Cohort
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    <div className="bg-amber-50 border border-amber-200 rounded-md p-4">
+                      <h3 className="text-sm font-medium text-amber-800">Single Cohort Class</h3>
+                      <p className="text-xs text-amber-700 mt-1">
+                        This class has a single cohort. All students will follow the same schedule.
+                        To enable multiple cohorts, go back to the Basic Information tab.
+                      </p>
+                    </div>
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label>Class Schedule</Label>
+                        <Select defaultValue="monday">
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select days" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="monday">Mondays, 4-5 PM</SelectItem>
+                            <SelectItem value="tuesday">Tuesdays, 4-5 PM</SelectItem>
+                            <SelectItem value="wednesday">Wednesdays, 4-5 PM</SelectItem>
+                            <SelectItem value="thursday">Thursdays, 4-5 PM</SelectItem>
+                            <SelectItem value="friday">Fridays, 4-5 PM</SelectItem>
+                            <SelectItem value="saturday">Saturdays, 10-11 AM</SelectItem>
+                            <SelectItem value="custom">Custom Schedule</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex justify-between pt-4">
+                  <Button type="button" variant="outline" onClick={() => setActiveTab("lessons")}>
+                    Back: Lesson Plans
+                  </Button>
+                  <Button type="button" variant="outline" onClick={() => setActiveTab("teaching")}>
+                    Next: Teaching Team
+                  </Button>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="teaching" className="space-y-6">
+                {hasTeamTeaching ? (
+                  <div className="space-y-6">
+                    <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
+                      <h3 className="text-sm font-medium text-blue-800">Team Teaching Enabled</h3>
+                      <p className="text-xs text-blue-700 mt-1">
+                        Add co-teachers or teaching assistants to collaborate on this class.
+                      </p>
+                    </div>
+
+                    {teamMembers.length === 0 ? (
+                      <div className="text-center py-8 border border-dashed rounded-md">
+                        <UserPlus className="h-12 w-12 mx-auto text-gray-400" />
+                        <h3 className="mt-2 text-sm font-medium text-gray-900">No team members added</h3>
+                        <p className="mt-1 text-sm text-gray-500">Get started by adding a team member</p>
+                        <Button
+                          type="button" 
+                          onClick={addTeamMember}
+                          className="mt-4"
+                        >
+                          <PlusCircle className="mr-2 h-4 w-4" />
+                          Add First Team Member
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {teamMembers.map((member, index) => (
+                          <div key={member.id} className="border rounded-md p-4 space-y-4">
+                            <div className="flex justify-between items-center">
+                              <h3 className="text-sm font-medium">Team Member {index + 1}</h3>
+                              <Button 
+                                type="button" 
+                                variant="ghost" 
+                                size="sm" 
+                                onClick={() => removeTeamMember(member.id)}
+                                className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div className="space-y-2">
+                                <Label htmlFor={`member-email-${member.id}`}>Email</Label>
+                                <Input 
+                                  id={`member-email-${member.id}`}
+                                  value={member.email}
+                                  onChange={(e) => updateTeamMember(member.id, "email", e.target.value)}
+                                  placeholder="colleague@example.com"
+                                  type="email"
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <Label htmlFor={`member-role-${member.id}`}>Role</Label>
+                                <Select 
+                                  value={member.role}
+                                  onValueChange={(value) => updateTeamMember(member.id, "role", value)}
+                                >
+                                  <SelectTrigger id={`member-role-${member.id}`}>
+                                    <SelectValue placeholder="Select role" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="co-teacher">Co-Teacher</SelectItem>
+                                    <SelectItem value="assistant">Teaching Assistant</SelectItem>
+                                    <SelectItem value="guest">Guest Lecturer</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                        <Button
+                          type="button" 
+                          variant="outline" 
+                          onClick={addTeamMember}
+                          className="mt-2"
+                        >
+                          <PlusCircle className="mr-2 h-4 w-4" />
+                          Add Another Team Member
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    <div className="bg-amber-50 border border-amber-200 rounded-md p-4">
+                      <h3 className="text-sm font-medium text-amber-800">Solo Teaching</h3>
+                      <p className="text-xs text-amber-700 mt-1">
+                        You'll be the only teacher for this class.
+                        To add co-teachers or assistants, go back to the Basic Information tab.
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex justify-between pt-4">
+                  <Button type="button" variant="outline" onClick={() => setActiveTab("cohorts")}>
+                    Back: Cohorts & Students
+                  </Button>
+                  <Button type="submit" disabled={isSubmitting}>
+                    {isSubmitting ? "Creating Class..." : "Create Class"}
+                  </Button>
+                </div>
+              </TabsContent>
+            </form>
+          </Form>
+        </Tabs>
+      </CardContent>
+      <CardFooter className="flex justify-between border-t pt-6">
+        <Button variant="outline" onClick={onCancel}>
+          Cancel
+        </Button>
+        {activeTab === "teaching" && (
+          <Button onClick={form.handleSubmit(handleSubmitForm)} disabled={isSubmitting}>
+            {isSubmitting ? "Creating Class..." : "Create Class"}
+          </Button>
+        )}
+      </CardFooter>
+    </Card>
+  );
+};
+
+export default CreateClassForm;
