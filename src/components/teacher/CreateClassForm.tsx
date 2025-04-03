@@ -1,26 +1,9 @@
+
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Button } from "@/components/ui/button";
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardFooter, 
-  CardHeader, 
-  CardTitle 
-} from "@/components/ui/card";
-import { 
-  Form, 
-  FormControl, 
-  FormDescription, 
-  FormField, 
-  FormItem, 
-  FormLabel, 
-  FormMessage,
-  FormFileUpload 
-} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -55,6 +38,16 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { 
+  Form, 
+  FormControl, 
+  FormDescription, 
+  FormField, 
+  FormItem, 
+  FormLabel, 
+  FormMessage,
+  FormFileUpload 
+} from "@/components/ui/form";
 
 const classSchema = z.object({
   type: z.enum(["academic", "afterschool"]),
@@ -302,8 +295,6 @@ const CreateClassForm = ({ onSubmit, onCancel }: CreateClassFormProps) => {
           </TabsList>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(handleSubmitForm)}>
-              
-              
               <TabsContent value="basic" className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <FormField
@@ -847,3 +838,241 @@ const CreateClassForm = ({ onSubmit, onCancel }: CreateClassFormProps) => {
                                     <Label htmlFor={`cohort-sibling-discount-${cohort.id}`}>Sibling Discount (%)</Label>
                                     <Input
                                       id={`cohort-sibling-discount-${cohort.id}`}
+                                      type="number"
+                                      min="0"
+                                      max="100"
+                                      value={cohort.siblingDiscount}
+                                      onChange={(e) => updateCohort(cohort.id, "siblingDiscount", e.target.value)}
+                                      placeholder="0"
+                                    />
+                                  </div>
+                                  
+                                  <div className="space-y-2">
+                                    <Label htmlFor={`cohort-friend-discount-${cohort.id}`}>Friend Discount (%)</Label>
+                                    <Input
+                                      id={`cohort-friend-discount-${cohort.id}`}
+                                      type="number"
+                                      min="0"
+                                      max="100"
+                                      value={cohort.friendDiscount}
+                                      onChange={(e) => updateCohort(cohort.id, "friendDiscount", e.target.value)}
+                                      placeholder="0"
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                            
+                            {/* Students */}
+                            <div className="space-y-4 pt-4 border-t">
+                              <div className="flex justify-between items-center">
+                                <h4 className="text-sm font-medium">Students</h4>
+                                <Button 
+                                  type="button" 
+                                  variant="outline" 
+                                  size="sm" 
+                                  onClick={() => addStudentToCohort(cohort.id)}
+                                  className="text-xs"
+                                >
+                                  <UserPlus className="h-3 w-3 mr-1" />
+                                  Add Student
+                                </Button>
+                              </div>
+                              
+                              {cohort.students.length === 0 ? (
+                                <div className="text-center py-4 border border-dashed rounded-md">
+                                  <p className="text-sm text-gray-500">No students enrolled yet</p>
+                                </div>
+                              ) : (
+                                <div className="space-y-3">
+                                  {cohort.students.map((student, studentIndex) => (
+                                    <div key={student.id} className="flex items-start gap-3 p-3 border rounded-md bg-gray-50">
+                                      <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-3">
+                                        <div>
+                                          <Label htmlFor={`student-name-${cohort.id}-${student.id}`} className="text-xs">Name</Label>
+                                          <Input
+                                            id={`student-name-${cohort.id}-${student.id}`}
+                                            value={student.name}
+                                            onChange={(e) => updateStudent(cohort.id, student.id, "name", e.target.value)}
+                                            placeholder="Student name"
+                                            className="mt-1"
+                                          />
+                                        </div>
+                                        <div>
+                                          <Label htmlFor={`student-email-${cohort.id}-${student.id}`} className="text-xs">Email</Label>
+                                          <Input
+                                            id={`student-email-${cohort.id}-${student.id}`}
+                                            type="email"
+                                            value={student.email}
+                                            onChange={(e) => updateStudent(cohort.id, student.id, "email", e.target.value)}
+                                            placeholder="Student email"
+                                            className="mt-1"
+                                          />
+                                        </div>
+                                      </div>
+                                      <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => removeStudentFromCohort(cohort.id, student.id)}
+                                        className="text-red-600 hover:text-red-700 hover:bg-red-50 mt-4"
+                                      >
+                                        <Trash2 className="h-4 w-4" />
+                                      </Button>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={addCohort}
+                          className="mt-2"
+                        >
+                          <PlusCircle className="mr-2 h-4 w-4" />
+                          Add Another Cohort
+                        </Button>
+                      </div>
+                    )}
+                    
+                    <div className="flex justify-between pt-4">
+                      <Button type="button" variant="outline" onClick={() => setActiveTab("lessons")}>
+                        Back: Lesson Plans
+                      </Button>
+                      <Button type="button" variant="outline" onClick={() => setActiveTab("teaching")}>
+                        Next: Teaching Team
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    <div className="bg-amber-50 border border-amber-200 rounded-md p-4">
+                      <h3 className="text-sm font-medium text-amber-800">Multiple Cohorts Disabled</h3>
+                      <p className="text-xs text-amber-700 mt-1">
+                        To create multiple cohorts, please enable the "Multiple Cohorts" option in the Basic Information tab.
+                      </p>
+                    </div>
+                    <div className="flex justify-between pt-4">
+                      <Button type="button" variant="outline" onClick={() => setActiveTab("lessons")}>
+                        Back: Lesson Plans
+                      </Button>
+                      <Button type="button" variant="outline" onClick={() => setActiveTab("teaching")}>
+                        Next: Teaching Team
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </TabsContent>
+
+              <TabsContent value="teaching" className="space-y-6">
+                {hasTeamTeaching ? (
+                  <div className="space-y-6">
+                    <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
+                      <h3 className="text-sm font-medium text-blue-800">Team Teaching Enabled</h3>
+                      <p className="text-xs text-blue-700 mt-1">
+                        Add other teachers or teaching assistants to collaborate on this class.
+                      </p>
+                    </div>
+
+                    {teamMembers.length === 0 ? (
+                      <div className="text-center py-8 border border-dashed rounded-md">
+                        <Users className="h-12 w-12 mx-auto text-gray-400" />
+                        <h3 className="mt-2 text-sm font-medium text-gray-900">No team members yet</h3>
+                        <p className="mt-1 text-sm text-gray-500">Get started by adding a team member</p>
+                        <Button
+                          type="button" 
+                          onClick={addTeamMember}
+                          className="mt-4"
+                        >
+                          <PlusCircle className="mr-2 h-4 w-4" />
+                          Add First Team Member
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {teamMembers.map((member, index) => (
+                          <div key={member.id} className="border rounded-md p-4 space-y-4">
+                            <div className="flex justify-between items-center">
+                              <h3 className="text-sm font-medium">Team Member {index + 1}</h3>
+                              <Button 
+                                type="button" 
+                                variant="ghost" 
+                                size="sm" 
+                                onClick={() => removeTeamMember(member.id)}
+                                className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div className="space-y-2">
+                                <Label htmlFor={`member-email-${member.id}`}>Email</Label>
+                                <Input 
+                                  id={`member-email-${member.id}`}
+                                  type="email"
+                                  value={member.email}
+                                  onChange={(e) => updateTeamMember(member.id, "email", e.target.value)}
+                                  placeholder="Enter team member's email"
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <Label htmlFor={`member-role-${member.id}`}>Role</Label>
+                                <Select
+                                  value={member.role}
+                                  onValueChange={(value) => updateTeamMember(member.id, "role", value)}
+                                >
+                                  <SelectTrigger id={`member-role-${member.id}`}>
+                                    <SelectValue placeholder="Select role" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="co-teacher">Co-Teacher</SelectItem>
+                                    <SelectItem value="assistant">Teaching Assistant</SelectItem>
+                                    <SelectItem value="observer">Observer</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                        <Button
+                          type="button" 
+                          variant="outline" 
+                          onClick={addTeamMember}
+                          className="mt-2"
+                        >
+                          <PlusCircle className="mr-2 h-4 w-4" />
+                          Add Another Team Member
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="bg-amber-50 border border-amber-200 rounded-md p-4">
+                    <h3 className="text-sm font-medium text-amber-800">Team Teaching Disabled</h3>
+                    <p className="text-xs text-amber-700 mt-1">
+                      To add team members, please enable the "Team Teaching" option in the Basic Information tab.
+                    </p>
+                  </div>
+                )}
+                
+                <div className="flex justify-between pt-4">
+                  <Button type="button" variant="outline" onClick={() => setActiveTab("cohorts")}>
+                    Back: Cohorts & Students
+                  </Button>
+                  <Button type="submit" disabled={isSubmitting}>
+                    {isSubmitting ? "Creating..." : "Create Class"}
+                  </Button>
+                </div>
+              </TabsContent>
+            </form>
+          </Form>
+        </Tabs>
+      </div>
+    </div>
+  );
+};
+
+export default CreateClassForm;
