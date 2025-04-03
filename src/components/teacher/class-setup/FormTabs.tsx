@@ -39,9 +39,14 @@ const FormTabs = ({ onSubmit }: FormTabsProps) => {
     removeStudentFromCohort,
     updateStudent,
     
+    addLessonSchedule,
+    removeLessonSchedule,
+    updateLessonSchedule,
+    
     addTeamMember,
     removeTeamMember,
     updateTeamMember,
+    calculateNumberOfLessons
   } = useClassForm();
 
   const hasTeamTeaching = form.watch("hasTeamTeaching");
@@ -59,7 +64,7 @@ const FormTabs = ({ onSubmit }: FormTabsProps) => {
         </TabsTrigger>
         <TabsTrigger value="cohorts" className="flex items-center gap-2">
           <Users className="h-4 w-4" />
-          Cohorts & Students
+          Cohorts & Schedule
         </TabsTrigger>
         <TabsTrigger value="teaching" className="flex items-center gap-2">
           <ScrollText className="h-4 w-4" />
@@ -98,9 +103,10 @@ const FormTabs = ({ onSubmit }: FormTabsProps) => {
               addCohort={addCohort}
               removeCohort={removeCohort}
               updateCohort={updateCohort}
-              addStudentToCohort={addStudentToCohort}
-              removeStudentFromCohort={removeStudentFromCohort}
-              updateStudent={updateStudent}
+              addLessonSchedule={addLessonSchedule}
+              removeLessonSchedule={removeLessonSchedule}
+              updateLessonSchedule={updateLessonSchedule}
+              calculateNumberOfLessons={calculateNumberOfLessons}
             />
           </TabsContent>
 

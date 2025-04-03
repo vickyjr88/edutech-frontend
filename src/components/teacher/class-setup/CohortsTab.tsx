@@ -4,8 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar as CalendarIcon, Clock, Users, PlusCircle, Trash2, UserPlus, AlertCircle } from "lucide-react";
+import { Calendar as CalendarIcon, Clock, Users, PlusCircle, Trash2, AlertCircle } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
@@ -28,12 +27,10 @@ interface CohortsTabProps {
   addCohort: () => void;
   removeCohort: (id: string) => void;
   updateCohort: (id: string, field: keyof CohortData, value: any) => void;
-  addStudentToCohort: (cohortId: string) => void;
-  removeStudentFromCohort: (cohortId: string, studentId: string) => void;
-  updateStudent: (cohortId: string, studentId: string, field: "name" | "email", value: string) => void;
   addLessonSchedule: (cohortId: string) => void;
   removeLessonSchedule: (cohortId: string, scheduleId: string) => void;
   updateLessonSchedule: (cohortId: string, scheduleId: string, field: keyof LessonSchedule, value: any) => void;
+  calculateNumberOfLessons: (startDate: Date | null, endDate: Date | null) => number;
 }
 
 const CohortsTab = ({ 
@@ -44,15 +41,12 @@ const CohortsTab = ({
   addCohort,
   removeCohort,
   updateCohort,
-  addStudentToCohort,
-  removeStudentFromCohort,
-  updateStudent,
   addLessonSchedule,
   removeLessonSchedule,
-  updateLessonSchedule
+  updateLessonSchedule,
+  calculateNumberOfLessons
 }: CohortsTabProps) => {
   const hasCohorts = form.watch("hasCohorts");
-  const lessonPlans = form.watch("lessonPlans") || [];
 
   return (
     <div className="space-y-6">
@@ -61,7 +55,7 @@ const CohortsTab = ({
           <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
             <h3 className="text-sm font-medium text-blue-800">Multiple Cohorts Enabled</h3>
             <p className="text-xs text-blue-700 mt-1">
-              Create multiple cohorts for this class. Each cohort can have its own schedule, pricing, and student list.
+              Create multiple cohorts for this class. Each cohort can have its own schedule, pricing, and dates.
             </p>
           </div>
 
@@ -133,97 +127,122 @@ const CohortsTab = ({
                     <h4 className="text-sm font-medium">Schedule & Timing</h4>
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {/* Date picker for the schedule */}
+                      {/* Start Date */}
                       <div className="space-y-2">
-                        <Label>Class Days</Label>
+                        <Label>Start Date</Label>
                         <Popover>
                           <PopoverTrigger asChild>
                             <Button
                               variant="outline"
                               className={cn(
                                 "w-full justify-start text-left",
-                                !cohort.scheduleDays.length && "text-muted-foreground"
+                                !cohort.startDate && "text-muted-foreground"
                               )}
                             >
                               <CalendarIcon className="mr-2 h-4 w-4" />
-                              {cohort.scheduleDays.length > 0 ? (
-                                cohort.scheduleDays.length > 3 
-                                  ? `${cohort.scheduleDays.length} days selected` 
-                                  : cohort.scheduleDays.map(date => format(date, "EEEE")).join(", ")
+                              {cohort.startDate ? (
+                                format(cohort.startDate, "PPP")
                               ) : (
-                                <span>Select days of the week</span>
+                                <span>Select start date</span>
                               )}
                             </Button>
                           </PopoverTrigger>
                           <PopoverContent className="w-auto p-0" align="start">
                             <Calendar
-                              mode="multiple"
-                              selected={cohort.scheduleDays}
-                              onSelect={(days) => updateCohort(cohort.id, "scheduleDays", days || [])}
+                              mode="single"
+                              selected={cohort.startDate || undefined}
+                              onSelect={(date) => updateCohort(cohort.id, "startDate", date)}
                               className="p-3 pointer-events-auto"
                               initialFocus
                             />
                           </PopoverContent>
                         </Popover>
-                        <p className="text-xs text-muted-foreground">
-                          Select the days when this cohort will meet
-                        </p>
                       </div>
                       
-                      {/* Flexible schedule toggle */}
+                      {/* End Date */}
                       <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <Label htmlFor={`flexible-schedule-${cohort.id}`}>Flexible Lesson Schedule</Label>
-                          <div className="flex items-center space-x-2">
-                            <Switch
-                              id={`flexible-schedule-${cohort.id}`}
-                              checked={cohort.hasFlexibleSchedule}
-                              onCheckedChange={(checked) => updateCohort(cohort.id, "hasFlexibleSchedule", checked)}
+                        <Label>End Date</Label>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              className={cn(
+                                "w-full justify-start text-left",
+                                !cohort.endDate && "text-muted-foreground"
+                              )}
+                            >
+                              <CalendarIcon className="mr-2 h-4 w-4" />
+                              {cohort.endDate ? (
+                                format(cohort.endDate, "PPP")
+                              ) : (
+                                <span>Select end date</span>
+                              )}
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar
+                              mode="single"
+                              selected={cohort.endDate || undefined}
+                              onSelect={(date) => updateCohort(cohort.id, "endDate", date)}
+                              className="p-3 pointer-events-auto"
+                              initialFocus
+                              disabled={(date) => 
+                                cohort.startDate ? date < cohort.startDate : false
+                              }
                             />
-                          </div>
-                        </div>
-                        <p className="text-xs text-muted-foreground">
-                          Enable to set different times for each lesson
-                        </p>
+                          </PopoverContent>
+                        </Popover>
                       </div>
                     </div>
                     
-                    {!cohort.hasFlexibleSchedule ? (
-                      // Single time for all lessons
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {/* Start Time */}
                       <div className="space-y-2">
-                        <Label htmlFor={`cohort-time-${cohort.id}`}>Class Time (All Lessons)</Label>
-                        <div className="flex items-center gap-2">
-                          <Select
-                            value={cohort.scheduleTime}
-                            onValueChange={(value) => updateCohort(cohort.id, "scheduleTime", value)}
-                          >
-                            <SelectTrigger id={`cohort-time-${cohort.id}`} className="w-full">
-                              <SelectValue placeholder="Select time" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="morning">Morning (8AM - 12PM)</SelectItem>
-                              <SelectItem value="afternoon">Afternoon (12PM - 4PM)</SelectItem>
-                              <SelectItem value="evening">Evening (4PM - 8PM)</SelectItem>
-                              <SelectItem value="custom">Custom Time</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          {cohort.scheduleTime === "custom" && (
-                            <div className="flex items-center space-x-2 ml-4">
-                              <Clock className="h-4 w-4 text-muted-foreground" />
-                              <Input
-                                type="time"
-                                className="w-32"
-                                value={cohort.schedule}
-                                onChange={(e) => updateCohort(cohort.id, "schedule", e.target.value)}
-                              />
-                            </div>
-                          )}
+                        <Label htmlFor={`start-time-${cohort.id}`}>Start Time</Label>
+                        <div className="flex items-center space-x-2">
+                          <Clock className="h-4 w-4 text-muted-foreground" />
+                          <Input
+                            id={`start-time-${cohort.id}`}
+                            type="time"
+                            value={cohort.startTime}
+                            onChange={(e) => updateCohort(cohort.id, "startTime", e.target.value)}
+                          />
                         </div>
-                        <p className="text-xs text-muted-foreground">
-                          Set the time when this cohort will meet
-                        </p>
                       </div>
-                    ) : (
+                      
+                      {/* End Time */}
+                      <div className="space-y-2">
+                        <Label htmlFor={`end-time-${cohort.id}`}>End Time</Label>
+                        <div className="flex items-center space-x-2">
+                          <Clock className="h-4 w-4 text-muted-foreground" />
+                          <Input
+                            id={`end-time-${cohort.id}`}
+                            type="time"
+                            value={cohort.endTime}
+                            onChange={(e) => updateCohort(cohort.id, "endTime", e.target.value)}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Flexible schedule toggle */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor={`flexible-schedule-${cohort.id}`}>Flexible Lesson Schedule</Label>
+                        <div className="flex items-center space-x-2">
+                          <Switch
+                            id={`flexible-schedule-${cohort.id}`}
+                            checked={cohort.hasFlexibleSchedule}
+                            onCheckedChange={(checked) => updateCohort(cohort.id, "hasFlexibleSchedule", checked)}
+                          />
+                        </div>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Enable to set different times for each lesson
+                      </p>
+                    </div>
+                    
+                    {cohort.hasFlexibleSchedule && (
                       // Flexible schedule - different times per lesson
                       <div className="mt-4 border border-gray-200 rounded-md p-4">
                         <div className="flex justify-between items-center mb-4">
@@ -241,7 +260,7 @@ const CohortsTab = ({
                         
                         {cohort.lessonSchedules && cohort.lessonSchedules.length > 0 ? (
                           <Accordion type="single" collapsible className="w-full">
-                            {cohort.lessonSchedules.map((schedule, idx) => (
+                            {cohort.lessonSchedules.map((schedule) => (
                               <AccordionItem key={schedule.id} value={schedule.id}>
                                 <AccordionTrigger>
                                   <div className="flex items-center">
@@ -262,52 +281,32 @@ const CohortsTab = ({
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                       <div className="space-y-2">
                                         <Label htmlFor={`lesson-number-${schedule.id}`}>Lesson Number</Label>
-                                        <Select
+                                        <Input
+                                          id={`lesson-number-${schedule.id}`}
+                                          type="number"
+                                          min="1"
+                                          max={cohort.numberOfLessons > 0 ? cohort.numberOfLessons.toString() : "10"}
                                           value={schedule.lessonNumber.toString()}
-                                          onValueChange={(value) => updateLessonSchedule(cohort.id, schedule.id, "lessonNumber", parseInt(value))}
-                                        >
-                                          <SelectTrigger>
-                                            <SelectValue placeholder="Select lesson" />
-                                          </SelectTrigger>
-                                          <SelectContent>
-                                            {Array.from({length: parseInt(cohort.numberOfLessons) || 10}, (_, i) => i + 1).map(num => (
-                                              <SelectItem key={num} value={num.toString()}>
-                                                Lesson {num}
-                                              </SelectItem>
-                                            ))}
-                                          </SelectContent>
-                                        </Select>
+                                          onChange={(e) => updateLessonSchedule(
+                                            cohort.id, 
+                                            schedule.id, 
+                                            "lessonNumber", 
+                                            parseInt(e.target.value) || 1
+                                          )}
+                                        />
                                       </div>
                                       <div className="space-y-2">
-                                        <Label htmlFor={`lesson-time-${schedule.id}`}>Time</Label>
-                                        <div className="flex items-center gap-2">
-                                          <Select
-                                            value={schedule.time}
-                                            onValueChange={(value) => updateLessonSchedule(cohort.id, schedule.id, "time", value)}
-                                          >
-                                            <SelectTrigger id={`lesson-time-${schedule.id}`} className="w-full">
-                                              <SelectValue placeholder="Select time" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                              <SelectItem value="morning">Morning (8AM - 12PM)</SelectItem>
-                                              <SelectItem value="afternoon">Afternoon (12PM - 4PM)</SelectItem>
-                                              <SelectItem value="evening">Evening (4PM - 8PM)</SelectItem>
-                                              <SelectItem value="custom">Custom Time</SelectItem>
-                                            </SelectContent>
-                                          </Select>
-                                          {schedule.time === "custom" && (
-                                            <div className="flex items-center space-x-2 ml-2">
-                                              <Clock className="h-4 w-4 text-muted-foreground" />
-                                              <Input
-                                                type="time"
-                                                className="w-32"
-                                                value={schedule.customTime || ""}
-                                                onChange={(e) => 
-                                                  updateLessonSchedule(cohort.id, schedule.id, "customTime", e.target.value)
-                                                }
-                                              />
-                                            </div>
-                                          )}
+                                        <Label htmlFor={`lesson-time-${schedule.id}`}>Custom Time</Label>
+                                        <div className="flex items-center space-x-2">
+                                          <Clock className="h-4 w-4 text-muted-foreground" />
+                                          <Input
+                                            id={`lesson-time-${schedule.id}`}
+                                            type="time"
+                                            value={schedule.customTime || ""}
+                                            onChange={(e) => 
+                                              updateLessonSchedule(cohort.id, schedule.id, "customTime", e.target.value)
+                                            }
+                                          />
                                         </div>
                                       </div>
                                     </div>
@@ -348,11 +347,16 @@ const CohortsTab = ({
                         min="1"
                         max="52"
                         value={cohort.numberOfLessons}
-                        onChange={(e) => updateCohort(cohort.id, "numberOfLessons", e.target.value)}
-                        placeholder="E.g., 8, 10, 12"
+                        onChange={(e) => updateCohort(cohort.id, "numberOfLessons", parseInt(e.target.value) || 0)}
+                        readOnly={!!(cohort.startDate && cohort.endDate)}
+                        className={cn(
+                          cohort.startDate && cohort.endDate ? "bg-gray-100" : ""
+                        )}
                       />
                       <p className="text-xs text-muted-foreground">
-                        Total number of lessons in this cohort
+                        {cohort.startDate && cohort.endDate 
+                          ? "Auto-calculated from start and end dates" 
+                          : "Manually set the number of lessons or define start/end dates"}
                       </p>
                     </div>
                   </div>
@@ -363,7 +367,7 @@ const CohortsTab = ({
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor={`cohort-price-${cohort.id}`}>Price</Label>
+                        <Label htmlFor={`cohort-price-${cohort.id}`}>Price for Entire Class</Label>
                         <div className="relative">
                           <span className="absolute left-3 top-2.5 text-gray-500">$</span>
                           <Input
@@ -378,97 +382,26 @@ const CohortsTab = ({
                           />
                         </div>
                         <p className="text-xs text-muted-foreground">
-                          Total price for the entire cohort
+                          Total price for all {cohort.numberOfLessons || "?"} lessons
                         </p>
                       </div>
                       
-                      <div className="space-y-4">
-                        <div className="space-y-2">
-                          <Label htmlFor={`cohort-sibling-discount-${cohort.id}`}>Sibling Discount (%)</Label>
-                          <Input
-                            id={`cohort-sibling-discount-${cohort.id}`}
-                            type="number"
-                            min="0"
-                            max="100"
-                            value={cohort.siblingDiscount}
-                            onChange={(e) => updateCohort(cohort.id, "siblingDiscount", e.target.value)}
-                            placeholder="0"
-                          />
-                        </div>
-                        
-                        <div className="space-y-2">
-                          <Label htmlFor={`cohort-friend-discount-${cohort.id}`}>Friend/Colleague Discount (%)</Label>
-                          <Input
-                            id={`cohort-friend-discount-${cohort.id}`}
-                            type="number"
-                            min="0"
-                            max="100"
-                            value={cohort.friendDiscount}
-                            onChange={(e) => updateCohort(cohort.id, "friendDiscount", e.target.value)}
-                            placeholder="0"
-                          />
-                        </div>
+                      <div className="space-y-2">
+                        <Label htmlFor={`cohort-discount-${cohort.id}`}>Discount (%)</Label>
+                        <Input
+                          id={`cohort-discount-${cohort.id}`}
+                          type="number"
+                          min="0"
+                          max="100"
+                          value={cohort.discount}
+                          onChange={(e) => updateCohort(cohort.id, "discount", e.target.value)}
+                          placeholder="0"
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          Discount percentage for siblings, friends, or early enrollment
+                        </p>
                       </div>
                     </div>
-                  </div>
-                  
-                  {/* Students section */}
-                  <div className="space-y-4 pt-4 border-t">
-                    <div className="flex justify-between items-center">
-                      <h4 className="text-sm font-medium">Students</h4>
-                      <Button 
-                        type="button" 
-                        size="sm" 
-                        variant="outline"
-                        onClick={() => addStudentToCohort(cohort.id)}
-                      >
-                        <UserPlus className="mr-2 h-4 w-4" />
-                        Add Student
-                      </Button>
-                    </div>
-                    
-                    {cohort.students.length === 0 ? (
-                      <div className="text-center py-4 border border-dashed rounded-md">
-                        <p className="text-sm text-gray-500">No students enrolled yet</p>
-                      </div>
-                    ) : (
-                      <div className="space-y-3">
-                        {cohort.students.map((student, studentIndex) => (
-                          <div key={student.id} className="grid grid-cols-1 md:grid-cols-5 gap-3 items-center border rounded-md p-3">
-                            <div className="md:col-span-2">
-                              <Label htmlFor={`student-name-${student.id}`} className="sr-only">Name</Label>
-                              <Input
-                                id={`student-name-${student.id}`}
-                                placeholder="Student name"
-                                value={student.name}
-                                onChange={(e) => updateStudent(cohort.id, student.id, "name", e.target.value)}
-                              />
-                            </div>
-                            <div className="md:col-span-2">
-                              <Label htmlFor={`student-email-${student.id}`} className="sr-only">Email</Label>
-                              <Input
-                                id={`student-email-${student.id}`}
-                                placeholder="Email address"
-                                type="email"
-                                value={student.email}
-                                onChange={(e) => updateStudent(cohort.id, student.id, "email", e.target.value)}
-                              />
-                            </div>
-                            <div className="flex justify-end">
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => removeStudentFromCohort(cohort.id, student.id)}
-                                className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
                   </div>
                 </div>
               ))}

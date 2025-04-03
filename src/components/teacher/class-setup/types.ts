@@ -32,19 +32,18 @@ export const classSchema = z.object({
 
 export type ClassFormValues = z.infer<typeof classSchema>;
 
-// Extended cohort type with new fields
+// Updated cohort type with new fields
 export type CohortData = {
   id: string;
   name: string; 
-  schedule: string;
-  scheduleDays: Date[];
-  scheduleTime: string;
+  startDate: Date | null;
+  endDate: Date | null;
+  startTime: string;
+  endTime: string;
+  numberOfLessons: number;
   price: string;
-  siblingDiscount: string;
-  friendDiscount: string;
-  numberOfLessons: string;
+  discount: string;
   isActive: boolean;
-  students: { id: string; name: string; email: string }[];
   lessonSchedules: LessonSchedule[];
   hasFlexibleSchedule: boolean;
 };

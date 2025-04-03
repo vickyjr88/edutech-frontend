@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, ReactNode } from "react";
 import { useForm, UseFormReturn } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -21,9 +20,6 @@ interface ClassFormContextType {
   addCohort: () => void;
   removeCohort: (id: string) => void;
   updateCohort: (id: string, field: keyof CohortData, value: any) => void;
-  addStudentToCohort: (cohortId: string) => void;
-  removeStudentFromCohort: (cohortId: string, studentId: string) => void;
-  updateStudent: (cohortId: string, studentId: string, field: "name" | "email", value: string) => void;
   
   // Lesson schedule methods
   addLessonSchedule: (cohortId: string) => void;
@@ -41,6 +37,7 @@ interface ClassFormContextType {
   updateLessonPlan: (id: string, field: string, value: string) => void;
   
   handleNavigateTab: (tab: string) => void;
+  calculateNumberOfLessons: (startDate: Date | null, endDate: Date | null) => number;
 }
 
 const ClassFormContext = createContext<ClassFormContextType | undefined>(undefined);
@@ -92,21 +89,35 @@ export const ClassFormProvider = ({ children, onSubmit }: ClassFormProviderProps
     setActiveTab(tab);
   };
 
+  // Calculate number of lessons based on start and end date
+  const calculateNumberOfLessons = (startDate: Date | null, endDate: Date | null): number => {
+    if (!startDate || !endDate) return 0;
+    
+    // Calculate weeks between the dates
+    const millisecondsPerDay = 1000 * 60 * 60 * 24;
+    const days = Math.round(Math.abs((endDate.getTime() - startDate.getTime()) / millisecondsPerDay));
+    
+    // Assume one lesson per week
+    return Math.ceil(days / 7);
+  };
+
   // Cohort methods
   const addCohort = () => {
     const newId = Date.now().toString();
+    const cohortNumber = cohorts.length + 1;
+    const classTitle = form.getValues().title || "Class";
+    
     setCohorts([...cohorts, { 
       id: newId, 
-      name: `Cohort ${cohorts.length + 1}`, 
-      schedule: "",
-      scheduleDays: [],
-      scheduleTime: "",
+      name: `${classTitle} Cohort ${cohortNumber}`, 
+      startDate: null,
+      endDate: null,
+      startTime: "",
+      endTime: "",
+      numberOfLessons: 0,
       price: "",
-      siblingDiscount: "0",
-      friendDiscount: "0",
-      numberOfLessons: "8",
+      discount: "0",
       isActive: true,
-      students: [],
       lessonSchedules: [],
       hasFlexibleSchedule: false
     }]);
@@ -117,9 +128,21 @@ export const ClassFormProvider = ({ children, onSubmit }: ClassFormProviderProps
   };
 
   const updateCohort = (id: string, field: keyof CohortData, value: any) => {
-    setCohorts(cohorts.map(cohort => 
-      cohort.id === id ? { ...cohort, [field]: value } : cohort
-    ));
+    setCohorts(cohorts.map(cohort => {
+      if (cohort.id === id) {
+        const updatedCohort = { ...cohort, [field]: value };
+        
+        // If updating start or end date, recalculate number of lessons
+        if (field === 'startDate' || field === 'endDate') {
+          const startDate = field === 'startDate' ? value : cohort.startDate;
+          const endDate = field === 'endDate' ? value : cohort.endDate;
+          updatedCohort.numberOfLessons = calculateNumberOfLessons(startDate, endDate);
+        }
+        
+        return updatedCohort;
+      }
+      return cohort;
+    }));
   };
 
   // Lesson schedule methods
@@ -173,52 +196,6 @@ export const ClassFormProvider = ({ children, onSubmit }: ClassFormProviderProps
       lessonSchedules: updatedSchedules
     };
     
-    setCohorts(cohorts.map(c => c.id === cohortId ? updatedCohort : c));
-  };
-
-  const addStudentToCohort = (cohortId: string) => {
-    const cohort = cohorts.find(c => c.id === cohortId);
-    if (!cohort) return;
-
-    const newStudent = {
-      id: Date.now().toString(),
-      name: "",
-      email: ""
-    };
-
-    const updatedCohort = {
-      ...cohort,
-      students: [...cohort.students, newStudent]
-    };
-
-    setCohorts(cohorts.map(c => c.id === cohortId ? updatedCohort : c));
-  };
-
-  const removeStudentFromCohort = (cohortId: string, studentId: string) => {
-    const cohort = cohorts.find(c => c.id === cohortId);
-    if (!cohort) return;
-
-    const updatedCohort = {
-      ...cohort,
-      students: cohort.students.filter(s => s.id !== studentId)
-    };
-
-    setCohorts(cohorts.map(c => c.id === cohortId ? updatedCohort : c));
-  };
-
-  const updateStudent = (cohortId: string, studentId: string, field: "name" | "email", value: string) => {
-    const cohort = cohorts.find(c => c.id === cohortId);
-    if (!cohort) return;
-
-    const updatedStudents = cohort.students.map(student => 
-      student.id === studentId ? { ...student, [field]: value } : student
-    );
-
-    const updatedCohort = {
-      ...cohort,
-      students: updatedStudents
-    };
-
     setCohorts(cohorts.map(c => c.id === cohortId ? updatedCohort : c));
   };
 
@@ -285,9 +262,6 @@ export const ClassFormProvider = ({ children, onSubmit }: ClassFormProviderProps
     addCohort,
     removeCohort,
     updateCohort,
-    addStudentToCohort,
-    removeStudentFromCohort,
-    updateStudent,
     
     addLessonSchedule,
     removeLessonSchedule,
@@ -303,7 +277,8 @@ export const ClassFormProvider = ({ children, onSubmit }: ClassFormProviderProps
     removeLessonPlan,
     updateLessonPlan,
     
-    handleNavigateTab
+    handleNavigateTab,
+    calculateNumberOfLessons
   };
 
   return (
