@@ -13,6 +13,9 @@ import {
 
 import { cn } from "@/lib/utils"
 import { Label } from "@/components/ui/label"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Upload } from "lucide-react"
 
 const Form = FormProvider
 
