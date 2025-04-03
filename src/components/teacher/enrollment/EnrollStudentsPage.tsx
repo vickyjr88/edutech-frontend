@@ -1,9 +1,7 @@
 
 import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import EmailInviteTab from "./EmailInviteTab";
-import FileUploadTab from "./FileUploadTab";
-import ShareLinkTab from "./ShareLinkTab";
+import InviteStudentsTab from "./InviteStudentsTab";
 import WaitingListTab from "./WaitingListTab";
 import ReviewsTab from "./ReviewsTab";
 
@@ -13,7 +11,7 @@ interface EnrollStudentsPageProps {
 }
 
 const EnrollStudentsPage = ({ classId, className }: EnrollStudentsPageProps) => {
-  const [activeTab, setActiveTab] = useState("email");
+  const [activeTab, setActiveTab] = useState("invite");
 
   return (
     <div className="space-y-6">
@@ -27,24 +25,14 @@ const EnrollStudentsPage = ({ classId, className }: EnrollStudentsPageProps) => 
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid grid-cols-5 mb-6">
-          <TabsTrigger value="email">Email Invite</TabsTrigger>
-          <TabsTrigger value="file">Bulk Upload</TabsTrigger>
-          <TabsTrigger value="link">Share Link</TabsTrigger>
+        <TabsList className="grid grid-cols-3 mb-6">
+          <TabsTrigger value="invite">Invite Students</TabsTrigger>
           <TabsTrigger value="waiting">Waiting List</TabsTrigger>
           <TabsTrigger value="reviews">Reviews</TabsTrigger>
         </TabsList>
         
-        <TabsContent value="email">
-          <EmailInviteTab classId={classId} />
-        </TabsContent>
-        
-        <TabsContent value="file">
-          <FileUploadTab classId={classId} />
-        </TabsContent>
-        
-        <TabsContent value="link">
-          <ShareLinkTab classId={classId} />
+        <TabsContent value="invite">
+          <InviteStudentsTab classId={classId} />
         </TabsContent>
         
         <TabsContent value="waiting">
