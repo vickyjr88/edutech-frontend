@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,7 +20,9 @@ import {
   AcademicSubjectItem,
   AfterSchoolSubjectItem,
   TechnicalSkillsStep,
-  TechnicalSkillItem
+  TechnicalSkillItem,
+  LanguagesStep,
+  LanguageItem
 } from "./professional-profile";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -76,7 +77,7 @@ const TeacherProfessionalProfileForm = ({
   const [academicSubjects, setAcademicSubjects] = useState<AcademicSubjectItem[]>([]);
   const [afterSchoolSubjects, setAfterSchoolSubjects] = useState<AfterSchoolSubjectItem[]>([]);
   const [technicalSkills, setTechnicalSkills] = useState<TechnicalSkillItem[]>([]);
-  const [languages, setLanguages] = useState<FormItem[]>([{ id: "1", value: "" }]);
+  const [languages, setLanguages] = useState<LanguageItem[]>([]);
   const [certifications, setCertifications] = useState<FormItem[]>([{ id: "1", value: "", details: "" }]);
   const [videoUrl, setVideoUrl] = useState("");
 
@@ -262,11 +263,9 @@ const TeacherProfessionalProfileForm = ({
           setSkills={setTechnicalSkills} 
         />;
       case 7: 
-        return <SimpleListStep 
-          items={languages} 
-          setItems={setLanguages} 
-          label="Language" 
-          placeholder="e.g., English, Swahili" 
+        return <LanguagesStep 
+          languages={languages} 
+          setLanguages={setLanguages} 
         />;
       case 8: 
         return <CertificationsStep 

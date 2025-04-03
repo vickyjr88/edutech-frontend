@@ -12,12 +12,14 @@ import ProgressIndicator from "./ProgressIndicator";
 import StrategiesStep from "./StrategiesStep";
 import MethodologiesStep from "./MethodologiesStep";
 import TechnicalSkillsStep from "./TechnicalSkillsStep";
+import LanguagesStep from "./LanguagesStep";
 import type { EducationItem, InstitutionType, ExperienceItem } from "./types";
 import type { StrategyItem } from "./utils/strategyUtils";
 import type { MethodologyItem } from "./utils/methodologyUtils";
 import type { AcademicSubjectItem } from "./utils/academicSubjectUtils";
 import type { AfterSchoolSubjectItem } from "./utils/afterSchoolSubjectUtils";
 import type { TechnicalSkillItem } from "./utils/technicalSkillUtils";
+import type { LanguageItem } from "./utils/languageUtils";
 
 // Export all components and types
 export {
@@ -32,7 +34,8 @@ export {
   ProgressIndicator,
   StrategiesStep,
   MethodologiesStep,
-  TechnicalSkillsStep
+  TechnicalSkillsStep,
+  LanguagesStep
 };
 
 // Export types with the 'export type' syntax
@@ -44,5 +47,6 @@ export type {
   MethodologyItem,
   AcademicSubjectItem,
   AfterSchoolSubjectItem,
-  TechnicalSkillItem
+  TechnicalSkillItem,
+  LanguageItem
 };
