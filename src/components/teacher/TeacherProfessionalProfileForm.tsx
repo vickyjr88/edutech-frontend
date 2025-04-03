@@ -79,7 +79,8 @@ const TeacherProfessionalProfileForm = ({
   const [technicalSkills, setTechnicalSkills] = useState<TechnicalSkillItem[]>([]);
   const [languages, setLanguages] = useState<LanguageItem[]>([]);
   const [certifications, setCertifications] = useState<FormItem[]>([{ id: "1", value: "", details: "" }]);
-  const [videoUrl, setVideoUrl] = useState("");
+  const [videoUrls, setVideoUrls] = useState<string[]>([]);
+  const [photoUrls, setPhotoUrls] = useState<string[]>([]);
 
   useEffect(() => {
     if (user) {
@@ -214,6 +215,7 @@ const TeacherProfessionalProfileForm = ({
 
   const handleSubmit = () => {
     setIsSubmitting(true);
+    
     setTimeout(() => {
       setIsSubmitting(false);
       onComplete();
@@ -274,8 +276,10 @@ const TeacherProfessionalProfileForm = ({
         />;
       case 9: 
         return <VideoStep 
-          videoUrl={videoUrl} 
-          setVideoUrl={setVideoUrl} 
+          videoUrls={videoUrls} 
+          setVideoUrls={setVideoUrls}
+          photoUrls={photoUrls}
+          setPhotoUrls={setPhotoUrls}
         />;
       default: return null;
     }
