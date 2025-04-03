@@ -23,7 +23,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { 
-  Calendar, 
+  Calendar as CalendarIcon, 
   Users, 
   BookOpen, 
   ScrollText, 
@@ -34,7 +34,8 @@ import {
   School, 
   FileText, 
   Link, 
-  FileUp 
+  FileUp,
+  Clock
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { 
@@ -43,6 +44,10 @@ import {
 import { 
   TEACHING_METHODOLOGIES 
 } from "@/components/teacher/professional-profile/utils/methodologyUtils";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 
 const classSchema = z.object({
   type: z.enum(["academic", "afterschool"]),
@@ -79,10 +84,25 @@ type CreateClassFormProps = {
   onCancel: () => void;
 };
 
+// Extended cohort type with new fields
+type CohortData = {
+  id: string;
+  name: string; 
+  schedule: string;
+  scheduleDays: Date[];
+  scheduleTime: string;
+  price: string;
+  siblingDiscount: string;
+  friendDiscount: string;
+  numberOfLessons: string;
+  isActive: boolean;
+  students: { id: string; name: string; email: string }[];
+};
+
 const CreateClassForm = ({ onSubmit, onCancel }: CreateClassFormProps) => {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("basic");
-  const [cohorts, setCohorts] = useState<{ id: string; name: string; schedule: string }[]>([]);
+  const [cohorts, setCohorts] = useState<CohortData[]>([]);
   const [teamMembers, setTeamMembers] = useState<{ id: string; email: string; role: string }[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [lessonFileUploads, setLessonFileUploads] = useState<Record<string, File[]>>({});
@@ -112,7 +132,36 @@ const CreateClassForm = ({ onSubmit, onCancel }: CreateClassFormProps) => {
   const classType = form.watch("type");
   const hasCohorts = form.watch("hasCohorts");
   const hasTeamTeaching = form.watch("hasTeamTeaching");
-  const lessonPlans = form.watch("lessonPlans");
+
+  const handleLessonFileChange = (lessonId: string, e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    setLessonFileUploads(prev => ({ ...prev, [lessonId]: files }));
+  };
+
+  const removeLessonFile = (lessonId: string, fileIndex: number) => {
+    setLessonFileUploads(prev => {
+      const updatedFiles = [...(prev[lessonId] || [])];
+      updatedFiles.splice(fileIndex, 1);
+      return { ...prev, [lessonId]: updatedFiles };
+    });
+  };
+
+  const appendLessonPlan = () => {
+    form.setValue("lessonPlans", [...form.getValues().lessonPlans, { id: Date.now().toString() }]);
+  };
+
+  const removeLessonPlan = (id: string) => {
+    form.setValue("lessonPlans", form.getValues().lessonPlans.filter(lesson => lesson.id !== id));
+  };
+
+  const updateLessonPlan = (id: string, field: string, value: string) => {
+    form.setValue("lessonPlans", form.getValues().lessonPlans.map(lesson => {
+      if (lesson.id === id) {
+        return { ...lesson, [field]: value };
+      }
+      return lesson;
+    }));
+  };
 
   const handleSubmitForm = (values: ClassFormValues) => {
     setIsSubmitting(true);
@@ -130,7 +179,19 @@ const CreateClassForm = ({ onSubmit, onCancel }: CreateClassFormProps) => {
 
   const addCohort = () => {
     const newId = Date.now().toString();
-    setCohorts([...cohorts, { id: newId, name: `Cohort ${cohorts.length + 1}`, schedule: "" }]);
+    setCohorts([...cohorts, { 
+      id: newId, 
+      name: `Cohort ${cohorts.length + 1}`, 
+      schedule: "",
+      scheduleDays: [],
+      scheduleTime: "",
+      price: "",
+      siblingDiscount: "0",
+      friendDiscount: "0",
+      numberOfLessons: "8",
+      isActive: true,
+      students: []
+    }]);
   };
 
   const removeCohort = (id: string) => {
@@ -139,7 +200,7 @@ const CreateClassForm = ({ onSubmit, onCancel }: CreateClassFormProps) => {
 
   const addTeamMember = () => {
     const newId = Date.now().toString();
-    setTeamMembers([...teamMembers, { id: newId, email: "", role: "assistant" }]);
+    setTeamMembers([...teamMembers, { id: newId, email: "", role: "co-teacher" }]);
   };
 
   const removeTeamMember = (id: string) => {
@@ -152,59 +213,56 @@ const CreateClassForm = ({ onSubmit, onCancel }: CreateClassFormProps) => {
     ));
   };
 
-  const updateCohort = (id: string, field: "name" | "schedule", value: string) => {
+  const updateCohort = (id: string, field: keyof CohortData, value: any) => {
     setCohorts(cohorts.map(cohort => 
       cohort.id === id ? { ...cohort, [field]: value } : cohort
     ));
   };
 
-  const addLessonPlan = () => {
-    const newId = Date.now().toString();
-    const updatedLessonPlans = [...lessonPlans, { 
-      id: newId, 
-      title: form.getValues("title") ? `${form.getValues("title")} - Lesson ${lessonPlans.length + 1}` : `Lesson ${lessonPlans.length + 1}`, 
-      description: "", 
-      duration: "30", 
-      resourceUrl: "",
-      resourceFiles: [] 
-    }];
-    form.setValue("lessonPlans", updatedLessonPlans);
+  const addStudentToCohort = (cohortId: string) => {
+    const cohort = cohorts.find(c => c.id === cohortId);
+    if (!cohort) return;
+
+    const newStudent = {
+      id: Date.now().toString(),
+      name: "",
+      email: ""
+    };
+
+    const updatedCohort = {
+      ...cohort,
+      students: [...cohort.students, newStudent]
+    };
+
+    setCohorts(cohorts.map(c => c.id === cohortId ? updatedCohort : c));
   };
 
-  const removeLessonPlan = (id: string) => {
-    const updatedLessonPlans = lessonPlans.filter(plan => plan.id !== id);
-    form.setValue("lessonPlans", updatedLessonPlans);
-    // Also clean up any stored files
-    const updatedFileUploads = {...lessonFileUploads};
-    delete updatedFileUploads[id];
-    setLessonFileUploads(updatedFileUploads);
+  const removeStudentFromCohort = (cohortId: string, studentId: string) => {
+    const cohort = cohorts.find(c => c.id === cohortId);
+    if (!cohort) return;
+
+    const updatedCohort = {
+      ...cohort,
+      students: cohort.students.filter(s => s.id !== studentId)
+    };
+
+    setCohorts(cohorts.map(c => c.id === cohortId ? updatedCohort : c));
   };
 
-  const updateLessonPlan = (id: string, field: "title" | "description" | "duration" | "resourceUrl", value: string) => {
-    const updatedLessonPlans = lessonPlans.map(plan => 
-      plan.id === id ? { ...plan, [field]: value } : plan
+  const updateStudent = (cohortId: string, studentId: string, field: "name" | "email", value: string) => {
+    const cohort = cohorts.find(c => c.id === cohortId);
+    if (!cohort) return;
+
+    const updatedStudents = cohort.students.map(student => 
+      student.id === studentId ? { ...student, [field]: value } : student
     );
-    form.setValue("lessonPlans", updatedLessonPlans);
-  };
 
-  const handleLessonFileUpload = (id: string, files: File[]) => {
-    // Store the files in state
-    setLessonFileUploads(prev => ({
-      ...prev,
-      [id]: files
-    }));
-    
-    // Update the form value
-    const updatedLessonPlans = lessonPlans.map(plan => 
-      plan.id === id ? { ...plan, resourceFiles: files } : plan
-    );
-    form.setValue("lessonPlans", updatedLessonPlans);
+    const updatedCohort = {
+      ...cohort,
+      students: updatedStudents
+    };
 
-    // Show a toast notification
-    toast({
-      title: "Files uploaded",
-      description: `${files.length} file(s) uploaded for lesson plan.`,
-    });
+    setCohorts(cohorts.map(c => c.id === cohortId ? updatedCohort : c));
   };
 
   return (
@@ -238,178 +296,26 @@ const CreateClassForm = ({ onSubmit, onCancel }: CreateClassFormProps) => {
           <Form {...form}>
             <form onSubmit={form.handleSubmit(handleSubmitForm)}>
               <TabsContent value="basic" className="space-y-6">
-                <div className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <FormField
-                      control={form.control}
-                      name="type"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Class Type</FormLabel>
-                          <Select 
-                            onValueChange={field.onChange} 
-                            defaultValue={field.value}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select class type" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="academic">Academic</SelectItem>
-                              <SelectItem value="afterschool">After School</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormDescription>
-                            Academic classes follow curriculum, after-school are extracurricular
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="title"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Class Title</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Enter a catchy title for your class" {...field} />
-                          </FormControl>
-                          <FormDescription>
-                            Give your class a catchy, descriptive title
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <FormField
-                      control={form.control}
-                      name="curriculum"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Curriculum</FormLabel>
-                          <Select 
-                            onValueChange={field.onChange}
-                            defaultValue={field.value}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select curriculum" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="national">National Curriculum</SelectItem>
-                              <SelectItem value="cambridge">Cambridge</SelectItem>
-                              <SelectItem value="ib">International Baccalaureate</SelectItem>
-                              <SelectItem value="american">American Curriculum</SelectItem>
-                              <SelectItem value="other">Other</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="gradeLevel"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>{classType === "academic" ? "Grade Level" : "Age Range"}</FormLabel>
-                          <Select 
-                            onValueChange={field.onChange}
-                            defaultValue={field.value}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder={classType === "academic" ? "Select grade level" : "Select age range"} />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {classType === "academic" ? (
-                                <>
-                                  <SelectItem value="elementary_1_3">Elementary (Grades 1-3)</SelectItem>
-                                  <SelectItem value="elementary_4_6">Elementary (Grades 4-6)</SelectItem>
-                                  <SelectItem value="middle_school">Middle School (Grades 7-8)</SelectItem>
-                                  <SelectItem value="high_school">High School (Grades 9-12)</SelectItem>
-                                </>
-                              ) : (
-                                <>
-                                  <SelectItem value="ages_5_7">Ages 5-7</SelectItem>
-                                  <SelectItem value="ages_8_10">Ages 8-10</SelectItem>
-                                  <SelectItem value="ages_11_13">Ages 11-13</SelectItem>
-                                  <SelectItem value="ages_14_18">Ages 14-18</SelectItem>
-                                </>
-                              )}
-                              <SelectItem value="all_ages">All Ages</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="subject"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Subject</FormLabel>
-                          <Select 
-                            onValueChange={field.onChange}
-                            defaultValue={field.value}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select subject" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {classType === "academic" ? (
-                                <>
-                                  <SelectItem value="mathematics">Mathematics</SelectItem>
-                                  <SelectItem value="english">English</SelectItem>
-                                  <SelectItem value="science">Science</SelectItem>
-                                  <SelectItem value="social_studies">Social Studies</SelectItem>
-                                  <SelectItem value="languages">Languages</SelectItem>
-                                </>
-                              ) : (
-                                <>
-                                  <SelectItem value="art">Art & Crafts</SelectItem>
-                                  <SelectItem value="music">Music</SelectItem>
-                                  <SelectItem value="sports">Sports & Physical Education</SelectItem>
-                                  <SelectItem value="coding">Coding & Technology</SelectItem>
-                                  <SelectItem value="drama">Drama & Theatre</SelectItem>
-                                </>
-                              )}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
-                    name="summary"
+                    name="type"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Class Summary</FormLabel>
-                        <FormControl>
-                          <Textarea 
-                            placeholder="Write a brief summary of your class (max 200 characters)..." 
-                            className="resize-none h-20"
-                            {...field} 
-                          />
-                        </FormControl>
+                        <FormLabel>Class Type</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select class type" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="academic">Academic</SelectItem>
+                            <SelectItem value="afterschool">After School</SelectItem>
+                          </SelectContent>
+                        </Select>
                         <FormDescription>
-                          A short summary that will appear in class listings
+                          Choose the type of class you are creating.
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
@@ -418,431 +324,329 @@ const CreateClassForm = ({ onSubmit, onCancel }: CreateClassFormProps) => {
 
                   <FormField
                     control={form.control}
-                    name="description"
+                    name="subject"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Detailed Description</FormLabel>
-                        <FormControl>
-                          <Textarea 
-                            placeholder="Provide a comprehensive description of what your class covers..." 
-                            className="min-h-32"
-                            {...field} 
-                          />
-                        </FormControl>
+                        <FormLabel>Subject</FormLabel>
+                        <Input placeholder="Enter subject" {...field} />
                         <FormDescription>
-                          Provide a detailed description of what students will learn
+                          Enter the subject of the class.
                         </FormDescription>
                         <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <FormField
+                  control={form.control}
+                  name="title"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Class Title</FormLabel>
+                      <Input placeholder="Enter class title" {...field} />
+                      <FormDescription>
+                        Enter a descriptive title for the class.
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {classType === "academic" && (
+                  <FormField
+                    control={form.control}
+                    name="gradeLevel"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Grade Level</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select grade level" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="1">1st Grade</SelectItem>
+                            <SelectItem value="2">2nd Grade</SelectItem>
+                            <SelectItem value="3">3rd Grade</SelectItem>
+                            <SelectItem value="4">4th Grade</SelectItem>
+                            <SelectItem value="5">5th Grade</SelectItem>
+                            <SelectItem value="6">6th Grade</SelectItem>
+                            <SelectItem value="7">7th Grade</SelectItem>
+                            <SelectItem value="8">8th Grade</SelectItem>
+                            <SelectItem value="9">9th Grade</SelectItem>
+                            <SelectItem value="10">10th Grade</SelectItem>
+                            <SelectItem value="11">11th Grade</SelectItem>
+                            <SelectItem value="12">12th Grade</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormDescription>
+                          Select the grade level for this class.
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
+
+                <FormField
+                  control={form.control}
+                  name="summary"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Class Summary</FormLabel>
+                      <Textarea
+                        placeholder="Write a brief summary of the class"
+                        className="resize-none"
+                        {...field}
+                      />
+                      <FormDescription>
+                        Write a brief summary of the class.
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="description"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Detailed Description</FormLabel>
+                      <Textarea
+                        placeholder="Write a detailed description of the class"
+                        className="resize-none"
+                        {...field}
+                      />
+                      <FormDescription>
+                        Write a detailed description of the class.
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="isPublic"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                        <div className="space-y-0.5">
+                          <FormLabel className="text-base">Public Class</FormLabel>
+                          <FormDescription>
+                            Make this class visible to all students.
+                          </FormDescription>
+                        </div>
+                        <FormControl>
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
                       </FormItem>
                     )}
                   />
 
                   <FormField
                     control={form.control}
-                    name="objectives"
+                    name="hasCohorts"
                     render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Learning Objectives</FormLabel>
+                      <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                        <div className="space-y-0.5">
+                          <FormLabel className="text-base">Multiple Cohorts</FormLabel>
+                          <FormDescription>
+                            Enable multiple cohorts for this class.
+                          </FormDescription>
+                        </div>
                         <FormControl>
-                          <Textarea 
-                            placeholder="List the key learning objectives or skills students will gain..." 
-                            className="min-h-24"
-                            {...field} 
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
                           />
                         </FormControl>
-                        <FormDescription>
-                          What will students be able to do after completing this class?
-                        </FormDescription>
-                        <FormMessage />
                       </FormItem>
                     )}
                   />
 
                   <FormField
                     control={form.control}
-                    name="assessmentMethods"
+                    name="hasTeamTeaching"
                     render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Assessment Methods</FormLabel>
+                      <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                        <div className="space-y-0.5">
+                          <FormLabel className="text-base">Team Teaching</FormLabel>
+                          <FormDescription>
+                            Enable team teaching for this class.
+                          </FormDescription>
+                        </div>
                         <FormControl>
-                          <Textarea 
-                            placeholder="Describe how you will assess student progress..." 
-                            className="min-h-24"
-                            {...field} 
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
                           />
                         </FormControl>
-                        <FormDescription>
-                          How will you evaluate student progress and learning?
-                        </FormDescription>
-                        <FormMessage />
                       </FormItem>
                     )}
                   />
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <FormField
-                      control={form.control}
-                      name="technicalRequirements"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Technical Requirements</FormLabel>
-                          <FormControl>
-                            <Textarea 
-                              placeholder="List technical requirements (internet speed, software, etc.)..." 
-                              className="min-h-24"
-                              {...field} 
-                            />
-                          </FormControl>
-                          <FormDescription>
-                            What technical setup do students need?
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="materialsRequired"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Materials Required</FormLabel>
-                          <FormControl>
-                            <Textarea 
-                              placeholder="List materials students will need to participate..." 
-                              className="min-h-24"
-                              {...field} 
-                            />
-                          </FormControl>
-                          <FormDescription>
-                            What supplies should students have ready?
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  <FormField
-                    control={form.control}
-                    name="commitmentRequired"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Commitment Required</FormLabel>
-                        <FormControl>
-                          <Textarea 
-                            placeholder="Describe the time commitment needed (days/weeks/months)..." 
-                            className="min-h-24"
-                            {...field} 
-                          />
-                        </FormControl>
-                        <FormDescription>
-                          How long will this class run? What time commitment is expected?
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <FormField
-                      control={form.control}
-                      name="methodology"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Teaching Methodology</FormLabel>
-                          <Select 
-                            onValueChange={field.onChange}
-                            defaultValue={field.value}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select methodology" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {TEACHING_METHODOLOGIES.map((methodology) => (
-                                <SelectItem key={methodology} value={methodology}>
-                                  {methodology}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormDescription>
-                            Choose your primary teaching methodology
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="strategy"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Teaching Strategy</FormLabel>
-                          <Select 
-                            onValueChange={field.onChange}
-                            defaultValue={field.value}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select strategy" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {TEACHING_STRATEGIES.map((strategy) => (
-                                <SelectItem key={strategy} value={strategy}>
-                                  {strategy}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormDescription>
-                            Select your preferred teaching strategy
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  <div className="space-y-4 pt-4 border-t">
-                    <FormField
-                      control={form.control}
-                      name="isPublic"
-                      render={({ field }) => (
-                        <FormItem className="flex flex-row items-center justify-between space-x-3 space-y-0">
-                          <div className="space-y-1">
-                            <FormLabel>Public Class</FormLabel>
-                            <FormDescription>
-                              Make this class publicly visible to students
-                            </FormDescription>
-                          </div>
-                          <FormControl>
-                            <Switch 
-                              checked={field.value}
-                              onCheckedChange={field.onChange}
-                            />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="hasCohorts"
-                      render={({ field }) => (
-                        <FormItem className="flex flex-row items-center justify-between space-x-3 space-y-0">
-                          <div className="space-y-1">
-                            <FormLabel>Multiple Cohorts</FormLabel>
-                            <FormDescription>
-                              Divide this class into multiple student cohorts
-                            </FormDescription>
-                          </div>
-                          <FormControl>
-                            <Switch 
-                              checked={field.value}
-                              onCheckedChange={field.onChange}
-                            />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="hasTeamTeaching"
-                      render={({ field }) => (
-                        <FormItem className="flex flex-row items-center justify-between space-x-3 space-y-0">
-                          <div className="space-y-1">
-                            <FormLabel>Team Teaching</FormLabel>
-                            <FormDescription>
-                              Add co-teachers or teaching assistants to this class
-                            </FormDescription>
-                          </div>
-                          <FormControl>
-                            <Switch 
-                              checked={field.value}
-                              onCheckedChange={field.onChange}
-                            />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                  
-                  <div className="flex justify-between pt-4">
-                    <Button type="button" variant="outline" onClick={() => setActiveTab("lessons")}>
-                      Next: Lesson Plans
-                    </Button>
-                  </div>
+                </div>
+                
+                <div className="flex justify-between pt-4">
+                  <div></div>
+                  <Button type="button" variant="outline" onClick={() => setActiveTab("lessons")}>
+                    Next: Lesson Plans
+                  </Button>
                 </div>
               </TabsContent>
 
               <TabsContent value="lessons" className="space-y-6">
-                <div className="space-y-6">
-                  <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
-                    <h3 className="text-sm font-medium text-blue-800">Lesson Plans</h3>
-                    <p className="text-xs text-blue-700 mt-1">
-                      Create detailed lesson plans for your class. Each lesson plan should outline what students will learn and what activities they'll engage in.
-                    </p>
-                  </div>
+                <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
+                  <h3 className="text-sm font-medium text-blue-800">Lesson Plans</h3>
+                  <p className="text-xs text-blue-700 mt-1">
+                    Add lesson plans to organize your teaching curriculum and share with students.
+                  </p>
+                </div>
 
-                  {lessonPlans.length === 0 ? (
-                    <div className="text-center py-8 border border-dashed rounded-md">
-                      <FileText className="h-12 w-12 mx-auto text-gray-400" />
-                      <h3 className="mt-2 text-sm font-medium text-gray-900">No lesson plans yet</h3>
-                      <p className="mt-1 text-sm text-gray-500">Get started by creating your first lesson plan</p>
-                      <Button
-                        type="button" 
-                        onClick={addLessonPlan}
-                        className="mt-4"
-                      >
-                        <PlusCircle className="mr-2 h-4 w-4" />
-                        Add First Lesson Plan
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      {lessonPlans.map((plan, index) => (
-                        <div key={plan.id} className="border rounded-md p-4 space-y-4">
-                          <div className="flex justify-between items-center">
-                            <h3 className="text-sm font-medium">Lesson {index + 1}</h3>
-                            <Button 
-                              type="button" 
-                              variant="ghost" 
-                              size="sm" 
-                              onClick={() => removeLessonPlan(plan.id)}
-                              className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
+                {form.watch("lessonPlans").length === 0 ? (
+                  <div className="text-center py-8 border border-dashed rounded-md">
+                    <BookOpen className="h-12 w-12 mx-auto text-gray-400" />
+                    <h3 className="mt-2 text-sm font-medium text-gray-900">No lesson plans yet</h3>
+                    <p className="mt-1 text-sm text-gray-500">Get started by creating a new lesson plan</p>
+                    <Button
+                      type="button" 
+                      onClick={appendLessonPlan}
+                      className="mt-4"
+                    >
+                      <PlusCircle className="mr-2 h-4 w-4" />
+                      Add First Lesson
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {form.watch("lessonPlans").map((lesson, index) => (
+                      <div key={lesson.id} className="border rounded-md p-4 space-y-4">
+                        <div className="flex justify-between items-center">
+                          <h3 className="text-sm font-medium">Lesson {index + 1}</h3>
+                          <Button 
+                            type="button" 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={() => removeLessonPlan(lesson.id)}
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor={`lesson-title-${lesson.id}`}>Title</Label>
+                            <Input 
+                              id={`lesson-title-${lesson.id}`}
+                              placeholder="Enter lesson title"
+                              value={lesson.title || ""}
+                              onChange={(e) => updateLessonPlan(lesson.id, "title", e.target.value)}
+                            />
                           </div>
-                          <div className="space-y-4">
-                            <div className="space-y-2">
-                              <Label htmlFor={`lesson-title-${plan.id}`}>Lesson Title</Label>
-                              <Input 
-                                id={`lesson-title-${plan.id}`}
-                                value={plan.title}
-                                onChange={(e) => updateLessonPlan(plan.id, "title", e.target.value)}
-                                placeholder={`${form.getValues("title") || "Class"} - Lesson ${index + 1}`}
-                              />
-                            </div>
-                            <div className="space-y-2">
-                              <Label htmlFor={`lesson-description-${plan.id}`}>Lesson Description</Label>
-                              <Textarea 
-                                id={`lesson-description-${plan.id}`}
-                                value={plan.description}
-                                onChange={(e) => updateLessonPlan(plan.id, "description", e.target.value)}
-                                placeholder="Describe what students will learn and activities they'll complete"
-                                className="min-h-24"
-                              />
-                            </div>
-                            <div className="space-y-2">
-                              <Label htmlFor={`lesson-duration-${plan.id}`}>Duration</Label>
-                              <Select
-                                value={plan.duration}
-                                onValueChange={(value) => updateLessonPlan(plan.id, "duration", value)}
-                              >
-                                <SelectTrigger id={`lesson-duration-${plan.id}`}>
-                                  <SelectValue placeholder="Select duration" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="15">15 minutes</SelectItem>
-                                  <SelectItem value="30">30 minutes</SelectItem>
-                                  <SelectItem value="45">45 minutes</SelectItem>
-                                  <SelectItem value="60">60 minutes</SelectItem>
-                                  <SelectItem value="75">75 minutes</SelectItem>
-                                  <SelectItem value="90">90 minutes</SelectItem>
-                                  <SelectItem value="120">2 hours</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-                            
-                            {/* Resource URL and File Upload */}
-                            <div className="space-y-2 pt-2 border-t">
-                              <h4 className="text-sm font-medium">Lesson Resources</h4>
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                  <Label htmlFor={`lesson-resource-url-${plan.id}`} className="flex items-center gap-1">
-                                    <Link className="h-4 w-4" />
-                                    Resource URL
-                                  </Label>
-                                  <Input 
-                                    id={`lesson-resource-url-${plan.id}`}
-                                    value={plan.resourceUrl || ""}
-                                    onChange={(e) => updateLessonPlan(plan.id, "resourceUrl", e.target.value)}
-                                    placeholder="https://example.com/resource"
-                                    type="url"
-                                  />
-                                  <p className="text-xs text-muted-foreground">
-                                    Link to online resources like videos or websites
-                                  </p>
-                                </div>
-                                
-                                <div className="space-y-2">
-                                  <FormFileUpload
-                                    label="Upload Files"
-                                    description="Upload worksheets, slides, or other materials"
-                                    accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.jpg,.jpeg,.png"
-                                    multiple={true}
-                                    onFilesSelected={(files) => handleLessonFileUpload(plan.id, files)}
-                                    icon={<FileUp className="h-8 w-8 text-gray-400" />}
-                                    className="h-full"
-                                  />
-                                </div>
-                              </div>
-                              
-                              {/* Show selected files */}
-                              {lessonFileUploads[plan.id] && lessonFileUploads[plan.id].length > 0 && (
-                                <div className="mt-2 p-2 bg-muted rounded-md">
-                                  <p className="text-xs font-medium mb-1">Selected files:</p>
-                                  <div className="space-y-1">
-                                    {lessonFileUploads[plan.id].map((file, fileIndex) => (
-                                      <div key={fileIndex} className="flex items-center text-xs">
-                                        <FileText className="h-3 w-3 mr-1 text-primary" />
-                                        {file.name} ({(file.size / 1024).toFixed(1)} KB)
-                                      </div>
-                                    ))}
-                                  </div>
-                                </div>
-                              )}
-                            </div>
+                          <div className="space-y-2">
+                            <Label htmlFor={`lesson-duration-${lesson.id}`}>Duration</Label>
+                            <Input 
+                              id={`lesson-duration-${lesson.id}`}
+                              placeholder="Enter lesson duration"
+                              value={lesson.duration || ""}
+                              onChange={(e) => updateLessonPlan(lesson.id, "duration", e.target.value)}
+                            />
                           </div>
                         </div>
-                      ))}
-                      <Button
-                        type="button" 
-                        variant="outline" 
-                        onClick={addLessonPlan}
-                        className="mt-2"
-                      >
-                        <PlusCircle className="mr-2 h-4 w-4" />
-                        Add Another Lesson Plan
-                      </Button>
-                    </div>
-                  )}
-                  
-                  <div className="flex justify-between pt-4">
-                    <Button type="button" variant="outline" onClick={() => setActiveTab("basic")}>
-                      Back: Basic Information
-                    </Button>
-                    <Button type="button" variant="outline" onClick={() => setActiveTab("cohorts")}>
-                      Next: Cohorts & Students
+                        <div className="space-y-2">
+                          <Label htmlFor={`lesson-description-${lesson.id}`}>Description</Label>
+                          <Textarea 
+                            id={`lesson-description-${lesson.id}`}
+                            placeholder="Enter lesson description"
+                            className="resize-none"
+                            value={lesson.description || ""}
+                            onChange={(e) => updateLessonPlan(lesson.id, "description", e.target.value)}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor={`lesson-resource-${lesson.id}`}>Resource URL</Label>
+                          <div className="flex items-center space-x-2">
+                            <Link className="h-4 w-4 text-muted-foreground" />
+                            <Input 
+                              id={`lesson-resource-${lesson.id}`}
+                              placeholder="Enter resource URL"
+                              type="url"
+                              value={lesson.resourceUrl || ""}
+                              onChange={(e) => updateLessonPlan(lesson.id, "resourceUrl", e.target.value)}
+                            />
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor={`lesson-files-${lesson.id}`}>Resource Files</Label>
+                          <div className="flex items-center space-x-2">
+                            <FileUp className="h-4 w-4 text-muted-foreground" />
+                            <input
+                              type="file"
+                              id={`lesson-files-${lesson.id}`}
+                              multiple
+                              onChange={(e) => handleLessonFileChange(lesson.id, e)}
+                              className="hidden"
+                            />
+                            <Label htmlFor={`lesson-files-${lesson.id}`} className="cursor-pointer bg-secondary text-secondary-foreground rounded-md px-4 py-2 text-sm font-medium hover:bg-secondary/80">
+                              Upload Files
+                            </Label>
+                          </div>
+                          {lessonFileUploads[lesson.id] && lessonFileUploads[lesson.id].length > 0 && (
+                            <div className="mt-2 space-y-1">
+                              {lessonFileUploads[lesson.id].map((file, fileIndex) => (
+                                <div key={fileIndex} className="flex items-center justify-between p-2 bg-gray-100 rounded-md">
+                                  <p className="text-sm text-gray-800">{file.name}</p>
+                                  <Button 
+                                    type="button" 
+                                    variant="ghost" 
+                                    size="sm"
+                                    onClick={() => removeLessonFile(lesson.id, fileIndex)}
+                                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                    <Button
+                      type="button" 
+                      variant="outline" 
+                      onClick={appendLessonPlan}
+                      className="mt-2"
+                    >
+                      <PlusCircle className="mr-2 h-4 w-4" />
+                      Add Another Lesson
                     </Button>
                   </div>
+                )}
+                
+                <div className="flex justify-between pt-4">
+                  <Button type="button" variant="outline" onClick={() => setActiveTab("basic")}>
+                    Back: Basic Information
+                  </Button>
+                  <Button type="button" variant="outline" onClick={() => setActiveTab("cohorts")}>
+                    Next: Cohorts & Students
+                  </Button>
                 </div>
               </TabsContent>
 
               <TabsContent value="cohorts" className="space-y-6">
-                {hasCohorts ? (
+                {form.watch("hasCohorts") ? (
                   <div className="space-y-6">
                     <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
                       <h3 className="text-sm font-medium text-blue-800">Multiple Cohorts Enabled</h3>
                       <p className="text-xs text-blue-700 mt-1">
-                        Create multiple cohorts for this class. Each cohort can have its own schedule and student list.
+                        Create multiple cohorts for this class. Each cohort can have its own schedule, pricing, and student list.
                       </p>
                     </div>
 
@@ -876,6 +680,8 @@ const CreateClassForm = ({ onSubmit, onCancel }: CreateClassFormProps) => {
                                 <Trash2 className="h-4 w-4" />
                               </Button>
                             </div>
+                            
+                            {/* Basic cohort information */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                               <div className="space-y-2">
                                 <Label htmlFor={`cohort-name-${cohort.id}`}>Cohort Name</Label>
@@ -886,193 +692,157 @@ const CreateClassForm = ({ onSubmit, onCancel }: CreateClassFormProps) => {
                                   placeholder="Enter cohort name"
                                 />
                               </div>
+                              
                               <div className="space-y-2">
-                                <Label htmlFor={`cohort-schedule-${cohort.id}`}>Schedule</Label>
-                                <Select 
-                                  value={cohort.schedule}
-                                  onValueChange={(value) => updateCohort(cohort.id, "schedule", value)}
-                                >
-                                  <SelectTrigger id={`cohort-schedule-${cohort.id}`}>
-                                    <SelectValue placeholder="Select schedule" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="monday_am">Monday Mornings</SelectItem>
-                                    <SelectItem value="monday_pm">Monday Afternoons</SelectItem>
-                                    <SelectItem value="tuesday_am">Tuesday Mornings</SelectItem>
-                                    <SelectItem value="tuesday_pm">Tuesday Afternoons</SelectItem>
-                                    <SelectItem value="wednesday_am">Wednesday Mornings</SelectItem>
-                                    <SelectItem value="wednesday_pm">Wednesday Afternoons</SelectItem>
-                                    <SelectItem value="thursday_am">Thursday Mornings</SelectItem>
-                                    <SelectItem value="thursday_pm">Thursday Afternoons</SelectItem>
-                                    <SelectItem value="friday_am">Friday Mornings</SelectItem>
-                                    <SelectItem value="friday_pm">Friday Afternoons</SelectItem>
-                                    <SelectItem value="weekend">Weekends</SelectItem>
-                                  </SelectContent>
-                                </Select>
+                                <div className="flex items-center justify-between">
+                                  <Label htmlFor={`cohort-active-${cohort.id}`}>Status</Label>
+                                  <div className="flex items-center space-x-2">
+                                    <Switch
+                                      id={`cohort-active-${cohort.id}`}
+                                      checked={cohort.isActive}
+                                      onCheckedChange={(checked) => updateCohort(cohort.id, "isActive", checked)}
+                                    />
+                                    <span className={`text-sm ${cohort.isActive ? 'text-green-600' : 'text-gray-500'}`}>
+                                      {cohort.isActive ? 'Active' : 'Inactive'}
+                                    </span>
+                                  </div>
+                                </div>
+                                <p className="text-xs text-muted-foreground">
+                                  Inactive cohorts won't accept new enrollments
+                                </p>
                               </div>
                             </div>
-                          </div>
-                        ))}
-                        <Button
-                          type="button" 
-                          variant="outline" 
-                          onClick={addCohort}
-                          className="mt-2"
-                        >
-                          <PlusCircle className="mr-2 h-4 w-4" />
-                          Add Another Cohort
-                        </Button>
-                      </div>
-                    )}
-                    
-                    <div className="flex justify-between pt-4">
-                      <Button type="button" variant="outline" onClick={() => setActiveTab("lessons")}>
-                        Back: Lesson Plans
-                      </Button>
-                      <Button type="button" variant="outline" onClick={() => setActiveTab("teaching")}>
-                        Next: Teaching Team
-                      </Button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="space-y-6">
-                    <div className="bg-amber-50 border border-amber-200 rounded-md p-4">
-                      <h3 className="text-sm font-medium text-amber-800">Multiple Cohorts Disabled</h3>
-                      <p className="text-xs text-amber-700 mt-1">
-                        Enable multiple cohorts in the Basic Information tab to manage separate student groups with different schedules.
-                      </p>
-                    </div>
-                    
-                    <div className="flex justify-between pt-4">
-                      <Button type="button" variant="outline" onClick={() => setActiveTab("lessons")}>
-                        Back: Lesson Plans
-                      </Button>
-                      <Button type="button" variant="outline" onClick={() => setActiveTab("teaching")}>
-                        Next: Teaching Team
-                      </Button>
-                    </div>
-                  </div>
-                )}
-              </TabsContent>
-
-              <TabsContent value="teaching" className="space-y-6">
-                {hasTeamTeaching ? (
-                  <div className="space-y-6">
-                    <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
-                      <h3 className="text-sm font-medium text-blue-800">Team Teaching Enabled</h3>
-                      <p className="text-xs text-blue-700 mt-1">
-                        Add co-teachers or teaching assistants to collaborate with you on this class.
-                      </p>
-                    </div>
-
-                    {teamMembers.length === 0 ? (
-                      <div className="text-center py-8 border border-dashed rounded-md">
-                        <UserPlus className="h-12 w-12 mx-auto text-gray-400" />
-                        <h3 className="mt-2 text-sm font-medium text-gray-900">No team members yet</h3>
-                        <p className="mt-1 text-sm text-gray-500">Add teachers or assistants to your teaching team</p>
-                        <Button
-                          type="button" 
-                          onClick={addTeamMember}
-                          className="mt-4"
-                        >
-                          <PlusCircle className="mr-2 h-4 w-4" />
-                          Add First Team Member
-                        </Button>
-                      </div>
-                    ) : (
-                      <div className="space-y-4">
-                        {teamMembers.map((member, index) => (
-                          <div key={member.id} className="border rounded-md p-4 space-y-4">
-                            <div className="flex justify-between items-center">
-                              <h3 className="text-sm font-medium">Team Member {index + 1}</h3>
-                              <Button 
-                                type="button" 
-                                variant="ghost" 
-                                size="sm" 
-                                onClick={() => removeTeamMember(member.id)}
-                                className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            
+                            {/* Schedule information */}
+                            <div className="space-y-4 pt-4 border-t">
+                              <h4 className="text-sm font-medium">Schedule & Timing</h4>
+                              
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {/* Date picker for the schedule */}
+                                <div className="space-y-2">
+                                  <Label>Class Days</Label>
+                                  <Popover>
+                                    <PopoverTrigger asChild>
+                                      <Button
+                                        variant="outline"
+                                        className={cn(
+                                          "w-full justify-start text-left",
+                                          !cohort.scheduleDays.length && "text-muted-foreground"
+                                        )}
+                                      >
+                                        <CalendarIcon className="mr-2 h-4 w-4" />
+                                        {cohort.scheduleDays.length > 0 ? (
+                                          cohort.scheduleDays.length > 3 
+                                            ? `${cohort.scheduleDays.length} days selected` 
+                                            : cohort.scheduleDays.map(date => format(date, "EEEE")).join(", ")
+                                        ) : (
+                                          <span>Select days of the week</span>
+                                        )}
+                                      </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-0" align="start">
+                                      <Calendar
+                                        mode="multiple"
+                                        selected={cohort.scheduleDays}
+                                        onSelect={(days) => updateCohort(cohort.id, "scheduleDays", days || [])}
+                                        className="p-3 pointer-events-auto"
+                                        initialFocus
+                                      />
+                                    </PopoverContent>
+                                  </Popover>
+                                  <p className="text-xs text-muted-foreground">
+                                    Select the days when this cohort will meet
+                                  </p>
+                                </div>
+                                
+                                {/* Time of day */}
+                                <div className="space-y-2">
+                                  <Label htmlFor={`cohort-time-${cohort.id}`}>Class Time</Label>
+                                  <div className="flex items-center gap-2">
+                                    <Select
+                                      value={cohort.scheduleTime}
+                                      onValueChange={(value) => updateCohort(cohort.id, "scheduleTime", value)}
+                                    >
+                                      <SelectTrigger id={`cohort-time-${cohort.id}`} className="w-full">
+                                        <SelectValue placeholder="Select time" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="morning">Morning (8AM - 12PM)</SelectItem>
+                                        <SelectItem value="afternoon">Afternoon (12PM - 4PM)</SelectItem>
+                                        <SelectItem value="evening">Evening (4PM - 8PM)</SelectItem>
+                                        <SelectItem value="custom">Custom Time</SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                    {cohort.scheduleTime === "custom" && (
+                                      <div className="flex items-center space-x-2 ml-4">
+                                        <Clock className="h-4 w-4 text-muted-foreground" />
+                                        <Input
+                                          type="time"
+                                          className="w-32"
+                                          value={cohort.schedule}
+                                          onChange={(e) => updateCohort(cohort.id, "schedule", e.target.value)}
+                                        />
+                                      </div>
+                                    )}
+                                  </div>
+                                  <p className="text-xs text-muted-foreground">
+                                    Set the time when this cohort will meet
+                                  </p>
+                                </div>
+                              </div>
+                              
                               <div className="space-y-2">
-                                <Label htmlFor={`team-email-${member.id}`}>Email Address</Label>
-                                <Input 
-                                  id={`team-email-${member.id}`}
-                                  value={member.email}
-                                  onChange={(e) => updateTeamMember(member.id, "email", e.target.value)}
-                                  placeholder="Enter team member's email"
-                                  type="email"
+                                <Label htmlFor={`cohort-lessons-${cohort.id}`}>Number of Lessons</Label>
+                                <Input
+                                  id={`cohort-lessons-${cohort.id}`}
+                                  type="number"
+                                  min="1"
+                                  max="52"
+                                  value={cohort.numberOfLessons}
+                                  onChange={(e) => updateCohort(cohort.id, "numberOfLessons", e.target.value)}
+                                  placeholder="E.g., 8, 10, 12"
                                 />
-                              </div>
-                              <div className="space-y-2">
-                                <Label htmlFor={`team-role-${member.id}`}>Role</Label>
-                                <Select 
-                                  value={member.role}
-                                  onValueChange={(value) => updateTeamMember(member.id, "role", value)}
-                                >
-                                  <SelectTrigger id={`team-role-${member.id}`}>
-                                    <SelectValue placeholder="Select role" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="co-teacher">Co-Teacher</SelectItem>
-                                    <SelectItem value="assistant">Teaching Assistant</SelectItem>
-                                    <SelectItem value="guest">Guest Lecturer</SelectItem>
-                                    <SelectItem value="observer">Observer</SelectItem>
-                                  </SelectContent>
-                                </Select>
+                                <p className="text-xs text-muted-foreground">
+                                  Total number of lessons in this cohort
+                                </p>
                               </div>
                             </div>
-                          </div>
-                        ))}
-                        <Button
-                          type="button" 
-                          variant="outline" 
-                          onClick={addTeamMember}
-                          className="mt-2"
-                        >
-                          <PlusCircle className="mr-2 h-4 w-4" />
-                          Add Another Team Member
-                        </Button>
-                      </div>
-                    )}
-                    
-                    <div className="flex justify-between pt-4">
-                      <Button type="button" variant="outline" onClick={() => setActiveTab("cohorts")}>
-                        Back: Cohorts
-                      </Button>
-                      <Button type="submit" disabled={isSubmitting}>
-                        {isSubmitting ? "Creating Class..." : "Create Class"}
-                      </Button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="space-y-6">
-                    <div className="bg-amber-50 border border-amber-200 rounded-md p-4">
-                      <h3 className="text-sm font-medium text-amber-800">Team Teaching Disabled</h3>
-                      <p className="text-xs text-amber-700 mt-1">
-                        Enable team teaching in the Basic Information tab to collaborate with co-teachers or assistants.
-                      </p>
-                    </div>
-                    
-                    <div className="flex justify-between pt-4">
-                      <Button type="button" variant="outline" onClick={() => setActiveTab("cohorts")}>
-                        Back: Cohorts
-                      </Button>
-                      <Button type="submit" disabled={isSubmitting}>
-                        {isSubmitting ? "Creating Class..." : "Create Class"}
-                      </Button>
-                    </div>
-                  </div>
-                )}
-              </TabsContent>
-            </form>
-          </Form>
-        </Tabs>
-      </CardContent>
-    </Card>
-  );
-};
-
-export default CreateClassForm;
+                            
+                            {/* Pricing information */}
+                            <div className="space-y-4 pt-4 border-t">
+                              <h4 className="text-sm font-medium">Pricing</h4>
+                              
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                  <Label htmlFor={`cohort-price-${cohort.id}`}>Price</Label>
+                                  <div className="relative">
+                                    <span className="absolute left-3 top-2.5 text-gray-500">$</span>
+                                    <Input
+                                      id={`cohort-price-${cohort.id}`}
+                                      className="pl-7"
+                                      type="number"
+                                      min="0"
+                                      step="0.01"
+                                      value={cohort.price}
+                                      onChange={(e) => updateCohort(cohort.id, "price", e.target.value)}
+                                      placeholder="0.00"
+                                    />
+                                  </div>
+                                  <p className="text-xs text-muted-foreground">
+                                    Total price for the entire cohort
+                                  </p>
+                                </div>
+                                
+                                <div className="space-y-4">
+                                  <div className="space-y-2">
+                                    <Label htmlFor={`cohort-sibling-discount-${cohort.id}`}>Sibling Discount (%)</Label>
+                                    <Input
+                                      id={`cohort-sibling-discount-${cohort.id}`}
+                                      type="number"
+                                      min="0"
+                                      max="100"
+                                      value={cohort.siblingDiscount}
+                                      onChange={(e) => updateCohort(cohort.id, "siblingDiscount", e.target.value)}
+                                      placeholder="0"
+                                    />
+                                  </div>
