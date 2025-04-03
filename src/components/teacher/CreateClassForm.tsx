@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { TabsContent } from "@/components/ui/tabs";
+import { Form } from "@/components/ui/form";
 import { PlusCircle, Trash2, Users, Calendar, Clock, Mail, Phone, Book, MapPin, CalendarRange, UserCircle2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { Badge } from "@/components/ui/badge";
@@ -66,13 +67,7 @@ const CreateClassForm = ({ onSubmit, onCancel }: CreateClassFormProps) => {
     status: "pending"
   });
 
-  const {
-    register,
-    handleSubmit,
-    setValue,
-    getValues,
-    formState: { errors, isSubmitting },
-  } = useForm({
+  const form = useForm({
     defaultValues: {
       title: "",
       type: "academic",
@@ -82,8 +77,11 @@ const CreateClassForm = ({ onSubmit, onCancel }: CreateClassFormProps) => {
       description: "",
       objectives: [""],
       hasCohorts: false,
+      activeTab: "basic",
     },
   });
+
+  const { register, handleSubmit, setValue, getValues, formState: { errors, isSubmitting } } = form;
 
   const activeTab = getValues("activeTab") || "basic";
 
@@ -92,6 +90,30 @@ const CreateClassForm = ({ onSubmit, onCancel }: CreateClassFormProps) => {
   };
 
   const hasCohorts = getValues("hasCohorts") === true;
+
+  const onSubmitHandler = (data: any) => {
+    const formData = {
+      ...data,
+      cohorts: cohorts
+    };
+    onSubmit(formData);
+  };
+
+  const handleObjectiveChange = (index: number, value: string) => {
+    const updatedObjectives = [...getValues("objectives")];
+    updatedObjectives[index] = value;
+    setValue("objectives", updatedObjectives);
+  };
+
+  const addObjective = () => {
+    setValue("objectives", [...getValues("objectives"), ""]);
+  };
+
+  const removeObjective = (index: number) => {
+    const updatedObjectives = [...getValues("objectives")];
+    updatedObjectives.splice(index, 1);
+    setValue("objectives", updatedObjectives);
+  };
 
   const addCohort = () => {
     const newId = Date.now().toString();
@@ -192,608 +214,575 @@ const CreateClassForm = ({ onSubmit, onCancel }: CreateClassFormProps) => {
     alert(`Invitations would be sent to students in cohort ${cohortId}`);
   };
 
-  const onSubmitHandler = (data: any) => {
-    const formData = {
-      ...data,
-      cohorts: cohorts
-    };
-    onSubmit(formData);
-  };
-
-  const handleObjectiveChange = (index: number, value: string) => {
-    const updatedObjectives = [...getValues("objectives")];
-    updatedObjectives[index] = value;
-    setValue("objectives", updatedObjectives);
-  };
-
-  const addObjective = () => {
-    setValue("objectives", [...getValues("objectives"), ""]);
-  };
-
-  const removeObjective = (index: number) => {
-    const updatedObjectives = [...getValues("objectives")];
-    updatedObjectives.splice(index, 1);
-    setValue("objectives", updatedObjectives);
-  };
-
   return (
-    <form onSubmit={handleSubmit(onSubmitHandler)} className="space-y-8">
-      <Card>
-        <CardHeader>
-          <CardTitle>Create New Class</CardTitle>
-          <CardDescription>Fill in the details to create a new class.</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <TabsContent value="basic" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="title">Class Title</Label>
-                <Input id="title" placeholder="Enter class title" {...register("title", { required: "Title is required" })} />
-                {errors.title && <p className="text-red-500 text-sm">{errors.title.message}</p>}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="type">Class Type</Label>
-                <Select {...register("type", { required: "Type is required" })}>
-                  <SelectTrigger id="type">
-                    <SelectValue placeholder="Select class type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="academic">Academic</SelectItem>
-                    <SelectItem value="afterSchool">After School</SelectItem>
-                  </SelectContent>
-                </Select>
-                {errors.type && <p className="text-red-500 text-sm">{errors.type.message}</p>}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="subject">Subject</Label>
-                <Input id="subject" placeholder="Enter subject" {...register("subject", { required: "Subject is required" })} />
-                {errors.subject && <p className="text-red-500 text-sm">{errors.subject.message}</p>}
-              </div>
-
-              {getValues("type") === "academic" ? (
+    <Form {...form}>
+      <form onSubmit={handleSubmit(onSubmitHandler)} className="space-y-8">
+        <Card>
+          <CardHeader>
+            <CardTitle>Create New Class</CardTitle>
+            <CardDescription>Fill in the details to create a new class.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <TabsContent value="basic" className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="gradeLevel">Grade Level</Label>
-                  <Input id="gradeLevel" placeholder="Enter grade level" {...register("gradeLevel", { required: "Grade level is required" })} />
-                  {errors.gradeLevel && <p className="text-red-500 text-sm">{errors.gradeLevel.message}</p>}
+                  <Label htmlFor="title">Class Title</Label>
+                  <Input id="title" placeholder="Enter class title" {...register("title", { required: "Title is required" })} />
+                  {errors.title && <p className="text-red-500 text-sm">{errors.title.message}</p>}
                 </div>
-              ) : (
+
                 <div className="space-y-2">
-                  <Label htmlFor="ageRange">Age Range</Label>
-                  <Input id="ageRange" placeholder="Enter age range" {...register("ageRange", { required: "Age range is required" })} />
-                  {errors.ageRange && <p className="text-red-500 text-sm">{errors.ageRange.message}</p>}
+                  <Label htmlFor="type">Class Type</Label>
+                  <Select {...register("type", { required: "Type is required" })}>
+                    <SelectTrigger id="type">
+                      <SelectValue placeholder="Select class type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="academic">Academic</SelectItem>
+                      <SelectItem value="afterSchool">After School</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {errors.type && <p className="text-red-500 text-sm">{errors.type.message}</p>}
                 </div>
-              )}
-            </div>
+              </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="description">Class Description</Label>
-              <Textarea id="description" placeholder="Enter class description" {...register("description")} />
-            </div>
-
-            <div className="space-y-2">
-              <Label>Learning Objectives</Label>
-              {getValues("objectives")?.map((objective: string, index: number) => (
-                <div key={index} className="flex items-center space-x-2">
-                  <Input
-                    type="text"
-                    placeholder={`Objective ${index + 1}`}
-                    value={objective}
-                    onChange={(e) => handleObjectiveChange(index, e.target.value)}
-                    className="flex-1"
-                  />
-                  <Button type="button" variant="ghost" size="sm" onClick={() => removeObjective(index)}>
-                    Remove
-                  </Button>
-                </div>
-              ))}
-              <Button type="button" variant="outline" onClick={addObjective}>
-                Add Objective
-              </Button>
-            </div>
-
-            <div className="flex items-center space-x-2">
-              <Checkbox id="hasCohorts" {...register("hasCohorts")} />
-              <Label htmlFor="hasCohorts">Divide class into multiple cohorts?</Label>
-            </div>
-
-            <div className="flex justify-between pt-4">
-              <Button type="button" variant="outline" onClick={onCancel}>
-                Cancel
-              </Button>
-              <Button type="button" variant="outline" onClick={() => setActiveTab("lessons")}>
-                Next: Lesson Plans
-              </Button>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="lessons" className="space-y-6">
-            <div>
-              <h3 className="text-lg font-medium">Lesson Plans</h3>
-              <p className="text-sm text-gray-500">Create and manage lesson plans for this class.</p>
-            </div>
-
-            <div className="flex justify-between pt-4">
-              <Button type="button" variant="outline" onClick={() => setActiveTab("basic")}>
-                Back: Basic Settings
-              </Button>
-              <Button type="button" variant="outline" onClick={() => setActiveTab("cohorts")}>
-                Next: Cohorts
-              </Button>
-            </div>
-          </TabsContent>
-    
-          <TabsContent value="cohorts" className="space-y-6">
-            {hasCohorts ? (
-              <div className="space-y-6">
-                <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
-                  <h3 className="text-sm font-medium text-blue-800">Multiple Cohorts Enabled</h3>
-                  <p className="text-xs text-blue-700 mt-1">
-                    Create multiple cohorts for this class. Each cohort can have its own schedule, capacity, and student list.
-                  </p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="subject">Subject</Label>
+                  <Input id="subject" placeholder="Enter subject" {...register("subject", { required: "Subject is required" })} />
+                  {errors.subject && <p className="text-red-500 text-sm">{errors.subject.message}</p>}
                 </div>
 
-                {cohorts.length === 0 ? (
-                  <div className="text-center py-8 border border-dashed rounded-md">
-                    <Users className="h-12 w-12 mx-auto text-gray-400" />
-                    <h3 className="mt-2 text-sm font-medium text-gray-900">No cohorts defined</h3>
-                    <p className="mt-1 text-sm text-gray-500">Get started by creating a new cohort</p>
-                    <Button
-                      type="button" 
-                      onClick={addCohort}
-                      className="mt-4"
-                    >
-                      <PlusCircle className="mr-2 h-4 w-4" />
-                      Add First Cohort
-                    </Button>
+                {getValues("type") === "academic" ? (
+                  <div className="space-y-2">
+                    <Label htmlFor="gradeLevel">Grade Level</Label>
+                    <Input id="gradeLevel" placeholder="Enter grade level" {...register("gradeLevel", { required: "Grade level is required" })} />
+                    {errors.gradeLevel && <p className="text-red-500 text-sm">{errors.gradeLevel.message}</p>}
                   </div>
                 ) : (
-                  <div className="space-y-4">
-                    {cohorts.map((cohort, index) => (
-                      <div key={cohort.id} className="border rounded-md p-4 space-y-4">
-                        <div className="flex justify-between items-center">
-                          <h3 className="text-sm font-medium flex items-center">
-                            <Users className="h-4 w-4 mr-2 text-blue-500" />
-                            Cohort {index + 1}
-                            {cohort.students.length > 0 && (
-                              <Badge variant="secondary" className="ml-2">
-                                {cohort.students.length} student(s)
-                              </Badge>
-                            )}
-                          </h3>
-                          <Button 
-                            type="button" 
-                            variant="ghost" 
-                            size="sm" 
-                            onClick={() => removeCohort(cohort.id)}
-                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                        
-                        {/* Basic Cohort Information */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <Label htmlFor={`cohort-name-${cohort.id}`}>Cohort Name</Label>
-                            <Input 
-                              id={`cohort-name-${cohort.id}`}
-                              value={cohort.name}
-                              onChange={(e) => updateCohort(cohort.id, "name", e.target.value)}
-                              placeholder="Enter cohort name"
-                            />
+                  <div className="space-y-2">
+                    <Label htmlFor="ageRange">Age Range</Label>
+                    <Input id="ageRange" placeholder="Enter age range" {...register("ageRange", { required: "Age range is required" })} />
+                    {errors.ageRange && <p className="text-red-500 text-sm">{errors.ageRange.message}</p>}
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="description">Class Description</Label>
+                <Textarea id="description" placeholder="Enter class description" {...register("description")} />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Learning Objectives</Label>
+                {getValues("objectives")?.map((objective: string, index: number) => (
+                  <div key={index} className="flex items-center space-x-2">
+                    <Input
+                      type="text"
+                      placeholder={`Objective ${index + 1}`}
+                      value={objective}
+                      onChange={(e) => handleObjectiveChange(index, e.target.value)}
+                      className="flex-1"
+                    />
+                    <Button type="button" variant="ghost" size="sm" onClick={() => removeObjective(index)}>
+                      Remove
+                    </Button>
+                  </div>
+                ))}
+                <Button type="button" variant="outline" onClick={addObjective}>
+                  Add Objective
+                </Button>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Checkbox id="hasCohorts" {...register("hasCohorts")} />
+                <Label htmlFor="hasCohorts">Divide class into multiple cohorts?</Label>
+              </div>
+
+              <div className="flex justify-between pt-4">
+                <Button type="button" variant="outline" onClick={onCancel}>
+                  Cancel
+                </Button>
+                <Button type="button" variant="outline" onClick={() => setActiveTab("lessons")}>
+                  Next: Lesson Plans
+                </Button>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="lessons" className="space-y-6">
+              <div>
+                <h3 className="text-lg font-medium">Lesson Plans</h3>
+                <p className="text-sm text-gray-500">Create and manage lesson plans for this class.</p>
+              </div>
+
+              <div className="flex justify-between pt-4">
+                <Button type="button" variant="outline" onClick={() => setActiveTab("basic")}>
+                  Back: Basic Settings
+                </Button>
+                <Button type="button" variant="outline" onClick={() => setActiveTab("cohorts")}>
+                  Next: Cohorts
+                </Button>
+              </div>
+            </TabsContent>
+      
+            <TabsContent value="cohorts" className="space-y-6">
+              {hasCohorts ? (
+                <div className="space-y-6">
+                  <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
+                    <h3 className="text-sm font-medium text-blue-800">Multiple Cohorts Enabled</h3>
+                    <p className="text-xs text-blue-700 mt-1">
+                      Create multiple cohorts for this class. Each cohort can have its own schedule, capacity, and student list.
+                    </p>
+                  </div>
+
+                  {cohorts.length === 0 ? (
+                    <div className="text-center py-8 border border-dashed rounded-md">
+                      <Users className="h-12 w-12 mx-auto text-gray-400" />
+                      <h3 className="mt-2 text-sm font-medium text-gray-900">No cohorts defined</h3>
+                      <p className="mt-1 text-sm text-gray-500">Get started by creating a new cohort</p>
+                      <Button
+                        type="button" 
+                        onClick={addCohort}
+                        className="mt-4"
+                      >
+                        <PlusCircle className="mr-2 h-4 w-4" />
+                        Add First Cohort
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {cohorts.map((cohort, index) => (
+                        <div key={cohort.id} className="border rounded-md p-4 space-y-4">
+                          <div className="flex justify-between items-center">
+                            <h3 className="text-sm font-medium flex items-center">
+                              <Users className="h-4 w-4 mr-2 text-blue-500" />
+                              Cohort {index + 1}
+                              {cohort.students.length > 0 && (
+                                <Badge variant="secondary" className="ml-2">
+                                  {cohort.students.length} student(s)
+                                </Badge>
+                              )}
+                            </h3>
+                            <Button 
+                              type="button" 
+                              variant="ghost" 
+                              size="sm" 
+                              onClick={() => removeCohort(cohort.id)}
+                              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
                           </div>
-                          <div className="space-y-2">
-                            <Label htmlFor={`cohort-max-students-${cohort.id}`}>Maximum Students</Label>
-                            <Input 
-                              id={`cohort-max-students-${cohort.id}`}
-                              type="number"
-                              min={1}
-                              value={cohort.maxStudents}
-                              onChange={(e) => updateCohort(cohort.id, "maxStudents", parseInt(e.target.value))}
-                              placeholder="Enter maximum number of students"
-                            />
-                          </div>
-                        </div>
-                        
-                        {/* Schedule Information */}
-                        <div className="pt-4 border-t">
-                          <h4 className="text-sm font-medium mb-3 flex items-center">
-                            <Calendar className="h-4 w-4 mr-2 text-blue-500" />
-                            Schedule
-                          </h4>
+                          
+                          {/* Basic Cohort Information */}
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-2">
-                              <Label htmlFor={`cohort-start-date-${cohort.id}`}>Start Date</Label>
-                              <Popover>
-                                <PopoverTrigger asChild>
-                                  <Button
-                                    variant="outline"
-                                    className="w-full justify-start text-left font-normal"
-                                    id={`cohort-start-date-${cohort.id}`}
-                                  >
-                                    <CalendarRange className="mr-2 h-4 w-4" />
-                                    {cohort.startDate ? format(new Date(cohort.startDate), "PPP") : "Select start date"}
-                                  </Button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0" align="start">
-                                  <CalendarComponent
-                                    mode="single"
-                                    selected={cohort.startDate ? new Date(cohort.startDate) : undefined}
-                                    onSelect={(date) => updateCohort(cohort.id, "startDate", date ? date.toISOString() : "")}
-                                    initialFocus
-                                  />
-                                </PopoverContent>
-                              </Popover>
-                            </div>
-                            <div className="space-y-2">
-                              <Label htmlFor={`cohort-end-date-${cohort.id}`}>End Date</Label>
-                              <Popover>
-                                <PopoverTrigger asChild>
-                                  <Button
-                                    variant="outline"
-                                    className="w-full justify-start text-left font-normal"
-                                    id={`cohort-end-date-${cohort.id}`}
-                                  >
-                                    <CalendarRange className="mr-2 h-4 w-4" />
-                                    {cohort.endDate ? format(new Date(cohort.endDate), "PPP") : "Select end date"}
-                                  </Button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0" align="start">
-                                  <CalendarComponent
-                                    mode="single"
-                                    selected={cohort.endDate ? new Date(cohort.endDate) : undefined}
-                                    onSelect={(date) => updateCohort(cohort.id, "endDate", date ? date.toISOString() : "")}
-                                    initialFocus
-                                  />
-                                </PopoverContent>
-                              </Popover>
-                            </div>
-                          </div>
-                          
-                          <div className="mt-4 space-y-2">
-                            <Label>Meeting Days</Label>
-                            <div className="flex flex-wrap gap-2">
-                              {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].map((day) => (
-                                <div key={day} className="flex items-center space-x-2">
-                                  <Checkbox 
-                                    id={`cohort-${cohort.id}-day-${day}`}
-                                    checked={cohort.meetingDays.includes(day)}
-                                    onCheckedChange={() => toggleMeetingDay(cohort.id, day)}
-                                  />
-                                  <Label htmlFor={`cohort-${cohort.id}-day-${day}`}>{day}</Label>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                          
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-                            <div className="space-y-2">
-                              <Label htmlFor={`cohort-meeting-time-${cohort.id}`}>Meeting Time</Label>
+                              <Label htmlFor={`cohort-name-${cohort.id}`}>Cohort Name</Label>
                               <Input 
-                                id={`cohort-meeting-time-${cohort.id}`}
-                                type="time"
-                                value={cohort.meetingTime}
-                                onChange={(e) => updateCohort(cohort.id, "meetingTime", e.target.value)}
+                                id={`cohort-name-${cohort.id}`}
+                                value={cohort.name}
+                                onChange={(e) => updateCohort(cohort.id, "name", e.target.value)}
+                                placeholder="Enter cohort name"
                               />
                             </div>
                             <div className="space-y-2">
-                              <Label htmlFor={`cohort-meeting-duration-${cohort.id}`}>Duration (minutes)</Label>
+                              <Label htmlFor={`cohort-max-students-${cohort.id}`}>Maximum Students</Label>
                               <Input 
-                                id={`cohort-meeting-duration-${cohort.id}`}
+                                id={`cohort-max-students-${cohort.id}`}
                                 type="number"
-                                min={15}
-                                step={15}
-                                value={cohort.meetingDuration}
-                                onChange={(e) => updateCohort(cohort.id, "meetingDuration", parseInt(e.target.value))}
+                                min={1}
+                                value={cohort.maxStudents}
+                                onChange={(e) => updateCohort(cohort.id, "maxStudents", parseInt(e.target.value))}
+                                placeholder="Enter maximum number of students"
                               />
                             </div>
-                            <div className="space-y-2">
-                              <Label htmlFor={`cohort-meeting-frequency-${cohort.id}`}>Frequency</Label>
-                              <Select 
-                                value={cohort.meetingFrequency}
-                                onValueChange={(value: "weekly" | "biweekly" | "monthly" | "custom") => 
-                                  updateCohort(cohort.id, "meetingFrequency", value)
-                                }
-                              >
-                                <SelectTrigger id={`cohort-meeting-frequency-${cohort.id}`}>
-                                  <SelectValue placeholder="Select frequency" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="weekly">Weekly</SelectItem>
-                                  <SelectItem value="biweekly">Bi-weekly</SelectItem>
-                                  <SelectItem value="monthly">Monthly</SelectItem>
-                                  <SelectItem value="custom">Custom</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
                           </div>
-
-                          {cohort.teachingMode === "in-person" || cohort.teachingMode === "hybrid" ? (
-                            <div className="mt-4 space-y-2">
-                              <Label htmlFor={`cohort-location-${cohort.id}`}>Location</Label>
-                              <Input 
-                                id={`cohort-location-${cohort.id}`}
-                                value={cohort.location || ""}
-                                onChange={(e) => updateCohort(cohort.id, "location", e.target.value)}
-                                placeholder="Enter meeting location"
-                              />
-                            </div>
-                          ) : null}
-                        </div>
-                        
-                        {/* Enrollment Information */}
-                        <div className="pt-4 border-t">
-                          <h4 className="text-sm font-medium mb-3 flex items-center">
-                            <Book className="h-4 w-4 mr-2 text-blue-500" />
-                            Enrollment
-                          </h4>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                              <Label htmlFor={`cohort-enrollment-status-${cohort.id}`}>Enrollment Status</Label>
-                              <Select 
-                                value={cohort.enrollmentStatus}
-                                onValueChange={(value: "open" | "closed" | "waitlist") => 
-                                  updateCohort(cohort.id, "enrollmentStatus", value)
-                                }
-                              >
-                                <SelectTrigger id={`cohort-enrollment-status-${cohort.id}`}>
-                                  <SelectValue placeholder="Select status" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="open">Open for enrollment</SelectItem>
-                                  <SelectItem value="closed">Closed</SelectItem>
-                                  <SelectItem value="waitlist">Waitlist only</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-                            <div className="space-y-2">
-                              <Label htmlFor={`cohort-teaching-mode-${cohort.id}`}>Teaching Mode</Label>
-                              <Select 
-                                value={cohort.teachingMode}
-                                onValueChange={(value: "online" | "in-person" | "hybrid") => 
-                                  updateCohort(cohort.id, "teachingMode", value)
-                                }
-                              >
-                                <SelectTrigger id={`cohort-teaching-mode-${cohort.id}`}>
-                                  <SelectValue placeholder="Select mode" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="online">Online</SelectItem>
-                                  <SelectItem value="in-person">In-person</SelectItem>
-                                  <SelectItem value="hybrid">Hybrid</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-                          </div>
-                        </div>
-                        
-                        {/* Additional Information */}
-                        <div className="pt-4 border-t space-y-4">
-                          <h4 className="text-sm font-medium flex items-center">
-                            <Book className="h-4 w-4 mr-2 text-blue-500" />
-                            Additional Information
-                          </h4>
-                          <div className="space-y-2">
-                            <Label htmlFor={`cohort-prerequisites-${cohort.id}`}>Prerequisites</Label>
-                            <Textarea 
-                              id={`cohort-prerequisites-${cohort.id}`}
-                              value={cohort.prerequisites}
-                              onChange={(e) => updateCohort(cohort.id, "prerequisites", e.target.value)}
-                              placeholder="Any prerequisites students should meet"
-                              className="min-h-24"
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label htmlFor={`cohort-objectives-${cohort.id}`}>Learning Objectives</Label>
-                            <Textarea 
-                              id={`cohort-objectives-${cohort.id}`}
-                              value={cohort.learningObjectives}
-                              onChange={(e) => updateCohort(cohort.id, "learningObjectives", e.target.value)}
-                              placeholder="Specific objectives for this cohort"
-                              className="min-h-24"
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label htmlFor={`cohort-notes-${cohort.id}`}>Special Notes</Label>
-                            <Textarea 
-                              id={`cohort-notes-${cohort.id}`}
-                              value={cohort.specialNotes}
-                              onChange={(e) => updateCohort(cohort.id, "specialNotes", e.target.value)}
-                              placeholder="Any additional notes or accommodations"
-                              className="min-h-24"
-                            />
-                          </div>
-                        </div>
-
-                        {/* Students Section */}
-                        <div className="pt-4 border-t">
-                          <div className="flex justify-between items-center mb-3">
-                            <h4 className="text-sm font-medium flex items-center">
-                              <UserCircle2 className="h-4 w-4 mr-2 text-blue-500" />
-                              Students ({cohort.students.length}/{cohort.maxStudents})
+                          
+                          {/* Schedule Information */}
+                          <div className="pt-4 border-t">
+                            <h4 className="text-sm font-medium mb-3 flex items-center">
+                              <Calendar className="h-4 w-4 mr-2 text-blue-500" />
+                              Schedule
                             </h4>
-                            <div className="flex space-x-2">
-                              <Button 
-                                type="button" 
-                                variant="outline" 
-                                size="sm"
-                                onClick={() => sendInvitations(cohort.id)}
-                                disabled={cohort.students.length === 0}
-                              >
-                                <Mail className="h-4 w-4 mr-1" />
-                                Send Invitations
-                              </Button>
-                              <Button 
-                                type="button" 
-                                variant="outline" 
-                                size="sm"
-                                onClick={() => setShowAddStudent(cohort.id)}
-                              >
-                                <PlusCircle className="h-4 w-4 mr-1" />
-                                Add Student
-                              </Button>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div className="space-y-2">
+                                <Label htmlFor={`cohort-start-date-${cohort.id}`}>Start Date</Label>
+                                <Popover>
+                                  <PopoverTrigger asChild>
+                                    <Button
+                                      variant="outline"
+                                      className="w-full justify-start text-left font-normal"
+                                      id={`cohort-start-date-${cohort.id}`}
+                                    >
+                                      <CalendarRange className="mr-2 h-4 w-4" />
+                                      {cohort.startDate ? format(new Date(cohort.startDate), "PPP") : "Select start date"}
+                                    </Button>
+                                  </PopoverTrigger>
+                                  <PopoverContent className="w-auto p-0" align="start">
+                                    <CalendarComponent
+                                      mode="single"
+                                      selected={cohort.startDate ? new Date(cohort.startDate) : undefined}
+                                      onSelect={(date) => updateCohort(cohort.id, "startDate", date ? date.toISOString() : "")}
+                                      initialFocus
+                                    />
+                                  </PopoverContent>
+                                </Popover>
+                              </div>
+                              <div className="space-y-2">
+                                <Label htmlFor={`cohort-end-date-${cohort.id}`}>End Date</Label>
+                                <Popover>
+                                  <PopoverTrigger asChild>
+                                    <Button
+                                      variant="outline"
+                                      className="w-full justify-start text-left font-normal"
+                                      id={`cohort-end-date-${cohort.id}`}
+                                    >
+                                      <CalendarRange className="mr-2 h-4 w-4" />
+                                      {cohort.endDate ? format(new Date(cohort.endDate), "PPP") : "Select end date"}
+                                    </Button>
+                                  </PopoverTrigger>
+                                  <PopoverContent className="w-auto p-0" align="start">
+                                    <CalendarComponent
+                                      mode="single"
+                                      selected={cohort.endDate ? new Date(cohort.endDate) : undefined}
+                                      onSelect={(date) => updateCohort(cohort.id, "endDate", date ? date.toISOString() : "")}
+                                      initialFocus
+                                    />
+                                  </PopoverContent>
+                                </Popover>
+                              </div>
+                            </div>
+                            
+                            <div className="mt-4 space-y-2">
+                              <Label>Meeting Days</Label>
+                              <div className="flex flex-wrap gap-2">
+                                {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].map((day) => (
+                                  <div key={day} className="flex items-center space-x-2">
+                                    <Checkbox 
+                                      id={`cohort-${cohort.id}-day-${day}`}
+                                      checked={cohort.meetingDays.includes(day)}
+                                      onCheckedChange={() => toggleMeetingDay(cohort.id, day)}
+                                    />
+                                    <Label htmlFor={`cohort-${cohort.id}-day-${day}`}>{day}</Label>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                              <div className="space-y-2">
+                                <Label htmlFor={`cohort-meeting-time-${cohort.id}`}>Meeting Time</Label>
+                                <Input 
+                                  id={`cohort-meeting-time-${cohort.id}`}
+                                  type="time"
+                                  value={cohort.meetingTime}
+                                  onChange={(e) => updateCohort(cohort.id, "meetingTime", e.target.value)}
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <Label htmlFor={`cohort-meeting-duration-${cohort.id}`}>Duration (minutes)</Label>
+                                <Input 
+                                  id={`cohort-meeting-duration-${cohort.id}`}
+                                  type="number"
+                                  min={15}
+                                  step={15}
+                                  value={cohort.meetingDuration}
+                                  onChange={(e) => updateCohort(cohort.id, "meetingDuration", parseInt(e.target.value))}
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <Label htmlFor={`cohort-meeting-frequency-${cohort.id}`}>Frequency</Label>
+                                <Select 
+                                  value={cohort.meetingFrequency}
+                                  onValueChange={(value: "weekly" | "biweekly" | "monthly" | "custom") => 
+                                    updateCohort(cohort.id, "meetingFrequency", value)
+                                  }
+                                >
+                                  <SelectTrigger id={`cohort-meeting-frequency-${cohort.id}`}>
+                                    <SelectValue placeholder="Select frequency" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="weekly">Weekly</SelectItem>
+                                    <SelectItem value="biweekly">Bi-weekly</SelectItem>
+                                    <SelectItem value="monthly">Monthly</SelectItem>
+                                    <SelectItem value="custom">Custom</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                            </div>
+
+                            {cohort.teachingMode === "in-person" || cohort.teachingMode === "hybrid" ? (
+                              <div className="mt-4 space-y-2">
+                                <Label htmlFor={`cohort-location-${cohort.id}`}>Location</Label>
+                                <Input 
+                                  id={`cohort-location-${cohort.id}`}
+                                  value={cohort.location || ""}
+                                  onChange={(e) => updateCohort(cohort.id, "location", e.target.value)}
+                                  placeholder="Enter meeting location"
+                                />
+                              </div>
+                            ) : null}
+                          </div>
+                          
+                          {/* Enrollment Information */}
+                          <div className="pt-4 border-t">
+                            <h4 className="text-sm font-medium mb-3 flex items-center">
+                              <Book className="h-4 w-4 mr-2 text-blue-500" />
+                              Enrollment
+                            </h4>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div className="space-y-2">
+                                <Label htmlFor={`cohort-enrollment-status-${cohort.id}`}>Enrollment Status</Label>
+                                <Select 
+                                  value={cohort.enrollmentStatus}
+                                  onValueChange={(value: "open" | "closed" | "waitlist") => 
+                                    updateCohort(cohort.id, "enrollmentStatus", value)
+                                  }
+                                >
+                                  <SelectTrigger id={`cohort-enrollment-status-${cohort.id}`}>
+                                    <SelectValue placeholder="Select status" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="open">Open for enrollment</SelectItem>
+                                    <SelectItem value="closed">Closed</SelectItem>
+                                    <SelectItem value="waitlist">Waitlist only</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              <div className="space-y-2">
+                                <Label htmlFor={`cohort-teaching-mode-${cohort.id}`}>Teaching Mode</Label>
+                                <Select 
+                                  value={cohort.teachingMode}
+                                  onValueChange={(value: "online" | "in-person" | "hybrid") => 
+                                    updateCohort(cohort.id, "teachingMode", value)
+                                  }
+                                >
+                                  <SelectTrigger id={`cohort-teaching-mode-${cohort.id}`}>
+                                    <SelectValue placeholder="Select mode" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="online">Online</SelectItem>
+                                    <SelectItem value="in-person">In-person</SelectItem>
+                                    <SelectItem value="hybrid">Hybrid</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          {/* Additional Information */}
+                          <div className="pt-4 border-t space-y-4">
+                            <h4 className="text-sm font-medium flex items-center">
+                              <Book className="h-4 w-4 mr-2 text-blue-500" />
+                              Additional Information
+                            </h4>
+                            <div className="space-y-2">
+                              <Label htmlFor={`cohort-prerequisites-${cohort.id}`}>Prerequisites</Label>
+                              <Textarea 
+                                id={`cohort-prerequisites-${cohort.id}`}
+                                value={cohort.prerequisites}
+                                onChange={(e) => updateCohort(cohort.id, "prerequisites", e.target.value)}
+                                placeholder="Any prerequisites students should meet"
+                                className="min-h-24"
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor={`cohort-objectives-${cohort.id}`}>Learning Objectives</Label>
+                              <Textarea 
+                                id={`cohort-objectives-${cohort.id}`}
+                                value={cohort.learningObjectives}
+                                onChange={(e) => updateCohort(cohort.id, "learningObjectives", e.target.value)}
+                                placeholder="Specific objectives for this cohort"
+                                className="min-h-24"
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor={`cohort-notes-${cohort.id}`}>Special Notes</Label>
+                              <Textarea 
+                                id={`cohort-notes-${cohort.id}`}
+                                value={cohort.specialNotes}
+                                onChange={(e) => updateCohort(cohort.id, "specialNotes", e.target.value)}
+                                placeholder="Any additional notes or accommodations"
+                                className="min-h-24"
+                              />
                             </div>
                           </div>
 
-                          {showAddStudent === cohort.id && (
-                            <div className="mb-4 p-4 border rounded-md bg-gray-50">
-                              <h5 className="text-sm font-medium mb-3">Add New Student</h5>
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
-                                <div className="space-y-2">
-                                  <Label htmlFor={`new-student-name-${cohort.id}`}>Student Name</Label>
-                                  <Input 
-                                    id={`new-student-name-${cohort.id}`}
-                                    value={newStudent.name || ""}
-                                    onChange={(e) => setNewStudent({...newStudent, name: e.target.value})}
-                                    placeholder="Enter student name"
-                                  />
-                                </div>
-                                <div className="space-y-2">
-                                  <Label htmlFor={`new-student-email-${cohort.id}`}>Email</Label>
-                                  <Input 
-                                    id={`new-student-email-${cohort.id}`}
-                                    type="email"
-                                    value={newStudent.email || ""}
-                                    onChange={(e) => setNewStudent({...newStudent, email: e.target.value})}
-                                    placeholder="Enter student email"
-                                  />
-                                </div>
-                              </div>
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                                <div className="space-y-2">
-                                  <Label htmlFor={`new-student-phone-${cohort.id}`}>Phone (Optional)</Label>
-                                  <Input 
-                                    id={`new-student-phone-${cohort.id}`}
-                                    value={newStudent.phone || ""}
-                                    onChange={(e) => setNewStudent({...newStudent, phone: e.target.value})}
-                                    placeholder="Enter student phone"
-                                  />
-                                </div>
-                                <div className="space-y-2">
-                                  <Label htmlFor={`new-student-status-${cohort.id}`}>Status</Label>
-                                  <Select 
-                                    value={newStudent.status as string || "pending"}
-                                    onValueChange={(value: StudentType["status"]) => 
-                                      setNewStudent({...newStudent, status: value})
-                                    }
-                                  >
-                                    <SelectTrigger id={`new-student-status-${cohort.id}`}>
-                                      <SelectValue placeholder="Select status" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem value="enrolled">Enrolled</SelectItem>
-                                      <SelectItem value="waitlisted">Waitlisted</SelectItem>
-                                      <SelectItem value="pending">Pending</SelectItem>
-                                    </SelectContent>
-                                  </Select>
-                                </div>
-                              </div>
-                              <div className="flex justify-end space-x-2">
+                          {/* Students Section */}
+                          <div className="pt-4 border-t">
+                            <div className="flex justify-between items-center mb-3">
+                              <h4 className="text-sm font-medium flex items-center">
+                                <UserCircle2 className="h-4 w-4 mr-2 text-blue-500" />
+                                Students ({cohort.students.length}/{cohort.maxStudents})
+                              </h4>
+                              <div className="flex space-x-2">
                                 <Button 
                                   type="button" 
-                                  variant="outline"
-                                  onClick={() => setShowAddStudent(null)}
+                                  variant="outline" 
+                                  size="sm"
+                                  onClick={() => sendInvitations(cohort.id)}
+                                  disabled={cohort.students.length === 0}
                                 >
-                                  Cancel
+                                  <Mail className="h-4 w-4 mr-1" />
+                                  Send Invitations
                                 </Button>
                                 <Button 
-                                  type="button"
-                                  onClick={() => addStudent(cohort.id)}
-                                  disabled={!newStudent.name || !newStudent.email}
+                                  type="button" 
+                                  variant="outline" 
+                                  size="sm"
+                                  onClick={() => setShowAddStudent(cohort.id)}
                                 >
+                                  <PlusCircle className="h-4 w-4 mr-1" />
                                   Add Student
                                 </Button>
                               </div>
                             </div>
-                          )}
 
-                          {cohort.students.length > 0 ? (
-                            <div className="border rounded-md overflow-hidden">
-                              <table className="min-w-full divide-y divide-gray-200">
-                                <thead className="bg-gray-50">
-                                  <tr>
-                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                      Name
-                                    </th>
-                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                      Contact
-                                    </th>
-                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                      Status
-                                    </th>
-                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                      Actions
-                                    </th>
-                                  </tr>
-                                </thead>
-                                <tbody className="bg-white divide-y divide-gray-200">
-                                  {cohort.students.map((student) => (
-                                    <tr key={student.id}>
-                                      <td className="px-6 py-4 whitespace-nowrap">
-                                        <div className="text-sm font-medium text-gray-900">{student.name}</div>
-                                      </td>
-                                      <td className="px-6 py-4 whitespace-nowrap">
-                                        <div className="text-sm text-gray-500">{student.email}</div>
-                                        {student.phone && <div className="text-sm text-gray-500">{student.phone}</div>}
-                                      </td>
-                                      <td className="px-6 py-4 whitespace-nowrap">
-                                        <Select 
-                                          value={student.status}
-                                          onValueChange={(value: StudentType["status"]) => 
-                                            updateStudentStatus(cohort.id, student.id, value)
-                                          }
-                                        >
-                                          <SelectTrigger className="h-8 w-32">
-                                            <SelectValue />
-                                          </SelectTrigger>
-                                          <SelectContent>
-                                            <SelectItem value="enrolled">
-                                              <Badge className="bg-green-100 text-green-800 hover:bg-green-100">Enrolled</Badge>
-                                            </SelectItem>
-                                            <SelectItem value="waitlisted">
-                                              <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100">Waitlisted</Badge>
-                                            </SelectItem>
-                                            <SelectItem value="pending">
-                                              <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100">Pending</Badge>
-                                            </SelectItem>
-                                            <SelectItem value="dropped">
-                                              <Badge className="bg-red-100 text-red-800 hover:bg-red-100">Dropped</Badge>
-                                            </SelectItem>
-                                          </SelectContent>
-                                        </Select>
-                                      </td>
-                                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                        <Button 
-                                          type="button" 
-                                          variant="ghost" 
-                                          size="sm"
-                                          onClick={() => removeStudent(cohort.id, student.id)}
-                                          className="text-red-600 hover:text-red-900"
-                                        >
-                                          <Trash2 className="h-4 w-4" />
-                                        </Button>
-                                      </td>
+                            {showAddStudent === cohort.id && (
+                              <div className="mb-4 p-4 border rounded-md bg-gray-50">
+                                <h5 className="text-sm font-medium mb-3">Add New Student</h5>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
+                                  <div className="space-y-2">
+                                    <Label htmlFor={`new-student-name-${cohort.id}`}>Student Name</Label>
+                                    <Input 
+                                      id={`new-student-name-${cohort.id}`}
+                                      value={newStudent.name || ""}
+                                      onChange={(e) => setNewStudent({...newStudent, name: e.target.value})}
+                                      placeholder="Enter student name"
+                                    />
+                                  </div>
+                                  <div className="space-y-2">
+                                    <Label htmlFor={`new-student-email-${cohort.id}`}>Email</Label>
+                                    <Input 
+                                      id={`new-student-email-${cohort.id}`}
+                                      type="email"
+                                      value={newStudent.email || ""}
+                                      onChange={(e) => setNewStudent({...newStudent, email: e.target.value})}
+                                      placeholder="Enter student email"
+                                    />
+                                  </div>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                  <div className="space-y-2">
+                                    <Label htmlFor={`new-student-phone-${cohort.id}`}>Phone (Optional)</Label>
+                                    <Input 
+                                      id={`new-student-phone-${cohort.id}`}
+                                      value={newStudent.phone || ""}
+                                      onChange={(e) => setNewStudent({...newStudent, phone: e.target.value})}
+                                      placeholder="Enter student phone"
+                                    />
+                                  </div>
+                                  <div className="space-y-2">
+                                    <Label htmlFor={`new-student-status-${cohort.id}`}>Status</Label>
+                                    <Select 
+                                      value={newStudent.status as string || "pending"}
+                                      onValueChange={(value: StudentType["status"]) => 
+                                        setNewStudent({...newStudent, status: value})
+                                      }
+                                    >
+                                      <SelectTrigger id={`new-student-status-${cohort.id}`}>
+                                        <SelectValue placeholder="Select status" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="enrolled">Enrolled</SelectItem>
+                                        <SelectItem value="waitlisted">Waitlisted</SelectItem>
+                                        <SelectItem value="pending">Pending</SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                  </div>
+                                </div>
+                                <div className="flex justify-end space-x-2">
+                                  <Button 
+                                    type="button" 
+                                    variant="outline"
+                                    onClick={() => setShowAddStudent(null)}
+                                  >
+                                    Cancel
+                                  </Button>
+                                  <Button 
+                                    type="button"
+                                    onClick={() => addStudent(cohort.id)}
+                                    disabled={!newStudent.name || !newStudent.email}
+                                  >
+                                    Add Student
+                                  </Button>
+                                </div>
+                              </div>
+                            )}
+
+                            {cohort.students.length > 0 ? (
+                              <div className="border rounded-md overflow-hidden">
+                                <table className="min-w-full divide-y divide-gray-200">
+                                  <thead className="bg-gray-50">
+                                    <tr>
+                                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Name
+                                      </th>
+                                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Contact
+                                      </th>
+                                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Status
+                                      </th>
+                                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Actions
+                                      </th>
                                     </tr>
-                                  ))}
-                                </tbody>
-                              </table>
-                            </div>
-                          ) : (
-                            <div className="text-center py-4 border border-dashed rounded-md">
-                              <p className="text-sm text-gray-500">No students added yet</p>
-                            </div>
-                          )}
-
-                          <div className="mt-4">
-                            <h5 className="text-sm font-medium mb-2">Bulk Invitation</h5>
-                            <div className="flex space-x-2">
-                              <Input
-                                type="email"
-                                placeholder="Enter email address to invite"
-                                value={inviteEmail}
-                                onChange={(e) => setInviteEmail(e.target.value)}
-                                className="flex-1"
+                                  </thead>
+                                  <tbody className="bg-white divide-y divide-gray-200">
+                                    {cohort.students.map((student) => (
+                                      <tr key={student.id}>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                          <div className="text-sm font-medium text-gray-900">{student.name}</div>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                          <div className="text-sm text-gray-500">{student.email}</div>
+                                          {student.phone && <div className="text-sm text-gray-500">{student.phone}</div>}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                          <Select 
+                                            value={student.status}
+                                            onValueChange={(value: StudentType["status"]) => 
+                                              updateStudentStatus(cohort.id, student.id, value)
+                                            }
+                                          >
+                                            <SelectTrigger className="h-8 w-32">
+                                              <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                              <SelectItem value="enrolled">
+                                                <Badge className="bg-green-100 text-green-800 hover:bg-green-100">Enrolled</Badge>
+                                              </SelectItem>
+                                              <SelectItem value="waitlisted">
+                                                <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100">Waitlisted</Badge>
+                                              </SelectItem>
+                                              <SelectItem value="pending">
+                                                <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100">Pending</Badge>
+                                              </SelectItem>
+                                              <SelectItem value="dropped">
+                                                <Badge className="bg-red-100 text-red-800 hover:bg-red-100">Dropped</Badge>
+                                              </SelectItem>
+                                            </SelectContent>
+                                          </Select>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                          <Button 
+                                            type="button" 
+                                            variant="ghost" 
+                                            size="sm"
+                                            onClick={() => removeStudent(cohort.id, student.id)}
+                                            className="text-red-600 hover:text-red-900"
+                                          >
+                                            <Trash2 className="h-4 w-4" />
+                                          </Button>
+                                        </td>
+                                      </tr>
+                                    ))}
+                                  </tbody>
+                                </table>
+                              </div>
+                            ) : (
+                              <div className="text-center py-4 border border-dashed rounded-md">
+                                <p className="text-sm text-gray-500">No students added yet</p>
+                              </div>
+                            )}
