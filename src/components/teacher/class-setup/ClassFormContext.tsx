@@ -139,7 +139,10 @@ export const ClassFormProvider = ({ children, onSubmit }: ClassFormProviderProps
         pattern: "weekly",
         daysOfWeek: ["monday"],
         repeatEvery: 1
-      }
+      },
+      minStudents: 1,
+      maxStudents: 20,
+      enrollmentDeadline: null
     }]);
   };
 

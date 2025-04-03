@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -20,6 +21,7 @@ import {
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 
 interface CohortsTabProps {
   form: UseFormReturn<ClassFormValues>;
@@ -463,6 +465,86 @@ const CohortsTab = ({
                           ? "Auto-calculated from start/end dates and repeat pattern" 
                           : "Manually set the number of lessons or define start/end dates"}
                       </p>
+                    </div>
+                  </div>
+                  
+                  {/* New enrollment section */}
+                  <div className="space-y-4 pt-4 border-t">
+                    <h4 className="text-sm font-medium">Enrollment Settings</h4>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {/* Min Students */}
+                      <div className="space-y-2">
+                        <Label htmlFor={`min-students-${cohort.id}`}>Minimum Students</Label>
+                        <Input
+                          id={`min-students-${cohort.id}`}
+                          type="number"
+                          min="1"
+                          value={cohort.minStudents}
+                          onChange={(e) => updateCohort(cohort.id, "minStudents", parseInt(e.target.value) || 1)}
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          Minimum number of students needed for the class to run
+                        </p>
+                      </div>
+                      
+                      {/* Max Students */}
+                      <div className="space-y-2">
+                        <Label htmlFor={`max-students-${cohort.id}`}>Maximum Students</Label>
+                        <Input
+                          id={`max-students-${cohort.id}`}
+                          type="number"
+                          min={cohort.minStudents}
+                          value={cohort.maxStudents}
+                          onChange={(e) => updateCohort(cohort.id, "maxStudents", parseInt(e.target.value) || cohort.minStudents)}
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          Maximum enrollment capacity for this cohort
+                        </p>
+                      </div>
+                    </div>
+                    
+                    {/* Enrollment Deadline */}
+                    <div className="space-y-2">
+                      <Label>Enrollment Deadline</Label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            className={cn(
+                              "w-full justify-start text-left",
+                              !cohort.enrollmentDeadline && "text-muted-foreground"
+                            )}
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {cohort.enrollmentDeadline ? (
+                              format(cohort.enrollmentDeadline, "PPP")
+                            ) : (
+                              <span>Set enrollment deadline</span>
+                            )}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={cohort.enrollmentDeadline || undefined}
+                            onSelect={(date) => updateCohort(cohort.id, "enrollmentDeadline", date)}
+                            className="p-3 pointer-events-auto"
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                      <p className="text-xs text-muted-foreground">
+                        Last day students can enroll in this cohort
+                      </p>
+                      {cohort.enrollmentDeadline && cohort.startDate && 
+                       cohort.enrollmentDeadline > cohort.startDate && (
+                        <div className="mt-1 flex items-center">
+                          <Badge variant="warning" className="text-xs">
+                            Warning: Deadline is after start date
+                          </Badge>
+                        </div>
+                      )}
                     </div>
                   </div>
                   

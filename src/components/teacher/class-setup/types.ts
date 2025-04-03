@@ -50,6 +50,11 @@ export type CohortData = {
   
   // New fields for repeating lessons
   repeatSchedule: RepeatSchedule;
+  
+  // New fields for enrollment limits and deadline
+  minStudents: number;
+  maxStudents: number;
+  enrollmentDeadline: Date | null;
 };
 
 export type RepeatSchedule = {
