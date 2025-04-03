@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { PlusCircle, Trash2, Award, Certificate, Calendar, FileText } from "lucide-react";
+import { PlusCircle, Trash2, Award, Medal, Calendar, FileText } from "lucide-react";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel } from "@/components/ui/form";
 
 type FormItem = {
@@ -88,7 +88,7 @@ const CertificationsStep = ({ certifications, setCertifications }: Certification
                 cert.certificateType === "Honor/Recognition") ? (
                 <Award className="h-5 w-5 text-amber-500 mr-2" />
               ) : (
-                <Certificate className="h-5 w-5 text-blue-500 mr-2" />
+                <Medal className="h-5 w-5 text-blue-500 mr-2" />
               )}
               <h4 className="font-medium">
                 {(cert.certificateType === "Teaching Award" || 
