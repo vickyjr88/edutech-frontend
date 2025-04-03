@@ -84,7 +84,7 @@ const BasicInformationTab = ({ form, onNextTab }: BasicInformationTabProps) => {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Grade Level</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select onValueChange={field.onChange} defaultValue={field.value || ""}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Select grade level" />
