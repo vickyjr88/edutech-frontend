@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -84,7 +83,9 @@ const LanguagesStep = ({ languages, setLanguages }: LanguagesStepProps) => {
         // Update existing language
         const updatedLanguage: LanguageItem = {
           id: editingId,
-          ...values
+          language: values.language,
+          description: values.description,
+          isCertified: values.isCertified
         };
 
         const { success, error } = await updateLanguage(updatedLanguage);
@@ -106,8 +107,10 @@ const LanguagesStep = ({ languages, setLanguages }: LanguagesStepProps) => {
       } else {
         // Add new language
         const newLanguage: LanguageItem = {
-          id: "", // Will be set by the database
-          ...values
+          id: "",
+          language: values.language,
+          description: values.description,
+          isCertified: values.isCertified
         };
 
         const { success, id, error } = await saveLanguage(user.id, newLanguage);
