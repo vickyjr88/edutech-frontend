@@ -16,7 +16,7 @@ export const saveExperienceRecord = async (
     id: string;
     position: string;
     institution: string;
-    institutionType: InstitutionType;
+    institutionType: InstitutionType | "";
     details?: string;
     startDate: string;
     endDate: string;
@@ -30,11 +30,14 @@ export const saveExperienceRecord = async (
     };
   }
 ): Promise<any> => {
+  // Default to "other" if institutionType is empty
+  const institutionType = experienceData.institutionType || "other";
+  
   const formattedData = {
     user_id: userId,
     position: experienceData.position,
     institution: experienceData.institution,
-    institution_type: experienceData.institutionType,
+    institution_type: institutionType,
     details: experienceData.details || null,
     start_date: formatDateForDatabase(experienceData.startDate),
     end_date: experienceData.currentlyWorking 
