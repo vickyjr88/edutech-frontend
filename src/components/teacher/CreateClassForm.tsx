@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -68,7 +67,6 @@ const classSchema = z.object({
     title: z.string().optional(),
     description: z.string().optional(),
     duration: z.string().optional(),
-    resources: z.string().optional(),
     resourceUrl: z.string().optional(),
     resourceFiles: z.array(z.any()).optional(),
   })).default([]),
@@ -164,10 +162,9 @@ const CreateClassForm = ({ onSubmit, onCancel }: CreateClassFormProps) => {
     const newId = Date.now().toString();
     const updatedLessonPlans = [...lessonPlans, { 
       id: newId, 
-      title: "", 
+      title: form.getValues("title") ? `${form.getValues("title")} - Lesson ${lessonPlans.length + 1}` : `Lesson ${lessonPlans.length + 1}`, 
       description: "", 
-      duration: "", 
-      resources: "", 
+      duration: "30", 
       resourceUrl: "",
       resourceFiles: [] 
     }];
@@ -183,7 +180,7 @@ const CreateClassForm = ({ onSubmit, onCancel }: CreateClassFormProps) => {
     setLessonFileUploads(updatedFileUploads);
   };
 
-  const updateLessonPlan = (id: string, field: "title" | "description" | "duration" | "resources" | "resourceUrl", value: string) => {
+  const updateLessonPlan = (id: string, field: "title" | "description" | "duration" | "resourceUrl", value: string) => {
     const updatedLessonPlans = lessonPlans.map(plan => 
       plan.id === id ? { ...plan, [field]: value } : plan
     );
@@ -732,7 +729,7 @@ const CreateClassForm = ({ onSubmit, onCancel }: CreateClassFormProps) => {
                                 id={`lesson-title-${plan.id}`}
                                 value={plan.title}
                                 onChange={(e) => updateLessonPlan(plan.id, "title", e.target.value)}
-                                placeholder="Introduction to Fractions"
+                                placeholder={`${form.getValues("title") || "Class"} - Lesson ${index + 1}`}
                               />
                             </div>
                             <div className="space-y-2">
@@ -745,25 +742,25 @@ const CreateClassForm = ({ onSubmit, onCancel }: CreateClassFormProps) => {
                                 className="min-h-24"
                               />
                             </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              <div className="space-y-2">
-                                <Label htmlFor={`lesson-duration-${plan.id}`}>Duration</Label>
-                                <Input 
-                                  id={`lesson-duration-${plan.id}`}
-                                  value={plan.duration}
-                                  onChange={(e) => updateLessonPlan(plan.id, "duration", e.target.value)}
-                                  placeholder="45 minutes"
-                                />
-                              </div>
-                              <div className="space-y-2">
-                                <Label htmlFor={`lesson-resources-${plan.id}`}>Resources & Materials</Label>
-                                <Input 
-                                  id={`lesson-resources-${plan.id}`}
-                                  value={plan.resources}
-                                  onChange={(e) => updateLessonPlan(plan.id, "resources", e.target.value)}
-                                  placeholder="Worksheets, videos, props, etc."
-                                />
-                              </div>
+                            <div className="space-y-2">
+                              <Label htmlFor={`lesson-duration-${plan.id}`}>Duration</Label>
+                              <Select
+                                value={plan.duration}
+                                onValueChange={(value) => updateLessonPlan(plan.id, "duration", value)}
+                              >
+                                <SelectTrigger id={`lesson-duration-${plan.id}`}>
+                                  <SelectValue placeholder="Select duration" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="15">15 minutes</SelectItem>
+                                  <SelectItem value="30">30 minutes</SelectItem>
+                                  <SelectItem value="45">45 minutes</SelectItem>
+                                  <SelectItem value="60">60 minutes</SelectItem>
+                                  <SelectItem value="75">75 minutes</SelectItem>
+                                  <SelectItem value="90">90 minutes</SelectItem>
+                                  <SelectItem value="120">2 hours</SelectItem>
+                                </SelectContent>
+                              </Select>
                             </div>
                             
                             {/* Resource URL and File Upload */}
@@ -901,191 +898,3 @@ const CreateClassForm = ({ onSubmit, onCancel }: CreateClassFormProps) => {
                                     <SelectValue placeholder="Select schedule" />
                                   </SelectTrigger>
                                   <SelectContent>
-                                    <SelectItem value="monday">Mondays, 4-5 PM</SelectItem>
-                                    <SelectItem value="tuesday">Tuesdays, 4-5 PM</SelectItem>
-                                    <SelectItem value="wednesday">Wednesdays, 4-5 PM</SelectItem>
-                                    <SelectItem value="thursday">Thursdays, 4-5 PM</SelectItem>
-                                    <SelectItem value="friday">Fridays, 4-5 PM</SelectItem>
-                                    <SelectItem value="saturday">Saturdays, 10-11 AM</SelectItem>
-                                    <SelectItem value="custom">Custom Schedule</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                        <Button
-                          type="button" 
-                          variant="outline" 
-                          onClick={addCohort}
-                          className="mt-2"
-                        >
-                          <PlusCircle className="mr-2 h-4 w-4" />
-                          Add Another Cohort
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <div className="space-y-6">
-                    <div className="bg-amber-50 border border-amber-200 rounded-md p-4">
-                      <h3 className="text-sm font-medium text-amber-800">Single Cohort Class</h3>
-                      <p className="text-xs text-amber-700 mt-1">
-                        This class has a single cohort. All students will follow the same schedule.
-                        To enable multiple cohorts, go back to the Basic Information tab.
-                      </p>
-                    </div>
-                    <div className="space-y-4">
-                      <div className="space-y-2">
-                        <Label>Class Schedule</Label>
-                        <Select defaultValue="monday">
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select days" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="monday">Mondays, 4-5 PM</SelectItem>
-                            <SelectItem value="tuesday">Tuesdays, 4-5 PM</SelectItem>
-                            <SelectItem value="wednesday">Wednesdays, 4-5 PM</SelectItem>
-                            <SelectItem value="thursday">Thursdays, 4-5 PM</SelectItem>
-                            <SelectItem value="friday">Fridays, 4-5 PM</SelectItem>
-                            <SelectItem value="saturday">Saturdays, 10-11 AM</SelectItem>
-                            <SelectItem value="custom">Custom Schedule</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                <div className="flex justify-between pt-4">
-                  <Button type="button" variant="outline" onClick={() => setActiveTab("lessons")}>
-                    Back: Lesson Plans
-                  </Button>
-                  <Button type="button" variant="outline" onClick={() => setActiveTab("teaching")}>
-                    Next: Teaching Team
-                  </Button>
-                </div>
-              </TabsContent>
-
-              <TabsContent value="teaching" className="space-y-6">
-                {hasTeamTeaching ? (
-                  <div className="space-y-6">
-                    <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
-                      <h3 className="text-sm font-medium text-blue-800">Team Teaching Enabled</h3>
-                      <p className="text-xs text-blue-700 mt-1">
-                        Add co-teachers or teaching assistants to collaborate on this class.
-                      </p>
-                    </div>
-
-                    {teamMembers.length === 0 ? (
-                      <div className="text-center py-8 border border-dashed rounded-md">
-                        <UserPlus className="h-12 w-12 mx-auto text-gray-400" />
-                        <h3 className="mt-2 text-sm font-medium text-gray-900">No team members added</h3>
-                        <p className="mt-1 text-sm text-gray-500">Get started by adding a team member</p>
-                        <Button
-                          type="button" 
-                          onClick={addTeamMember}
-                          className="mt-4"
-                        >
-                          <PlusCircle className="mr-2 h-4 w-4" />
-                          Add First Team Member
-                        </Button>
-                      </div>
-                    ) : (
-                      <div className="space-y-4">
-                        {teamMembers.map((member, index) => (
-                          <div key={member.id} className="border rounded-md p-4 space-y-4">
-                            <div className="flex justify-between items-center">
-                              <h3 className="text-sm font-medium">Team Member {index + 1}</h3>
-                              <Button 
-                                type="button" 
-                                variant="ghost" 
-                                size="sm" 
-                                onClick={() => removeTeamMember(member.id)}
-                                className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              <div className="space-y-2">
-                                <Label htmlFor={`member-email-${member.id}`}>Email</Label>
-                                <Input 
-                                  id={`member-email-${member.id}`}
-                                  value={member.email}
-                                  onChange={(e) => updateTeamMember(member.id, "email", e.target.value)}
-                                  placeholder="colleague@example.com"
-                                  type="email"
-                                />
-                              </div>
-                              <div className="space-y-2">
-                                <Label htmlFor={`member-role-${member.id}`}>Role</Label>
-                                <Select 
-                                  value={member.role}
-                                  onValueChange={(value) => updateTeamMember(member.id, "role", value)}
-                                >
-                                  <SelectTrigger id={`member-role-${member.id}`}>
-                                    <SelectValue placeholder="Select role" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="co-teacher">Co-Teacher</SelectItem>
-                                    <SelectItem value="assistant">Teaching Assistant</SelectItem>
-                                    <SelectItem value="guest">Guest Lecturer</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                        <Button
-                          type="button" 
-                          variant="outline" 
-                          onClick={addTeamMember}
-                          className="mt-2"
-                        >
-                          <PlusCircle className="mr-2 h-4 w-4" />
-                          Add Another Team Member
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <div className="space-y-6">
-                    <div className="bg-amber-50 border border-amber-200 rounded-md p-4">
-                      <h3 className="text-sm font-medium text-amber-800">Solo Teaching</h3>
-                      <p className="text-xs text-amber-700 mt-1">
-                        You'll be the only teacher for this class.
-                        To add co-teachers or assistants, go back to the Basic Information tab.
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                <div className="flex justify-between pt-4">
-                  <Button type="button" variant="outline" onClick={() => setActiveTab("cohorts")}>
-                    Back: Cohorts & Students
-                  </Button>
-                  <Button type="submit" disabled={isSubmitting}>
-                    {isSubmitting ? "Creating Class..." : "Create Class"}
-                  </Button>
-                </div>
-              </TabsContent>
-            </form>
-          </Form>
-        </Tabs>
-      </CardContent>
-      <CardFooter className="flex justify-between border-t pt-6">
-        <Button variant="outline" onClick={onCancel}>
-          Cancel
-        </Button>
-        {activeTab === "teaching" && (
-          <Button onClick={form.handleSubmit(handleSubmitForm)} disabled={isSubmitting}>
-            {isSubmitting ? "Creating Class..." : "Create Class"}
-          </Button>
-        )}
-      </CardFooter>
-    </Card>
-  );
-};
-
-export default CreateClassForm;
