@@ -2,8 +2,9 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Home, BookOpen, Users, Calendar, User, Settings, LogOut, Edit, Phone, MapPin, Award, CheckCircle2, CircleDashed, Video, PlusCircle, Star, UserPlus } from "lucide-react";
+import { Home, BookOpen, Users, Calendar, User, Settings, LogOut, Edit, Phone, MapPin, Award, CheckCircle2, CircleDashed, Video, PlusCircle, Star, UserPlus, BookText, School, UsersRound, ParentChild } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import TeacherProfileForm from "@/components/teacher/TeacherProfileForm";
 import TeacherProfessionalProfileForm from "@/components/teacher/TeacherProfessionalProfileForm";
 import ClassSetupForm from "@/components/teacher/ClassSetupForm";
@@ -56,9 +57,11 @@ const TeacherDashboard = () => {
   const [showProfessionalForm, setShowProfessionalForm] = useState(false);
   const [hasProfessionalProfile, setHasProfessionalProfile] = useState(false);
   const [showClassSetupForm, setShowClassSetupForm] = useState(false);
-  const [hasClassesSetup, setHasClassesSetup] = useState(false);
+  const [hasClassesSetup, setHasClassesSetup] = useState(true); // Changed to true to show buttons by default
   const [showCreateClassForm, setShowCreateClassForm] = useState(false);
   const [classes, setClasses] = useState([]);
+  const [selectedClass, setSelectedClass] = useState<any>(null);
+  const [activeClassTab, setActiveClassTab] = useState("basic");
 
   useEffect(() => {
     if (user) {
@@ -309,6 +312,17 @@ const TeacherDashboard = () => {
     setActiveTab("dashboard");
   };
 
+  const handleViewClass = (classItem: any) => {
+    setSelectedClass(classItem);
+    setActiveTab("viewClass");
+    setActiveClassTab("basic");
+  };
+
+  const handleBackToClasses = () => {
+    setSelectedClass(null);
+    setActiveTab("classes");
+  };
+
   const renderProfileView = () => {
     if (!profileData) return null;
     
@@ -434,7 +448,7 @@ const TeacherDashboard = () => {
           <button 
             onClick={() => setActiveTab("classes")}
             className={`flex items-center px-4 py-3 text-sm font-medium rounded-md w-full text-left ${
-              activeTab === "classes" 
+              activeTab === "classes" || activeTab === "viewClass"
                 ? "bg-kidato-light-blue text-kidato-blue" 
                 : "text-gray-700 hover:bg-gray-100"
             }`}
@@ -494,6 +508,7 @@ const TeacherDashboard = () => {
             <h1 className="text-xl font-semibold text-gray-900">
               {activeTab === "dashboard" ? "Dashboard" :
                activeTab === "classes" ? (showCreateClassForm ? "Create New Class" : "My Classes") :
+               activeTab === "viewClass" ? "Class Details" :
                activeTab === "students" ? "Students" :
                activeTab === "schedule" ? "Schedule" : 
                isEditing ? "Update Your Profile" : 
@@ -852,7 +867,7 @@ const TeacherDashboard = () => {
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {classes.map((classItem: any) => (
-                    <Card key={classItem.id}>
+                    <Card key={classItem.id} className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => handleViewClass(classItem)}>
                       <CardHeader>
                         <div className="flex justify-between items-start">
                           <div>
@@ -861,66 +876,4 @@ const TeacherDashboard = () => {
                               {classItem.type === "academic" ? "Academic" : "After School"} - {classItem.subject}
                             </CardDescription>
                           </div>
-                          <div className="px-2 py-1 rounded-full text-xs uppercase font-semibold bg-blue-100 text-blue-800">
-                            New
-                          </div>
-                        </div>
-                      </CardHeader>
-                      <CardContent>
-                        <p className="text-sm text-gray-700 line-clamp-3 mb-4">
-                          {classItem.description}
-                        </p>
-                        <div className="flex justify-between text-sm text-gray-500">
-                          <span className="flex items-center">
-                            <Users className="mr-1 h-4 w-4" /> 
-                            0/{classItem.maxStudents}
-                          </span>
-                          <span>
-                            Grade: {classItem.gradeLevel}
-                          </span>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-
-          {!isLoading && (activeTab === "students" || activeTab === "schedule") && !hasProfile && (
-            <div className="flex flex-col items-center justify-center h-64">
-              <div className="text-center">
-                <h3 className="text-lg font-medium text-gray-900">Complete your profile first</h3>
-                <p className="mt-1 text-sm text-gray-500">
-                  You need to complete your teacher profile before accessing this section
-                </p>
-                <Button 
-                  className="mt-4 bg-kidato-blue hover:bg-kidato-dark-blue"
-                  onClick={() => {
-                    setActiveTab("settings");
-                    setIsEditing(true);
-                  }}
-                >
-                  Go to Profile
-                </Button>
-              </div>
-            </div>
-          )}
-
-          {!isLoading && (activeTab === "students" || activeTab === "schedule") && hasProfile && (
-            <div className="flex flex-col items-center justify-center h-64">
-              <div className="text-center">
-                <h3 className="text-lg font-medium text-gray-900">Coming Soon</h3>
-                <p className="mt-1 text-sm text-gray-500">
-                  This feature is currently under development
-                </p>
-              </div>
-            </div>
-          )}
-        </main>
-      </div>
-    </div>
-  );
-};
-
-export default TeacherDashboard;
+                          <div className="px-2 py-1
