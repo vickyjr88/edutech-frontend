@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,7 +8,15 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { TabsContent } from "@/components/ui/tabs";
-import { Form } from "@/components/ui/form";
+import { 
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage 
+} from "@/components/ui/form";
 import { PlusCircle, Trash2, Users, Calendar, Clock, Mail, Phone, Book, MapPin, CalendarRange, UserCircle2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { Badge } from "@/components/ui/badge";
@@ -81,7 +90,7 @@ const CreateClassForm = ({ onSubmit, onCancel }: CreateClassFormProps) => {
     },
   });
 
-  const { register, handleSubmit, setValue, getValues, formState: { errors, isSubmitting } } = form;
+  const { setValue, getValues, formState: { errors } } = form;
 
   const activeTab = getValues("activeTab") || "basic";
 
@@ -216,7 +225,7 @@ const CreateClassForm = ({ onSubmit, onCancel }: CreateClassFormProps) => {
 
   return (
     <Form {...form}>
-      <form onSubmit={handleSubmit(onSubmitHandler)} className="space-y-8">
+      <form onSubmit={form.handleSubmit(onSubmitHandler)} className="space-y-8">
         <Card>
           <CardHeader>
             <CardTitle>Create New Class</CardTitle>
@@ -225,53 +234,105 @@ const CreateClassForm = ({ onSubmit, onCancel }: CreateClassFormProps) => {
           <CardContent className="space-y-6">
             <TabsContent value="basic" className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="title">Class Title</Label>
-                  <Input id="title" placeholder="Enter class title" {...register("title", { required: "Title is required" })} />
-                  {errors.title && <p className="text-red-500 text-sm">{errors.title.message}</p>}
-                </div>
+                <FormField
+                  control={form.control}
+                  name="title"
+                  render={({ field }) => (
+                    <FormItem className="space-y-2">
+                      <FormLabel>Class Title</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter class title" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-                <div className="space-y-2">
-                  <Label htmlFor="type">Class Type</Label>
-                  <Select {...register("type", { required: "Type is required" })}>
-                    <SelectTrigger id="type">
-                      <SelectValue placeholder="Select class type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="academic">Academic</SelectItem>
-                      <SelectItem value="afterSchool">After School</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  {errors.type && <p className="text-red-500 text-sm">{errors.type.message}</p>}
-                </div>
+                <FormField
+                  control={form.control}
+                  name="type"
+                  render={({ field }) => (
+                    <FormItem className="space-y-2">
+                      <FormLabel>Class Type</FormLabel>
+                      <Select 
+                        onValueChange={field.onChange} 
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select class type" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="academic">Academic</SelectItem>
+                          <SelectItem value="afterSchool">After School</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="subject">Subject</Label>
-                  <Input id="subject" placeholder="Enter subject" {...register("subject", { required: "Subject is required" })} />
-                  {errors.subject && <p className="text-red-500 text-sm">{errors.subject.message}</p>}
-                </div>
+                <FormField
+                  control={form.control}
+                  name="subject"
+                  render={({ field }) => (
+                    <FormItem className="space-y-2">
+                      <FormLabel>Subject</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter subject" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
                 {getValues("type") === "academic" ? (
-                  <div className="space-y-2">
-                    <Label htmlFor="gradeLevel">Grade Level</Label>
-                    <Input id="gradeLevel" placeholder="Enter grade level" {...register("gradeLevel", { required: "Grade level is required" })} />
-                    {errors.gradeLevel && <p className="text-red-500 text-sm">{errors.gradeLevel.message}</p>}
-                  </div>
+                  <FormField
+                    control={form.control}
+                    name="gradeLevel"
+                    render={({ field }) => (
+                      <FormItem className="space-y-2">
+                        <FormLabel>Grade Level</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter grade level" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 ) : (
-                  <div className="space-y-2">
-                    <Label htmlFor="ageRange">Age Range</Label>
-                    <Input id="ageRange" placeholder="Enter age range" {...register("ageRange", { required: "Age range is required" })} />
-                    {errors.ageRange && <p className="text-red-500 text-sm">{errors.ageRange.message}</p>}
-                  </div>
+                  <FormField
+                    control={form.control}
+                    name="ageRange"
+                    render={({ field }) => (
+                      <FormItem className="space-y-2">
+                        <FormLabel>Age Range</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter age range" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 )}
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="description">Class Description</Label>
-                <Textarea id="description" placeholder="Enter class description" {...register("description")} />
-              </div>
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem className="space-y-2">
+                    <FormLabel>Class Description</FormLabel>
+                    <FormControl>
+                      <Textarea placeholder="Enter class description" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
               <div className="space-y-2">
                 <Label>Learning Objectives</Label>
@@ -294,10 +355,21 @@ const CreateClassForm = ({ onSubmit, onCancel }: CreateClassFormProps) => {
                 </Button>
               </div>
 
-              <div className="flex items-center space-x-2">
-                <Checkbox id="hasCohorts" {...register("hasCohorts")} />
-                <Label htmlFor="hasCohorts">Divide class into multiple cohorts?</Label>
-              </div>
+              <FormField
+                control={form.control}
+                name="hasCohorts"
+                render={({ field }) => (
+                  <FormItem className="flex items-center space-x-2">
+                    <FormControl>
+                      <Checkbox 
+                        checked={field.value} 
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <FormLabel>Divide class into multiple cohorts?</FormLabel>
+                  </FormItem>
+                )}
+              />
 
               <div className="flex justify-between pt-4">
                 <Button type="button" variant="outline" onClick={onCancel}>
@@ -324,7 +396,7 @@ const CreateClassForm = ({ onSubmit, onCancel }: CreateClassFormProps) => {
                 </Button>
               </div>
             </TabsContent>
-      
+    
             <TabsContent value="cohorts" className="space-y-6">
               {hasCohorts ? (
                 <div className="space-y-6">
@@ -786,3 +858,105 @@ const CreateClassForm = ({ onSubmit, onCancel }: CreateClassFormProps) => {
                                 <p className="text-sm text-gray-500">No students added yet</p>
                               </div>
                             )}
+
+                            <div className="mt-4">
+                              <h5 className="text-sm font-medium mb-2">Bulk Invitation</h5>
+                              <div className="flex space-x-2">
+                                <Input
+                                  type="email"
+                                  placeholder="Enter email address to invite"
+                                  value={inviteEmail}
+                                  onChange={(e) => setInviteEmail(e.target.value)}
+                                  className="flex-1"
+                                />
+                                <Button 
+                                  type="button"
+                                  variant="outline"
+                                  onClick={() => {
+                                    if (inviteEmail) {
+                                      addStudent(cohort.id);
+                                      setInviteEmail("");
+                                    }
+                                  }}
+                                  disabled={!inviteEmail}
+                                >
+                                  Add
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <div className="flex justify-center pt-4">
+                    {cohorts.length > 0 && (
+                      <Button 
+                        type="button" 
+                        variant="outline"
+                        onClick={addCohort}
+                      >
+                        <PlusCircle className="mr-2 h-4 w-4" />
+                        Add Another Cohort
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4">
+                  <h3 className="text-sm font-medium text-yellow-800">Multiple Cohorts Disabled</h3>
+                  <p className="text-xs text-yellow-700 mt-1">
+                    You have not enabled multiple cohorts for this class. To manage cohorts, go back to the basic settings and 
+                    enable the "Divide class into multiple cohorts" option.
+                  </p>
+                </div>
+              )}
+
+              <div className="flex justify-between pt-4">
+                <Button type="button" variant="outline" onClick={() => setActiveTab("lessons")}>
+                  Back: Lesson Plans
+                </Button>
+                <Button type="submit" disabled={form.formState.isSubmitting}>
+                  {form.formState.isSubmitting ? "Saving..." : "Save Class"}
+                </Button>
+              </div>
+            </TabsContent>
+          </CardContent>
+          <CardFooter className="flex justify-between">
+            {activeTab === "basic" ? (
+              <>
+                <Button type="button" variant="outline" onClick={onCancel}>
+                  Cancel
+                </Button>
+                <Button type="button" variant="outline" onClick={() => setActiveTab("lessons")}>
+                  Next: Lesson Plans
+                </Button>
+              </>
+            ) : activeTab === "lessons" ? (
+              <>
+                <Button type="button" variant="outline" onClick={() => setActiveTab("basic")}>
+                  Back: Basic Settings
+                </Button>
+                <Button type="button" variant="outline" onClick={() => setActiveTab("cohorts")}>
+                  Next: Cohorts
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button type="button" variant="outline" onClick={() => setActiveTab("lessons")}>
+                  Back: Lesson Plans
+                </Button>
+                <Button type="submit" disabled={form.formState.isSubmitting}>
+                  {form.formState.isSubmitting ? "Saving..." : "Save Class"}
+                </Button>
+              </>
+            )}
+          </CardFooter>
+        </Card>
+      </form>
+    </Form>
+  );
+};
+
+export default CreateClassForm;
