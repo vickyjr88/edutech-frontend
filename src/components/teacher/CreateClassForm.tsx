@@ -36,7 +36,6 @@ const classSchema = z.object({
   commitmentRequired: z.string().optional(),
   methodology: z.string().optional(),
   strategy: z.string().optional(),
-  maxStudents: z.coerce.number().min(1, { message: "Class must have at least 1 student" }),
   isPublic: z.boolean().default(true),
   hasCohorts: z.boolean().default(false),
   hasTeamTeaching: z.boolean().default(false),
@@ -70,7 +69,6 @@ const CreateClassForm = ({ onSubmit, onCancel }: CreateClassFormProps) => {
       technicalRequirements: "",
       materialsRequired: "",
       commitmentRequired: "",
-      maxStudents: 20,
       isPublic: true,
       hasCohorts: false,
       hasTeamTeaching: false,
@@ -361,47 +359,49 @@ const CreateClassForm = ({ onSubmit, onCancel }: CreateClassFormProps) => {
                     )}
                   />
 
-                  <FormField
-                    control={form.control}
-                    name="technicalRequirements"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Technical Requirements</FormLabel>
-                        <FormControl>
-                          <Textarea 
-                            placeholder="List any technical requirements needed (internet speed, software, etc.)..." 
-                            className="min-h-24"
-                            {...field} 
-                          />
-                        </FormControl>
-                        <FormDescription>
-                          What technical setup do students need for this class?
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <FormField
+                      control={form.control}
+                      name="technicalRequirements"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Technical Requirements</FormLabel>
+                          <FormControl>
+                            <Textarea 
+                              placeholder="List technical requirements (internet speed, software, etc.)..." 
+                              className="min-h-24"
+                              {...field} 
+                            />
+                          </FormControl>
+                          <FormDescription>
+                            What technical setup do students need?
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                  <FormField
-                    control={form.control}
-                    name="materialsRequired"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Materials Required</FormLabel>
-                        <FormControl>
-                          <Textarea 
-                            placeholder="List any materials students will need to participate..." 
-                            className="min-h-24"
-                            {...field} 
-                          />
-                        </FormControl>
-                        <FormDescription>
-                          What supplies or materials should students have ready?
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                    <FormField
+                      control={form.control}
+                      name="materialsRequired"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Materials Required</FormLabel>
+                          <FormControl>
+                            <Textarea 
+                              placeholder="List materials students will need to participate..." 
+                              className="min-h-24"
+                              {...field} 
+                            />
+                          </FormControl>
+                          <FormDescription>
+                            What supplies should students have ready?
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
 
                   <FormField
                     control={form.control}
@@ -449,7 +449,7 @@ const CreateClassForm = ({ onSubmit, onCancel }: CreateClassFormProps) => {
                             </SelectContent>
                           </Select>
                           <FormDescription>
-                            Choose your primary teaching methodology for this class
+                            Choose your primary teaching methodology
                           </FormDescription>
                           <FormMessage />
                         </FormItem>
@@ -487,23 +487,6 @@ const CreateClassForm = ({ onSubmit, onCancel }: CreateClassFormProps) => {
                       )}
                     />
                   </div>
-
-                  <FormField
-                    control={form.control}
-                    name="maxStudents"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Maximum Students</FormLabel>
-                        <FormControl>
-                          <Input type="number" min="1" max="100" {...field} />
-                        </FormControl>
-                        <FormDescription>
-                          Set the maximum number of students allowed in this class
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
 
                   <div className="space-y-4 pt-4 border-t">
                     <FormField
