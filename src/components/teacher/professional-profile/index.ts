@@ -21,6 +21,20 @@ import type { AfterSchoolSubjectItem } from "./utils/afterSchoolSubjectUtils";
 import type { TechnicalSkillItem } from "./utils/technicalSkillUtils";
 import type { LanguageItem } from "./utils/languageUtils";
 
+// Define CertificationItem type
+export type CertificationItem = {
+  id: string;
+  value: string;
+  details?: string;
+  issuer?: string;
+  issueDate?: string;
+  expiryDate?: string;
+  certificateType?: string;
+  description?: string;
+  isVerifiable?: boolean;
+  verificationUrl?: string;
+};
+
 // Export all components and types
 export {
   EducationStep,
