@@ -1,12 +1,24 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { FileText, BookOpen, Link, FileUp, PlusCircle, Trash2 } from "lucide-react";
+import { FormFileUpload } from "@/components/ui/form";
+import { 
+  FileText, 
+  BookOpen, 
+  Link as LinkIcon, 
+  PlusCircle, 
+  Trash2, 
+  FileImage,
+  FileVideo,
+  Files,
+  Plus
+} from "lucide-react";
 import { UseFormReturn } from "react-hook-form";
 import { ClassFormValues } from "../CreateClassForm";
+import { Badge } from "@/components/ui/badge";
 
 interface LessonPlansTabProps {
   form: UseFormReturn<ClassFormValues>;
@@ -20,6 +32,12 @@ interface LessonPlansTabProps {
   updateLessonPlan: (id: string, field: string, value: string) => void;
 }
 
+type ResourceLink = {
+  id: string;
+  url: string;
+  title: string;
+};
+
 const LessonPlansTab = ({ 
   form, 
   onPreviousTab, 
@@ -31,6 +49,75 @@ const LessonPlansTab = ({
   removeLessonPlan,
   updateLessonPlan
 }: LessonPlansTabProps) => {
+  const [resourceLinks, setResourceLinks] = useState<Record<string, ResourceLink[]>>({});
+  const [newResourceUrl, setNewResourceUrl] = useState<Record<string, string>>({});
+  const [newResourceTitle, setNewResourceTitle] = useState<Record<string, string>>({});
+
+  const handleAddResourceLink = (lessonId: string) => {
+    if (!newResourceUrl[lessonId]?.trim()) return;
+
+    const newLink = {
+      id: Date.now().toString(),
+      url: newResourceUrl[lessonId],
+      title: newResourceTitle[lessonId] || `Resource ${(resourceLinks[lessonId] || []).length + 1}`
+    };
+
+    const updatedLinks = {
+      ...resourceLinks,
+      [lessonId]: [...(resourceLinks[lessonId] || []), newLink]
+    };
+
+    setResourceLinks(updatedLinks);
+    setNewResourceUrl({ ...newResourceUrl, [lessonId]: '' });
+    setNewResourceTitle({ ...newResourceTitle, [lessonId]: '' });
+  };
+
+  const removeResourceLink = (lessonId: string, linkId: string) => {
+    if (!resourceLinks[lessonId]) return;
+
+    const updatedLinks = {
+      ...resourceLinks,
+      [lessonId]: resourceLinks[lessonId].filter(link => link.id !== linkId)
+    };
+
+    setResourceLinks(updatedLinks);
+  };
+
+  const getFileTypeIcon = (file: File) => {
+    if (file.type.startsWith('image/')) {
+      return <FileImage className="h-4 w-4 text-purple-500" />;
+    } else if (file.type.startsWith('video/')) {
+      return <FileVideo className="h-4 w-4 text-blue-500" />;
+    } else if (file.type.includes('pdf')) {
+      return <FileText className="h-4 w-4 text-red-500" />;
+    } else {
+      return <Files className="h-4 w-4 text-gray-500" />;
+    }
+  };
+
+  const getLinkTypeIcon = (url: string) => {
+    if (url.includes('docs.google.com')) {
+      return <FileText className="h-4 w-4 text-blue-600" />;
+    } else if (url.includes('youtube.com') || url.includes('youtu.be')) {
+      return <FileVideo className="h-4 w-4 text-red-600" />;
+    } else if (url.includes('sheets.google.com')) {
+      return <FileText className="h-4 w-4 text-green-600" />;
+    } else if (url.includes('slides.google.com')) {
+      return <FileText className="h-4 w-4 text-yellow-600" />;
+    } else {
+      return <LinkIcon className="h-4 w-4 text-blue-500" />;
+    }
+  };
+
+  const getLinkTypeName = (url: string) => {
+    if (url.includes('docs.google.com')) return 'Google Doc';
+    if (url.includes('sheets.google.com')) return 'Google Sheet';
+    if (url.includes('slides.google.com')) return 'Google Slides';
+    if (url.includes('youtube.com') || url.includes('youtu.be')) return 'YouTube';
+    if (url.includes('vimeo.com')) return 'Vimeo';
+    return 'Link';
+  };
+
   return (
     <div className="space-y-6">
       <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
@@ -100,50 +187,118 @@ const LessonPlansTab = ({
                   onChange={(e) => updateLessonPlan(lesson.id, "description", e.target.value)}
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor={`lesson-resource-${lesson.id}`}>Resource URL</Label>
-                <div className="flex items-center space-x-2">
-                  <Link className="h-4 w-4 text-muted-foreground" />
-                  <Input 
-                    id={`lesson-resource-${lesson.id}`}
-                    placeholder="Enter resource URL"
-                    type="url"
-                    value={lesson.resourceUrl || ""}
-                    onChange={(e) => updateLessonPlan(lesson.id, "resourceUrl", e.target.value)}
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor={`lesson-files-${lesson.id}`}>Resource Files</Label>
-                <div className="flex items-center space-x-2">
-                  <FileUp className="h-4 w-4 text-muted-foreground" />
-                  <input
-                    type="file"
-                    id={`lesson-files-${lesson.id}`}
-                    multiple
-                    onChange={(e) => handleLessonFileChange(lesson.id, e)}
-                    className="hidden"
-                  />
-                  <Label htmlFor={`lesson-files-${lesson.id}`} className="cursor-pointer bg-secondary text-secondary-foreground rounded-md px-4 py-2 text-sm font-medium hover:bg-secondary/80">
-                    Upload Files
-                  </Label>
-                </div>
+              
+              {/* Resource Files Upload */}
+              <div className="space-y-2 border-t pt-4 mt-4">
+                <Label>Resource Files</Label>
+                <FormFileUpload
+                  accept="*"
+                  multiple={true}
+                  onFilesSelected={(files) => {
+                    const event = {
+                      target: {
+                        files: files
+                      }
+                    } as unknown as React.ChangeEvent<HTMLInputElement>;
+                    handleLessonFileChange(lesson.id, event)
+                  }}
+                  label="Upload Documents, Images & Files"
+                  description="Drag and drop files here, or click to choose files"
+                />
+                
                 {lessonFileUploads[lesson.id] && lessonFileUploads[lesson.id].length > 0 && (
                   <div className="mt-2 space-y-1">
-                    {lessonFileUploads[lesson.id].map((file, fileIndex) => (
-                      <div key={fileIndex} className="flex items-center justify-between p-2 bg-gray-100 rounded-md">
-                        <p className="text-sm text-gray-800">{file.name}</p>
-                        <Button 
-                          type="button" 
-                          variant="ghost" 
-                          size="sm"
-                          onClick={() => removeLessonFile(lesson.id, fileIndex)}
-                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    ))}
+                    <Label className="text-xs text-gray-500">Uploaded Files ({lessonFileUploads[lesson.id].length})</Label>
+                    <div className="grid grid-cols-1 gap-2">
+                      {lessonFileUploads[lesson.id].map((file, fileIndex) => (
+                        <div key={fileIndex} className="flex items-center justify-between p-2 bg-gray-50 border rounded-md">
+                          <div className="flex items-center space-x-2 overflow-hidden">
+                            {getFileTypeIcon(file)}
+                            <span className="text-sm text-gray-800 truncate">{file.name}</span>
+                          </div>
+                          <Button 
+                            type="button" 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => removeLessonFile(lesson.id, fileIndex)}
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50 flex-shrink-0"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+              
+              {/* Resource URLs */}
+              <div className="space-y-3 border-t pt-4 mt-4">
+                <Label>Resource Links</Label>
+                <div className="grid grid-cols-1 gap-2">
+                  <div className="flex flex-col space-y-2">
+                    <div className="flex space-x-2">
+                      <Input 
+                        placeholder="Resource title (optional)"
+                        value={newResourceTitle[lesson.id] || ''}
+                        onChange={(e) => setNewResourceTitle({
+                          ...newResourceTitle,
+                          [lesson.id]: e.target.value
+                        })}
+                        className="flex-grow"
+                      />
+                    </div>
+                    <div className="flex space-x-2">
+                      <Input 
+                        placeholder="https://... (YouTube, Google Docs, etc.)"
+                        value={newResourceUrl[lesson.id] || ''}
+                        onChange={(e) => setNewResourceUrl({
+                          ...newResourceUrl,
+                          [lesson.id]: e.target.value
+                        })}
+                        icon={<LinkIcon className="h-4 w-4" />}
+                        className="flex-grow"
+                      />
+                      <Button 
+                        type="button" 
+                        onClick={() => handleAddResourceLink(lesson.id)}
+                        variant="outline"
+                        size="sm"
+                      >
+                        <Plus className="h-4 w-4 mr-1" />
+                        Add
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+
+                {resourceLinks[lesson.id] && resourceLinks[lesson.id].length > 0 && (
+                  <div className="mt-2 space-y-1">
+                    <Label className="text-xs text-gray-500">Added Links ({resourceLinks[lesson.id].length})</Label>
+                    <div className="grid grid-cols-1 gap-2">
+                      {resourceLinks[lesson.id].map((link) => (
+                        <div key={link.id} className="flex items-center justify-between p-2 bg-gray-50 border rounded-md">
+                          <div className="flex items-center space-x-2 overflow-hidden">
+                            {getLinkTypeIcon(link.url)}
+                            <span className="text-sm text-gray-800 truncate">{link.title}</span>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <Badge variant="outline" className="text-xs">
+                              {getLinkTypeName(link.url)}
+                            </Badge>
+                            <Button 
+                              type="button" 
+                              variant="ghost" 
+                              size="sm"
+                              onClick={() => removeResourceLink(lesson.id, link.id)}
+                              className="text-red-600 hover:text-red-700 hover:bg-red-50 flex-shrink-0"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>
