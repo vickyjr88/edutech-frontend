@@ -208,14 +208,14 @@ const CreateClassForm = ({ onSubmit, onCancel }: CreateClassFormProps) => {
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto border rounded-lg shadow-sm bg-card text-card-foreground">
-      <div className="flex flex-col space-y-1.5 p-6">
-        <h3 className="text-2xl font-semibold leading-none tracking-tight">Create a New Class</h3>
-        <p className="text-sm text-muted-foreground">
+    <Card className="w-full max-w-4xl mx-auto">
+      <CardHeader>
+        <CardTitle>Create a New Class</CardTitle>
+        <CardDescription>
           Set up your class details, schedule, and teaching team
-        </p>
-      </div>
-      <div className="p-6 pt-0">
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid grid-cols-4 mb-8">
             <TabsTrigger value="basic" className="flex items-center gap-2">
@@ -239,7 +239,6 @@ const CreateClassForm = ({ onSubmit, onCancel }: CreateClassFormProps) => {
             <form onSubmit={form.handleSubmit(handleSubmitForm)}>
               <TabsContent value="basic" className="space-y-6">
                 <div className="space-y-6">
-                  {/* Class Type and Title in one row */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <FormField
                       control={form.control}
@@ -287,7 +286,6 @@ const CreateClassForm = ({ onSubmit, onCancel }: CreateClassFormProps) => {
                     />
                   </div>
 
-                  {/* Curriculum, Grade Level, and Subject in one row */}
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <FormField
                       control={form.control}
@@ -892,4 +890,189 @@ const CreateClassForm = ({ onSubmit, onCancel }: CreateClassFormProps) => {
                                 <Label htmlFor={`cohort-schedule-${cohort.id}`}>Schedule</Label>
                                 <Select 
                                   value={cohort.schedule}
-                                  onValueChange={(value) => updateCohort(cohort
+                                  onValueChange={(value) => updateCohort(cohort.id, "schedule", value)}
+                                >
+                                  <SelectTrigger id={`cohort-schedule-${cohort.id}`}>
+                                    <SelectValue placeholder="Select schedule" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="monday_am">Monday Mornings</SelectItem>
+                                    <SelectItem value="monday_pm">Monday Afternoons</SelectItem>
+                                    <SelectItem value="tuesday_am">Tuesday Mornings</SelectItem>
+                                    <SelectItem value="tuesday_pm">Tuesday Afternoons</SelectItem>
+                                    <SelectItem value="wednesday_am">Wednesday Mornings</SelectItem>
+                                    <SelectItem value="wednesday_pm">Wednesday Afternoons</SelectItem>
+                                    <SelectItem value="thursday_am">Thursday Mornings</SelectItem>
+                                    <SelectItem value="thursday_pm">Thursday Afternoons</SelectItem>
+                                    <SelectItem value="friday_am">Friday Mornings</SelectItem>
+                                    <SelectItem value="friday_pm">Friday Afternoons</SelectItem>
+                                    <SelectItem value="weekend">Weekends</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                        <Button
+                          type="button" 
+                          variant="outline" 
+                          onClick={addCohort}
+                          className="mt-2"
+                        >
+                          <PlusCircle className="mr-2 h-4 w-4" />
+                          Add Another Cohort
+                        </Button>
+                      </div>
+                    )}
+                    
+                    <div className="flex justify-between pt-4">
+                      <Button type="button" variant="outline" onClick={() => setActiveTab("lessons")}>
+                        Back: Lesson Plans
+                      </Button>
+                      <Button type="button" variant="outline" onClick={() => setActiveTab("teaching")}>
+                        Next: Teaching Team
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    <div className="bg-amber-50 border border-amber-200 rounded-md p-4">
+                      <h3 className="text-sm font-medium text-amber-800">Multiple Cohorts Disabled</h3>
+                      <p className="text-xs text-amber-700 mt-1">
+                        Enable multiple cohorts in the Basic Information tab to manage separate student groups with different schedules.
+                      </p>
+                    </div>
+                    
+                    <div className="flex justify-between pt-4">
+                      <Button type="button" variant="outline" onClick={() => setActiveTab("lessons")}>
+                        Back: Lesson Plans
+                      </Button>
+                      <Button type="button" variant="outline" onClick={() => setActiveTab("teaching")}>
+                        Next: Teaching Team
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </TabsContent>
+
+              <TabsContent value="teaching" className="space-y-6">
+                {hasTeamTeaching ? (
+                  <div className="space-y-6">
+                    <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
+                      <h3 className="text-sm font-medium text-blue-800">Team Teaching Enabled</h3>
+                      <p className="text-xs text-blue-700 mt-1">
+                        Add co-teachers or teaching assistants to collaborate with you on this class.
+                      </p>
+                    </div>
+
+                    {teamMembers.length === 0 ? (
+                      <div className="text-center py-8 border border-dashed rounded-md">
+                        <UserPlus className="h-12 w-12 mx-auto text-gray-400" />
+                        <h3 className="mt-2 text-sm font-medium text-gray-900">No team members yet</h3>
+                        <p className="mt-1 text-sm text-gray-500">Add teachers or assistants to your teaching team</p>
+                        <Button
+                          type="button" 
+                          onClick={addTeamMember}
+                          className="mt-4"
+                        >
+                          <PlusCircle className="mr-2 h-4 w-4" />
+                          Add First Team Member
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {teamMembers.map((member, index) => (
+                          <div key={member.id} className="border rounded-md p-4 space-y-4">
+                            <div className="flex justify-between items-center">
+                              <h3 className="text-sm font-medium">Team Member {index + 1}</h3>
+                              <Button 
+                                type="button" 
+                                variant="ghost" 
+                                size="sm" 
+                                onClick={() => removeTeamMember(member.id)}
+                                className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div className="space-y-2">
+                                <Label htmlFor={`team-email-${member.id}`}>Email Address</Label>
+                                <Input 
+                                  id={`team-email-${member.id}`}
+                                  value={member.email}
+                                  onChange={(e) => updateTeamMember(member.id, "email", e.target.value)}
+                                  placeholder="Enter team member's email"
+                                  type="email"
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <Label htmlFor={`team-role-${member.id}`}>Role</Label>
+                                <Select 
+                                  value={member.role}
+                                  onValueChange={(value) => updateTeamMember(member.id, "role", value)}
+                                >
+                                  <SelectTrigger id={`team-role-${member.id}`}>
+                                    <SelectValue placeholder="Select role" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="co-teacher">Co-Teacher</SelectItem>
+                                    <SelectItem value="assistant">Teaching Assistant</SelectItem>
+                                    <SelectItem value="guest">Guest Lecturer</SelectItem>
+                                    <SelectItem value="observer">Observer</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                        <Button
+                          type="button" 
+                          variant="outline" 
+                          onClick={addTeamMember}
+                          className="mt-2"
+                        >
+                          <PlusCircle className="mr-2 h-4 w-4" />
+                          Add Another Team Member
+                        </Button>
+                      </div>
+                    )}
+                    
+                    <div className="flex justify-between pt-4">
+                      <Button type="button" variant="outline" onClick={() => setActiveTab("cohorts")}>
+                        Back: Cohorts
+                      </Button>
+                      <Button type="submit" disabled={isSubmitting}>
+                        {isSubmitting ? "Creating Class..." : "Create Class"}
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    <div className="bg-amber-50 border border-amber-200 rounded-md p-4">
+                      <h3 className="text-sm font-medium text-amber-800">Team Teaching Disabled</h3>
+                      <p className="text-xs text-amber-700 mt-1">
+                        Enable team teaching in the Basic Information tab to collaborate with co-teachers or assistants.
+                      </p>
+                    </div>
+                    
+                    <div className="flex justify-between pt-4">
+                      <Button type="button" variant="outline" onClick={() => setActiveTab("cohorts")}>
+                        Back: Cohorts
+                      </Button>
+                      <Button type="submit" disabled={isSubmitting}>
+                        {isSubmitting ? "Creating Class..." : "Create Class"}
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </TabsContent>
+            </form>
+          </Form>
+        </Tabs>
+      </CardContent>
+    </Card>
+  );
+};
+
+export default CreateClassForm;
