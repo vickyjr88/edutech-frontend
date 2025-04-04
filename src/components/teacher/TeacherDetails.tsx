@@ -57,6 +57,14 @@ interface TeacherDetailsProps {
       rating?: number;
       imageSrc?: string;
     }>;
+    reviews?: Array<{
+      id: string;
+      reviewer: string;
+      reviewerImage?: string;
+      rating: number;
+      comment: string;
+      date: string;
+    }>;
   }
 }
 
@@ -64,6 +72,7 @@ export default function TeacherDetails({ teacher }: TeacherDetailsProps) {
   const [isMessageDialogOpen, setIsMessageDialogOpen] = useState(false);
   const [isVideoDialogOpen, setIsVideoDialogOpen] = useState(false);
   const [messageText, setMessageText] = useState("");
+  const [activeTab, setActiveTab] = useState<'about' | 'classes' | 'reviews'>('about');
 
   const handleSendMessage = () => {
     // In a real app, this would send the message to the backend
@@ -114,7 +123,8 @@ export default function TeacherDetails({ teacher }: TeacherDetailsProps) {
               
               <p className="text-gray-700 mb-6">{teacher.bio}</p>
               
-              <div className="flex flex-wrap gap-3 justify-center md:justify-start">
+              {/* Message/Contact Teacher Button - Made sticky on mobile for easier access */}
+              <div className="flex flex-wrap gap-3 justify-center md:justify-start sticky md:static bottom-4 left-0 right-0 z-10 md:z-0 p-2 md:p-0 bg-white/80 md:bg-transparent backdrop-blur-sm md:backdrop-blur-none">
                 <Dialog open={isMessageDialogOpen} onOpenChange={setIsMessageDialogOpen}>
                   <DialogTrigger asChild>
                     <Button className="bg-kidato-blue hover:bg-kidato-dark-blue">
@@ -194,212 +204,357 @@ export default function TeacherDetails({ teacher }: TeacherDetailsProps) {
         </div>
       </div>
       
-      {/* Grid Layout for Teacher Details */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10">
-        {/* Education Section */}
-        <Card>
-          <CardHeader className="pb-3">
-            <div className="flex items-center gap-2">
-              <GraduationCap className="h-5 w-5 text-kidato-blue" />
-              <CardTitle className="text-xl">Educational Qualifications</CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent>
-            {teacher.education.map((edu) => (
-              <div key={edu.id} className="mb-5 last:mb-0">
-                <h4 className="font-medium text-gray-900">{edu.degree}</h4>
-                <p className="text-gray-600">{edu.institution}</p>
-                <p className="text-sm text-gray-500">{edu.dates}</p>
+      {/* Tab Navigation */}
+      <div className="mb-8 border-b">
+        <div className="flex overflow-x-auto">
+          <button 
+            onClick={() => setActiveTab('about')}
+            className={`px-6 py-3 font-medium text-sm transition-colors ${activeTab === 'about' ? 'text-kidato-blue border-b-2 border-kidato-blue' : 'text-gray-500 hover:text-gray-700'}`}
+          >
+            About
+          </button>
+          <button 
+            onClick={() => setActiveTab('classes')}
+            className={`px-6 py-3 font-medium text-sm transition-colors ${activeTab === 'classes' ? 'text-kidato-blue border-b-2 border-kidato-blue' : 'text-gray-500 hover:text-gray-700'}`}
+          >
+            Classes
+          </button>
+          <button 
+            onClick={() => setActiveTab('reviews')}
+            className={`px-6 py-3 font-medium text-sm transition-colors ${activeTab === 'reviews' ? 'text-kidato-blue border-b-2 border-kidato-blue' : 'text-gray-500 hover:text-gray-700'}`}
+          >
+            Reviews
+          </button>
+        </div>
+      </div>
+      
+      {/* About Tab Content */}
+      {activeTab === 'about' && (
+        <>
+          {/* Enhanced Bio Section */}
+          <div className="mb-10">
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">Biography</h2>
+            <div className="bg-white rounded-lg shadow-sm p-6">
+              <p className="text-gray-700 leading-relaxed">{teacher.bio}</p>
+              <div className="mt-4 flex flex-wrap gap-2">
+                {teacher.methodologies.slice(0, 3).map(methodology => (
+                  <span key={methodology.id} className="bg-blue-50 text-blue-700 text-xs px-2 py-1 rounded-full">
+                    {methodology.methodology}
+                  </span>
+                ))}
+                {teacher.strategies.slice(0, 3).map(strategy => (
+                  <span key={strategy.id} className="bg-green-50 text-green-700 text-xs px-2 py-1 rounded-full">
+                    {strategy.strategy}
+                  </span>
+                ))}
               </div>
-            ))}
-          </CardContent>
-        </Card>
-
-        {/* Experience Section */}
-        <Card>
-          <CardHeader className="pb-3">
-            <div className="flex items-center gap-2">
-              <Briefcase className="h-5 w-5 text-kidato-blue" />
-              <CardTitle className="text-xl">Teaching Experience</CardTitle>
             </div>
-          </CardHeader>
-          <CardContent>
-            {teacher.experience.map((exp) => (
-              <div key={exp.id} className="mb-5 last:mb-0">
-                <h4 className="font-medium text-gray-900">{exp.position}</h4>
-                <p className="text-gray-600">{exp.institution}</p>
-                <p className="text-sm text-gray-500">{exp.dates}</p>
-                {exp.description && (
-                  <p className="text-sm text-gray-700 mt-1">{exp.description}</p>
+          </div>
+
+          {/* Grid Layout for Teacher Details */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10">
+            {/* Education Section */}
+            <Card>
+              <CardHeader className="pb-3">
+                <div className="flex items-center gap-2">
+                  <GraduationCap className="h-5 w-5 text-kidato-blue" />
+                  <CardTitle className="text-xl">Educational Qualifications</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {teacher.education.length > 0 ? (
+                  teacher.education.map((edu) => (
+                    <div key={edu.id} className="mb-5 last:mb-0">
+                      <h4 className="font-medium text-gray-900">{edu.degree}</h4>
+                      <p className="text-gray-600">{edu.institution}</p>
+                      <p className="text-sm text-gray-500">{edu.dates}</p>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-gray-500 italic">No educational information available</p>
                 )}
-              </div>
-            ))}
-          </CardContent>
-        </Card>
+              </CardContent>
+            </Card>
 
-        {/* Certifications Section */}
-        <Card>
-          <CardHeader className="pb-3">
-            <div className="flex items-center gap-2">
-              <CertificateIcon className="h-5 w-5 text-kidato-blue" />
-              <CardTitle className="text-xl">Certifications</CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent>
-            {teacher.certifications.map((cert) => (
-              <div key={cert.id} className="mb-5 last:mb-0">
-                <div className="flex items-start justify-between">
-                  <h4 className="font-medium text-gray-900">{cert.name}</h4>
-                  {cert.isVerified && (
-                    <span className="inline-flex items-center bg-green-50 text-green-700 text-xs px-2 py-0.5 rounded-full">
-                      <svg className="w-3 h-3 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                      </svg>
-                      Verified
-                    </span>
-                  )}
+            {/* Experience Section */}
+            <Card>
+              <CardHeader className="pb-3">
+                <div className="flex items-center gap-2">
+                  <Briefcase className="h-5 w-5 text-kidato-blue" />
+                  <CardTitle className="text-xl">Teaching Experience</CardTitle>
                 </div>
-                <p className="text-gray-600">{cert.issuer}</p>
-                <p className="text-sm text-gray-500">{cert.date}</p>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      </div>
+              </CardHeader>
+              <CardContent>
+                {teacher.experience.length > 0 ? (
+                  teacher.experience.map((exp) => (
+                    <div key={exp.id} className="mb-5 last:mb-0">
+                      <h4 className="font-medium text-gray-900">{exp.position}</h4>
+                      <p className="text-gray-600">{exp.institution}</p>
+                      <p className="text-sm text-gray-500">{exp.dates}</p>
+                      {exp.description && (
+                        <p className="text-sm text-gray-700 mt-1">{exp.description}</p>
+                      )}
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-gray-500 italic">No experience information available</p>
+                )}
+              </CardContent>
+            </Card>
 
-      {/* Additional Skills Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-        {/* Methodologies */}
-        <Card>
-          <CardHeader className="pb-3">
-            <div className="flex items-center gap-2">
-              <Book className="h-5 w-5 text-kidato-blue" />
-              <CardTitle className="text-xl">Teaching Methodologies</CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <ul className="space-y-3">
-              {teacher.methodologies.map((item) => (
-                <li key={item.id} className="flex items-start">
-                  <span className="bg-kidato-blue/10 text-kidato-blue p-1 rounded mr-3">
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                  </span>
-                  <div>
-                    <span className="font-medium text-gray-900">{item.methodology}</span>
-                    {item.is_certified && (
-                      <span className="ml-2 inline-flex items-center bg-green-50 text-green-700 text-xs px-2 py-0.5 rounded-full">
-                        Certified
-                      </span>
-                    )}
-                    {item.description && (
-                      <p className="text-sm text-gray-600 mt-1">{item.description}</p>
-                    )}
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </CardContent>
-        </Card>
-
-        {/* Strategies */}
-        <Card>
-          <CardHeader className="pb-3">
-            <div className="flex items-center gap-2">
-              <Award className="h-5 w-5 text-kidato-blue" />
-              <CardTitle className="text-xl">Teaching Strategies</CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <ul className="space-y-3">
-              {teacher.strategies.map((item) => (
-                <li key={item.id} className="flex items-start">
-                  <span className="bg-kidato-blue/10 text-kidato-blue p-1 rounded mr-3">
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                  </span>
-                  <div>
-                    <span className="font-medium text-gray-900">{item.strategy}</span>
-                    {item.is_certified && (
-                      <span className="ml-2 inline-flex items-center bg-green-50 text-green-700 text-xs px-2 py-0.5 rounded-full">
-                        Certified
-                      </span>
-                    )}
-                    {item.description && (
-                      <p className="text-sm text-gray-600 mt-1">{item.description}</p>
-                    )}
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </CardContent>
-        </Card>
-
-        {/* Languages */}
-        <Card>
-          <CardHeader className="pb-3">
-            <div className="flex items-center gap-2">
-              <Globe className="h-5 w-5 text-kidato-blue" />
-              <CardTitle className="text-xl">Languages</CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <ul className="space-y-3">
-              {teacher.languages.map((item) => (
-                <li key={item.id} className="flex items-start">
-                  <span className="bg-kidato-blue/10 text-kidato-blue p-1 rounded mr-3">
-                    <Globe className="w-4 h-4" />
-                  </span>
-                  <div>
-                    <span className="font-medium text-gray-900">{item.language}</span>
-                    {item.isCertified && (
-                      <span className="ml-2 inline-flex items-center bg-green-50 text-green-700 text-xs px-2 py-0.5 rounded-full">
-                        Certified
-                      </span>
-                    )}
-                    {item.description && (
-                      <p className="text-sm text-gray-600 mt-1">{item.description}</p>
-                    )}
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Teacher's Classes */}
-      <h2 className="text-2xl font-bold text-gray-900 mb-6">Classes by {teacher.name}</h2>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {teacher.classes.map((cls) => (
-          <Card key={cls.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-            <div className="h-48 w-full overflow-hidden">
-              <img 
-                src={cls.imageSrc || 'https://via.placeholder.com/400x250?text=Class+Image'} 
-                alt={cls.title} 
-                className="w-full h-full object-cover"
-              />
-            </div>
-            <CardContent className="p-5">
-              <h3 className="font-semibold text-gray-900 mb-1">{cls.title}</h3>
-              <p className="text-sm text-gray-600 mb-2">{cls.subject} · {cls.level}</p>
-              
-              {cls.rating && (
-                <div className="flex items-center gap-1">
-                  <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
-                  <span className="font-medium">{cls.rating}</span>
+            {/* Certifications Section */}
+            <Card>
+              <CardHeader className="pb-3">
+                <div className="flex items-center gap-2">
+                  <CertificateIcon className="h-5 w-5 text-kidato-blue" />
+                  <CardTitle className="text-xl">Certifications</CardTitle>
                 </div>
-              )}
-              
-              <Button variant="outline" className="w-full mt-4 border-kidato-blue text-kidato-blue hover:bg-kidato-blue/10">
-                View Class
-              </Button>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+              </CardHeader>
+              <CardContent>
+                {teacher.certifications.length > 0 ? (
+                  teacher.certifications.map((cert) => (
+                    <div key={cert.id} className="mb-5 last:mb-0">
+                      <div className="flex items-start justify-between">
+                        <h4 className="font-medium text-gray-900">{cert.name}</h4>
+                        {cert.isVerified && (
+                          <span className="inline-flex items-center bg-green-50 text-green-700 text-xs px-2 py-0.5 rounded-full">
+                            <svg className="w-3 h-3 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                            </svg>
+                            Verified
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-gray-600">{cert.issuer}</p>
+                      <p className="text-sm text-gray-500">{cert.date}</p>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-gray-500 italic">No certifications available</p>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Additional Skills Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+            {/* Methodologies */}
+            <Card>
+              <CardHeader className="pb-3">
+                <div className="flex items-center gap-2">
+                  <Book className="h-5 w-5 text-kidato-blue" />
+                  <CardTitle className="text-xl">Teaching Methodologies</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {teacher.methodologies.length > 0 ? (
+                  <ul className="space-y-3">
+                    {teacher.methodologies.map((item) => (
+                      <li key={item.id} className="flex items-start">
+                        <span className="bg-kidato-blue/10 text-kidato-blue p-1 rounded mr-3">
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                        </span>
+                        <div>
+                          <span className="font-medium text-gray-900">{item.methodology}</span>
+                          {item.is_certified && (
+                            <span className="ml-2 inline-flex items-center bg-green-50 text-green-700 text-xs px-2 py-0.5 rounded-full">
+                              Certified
+                            </span>
+                          )}
+                          {item.description && (
+                            <p className="text-sm text-gray-600 mt-1">{item.description}</p>
+                          )}
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-gray-500 italic">No methodologies available</p>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Strategies */}
+            <Card>
+              <CardHeader className="pb-3">
+                <div className="flex items-center gap-2">
+                  <Award className="h-5 w-5 text-kidato-blue" />
+                  <CardTitle className="text-xl">Teaching Strategies</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {teacher.strategies.length > 0 ? (
+                  <ul className="space-y-3">
+                    {teacher.strategies.map((item) => (
+                      <li key={item.id} className="flex items-start">
+                        <span className="bg-kidato-blue/10 text-kidato-blue p-1 rounded mr-3">
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                        </span>
+                        <div>
+                          <span className="font-medium text-gray-900">{item.strategy}</span>
+                          {item.is_certified && (
+                            <span className="ml-2 inline-flex items-center bg-green-50 text-green-700 text-xs px-2 py-0.5 rounded-full">
+                              Certified
+                            </span>
+                          )}
+                          {item.description && (
+                            <p className="text-sm text-gray-600 mt-1">{item.description}</p>
+                          )}
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-gray-500 italic">No strategies available</p>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Languages */}
+            <Card>
+              <CardHeader className="pb-3">
+                <div className="flex items-center gap-2">
+                  <Globe className="h-5 w-5 text-kidato-blue" />
+                  <CardTitle className="text-xl">Languages</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {teacher.languages.length > 0 ? (
+                  <ul className="space-y-3">
+                    {teacher.languages.map((item) => (
+                      <li key={item.id} className="flex items-start">
+                        <span className="bg-kidato-blue/10 text-kidato-blue p-1 rounded mr-3">
+                          <Globe className="w-4 h-4" />
+                        </span>
+                        <div>
+                          <span className="font-medium text-gray-900">{item.language}</span>
+                          {item.isCertified && (
+                            <span className="ml-2 inline-flex items-center bg-green-50 text-green-700 text-xs px-2 py-0.5 rounded-full">
+                              Certified
+                            </span>
+                          )}
+                          {item.description && (
+                            <p className="text-sm text-gray-600 mt-1">{item.description}</p>
+                          )}
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-gray-500 italic">No languages available</p>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </>
+      )}
+
+      {/* Classes Tab Content */}
+      {activeTab === 'classes' && (
+        <>
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">Classes by {teacher.name}</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {teacher.classes.length > 0 ? (
+              teacher.classes.map((cls) => (
+                <Card key={cls.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+                  <div className="h-48 w-full overflow-hidden">
+                    <img 
+                      src={cls.imageSrc || 'https://via.placeholder.com/400x250?text=Class+Image'} 
+                      alt={cls.title} 
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <CardContent className="p-5">
+                    <h3 className="font-semibold text-gray-900 mb-1">{cls.title}</h3>
+                    <p className="text-sm text-gray-600 mb-2">{cls.subject} · {cls.level}</p>
+                    
+                    {cls.rating && (
+                      <div className="flex items-center gap-1">
+                        <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
+                        <span className="font-medium">{cls.rating}</span>
+                      </div>
+                    )}
+                    
+                    <Button variant="outline" className="w-full mt-4 border-kidato-blue text-kidato-blue hover:bg-kidato-blue/10">
+                      View Class
+                    </Button>
+                  </CardContent>
+                </Card>
+              ))
+            ) : (
+              <div className="col-span-full text-center py-12">
+                <p className="text-gray-500">No classes available at the moment.</p>
+              </div>
+            )}
+          </div>
+        </>
+      )}
+
+      {/* Reviews Tab Content */}
+      {activeTab === 'reviews' && (
+        <>
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">Student Reviews ({teacher.ratingCount})</h2>
+          
+          <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
+            <div className="flex items-center mb-4">
+              <div className="flex items-center mr-4">
+                <Star className="h-8 w-8 text-yellow-500 fill-yellow-500" />
+                <span className="text-3xl font-bold ml-2">{teacher.rating}</span>
+              </div>
+              <div>
+                <p className="text-gray-500">{teacher.ratingCount} reviews</p>
+                <div className="flex gap-1 mt-1">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <Star
+                      key={star}
+                      className={`h-4 w-4 ${star <= Math.round(teacher.rating) ? 'text-yellow-500 fill-yellow-500' : 'text-gray-300'}`}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div className="space-y-6">
+            {teacher.reviews && teacher.reviews.length > 0 ? (
+              teacher.reviews.map((review) => (
+                <div key={review.id} className="bg-white rounded-lg shadow-sm p-6">
+                  <div className="flex items-start">
+                    <img 
+                      src={review.reviewerImage || 'https://via.placeholder.com/40?text=User'} 
+                      alt={review.reviewer}
+                      className="w-10 h-10 rounded-full mr-4"
+                    />
+                    <div className="flex-1">
+                      <div className="flex justify-between items-center mb-2">
+                        <h4 className="font-medium">{review.reviewer}</h4>
+                        <span className="text-sm text-gray-500">{review.date}</span>
+                      </div>
+                      <div className="flex mb-3">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <Star
+                            key={star}
+                            className={`h-4 w-4 ${star <= review.rating ? 'text-yellow-500 fill-yellow-500' : 'text-gray-300'}`}
+                          />
+                        ))}
+                      </div>
+                      <p className="text-gray-700">{review.comment}</p>
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="text-center py-12 bg-white rounded-lg shadow-sm">
+                <p className="text-gray-500">No reviews available yet.</p>
+              </div>
+            )}
+          </div>
+        </>
+      )}
     </div>
   );
 }
