@@ -1,4 +1,3 @@
-
 import { Book, Users, Award, Globe, Shield, Clock, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
@@ -90,7 +89,7 @@ const upcomingClasses = [
   }
 ];
 
-const availableTeachers = [
+const featuredTeachers = [
   {
     name: "Dr. Nkem Adeyemi",
     subject: "Mathematics & Physics",
@@ -98,40 +97,29 @@ const availableTeachers = [
     education: "PhD in Applied Mathematics",
     rating: 4.9,
     availability: "Weekdays 3-8 PM",
-    imageSrc: "https://images.unsplash.com/photo-1573497019236-61f323342eb4?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+    imageSrc: "https://images.unsplash.com/photo-1507152832244-10d45c7eda57?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
     expertise: "Advanced Calculus, Mechanics",
     hourlyRate: "$25/hour"
   },
   {
-    name: "Ms. Zainab Omar",
+    name: "Ms. Nneka Okonkwo",
     subject: "English Literature",
     experience: "8 years",
     education: "MA in English",
     rating: 4.8,
     availability: "Evenings & Weekends",
-    imageSrc: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+    imageSrc: "https://images.unsplash.com/photo-1531123897727-8f129e1688ce?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
     expertise: "Essay Writing, Critical Analysis",
     hourlyRate: "$22/hour"
   },
   {
-    name: "Mr. David Ndung'u",
-    subject: "Chemistry & Biology",
-    experience: "12 years",
-    education: "MSc in Biochemistry",
-    rating: 5.0,
-    availability: "Flexible Hours",
-    imageSrc: "https://images.unsplash.com/photo-1577202214328-c04b77cefb5d?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
-    expertise: "Lab Techniques, STEM Projects",
-    hourlyRate: "$28/hour"
-  },
-  {
-    name: "Ms. Priya Sharma",
+    name: "Mr. Taiwo Makinde",
     subject: "Computer Science",
     experience: "6 years",
     education: "BSc in Computer Science",
     rating: 4.7,
     availability: "Afternoons & Weekends",
-    imageSrc: "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+    imageSrc: "https://images.unsplash.com/photo-1568602471122-7832951cc4c5?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
     expertise: "Python, Web Development",
     hourlyRate: "$24/hour"
   }
@@ -227,16 +215,23 @@ const Features = () => {
           </div>
         </div>
         
+        <div className="mt-16 text-center">
+          <p className="text-xl text-gray-700 max-w-3xl mx-auto italic">
+            "Our mission is to empower your child with quality education that builds confidence, 
+            sparks curiosity, and prepares them for future success - all while giving you peace of mind."
+          </p>
+        </div>
+        
         <div className="mt-16">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 md:text-4xl">Why Educators Choose Kidato</h2>
-            <p className="mt-4 text-xl text-gray-600 max-w-3xl mx-auto">
-              Join our community of exceptional educators making a difference in students' lives
+          <div className="text-center mb-10">
+            <h3 className="text-2xl font-bold text-gray-900">Educators Available for On-Demand Tuition</h3>
+            <p className="mt-3 text-gray-600 max-w-2xl mx-auto">
+              Book a session with our highly qualified educators who are ready to help your child excel
             </p>
           </div>
           
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4 mb-12">
-            {availableTeachers.map((teacher, index) => (
+          <div className="grid gap-8 sm:grid-cols-3 mb-10">
+            {featuredTeachers.map((teacher, index) => (
               <Card key={index} className="overflow-hidden hover:shadow-md transition-shadow duration-300">
                 <CardContent className="p-5">
                   <div className="flex flex-col items-center text-center mb-4">
@@ -261,10 +256,6 @@ const Features = () => {
                       <span className="text-gray-600">Expertise:</span>
                       <span className="font-medium line-clamp-1">{teacher.expertise}</span>
                     </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Availability:</span>
-                      <span className="font-medium">{teacher.availability}</span>
-                    </div>
                   </div>
                   
                   <div className="flex items-center justify-between pt-3 border-t border-gray-100">
@@ -282,13 +273,12 @@ const Features = () => {
               </Card>
             ))}
           </div>
-        </div>
-        
-        <div className="mt-8 text-center">
-          <p className="text-xl text-gray-700 max-w-3xl mx-auto italic">
-            "Our mission is to empower your child with quality education that builds confidence, 
-            sparks curiosity, and prepares them for future success - all while giving you peace of mind."
-          </p>
+          
+          <div className="text-center mt-8">
+            <Button className="bg-kidato-blue hover:bg-kidato-dark-blue text-white px-8">
+              Become a Kidato Teacher
+            </Button>
+          </div>
         </div>
       </div>
     </div>
@@ -296,4 +286,3 @@ const Features = () => {
 };
 
 export default Features;
-
