@@ -1,8 +1,10 @@
-import { Book, Users, Award, Globe, Shield, Clock, Star } from "lucide-react";
+
+import { Book, Users, Award, Globe, Shield, Clock, Star, Briefcase, GraduationCap, Languages, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 
 const features = [
   {
@@ -91,37 +93,64 @@ const upcomingClasses = [
 
 const featuredTeachers = [
   {
-    name: "Dr. Nkem Adeyemi",
+    name: "Dr. Sarah Okafor",
     subject: "Mathematics & Physics",
-    experience: "10+ years",
-    education: "PhD in Applied Mathematics",
+    experience: "8+ years",
+    education: "PhD in Applied Mathematics, University of Lagos",
     rating: 4.9,
     availability: "Weekdays 3-8 PM",
-    imageSrc: "https://images.unsplash.com/photo-1507152832244-10d45c7eda57?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
-    expertise: "Advanced Calculus, Mechanics",
-    hourlyRate: "$25/hour"
-  },
-  {
-    name: "Ms. Nneka Okonkwo",
-    subject: "English Literature",
-    experience: "8 years",
-    education: "MA in English",
-    rating: 4.8,
-    availability: "Evenings & Weekends",
     imageSrc: "https://images.unsplash.com/photo-1531123897727-8f129e1688ce?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
-    expertise: "Essay Writing, Critical Analysis",
-    hourlyRate: "$22/hour"
+    expertise: ["Advanced Calculus", "Mechanics", "Statistics"],
+    hourlyRate: "$25/hour",
+    students: 120,
+    shortBio: "Joining Kidato transformed my teaching career. I now connect with motivated students from across Africa, set my own schedule, and earn a reliable income doing what I love.",
+    languages: ["English", "Yoruba", "French"],
+    featured: true
   },
   {
     name: "Mr. Taiwo Makinde",
-    subject: "Computer Science",
+    subject: "Computer Science & Programming",
     experience: "6 years",
-    education: "BSc in Computer Science",
-    rating: 4.7,
+    education: "MSc in Computer Science, University of Cape Town",
+    rating: 4.8,
     availability: "Afternoons & Weekends",
     imageSrc: "https://images.unsplash.com/photo-1568602471122-7832951cc4c5?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
-    expertise: "Python, Web Development",
-    hourlyRate: "$24/hour"
+    expertise: ["Python", "Web Development", "Mobile App Development"],
+    hourlyRate: "$24/hour",
+    students: 85,
+    shortBio: "I specialize in teaching coding to beginners and advanced students. My passion is making complex programming concepts accessible to learners of all ages.",
+    languages: ["English", "Hausa"],
+    featured: true
+  },
+  {
+    name: "Ms. Nneka Okonkwo",
+    subject: "English Literature & Writing",
+    experience: "10 years",
+    education: "MA in English, University of Nairobi",
+    rating: 5.0,
+    availability: "Evenings & Weekends",
+    imageSrc: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+    expertise: ["Essay Writing", "Critical Analysis", "Creative Writing"],
+    hourlyRate: "$22/hour",
+    students: 145,
+    shortBio: "With a background in journalism and creative writing, I help students develop strong communication skills and a love for literature that will serve them throughout their lives.",
+    languages: ["English", "Igbo", "Swahili"],
+    featured: true
+  },
+  {
+    name: "Mr. Kofi Mensah",
+    subject: "Biology & Environmental Science",
+    experience: "12 years",
+    education: "PhD in Marine Biology, University of Ghana",
+    rating: 4.9,
+    availability: "Flexible Schedule",
+    imageSrc: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+    expertise: ["Ecology", "Genetics", "Environmental Conservation"],
+    hourlyRate: "$26/hour",
+    students: 160,
+    shortBio: "I bring science to life through practical experiments and real-world applications. My students learn to observe, question, and understand the natural world around them.",
+    languages: ["English", "Twi", "French"],
+    featured: true
   }
 ];
 
@@ -222,51 +251,79 @@ const Features = () => {
           </p>
         </div>
         
+        {/* Featured Teachers Section - Now positioned above the "Become a Kidato Teacher" button */}
         <div className="mt-16">
           <div className="text-center mb-10">
-            <h3 className="text-2xl font-bold text-gray-900">Educators Available for On-Demand Tuition</h3>
+            <h3 className="text-2xl font-bold text-gray-900">Featured Educators</h3>
             <p className="mt-3 text-gray-600 max-w-2xl mx-auto">
-              Book a session with our highly qualified educators who are ready to help your child excel
+              Meet our highly-rated teachers who are making a difference in students' lives across Africa
             </p>
           </div>
           
-          <div className="grid gap-8 sm:grid-cols-3 mb-10">
+          <div className="grid gap-8 grid-cols-1 md:grid-cols-2 lg:grid-cols-4 mb-10">
             {featuredTeachers.map((teacher, index) => (
-              <Card key={index} className="overflow-hidden hover:shadow-md transition-shadow duration-300">
+              <Card key={index} className="overflow-hidden hover:shadow-lg transition-shadow duration-300 border-gray-200">
+                <div className="relative">
+                  {teacher.featured && (
+                    <div className="absolute top-4 right-4 z-10">
+                      <Badge className="bg-kidato-orange text-white">Featured</Badge>
+                    </div>
+                  )}
+                  <div className="h-48 overflow-hidden bg-gradient-to-b from-gray-100 to-gray-200">
+                    <img 
+                      src={teacher.imageSrc} 
+                      alt={teacher.name} 
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                </div>
                 <CardContent className="p-5">
-                  <div className="flex flex-col items-center text-center mb-4">
-                    <Avatar className="h-20 w-20 mb-3">
-                      <AvatarImage src={teacher.imageSrc} alt={teacher.name} />
-                      <AvatarFallback>{teacher.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
-                    </Avatar>
-                    <h4 className="text-lg font-semibold text-gray-900">{teacher.name}</h4>
+                  <div className="flex flex-col mb-4">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h4 className="text-lg font-semibold text-gray-900">{teacher.name}</h4>
+                      <div className="flex items-center gap-1 bg-green-50 px-2 py-0.5 rounded-full">
+                        <Star className="h-3 w-3 text-yellow-500 fill-yellow-500" />
+                        <span className="text-xs font-medium">{teacher.rating}</span>
+                      </div>
+                    </div>
                     <p className="text-sm font-medium text-kidato-blue">{teacher.subject}</p>
                   </div>
                   
-                  <div className="space-y-2 mb-4">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Experience:</span>
-                      <span className="font-medium">{teacher.experience}</span>
+                  <div className="space-y-3 mb-4">
+                    <div className="flex items-start gap-2">
+                      <Briefcase className="h-4 w-4 text-gray-500 mt-0.5 shrink-0" />
+                      <span className="text-sm text-gray-700">{teacher.experience} teaching experience</span>
                     </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Education:</span>
-                      <span className="font-medium line-clamp-1">{teacher.education}</span>
+                    <div className="flex items-start gap-2">
+                      <GraduationCap className="h-4 w-4 text-gray-500 mt-0.5 shrink-0" />
+                      <span className="text-sm text-gray-700 line-clamp-1">{teacher.education}</span>
                     </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Expertise:</span>
-                      <span className="font-medium line-clamp-1">{teacher.expertise}</span>
+                    <div className="flex items-start gap-2">
+                      <Languages className="h-4 w-4 text-gray-500 mt-0.5 shrink-0" />
+                      <span className="text-sm text-gray-700">{teacher.languages.join(", ")}</span>
                     </div>
                   </div>
                   
-                  <div className="flex items-center justify-between pt-3 border-t border-gray-100">
-                    <div className="flex items-center gap-1">
-                      <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
-                      <span className="text-sm font-medium">{teacher.rating}</span>
+                  <div className="mb-4">
+                    <p className="text-sm text-gray-600 mb-2">Expertise:</p>
+                    <div className="flex flex-wrap gap-2">
+                      {teacher.expertise.map((skill, i) => (
+                        <span key={i} className="text-xs bg-kidato-light-blue text-kidato-blue px-2 py-1 rounded-full">
+                          {skill}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center justify-between pt-3 border-t border-gray-100 mb-4">
+                    <div className="flex items-center gap-2">
+                      <Users className="h-4 w-4 text-gray-500" />
+                      <span className="text-sm text-gray-700">{teacher.students}+ students</span>
                     </div>
                     <div className="text-sm font-semibold text-gray-900">{teacher.hourlyRate}</div>
                   </div>
                   
-                  <Button className="w-full mt-4 bg-kidato-orange hover:bg-orange-600 text-white">
+                  <Button className="w-full bg-kidato-blue hover:bg-kidato-dark-blue text-white">
                     Book Session
                   </Button>
                 </CardContent>
@@ -275,7 +332,7 @@ const Features = () => {
           </div>
           
           <div className="text-center mt-8">
-            <Button className="bg-kidato-blue hover:bg-kidato-dark-blue text-white px-8">
+            <Button className="bg-kidato-orange hover:bg-orange-600 text-white px-8 py-6 text-lg">
               Become a Kidato Teacher
             </Button>
           </div>
