@@ -157,6 +157,32 @@ const getMockTeacher = (teacherUrlName: string) => {
           rating: 4.7,
           imageSrc: "https://images.unsplash.com/photo-1636466497217-26a8cbeaf0aa?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80"
         }
+      ],
+      reviews: [
+        {
+          id: "rev1",
+          reviewer: "Jane Muthoni",
+          reviewerImage: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?ixlib=rb-1.2.1&auto=format&fit=crop&w=256&q=80",
+          rating: 5,
+          comment: "Mr. Mwangi is an exceptional teacher! My daughter has improved tremendously in her science grades since taking his classes.",
+          date: "March 15, 2023"
+        },
+        {
+          id: "rev2",
+          reviewer: "John Kamau",
+          reviewerImage: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?ixlib=rb-1.2.1&auto=format&fit=crop&w=256&q=80",
+          rating: 4,
+          comment: "Very knowledgeable and patient teacher. The interactive experiments really helped my son understand complex concepts.",
+          date: "February 2, 2023"
+        },
+        {
+          id: "rev3",
+          reviewer: "Sarah Wanjiku",
+          reviewerImage: "https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?ixlib=rb-1.2.1&auto=format&fit=crop&w=256&q=80",
+          rating: 5,
+          comment: "Mr. Daniel makes learning science fun! His practical approach to teaching is refreshing and effective.",
+          date: "December 10, 2022"
+        }
       ]
     };
   }
@@ -177,7 +203,8 @@ const getMockTeacher = (teacherUrlName: string) => {
     strategies: [],
     languages: [],
     certifications: [],
-    classes: []
+    classes: [],
+    reviews: []
   };
 };
 

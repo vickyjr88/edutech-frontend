@@ -23,6 +23,12 @@ interface TeacherProfileCardProps {
     rating?: number;
     bio?: string;
     videoProfileUrl?: string;
+    education?: Array<{
+      id: string;
+      institution: string;
+      degree: string;
+      dates: string;
+    }>;
   };
 }
 
@@ -85,6 +91,17 @@ const TeacherProfileCard = ({ teacher }: TeacherProfileCardProps) => {
           
           {teacher.bio && (
             <p className="text-gray-700 mb-4">{teacher.bio}</p>
+          )}
+          
+          {teacher.education && teacher.education.length > 0 && (
+            <div className="mb-4">
+              <h4 className="text-sm font-medium text-gray-700 mb-1">Education</h4>
+              <ul className="text-sm text-gray-600">
+                {teacher.education.slice(0, 1).map(edu => (
+                  <li key={edu.id}>{edu.degree} - {edu.institution}</li>
+                ))}
+              </ul>
+            </div>
           )}
           
           <div className="flex flex-wrap gap-3">
