@@ -1,4 +1,5 @@
-import { Book, Award, Users, Star, MessageSquare, Video, Globe, Briefcase, GraduationCap, Laptop, School } from "lucide-react";
+
+import { Book, Award, Users, Star, MessageSquare, Video, Globe, Briefcase, GraduationCap, Laptop, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { StrategyItem } from "../teacher/professional-profile";
@@ -104,12 +105,16 @@ export default function TeacherDetails({ teacher }: TeacherDetailsProps) {
       <div className="bg-white rounded-lg shadow-md overflow-hidden mb-10">
         <div className="bg-kidato-blue/10 p-8">
           <div className="flex flex-col md:flex-row gap-8 items-center md:items-start">
-            <div className="w-40 h-40 rounded-full border-4 border-white shadow-lg overflow-hidden bg-white">
+            <div className="w-40 h-40 rounded-full border-4 border-white shadow-lg overflow-hidden bg-white relative">
               <img 
                 src={teacher.imageSrc} 
                 alt={teacher.name} 
                 className="w-full h-full object-cover"
               />
+              {/* Verification badge */}
+              <div className="absolute bottom-0 right-0 bg-kidato-blue text-white p-1 rounded-full">
+                <Check className="h-4 w-4" />
+              </div>
             </div>
 
             <div className="flex-1 text-center md:text-left">
@@ -118,7 +123,6 @@ export default function TeacherDetails({ teacher }: TeacherDetailsProps) {
                 <p className="text-lg text-kidato-blue font-medium">{teacher.position}</p>
                 {teacher.school && (
                   <div className="flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800">
-                    <School className="h-3.5 w-3.5" />
                     <span>{teacher.school}</span>
                     {teacher.schoolStatus && (
                       <span className={`ml-1 text-xs px-1.5 py-0.5 rounded-full ${
