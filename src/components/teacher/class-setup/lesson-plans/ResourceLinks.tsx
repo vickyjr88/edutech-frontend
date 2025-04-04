@@ -11,7 +11,7 @@ export interface ResourceLink {
   url: string;
 }
 
-interface ResourceLinksProps {
+export interface ResourceLinksProps {
   lessonId: string;
   resourceLinks: ResourceLink[];
   onAddResourceLink: (lessonId: string, title: string, url: string) => void;
@@ -50,7 +50,6 @@ export const ResourceLinks = ({
               value={newLinkTitle}
               onChange={(e) => setNewLinkTitle(e.target.value)}
               placeholder="Resource title or description"
-              icon={<Link className="h-4 w-4" />}
             />
           </div>
           <div className="flex-1">
@@ -58,7 +57,6 @@ export const ResourceLinks = ({
               value={newLinkUrl}
               onChange={(e) => setNewLinkUrl(e.target.value)}
               placeholder="https://example.com/resource"
-              icon={<ExternalLink className="h-4 w-4" />}
             />
           </div>
           <Button 

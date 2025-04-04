@@ -26,8 +26,7 @@ export const classSchema = z.object({
     title: z.string().optional(),
     description: z.string().optional(),
     duration: z.string().optional(),
-    resourceUrl: z.string().optional(),
-    resourceFiles: z.array(z.any()).optional(),
+    resources: z.string().optional(), // Store as JSON string
   })).default([]),
 });
 

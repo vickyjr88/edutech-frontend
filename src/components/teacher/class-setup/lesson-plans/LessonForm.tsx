@@ -12,8 +12,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { FileUploads } from "./FileUploads";
-import { ResourceLinks, ResourceLink } from "./ResourceLinks";
 
 interface LessonFormProps {
   lesson: {
@@ -22,15 +20,10 @@ interface LessonFormProps {
     description?: string;
     duration?: string;
   };
-  lessonIndex: number;
-  files: File[];
-  resourceLinks: ResourceLink[];
-  onLessonUpdate: (id: string, field: string, value: string) => void;
-  onLessonRemove: (id: string) => void;
-  onFilesSelected: (lessonId: string, files: File[]) => void;
-  onFileRemove: (lessonId: string, fileIndex: number) => void;
-  onAddResourceLink: (lessonId: string, title: string, url: string) => void;
-  onRemoveResourceLink: (lessonId: string, linkId: string) => void;
+  onUpdate: (field: string, value: string) => void;
+  onRemove: () => void;
+  isRemovable: boolean;
+  lessonNumber: number;
 }
 
 const durationOptions = [
@@ -51,15 +44,10 @@ const durationOptions = [
 
 export const LessonForm = ({
   lesson,
-  lessonIndex,
-  files,
-  resourceLinks,
-  onLessonUpdate,
-  onLessonRemove,
-  onFilesSelected,
-  onFileRemove,
-  onAddResourceLink,
-  onRemoveResourceLink
+  onUpdate,
+  onRemove,
+  isRemovable,
+  lessonNumber
 }: LessonFormProps) => {
   const [customDuration, setCustomDuration] = useState<string>(
     lesson.duration && !durationOptions.some(option => option.value === lesson.duration) 
@@ -73,28 +61,30 @@ export const LessonForm = ({
       setCustomDuration(customDuration || "");
     } else {
       // For predefined options, update the lesson plan directly
-      onLessonUpdate(lesson.id, "duration", value);
+      onUpdate("duration", value);
     }
   };
 
   const handleCustomDurationChange = (value: string) => {
     setCustomDuration(value);
-    onLessonUpdate(lesson.id, "duration", value);
+    onUpdate("duration", value);
   };
 
   return (
     <div className="border rounded-md p-4 space-y-4">
       <div className="flex justify-between items-center">
-        <h3 className="text-sm font-medium">Lesson {lessonIndex + 1}</h3>
-        <Button 
-          type="button" 
-          variant="ghost" 
-          size="sm" 
-          onClick={() => onLessonRemove(lesson.id)}
-          className="text-red-600 hover:text-red-700 hover:bg-red-50"
-        >
-          <Trash2 className="h-4 w-4" />
-        </Button>
+        <h3 className="text-sm font-medium">Lesson {lessonNumber}</h3>
+        {isRemovable && (
+          <Button 
+            type="button" 
+            variant="ghost" 
+            size="sm" 
+            onClick={onRemove}
+            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        )}
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
@@ -103,7 +93,7 @@ export const LessonForm = ({
             id={`lesson-title-${lesson.id}`}
             placeholder="Enter a descriptive lesson title"
             value={lesson.title || ""}
-            onChange={(e) => onLessonUpdate(lesson.id, "title", e.target.value)}
+            onChange={(e) => onUpdate("title", e.target.value)}
           />
         </div>
         <div className="space-y-2">
@@ -152,25 +142,9 @@ export const LessonForm = ({
           placeholder="Describe what students will learn and do in this lesson"
           className="resize-none"
           value={lesson.description || ""}
-          onChange={(e) => onLessonUpdate(lesson.id, "description", e.target.value)}
+          onChange={(e) => onUpdate("description", e.target.value)}
         />
       </div>
-      
-      {/* Resource Files Upload */}
-      <FileUploads
-        lessonId={lesson.id}
-        files={files}
-        onFilesSelected={onFilesSelected}
-        onFileRemove={onFileRemove}
-      />
-      
-      {/* Resource URLs */}
-      <ResourceLinks
-        lessonId={lesson.id}
-        resourceLinks={resourceLinks}
-        onAddResourceLink={onAddResourceLink}
-        onRemoveResourceLink={onRemoveResourceLink}
-      />
     </div>
   );
 };

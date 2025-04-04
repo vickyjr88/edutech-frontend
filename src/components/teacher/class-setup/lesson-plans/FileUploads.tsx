@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { FormFileUpload } from "@/components/ui/form";
 import { FileImage, FileVideo, FileText, Files, Trash2 } from "lucide-react";
 
-interface FileUploadsProps {
+export interface FileUploadsProps {
   lessonId: string;
   files: File[];
   onFilesSelected: (lessonId: string, files: File[]) => void;

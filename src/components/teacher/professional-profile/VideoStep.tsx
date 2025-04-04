@@ -8,13 +8,16 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Video, Link, FileText } from "lucide-react";
 import ResourceUploader from "../ResourceUploader";
 
-type VideoStepProps = {
-  videoUrl: string;
-  setVideoUrl: (url: string) => void;
+export type VideoStepProps = {
+  videoUrls: string[];
+  setVideoUrls: (urls: string[]) => void;
+  photoUrls: string[];
+  setPhotoUrls: (urls: string[]) => void;
 };
 
-const VideoStep = ({ videoUrl, setVideoUrl }: VideoStepProps) => {
+const VideoStep = ({ videoUrls, setVideoUrls, photoUrls, setPhotoUrls }: VideoStepProps) => {
   const [activeTab, setActiveTab] = useState("video");
+  const [newVideoUrl, setNewVideoUrl] = useState("");
   const [resources, setResources] = useState({
     files: [],
     links: []
@@ -25,13 +28,26 @@ const VideoStep = ({ videoUrl, setVideoUrl }: VideoStepProps) => {
     // You can also add logic here to save these to your form state if needed
   };
 
+  const handleAddVideo = () => {
+    if (newVideoUrl.trim()) {
+      setVideoUrls([...videoUrls, newVideoUrl.trim()]);
+      setNewVideoUrl("");
+    }
+  };
+
+  const handleRemoveVideo = (index: number) => {
+    const updatedUrls = [...videoUrls];
+    updatedUrls.splice(index, 1);
+    setVideoUrls(updatedUrls);
+  };
+
   return (
     <div className="space-y-4">
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="video" className="flex items-center">
             <Video className="mr-2 h-4 w-4" />
-            Introduction Video
+            Introduction Videos
           </TabsTrigger>
           <TabsTrigger value="documents" className="flex items-center">
             <FileText className="mr-2 h-4 w-4" />
@@ -42,11 +58,11 @@ const VideoStep = ({ videoUrl, setVideoUrl }: VideoStepProps) => {
         <TabsContent value="video" className="pt-4">
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Introduction Video</CardTitle>
+              <CardTitle className="text-base">Introduction Videos</CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-sm text-gray-500 mb-4">
-                Add a YouTube or Vimeo video URL where you introduce yourself to potential students.
+                Add YouTube or Vimeo video URLs where you introduce yourself to potential students.
               </p>
               <div className="space-y-4">
                 <div>
@@ -58,12 +74,48 @@ const VideoStep = ({ videoUrl, setVideoUrl }: VideoStepProps) => {
                     <Input
                       id="video-url"
                       placeholder="https://www.youtube.com/watch?v=..."
-                      value={videoUrl}
-                      onChange={(e) => setVideoUrl(e.target.value)}
+                      value={newVideoUrl}
+                      onChange={(e) => setNewVideoUrl(e.target.value)}
                       className="rounded-l-none"
                     />
+                    <Button 
+                      onClick={handleAddVideo} 
+                      className="ml-2"
+                      disabled={!newVideoUrl.trim()}
+                    >
+                      Add
+                    </Button>
                   </div>
                 </div>
+                
+                {videoUrls.length > 0 && (
+                  <div className="mt-4 space-y-2">
+                    <Label>Added Videos ({videoUrls.length})</Label>
+                    <div className="space-y-2">
+                      {videoUrls.map((url, index) => (
+                        <div key={index} className="flex items-center justify-between p-2 bg-gray-50 border rounded-md">
+                          <a 
+                            href={url} 
+                            target="_blank" 
+                            rel="noopener noreferrer" 
+                            className="text-sm text-blue-600 hover:underline truncate"
+                          >
+                            {url}
+                          </a>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={() => handleRemoveVideo(index)}
+                            className="text-red-500 hover:text-red-700"
+                          >
+                            Remove
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
                 <div className="text-xs text-gray-500">
                   <p>Tips for a great introduction video:</p>
                   <ul className="list-disc pl-5 space-y-1 mt-2">

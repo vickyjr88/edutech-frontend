@@ -9,7 +9,7 @@ import { FileText, Plus, AlertCircle } from "lucide-react";
 import { EmptyState } from "./lesson-plans/EmptyState";
 import { LessonForm } from "./lesson-plans/LessonForm";
 import { FileUploads } from "./lesson-plans/FileUploads";
-import { ResourceLinks } from "./lesson-plans/ResourceLinks";
+import { ResourceLinks, ResourceLink } from "./lesson-plans/ResourceLinks";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface LessonPlansTabProps {
@@ -48,7 +48,7 @@ const LessonPlansTab = ({
           </CardDescription>
         </CardHeader>
         
-        <Alert variant="default">
+        <Alert>
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>Minimum lesson plans required</AlertTitle>
           <AlertDescription>
@@ -57,7 +57,7 @@ const LessonPlansTab = ({
         </Alert>
 
         {lessonPlans.length === 0 ? (
-          <EmptyState onCreateFirst={appendLessonPlan} />
+          <EmptyState onAddLesson={appendLessonPlan} />
         ) : (
           <div className="space-y-6">
             <Accordion type="multiple" defaultValue={[lessonPlans[0]?.id]}>
@@ -92,13 +92,29 @@ const LessonPlansTab = ({
                             <FileUploads
                               lessonId={lesson.id}
                               files={lessonFileUploads[lesson.id] || []}
-                              onFileChange={(e) => handleLessonFileChange(lesson.id, e)}
-                              onRemoveFile={(fileIndex) => removeLessonFile(lesson.id, fileIndex)}
+                              onFilesSelected={(lessonId, files) => {
+                                // Handle files selected - this is a wrapper around handleLessonFileChange
+                                const mockEvent = { 
+                                  target: { files: files } 
+                                } as unknown as React.ChangeEvent<HTMLInputElement>;
+                                handleLessonFileChange(lessonId, mockEvent);
+                              }}
+                              onFileRemove={removeLessonFile}
                             />
+                            
                             <ResourceLinks
                               lessonId={lesson.id}
-                              resources={lesson.resources || []}
-                              onUpdate={(resources) => updateLessonPlan(lesson.id, "resources", JSON.stringify(resources))}
+                              resourceLinks={lesson.resources ? JSON.parse(lesson.resources) : []}
+                              onAddResourceLink={(lessonId, title, url) => {
+                                const resources = lesson.resources ? JSON.parse(lesson.resources) : [];
+                                const newResource = { id: Date.now().toString(), title, url };
+                                updateLessonPlan(lessonId, "resources", JSON.stringify([...resources, newResource]));
+                              }}
+                              onRemoveResourceLink={(lessonId, linkId) => {
+                                const resources = lesson.resources ? JSON.parse(lesson.resources) : [];
+                                const updatedResources = resources.filter((res: ResourceLink) => res.id !== linkId);
+                                updateLessonPlan(lessonId, "resources", JSON.stringify(updatedResources));
+                              }}
                             />
                           </div>
                         </div>

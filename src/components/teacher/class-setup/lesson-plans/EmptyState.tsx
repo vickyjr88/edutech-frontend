@@ -3,7 +3,7 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { BookOpen, PlusCircle } from "lucide-react";
 
-interface EmptyStateProps {
+export interface EmptyStateProps {
   onAddLesson: () => void;
 }
 
