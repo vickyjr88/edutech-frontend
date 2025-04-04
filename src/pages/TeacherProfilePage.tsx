@@ -192,7 +192,7 @@ const getMockTeacher = (teacherUrlName: string) => {
     id: "default",
     name: "Teacher",
     imageSrc: "https://images.unsplash.com/photo-1568602471122-7832951cc4c5?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
-    bio: "This teacher is passionate about education and helping students succeed.",
+    bio: "This teacher is passionate about education and helping students succeed. With a focus on personalized learning approaches and modern teaching techniques, they aim to inspire and empower students to reach their full potential.",
     position: "Teacher",
     rating: 4.5,
     ratingCount: 50,
@@ -217,13 +217,189 @@ const getMockTeacher = (teacherUrlName: string) => {
         dates: "2018"
       }
     ],
-    experience: [],
-    methodologies: [],
-    strategies: [],
-    languages: [],
-    certifications: [],
-    classes: [],
-    reviews: []
+    experience: [
+      {
+        id: "exp1",
+        position: "Lead Teacher",
+        institution: "Central High School",
+        dates: "2019 - Present",
+        description: "Developing curriculum and leading classroom activities for grades 9-12 with a focus on interactive learning experiences."
+      },
+      {
+        id: "exp2",
+        position: "Assistant Teacher",
+        institution: "Woodland Elementary",
+        dates: "2017 - 2019",
+        description: "Supported lead teachers in classroom management and provided individualized instruction to students."
+      }
+    ],
+    methodologies: [
+      {
+        id: "meth1",
+        methodology: "Differentiated Instruction",
+        description: "Tailoring instruction to meet individual needs of diverse learners",
+        is_certified: true
+      },
+      {
+        id: "meth2",
+        methodology: "Problem-Based Learning",
+        description: "Engaging students with authentic problems that require critical thinking",
+        is_certified: false
+      },
+      {
+        id: "meth3",
+        methodology: "Flipped Classroom",
+        description: "Inverting traditional teaching methods to enhance engagement",
+        is_certified: true
+      }
+    ],
+    strategies: [
+      {
+        id: "str1",
+        strategy: "Collaborative Learning",
+        description: "Facilitating group activities that develop teamwork skills",
+        is_certified: true
+      },
+      {
+        id: "str2",
+        strategy: "Visual Learning",
+        description: "Using diagrams, charts, and videos to enhance comprehension",
+        is_certified: true
+      },
+      {
+        id: "str3",
+        strategy: "Formative Assessment",
+        description: "Ongoing assessment to guide instructional decisions",
+        is_certified: false
+      }
+    ],
+    languages: [
+      {
+        id: "lang1",
+        language: "English",
+        description: "Native proficiency",
+        isCertified: true
+      },
+      {
+        id: "lang2",
+        language: "Spanish",
+        description: "Intermediate level",
+        isCertified: true
+      },
+      {
+        id: "lang3",
+        language: "German",
+        description: "Basic knowledge",
+        isCertified: false
+      }
+    ],
+    certifications: [
+      {
+        id: "cert1",
+        name: "Certified Education Professional",
+        issuer: "National Education Board",
+        date: "2019",
+        isVerified: true
+      },
+      {
+        id: "cert2",
+        name: "Technology Integration Specialist",
+        issuer: "EdTech Institute",
+        date: "2020",
+        isVerified: true
+      },
+      {
+        id: "cert3",
+        name: "Student Mentorship Certification",
+        issuer: "Mentoring Alliance",
+        date: "2021",
+        isVerified: false
+      }
+    ],
+    classes: [
+      {
+        id: "class1",
+        title: "Introduction to World History",
+        subject: "History",
+        level: "Grade 9-10",
+        rating: 4.6,
+        imageSrc: "https://images.unsplash.com/photo-1447069387593-a5de0862481e?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80"
+      },
+      {
+        id: "class2",
+        title: "Critical Thinking Skills",
+        subject: "Cross-disciplinary",
+        level: "All Grades",
+        rating: 4.8,
+        imageSrc: "https://images.unsplash.com/photo-1610484826967-09c5720778c7?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80"
+      },
+      {
+        id: "class3",
+        title: "Study Skills Workshop",
+        subject: "Academic Skills",
+        level: "Grade 7-12",
+        rating: 4.5,
+        imageSrc: "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80"
+      }
+    ],
+    reviews: [
+      {
+        id: "rev1",
+        reviewer: "Parent of Student",
+        reviewerImage: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-1.2.1&auto=format&fit=crop&w=256&q=80",
+        rating: 5,
+        comment: "Our child has shown significant improvement in their study habits and confidence. The teacher is patient, knowledgeable, and genuinely cares about student success.",
+        date: "April 15, 2023"
+      },
+      {
+        id: "rev2",
+        reviewer: "High School Student",
+        reviewerImage: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-1.2.1&auto=format&fit=crop&w=256&q=80",
+        rating: 4,
+        comment: "The classes are engaging and interactive. I've learned a lot of useful techniques that have helped me with my other subjects as well.",
+        date: "March 3, 2023"
+      },
+      {
+        id: "rev3",
+        reviewer: "School Administrator",
+        reviewerImage: "https://images.unsplash.com/photo-1580489944761-15a19d654956?ixlib=rb-1.2.1&auto=format&fit=crop&w=256&q=80",
+        rating: 5,
+        comment: "An exceptional educator who consistently goes above and beyond for their students. Their innovative teaching methods have been an asset to our school.",
+        date: "January 22, 2023"
+      }
+    ],
+    technicalSkills: [
+      {
+        id: "tech1",
+        skill: "Learning Management Systems",
+        description: "Proficient with Canvas, Moodle, and Google Classroom",
+        level: "Advanced"
+      },
+      {
+        id: "tech2",
+        skill: "Educational Software",
+        description: "Experience with Kahoot, Quizlet, and Nearpod for interactive lessons",
+        level: "Advanced"
+      },
+      {
+        id: "tech3",
+        skill: "Video Production",
+        description: "Creation of educational videos using Camtasia and OBS Studio",
+        level: "Intermediate"
+      },
+      {
+        id: "tech4",
+        skill: "Microsoft Office Suite",
+        description: "Advanced use of Word, PowerPoint, and Excel for classroom materials",
+        level: "Advanced"
+      },
+      {
+        id: "tech5",
+        skill: "Digital Assessment Tools",
+        description: "Implementing formative and summative assessments using digital platforms",
+        level: "Intermediate"
+      }
+    ]
   };
 };
 

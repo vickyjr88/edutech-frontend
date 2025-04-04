@@ -1,5 +1,4 @@
-
-import { Book, Award, Users, Star, MessageSquare, Video, Globe, Briefcase, GraduationCap } from "lucide-react";
+import { Book, Award, Users, Star, MessageSquare, Video, Globe, Briefcase, GraduationCap, Laptop } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { StrategyItem } from "../teacher/professional-profile";
@@ -64,6 +63,12 @@ interface TeacherDetailsProps {
       rating: number;
       comment: string;
       date: string;
+    }>;
+    technicalSkills?: Array<{
+      id: string;
+      skill: string;
+      description?: string;
+      level?: string;
     }>;
   }
 }
@@ -337,7 +342,7 @@ export default function TeacherDetails({ teacher }: TeacherDetailsProps) {
           </div>
 
           {/* Additional Skills Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
             {/* Methodologies */}
             <Card>
               <CardHeader className="pb-3">
@@ -450,6 +455,53 @@ export default function TeacherDetails({ teacher }: TeacherDetailsProps) {
               </CardContent>
             </Card>
           </div>
+          
+          {/* Technical Skills Section */}
+          {teacher.technicalSkills && teacher.technicalSkills.length > 0 && (
+            <div className="mb-10">
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">Technical Skills</h2>
+              <Card>
+                <CardHeader className="pb-3">
+                  <div className="flex items-center gap-2">
+                    <Laptop className="h-5 w-5 text-kidato-blue" />
+                    <CardTitle className="text-xl">Digital & Technical Proficiency</CardTitle>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <ul className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    {teacher.technicalSkills.map((skill) => (
+                      <li key={skill.id} className="flex items-start bg-gray-50 p-4 rounded-lg">
+                        <div className="mt-1">
+                          <span className="bg-kidato-blue/10 text-kidato-blue p-1.5 rounded-full flex items-center justify-center">
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                          </span>
+                        </div>
+                        <div className="ml-4">
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium text-gray-900">{skill.skill}</span>
+                            {skill.level && (
+                              <span className={`text-xs px-2 py-1 rounded-full ${
+                                skill.level === 'Advanced' ? 'bg-green-50 text-green-700' : 
+                                skill.level === 'Intermediate' ? 'bg-blue-50 text-blue-700' :
+                                'bg-yellow-50 text-yellow-700'
+                              }`}>
+                                {skill.level}
+                              </span>
+                            )}
+                          </div>
+                          {skill.description && (
+                            <p className="text-sm text-gray-600 mt-1">{skill.description}</p>
+                          )}
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </CardContent>
+              </Card>
+            </div>
+          )}
         </>
       )}
 
