@@ -1,3 +1,4 @@
+
 import { Book, Award, Users, Star, MessageSquare, Video, Globe, Briefcase, GraduationCap, Laptop } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -268,13 +269,22 @@ export default function TeacherDetails({ teacher }: TeacherDetailsProps) {
               </CardHeader>
               <CardContent>
                 {teacher.education.length > 0 ? (
-                  teacher.education.map((edu) => (
-                    <div key={edu.id} className="mb-5 last:mb-0">
-                      <h4 className="font-medium text-gray-900">{edu.degree}</h4>
-                      <p className="text-gray-600">{edu.institution}</p>
-                      <p className="text-sm text-gray-500">{edu.dates}</p>
-                    </div>
-                  ))
+                  <ul className="space-y-3">
+                    {teacher.education.map((edu) => (
+                      <li key={edu.id} className="flex items-start">
+                        <span className="bg-kidato-blue/10 text-kidato-blue p-1 rounded mr-3">
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                        </span>
+                        <div>
+                          <span className="font-medium text-gray-900">{edu.degree}</span>
+                          <p className="text-sm text-gray-600">{edu.institution}</p>
+                          <p className="text-xs text-gray-500">{edu.dates}</p>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
                 ) : (
                   <p className="text-gray-500 italic">No educational information available</p>
                 )}
@@ -291,16 +301,25 @@ export default function TeacherDetails({ teacher }: TeacherDetailsProps) {
               </CardHeader>
               <CardContent>
                 {teacher.experience.length > 0 ? (
-                  teacher.experience.map((exp) => (
-                    <div key={exp.id} className="mb-5 last:mb-0">
-                      <h4 className="font-medium text-gray-900">{exp.position}</h4>
-                      <p className="text-gray-600">{exp.institution}</p>
-                      <p className="text-sm text-gray-500">{exp.dates}</p>
-                      {exp.description && (
-                        <p className="text-sm text-gray-700 mt-1">{exp.description}</p>
-                      )}
-                    </div>
-                  ))
+                  <ul className="space-y-3">
+                    {teacher.experience.map((exp) => (
+                      <li key={exp.id} className="flex items-start">
+                        <span className="bg-kidato-blue/10 text-kidato-blue p-1 rounded mr-3">
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                        </span>
+                        <div>
+                          <span className="font-medium text-gray-900">{exp.position}</span>
+                          <p className="text-sm text-gray-600">{exp.institution}</p>
+                          <p className="text-xs text-gray-500">{exp.dates}</p>
+                          {exp.description && (
+                            <p className="text-sm text-gray-700 mt-1">{exp.description}</p>
+                          )}
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
                 ) : (
                   <p className="text-gray-500 italic">No experience information available</p>
                 )}
@@ -317,23 +336,30 @@ export default function TeacherDetails({ teacher }: TeacherDetailsProps) {
               </CardHeader>
               <CardContent>
                 {teacher.certifications.length > 0 ? (
-                  teacher.certifications.map((cert) => (
-                    <div key={cert.id} className="mb-5 last:mb-0">
-                      <div className="flex items-start justify-between">
-                        <h4 className="font-medium text-gray-900">{cert.name}</h4>
-                        {cert.isVerified && (
-                          <span className="inline-flex items-center bg-green-50 text-green-700 text-xs px-2 py-0.5 rounded-full">
-                            <svg className="w-3 h-3 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                            </svg>
-                            Verified
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-gray-600">{cert.issuer}</p>
-                      <p className="text-sm text-gray-500">{cert.date}</p>
-                    </div>
-                  ))
+                  <ul className="space-y-3">
+                    {teacher.certifications.map((cert) => (
+                      <li key={cert.id} className="flex items-start">
+                        <span className="bg-kidato-blue/10 text-kidato-blue p-1 rounded mr-3">
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                        </span>
+                        <div>
+                          <span className="font-medium text-gray-900">{cert.name}</span>
+                          {cert.isVerified && (
+                            <span className="ml-2 inline-flex items-center bg-green-50 text-green-700 text-xs px-2 py-0.5 rounded-full">
+                              <svg className="w-3 h-3 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                              </svg>
+                              Verified
+                            </span>
+                          )}
+                          <p className="text-sm text-gray-600">{cert.issuer}</p>
+                          <p className="text-xs text-gray-500">{cert.date}</p>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
                 ) : (
                   <p className="text-gray-500 italic">No certifications available</p>
                 )}
