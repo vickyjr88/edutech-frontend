@@ -21,28 +21,28 @@ const Navbar = () => {
             </Link>
             <div className="hidden md:ml-6 md:flex md:space-x-8">
               <Link 
-                to="/courses" 
+                to="/for-teachers" 
                 className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-kidato-blue"
               >
-                Courses
+                For Teachers
               </Link>
               <Link 
-                to="/tutors" 
+                to="/for-parents" 
                 className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-kidato-blue"
               >
-                Tutors
+                For Parents
+              </Link>
+              <Link 
+                to="/for-students" 
+                className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-kidato-blue"
+              >
+                For Students
               </Link>
               <Link 
                 to="/how-it-works" 
                 className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-kidato-blue"
               >
                 How It Works
-              </Link>
-              <Link 
-                to="/about" 
-                className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-kidato-blue"
-              >
-                About
               </Link>
             </div>
           </div>
@@ -74,18 +74,25 @@ const Navbar = () => {
         <div className="md:hidden bg-white shadow-lg">
           <div className="pt-2 pb-3 space-y-1">
             <Link 
-              to="/courses" 
+              to="/for-teachers" 
               className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-kidato-blue hover:bg-gray-50"
               onClick={() => setIsMenuOpen(false)}
             >
-              Courses
+              For Teachers
             </Link>
             <Link 
-              to="/tutors" 
+              to="/for-parents" 
               className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-kidato-blue hover:bg-gray-50"
               onClick={() => setIsMenuOpen(false)}
             >
-              Tutors
+              For Parents
+            </Link>
+            <Link 
+              to="/for-students" 
+              className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-kidato-blue hover:bg-gray-50"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              For Students
             </Link>
             <Link 
               to="/how-it-works" 
@@ -93,13 +100,6 @@ const Navbar = () => {
               onClick={() => setIsMenuOpen(false)}
             >
               How It Works
-            </Link>
-            <Link 
-              to="/about" 
-              className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-kidato-blue hover:bg-gray-50"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              About
             </Link>
             <div className="flex flex-col px-3 py-2 space-y-2">
               <Link 

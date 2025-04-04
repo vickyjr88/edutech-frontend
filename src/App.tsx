@@ -13,6 +13,10 @@ import TeacherDashboard from "./pages/TeacherDashboard";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import AuthCallback from "./pages/AuthCallback";
+import ForTeachers from "./pages/ForTeachers";
+import ForParents from "./pages/ForParents";
+import ForStudents from "./pages/ForStudents";
+import HowItWorks from "./pages/HowItWorks";
 
 // Create a client
 const queryClient = new QueryClient();
@@ -28,6 +32,10 @@ const App = () => {
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
               <Route path="/auth/callback" element={<AuthCallback />} />
+              <Route path="/for-teachers" element={<ForTeachers />} />
+              <Route path="/for-parents" element={<ForParents />} />
+              <Route path="/for-students" element={<ForStudents />} />
+              <Route path="/how-it-works" element={<HowItWorks />} />
               <Route path="/dashboard" element={
                 <ProtectedRoute>
                   <Dashboard />
