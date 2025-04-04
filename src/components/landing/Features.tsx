@@ -1,3 +1,4 @@
+
 import { Book, Users, Award, Globe, Shield, Clock, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
@@ -227,14 +228,14 @@ const Features = () => {
         </div>
         
         <div className="mt-16">
-          <div className="flex items-center justify-between mb-8">
-            <h3 className="text-2xl font-bold text-gray-900">Educators Available for On-Demand Tuition</h3>
-            <Button className="bg-kidato-blue hover:bg-kidato-dark-blue text-white">
-              View All Teachers
-            </Button>
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-gray-900 md:text-4xl">Why Educators Choose Kidato</h2>
+            <p className="mt-4 text-xl text-gray-600 max-w-3xl mx-auto">
+              Join our community of exceptional educators making a difference in students' lives
+            </p>
           </div>
           
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4 mb-12">
             {availableTeachers.map((teacher, index) => (
               <Card key={index} className="overflow-hidden hover:shadow-md transition-shadow duration-300">
                 <CardContent className="p-5">
@@ -283,7 +284,7 @@ const Features = () => {
           </div>
         </div>
         
-        <div className="mt-16 text-center">
+        <div className="mt-8 text-center">
           <p className="text-xl text-gray-700 max-w-3xl mx-auto italic">
             "Our mission is to empower your child with quality education that builds confidence, 
             sparks curiosity, and prepares them for future success - all while giving you peace of mind."
@@ -295,3 +296,4 @@ const Features = () => {
 };
 
 export default Features;
+
