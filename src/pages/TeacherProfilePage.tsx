@@ -8,8 +8,13 @@ import { MethodologyItem, StrategyItem, LanguageItem } from "@/components/teache
 
 // Mock data for now - in a real app this would come from an API
 const getMockTeacher = (teacherUrlName: string) => {
+  // Clean the teacher URL name to handle variations with dots or dashes
+  const normalizedTeacherName = teacherUrlName.replace(/\./g, '-').toLowerCase();
+  
+  console.log("Looking for teacher with normalized name:", normalizedTeacherName);
+  
   // For demo purposes, returning mock data for "mr-daniel-mwangi"
-  if (teacherUrlName === "mr-daniel-mwangi") {
+  if (normalizedTeacherName === "mr-daniel-mwangi") {
     return {
       id: "1",
       name: "Mr. Daniel Mwangi",
@@ -531,6 +536,7 @@ const TeacherProfilePage = () => {
   useEffect(() => {
     // In a real app, this would fetch data from an API
     // For now, we're using mock data
+    console.log("Teacher ID from URL:", teacherId);
     const teacherData = getMockTeacher(teacherId || "");
     setTeacher(teacherData);
     setLoading(false);
