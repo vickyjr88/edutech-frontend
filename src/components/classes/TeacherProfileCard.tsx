@@ -1,5 +1,5 @@
 
-import { User, MessageSquare, Star, Video } from "lucide-react";
+import { User, MessageSquare, Star, Video, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -42,9 +42,12 @@ const TeacherProfileCard = ({ teacher }: TeacherProfileCardProps) => {
   };
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-6 mb-8">
+    <div className="bg-white rounded-lg border border-gray-200 p-6 mb-8 hover:shadow-md transition-shadow">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-semibold text-gray-900">Meet Your Teacher</h2>
+        <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+          <BookOpen className="h-5 w-5 text-kidato-blue" />
+          Meet Your Teacher
+        </h2>
         {teacher.rating && (
           <div className="flex items-center gap-1 bg-green-50 px-3 py-1.5 rounded-full">
             <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
