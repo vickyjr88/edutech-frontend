@@ -197,7 +197,26 @@ const getMockTeacher = (teacherUrlName: string) => {
     rating: 4.5,
     ratingCount: 50,
     videoProfileUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
-    education: [],
+    education: [
+      {
+        id: "edu1", 
+        institution: "University of Education",
+        degree: "Master's in Teaching",
+        dates: "2015 - 2017"
+      },
+      {
+        id: "edu2",
+        institution: "State University",
+        degree: "Bachelor of Arts in History",
+        dates: "2011 - 2015"
+      },
+      {
+        id: "edu3",
+        institution: "Teaching Certification Program",
+        degree: "Professional Teaching Certificate",
+        dates: "2018"
+      }
+    ],
     experience: [],
     methodologies: [],
     strategies: [],
