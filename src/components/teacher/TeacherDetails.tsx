@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { ALL_LANGUAGES } from "../teacher/professional-profile/utils/languageUtils";
 import { TEACHING_METHODOLOGIES } from "../teacher/professional-profile/utils/methodologyUtils";
 import { TEACHING_STRATEGIES } from "../teacher/professional-profile/utils/strategyUtils";
+import { Badge } from "@/components/ui/badge";
 
 // Using Award icon as a replacement for Certificate, but renamed for clarity
 const CertificateIcon = Award;
@@ -128,6 +129,28 @@ export default function TeacherDetails({ teacher }: TeacherDetailsProps) {
               </div>
               
               <p className="text-gray-700 mb-6">{teacher.bio}</p>
+              
+              {/* Teaching methodologies and strategies */}
+              <div className="mb-6">
+                <div className="flex flex-wrap gap-2">
+                  {teacher.methodologies.map(methodology => (
+                    <Badge 
+                      key={methodology.id} 
+                      className="bg-blue-100 text-blue-800 hover:bg-blue-200"
+                    >
+                      {methodology.methodology}
+                    </Badge>
+                  ))}
+                  {teacher.strategies.map(strategy => (
+                    <Badge 
+                      key={strategy.id} 
+                      className="bg-green-100 text-green-800 hover:bg-green-200"
+                    >
+                      {strategy.strategy}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
               
               {/* Message/Contact Teacher Button - Made sticky on mobile for easier access */}
               <div className="flex flex-wrap gap-3 justify-center md:justify-start sticky md:static bottom-4 left-0 right-0 z-10 md:z-0 p-2 md:p-0 bg-white/80 md:bg-transparent backdrop-blur-sm md:backdrop-blur-none">
