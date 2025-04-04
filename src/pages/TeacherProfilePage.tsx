@@ -28,6 +28,8 @@ const getMockTeacher = (teacherUrlName: string) => {
       imageSrc: "https://images.unsplash.com/photo-1568602471122-7832951cc4c5?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
       bio: "With over 8 years of teaching experience, Daniel is passionate about making learning engaging and accessible for all students. His teaching approach combines traditional methods with innovative techniques to ensure student success.",
       position: "Senior Science Teacher",
+      school: "Nairobi International School",
+      schoolStatus: "active", // can be "active" or "past"
       rating: 4.8,
       ratingCount: 127,
       videoProfileUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
@@ -288,6 +290,8 @@ const getDefaultTeacher = () => {
     imageSrc: "https://images.unsplash.com/photo-1568602471122-7832951cc4c5?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
     bio: "This teacher is passionate about education and helping students succeed. With a focus on personalized learning approaches and modern teaching techniques, they aim to inspire and empower students to reach their full potential.",
     position: "Teacher",
+    school: "Central High School",
+    schoolStatus: "active",
     rating: 4.5,
     ratingCount: 50,
     videoProfileUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",

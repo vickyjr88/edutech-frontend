@@ -1,5 +1,5 @@
 
-import { Book, Award, Users, Star, MessageSquare, Video, Globe, Briefcase, GraduationCap, Laptop } from "lucide-react";
+import { Book, Award, Users, Star, MessageSquare, Video, Globe, Briefcase, GraduationCap, Laptop, Building } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { StrategyItem } from "../teacher/professional-profile";
@@ -24,6 +24,8 @@ interface TeacherDetailsProps {
     imageSrc: string;
     bio: string;
     position: string; // e.g., "Senior Math Teacher"
+    school?: string; // Added school property
+    schoolStatus?: "active" | "past"; // Added school status property
     rating: number;
     ratingCount: number;
     videoProfileUrl?: string;
@@ -104,7 +106,24 @@ export default function TeacherDetails({ teacher }: TeacherDetailsProps) {
 
             <div className="flex-1 text-center md:text-left">
               <h1 className="text-3xl font-bold text-gray-900 mb-2">{teacher.name}</h1>
-              <p className="text-lg text-kidato-blue font-medium mb-3">{teacher.position}</p>
+              <div className="flex flex-wrap items-center gap-2 justify-center md:justify-start mb-3">
+                <p className="text-lg text-kidato-blue font-medium">{teacher.position}</p>
+                {teacher.school && (
+                  <div className="flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800">
+                    <Building className="h-3.5 w-3.5" />
+                    <span>{teacher.school}</span>
+                    {teacher.schoolStatus && (
+                      <span className={`ml-1 text-xs px-1.5 py-0.5 rounded-full ${
+                        teacher.schoolStatus === 'active' 
+                          ? 'bg-green-100 text-green-800' 
+                          : 'bg-amber-100 text-amber-800'
+                      }`}>
+                        {teacher.schoolStatus === 'active' ? 'Current' : 'Past'}
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
               
               <div className="flex flex-wrap gap-4 justify-center md:justify-start mb-6">
                 <div className="flex items-center gap-1 bg-yellow-50 px-3 py-1.5 rounded-full">
