@@ -12,17 +12,25 @@ export interface ClassItemProps {
   imageSrc: string;
   spots: string;
   price: string;
+  featured?: boolean;
 }
 
 const ClassCard = ({ classItem }: { classItem: ClassItemProps }) => {
   return (
-    <Card className="overflow-hidden hover:shadow-md transition-shadow duration-300">
-      <div className="h-48 overflow-hidden">
+    <Card className={`overflow-hidden transition-all duration-300 ${classItem.featured 
+      ? 'border-2 border-kidato-orange shadow-md' 
+      : 'hover:shadow-md border border-gray-100'}`}>
+      <div className="relative h-48 overflow-hidden">
         <img 
           src={classItem.imageSrc} 
           alt={classItem.title} 
-          className="w-full h-full object-cover"
+          className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
         />
+        {classItem.featured && (
+          <div className="absolute top-2 right-2 bg-kidato-orange text-white text-xs font-bold px-2 py-1 rounded-full">
+            Featured
+          </div>
+        )}
       </div>
       <CardContent className="p-4">
         <div className="flex justify-between items-start mb-2">

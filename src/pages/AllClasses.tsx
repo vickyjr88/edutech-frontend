@@ -4,7 +4,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ClassCard, { ClassItemProps } from "@/components/common/ClassCard";
 import { Button } from "@/components/ui/button";
-import { Search, Filter, ChevronDown } from "lucide-react";
+import { Search, Filter, ChevronDown, Users, GraduationCap, Clock, Award } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { 
   Select, 
@@ -14,6 +14,10 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
+import { Slider } from "@/components/ui/slider";
+import { Switch } from "@/components/ui/switch";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import CTASection from "@/components/common/CTASection";
 
 const mockClasses: ClassItemProps[] = [
@@ -151,6 +155,12 @@ const mockClasses: ClassItemProps[] = [
   }
 ];
 
+// Mark some classes as featured
+const enhancedClasses = mockClasses.map((cls, index) => ({
+  ...cls,
+  featured: index === 1 || index === 5 || index === 8
+}));
+
 const subjects = ["All Subjects", "Mathematics", "Science", "English", "History", "Languages", "Computer Science", "Arts", "Technology"];
 const grades = ["All Grades", "Grade 1-3", "Grade 4-6", "Grade 7-9", "Grade 10-12"];
 const sortOptions = ["Recommended", "Price: Low to High", "Price: High to Low", "Rating: High to Low", "Newest First"];
@@ -161,8 +171,13 @@ const AllClasses = () => {
   const [selectedGrade, setSelectedGrade] = useState("All Grades");
   const [sortBy, setSortBy] = useState("Recommended");
   const [showFilters, setShowFilters] = useState(false);
+  const [priceRange, setPriceRange] = useState([5, 20]);
+  const [showFeaturedOnly, setShowFeaturedOnly] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const classesPerPage = 8;
   
-  const filteredClasses = mockClasses.filter(classItem => {
+  // Filter classes based on all criteria
+  const filteredClasses = enhancedClasses.filter(classItem => {
     // Search term filter
     const matchesSearch = classItem.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
                          classItem.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -174,23 +189,109 @@ const AllClasses = () => {
     // Grade filter
     const matchesGrade = selectedGrade === "All Grades" || classItem.level.includes(selectedGrade.replace("Grade ", ""));
     
-    return matchesSearch && matchesSubject && matchesGrade;
+    // Price filter - extract numeric value from price string
+    const price = parseInt(classItem.price.replace("$", ""));
+    const matchesPrice = price >= priceRange[0] && price <= priceRange[1];
+    
+    // Featured filter
+    const matchesFeatured = showFeaturedOnly ? classItem.featured : true;
+    
+    return matchesSearch && matchesSubject && matchesGrade && matchesPrice && matchesFeatured;
   });
+  
+  // Sort classes
+  const sortedClasses = [...filteredClasses].sort((a, b) => {
+    switch (sortBy) {
+      case "Price: Low to High":
+        return parseInt(a.price.replace("$", "")) - parseInt(b.price.replace("$", ""));
+      case "Price: High to Low":
+        return parseInt(b.price.replace("$", "")) - parseInt(a.price.replace("$", ""));
+      case "Rating: High to Low":
+        return b.rating - a.rating;
+      case "Newest First":
+        // For mock data, we'll just reverse the order
+        return -1;
+      default: // Recommended
+        return b.featured ? 1 : -1;
+    }
+  });
+  
+  // Paginate classes
+  const indexOfLastClass = currentPage * classesPerPage;
+  const indexOfFirstClass = indexOfLastClass - classesPerPage;
+  const currentClasses = sortedClasses.slice(indexOfFirstClass, indexOfLastClass);
+  const totalPages = Math.ceil(sortedClasses.length / classesPerPage);
+  
+  // Featured classes section
+  const featuredClasses = enhancedClasses.filter(cls => cls.featured);
   
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
       
       <main className="flex-grow">
-        {/* Hero Section */}
-        <div className="bg-kidato-blue py-16 text-white">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <h1 className="text-3xl md:text-4xl font-bold mb-4">Explore Our Classes</h1>
-            <p className="text-xl max-w-3xl mx-auto">
-              Discover live, interactive classes taught by Africa's top educators designed to inspire and challenge your child.
-            </p>
+        {/* Enhanced Hero Section with Stats */}
+        <div className="bg-gradient-to-r from-kidato-blue to-kidato-dark-blue py-16 text-white">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="grid md:grid-cols-2 gap-8 items-center">
+              <div className="text-center md:text-left">
+                <h1 className="text-3xl md:text-4xl font-bold mb-4">Discover Your Child's Learning Potential</h1>
+                <p className="text-xl max-w-3xl mb-6">
+                  Explore live, interactive classes taught by Africa's top educators designed to inspire and challenge your child.
+                </p>
+                <Button size="lg" className="bg-white text-kidato-blue hover:bg-gray-100">
+                  Start Learning Today
+                </Button>
+              </div>
+              
+              {/* Stats Section */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-white/10 backdrop-blur-sm p-4 rounded-lg text-center">
+                  <div className="flex justify-center mb-2">
+                    <Users className="h-8 w-8 text-kidato-orange" />
+                  </div>
+                  <h3 className="text-3xl font-bold">15,000+</h3>
+                  <p className="text-sm opacity-80">Students Enrolled</p>
+                </div>
+                <div className="bg-white/10 backdrop-blur-sm p-4 rounded-lg text-center">
+                  <div className="flex justify-center mb-2">
+                    <GraduationCap className="h-8 w-8 text-kidato-orange" />
+                  </div>
+                  <h3 className="text-3xl font-bold">94%</h3>
+                  <p className="text-sm opacity-80">Grade Improvement</p>
+                </div>
+                <div className="bg-white/10 backdrop-blur-sm p-4 rounded-lg text-center">
+                  <div className="flex justify-center mb-2">
+                    <Clock className="h-8 w-8 text-kidato-orange" />
+                  </div>
+                  <h3 className="text-3xl font-bold">500+</h3>
+                  <p className="text-sm opacity-80">Weekly Classes</p>
+                </div>
+                <div className="bg-white/10 backdrop-blur-sm p-4 rounded-lg text-center">
+                  <div className="flex justify-center mb-2">
+                    <Award className="h-8 w-8 text-kidato-orange" />
+                  </div>
+                  <h3 className="text-3xl font-bold">4.8/5</h3>
+                  <p className="text-sm opacity-80">Average Rating</p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
+        
+        {/* Featured Classes Section */}
+        {featuredClasses.length > 0 && (
+          <div className="bg-gray-50 py-10">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">Featured Classes</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6">
+                {featuredClasses.map((classItem, index) => (
+                  <ClassCard key={`featured-${index}`} classItem={classItem} />
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
         
         {/* Search and Filter Section */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -217,55 +318,80 @@ const AllClasses = () => {
             </Button>
           </div>
           
-          {/* Expandable Filters */}
+          {/* Enhanced Expandable Filters */}
           {showFilters && (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 p-4 bg-gray-50 rounded-lg">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Subject</label>
-                <Select value={selectedSubject} onValueChange={setSelectedSubject}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a subject" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      {subjects.map((subject) => (
-                        <SelectItem key={subject} value={subject}>{subject}</SelectItem>
-                      ))}
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Grade Level</label>
-                <Select value={selectedGrade} onValueChange={setSelectedGrade}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select grade level" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      {grades.map((grade) => (
-                        <SelectItem key={grade} value={grade}>{grade}</SelectItem>
-                      ))}
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Sort By</label>
-                <Select value={sortBy} onValueChange={setSortBy}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Sort by" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      {sortOptions.map((option) => (
-                        <SelectItem key={option} value={option}>{option}</SelectItem>
-                      ))}
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
+            <div className="rounded-lg mb-8 p-6 bg-gray-50 border border-gray-100 shadow-sm">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Subject</label>
+                  <Select value={selectedSubject} onValueChange={setSelectedSubject}>
+                    <SelectTrigger className="bg-white">
+                      <SelectValue placeholder="Select a subject" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectGroup>
+                        {subjects.map((subject) => (
+                          <SelectItem key={subject} value={subject}>{subject}</SelectItem>
+                        ))}
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Grade Level</label>
+                  <Select value={selectedGrade} onValueChange={setSelectedGrade}>
+                    <SelectTrigger className="bg-white">
+                      <SelectValue placeholder="Select grade level" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectGroup>
+                        {grades.map((grade) => (
+                          <SelectItem key={grade} value={grade}>{grade}</SelectItem>
+                        ))}
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Price Range: ${priceRange[0]} - ${priceRange[1]}</label>
+                  <Slider
+                    defaultValue={[5, 20]}
+                    min={5}
+                    max={30}
+                    step={1}
+                    value={priceRange}
+                    onValueChange={setPriceRange}
+                    className="my-4"
+                  />
+                </div>
+                
+                <div className="flex items-center">
+                  <label htmlFor="featured-toggle" className="text-sm font-medium text-gray-700 mr-3">
+                    Show Featured Classes Only
+                  </label>
+                  <Switch
+                    id="featured-toggle"
+                    checked={showFeaturedOnly}
+                    onCheckedChange={setShowFeaturedOnly}
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Sort By</label>
+                  <ToggleGroup type="single" value={sortBy} onValueChange={(value) => value && setSortBy(value)}>
+                    {sortOptions.map((option) => (
+                      <ToggleGroupItem 
+                        key={option} 
+                        value={option} 
+                        className="text-xs px-3 py-1 data-[state=on]:bg-kidato-blue data-[state=on]:text-white"
+                      >
+                        {option}
+                      </ToggleGroupItem>
+                    ))}
+                  </ToggleGroup>
+                </div>
               </div>
             </div>
           )}
@@ -273,14 +399,14 @@ const AllClasses = () => {
           {/* Results Count */}
           <div className="mb-6">
             <p className="text-gray-600">
-              Showing {filteredClasses.length} {filteredClasses.length === 1 ? 'class' : 'classes'}
+              Showing {currentClasses.length} of {filteredClasses.length} {filteredClasses.length === 1 ? 'class' : 'classes'}
             </p>
           </div>
           
           {/* Classes Grid */}
-          {filteredClasses.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-12">
-              {filteredClasses.map((classItem, index) => (
+          {currentClasses.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
+              {currentClasses.map((classItem, index) => (
                 <ClassCard key={index} classItem={classItem} />
               ))}
             </div>
@@ -293,11 +419,121 @@ const AllClasses = () => {
                   setSearchTerm("");
                   setSelectedSubject("All Subjects");
                   setSelectedGrade("All Grades");
+                  setPriceRange([5, 20]);
+                  setShowFeaturedOnly(false);
                 }}
               >
                 Reset Filters
               </Button>
             </div>
+          )}
+          
+          {/* Pagination */}
+          {filteredClasses.length > classesPerPage && (
+            <Pagination className="my-8">
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious 
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))} 
+                    disabled={currentPage === 1}
+                    className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                  />
+                </PaginationItem>
+                
+                {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+                  if (totalPages <= 5) {
+                    // Show all pages if there are 5 or less
+                    return (
+                      <PaginationItem key={i}>
+                        <PaginationLink 
+                          isActive={currentPage === i + 1}
+                          onClick={() => setCurrentPage(i + 1)}
+                        >
+                          {i + 1}
+                        </PaginationLink>
+                      </PaginationItem>
+                    );
+                  } else {
+                    // Show dynamic pagination for more than 5 pages
+                    if (currentPage <= 3) {
+                      // Near the start
+                      if (i < 4) {
+                        return (
+                          <PaginationItem key={i}>
+                            <PaginationLink 
+                              isActive={currentPage === i + 1}
+                              onClick={() => setCurrentPage(i + 1)}
+                            >
+                              {i + 1}
+                            </PaginationLink>
+                          </PaginationItem>
+                        );
+                      } else {
+                        return (
+                          <PaginationItem key="ellipsis-end">
+                            <PaginationEllipsis />
+                          </PaginationItem>
+                        );
+                      }
+                    } else if (currentPage > totalPages - 3) {
+                      // Near the end
+                      if (i === 0) {
+                        return (
+                          <PaginationItem key="ellipsis-start">
+                            <PaginationEllipsis />
+                          </PaginationItem>
+                        );
+                      } else {
+                        return (
+                          <PaginationItem key={totalPages - 4 + i}>
+                            <PaginationLink 
+                              isActive={currentPage === totalPages - 4 + i}
+                              onClick={() => setCurrentPage(totalPages - 4 + i)}
+                            >
+                              {totalPages - 4 + i}
+                            </PaginationLink>
+                          </PaginationItem>
+                        );
+                      }
+                    } else {
+                      // In the middle
+                      if (i === 0) {
+                        return (
+                          <PaginationItem key="ellipsis-start">
+                            <PaginationEllipsis />
+                          </PaginationItem>
+                        );
+                      } else if (i === 4) {
+                        return (
+                          <PaginationItem key="ellipsis-end">
+                            <PaginationEllipsis />
+                          </PaginationItem>
+                        );
+                      } else {
+                        return (
+                          <PaginationItem key={currentPage - 2 + i}>
+                            <PaginationLink 
+                              isActive={i === 2}
+                              onClick={() => setCurrentPage(currentPage - 2 + i)}
+                            >
+                              {currentPage - 2 + i}
+                            </PaginationLink>
+                          </PaginationItem>
+                        );
+                      }
+                    }
+                  }
+                })}
+                
+                <PaginationItem>
+                  <PaginationNext 
+                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                    disabled={currentPage === totalPages}
+                    className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
           )}
         </div>
         
