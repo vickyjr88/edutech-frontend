@@ -81,7 +81,12 @@ const LessonPlansTab = ({
                         <div className="flex flex-wrap gap-4">
                           <div className="flex-1 min-w-[300px] space-y-6">
                             <LessonForm
-                              lesson={lesson}
+                              lesson={{
+                                id: lesson.id, // Ensure id is always passed as required
+                                title: lesson.title,
+                                description: lesson.description,
+                                duration: lesson.duration
+                              }}
                               onUpdate={(field, value) => updateLessonPlan(lesson.id, field, value)}
                               onRemove={() => removeLessonPlan(lesson.id)}
                               isRemovable={lessonPlans.length > 1}
