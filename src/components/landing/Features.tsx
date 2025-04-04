@@ -1,5 +1,4 @@
-
-import { Book, Users, Award, Globe, Shield, Clock } from "lucide-react";
+import { Book, Users, Award, Globe, Shield, Clock, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
