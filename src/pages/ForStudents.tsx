@@ -94,13 +94,13 @@ const ForStudents = () => {
       <Navbar />
       <main className="flex-grow pt-16">
         {/* Hero Section */}
-        <section className="bg-gradient-to-r from-green-500 to-green-600 text-white py-20">
+        <section className="bg-gradient-to-r from-kidato-blue to-kidato-dark-blue text-white py-20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="max-w-3xl">
               <h1 className="text-4xl md:text-5xl font-bold mb-6">Learning That's Actually Fun!</h1>
               <p className="text-xl mb-8">Join thousands of students across Africa who are making friends, building confidence, and improving their grades with Kidato.</p>
               <div className="space-x-4">
-                <Button size="lg" className="bg-white text-green-600 hover:bg-gray-100">
+                <Button size="lg" className="bg-white text-kidato-blue hover:bg-gray-100">
                   <Link to="/student-signup">Join Now</Link>
                 </Button>
                 <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10">
@@ -124,8 +124,8 @@ const ForStudents = () => {
             <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
               {benefits.map((benefit, index) => (
                 <div key={index} className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-300">
-                  <div className="bg-green-100 rounded-full w-12 h-12 flex items-center justify-center mb-4">
-                    <benefit.icon className="h-6 w-6 text-green-600" />
+                  <div className="bg-kidato-light-blue rounded-full w-12 h-12 flex items-center justify-center mb-4">
+                    <benefit.icon className="h-6 w-6 text-kidato-blue" />
                   </div>
                   <h3 className="text-xl font-semibold text-gray-900 mb-2">{benefit.title}</h3>
                   <p className="text-gray-600">{benefit.description}</p>
@@ -151,7 +151,7 @@ const ForStudents = () => {
                   <div className="relative h-48">
                     {classItem.featured && (
                       <div className="absolute top-2 right-2 z-10">
-                        <Badge className="bg-green-500 text-white">Popular</Badge>
+                        <Badge className="bg-kidato-orange text-white">Popular</Badge>
                       </div>
                     )}
                     <img 
@@ -163,7 +163,7 @@ const ForStudents = () => {
                   <CardContent className="p-4">
                     <div className="flex justify-between items-start mb-2">
                       <div>
-                        <p className="text-sm font-medium text-green-600">{classItem.subject}</p>
+                        <p className="text-sm font-medium text-kidato-blue">{classItem.subject}</p>
                         <h3 className="text-lg font-semibold text-gray-900">{classItem.title}</h3>
                       </div>
                       <div className="flex items-center gap-1">
@@ -177,7 +177,7 @@ const ForStudents = () => {
                         <Users className="h-4 w-4 text-gray-400 mr-1" />
                         <span className="text-xs text-gray-500">{classItem.students} students</span>
                       </div>
-                      <Button variant="outline" className="text-green-600 border-green-600 hover:bg-green-50">
+                      <Button variant="outline" className="text-kidato-blue border-kidato-blue hover:bg-kidato-light-blue">
                         <Link to="/class-details">Learn More</Link>
                       </Button>
                     </div>
@@ -187,7 +187,7 @@ const ForStudents = () => {
             </div>
             
             <div className="text-center mt-10">
-              <Button size="lg" className="bg-green-600 hover:bg-green-700 text-white">
+              <Button size="lg" className="bg-kidato-blue hover:bg-kidato-dark-blue text-white">
                 <Link to="/all-classes">Browse All Classes</Link>
               </Button>
             </div>
@@ -223,7 +223,7 @@ const ForStudents = () => {
                 }
               ].map((step, index) => (
                 <div key={index} className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-300 text-center">
-                  <div className="bg-green-600 text-white rounded-full w-10 h-10 flex items-center justify-center mx-auto mb-4 font-bold">
+                  <div className="bg-kidato-orange text-white rounded-full w-10 h-10 flex items-center justify-center mx-auto mb-4 font-bold">
                     {step.step}
                   </div>
                   <h3 className="text-xl font-semibold text-gray-900 mb-2">{step.title}</h3>
@@ -235,7 +235,7 @@ const ForStudents = () => {
         </section>
         
         {/* What You'll Need Section */}
-        <section className="py-16 bg-green-50">
+        <section className="py-16 bg-kidato-light-blue">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="md:flex items-center justify-between">
               <div className="md:w-1/2 mb-10 md:mb-0">
@@ -250,13 +250,13 @@ const ForStudents = () => {
                     "Curiosity and enthusiasm!"
                   ].map((item, index) => (
                     <li key={index} className="flex items-start">
-                      <CheckCircle className="h-6 w-6 text-green-600 mr-2 flex-shrink-0 mt-0.5" />
+                      <CheckCircle className="h-6 w-6 text-kidato-blue mr-2 flex-shrink-0 mt-0.5" />
                       <span className="text-gray-700">{item}</span>
                     </li>
                   ))}
                 </ul>
                 <div className="mt-8">
-                  <Button size="lg" className="bg-green-600 hover:bg-green-700 text-white">
+                  <Button size="lg" className="bg-kidato-blue hover:bg-kidato-dark-blue text-white">
                     <Link to="/student-signup">Join Kidato Today</Link>
                   </Button>
                 </div>
@@ -265,13 +265,13 @@ const ForStudents = () => {
               <div className="md:w-2/5">
                 <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
                   <div className="text-center mb-6">
-                    <Monitor className="h-12 w-12 text-green-600 mx-auto mb-2" />
+                    <Monitor className="h-12 w-12 text-kidato-blue mx-auto mb-2" />
                     <h3 className="text-xl font-semibold text-gray-900">Your First Class is Free!</h3>
                   </div>
                   <p className="text-gray-600 mb-6">
                     Try any class with no commitment. If you enjoy it, you can sign up for more sessions!
                   </p>
-                  <div className="bg-green-100 p-4 rounded-lg">
+                  <div className="bg-kidato-light-blue p-4 rounded-lg">
                     <h4 className="font-semibold text-gray-900 mb-2">Student Safety Promise</h4>
                     <p className="text-sm text-gray-700">
                       All classes are monitored and taught by verified teachers in a secure online environment. Your safety is our top priority.
@@ -305,7 +305,7 @@ const ForStudents = () => {
                       />
                       <div>
                         <h4 className="font-semibold text-gray-900">{testimonial.name}</h4>
-                        <p className="text-sm text-green-600">{testimonial.location}</p>
+                        <p className="text-sm text-kidato-blue">{testimonial.location}</p>
                       </div>
                     </div>
                     <div className="flex text-yellow-400 mb-3">
@@ -360,13 +360,13 @@ const ForStudents = () => {
         </section>
         
         {/* CTA Section */}
-        <section className="py-20 bg-green-600 text-white text-center">
+        <section className="py-20 bg-kidato-blue text-white text-center">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <h2 className="text-3xl font-bold mb-6">Ready to Make Learning Fun?</h2>
             <p className="text-xl mb-8 max-w-3xl mx-auto">
               Join thousands of students who are learning, making friends, and having fun with Kidato!
             </p>
-            <Button size="lg" className="bg-white text-green-600 hover:bg-gray-100">
+            <Button size="lg" className="bg-white text-kidato-blue hover:bg-gray-100">
               <Link to="/student-signup">Get Started Today</Link>
             </Button>
           </div>

@@ -66,7 +66,7 @@ const ForTeachers = () => {
       <Navbar />
       <main className="flex-grow pt-16">
         {/* Hero Section */}
-        <section className="bg-gradient-to-r from-kidato-blue to-blue-700 text-white py-20">
+        <section className="bg-gradient-to-r from-kidato-blue to-kidato-dark-blue text-white py-20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="max-w-3xl">
               <h1 className="text-4xl md:text-5xl font-bold mb-6">Share Your Knowledge, Inspire the Next Generation</h1>
