@@ -1,4 +1,3 @@
-
 import { useParams } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -579,7 +578,7 @@ const TeacherProfilePage = () => {
         {teacher && (
           <>
             <TeacherDetails teacher={teacher} />
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
               <TeacherStats teacher={teacher} />
             </div>
           </>
