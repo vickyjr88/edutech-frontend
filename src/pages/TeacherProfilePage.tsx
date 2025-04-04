@@ -14,7 +14,7 @@ const getMockTeacher = (teacherUrlName: string) => {
       id: "1",
       name: "Mr. Daniel Mwangi",
       imageSrc: "https://images.unsplash.com/photo-1568602471122-7832951cc4c5?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
-      bio: "With over 8 years of teaching experience, Daniel is passionate about making learning engaging and accessible for all students. His teaching approach combines traditional methods with innovative techniques to ensure student success.",
+      bio: "With over 8 years of teaching experience, Daniel is passionate about making learning engaging and accessible for all students. His teaching approach combines traditional methods with innovative techniques to ensure student success. He specializes in creating hands-on science experiments that make complex concepts easy to understand.",
       position: "Senior Science Teacher",
       rating: 4.8,
       ratingCount: 127,
@@ -87,6 +87,12 @@ const getMockTeacher = (teacherUrlName: string) => {
           strategy: "Blended Learning",
           description: "Combining online educational materials with traditional classroom methods",
           is_certified: true
+        },
+        {
+          id: "str4",
+          strategy: "Peer Learning",
+          description: "Creating opportunities for students to learn from each other",
+          is_certified: true
         }
       ],
       languages: [
@@ -130,6 +136,13 @@ const getMockTeacher = (teacherUrlName: string) => {
           issuer: "Kenya Red Cross",
           date: "2020",
           isVerified: false
+        },
+        {
+          id: "cert4",
+          name: "STEM Education Excellence Award",
+          issuer: "African Education Society",
+          date: "2022",
+          isVerified: true
         }
       ],
       classes: [
@@ -156,6 +169,14 @@ const getMockTeacher = (teacherUrlName: string) => {
           level: "Grade 6-7",
           rating: 4.7,
           imageSrc: "https://images.unsplash.com/photo-1636466497217-26a8cbeaf0aa?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80"
+        },
+        {
+          id: "class4",
+          title: "Environmental Science Workshop",
+          subject: "Environmental Science",
+          level: "Grade 5-8",
+          rating: 4.6,
+          imageSrc: "https://images.unsplash.com/photo-1518156677180-95a2893f3499?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80"
         }
       ]
     };
@@ -187,11 +208,18 @@ const TeacherProfilePage = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // In a real app, this would fetch data from an API
-    // For now, we're using mock data
-    const teacherData = getMockTeacher(teacherId || "");
-    setTeacher(teacherData);
-    setLoading(false);
+    // Simulate API loading time
+    const fetchData = async () => {
+      // In a real app, this would fetch data from an API
+      // For now, we're using mock data with a slight delay to simulate loading
+      setTimeout(() => {
+        const teacherData = getMockTeacher(teacherId || "");
+        setTeacher(teacherData);
+        setLoading(false);
+      }, 800);
+    };
+
+    fetchData();
   }, [teacherId]);
 
   if (loading) {
@@ -199,7 +227,10 @@ const TeacherProfilePage = () => {
       <div className="min-h-screen flex flex-col">
         <Navbar />
         <div className="flex-grow flex items-center justify-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-kidato-blue"></div>
+          <div className="flex flex-col items-center space-y-4">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-kidato-blue"></div>
+            <p className="text-gray-500">Loading teacher profile...</p>
+          </div>
         </div>
         <Footer />
       </div>
@@ -209,7 +240,7 @@ const TeacherProfilePage = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
-      <main className="flex-grow pt-20 bg-gray-50">
+      <main className="flex-grow pt-20 bg-gradient-to-b from-gray-50 to-white">
         {teacher && <TeacherDetails teacher={teacher} />}
       </main>
       <Footer />
