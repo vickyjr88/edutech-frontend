@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { 
   BookOpen, Users, Award, Calendar, Video, MessageSquare, 
   FileText, BarChart3, Clock, CheckCircle, User, Percent,
-  Briefcase, GraduationCap, Star, Target, Lightbulb, Trophy
+  Briefcase, GraduationCap, Star, Target, Lightbulb, Trophy,
+  Globe
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
