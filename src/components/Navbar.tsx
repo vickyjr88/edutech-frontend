@@ -37,6 +37,12 @@ const Navbar = () => {
                 Teachers
               </Link>
               <Link 
+                to="/how-it-works" 
+                className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-kidato-blue"
+              >
+                How It Works
+              </Link>
+              <Link 
                 to="/for-teachers" 
                 className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-kidato-blue"
               >
@@ -53,12 +59,6 @@ const Navbar = () => {
                 className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-kidato-blue"
               >
                 For Students
-              </Link>
-              <Link 
-                to="/how-it-works" 
-                className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-kidato-blue"
-              >
-                How It Works
               </Link>
             </div>
           </div>
@@ -105,6 +105,13 @@ const Navbar = () => {
               Teachers
             </Link>
             <Link 
+              to="/how-it-works" 
+              className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-kidato-blue hover:bg-gray-50"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              How It Works
+            </Link>
+            <Link 
               to="/for-teachers" 
               className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-kidato-blue hover:bg-gray-50"
               onClick={() => setIsMenuOpen(false)}
@@ -124,13 +131,6 @@ const Navbar = () => {
               onClick={() => setIsMenuOpen(false)}
             >
               For Students
-            </Link>
-            <Link 
-              to="/how-it-works" 
-              className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-kidato-blue hover:bg-gray-50"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              How It Works
             </Link>
             <div className="flex flex-col px-3 py-2 space-y-2">
               <Link 
