@@ -1,4 +1,3 @@
-
 import { Book, Award, Users, Star, MessageSquare, Video, Globe, Briefcase, GraduationCap, Laptop, School } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -89,6 +88,15 @@ export default function TeacherDetails({ teacher }: TeacherDetailsProps) {
     setMessageText("");
     setIsMessageDialogOpen(false);
   };
+
+  // Helper function to render check icons consistently
+  const renderCheckIcon = () => (
+    <span className="bg-kidato-blue/10 text-kidato-blue p-1.5 rounded-full flex items-center justify-center">
+      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+      </svg>
+    </span>
+  );
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -311,15 +319,11 @@ export default function TeacherDetails({ teacher }: TeacherDetailsProps) {
               </CardHeader>
               <CardContent>
                 {teacher.education.length > 0 ? (
-                  <ul className="space-y-3">
+                  <ul className="space-y-5">
                     {teacher.education.map((edu) => (
-                      <li key={edu.id} className="flex items-start">
-                        <span className="bg-kidato-blue/10 text-kidato-blue p-1 rounded mr-3">
-                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                          </svg>
-                        </span>
-                        <div>
+                      <li key={edu.id} className="flex items-start bg-gray-50 p-4 rounded-lg">
+                        <div className="mt-1">{renderCheckIcon()}</div>
+                        <div className="ml-4">
                           <span className="font-medium text-gray-900">{edu.degree}</span>
                           <p className="text-sm text-gray-600">{edu.institution}</p>
                           <p className="text-xs text-gray-500">{edu.dates}</p>
@@ -343,15 +347,11 @@ export default function TeacherDetails({ teacher }: TeacherDetailsProps) {
               </CardHeader>
               <CardContent>
                 {teacher.experience.length > 0 ? (
-                  <ul className="space-y-3">
+                  <ul className="space-y-5">
                     {teacher.experience.map((exp) => (
-                      <li key={exp.id} className="flex items-start">
-                        <span className="bg-kidato-blue/10 text-kidato-blue p-1 rounded mr-3">
-                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                          </svg>
-                        </span>
-                        <div>
+                      <li key={exp.id} className="flex items-start bg-gray-50 p-4 rounded-lg">
+                        <div className="mt-1">{renderCheckIcon()}</div>
+                        <div className="ml-4">
                           <span className="font-medium text-gray-900">{exp.position}</span>
                           <p className="text-sm text-gray-600">{exp.institution}</p>
                           <p className="text-xs text-gray-500">{exp.dates}</p>
@@ -378,24 +378,22 @@ export default function TeacherDetails({ teacher }: TeacherDetailsProps) {
               </CardHeader>
               <CardContent>
                 {teacher.certifications.length > 0 ? (
-                  <ul className="space-y-3">
+                  <ul className="space-y-5">
                     {teacher.certifications.map((cert) => (
-                      <li key={cert.id} className="flex items-start">
-                        <span className="bg-kidato-blue/10 text-kidato-blue p-1 rounded mr-3">
-                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                          </svg>
-                        </span>
-                        <div>
-                          <span className="font-medium text-gray-900">{cert.name}</span>
-                          {cert.isVerified && (
-                            <span className="ml-2 inline-flex items-center bg-green-50 text-green-700 text-xs px-2 py-0.5 rounded-full">
-                              <svg className="w-3 h-3 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                              </svg>
-                              Verified
-                            </span>
-                          )}
+                      <li key={cert.id} className="flex items-start bg-gray-50 p-4 rounded-lg">
+                        <div className="mt-1">{renderCheckIcon()}</div>
+                        <div className="ml-4">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-medium text-gray-900">{cert.name}</span>
+                            {cert.isVerified && (
+                              <span className="inline-flex items-center bg-green-50 text-green-700 text-xs px-2 py-0.5 rounded-full">
+                                <svg className="w-3 h-3 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                </svg>
+                                Verified
+                              </span>
+                            )}
+                          </div>
                           <p className="text-sm text-gray-600">{cert.issuer}</p>
                           <p className="text-xs text-gray-500">{cert.date}</p>
                         </div>
@@ -418,21 +416,19 @@ export default function TeacherDetails({ teacher }: TeacherDetailsProps) {
               </CardHeader>
               <CardContent>
                 {teacher.methodologies.length > 0 ? (
-                  <ul className="space-y-3">
+                  <ul className="space-y-5">
                     {teacher.methodologies.map((item) => (
-                      <li key={item.id} className="flex items-start">
-                        <span className="bg-kidato-blue/10 text-kidato-blue p-1 rounded mr-3">
-                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                          </svg>
-                        </span>
-                        <div>
-                          <span className="font-medium text-gray-900">{item.methodology}</span>
-                          {item.is_certified && (
-                            <span className="ml-2 inline-flex items-center bg-green-50 text-green-700 text-xs px-2 py-0.5 rounded-full">
-                              Certified
-                            </span>
-                          )}
+                      <li key={item.id} className="flex items-start bg-gray-50 p-4 rounded-lg">
+                        <div className="mt-1">{renderCheckIcon()}</div>
+                        <div className="ml-4">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-medium text-gray-900">{item.methodology}</span>
+                            {item.is_certified && (
+                              <span className="inline-flex items-center bg-green-50 text-green-700 text-xs px-2 py-0.5 rounded-full">
+                                Certified
+                              </span>
+                            )}
+                          </div>
                           {item.description && (
                             <p className="text-sm text-gray-600 mt-1">{item.description}</p>
                           )}
@@ -456,21 +452,19 @@ export default function TeacherDetails({ teacher }: TeacherDetailsProps) {
               </CardHeader>
               <CardContent>
                 {teacher.strategies.length > 0 ? (
-                  <ul className="space-y-3">
+                  <ul className="space-y-5">
                     {teacher.strategies.map((item) => (
-                      <li key={item.id} className="flex items-start">
-                        <span className="bg-kidato-blue/10 text-kidato-blue p-1 rounded mr-3">
-                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                          </svg>
-                        </span>
-                        <div>
-                          <span className="font-medium text-gray-900">{item.strategy}</span>
-                          {item.is_certified && (
-                            <span className="ml-2 inline-flex items-center bg-green-50 text-green-700 text-xs px-2 py-0.5 rounded-full">
-                              Certified
-                            </span>
-                          )}
+                      <li key={item.id} className="flex items-start bg-gray-50 p-4 rounded-lg">
+                        <div className="mt-1">{renderCheckIcon()}</div>
+                        <div className="ml-4">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-medium text-gray-900">{item.strategy}</span>
+                            {item.is_certified && (
+                              <span className="inline-flex items-center bg-green-50 text-green-700 text-xs px-2 py-0.5 rounded-full">
+                                Certified
+                              </span>
+                            )}
+                          </div>
                           {item.description && (
                             <p className="text-sm text-gray-600 mt-1">{item.description}</p>
                           )}
@@ -494,19 +488,23 @@ export default function TeacherDetails({ teacher }: TeacherDetailsProps) {
               </CardHeader>
               <CardContent>
                 {teacher.languages.length > 0 ? (
-                  <ul className="space-y-3">
+                  <ul className="space-y-5">
                     {teacher.languages.map((item) => (
-                      <li key={item.id} className="flex items-start">
-                        <span className="bg-kidato-blue/10 text-kidato-blue p-1 rounded mr-3">
-                          <Globe className="w-4 h-4" />
-                        </span>
-                        <div>
-                          <span className="font-medium text-gray-900">{item.language}</span>
-                          {item.isCertified && (
-                            <span className="ml-2 inline-flex items-center bg-green-50 text-green-700 text-xs px-2 py-0.5 rounded-full">
-                              Certified
-                            </span>
-                          )}
+                      <li key={item.id} className="flex items-start bg-gray-50 p-4 rounded-lg">
+                        <div className="mt-1">
+                          <span className="bg-kidato-blue/10 text-kidato-blue p-1.5 rounded-full flex items-center justify-center">
+                            <Globe className="w-4 h-4" />
+                          </span>
+                        </div>
+                        <div className="ml-4">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-medium text-gray-900">{item.language}</span>
+                            {item.isCertified && (
+                              <span className="inline-flex items-center bg-green-50 text-green-700 text-xs px-2 py-0.5 rounded-full">
+                                Certified
+                              </span>
+                            )}
+                          </div>
                           {item.description && (
                             <p className="text-sm text-gray-600 mt-1">{item.description}</p>
                           )}
@@ -536,15 +534,9 @@ export default function TeacherDetails({ teacher }: TeacherDetailsProps) {
                   <ul className="grid grid-cols-1 md:grid-cols-2 gap-5">
                     {teacher.technicalSkills.map((skill) => (
                       <li key={skill.id} className="flex items-start bg-gray-50 p-4 rounded-lg">
-                        <div className="mt-1">
-                          <span className="bg-kidato-blue/10 text-kidato-blue p-1.5 rounded-full flex items-center justify-center">
-                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                            </svg>
-                          </span>
-                        </div>
+                        <div className="mt-1">{renderCheckIcon()}</div>
                         <div className="ml-4">
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 flex-wrap">
                             <span className="font-medium text-gray-900">{skill.skill}</span>
                             {skill.level && (
                               <span className={`text-xs px-2 py-1 rounded-full ${
