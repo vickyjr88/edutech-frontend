@@ -20,7 +20,7 @@ const getMockTeacher = (teacherUrlName: string) => {
   console.log("Teacher ID from URL:", teacherUrlName);
   console.log("Looking for teacher with normalized name:", normalizedTeacherName);
   
-  // For demo purposes, returning mock data for "mr-daniel-mwangi"
+  // For demo purposes, returning mock data for specific teachers
   if (normalizedTeacherName === "mr-daniel-mwangi") {
     return {
       id: "1",
@@ -272,6 +272,254 @@ const getMockTeacher = (teacherUrlName: string) => {
           skill: "Data Analytics for Education",
           description: "Analyzing student performance data to improve teaching methods",
           level: "Intermediate"
+        }
+      ]
+    };
+  } else if (normalizedTeacherName === "ms-amina-okafor") {
+    return {
+      id: "2",
+      name: "Ms. Amina Okafor",
+      imageSrc: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+      bio: "Ms. Amina Okafor is an experienced mathematics teacher with over 10 years of teaching across various educational levels. She specializes in making complex mathematical concepts accessible and engaging for all students.",
+      position: "Mathematics Teacher",
+      school: "Nairobi Academy",
+      schoolStatus: "active",
+      rating: 4.9,
+      ratingCount: 156,
+      videoProfileUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
+      education: [
+        {
+          id: "edu1",
+          institution: "University of Lagos",
+          degree: "Master's in Mathematics Education",
+          dates: "2010 - 2012"
+        },
+        {
+          id: "edu2",
+          institution: "Ahmadu Bello University",
+          degree: "Bachelor of Science in Mathematics",
+          dates: "2006 - 2010"
+        }
+      ],
+      experience: [
+        {
+          id: "exp1",
+          position: "Mathematics Teacher",
+          institution: "Nairobi Academy",
+          dates: "2017 - Present",
+          description: "Teaching mathematics to high school students with a focus on practical applications and real-world problem solving."
+        },
+        {
+          id: "exp2",
+          position: "Mathematics Teacher",
+          institution: "International School of Abuja",
+          dates: "2012 - 2017",
+          description: "Developed comprehensive mathematics curriculum for middle school students."
+        }
+      ],
+      methodologies: [
+        {
+          id: "meth1",
+          methodology: "Socratic Method",
+          description: "Using questioning to stimulate critical thinking and illuminate ideas",
+          is_certified: true
+        },
+        {
+          id: "meth2",
+          methodology: "Problem-Based Learning",
+          description: "Centering learning around complex, real-world problems",
+          is_certified: true
+        },
+        {
+          id: "meth3",
+          methodology: "Mastery Learning",
+          description: "Ensuring students master a concept before moving to the next level",
+          is_certified: true
+        }
+      ],
+      strategies: [
+        {
+          id: "str1",
+          strategy: "Visual Learning",
+          description: "Using diagrams, graphs, and visual models to enhance mathematical understanding",
+          is_certified: true
+        },
+        {
+          id: "str2",
+          strategy: "Cooperative Learning",
+          description: "Organizing students into small groups for mutual support and learning",
+          is_certified: true
+        },
+        {
+          id: "str3",
+          strategy: "Technology Integration",
+          description: "Incorporating digital tools and software to enhance mathematical concepts",
+          is_certified: false
+        }
+      ],
+      languages: [
+        {
+          id: "lang1",
+          language: "English",
+          description: "Native proficiency",
+          isCertified: true
+        },
+        {
+          id: "lang2",
+          language: "Yoruba",
+          description: "Native proficiency",
+          isCertified: true
+        },
+        {
+          id: "lang3",
+          language: "Hausa",
+          description: "Intermediate level",
+          isCertified: false
+        },
+        {
+          id: "lang4",
+          language: "Swahili",
+          description: "Intermediate level",
+          isCertified: false
+        }
+      ],
+      certifications: [
+        {
+          id: "cert1",
+          name: "Certified Mathematics Educator",
+          issuer: "African Mathematics Initiative",
+          date: "2015",
+          isVerified: true
+        },
+        {
+          id: "cert2",
+          name: "Advanced STEM Teaching Certificate",
+          issuer: "Educational Development Institute",
+          date: "2018",
+          isVerified: true
+        },
+        {
+          id: "cert3",
+          name: "Digital Mathematics Instruction",
+          issuer: "Global EdTech Alliance",
+          date: "2020",
+          isVerified: true
+        },
+        {
+          id: "cert4",
+          name: "Mathematics Competition Coach",
+          issuer: "Pan-African Mathematics Olympiad",
+          date: "2019",
+          isVerified: true
+        },
+        {
+          id: "cert5",
+          name: "Educational Leadership",
+          issuer: "Teachers Without Borders",
+          date: "2021",
+          isVerified: false
+        }
+      ],
+      classes: [
+        {
+          id: "class1",
+          title: "Algebra Fundamentals",
+          subject: "Mathematics",
+          level: "Grade 8-9",
+          rating: 4.9,
+          imageSrc: "https://images.unsplash.com/photo-1635070041078-e363dbe005cb?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80"
+        },
+        {
+          id: "class2",
+          title: "Geometry in Real Life",
+          subject: "Mathematics",
+          level: "Grade 10-11",
+          rating: 4.8,
+          imageSrc: "https://images.unsplash.com/photo-1509228468518-180dd4864904?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80"
+        },
+        {
+          id: "class3",
+          title: "Advanced Calculus",
+          subject: "Mathematics",
+          level: "Grade 11-12",
+          rating: 4.7,
+          imageSrc: "https://images.unsplash.com/photo-1580582932707-520aed937b7b?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80"
+        }
+      ],
+      reviews: [
+        {
+          id: "rev1",
+          reviewer: "David Njoroge",
+          reviewerImage: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?ixlib=rb-1.2.1&auto=format&fit=crop&w=256&q=80",
+          rating: 5,
+          comment: "Ms. Okafor's teaching style transformed my daughter's relationship with mathematics. She now enjoys solving problems and has improved significantly.",
+          date: "April 10, 2023"
+        },
+        {
+          id: "rev2",
+          reviewer: "Fatima Hassan",
+          reviewerImage: "https://images.unsplash.com/photo-1531123897727-8f129e1688ce?ixlib=rb-1.2.1&auto=format&fit=crop&w=256&q=80",
+          rating: 5,
+          comment: "An excellent teacher who breaks down complex concepts into manageable pieces. My son's confidence in math has soared under her guidance.",
+          date: "March 22, 2023"
+        },
+        {
+          id: "rev3",
+          reviewer: "Michael Ochieng",
+          reviewerImage: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-1.2.1&auto=format&fit=crop&w=256&q=80",
+          rating: 4,
+          comment: "Very methodical and patient. Provides excellent resources and is always available to help with difficult problems.",
+          date: "February 5, 2023"
+        }
+      ],
+      technicalSkills: [
+        {
+          id: "tech1",
+          skill: "Mathematical Software",
+          description: "Proficient with MATLAB, GeoGebra, and Mathematica",
+          level: "Advanced"
+        },
+        {
+          id: "tech2",
+          skill: "Online Learning Platforms",
+          description: "Experience with Khan Academy, Coursera, and EdX for supplemental instruction",
+          level: "Advanced"
+        },
+        {
+          id: "tech3",
+          skill: "Data Analysis",
+          description: "Using statistical tools to track and improve student performance",
+          level: "Intermediate"
+        },
+        {
+          id: "tech4",
+          skill: "Interactive Whiteboard",
+          description: "Creating dynamic mathematical visualizations for classroom instruction",
+          level: "Advanced"
+        },
+        {
+          id: "tech5",
+          skill: "Educational Apps",
+          description: "Implementing mobile applications for practice and assessment",
+          level: "Intermediate"
+        },
+        {
+          id: "tech6",
+          skill: "Learning Management Systems",
+          description: "Managing course content and assessments through digital platforms",
+          level: "Advanced"
+        },
+        {
+          id: "tech7",
+          skill: "Programming for Education",
+          description: "Basic Python and JavaScript for creating educational tools",
+          level: "Intermediate"
+        },
+        {
+          id: "tech8",
+          skill: "Virtual Mathematics Labs",
+          description: "Designing and implementing virtual experiments and simulations",
+          level: "Advanced"
         }
       ]
     };
