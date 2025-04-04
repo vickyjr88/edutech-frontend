@@ -1,24 +1,14 @@
-
 import { useState } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ClassCard, { ClassItemProps } from "@/components/common/ClassCard";
-import { Button } from "@/components/ui/button";
-import { Search, Filter, ChevronDown, Users, GraduationCap, Clock, Award } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { 
-  Select, 
-  SelectContent, 
-  SelectGroup, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from "@/components/ui/select";
-import { Slider } from "@/components/ui/slider";
-import { Switch } from "@/components/ui/switch";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import CTASection from "@/components/common/CTASection";
+import ClassesHero from "@/components/classes/ClassesHero";
+import FeaturedClasses from "@/components/classes/FeaturedClasses";
+import SearchBar from "@/components/classes/SearchBar";
+import ClassFilters from "@/components/classes/ClassFilters";
+import ClassesGrid from "@/components/classes/ClassesGrid";
+import ClassesPagination from "@/components/classes/ClassesPagination";
 
 const mockClasses: ClassItemProps[] = [
   {
@@ -214,169 +204,48 @@ const AllClasses = () => {
   
   const featuredClasses = enhancedClasses.filter(cls => cls.featured);
   
+  const resetFilters = () => {
+    setSearchTerm("");
+    setSelectedSubject("All Subjects");
+    setSelectedGrade("All Grades");
+    setPriceRange([5, 20]);
+    setShowFeaturedOnly(false);
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
       
       <main className="flex-grow">
-        <div className="bg-gradient-to-r from-kidato-blue to-kidato-dark-blue py-20 pt-50 text-white">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid md:grid-cols-2 gap-8 items-center">
-              <div className="text-center md:text-left">
-                <h1 className="text-3xl md:text-4xl font-bold mb-4">Discover Your Child's Learning Potential</h1>
-                <p className="text-xl max-w-3xl mb-6">
-                  Explore live, interactive classes taught by Africa's top educators designed to inspire and challenge your child.
-                </p>
-                <Button size="lg" className="bg-white text-kidato-blue hover:bg-gray-100">
-                  Start Learning Today
-                </Button>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-white/10 backdrop-blur-sm p-4 rounded-lg text-center">
-                  <div className="flex justify-center mb-2">
-                    <Users className="h-8 w-8 text-kidato-orange" />
-                  </div>
-                  <h3 className="text-3xl font-bold">15,000+</h3>
-                  <p className="text-sm opacity-80">Students Enrolled</p>
-                </div>
-                <div className="bg-white/10 backdrop-blur-sm p-4 rounded-lg text-center">
-                  <div className="flex justify-center mb-2">
-                    <GraduationCap className="h-8 w-8 text-kidato-orange" />
-                  </div>
-                  <h3 className="text-3xl font-bold">94%</h3>
-                  <p className="text-sm opacity-80">Grade Improvement</p>
-                </div>
-                <div className="bg-white/10 backdrop-blur-sm p-4 rounded-lg text-center">
-                  <div className="flex justify-center mb-2">
-                    <Clock className="h-8 w-8 text-kidato-orange" />
-                  </div>
-                  <h3 className="text-3xl font-bold">500+</h3>
-                  <p className="text-sm opacity-80">Weekly Classes</p>
-                </div>
-                <div className="bg-white/10 backdrop-blur-sm p-4 rounded-lg text-center">
-                  <div className="flex justify-center mb-2">
-                    <Award className="h-8 w-8 text-kidato-orange" />
-                  </div>
-                  <h3 className="text-3xl font-bold">4.8/5</h3>
-                  <p className="text-sm opacity-80">Average Rating</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        <ClassesHero />
         
-        {featuredClasses.length > 0 && (
-          <div className="bg-gray-50 py-10">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">Featured Classes</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6">
-                {featuredClasses.map((classItem, index) => (
-                  <ClassCard key={`featured-${index}`} classItem={classItem} />
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
+        <FeaturedClasses classes={featuredClasses} />
         
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="flex flex-col md:flex-row md:items-center gap-4 mb-6">
-            <div className="relative flex-grow">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <Input
-                type="search"
-                placeholder="Search for classes, subjects, or teachers..."
-                className="pl-10"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-            
-            <Button 
-              variant="outline" 
-              className="md:w-auto flex items-center gap-2"
-              onClick={() => setShowFilters(!showFilters)}
-            >
-              <Filter className="h-4 w-4" />
-              Filters
-              <ChevronDown className={`h-4 w-4 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
-            </Button>
-          </div>
+          <SearchBar 
+            searchTerm={searchTerm} 
+            onSearchChange={setSearchTerm}
+            onToggleFilters={() => setShowFilters(!showFilters)}
+            showFilters={showFilters}
+          />
           
-          <div className="rounded-lg mb-8 p-6 bg-gray-50 border border-gray-100 shadow-sm">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Subject</label>
-                <Select value={selectedSubject} onValueChange={setSelectedSubject}>
-                  <SelectTrigger className="bg-white">
-                    <SelectValue placeholder="Select a subject" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      {subjects.map((subject) => (
-                        <SelectItem key={subject} value={subject}>{subject}</SelectItem>
-                      ))}
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Grade Level</label>
-                <Select value={selectedGrade} onValueChange={setSelectedGrade}>
-                  <SelectTrigger className="bg-white">
-                    <SelectValue placeholder="Select grade level" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      {grades.map((grade) => (
-                        <SelectItem key={grade} value={grade}>{grade}</SelectItem>
-                      ))}
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Price Range: ${priceRange[0]} - ${priceRange[1]}</label>
-                <Slider
-                  defaultValue={[5, 20]}
-                  min={5}
-                  max={30}
-                  step={1}
-                  value={priceRange}
-                  onValueChange={setPriceRange}
-                  className="my-4"
-                />
-              </div>
-              
-              <div className="flex items-center">
-                <label htmlFor="featured-toggle" className="text-sm font-medium text-gray-700 mr-3">
-                  Show Featured Classes Only
-                </label>
-                <Switch
-                  id="featured-toggle"
-                  checked={showFeaturedOnly}
-                  onCheckedChange={setShowFeaturedOnly}
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Sort By</label>
-                <ToggleGroup type="single" value={sortBy} onValueChange={(value) => value && setSortBy(value)}>
-                  {sortOptions.map((option) => (
-                    <ToggleGroupItem 
-                      key={option} 
-                      value={option} 
-                      className="text-xs px-3 py-1 data-[state=on]:bg-kidato-blue data-[state=on]:text-white"
-                    >
-                      {option}
-                    </ToggleGroupItem>
-                  ))}
-                </ToggleGroup>
-              </div>
-            </div>
-          </div>
+          {showFilters && (
+            <ClassFilters 
+              subjects={subjects}
+              grades={grades}
+              sortOptions={sortOptions}
+              selectedSubject={selectedSubject}
+              selectedGrade={selectedGrade}
+              priceRange={priceRange}
+              showFeaturedOnly={showFeaturedOnly}
+              sortBy={sortBy}
+              onSubjectChange={setSelectedSubject}
+              onGradeChange={setSelectedGrade}
+              onPriceRangeChange={setPriceRange}
+              onFeaturedToggle={setShowFeaturedOnly}
+              onSortByChange={setSortBy}
+            />
+          )}
           
           <div className="mb-6">
             <p className="text-gray-600">
@@ -384,129 +253,16 @@ const AllClasses = () => {
             </p>
           </div>
           
-          {currentClasses.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
-              {currentClasses.map((classItem, index) => (
-                <ClassCard key={index} classItem={classItem} />
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-16">
-              <h3 className="text-xl font-medium text-gray-800 mb-2">No classes found</h3>
-              <p className="text-gray-600 mb-6">Try adjusting your filters or search term</p>
-              <Button 
-                onClick={() => {
-                  setSearchTerm("");
-                  setSelectedSubject("All Subjects");
-                  setSelectedGrade("All Grades");
-                  setPriceRange([5, 20]);
-                  setShowFeaturedOnly(false);
-                }}
-              >
-                Reset Filters
-              </Button>
-            </div>
-          )}
+          <ClassesGrid 
+            classes={currentClasses} 
+            emptyStateResetFilters={resetFilters}
+          />
           
-          {filteredClasses.length > classesPerPage && (
-            <Pagination className="my-8">
-              <PaginationContent>
-                <PaginationItem>
-                  <PaginationPrevious 
-                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))} 
-                    className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                  />
-                </PaginationItem>
-                
-                {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
-                  if (totalPages <= 5) {
-                    return (
-                      <PaginationItem key={i}>
-                        <PaginationLink 
-                          isActive={currentPage === i + 1}
-                          onClick={() => setCurrentPage(i + 1)}
-                        >
-                          {i + 1}
-                        </PaginationLink>
-                      </PaginationItem>
-                    );
-                  } else {
-                    if (currentPage <= 3) {
-                      if (i < 4) {
-                        return (
-                          <PaginationItem key={i}>
-                            <PaginationLink 
-                              isActive={currentPage === i + 1}
-                              onClick={() => setCurrentPage(i + 1)}
-                            >
-                              {i + 1}
-                            </PaginationLink>
-                          </PaginationItem>
-                        );
-                      } else {
-                        return (
-                          <PaginationItem key="ellipsis-end">
-                            <PaginationEllipsis />
-                          </PaginationItem>
-                        );
-                      }
-                    } else if (currentPage > totalPages - 3) {
-                      if (i === 0) {
-                        return (
-                          <PaginationItem key="ellipsis-start">
-                            <PaginationEllipsis />
-                          </PaginationItem>
-                        );
-                      } else {
-                        return (
-                          <PaginationItem key={totalPages - 4 + i}>
-                            <PaginationLink 
-                              isActive={currentPage === totalPages - 4 + i}
-                              onClick={() => setCurrentPage(totalPages - 4 + i)}
-                            >
-                              {totalPages - 4 + i}
-                            </PaginationLink>
-                          </PaginationItem>
-                        );
-                      }
-                    } else {
-                      if (i === 0) {
-                        return (
-                          <PaginationItem key="ellipsis-start">
-                            <PaginationEllipsis />
-                          </PaginationItem>
-                        );
-                      } else if (i === 4) {
-                        return (
-                          <PaginationItem key="ellipsis-end">
-                            <PaginationEllipsis />
-                          </PaginationItem>
-                        );
-                      } else {
-                        return (
-                          <PaginationItem key={currentPage - 2 + i}>
-                            <PaginationLink 
-                              isActive={i === 2}
-                              onClick={() => setCurrentPage(currentPage - 2 + i)}
-                            >
-                              {currentPage - 2 + i}
-                            </PaginationLink>
-                          </PaginationItem>
-                        );
-                      }
-                    }
-                  }
-                })}
-                
-                <PaginationItem>
-                  <PaginationNext 
-                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                    className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                  />
-                </PaginationItem>
-              </PaginationContent>
-            </Pagination>
-          )}
+          <ClassesPagination 
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+          />
         </div>
         
         <CTASection 
