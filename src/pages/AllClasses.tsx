@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -218,7 +219,7 @@ const AllClasses = () => {
       <Navbar />
       
       <main className="flex-grow">
-        <div className="bg-gradient-to-r from-kidato-blue to-kidato-dark-blue py-20 text-white">
+        <div className="bg-gradient-to-r from-kidato-blue to-kidato-dark-blue py-20 pt-60 text-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid md:grid-cols-2 gap-8 items-center">
               <div className="text-center md:text-left">
