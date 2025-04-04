@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -25,8 +24,8 @@ const enrollmentSchema = z.object({
   paymentMethod: z.enum(["credit", "mpesa", "bank"], {
     required_error: "Please select a payment method",
   }),
-  agreeToTerms: z.literal(true, {
-    errorMap: () => ({ message: "You must agree to the terms and conditions" }),
+  agreeToTerms: z.boolean().refine(value => value === true, {
+    message: "You must agree to the terms and conditions",
   }),
   additionalNotes: z.string().optional(),
 });
