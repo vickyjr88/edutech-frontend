@@ -2,6 +2,7 @@ import { Book, Users, Award, Globe, Shield, Clock, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const features = [
   {
@@ -85,6 +86,53 @@ const upcomingClasses = [
     imageSrc: "https://images.unsplash.com/photo-1515879218367-8466d910aaa4?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
     spots: "1 spot left",
     price: "$18/class"
+  }
+];
+
+const availableTeachers = [
+  {
+    name: "Dr. Nkem Adeyemi",
+    subject: "Mathematics & Physics",
+    experience: "10+ years",
+    education: "PhD in Applied Mathematics",
+    rating: 4.9,
+    availability: "Weekdays 3-8 PM",
+    imageSrc: "https://images.unsplash.com/photo-1573497019236-61f323342eb4?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+    expertise: "Advanced Calculus, Mechanics",
+    hourlyRate: "$25/hour"
+  },
+  {
+    name: "Ms. Zainab Omar",
+    subject: "English Literature",
+    experience: "8 years",
+    education: "MA in English",
+    rating: 4.8,
+    availability: "Evenings & Weekends",
+    imageSrc: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+    expertise: "Essay Writing, Critical Analysis",
+    hourlyRate: "$22/hour"
+  },
+  {
+    name: "Mr. David Ndung'u",
+    subject: "Chemistry & Biology",
+    experience: "12 years",
+    education: "MSc in Biochemistry",
+    rating: 5.0,
+    availability: "Flexible Hours",
+    imageSrc: "https://images.unsplash.com/photo-1577202214328-c04b77cefb5d?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+    expertise: "Lab Techniques, STEM Projects",
+    hourlyRate: "$28/hour"
+  },
+  {
+    name: "Ms. Priya Sharma",
+    subject: "Computer Science",
+    experience: "6 years",
+    education: "BSc in Computer Science",
+    rating: 4.7,
+    availability: "Afternoons & Weekends",
+    imageSrc: "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+    expertise: "Python, Web Development",
+    hourlyRate: "$24/hour"
   }
 ];
 
@@ -172,6 +220,63 @@ const Features = () => {
                     </span>
                     <span className="text-sm font-semibold text-gray-900">{classItem.price}</span>
                   </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+        
+        <div className="mt-16">
+          <div className="flex items-center justify-between mb-8">
+            <h3 className="text-2xl font-bold text-gray-900">Educators Available for On-Demand Tuition</h3>
+            <Button className="bg-kidato-blue hover:bg-kidato-dark-blue text-white">
+              View All Teachers
+            </Button>
+          </div>
+          
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {availableTeachers.map((teacher, index) => (
+              <Card key={index} className="overflow-hidden hover:shadow-md transition-shadow duration-300">
+                <CardContent className="p-5">
+                  <div className="flex flex-col items-center text-center mb-4">
+                    <Avatar className="h-20 w-20 mb-3">
+                      <AvatarImage src={teacher.imageSrc} alt={teacher.name} />
+                      <AvatarFallback>{teacher.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                    </Avatar>
+                    <h4 className="text-lg font-semibold text-gray-900">{teacher.name}</h4>
+                    <p className="text-sm font-medium text-kidato-blue">{teacher.subject}</p>
+                  </div>
+                  
+                  <div className="space-y-2 mb-4">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Experience:</span>
+                      <span className="font-medium">{teacher.experience}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Education:</span>
+                      <span className="font-medium line-clamp-1">{teacher.education}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Expertise:</span>
+                      <span className="font-medium line-clamp-1">{teacher.expertise}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Availability:</span>
+                      <span className="font-medium">{teacher.availability}</span>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+                    <div className="flex items-center gap-1">
+                      <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
+                      <span className="text-sm font-medium">{teacher.rating}</span>
+                    </div>
+                    <div className="text-sm font-semibold text-gray-900">{teacher.hourlyRate}</div>
+                  </div>
+                  
+                  <Button className="w-full mt-4 bg-kidato-orange hover:bg-orange-600 text-white">
+                    Book Session
+                  </Button>
                 </CardContent>
               </Card>
             ))}
