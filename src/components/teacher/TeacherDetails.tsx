@@ -256,8 +256,8 @@ export default function TeacherDetails({ teacher }: TeacherDetailsProps) {
             </div>
           </div>
 
-          {/* Grid Layout for Teacher Details */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10">
+          {/* Grid Layout for Teacher Details - Now with 2 cards per row */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
             {/* Education Section */}
             <Card>
               <CardHeader className="pb-3">
@@ -339,10 +339,7 @@ export default function TeacherDetails({ teacher }: TeacherDetailsProps) {
                 )}
               </CardContent>
             </Card>
-          </div>
 
-          {/* Additional Skills Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
             {/* Methodologies */}
             <Card>
               <CardHeader className="pb-3">
