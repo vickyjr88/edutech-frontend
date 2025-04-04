@@ -1,4 +1,3 @@
-
 import { Link } from "react-router-dom";
 import { ArrowRight, BarChart3, Users, BookOpen, Award, Bell, Calendar, CheckCircle, MoreVertical, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -15,8 +14,11 @@ const Hero = () => {
               <span className="text-kidato-blue">Learn</span>, <span className="text-kidato-orange">Connect</span>, and <span className="text-kidato-blue">Grow</span> with Africa's Premier Learning Platform
             </h1>
             <p className="mt-3 text-lg text-gray-600">
-              Connecting K12 students across Africa with exceptional tutors for personalized learning experiences.
+              Give your child the academic support they deserve with personalized tutoring from Africa's most qualified educators.
             </p>
+            <div className="mt-4 inline-block px-4 py-2 bg-yellow-100 text-yellow-800 rounded-lg text-sm">
+              <strong>Parents:</strong> 90% of our students show improved grades within 3 months
+            </div>
             <div className="mt-6 flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4">
               <Link to="/signup">
                 <Button className="w-full sm:w-auto bg-kidato-blue hover:bg-kidato-dark-blue button-hover-effect text-lg px-6 py-5">
