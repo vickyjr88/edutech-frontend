@@ -9,8 +9,10 @@ import { MethodologyItem, StrategyItem, LanguageItem } from "@/components/teache
 // Mock data for now - in a real app this would come from an API
 const getMockTeacher = (teacherUrlName: string) => {
   // Clean the teacher URL name to handle variations with dots or dashes
-  const normalizedTeacherName = teacherUrlName.replace(/\./g, '-').toLowerCase();
+  // Replace dots with single dash and normalize consecutive dashes to single dash
+  const normalizedTeacherName = teacherUrlName.replace(/\./g, '-').replace(/-+/g, '-').toLowerCase();
   
+  console.log("Teacher ID from URL:", teacherUrlName);
   console.log("Looking for teacher with normalized name:", normalizedTeacherName);
   
   // For demo purposes, returning mock data for "mr-daniel-mwangi"
