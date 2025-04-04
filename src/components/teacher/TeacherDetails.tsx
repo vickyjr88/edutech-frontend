@@ -1,5 +1,5 @@
 
-import { Book, Award, Users, Star, MessageSquare, Video, Certificate, Globe, Briefcase, GraduationCap } from "lucide-react";
+import { Book, Award, Users, Star, MessageSquare, Video, Award as CertificateIcon, Globe, Briefcase, GraduationCap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { StrategyItem } from "../teacher/professional-profile";
@@ -103,7 +103,7 @@ export default function TeacherDetails({ teacher }: TeacherDetailsProps) {
                 
                 {teacher.certifications.length > 0 && (
                   <div className="flex items-center gap-1 bg-green-50 px-3 py-1.5 rounded-full">
-                    <Certificate className="h-4 w-4 text-green-500" />
+                    <CertificateIcon className="h-4 w-4 text-green-500" />
                     <span className="font-medium">{teacher.certifications.filter(c => c.isVerified).length} verified certificates</span>
                   </div>
                 )}
@@ -238,7 +238,7 @@ export default function TeacherDetails({ teacher }: TeacherDetailsProps) {
         <Card>
           <CardHeader className="pb-3">
             <div className="flex items-center gap-2">
-              <Certificate className="h-5 w-5 text-kidato-blue" />
+              <CertificateIcon className="h-5 w-5 text-kidato-blue" />
               <CardTitle className="text-xl">Certifications</CardTitle>
             </div>
           </CardHeader>
