@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import TeacherDetails from "@/components/teacher/TeacherDetails";
+import TeacherStats from "@/components/teacher/TeacherStats";
 import { useEffect, useState } from "react";
 import { MethodologyItem, StrategyItem, LanguageItem } from "@/components/teacher/professional-profile";
 
@@ -575,7 +576,14 @@ const TeacherProfilePage = () => {
     <div className="min-h-screen flex flex-col">
       <Navbar />
       <main className="flex-grow pt-20 bg-gray-50">
-        {teacher && <TeacherDetails teacher={teacher} />}
+        {teacher && (
+          <>
+            <TeacherDetails teacher={teacher} />
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <TeacherStats teacher={teacher} />
+            </div>
+          </>
+        )}
       </main>
       <Footer />
     </div>

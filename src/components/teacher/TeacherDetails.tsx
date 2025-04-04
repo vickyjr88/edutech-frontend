@@ -1,4 +1,3 @@
-
 import { Book, Award, Users, Star, MessageSquare, Video, Globe, Briefcase, GraduationCap, Laptop, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -264,7 +263,7 @@ export default function TeacherDetails({ teacher }: TeacherDetailsProps) {
         </div>
       </div>
       
-      {/* Tab Navigation */}
+      {/* Tab Navigation - moved here so TeacherStats can be inserted above this */}
       <div className="mb-8 border-b">
         <div className="flex overflow-x-auto">
           <button 
