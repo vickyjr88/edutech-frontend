@@ -13,7 +13,6 @@ import { TEACHING_METHODOLOGIES } from "../teacher/professional-profile/utils/me
 import { TEACHING_STRATEGIES } from "../teacher/professional-profile/utils/strategyUtils";
 import { Badge } from "@/components/ui/badge";
 
-// Using Award icon as a replacement for Certificate, but renamed for clarity
 const CertificateIcon = Award;
 
 interface TeacherDetailsProps {
@@ -22,9 +21,9 @@ interface TeacherDetailsProps {
     name: string;
     imageSrc: string;
     bio: string;
-    position: string; // e.g., "Senior Math Teacher"
-    school?: string; // Added school property
-    schoolStatus?: "active" | "past"; // Added school status property
+    position: string;
+    school?: string;
+    schoolStatus?: "active" | "past";
     rating: number;
     ratingCount: number;
     videoProfileUrl?: string;
@@ -83,13 +82,11 @@ export default function TeacherDetails({ teacher }: TeacherDetailsProps) {
   const [activeTab, setActiveTab] = useState<'about' | 'classes' | 'reviews'>('about');
 
   const handleSendMessage = () => {
-    // In a real app, this would send the message to the backend
     console.log("Message sent:", messageText);
     setMessageText("");
     setIsMessageDialogOpen(false);
   };
 
-  // Helper function to render check icons consistently
   const renderCheckIcon = () => (
     <span className="bg-kidato-blue/10 text-kidato-blue p-1.5 rounded-full flex items-center justify-center">
       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -100,7 +97,6 @@ export default function TeacherDetails({ teacher }: TeacherDetailsProps) {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      {/* Hero Section */}
       <div className="bg-white rounded-lg shadow-md overflow-hidden mb-10">
         <div className="bg-kidato-blue/10 p-8">
           <div className="flex flex-col md:flex-row gap-8 items-center md:items-start">
@@ -110,7 +106,6 @@ export default function TeacherDetails({ teacher }: TeacherDetailsProps) {
                 alt={teacher.name} 
                 className="w-full h-full object-cover"
               />
-              {/* Verification badge */}
               <div className="absolute bottom-0 right-0 bg-kidato-blue text-white p-1 rounded-full">
                 <Check className="h-4 w-4" />
               </div>
@@ -160,7 +155,6 @@ export default function TeacherDetails({ teacher }: TeacherDetailsProps) {
               
               <p className="text-gray-700 mb-6">{teacher.bio}</p>
               
-              {/* Teaching methodologies and strategies */}
               <div className="mb-6">
                 <div className="flex flex-wrap gap-2">
                   {teacher.methodologies.map(methodology => (
@@ -182,7 +176,6 @@ export default function TeacherDetails({ teacher }: TeacherDetailsProps) {
                 </div>
               </div>
               
-              {/* Message/Contact Teacher Button - Made sticky on mobile for easier access */}
               <div className="flex flex-wrap gap-3 justify-center md:justify-start sticky md:static bottom-4 left-0 right-0 z-10 md:z-0 p-2 md:p-0 bg-white/80 md:bg-transparent backdrop-blur-sm md:backdrop-blur-none">
                 <Dialog open={isMessageDialogOpen} onOpenChange={setIsMessageDialogOpen}>
                   <DialogTrigger asChild>
@@ -263,7 +256,6 @@ export default function TeacherDetails({ teacher }: TeacherDetailsProps) {
         </div>
       </div>
       
-      {/* Tab Navigation - moved here so TeacherStats can be inserted above this */}
       <div className="mb-8 border-b">
         <div className="flex overflow-x-auto">
           <button 
@@ -287,32 +279,9 @@ export default function TeacherDetails({ teacher }: TeacherDetailsProps) {
         </div>
       </div>
       
-      {/* About Tab Content */}
       {activeTab === 'about' && (
         <>
-          {/* Enhanced Bio Section */}
-          <div className="mb-10">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">Biography</h2>
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <p className="text-gray-700 leading-relaxed">{teacher.bio}</p>
-              <div className="mt-4 flex flex-wrap gap-2">
-                {teacher.methodologies.slice(0, 3).map(methodology => (
-                  <span key={methodology.id} className="bg-blue-50 text-blue-700 text-xs px-2 py-1 rounded-full">
-                    {methodology.methodology}
-                  </span>
-                ))}
-                {teacher.strategies.slice(0, 3).map(strategy => (
-                  <span key={strategy.id} className="bg-green-50 text-green-700 text-xs px-2 py-1 rounded-full">
-                    {strategy.strategy}
-                  </span>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Grid Layout for Teacher Details - Now with 2 cards per row */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
-            {/* Education Section */}
             <Card>
               <CardHeader className="pb-3">
                 <div className="flex items-center gap-2">
@@ -340,7 +309,6 @@ export default function TeacherDetails({ teacher }: TeacherDetailsProps) {
               </CardContent>
             </Card>
 
-            {/* Experience Section */}
             <Card>
               <CardHeader className="pb-3">
                 <div className="flex items-center gap-2">
@@ -371,7 +339,6 @@ export default function TeacherDetails({ teacher }: TeacherDetailsProps) {
               </CardContent>
             </Card>
 
-            {/* Certifications Section */}
             <Card>
               <CardHeader className="pb-3">
                 <div className="flex items-center gap-2">
@@ -409,7 +376,6 @@ export default function TeacherDetails({ teacher }: TeacherDetailsProps) {
               </CardContent>
             </Card>
 
-            {/* Methodologies */}
             <Card>
               <CardHeader className="pb-3">
                 <div className="flex items-center gap-2">
@@ -445,7 +411,6 @@ export default function TeacherDetails({ teacher }: TeacherDetailsProps) {
               </CardContent>
             </Card>
 
-            {/* Strategies */}
             <Card>
               <CardHeader className="pb-3">
                 <div className="flex items-center gap-2">
@@ -481,7 +446,6 @@ export default function TeacherDetails({ teacher }: TeacherDetailsProps) {
               </CardContent>
             </Card>
 
-            {/* Languages */}
             <Card>
               <CardHeader className="pb-3">
                 <div className="flex items-center gap-2">
@@ -522,7 +486,6 @@ export default function TeacherDetails({ teacher }: TeacherDetailsProps) {
             </Card>
           </div>
           
-          {/* Technical Skills Section */}
           {teacher.technicalSkills && teacher.technicalSkills.length > 0 && (
             <div className="mb-10">
               <h2 className="text-2xl font-bold text-gray-900 mb-4">Technical Skills</h2>
@@ -565,7 +528,6 @@ export default function TeacherDetails({ teacher }: TeacherDetailsProps) {
         </>
       )}
 
-      {/* Classes Tab Content */}
       {activeTab === 'classes' && (
         <>
           <h2 className="text-2xl font-bold text-gray-900 mb-6">Classes by {teacher.name}</h2>
@@ -606,7 +568,6 @@ export default function TeacherDetails({ teacher }: TeacherDetailsProps) {
         </>
       )}
 
-      {/* Reviews Tab Content */}
       {activeTab === 'reviews' && (
         <>
           <h2 className="text-2xl font-bold text-gray-900 mb-6">Student Reviews ({teacher.ratingCount})</h2>
