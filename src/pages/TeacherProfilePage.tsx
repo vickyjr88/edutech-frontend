@@ -8,6 +8,11 @@ import { MethodologyItem, StrategyItem, LanguageItem } from "@/components/teache
 
 // Mock data for now - in a real app this would come from an API
 const getMockTeacher = (teacherUrlName: string) => {
+  if (!teacherUrlName) {
+    console.log("No teacher ID provided");
+    return getDefaultTeacher();
+  }
+  
   // Clean the teacher URL name to handle variations with dots or dashes
   // Replace dots with single dash and normalize consecutive dashes to single dash
   const normalizedTeacherName = teacherUrlName.replace(/\./g, '-').replace(/-+/g, '-').toLowerCase();
@@ -270,7 +275,13 @@ const getMockTeacher = (teacherUrlName: string) => {
     };
   }
 
-  // Default teacher data if no match is found
+  // If no matching teacher found, return default teacher
+  console.log("No matching teacher found, returning default teacher");
+  return getDefaultTeacher();
+};
+
+// Separate function for the default teacher to avoid code duplication
+const getDefaultTeacher = () => {
   return {
     id: "default",
     name: "Teacher",
