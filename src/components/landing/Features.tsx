@@ -32,7 +32,7 @@ const features = [
   },
   {
     name: "Global Perspective",
-    description: "Expose your child to diverse perspectives as they connect with peers and tutors from across the African continent.",
+    description: "Expose your child to diverse perspectives as they connect with world-class tutors and peers from across the globe while focusing on African curriculum.",
     icon: Globe,
     color: "bg-pink-100",
     iconColor: "text-pink-600"
@@ -53,7 +53,7 @@ const Features = () => {
         <div className="text-center mb-16">
           <h2 className="text-3xl font-bold text-gray-900 md:text-4xl">Why Parents Choose Kidato</h2>
           <p className="mt-4 text-xl text-gray-600 max-w-3xl mx-auto">
-            Join thousands of parents who trust us with their children's education. Here's how we support your child's learning journey:
+            Join parents who trust us with their children's education. Here's how we support your child's learning journey:
           </p>
         </div>
 
