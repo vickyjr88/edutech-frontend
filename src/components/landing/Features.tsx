@@ -1,10 +1,11 @@
 
-import { Book, Users, Award, Globe, Shield, Clock, Star, Briefcase, GraduationCap, Languages, CheckCircle } from "lucide-react";
+import { Book, Users, Award, Globe, Shield, Clock, Star, Briefcase, GraduationCap, Languages, CheckCircle, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Link } from "react-router-dom";
 
 const features = [
   {
@@ -198,9 +199,12 @@ const Features = () => {
         <div className="mt-16">
           <div className="flex items-center justify-between mb-8">
             <h3 className="text-2xl font-bold text-gray-900">Available Classes</h3>
-            <Button className="bg-kidato-blue hover:bg-kidato-dark-blue text-white">
-              View All Classes
-            </Button>
+            <Link to="/all-classes">
+              <Button className="bg-kidato-blue hover:bg-kidato-dark-blue text-white flex items-center gap-2">
+                View All Classes
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            </Link>
           </div>
           
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">

@@ -1,0 +1,57 @@
+
+import { Star, Clock } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+
+export interface ClassItemProps {
+  title: string;
+  subject: string;
+  level: string;
+  teacher: string;
+  rating: number;
+  time: string;
+  imageSrc: string;
+  spots: string;
+  price: string;
+}
+
+const ClassCard = ({ classItem }: { classItem: ClassItemProps }) => {
+  return (
+    <Card className="overflow-hidden hover:shadow-md transition-shadow duration-300">
+      <div className="h-48 overflow-hidden">
+        <img 
+          src={classItem.imageSrc} 
+          alt={classItem.title} 
+          className="w-full h-full object-cover"
+        />
+      </div>
+      <CardContent className="p-4">
+        <div className="flex justify-between items-start mb-2">
+          <div>
+            <p className="text-sm font-medium text-kidato-blue">{classItem.subject}</p>
+            <h4 className="text-lg font-semibold text-gray-900 line-clamp-1">{classItem.title}</h4>
+          </div>
+          <div className="flex items-center gap-1 bg-green-50 px-2 py-1 rounded-full">
+            <Star className="h-3 w-3 text-yellow-500 fill-yellow-500" />
+            <span className="text-xs font-medium">{classItem.rating}</span>
+          </div>
+        </div>
+        <p className="text-sm text-gray-600 mb-2">{classItem.level}</p>
+        <p className="text-xs text-gray-500 mb-3">
+          <span className="font-medium">Teacher:</span> {classItem.teacher}
+        </p>
+        <div className="flex items-center gap-1 mb-3">
+          <Clock className="h-3.5 w-3.5 text-gray-400" />
+          <p className="text-xs text-gray-500">{classItem.time}</p>
+        </div>
+        <div className="flex justify-between items-center">
+          <span className="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded-full">
+            {classItem.spots}
+          </span>
+          <span className="text-sm font-semibold text-gray-900">{classItem.price}</span>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
+export default ClassCard;

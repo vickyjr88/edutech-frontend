@@ -17,6 +17,7 @@ import ForTeachers from "./pages/ForTeachers";
 import ForParents from "./pages/ForParents";
 import ForStudents from "./pages/ForStudents";
 import HowItWorks from "./pages/HowItWorks";
+import AllClasses from "./pages/AllClasses";
 
 // Create a client
 const queryClient = new QueryClient();
@@ -36,6 +37,7 @@ const App = () => {
               <Route path="/for-parents" element={<ForParents />} />
               <Route path="/for-students" element={<ForStudents />} />
               <Route path="/how-it-works" element={<HowItWorks />} />
+              <Route path="/all-classes" element={<AllClasses />} />
               <Route path="/dashboard" element={
                 <ProtectedRoute>
                   <Dashboard />
