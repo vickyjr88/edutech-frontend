@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -155,7 +154,6 @@ const mockClasses: ClassItemProps[] = [
   }
 ];
 
-// Mark some classes as featured
 const enhancedClasses = mockClasses.map((cls, index) => ({
   ...cls,
   featured: index === 1 || index === 5 || index === 8
@@ -176,30 +174,23 @@ const AllClasses = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const classesPerPage = 8;
   
-  // Filter classes based on all criteria
   const filteredClasses = enhancedClasses.filter(classItem => {
-    // Search term filter
     const matchesSearch = classItem.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
                          classItem.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          classItem.teacher.toLowerCase().includes(searchTerm.toLowerCase());
     
-    // Subject filter
     const matchesSubject = selectedSubject === "All Subjects" || classItem.subject === selectedSubject;
     
-    // Grade filter
     const matchesGrade = selectedGrade === "All Grades" || classItem.level.includes(selectedGrade.replace("Grade ", ""));
     
-    // Price filter - extract numeric value from price string
     const price = parseInt(classItem.price.replace("$", ""));
     const matchesPrice = price >= priceRange[0] && price <= priceRange[1];
     
-    // Featured filter
     const matchesFeatured = showFeaturedOnly ? classItem.featured : true;
     
     return matchesSearch && matchesSubject && matchesGrade && matchesPrice && matchesFeatured;
   });
   
-  // Sort classes
   const sortedClasses = [...filteredClasses].sort((a, b) => {
     switch (sortBy) {
       case "Price: Low to High":
@@ -209,20 +200,17 @@ const AllClasses = () => {
       case "Rating: High to Low":
         return b.rating - a.rating;
       case "Newest First":
-        // For mock data, we'll just reverse the order
         return -1;
       default: // Recommended
         return b.featured ? 1 : -1;
     }
   });
   
-  // Paginate classes
   const indexOfLastClass = currentPage * classesPerPage;
   const indexOfFirstClass = indexOfLastClass - classesPerPage;
   const currentClasses = sortedClasses.slice(indexOfFirstClass, indexOfLastClass);
   const totalPages = Math.ceil(sortedClasses.length / classesPerPage);
   
-  // Featured classes section
   const featuredClasses = enhancedClasses.filter(cls => cls.featured);
   
   return (
@@ -230,8 +218,7 @@ const AllClasses = () => {
       <Navbar />
       
       <main className="flex-grow">
-        {/* Enhanced Hero Section with Stats */}
-        <div className="bg-gradient-to-r from-kidato-blue to-kidato-dark-blue py-16 text-white">
+        <div className="bg-gradient-to-r from-kidato-blue to-kidato-dark-blue py-20 pt-28 text-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid md:grid-cols-2 gap-8 items-center">
               <div className="text-center md:text-left">
@@ -244,7 +231,6 @@ const AllClasses = () => {
                 </Button>
               </div>
               
-              {/* Stats Section */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-white/10 backdrop-blur-sm p-4 rounded-lg text-center">
                   <div className="flex justify-center mb-2">
@@ -279,7 +265,6 @@ const AllClasses = () => {
           </div>
         </div>
         
-        {/* Featured Classes Section */}
         {featuredClasses.length > 0 && (
           <div className="bg-gray-50 py-10">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -293,7 +278,6 @@ const AllClasses = () => {
           </div>
         )}
         
-        {/* Search and Filter Section */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex flex-col md:flex-row md:items-center gap-4 mb-6">
             <div className="relative flex-grow">
@@ -318,92 +302,87 @@ const AllClasses = () => {
             </Button>
           </div>
           
-          {/* Enhanced Expandable Filters */}
-          {showFilters && (
-            <div className="rounded-lg mb-8 p-6 bg-gray-50 border border-gray-100 shadow-sm">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Subject</label>
-                  <Select value={selectedSubject} onValueChange={setSelectedSubject}>
-                    <SelectTrigger className="bg-white">
-                      <SelectValue placeholder="Select a subject" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectGroup>
-                        {subjects.map((subject) => (
-                          <SelectItem key={subject} value={subject}>{subject}</SelectItem>
-                        ))}
-                      </SelectGroup>
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Grade Level</label>
-                  <Select value={selectedGrade} onValueChange={setSelectedGrade}>
-                    <SelectTrigger className="bg-white">
-                      <SelectValue placeholder="Select grade level" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectGroup>
-                        {grades.map((grade) => (
-                          <SelectItem key={grade} value={grade}>{grade}</SelectItem>
-                        ))}
-                      </SelectGroup>
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Price Range: ${priceRange[0]} - ${priceRange[1]}</label>
-                  <Slider
-                    defaultValue={[5, 20]}
-                    min={5}
-                    max={30}
-                    step={1}
-                    value={priceRange}
-                    onValueChange={setPriceRange}
-                    className="my-4"
-                  />
-                </div>
-                
-                <div className="flex items-center">
-                  <label htmlFor="featured-toggle" className="text-sm font-medium text-gray-700 mr-3">
-                    Show Featured Classes Only
-                  </label>
-                  <Switch
-                    id="featured-toggle"
-                    checked={showFeaturedOnly}
-                    onCheckedChange={setShowFeaturedOnly}
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Sort By</label>
-                  <ToggleGroup type="single" value={sortBy} onValueChange={(value) => value && setSortBy(value)}>
-                    {sortOptions.map((option) => (
-                      <ToggleGroupItem 
-                        key={option} 
-                        value={option} 
-                        className="text-xs px-3 py-1 data-[state=on]:bg-kidato-blue data-[state=on]:text-white"
-                      >
-                        {option}
-                      </ToggleGroupItem>
-                    ))}
-                  </ToggleGroup>
-                </div>
+          <div className="rounded-lg mb-8 p-6 bg-gray-50 border border-gray-100 shadow-sm">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Subject</label>
+                <Select value={selectedSubject} onValueChange={setSelectedSubject}>
+                  <SelectTrigger className="bg-white">
+                    <SelectValue placeholder="Select a subject" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      {subjects.map((subject) => (
+                        <SelectItem key={subject} value={subject}>{subject}</SelectItem>
+                      ))}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Grade Level</label>
+                <Select value={selectedGrade} onValueChange={setSelectedGrade}>
+                  <SelectTrigger className="bg-white">
+                    <SelectValue placeholder="Select grade level" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      {grades.map((grade) => (
+                        <SelectItem key={grade} value={grade}>{grade}</SelectItem>
+                      ))}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Price Range: ${priceRange[0]} - ${priceRange[1]}</label>
+                <Slider
+                  defaultValue={[5, 20]}
+                  min={5}
+                  max={30}
+                  step={1}
+                  value={priceRange}
+                  onValueChange={setPriceRange}
+                  className="my-4"
+                />
+              </div>
+              
+              <div className="flex items-center">
+                <label htmlFor="featured-toggle" className="text-sm font-medium text-gray-700 mr-3">
+                  Show Featured Classes Only
+                </label>
+                <Switch
+                  id="featured-toggle"
+                  checked={showFeaturedOnly}
+                  onCheckedChange={setShowFeaturedOnly}
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Sort By</label>
+                <ToggleGroup type="single" value={sortBy} onValueChange={(value) => value && setSortBy(value)}>
+                  {sortOptions.map((option) => (
+                    <ToggleGroupItem 
+                      key={option} 
+                      value={option} 
+                      className="text-xs px-3 py-1 data-[state=on]:bg-kidato-blue data-[state=on]:text-white"
+                    >
+                      {option}
+                    </ToggleGroupItem>
+                  ))}
+                </ToggleGroup>
               </div>
             </div>
-          )}
+          </div>
           
-          {/* Results Count */}
           <div className="mb-6">
             <p className="text-gray-600">
               Showing {currentClasses.length} of {filteredClasses.length} {filteredClasses.length === 1 ? 'class' : 'classes'}
             </p>
           </div>
           
-          {/* Classes Grid */}
           {currentClasses.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
               {currentClasses.map((classItem, index) => (
@@ -428,21 +407,18 @@ const AllClasses = () => {
             </div>
           )}
           
-          {/* Pagination */}
           {filteredClasses.length > classesPerPage && (
             <Pagination className="my-8">
               <PaginationContent>
                 <PaginationItem>
                   <PaginationPrevious 
                     onClick={() => setCurrentPage(p => Math.max(1, p - 1))} 
-                    disabled={currentPage === 1}
                     className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
                   />
                 </PaginationItem>
                 
                 {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
                   if (totalPages <= 5) {
-                    // Show all pages if there are 5 or less
                     return (
                       <PaginationItem key={i}>
                         <PaginationLink 
@@ -454,9 +430,7 @@ const AllClasses = () => {
                       </PaginationItem>
                     );
                   } else {
-                    // Show dynamic pagination for more than 5 pages
                     if (currentPage <= 3) {
-                      // Near the start
                       if (i < 4) {
                         return (
                           <PaginationItem key={i}>
@@ -476,7 +450,6 @@ const AllClasses = () => {
                         );
                       }
                     } else if (currentPage > totalPages - 3) {
-                      // Near the end
                       if (i === 0) {
                         return (
                           <PaginationItem key="ellipsis-start">
@@ -496,7 +469,6 @@ const AllClasses = () => {
                         );
                       }
                     } else {
-                      // In the middle
                       if (i === 0) {
                         return (
                           <PaginationItem key="ellipsis-start">
@@ -528,7 +500,6 @@ const AllClasses = () => {
                 <PaginationItem>
                   <PaginationNext 
                     onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                    disabled={currentPage === totalPages}
                     className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
                   />
                 </PaginationItem>
@@ -537,7 +508,6 @@ const AllClasses = () => {
           )}
         </div>
         
-        {/* CTA Section */}
         <CTASection 
           title="Can't find what you're looking for?"
           description="Contact us to request specific subjects or suggest new class topics. We're constantly expanding our offerings to meet your child's educational needs."
