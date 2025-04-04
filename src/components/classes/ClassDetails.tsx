@@ -67,6 +67,7 @@ const ClassDetails = () => {
     experience: "8+ years teaching experience",
     rating: classItem.rating,
     bio: `With over 8 years of teaching experience, ${classItem.teacher.split(' ')[1]} is passionate about making learning engaging and accessible for all students. Their teaching approach combines traditional methods with innovative techniques to ensure student success.`,
+    videoProfileUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ"
   };
   
   return (
@@ -93,11 +94,9 @@ const ClassDetails = () => {
               <h1 className="text-3xl font-bold text-gray-900 mb-1">{classItem.title}</h1>
               <p className="text-lg text-gray-600 mb-2">{classItem.level}</p>
             </div>
-            <div className="flex items-center gap-1 bg-green-50 px-3 py-1.5 rounded-full">
-              <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
-              <span className="font-medium">{classItem.rating}</span>
-            </div>
           </div>
+          
+          <TeacherProfileCard teacher={teacher} />
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             <div className="flex items-start gap-3">
@@ -145,8 +144,6 @@ const ClassDetails = () => {
               <li>Confidence in academic performance and subject mastery</li>
             </ul>
           </div>
-          
-          <TeacherProfileCard teacher={teacher} />
         </div>
         
         <div className="md:col-span-1">
