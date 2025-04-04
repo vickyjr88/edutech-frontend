@@ -1,5 +1,5 @@
 
-import { Book, Award, Users, Star, MessageSquare, Video, Globe, Briefcase, GraduationCap, Laptop, Building } from "lucide-react";
+import { Book, Award, Users, Star, MessageSquare, Video, Globe, Briefcase, GraduationCap, Laptop, School } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { StrategyItem } from "../teacher/professional-profile";
@@ -110,7 +110,7 @@ export default function TeacherDetails({ teacher }: TeacherDetailsProps) {
                 <p className="text-lg text-kidato-blue font-medium">{teacher.position}</p>
                 {teacher.school && (
                   <div className="flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800">
-                    <Building className="h-3.5 w-3.5" />
+                    <School className="h-3.5 w-3.5" />
                     <span>{teacher.school}</span>
                     {teacher.schoolStatus && (
                       <span className={`ml-1 text-xs px-1.5 py-0.5 rounded-full ${
