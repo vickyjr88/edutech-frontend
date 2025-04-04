@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { ArrowLeft, Calendar, Clock, Star, Users } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
@@ -13,8 +12,8 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import EnrollmentForm from "./EnrollmentForm";
+import TeacherProfileCard from "./TeacherProfileCard";
 
-// This would typically come from an API
 const getMockClassById = (id: string): ClassItemProps => {
   const mockClasses = [
     {
@@ -52,7 +51,6 @@ const getMockClassById = (id: string): ClassItemProps => {
     },
   ];
   
-  // For demo purposes, we're using the first class if ID doesn't match
   return mockClasses.find(c => c.title.toLowerCase().replace(/\s+/g, '-') === id) || mockClasses[0];
 };
 
@@ -61,6 +59,15 @@ const ClassDetails = () => {
   const [isEnrollmentOpen, setIsEnrollmentOpen] = useState(false);
   
   const classItem = getMockClassById(id || "");
+  
+  const teacher = {
+    name: classItem.teacher,
+    subject: classItem.subject,
+    imageSrc: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+    experience: "8+ years teaching experience",
+    rating: classItem.rating,
+    bio: `With over 8 years of teaching experience, ${classItem.teacher.split(' ')[1]} is passionate about making learning engaging and accessible for all students. Their teaching approach combines traditional methods with innovative techniques to ensure student success.`,
+  };
   
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -139,25 +146,7 @@ const ClassDetails = () => {
             </ul>
           </div>
           
-          <div>
-            <h2 className="text-xl font-semibold text-gray-900 mb-3">Meet Your Teacher</h2>
-            <div className="flex items-start gap-4">
-              <div className="w-16 h-16 rounded-full bg-gray-200 flex-shrink-0 overflow-hidden">
-                <img 
-                  src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80" 
-                  alt={classItem.teacher} 
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <div>
-                <h3 className="font-medium text-gray-900">{classItem.teacher}</h3>
-                <p className="text-gray-600 mb-2">Expert in {classItem.subject} Education</p>
-                <p className="text-gray-700">
-                  With over 8 years of teaching experience, {classItem.teacher.split(' ')[1]} is passionate about making learning engaging and accessible for all students. Their teaching approach combines traditional methods with innovative techniques to ensure student success.
-                </p>
-              </div>
-            </div>
-          </div>
+          <TeacherProfileCard teacher={teacher} />
         </div>
         
         <div className="md:col-span-1">
