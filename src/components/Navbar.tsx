@@ -19,12 +19,22 @@ const Navbar = () => {
                 className="h-8 w-auto"
               />
             </Link>
-            <div className="hidden md:ml-6 md:flex md:space-x-8">
+          </div>
+          
+          {/* Desktop navigation - centered */}
+          <div className="hidden md:flex md:items-center md:justify-center md:flex-1">
+            <div className="flex space-x-8">
               <Link 
                 to="/all-classes" 
                 className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-kidato-blue"
               >
                 All Classes
+              </Link>
+              <Link 
+                to="/teachers" 
+                className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-kidato-blue"
+              >
+                Teachers
               </Link>
               <Link 
                 to="/for-teachers" 
@@ -52,6 +62,7 @@ const Navbar = () => {
               </Link>
             </div>
           </div>
+          
           <div className="hidden md:flex items-center">
             <Link to="/login">
               <Button variant="outline" className="mr-3">
@@ -85,6 +96,13 @@ const Navbar = () => {
               onClick={() => setIsMenuOpen(false)}
             >
               All Classes
+            </Link>
+            <Link 
+              to="/teachers" 
+              className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-kidato-blue hover:bg-gray-50"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              Teachers
             </Link>
             <Link 
               to="/for-teachers" 

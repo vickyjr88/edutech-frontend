@@ -20,6 +20,7 @@ import HowItWorks from "./pages/HowItWorks";
 import AllClasses from "./pages/AllClasses";
 import ClassDetailsPage from "./pages/ClassDetailsPage";
 import TeacherProfilePage from "./pages/TeacherProfilePage";
+import TeacherProfilesPage from "./pages/TeacherProfilesPage";
 
 // Create a client
 const queryClient = new QueryClient();
@@ -40,6 +41,7 @@ const App = () => {
               <Route path="/for-students" element={<ForStudents />} />
               <Route path="/how-it-works" element={<HowItWorks />} />
               <Route path="/all-classes" element={<AllClasses />} />
+              <Route path="/teachers" element={<TeacherProfilesPage />} />
               <Route path="/class/:id" element={<ClassDetailsPage />} />
               <Route path="/teacher/:teacherId" element={<TeacherProfilePage />} />
               <Route path="/dashboard" element={
