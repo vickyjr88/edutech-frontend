@@ -12,6 +12,7 @@ import {
 import { useState } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
+import { Link } from "react-router-dom";
 
 interface TeacherProfileCardProps {
   teacher: {
@@ -29,6 +30,9 @@ const TeacherProfileCard = ({ teacher }: TeacherProfileCardProps) => {
   const [isMessageDialogOpen, setIsMessageDialogOpen] = useState(false);
   const [isVideoDialogOpen, setIsVideoDialogOpen] = useState(false);
   const [messageText, setMessageText] = useState("");
+
+  // Generate a URL-friendly name for the teacher
+  const teacherUrlName = teacher.name.toLowerCase().replace(/\s+/g, '-');
 
   const handleSendMessage = () => {
     // In a real app, this would send the message to the backend
@@ -66,7 +70,9 @@ const TeacherProfileCard = ({ teacher }: TeacherProfileCardProps) => {
         
         <div className="flex-1">
           <div className="mb-2">
-            <h3 className="text-lg font-medium text-gray-900">{teacher.name}</h3>
+            <Link to={`/teacher/${teacherUrlName}`} className="hover:underline">
+              <h3 className="text-lg font-medium text-gray-900">{teacher.name}</h3>
+            </Link>
             <p className="text-gray-600">Expert in {teacher.subject}</p>
           </div>
           
