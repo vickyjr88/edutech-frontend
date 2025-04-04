@@ -107,6 +107,18 @@ const getMockTeacher = (teacherUrlName: string) => {
           language: "French",
           description: "Intermediate level",
           isCertified: false
+        },
+        {
+          id: "lang4",
+          language: "German",
+          description: "Basic knowledge",
+          isCertified: false
+        },
+        {
+          id: "lang5",
+          language: "Arabic",
+          description: "Elementary proficiency",
+          isCertified: false
         }
       ],
       certifications: [
@@ -130,6 +142,20 @@ const getMockTeacher = (teacherUrlName: string) => {
           issuer: "Kenya Red Cross",
           date: "2020",
           isVerified: false
+        },
+        {
+          id: "cert4",
+          name: "STEM Teaching Excellence",
+          issuer: "African STEM Foundation",
+          date: "2021",
+          isVerified: true
+        },
+        {
+          id: "cert5",
+          name: "Environmental Education Leader",
+          issuer: "National Environmental Authority",
+          date: "2022",
+          isVerified: true
         }
       ],
       classes: [
@@ -182,6 +208,56 @@ const getMockTeacher = (teacherUrlName: string) => {
           rating: 5,
           comment: "Mr. Daniel makes learning science fun! His practical approach to teaching is refreshing and effective.",
           date: "December 10, 2022"
+        }
+      ],
+      technicalSkills: [
+        {
+          id: "tech1",
+          skill: "Learning Management Systems",
+          description: "Proficient with Canvas, Moodle, and Google Classroom",
+          level: "Advanced"
+        },
+        {
+          id: "tech2",
+          skill: "Educational Software",
+          description: "Experience with Kahoot, Quizlet, and Nearpod for interactive lessons",
+          level: "Advanced"
+        },
+        {
+          id: "tech3",
+          skill: "Video Production",
+          description: "Creation of educational videos using Camtasia and OBS Studio",
+          level: "Intermediate"
+        },
+        {
+          id: "tech4",
+          skill: "Microsoft Office Suite",
+          description: "Advanced use of Word, PowerPoint, and Excel for classroom materials",
+          level: "Advanced"
+        },
+        {
+          id: "tech5",
+          skill: "Digital Assessment Tools",
+          description: "Implementing formative and summative assessments using digital platforms",
+          level: "Intermediate"
+        },
+        {
+          id: "tech6",
+          skill: "Virtual Reality in Education",
+          description: "Using VR applications to create immersive learning experiences",
+          level: "Basic"
+        },
+        {
+          id: "tech7",
+          skill: "Interactive Whiteboard Technology",
+          description: "Creating engaging visual presentations and collaborative exercises",
+          level: "Advanced"
+        },
+        {
+          id: "tech8",
+          skill: "Data Analytics for Education",
+          description: "Analyzing student performance data to improve teaching methods",
+          level: "Intermediate"
         }
       ]
     };
@@ -291,6 +367,18 @@ const getMockTeacher = (teacherUrlName: string) => {
         language: "German",
         description: "Basic knowledge",
         isCertified: false
+      },
+      {
+        id: "lang4",
+        language: "French",
+        description: "Intermediate proficiency",
+        isCertified: true
+      },
+      {
+        id: "lang5",
+        language: "Mandarin",
+        description: "Elementary level",
+        isCertified: false
       }
     ],
     certifications: [
@@ -314,6 +402,20 @@ const getMockTeacher = (teacherUrlName: string) => {
         issuer: "Mentoring Alliance",
         date: "2021",
         isVerified: false
+      },
+      {
+        id: "cert4",
+        name: "Advanced Classroom Management",
+        issuer: "Education Leadership Council",
+        date: "2022",
+        isVerified: true
+      },
+      {
+        id: "cert5",
+        name: "Multicultural Education Specialist",
+        issuer: "Global Education Initiative",
+        date: "2023",
+        isVerified: true
       }
     ],
     classes: [
@@ -398,6 +500,24 @@ const getMockTeacher = (teacherUrlName: string) => {
         skill: "Digital Assessment Tools",
         description: "Implementing formative and summative assessments using digital platforms",
         level: "Intermediate"
+      },
+      {
+        id: "tech6",
+        skill: "Assistive Technology",
+        description: "Using tools to support students with diverse learning needs",
+        level: "Advanced"
+      },
+      {
+        id: "tech7",
+        skill: "Coding and Programming",
+        description: "Teaching basic programming concepts using Scratch and Python",
+        level: "Intermediate"
+      },
+      {
+        id: "tech8",
+        skill: "3D Printing for Education",
+        description: "Creating physical models to enhance conceptual understanding",
+        level: "Basic"
       }
     ]
   };
