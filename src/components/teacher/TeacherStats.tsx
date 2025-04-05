@@ -1,5 +1,5 @@
 
-import { Users, Star, Book, Award, Globe, Check } from "lucide-react";
+import { Users, Star, Book, Award, Check } from "lucide-react";
 
 interface TeacherStatsProps {
   teacher: {
@@ -15,13 +15,20 @@ interface TeacherStatsProps {
     rating?: number;
     methodologies?: Array<any>;
     strategies?: Array<any>;
-    languages?: Array<any>;
     reviews?: Array<any>;
     technicalSkills?: Array<any>;
   };
 }
 
 const TeacherStats = ({ teacher }: TeacherStatsProps) => {
+  // Count active classes (for demo purposes - in a real app this would be filtered by date)
+  const countActiveClasses = () => {
+    if (!teacher.classes) return 0;
+    // In a real app, would filter by class status or date
+    // For demo, just return half the classes as "active"
+    return Math.ceil(teacher.classes.length / 2); 
+  };
+  
   // Calculate years of experience
   const calculateExperienceYears = () => {
     if (!teacher.experience || teacher.experience.length === 0) return 0;
@@ -57,27 +64,40 @@ const TeacherStats = ({ teacher }: TeacherStatsProps) => {
     return methodCount + strategyCount;
   };
 
-  // Count languages
-  const countLanguages = () => {
-    return teacher.languages ? teacher.languages.length : 0;
-  };
-
+  const activeClasses = countActiveClasses();
+  const totalClasses = teacher.classes ? teacher.classes.length : 0;
   const yearsExperience = calculateExperienceYears();
   const positiveReviews = countPositiveReviews();
   const verifiedCertifications = countVerifiedCertifications();
   const teachingMethods = countTeachingMethods();
-  const languagesCount = countLanguages();
-  const classesCount = teacher.classes ? teacher.classes.length : 0;
 
   return (
     <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
       <h2 className="text-xl font-bold text-gray-900 mb-6">Teacher Highlights</h2>
       
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-        {/* Years of Experience */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+        {/* Active Classes */}
         <div className="flex flex-col items-center p-4 rounded-lg bg-blue-50 hover:bg-blue-100 transition-colors">
           <div className="mb-2 bg-blue-100 p-2 rounded-full">
-            <Award className="h-6 w-6 text-kidato-blue" />
+            <Users className="h-6 w-6 text-blue-600" />
+          </div>
+          <span className="text-2xl font-bold text-gray-900">{activeClasses}</span>
+          <p className="text-sm text-center text-gray-600">Live Classes</p>
+        </div>
+
+        {/* Total Classes */}
+        <div className="flex flex-col items-center p-4 rounded-lg bg-pink-50 hover:bg-pink-100 transition-colors">
+          <div className="mb-2 bg-pink-100 p-2 rounded-full">
+            <Book className="h-6 w-6 text-pink-600" />
+          </div>
+          <span className="text-2xl font-bold text-gray-900">{totalClasses}</span>
+          <p className="text-sm text-center text-gray-600">Total Classes</p>
+        </div>
+
+        {/* Years of Experience */}
+        <div className="flex flex-col items-center p-4 rounded-lg bg-indigo-50 hover:bg-indigo-100 transition-colors">
+          <div className="mb-2 bg-indigo-100 p-2 rounded-full">
+            <Award className="h-6 w-6 text-indigo-600" />
           </div>
           <span className="text-2xl font-bold text-gray-900">{yearsExperience}</span>
           <p className="text-sm text-center text-gray-600">Years Experience</p>
@@ -99,33 +119,6 @@ const TeacherStats = ({ teacher }: TeacherStatsProps) => {
           </div>
           <span className="text-2xl font-bold text-gray-900">{verifiedCertifications}</span>
           <p className="text-sm text-center text-gray-600">Verified Certs</p>
-        </div>
-
-        {/* Teaching Methods */}
-        <div className="flex flex-col items-center p-4 rounded-lg bg-purple-50 hover:bg-purple-100 transition-colors">
-          <div className="mb-2 bg-purple-100 p-2 rounded-full">
-            <Book className="h-6 w-6 text-purple-600" />
-          </div>
-          <span className="text-2xl font-bold text-gray-900">{teachingMethods}</span>
-          <p className="text-sm text-center text-gray-600">Teaching Methods</p>
-        </div>
-
-        {/* Languages */}
-        <div className="flex flex-col items-center p-4 rounded-lg bg-indigo-50 hover:bg-indigo-100 transition-colors">
-          <div className="mb-2 bg-indigo-100 p-2 rounded-full">
-            <Globe className="h-6 w-6 text-indigo-600" />
-          </div>
-          <span className="text-2xl font-bold text-gray-900">{languagesCount}</span>
-          <p className="text-sm text-center text-gray-600">Languages</p>
-        </div>
-
-        {/* Classes Offered */}
-        <div className="flex flex-col items-center p-4 rounded-lg bg-pink-50 hover:bg-pink-100 transition-colors">
-          <div className="mb-2 bg-pink-100 p-2 rounded-full">
-            <Users className="h-6 w-6 text-pink-600" />
-          </div>
-          <span className="text-2xl font-bold text-gray-900">{classesCount}</span>
-          <p className="text-sm text-center text-gray-600">Classes Offered</p>
         </div>
       </div>
     </div>
