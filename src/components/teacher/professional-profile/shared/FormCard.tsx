@@ -7,7 +7,7 @@ interface FormCardProps {
   children: ReactNode;
 }
 
-const FormCard = ({ title, children }: FormCardProps) => {
+export const FormCard = ({ title, children }: FormCardProps) => {
   return (
     <Card>
       <CardContent className="p-6">

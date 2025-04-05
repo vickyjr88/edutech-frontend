@@ -3,6 +3,7 @@ import { useState } from "react";
 import AboutTab from "./tabs/AboutTab";
 import ClassesTab from "./tabs/ClassesTab";
 import ReviewsTab from "./tabs/ReviewsTab";
+import BookingForm from "./BookingForm";
 import { BookOpen, FileText, Star } from "lucide-react";
 
 interface TabsProps {
@@ -11,6 +12,22 @@ interface TabsProps {
 
 export default function Tabs({ teacher }: TabsProps) {
   const [activeTab, setActiveTab] = useState<'classes' | 'about' | 'reviews'>('classes');
+  const [isBookingFlow, setIsBookingFlow] = useState(false);
+  const [selectedService, setSelectedService] = useState<string | undefined>(undefined);
+
+  const handleStartBooking = (serviceId?: string) => {
+    setSelectedService(serviceId);
+    setIsBookingFlow(true);
+  };
+
+  const handleCancelBooking = () => {
+    setIsBookingFlow(false);
+    setSelectedService(undefined);
+  };
+
+  if (isBookingFlow) {
+    return <BookingForm teacher={teacher} onCancel={handleCancelBooking} selectedService={selectedService} />;
+  }
 
   return (
     <>
@@ -40,7 +57,7 @@ export default function Tabs({ teacher }: TabsProps) {
         </div>
       </div>
       
-      {activeTab === 'classes' && <ClassesTab teacher={teacher} />}
+      {activeTab === 'classes' && <ClassesTab teacher={teacher} onBookService={handleStartBooking} />}
       {activeTab === 'about' && <AboutTab teacher={teacher} />}
       {activeTab === 'reviews' && <ReviewsTab teacher={teacher} />}
     </>
