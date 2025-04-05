@@ -82,7 +82,9 @@ export default function TeacherDetails({ teacher }: TeacherDetailsProps) {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <TeacherHeader teacher={teacher} />
       <TeacherStats teacher={teacher} />
-      <TeacherTabs teacher={teacher} />
+      <div id="teacher-tabs">
+        <TeacherTabs teacher={teacher} />
+      </div>
     </div>
   );
 }
