@@ -1,6 +1,6 @@
 
-import MessageTeacherDialog from "./MessageTeacherDialog";
-import VideoProfileDialog from "./VideoProfileDialog";
+import { MessageTeacherDialog } from "./MessageTeacherDialog";
+import { VideoProfileDialog } from "./VideoProfileDialog";
 
 interface TeacherActionsProps {
   teacher: {
