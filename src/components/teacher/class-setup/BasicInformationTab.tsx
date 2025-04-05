@@ -101,25 +101,25 @@ const BasicInformationTab = ({ form, onNextTab }: BasicInformationTabProps) => {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Grade Level</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value || ""}>
+                <Select onValueChange={field.onChange} defaultValue={field.value || "grade1"}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select grade level" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="1">1st Grade</SelectItem>
-                    <SelectItem value="2">2nd Grade</SelectItem>
-                    <SelectItem value="3">3rd Grade</SelectItem>
-                    <SelectItem value="4">4th Grade</SelectItem>
-                    <SelectItem value="5">5th Grade</SelectItem>
-                    <SelectItem value="6">6th Grade</SelectItem>
-                    <SelectItem value="7">7th Grade</SelectItem>
-                    <SelectItem value="8">8th Grade</SelectItem>
-                    <SelectItem value="9">9th Grade</SelectItem>
-                    <SelectItem value="10">10th Grade</SelectItem>
-                    <SelectItem value="11">11th Grade</SelectItem>
-                    <SelectItem value="12">12th Grade</SelectItem>
+                    <SelectItem value="grade1">1st Grade</SelectItem>
+                    <SelectItem value="grade2">2nd Grade</SelectItem>
+                    <SelectItem value="grade3">3rd Grade</SelectItem>
+                    <SelectItem value="grade4">4th Grade</SelectItem>
+                    <SelectItem value="grade5">5th Grade</SelectItem>
+                    <SelectItem value="grade6">6th Grade</SelectItem>
+                    <SelectItem value="grade7">7th Grade</SelectItem>
+                    <SelectItem value="grade8">8th Grade</SelectItem>
+                    <SelectItem value="grade9">9th Grade</SelectItem>
+                    <SelectItem value="grade10">10th Grade</SelectItem>
+                    <SelectItem value="grade11">11th Grade</SelectItem>
+                    <SelectItem value="grade12">12th Grade</SelectItem>
                   </SelectContent>
                 </Select>
                 <FormDescription>
@@ -136,18 +136,18 @@ const BasicInformationTab = ({ form, onNextTab }: BasicInformationTabProps) => {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Age Range</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value || ""}>
+                <Select onValueChange={field.onChange} defaultValue={field.value || "age3-5"}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select age range" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="3-5">3-5 years</SelectItem>
-                    <SelectItem value="6-8">6-8 years</SelectItem>
-                    <SelectItem value="9-11">9-11 years</SelectItem>
-                    <SelectItem value="12-14">12-14 years</SelectItem>
-                    <SelectItem value="15-18">15-18 years</SelectItem>
+                    <SelectItem value="age3-5">3-5 years</SelectItem>
+                    <SelectItem value="age6-8">6-8 years</SelectItem>
+                    <SelectItem value="age9-11">9-11 years</SelectItem>
+                    <SelectItem value="age12-14">12-14 years</SelectItem>
+                    <SelectItem value="age15-18">15-18 years</SelectItem>
                   </SelectContent>
                 </Select>
                 <FormDescription>

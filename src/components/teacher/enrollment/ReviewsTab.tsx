@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -134,25 +133,25 @@ const ReviewsTab = ({ classId }: ReviewsTabProps) => {
                             <SelectValue placeholder="Select reviewer type" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="student" className="flex items-center">
+                            <SelectItem value="student">
                               <div className="flex items-center">
                                 <User className="mr-2 h-4 w-4" />
                                 Student
                               </div>
                             </SelectItem>
-                            <SelectItem value="parent" className="flex items-center">
+                            <SelectItem value="parent">
                               <div className="flex items-center">
                                 <Users className="mr-2 h-4 w-4" />
                                 Parent
                               </div>
                             </SelectItem>
-                            <SelectItem value="supervisor" className="flex items-center">
+                            <SelectItem value="supervisor">
                               <div className="flex items-center">
                                 <User className="mr-2 h-4 w-4" />
                                 Supervisor
                               </div>
                             </SelectItem>
-                            <SelectItem value="other" className="flex items-center">
+                            <SelectItem value="other">
                               <div className="flex items-center">
                                 <User className="mr-2 h-4 w-4" />
                                 Other

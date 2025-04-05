@@ -135,8 +135,8 @@ const EducationItemComponent = ({
         <div>
           <Label htmlFor={`edu-type-${item.id}`}>Institution Type</Label>
           <Select 
-            value={item.institutionType} 
-            onValueChange={(value: InstitutionType | "") => onUpdate(item.id, 'institutionType', value)}
+            value={item.institutionType || "primary"} 
+            onValueChange={(value: InstitutionType | "") => onUpdate(item.id, 'institutionType', value || "primary")}
           >
             <SelectTrigger id={`edu-type-${item.id}`}>
               <SelectValue placeholder="Select institution type" />
