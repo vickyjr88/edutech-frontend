@@ -14,6 +14,10 @@ interface TeacherDetailsProps {
     rating: number;
     ratingCount: number;
     videoProfileUrl?: string;
+    teachingMode?: "online" | "offline" | "hybrid";
+    grades?: string[];
+    subjects?: string[];
+    curriculum?: string[];
     education: Array<{
       id: string;
       institution: string;

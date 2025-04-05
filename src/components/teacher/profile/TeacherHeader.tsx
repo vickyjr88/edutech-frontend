@@ -1,6 +1,6 @@
 
 import { Star, Check, Globe } from "lucide-react";
-import { Award } from "lucide-react";
+import { Award, BookOpen, Monitor, Users, GraduationCap } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { MethodologyItem, StrategyItem } from "../professional-profile";
 import MessageTeacherDialog from "./MessageTeacherDialog";
@@ -34,10 +34,23 @@ interface TeacherHeaderProps {
       date: string;
       isVerified: boolean;
     }>;
+    // Adding optional teaching info fields
+    teachingMode?: "online" | "offline" | "hybrid";
+    grades?: string[];
+    subjects?: string[];
+    curriculum?: string[];
   }
 }
 
 export default function TeacherHeader({ teacher }: TeacherHeaderProps) {
+  // Default teaching info if not provided
+  const teachingInfo = {
+    mode: teacher.teachingMode || "hybrid",
+    grades: teacher.grades || ["Grade 6-8", "Grade 9-12"],
+    subjects: teacher.subjects || ["Science", "Mathematics"],
+    curriculum: teacher.curriculum || ["National Curriculum", "IB", "Cambridge"]
+  };
+
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden mb-10">
       <div className="bg-kidato-blue/10 p-8">
@@ -71,6 +84,33 @@ export default function TeacherHeader({ teacher }: TeacherHeaderProps) {
                   )}
                 </div>
               )}
+            </div>
+            
+            {/* New row with teaching information */}
+            <div className="flex flex-wrap items-center gap-3 justify-center md:justify-start mb-4">
+              <div className="flex items-center gap-1 px-3 py-1.5 rounded-full text-sm bg-indigo-50 text-indigo-700">
+                <Monitor className="h-4 w-4" />
+                <span>
+                  {teachingInfo.mode === "online" ? "Online" : 
+                   teachingInfo.mode === "offline" ? "In-person" : 
+                   "Online & In-person"}
+                </span>
+              </div>
+              
+              <div className="flex items-center gap-1 px-3 py-1.5 rounded-full text-sm bg-teal-50 text-teal-700">
+                <GraduationCap className="h-4 w-4" />
+                <span>{teachingInfo.grades.join(", ")}</span>
+              </div>
+              
+              <div className="flex items-center gap-1 px-3 py-1.5 rounded-full text-sm bg-amber-50 text-amber-700">
+                <BookOpen className="h-4 w-4" />
+                <span>{teachingInfo.subjects.join(", ")}</span>
+              </div>
+              
+              <div className="flex items-center gap-1 px-3 py-1.5 rounded-full text-sm bg-purple-50 text-purple-700">
+                <Users className="h-4 w-4" />
+                <span>{teachingInfo.curriculum.join(", ")}</span>
+              </div>
             </div>
             
             <div className="flex flex-wrap gap-4 justify-center md:justify-start mb-6">
