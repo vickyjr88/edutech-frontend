@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Star, Filter, Calendar, Clock, ArrowRight } from "lucide-react";
+import { Star, Filter, Calendar, Clock, ArrowRight, Users, User } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -28,20 +28,50 @@ interface ClassesTabProps {
 
 // Mock availability data - this would come from an API in a real application
 const availabilityData = {
-  // Format: day of week (0 = Sunday) mapped to available time slots
-  0: ["13:00", "14:00", "15:00"],
-  1: ["09:00", "10:00", "15:00", "16:00"],
-  2: ["09:00", "10:00", "14:00"],
-  3: ["11:00", "13:00", "14:00", "15:00"],
-  4: ["09:00", "10:00", "11:00"],
-  5: ["14:00", "15:00", "16:00"],
-  6: ["10:00", "11:00"]
+  // Format: day of week (0 = Sunday) mapped to available time slots with session type
+  0: [
+    { time: "13:00", type: "one-to-one" },
+    { time: "14:00", type: "one-to-one" },
+    { time: "15:00", type: "group" }
+  ],
+  1: [
+    { time: "09:00", type: "one-to-one" },
+    { time: "10:00", type: "group" },
+    { time: "15:00", type: "one-to-one" },
+    { time: "16:00", type: "group" }
+  ],
+  2: [
+    { time: "09:00", type: "one-to-one" },
+    { time: "10:00", type: "one-to-one" },
+    { time: "14:00", type: "group" }
+  ],
+  3: [
+    { time: "11:00", type: "group" },
+    { time: "13:00", type: "one-to-one" },
+    { time: "14:00", type: "one-to-one" },
+    { time: "15:00", type: "group" }
+  ],
+  4: [
+    { time: "09:00", type: "one-to-one" },
+    { time: "10:00", type: "group" },
+    { time: "11:00", type: "one-to-one" }
+  ],
+  5: [
+    { time: "14:00", type: "group" },
+    { time: "15:00", type: "one-to-one" },
+    { time: "16:00", type: "group" }
+  ],
+  6: [
+    { time: "10:00", type: "one-to-one" },
+    { time: "11:00", type: "group" }
+  ]
 };
 
 export default function ClassesTab({ teacher }: ClassesTabProps) {
   const [classType, setClassType] = useState<"all" | "academic" | "afterschool">("all");
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
+  const [selectedSessionType, setSelectedSessionType] = useState<string | null>(null);
   const [selectedSubject, setSelectedSubject] = useState("");
   const [bookingStep, setBookingStep] = useState<"calendar" | "details">("calendar");
   const [bookingNotes, setBookingNotes] = useState("");
@@ -60,8 +90,9 @@ export default function ClassesTab({ teacher }: ClassesTabProps) {
   const availableTimeSlots = selectedDate ? getTimeSlots(selectedDate) : [];
 
   // Handle time slot selection
-  const handleTimeSlotSelect = (time: string) => {
+  const handleTimeSlotSelect = (time: string, type: string) => {
     setSelectedTime(time);
+    setSelectedSessionType(type);
   };
 
   // Handle booking submission
@@ -80,6 +111,7 @@ export default function ClassesTab({ teacher }: ClassesTabProps) {
     // Reset form
     setSelectedDate(new Date());
     setSelectedTime(null);
+    setSelectedSessionType(null);
     setSelectedSubject("");
     setBookingNotes("");
     setBookingStep("calendar");
@@ -158,7 +190,12 @@ export default function ClassesTab({ teacher }: ClassesTabProps) {
     <div className="space-y-10">
       {/* On-Demand Booking Calendar Section */}
       <div className="bg-white rounded-lg border p-6">
-        <h2 className="text-2xl font-bold text-gray-900 mb-6">Book On-Demand Session with {teacher.name}</h2>
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">Book On-Demand Session with {teacher.name}</h2>
+        <p className="text-gray-600 mb-6">
+          On-demand sessions allow you to book personalized tutoring at your convenience. 
+          Select your preferred date and time below, choose between one-to-one or group sessions, 
+          and get immediate help with specific subjects or homework questions.
+        </p>
         
         {bookingStep === "calendar" ? (
           <div className="grid md:grid-cols-7 gap-8">
@@ -181,6 +218,17 @@ export default function ClassesTab({ teacher }: ClassesTabProps) {
                   return date < now || date > maxDate;
                 }}
               />
+              
+              <div className="mt-4 flex items-center gap-6">
+                <div className="flex items-center gap-2">
+                  <div className="h-3 w-3 rounded-full bg-kidato-blue"></div>
+                  <span className="text-xs text-gray-600">One-to-One Session</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="h-3 w-3 rounded-full bg-emerald-500"></div>
+                  <span className="text-xs text-gray-600">Group Session</span>
+                </div>
+              </div>
             </div>
             
             <div className="md:col-span-4">
@@ -196,14 +244,36 @@ export default function ClassesTab({ teacher }: ClassesTabProps) {
               {selectedDate && (
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                   {availableTimeSlots.length > 0 ? (
-                    availableTimeSlots.map((time) => (
+                    availableTimeSlots.map((slot) => (
                       <Button 
-                        key={time} 
-                        variant={selectedTime === time ? "default" : "outline"}
-                        className={`px-4 py-6 h-auto ${selectedTime === time ? 'bg-kidato-blue text-white' : 'border-gray-300 text-gray-700'}`}
-                        onClick={() => handleTimeSlotSelect(time)}
+                        key={slot.time} 
+                        variant={selectedTime === slot.time ? "default" : "outline"}
+                        className={`px-4 py-6 h-auto ${
+                          selectedTime === slot.time 
+                            ? (slot.type === 'one-to-one' ? 'bg-kidato-blue text-white' : 'bg-emerald-500 text-white')
+                            : 'border-gray-300 text-gray-700'
+                        }`}
+                        onClick={() => handleTimeSlotSelect(slot.time, slot.type)}
                       >
-                        <Clock className="h-4 w-4 mr-2" /> {time}
+                        <div className="flex flex-col items-center gap-1">
+                          <div className="flex items-center gap-2">
+                            <Clock className="h-4 w-4" /> 
+                            <span>{slot.time}</span>
+                          </div>
+                          <div className="flex items-center text-xs mt-1 gap-1">
+                            {slot.type === 'one-to-one' ? (
+                              <>
+                                <User className="h-3 w-3" /> 
+                                <span>One-to-One</span>
+                              </>
+                            ) : (
+                              <>
+                                <Users className="h-3 w-3" /> 
+                                <span>Group</span>
+                              </>
+                            )}
+                          </div>
+                        </div>
                       </Button>
                     ))
                   ) : (
@@ -235,9 +305,23 @@ export default function ClassesTab({ teacher }: ClassesTabProps) {
                   <span className="text-gray-500">Date:</span>
                   <span className="font-medium">{selectedDate && format(selectedDate, 'EEEE, MMMM d, yyyy')}</span>
                 </div>
-                <div className="flex justify-between">
+                <div className="flex justify-between mb-2">
                   <span className="text-gray-500">Time:</span>
                   <span className="font-medium">{selectedTime}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Session Type:</span>
+                  <span className="font-medium flex items-center gap-1">
+                    {selectedSessionType === 'one-to-one' ? (
+                      <>
+                        <User className="h-3 w-3" /> One-to-One
+                      </>
+                    ) : (
+                      <>
+                        <Users className="h-3 w-3" /> Group
+                      </>
+                    )}
+                  </span>
                 </div>
               </div>
             </div>
