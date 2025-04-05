@@ -2,7 +2,7 @@
 import { useState, useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Star, Filter, Calendar as CalendarIcon, Clock, ArrowRight, Users, User } from "lucide-react";
+import { Star, Filter, Calendar as CalendarIcon, Clock, ArrowRight, Users, User, Calendar } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -67,6 +67,9 @@ const availabilityData = {
   ]
 };
 
+// Define days when the teacher is completely unavailable (no slots)
+const unavailableDays = [2, 3]; // Tuesday and Wednesday are completely unavailable
+
 // Mock booked slots - this would come from an API in a real application
 const bookedSlots = {
   // Format: 'YYYY-MM-DD' mapped to booked time slots
@@ -94,6 +97,10 @@ export default function ClassesTab({ teacher }: ClassesTabProps) {
   const getTimeSlots = (date: Date | undefined) => {
     if (!date) return [];
     const dayOfWeek = date.getDay();
+    
+    // Check if this day is marked as completely unavailable
+    if (unavailableDays.includes(dayOfWeek)) return [];
+    
     return availabilityData[dayOfWeek as keyof typeof availabilityData] || [];
   };
 
@@ -125,6 +132,12 @@ export default function ClassesTab({ teacher }: ClassesTabProps) {
     const dayOfWeek = date.getDay();
     return !availabilityData[dayOfWeek as keyof typeof availabilityData] || 
            availabilityData[dayOfWeek as keyof typeof availabilityData].length === 0;
+  };
+
+  // Check if a date is completely unavailable (teacher has not scheduled any slots)
+  const isTeacherUnavailable = (date: Date): boolean => {
+    const dayOfWeek = date.getDay();
+    return unavailableDays.includes(dayOfWeek);
   };
 
   const availableTimeSlots = selectedDate ? getTimeSlots(selectedDate) : [];
@@ -242,9 +255,10 @@ export default function ClassesTab({ teacher }: ClassesTabProps) {
       <div className="bg-white rounded-lg border p-6">
         <h2 className="text-2xl font-bold text-gray-900 mb-2">Book On-Demand Session with {teacher.name}</h2>
         <p className="text-gray-600 mb-6">
-          On-demand sessions allow you to book personalized tutoring at your convenience. 
-          Select your preferred date and time below, choose between one-to-one or group sessions, 
-          and get immediate help with specific subjects or homework questions.
+          On-demand sessions allow you to book personalized tutoring at times that work for you. 
+          Select a green date with available slots, choose a time, and get immediate help with specific 
+          subjects or homework questions. One-to-one sessions offer personalized attention, while group 
+          sessions provide collaborative learning at a lower cost.
         </p>
         
         {bookingStep === "calendar" ? (
@@ -270,12 +284,14 @@ export default function ClassesTab({ teacher }: ClassesTabProps) {
                 modifiers={{
                   available: (date) => hasAvailableSlots(date),
                   booked: (date) => isDateFullyBooked(date),
-                  noSlots: (date) => hasNoSlots(date)
+                  noSlots: (date) => hasNoSlots(date),
+                  unavailable: (date) => isTeacherUnavailable(date)
                 }}
                 modifiersClassNames={{
                   available: "bg-green-50 text-green-800 font-medium border-green-200",
                   booked: "bg-red-50 text-red-800 font-medium border-red-200",
-                  noSlots: "bg-gray-50 text-gray-400 opacity-50"
+                  noSlots: "bg-gray-50 text-gray-400 opacity-50",
+                  unavailable: "bg-orange-50 text-orange-800 font-medium border-orange-200 opacity-60"
                 }}
               />
               
@@ -293,6 +309,10 @@ export default function ClassesTab({ teacher }: ClassesTabProps) {
                   <div className="flex items-center gap-2">
                     <div className="h-3 w-3 rounded-full bg-gray-300"></div>
                     <span className="text-xs text-gray-600">No Scheduled Slots</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="h-3 w-3 rounded-full bg-orange-400"></div>
+                    <span className="text-xs text-gray-600">Teacher Unavailable</span>
                   </div>
                 </div>
                 <div className="border-t pt-3 mt-2">
@@ -320,7 +340,18 @@ export default function ClassesTab({ teacher }: ClassesTabProps) {
               
               {selectedDate && (
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                  {filteredTimeSlots.length > 0 ? (
+                  {isTeacherUnavailable(selectedDate) ? (
+                    <div className="col-span-full flex flex-col items-center justify-center py-8 px-4 border border-orange-200 bg-orange-50 rounded-md">
+                      <Calendar className="h-12 w-12 text-orange-500 mb-3 opacity-80" />
+                      <h4 className="text-orange-800 font-medium text-lg mb-1">Teacher Unavailable</h4>
+                      <p className="text-orange-700 text-center">
+                        {teacher.name} has not scheduled any sessions for this day.
+                      </p>
+                      <p className="text-orange-700 text-center text-sm mt-1">
+                        Please try selecting another date from the calendar.
+                      </p>
+                    </div>
+                  ) : filteredTimeSlots.length > 0 ? (
                     filteredTimeSlots.map((slot) => (
                       <Button 
                         key={slot.time} 
