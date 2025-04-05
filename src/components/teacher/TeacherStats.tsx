@@ -61,11 +61,21 @@ const TeacherStats = ({ teacher }: TeacherStatsProps) => {
     return teacher.certifications.filter(cert => cert.isVerified).length;
   };
 
-  // Total number of teaching methods (methodologies + strategies)
-  const countTeachingMethods = () => {
-    const methodCount = teacher.methodologies ? teacher.methodologies.length : 0;
-    const strategyCount = teacher.strategies ? teacher.strategies.length : 0;
-    return methodCount + strategyCount;
+  // Count total students taught (mock data based on classes)
+  const countStudentsTaught = () => {
+    if (!teacher.classes) return 0;
+    // Calculate a realistic number of students based on classes
+    // Assuming average of 15-30 students per class
+    const minStudentsPerClass = 15;
+    const maxStudentsPerClass = 30;
+    let totalStudents = 0;
+    
+    teacher.classes.forEach(() => {
+      const classSize = Math.floor(Math.random() * (maxStudentsPerClass - minStudentsPerClass + 1)) + minStudentsPerClass;
+      totalStudents += classSize;
+    });
+    
+    return totalStudents;
   };
 
   // Mock growth metrics (for demo purposes)
@@ -73,7 +83,8 @@ const TeacherStats = ({ teacher }: TeacherStatsProps) => {
     return {
       classesGrowth: Math.floor(Math.random() * 30) + 5, // 5% to 35%
       reviewsGrowth: Math.floor(Math.random() * 40) + 10, // 10% to 50%
-      certGrowth: Math.floor(Math.random() * 25) // 0% to 25%
+      certGrowth: Math.floor(Math.random() * 25), // 0% to 25%
+      studentsGrowth: Math.floor(Math.random() * 35) + 10, // 10% to 45%
     };
   };
 
@@ -82,7 +93,7 @@ const TeacherStats = ({ teacher }: TeacherStatsProps) => {
   const yearsExperience = calculateExperienceYears();
   const positiveReviews = countPositiveReviews();
   const verifiedCertifications = countVerifiedCertifications();
-  const teachingMethods = countTeachingMethods();
+  const studentsTaught = countStudentsTaught();
   const growthMetrics = getGrowthMetrics();
 
   const handleClassesClick = () => {
@@ -109,7 +120,7 @@ const TeacherStats = ({ teacher }: TeacherStatsProps) => {
       </div>
       
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-        {/* Active Classes */}
+        {/* Live/Total Classes */}
         <div 
           className="flex flex-col items-center p-4 rounded-lg bg-blue-50 hover:bg-blue-100 transition-colors cursor-pointer"
           onClick={handleClassesClick}
@@ -117,8 +128,12 @@ const TeacherStats = ({ teacher }: TeacherStatsProps) => {
           <div className="mb-2 bg-blue-100 p-2 rounded-full">
             <Users className="h-6 w-6 text-blue-600" />
           </div>
-          <span className="text-2xl font-bold text-gray-900">{activeClasses}</span>
-          <p className="text-sm text-center text-gray-600">Live Classes</p>
+          <div className="flex items-baseline">
+            <span className="text-2xl font-bold text-gray-900">{activeClasses}</span>
+            <span className="text-lg text-gray-500 mx-1">/</span>
+            <span className="text-lg text-gray-500">{totalClasses}</span>
+          </div>
+          <p className="text-sm text-center text-gray-600">Live/Total Classes</p>
           {growthMetrics.classesGrowth > 0 && (
             <div className="mt-2 flex items-center text-xs text-green-600">
               <TrendingUp className="h-3 w-3 mr-1" />
@@ -127,14 +142,19 @@ const TeacherStats = ({ teacher }: TeacherStatsProps) => {
           )}
         </div>
 
-        {/* Total Classes */}
+        {/* Students Taught */}
         <div className="flex flex-col items-center p-4 rounded-lg bg-pink-50 hover:bg-pink-100 transition-colors">
           <div className="mb-2 bg-pink-100 p-2 rounded-full">
             <Book className="h-6 w-6 text-pink-600" />
           </div>
-          <span className="text-2xl font-bold text-gray-900">{totalClasses}</span>
-          <p className="text-sm text-center text-gray-600">Total Classes</p>
-          <div className="mt-2 h-4"></div> {/* Spacer for alignment */}
+          <span className="text-2xl font-bold text-gray-900">{studentsTaught}</span>
+          <p className="text-sm text-center text-gray-600">Students Taught</p>
+          {growthMetrics.studentsGrowth > 0 && (
+            <div className="mt-2 flex items-center text-xs text-green-600">
+              <TrendingUp className="h-3 w-3 mr-1" />
+              <span>+{growthMetrics.studentsGrowth}%</span>
+            </div>
+          )}
         </div>
 
         {/* Years of Experience */}
