@@ -12,7 +12,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 interface TeachingTeamTabProps {
   form: UseFormReturn<ClassFormValues>;
   onPreviousTab: () => void;
-  onNextTab: () => void; // Add this line to fix the prop error
+  onNextTab: () => void; 
   isSubmitting: boolean;
   hasTeamTeaching: boolean;
   teamMembers: TeamMember[];
@@ -24,7 +24,7 @@ interface TeachingTeamTabProps {
 const TeachingTeamTab = ({
   form,
   onPreviousTab,
-  onNextTab, // Add this line to fix the prop error
+  onNextTab,
   isSubmitting,
   hasTeamTeaching,
   teamMembers,
@@ -73,7 +73,7 @@ const TeachingTeamTab = ({
                           <div>
                             <p className="text-sm font-medium mb-2">Role</p>
                             <Select
-                              value={member.role}
+                              value={member.role || "co-teacher"}
                               onValueChange={(value) => updateTeamMember(member.id, "role", value)}
                             >
                               <SelectTrigger>

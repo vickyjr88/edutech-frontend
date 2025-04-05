@@ -54,7 +54,7 @@ const ClassFilters = ({
             <SelectContent>
               <SelectGroup>
                 {subjects.map((subject) => (
-                  <SelectItem key={subject} value={subject}>{subject}</SelectItem>
+                  <SelectItem key={subject} value={subject || "default-subject"}>{subject}</SelectItem>
                 ))}
               </SelectGroup>
             </SelectContent>
@@ -70,7 +70,7 @@ const ClassFilters = ({
             <SelectContent>
               <SelectGroup>
                 {grades.map((grade) => (
-                  <SelectItem key={grade} value={grade}>{grade}</SelectItem>
+                  <SelectItem key={grade} value={grade || "default-grade"}>{grade}</SelectItem>
                 ))}
               </SelectGroup>
             </SelectContent>
@@ -107,7 +107,7 @@ const ClassFilters = ({
             {sortOptions.map((option) => (
               <ToggleGroupItem 
                 key={option} 
-                value={option} 
+                value={option || "default-option"} 
                 className="text-xs px-3 py-1 data-[state=on]:bg-kidato-blue data-[state=on]:text-white"
               >
                 {option}

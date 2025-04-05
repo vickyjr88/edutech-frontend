@@ -28,7 +28,7 @@ const BasicInformationTab = ({ form, onNextTab }: BasicInformationTabProps) => {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Class Type</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select onValueChange={field.onChange} defaultValue={field.value || "academic"}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Select class type" />
