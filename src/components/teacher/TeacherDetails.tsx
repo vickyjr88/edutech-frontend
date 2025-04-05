@@ -1,5 +1,6 @@
 
 import { TeacherHeader, TeacherTabs } from "./profile";
+import TeacherStats from "./TeacherStats";
 
 interface TeacherDetailsProps {
   teacher: {
@@ -80,6 +81,7 @@ export default function TeacherDetails({ teacher }: TeacherDetailsProps) {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <TeacherHeader teacher={teacher} />
+      <TeacherStats teacher={teacher} />
       <TeacherTabs teacher={teacher} />
     </div>
   );
