@@ -2,25 +2,20 @@ import { useParams } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import TeacherDetails from "@/components/teacher/TeacherDetails";
-import TeacherStats from "@/components/teacher/TeacherStats";
 import { useEffect, useState } from "react";
 import { MethodologyItem, StrategyItem, LanguageItem } from "@/components/teacher/professional-profile";
 
-// Mock data for now - in a real app this would come from an API
 const getMockTeacher = (teacherUrlName: string) => {
   if (!teacherUrlName) {
     console.log("No teacher ID provided");
     return getDefaultTeacher();
   }
   
-  // Clean the teacher URL name to handle variations with dots or dashes
-  // Replace dots with single dash and normalize consecutive dashes to single dash
   const normalizedTeacherName = teacherUrlName.replace(/\./g, '-').replace(/-+/g, '-').toLowerCase();
   
   console.log("Teacher ID from URL:", teacherUrlName);
   console.log("Looking for teacher with normalized name:", normalizedTeacherName);
   
-  // For demo purposes, returning mock data for specific teachers
   if (normalizedTeacherName === "mr-daniel-mwangi") {
     return {
       id: "1",
@@ -29,7 +24,7 @@ const getMockTeacher = (teacherUrlName: string) => {
       bio: "With over 8 years of teaching experience, Daniel is passionate about making learning engaging and accessible for all students. His teaching approach combines traditional methods with innovative techniques to ensure student success.",
       position: "Senior Science Teacher",
       school: "Nairobi International School",
-      schoolStatus: "active", // can be "active" or "past"
+      schoolStatus: "active",
       rating: 4.8,
       ratingCount: 127,
       videoProfileUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
@@ -179,7 +174,8 @@ const getMockTeacher = (teacherUrlName: string) => {
           subject: "Science",
           level: "Grade 5-6",
           rating: 4.8,
-          imageSrc: "https://images.unsplash.com/photo-1503944583220-79d8926ad5e2?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80"
+          imageSrc: "https://images.unsplash.com/photo-1503944583220-79d8926ad5e2?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+          type: "academic"
         },
         {
           id: "class2",
@@ -187,7 +183,8 @@ const getMockTeacher = (teacherUrlName: string) => {
           subject: "Chemistry",
           level: "Grade 7-8",
           rating: 4.9,
-          imageSrc: "https://images.unsplash.com/photo-1587394910144-ab3451fd93e5?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80"
+          imageSrc: "https://images.unsplash.com/photo-1587394910144-ab3451fd93e5?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+          type: "academic"
         },
         {
           id: "class3",
@@ -195,7 +192,26 @@ const getMockTeacher = (teacherUrlName: string) => {
           subject: "Physics",
           level: "Grade 6-7",
           rating: 4.7,
-          imageSrc: "https://images.unsplash.com/photo-1636466497217-26a8cbeaf0aa?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80"
+          imageSrc: "https://images.unsplash.com/photo-1636466497217-26a8cbeaf0aa?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+          type: "academic"
+        },
+        {
+          id: "class4",
+          title: "Creative Arts & Crafts",
+          subject: "Arts",
+          level: "Ages 8-10",
+          rating: 4.9,
+          imageSrc: "https://images.unsplash.com/photo-1613140952277-1c6bd0386ff5?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+          type: "afterschool"
+        },
+        {
+          id: "class5",
+          title: "Coding for Kids",
+          subject: "Technology",
+          level: "Ages 10-14",
+          rating: 5.0,
+          imageSrc: "https://images.unsplash.com/photo-1603354350317-6f7aaa5911c5?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+          type: "afterschool"
         }
       ],
       reviews: [
@@ -427,7 +443,8 @@ const getMockTeacher = (teacherUrlName: string) => {
           subject: "Mathematics",
           level: "Grade 8-9",
           rating: 4.9,
-          imageSrc: "https://images.unsplash.com/photo-1635070041078-e363dbe005cb?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80"
+          imageSrc: "https://images.unsplash.com/photo-1635070041078-e363dbe005cb?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+          type: "academic"
         },
         {
           id: "class2",
@@ -435,7 +452,8 @@ const getMockTeacher = (teacherUrlName: string) => {
           subject: "Mathematics",
           level: "Grade 10-11",
           rating: 4.8,
-          imageSrc: "https://images.unsplash.com/photo-1509228468518-180dd4864904?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80"
+          imageSrc: "https://images.unsplash.com/photo-1509228468518-180dd4864904?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+          type: "academic"
         },
         {
           id: "class3",
@@ -443,7 +461,26 @@ const getMockTeacher = (teacherUrlName: string) => {
           subject: "Mathematics",
           level: "Grade 11-12",
           rating: 4.7,
-          imageSrc: "https://images.unsplash.com/photo-1580582932707-520aed937b7b?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80"
+          imageSrc: "https://images.unsplash.com/photo-1580582932707-520aed937b7b?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+          type: "academic"
+        },
+        {
+          id: "class4",
+          title: "Math Fun & Games",
+          subject: "Mathematics",
+          level: "Ages 6-8",
+          rating: 4.9,
+          imageSrc: "https://images.unsplash.com/photo-1587654780291-39c9404d746b?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+          type: "afterschool"
+        },
+        {
+          id: "class5",
+          title: "Competitive Math Coaching",
+          subject: "Mathematics",
+          level: "Ages 12-16",
+          rating: 5.0,
+          imageSrc: "https://images.unsplash.com/photo-1596495577886-d920f1fb7238?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+          type: "afterschool"
         }
       ],
       reviews: [
@@ -466,7 +503,7 @@ const getMockTeacher = (teacherUrlName: string) => {
         {
           id: "rev3",
           reviewer: "Michael Ochieng",
-          reviewerImage: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-1.2.1&auto=format&fit=crop&w=256&q=80",
+          reviewerImage: "https://images.unsplash.com/photo-1500648767785-00dcc994a43e?ixlib=rb-1.2.1&auto=format&fit=crop&w=256&q=80",
           rating: 4,
           comment: "Very methodical and patient. Provides excellent resources and is always available to help with difficult problems.",
           date: "February 5, 2023"
@@ -525,12 +562,10 @@ const getMockTeacher = (teacherUrlName: string) => {
     };
   }
 
-  // If no matching teacher found, return default teacher
   console.log("No matching teacher found, returning default teacher");
   return getDefaultTeacher();
 };
 
-// Separate function for the default teacher to avoid code duplication
 const getDefaultTeacher = () => {
   return {
     id: "default",
@@ -695,7 +730,8 @@ const getDefaultTeacher = () => {
         subject: "History",
         level: "Grade 9-10",
         rating: 4.6,
-        imageSrc: "https://images.unsplash.com/photo-1447069387593-a5de0862481e?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80"
+        imageSrc: "https://images.unsplash.com/photo-1447069387593-a5de0862481e?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+        type: "academic"
       },
       {
         id: "class2",
@@ -703,7 +739,8 @@ const getDefaultTeacher = () => {
         subject: "Cross-disciplinary",
         level: "All Grades",
         rating: 4.8,
-        imageSrc: "https://images.unsplash.com/photo-1610484826967-09c5720778c7?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80"
+        imageSrc: "https://images.unsplash.com/photo-1610484826967-09c5720778c7?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+        type: "academic"
       },
       {
         id: "class3",
@@ -711,7 +748,26 @@ const getDefaultTeacher = () => {
         subject: "Academic Skills",
         level: "Grade 7-12",
         rating: 4.5,
-        imageSrc: "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80"
+        imageSrc: "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+        type: "academic"
+      },
+      {
+        id: "class4",
+        title: "Creative Writing Club",
+        subject: "English",
+        level: "Ages 10-14",
+        rating: 4.7,
+        imageSrc: "https://images.unsplash.com/photo-1455390582262-044cdead277a?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+        type: "afterschool"
+      },
+      {
+        id: "class5",
+        title: "Public Speaking for Youth",
+        subject: "Communication",
+        level: "Ages 12-16",
+        rating: 4.9,
+        imageSrc: "https://images.unsplash.com/photo-1475721027785-f74eccf877e2?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+        type: "afterschool"
       }
     ],
     reviews: [
@@ -773,21 +829,21 @@ const getDefaultTeacher = () => {
       },
       {
         id: "tech6",
-        skill: "Assistive Technology",
-        description: "Using tools to support students with diverse learning needs",
-        level: "Advanced"
+        skill: "Virtual Reality in Education",
+        description: "Using VR applications to create immersive learning experiences",
+        level: "Basic"
       },
       {
         id: "tech7",
-        skill: "Coding and Programming",
-        description: "Teaching basic programming concepts using Scratch and Python",
-        level: "Intermediate"
+        skill: "Interactive Whiteboard Technology",
+        description: "Creating engaging visual presentations and collaborative exercises",
+        level: "Advanced"
       },
       {
         id: "tech8",
-        skill: "3D Printing for Education",
-        description: "Creating physical models to enhance conceptual understanding",
-        level: "Basic"
+        skill: "Data Analytics for Education",
+        description: "Analyzing student performance data to improve teaching methods",
+        level: "Intermediate"
       }
     ]
   };
@@ -799,8 +855,6 @@ const TeacherProfilePage = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // In a real app, this would fetch data from an API
-    // For now, we're using mock data
     console.log("Teacher ID from URL:", teacherId);
     const teacherData = getMockTeacher(teacherId || "");
     setTeacher(teacherData);
@@ -824,12 +878,7 @@ const TeacherProfilePage = () => {
       <Navbar />
       <main className="flex-grow pt-20 bg-gray-50">
         {teacher && (
-          <>
-            <TeacherDetails teacher={teacher} />
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-              <TeacherStats teacher={teacher} />
-            </div>
-          </>
+          <TeacherDetails teacher={teacher} />
         )}
       </main>
       <Footer />
