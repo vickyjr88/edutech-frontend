@@ -71,6 +71,14 @@ const ReviewsTab = ({ classId }: ReviewsTabProps) => {
     setTimeout(() => setCopySuccess(false), 2000);
   };
 
+  // Make sure all SelectItem components have non-empty values
+  const reviewerTypes = [
+    { id: "student", label: "Student", icon: User },
+    { id: "parent", label: "Parent", icon: Users },
+    { id: "supervisor", label: "Supervisor", icon: User },
+    { id: "other", label: "Other", icon: User }
+  ];
+
   return (
     <div className="space-y-6">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -133,30 +141,14 @@ const ReviewsTab = ({ classId }: ReviewsTabProps) => {
                             <SelectValue placeholder="Select reviewer type" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="student">
-                              <div className="flex items-center">
-                                <User className="mr-2 h-4 w-4" />
-                                Student
-                              </div>
-                            </SelectItem>
-                            <SelectItem value="parent">
-                              <div className="flex items-center">
-                                <Users className="mr-2 h-4 w-4" />
-                                Parent
-                              </div>
-                            </SelectItem>
-                            <SelectItem value="supervisor">
-                              <div className="flex items-center">
-                                <User className="mr-2 h-4 w-4" />
-                                Supervisor
-                              </div>
-                            </SelectItem>
-                            <SelectItem value="other">
-                              <div className="flex items-center">
-                                <User className="mr-2 h-4 w-4" />
-                                Other
-                              </div>
-                            </SelectItem>
+                            {reviewerTypes.map((type) => (
+                              <SelectItem key={type.id} value={type.id}>
+                                <div className="flex items-center">
+                                  <type.icon className="mr-2 h-4 w-4" />
+                                  {type.label}
+                                </div>
+                              </SelectItem>
+                            ))}
                           </SelectContent>
                         </Select>
                       </div>

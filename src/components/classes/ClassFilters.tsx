@@ -42,6 +42,16 @@ const ClassFilters = ({
   onFeaturedToggle,
   onSortByChange
 }: ClassFiltersProps) => {
+  // Helper function to ensure no empty string values
+  const getValidValue = (value: string, fallback: string): string => {
+    return value === "" ? fallback : value;
+  };
+
+  // Filter out any empty strings from arrays
+  const validSubjects = subjects.map(subject => getValidValue(subject, `subject-${Math.random().toString(36).substring(2, 7)}`));
+  const validGrades = grades.map(grade => getValidValue(grade, `grade-${Math.random().toString(36).substring(2, 7)}`));
+  const validSortOptions = sortOptions.map(option => getValidValue(option, `option-${Math.random().toString(36).substring(2, 7)}`));
+
   return (
     <div className="rounded-lg mb-8 p-6 bg-gray-50 border border-gray-100 shadow-sm">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -53,10 +63,10 @@ const ClassFilters = ({
             </SelectTrigger>
             <SelectContent>
               <SelectGroup>
-                {subjects.map((subject) => (
+                {subjects.map((subject, index) => (
                   <SelectItem 
-                    key={subject || "default-subject"} 
-                    value={subject || "default-subject"}
+                    key={`subject-${index}`} 
+                    value={getValidValue(subject, `subject-${index}`)}
                   >
                     {subject || "Default Subject"}
                   </SelectItem>
@@ -74,10 +84,10 @@ const ClassFilters = ({
             </SelectTrigger>
             <SelectContent>
               <SelectGroup>
-                {grades.map((grade) => (
+                {grades.map((grade, index) => (
                   <SelectItem 
-                    key={grade || "default-grade"} 
-                    value={grade || "default-grade"}
+                    key={`grade-${index}`} 
+                    value={getValidValue(grade, `grade-${index}`)}
                   >
                     {grade || "Default Grade"}
                   </SelectItem>
@@ -114,10 +124,10 @@ const ClassFilters = ({
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">Sort By</label>
           <ToggleGroup type="single" value={sortBy} onValueChange={(value) => value && onSortByChange(value)}>
-            {sortOptions.map((option) => (
+            {sortOptions.map((option, index) => (
               <ToggleGroupItem 
-                key={option || "default-option"} 
-                value={option || "default-option"}
+                key={`option-${index}`} 
+                value={getValidValue(option, `option-${index}`)}
                 className="text-xs px-3 py-1 data-[state=on]:bg-kidato-blue data-[state=on]:text-white"
               >
                 {option || "Default Option"}
