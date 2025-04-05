@@ -1,8 +1,8 @@
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Star, Filter, Calendar, Clock, ArrowRight, Users, User } from "lucide-react";
+import { Star, Filter, Calendar as CalendarIcon, Clock, ArrowRight, Users, User } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -67,6 +67,16 @@ const availabilityData = {
   ]
 };
 
+// Mock booked slots - this would come from an API in a real application
+const bookedSlots = {
+  // Format: 'YYYY-MM-DD' mapped to booked time slots
+  '2025-04-06': ["10:00"],
+  '2025-04-09': ["09:00", "10:00", "11:00"], // Fully booked day
+  '2025-04-11': ["15:00"],
+  '2025-04-12': ["14:00", "15:00"],
+  '2025-04-15': ["09:00"]
+};
+
 export default function ClassesTab({ teacher }: ClassesTabProps) {
   const [classType, setClassType] = useState<"all" | "academic" | "afterschool">("all");
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
@@ -87,7 +97,47 @@ export default function ClassesTab({ teacher }: ClassesTabProps) {
     return availabilityData[dayOfWeek as keyof typeof availabilityData] || [];
   };
 
+  // Check if a date is fully booked
+  const isDateFullyBooked = (date: Date): boolean => {
+    const dateString = format(date, 'yyyy-MM-dd');
+    const daySlots = getTimeSlots(date);
+    const bookedForDate = bookedSlots[dateString as keyof typeof bookedSlots] || [];
+    
+    // If there are no slots for this day, it's not bookable
+    if (daySlots.length === 0) return false;
+    
+    // If all slots for this day are booked, it's fully booked
+    return daySlots.length === bookedForDate.length;
+  };
+
+  // Check if a date has some available slots (partially booked)
+  const hasAvailableSlots = (date: Date): boolean => {
+    const dateString = format(date, 'yyyy-MM-dd');
+    const daySlots = getTimeSlots(date);
+    const bookedForDate = bookedSlots[dateString as keyof typeof bookedSlots] || [];
+    
+    // Has slots for this day and not all are booked
+    return daySlots.length > 0 && bookedForDate.length < daySlots.length;
+  };
+
+  // Check if a date has no slots scheduled
+  const hasNoSlots = (date: Date): boolean => {
+    const dayOfWeek = date.getDay();
+    return !availabilityData[dayOfWeek as keyof typeof availabilityData] || 
+           availabilityData[dayOfWeek as keyof typeof availabilityData].length === 0;
+  };
+
   const availableTimeSlots = selectedDate ? getTimeSlots(selectedDate) : [];
+  
+  // Filter out booked slots for the selected date
+  const filteredTimeSlots = useMemo(() => {
+    if (!selectedDate) return [];
+    
+    const dateString = format(selectedDate, 'yyyy-MM-dd');
+    const bookedForDate = bookedSlots[dateString as keyof typeof bookedSlots] || [];
+    
+    return availableTimeSlots.filter(slot => !bookedForDate.includes(slot.time));
+  }, [selectedDate, availableTimeSlots]);
 
   // Handle time slot selection
   const handleTimeSlotSelect = (time: string, type: string) => {
@@ -217,16 +267,43 @@ export default function ClassesTab({ teacher }: ClassesTabProps) {
                   maxDate.setMonth(maxDate.getMonth() + 2);
                   return date < now || date > maxDate;
                 }}
+                modifiers={{
+                  available: (date) => hasAvailableSlots(date),
+                  booked: (date) => isDateFullyBooked(date),
+                  noSlots: (date) => hasNoSlots(date)
+                }}
+                modifiersClassNames={{
+                  available: "bg-green-50 text-green-800 font-medium border-green-200",
+                  booked: "bg-red-50 text-red-800 font-medium border-red-200",
+                  noSlots: "bg-gray-50 text-gray-400 opacity-50"
+                }}
               />
               
-              <div className="mt-4 flex items-center gap-6">
-                <div className="flex items-center gap-2">
-                  <div className="h-3 w-3 rounded-full bg-kidato-blue"></div>
-                  <span className="text-xs text-gray-600">One-to-One Session</span>
+              <div className="mt-6 flex flex-col gap-3">
+                <h4 className="text-sm font-medium text-gray-700">Calendar Legend</h4>
+                <div className="flex flex-wrap gap-4">
+                  <div className="flex items-center gap-2">
+                    <div className="h-3 w-3 rounded-full bg-green-500"></div>
+                    <span className="text-xs text-gray-600">Available Slots</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="h-3 w-3 rounded-full bg-red-500"></div>
+                    <span className="text-xs text-gray-600">Fully Booked</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="h-3 w-3 rounded-full bg-gray-300"></div>
+                    <span className="text-xs text-gray-600">No Scheduled Slots</span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <div className="h-3 w-3 rounded-full bg-emerald-500"></div>
-                  <span className="text-xs text-gray-600">Group Session</span>
+                <div className="border-t pt-3 mt-2">
+                  <div className="flex items-center gap-2">
+                    <div className="h-3 w-3 rounded-full bg-kidato-blue"></div>
+                    <span className="text-xs text-gray-600">One-to-One Session</span>
+                  </div>
+                  <div className="flex items-center gap-2 mt-1">
+                    <div className="h-3 w-3 rounded-full bg-emerald-500"></div>
+                    <span className="text-xs text-gray-600">Group Session</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -243,8 +320,8 @@ export default function ClassesTab({ teacher }: ClassesTabProps) {
               
               {selectedDate && (
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                  {availableTimeSlots.length > 0 ? (
-                    availableTimeSlots.map((slot) => (
+                  {filteredTimeSlots.length > 0 ? (
+                    filteredTimeSlots.map((slot) => (
                       <Button 
                         key={slot.time} 
                         variant={selectedTime === slot.time ? "default" : "outline"}
@@ -277,7 +354,13 @@ export default function ClassesTab({ teacher }: ClassesTabProps) {
                       </Button>
                     ))
                   ) : (
-                    <p className="col-span-full text-center py-4 text-gray-500">No available times for this date.</p>
+                    <p className="col-span-full text-center py-4 text-gray-500">
+                      {isDateFullyBooked(selectedDate) 
+                        ? "All slots for this date are booked. Please select another date." 
+                        : hasNoSlots(selectedDate) 
+                          ? "No scheduled sessions for this date. Please select another date." 
+                          : "No available times for this date."}
+                    </p>
                   )}
                 </div>
               )}
