@@ -3,6 +3,8 @@ import { Star, Check, Globe } from "lucide-react";
 import { Award } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { MethodologyItem, StrategyItem } from "../professional-profile";
+import MessageTeacherDialog from "./MessageTeacherDialog";
+import VideoProfileDialog from "./VideoProfileDialog";
 
 const CertificateIcon = Award;
 
@@ -16,6 +18,7 @@ interface TeacherHeaderProps {
     rating: number;
     ratingCount: number;
     bio: string;
+    videoProfileUrl?: string;
     methodologies: MethodologyItem[];
     strategies: StrategyItem[];
     languages: Array<{
@@ -113,6 +116,17 @@ export default function TeacherHeader({ teacher }: TeacherHeaderProps) {
                   </Badge>
                 ))}
               </div>
+            </div>
+            
+            <div className="flex flex-wrap gap-3 justify-center md:justify-start">
+              <MessageTeacherDialog teacherName={teacher.name} />
+              
+              {teacher.videoProfileUrl && (
+                <VideoProfileDialog 
+                  teacherName={teacher.name}
+                  videoUrl={teacher.videoProfileUrl}
+                />
+              )}
             </div>
           </div>
         </div>
