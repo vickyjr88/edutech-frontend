@@ -18,6 +18,13 @@ export default function Tabs({ teacher }: TabsProps) {
   const handleStartBooking = (serviceId?: string) => {
     setSelectedService(serviceId);
     setIsBookingFlow(true);
+    // Force scroll to the booking form
+    setTimeout(() => {
+      const element = document.getElementById("booking-form-container");
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth" });
+      }
+    }, 100);
   };
 
   const handleCancelBooking = () => {
@@ -30,21 +37,30 @@ export default function Tabs({ teacher }: TabsProps) {
       <div className="mb-8 border-b">
         <div className="flex overflow-x-auto">
           <button 
-            onClick={() => setActiveTab('classes')}
+            onClick={() => {
+              setActiveTab('classes');
+              setIsBookingFlow(false); // Cancel booking flow when changing tabs
+            }}
             className={`px-6 py-3 font-medium text-sm transition-colors flex items-center gap-2 ${activeTab === 'classes' ? 'text-kidato-blue border-b-2 border-kidato-blue' : 'text-gray-500 hover:text-gray-700'}`}
           >
             <BookOpen className="h-4 w-4" />
             Classes
           </button>
           <button 
-            onClick={() => setActiveTab('about')}
+            onClick={() => {
+              setActiveTab('about');
+              setIsBookingFlow(false); // Cancel booking flow when changing tabs
+            }}
             className={`px-6 py-3 font-medium text-sm transition-colors flex items-center gap-2 ${activeTab === 'about' ? 'text-kidato-blue border-b-2 border-kidato-blue' : 'text-gray-500 hover:text-gray-700'}`}
           >
             <FileText className="h-4 w-4" />
             About me
           </button>
           <button 
-            onClick={() => setActiveTab('reviews')}
+            onClick={() => {
+              setActiveTab('reviews');
+              setIsBookingFlow(false); // Cancel booking flow when changing tabs
+            }}
             className={`px-6 py-3 font-medium text-sm transition-colors flex items-center gap-2 ${activeTab === 'reviews' ? 'text-kidato-blue border-b-2 border-kidato-blue' : 'text-gray-500 hover:text-gray-700'}`}
           >
             <Star className="h-4 w-4" />
@@ -53,15 +69,17 @@ export default function Tabs({ teacher }: TabsProps) {
         </div>
       </div>
       
-      {isBookingFlow ? (
-        <BookingForm teacher={teacher} onCancel={handleCancelBooking} selectedService={selectedService} />
-      ) : (
-        <>
-          {activeTab === 'classes' && <ClassesTab teacher={teacher} onBookService={handleStartBooking} />}
-          {activeTab === 'about' && <AboutTab teacher={teacher} />}
-          {activeTab === 'reviews' && <ReviewsTab teacher={teacher} />}
-        </>
-      )}
+      <div id="booking-form-container" className="w-full">
+        {isBookingFlow ? (
+          <BookingForm teacher={teacher} onCancel={handleCancelBooking} selectedService={selectedService} />
+        ) : (
+          <>
+            {activeTab === 'classes' && <ClassesTab teacher={teacher} onBookService={handleStartBooking} />}
+            {activeTab === 'about' && <AboutTab teacher={teacher} />}
+            {activeTab === 'reviews' && <ReviewsTab teacher={teacher} />}
+          </>
+        )}
+      </div>
     </>
   );
 }
