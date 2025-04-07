@@ -121,50 +121,50 @@ const ClassDetails = () => {
             sessionsCount={classStats.sessionsCount}
           />
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-6 mb-8">
             <div className="flex items-start gap-3">
-              <Calendar className="h-5 w-5 text-gray-400 mt-1" />
-              <div>
+              <Calendar className="h-5 w-5 text-gray-400 mt-1 flex-shrink-0" />
+              <div className="min-w-0">
                 <h3 className="font-medium text-gray-900">Cohort Days</h3>
                 <p className="text-gray-600">{classItem.time}</p>
               </div>
             </div>
             
             <div className="flex items-start gap-3">
-              <Clock className="h-5 w-5 text-gray-400 mt-1" />
-              <div>
+              <Clock className="h-5 w-5 text-gray-400 mt-1 flex-shrink-0" />
+              <div className="min-w-0">
                 <h3 className="font-medium text-gray-900">Duration</h3>
                 <p className="text-gray-600">45 minutes per session</p>
               </div>
             </div>
             
             <div className="flex items-start gap-3">
-              <Users className="h-5 w-5 text-gray-400 mt-1" />
-              <div>
+              <Users className="h-5 w-5 text-gray-400 mt-1 flex-shrink-0" />
+              <div className="min-w-0">
                 <h3 className="font-medium text-gray-900">Class Size</h3>
                 <p className="text-gray-600">{classItem.spots}</p>
               </div>
             </div>
             
             <div className="flex items-start gap-3">
-              <Hash className="h-5 w-5 text-gray-400 mt-1" />
-              <div>
+              <Hash className="h-5 w-5 text-gray-400 mt-1 flex-shrink-0" />
+              <div className="min-w-0">
                 <h3 className="font-medium text-gray-900">Number of Sessions</h3>
                 <p className="text-gray-600">12 sessions</p>
               </div>
             </div>
             
             <div className="flex items-start gap-3">
-              <Users className="h-5 w-5 text-gray-400 mt-1" />
-              <div>
+              <Users className="h-5 w-5 text-gray-400 mt-1 flex-shrink-0" />
+              <div className="min-w-0">
                 <h3 className="font-medium text-gray-900">Teaching Team Size</h3>
                 <p className="text-gray-600">2 instructors</p>
               </div>
             </div>
             
             <div className="flex items-start gap-3">
-              <Star className="h-5 w-5 text-gray-400 mt-1" />
-              <div>
+              <Star className="h-5 w-5 text-gray-400 mt-1 flex-shrink-0" />
+              <div className="min-w-0">
                 <h3 className="font-medium text-gray-900">Reviews</h3>
                 <p className="text-gray-600">3 reviews</p>
               </div>
