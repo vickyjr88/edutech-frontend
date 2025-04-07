@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import EnrollmentForm from "./EnrollmentForm";
 import TeacherProfileCard from "./TeacherProfileCard";
+import ClassStats from "./ClassStats";
 
 const getMockClassById = (id: string): ClassItemProps => {
   const mockClasses = [
@@ -76,6 +77,14 @@ const ClassDetails = () => {
     setIsBookmarked(!isBookmarked);
   };
   
+  const classStats = {
+    rating: classItem.rating,
+    studentsEnrolled: Math.floor(Math.random() * 200) + 80,
+    completionRate: Math.floor(Math.random() * 15) + 85,
+    classHours: 12,
+    sessionsCount: 12
+  };
+  
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <Link to="/all-classes" className="flex items-center text-kidato-blue mb-6 hover:underline">
@@ -103,6 +112,14 @@ const ClassDetails = () => {
           </div>
           
           <TeacherProfileCard teacher={teacher} />
+          
+          <ClassStats 
+            rating={classStats.rating}
+            studentsEnrolled={classStats.studentsEnrolled}
+            completionRate={classStats.completionRate}
+            classHours={classStats.classHours}
+            sessionsCount={classStats.sessionsCount}
+          />
           
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 mb-8">
             <div className="flex items-start gap-3">
