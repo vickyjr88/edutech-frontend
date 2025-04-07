@@ -25,10 +25,6 @@ export default function Tabs({ teacher }: TabsProps) {
     setSelectedService(undefined);
   };
 
-  if (isBookingFlow) {
-    return <BookingForm teacher={teacher} onCancel={handleCancelBooking} selectedService={selectedService} />;
-  }
-
   return (
     <>
       <div className="mb-8 border-b">
@@ -57,9 +53,15 @@ export default function Tabs({ teacher }: TabsProps) {
         </div>
       </div>
       
-      {activeTab === 'classes' && <ClassesTab teacher={teacher} onBookService={handleStartBooking} />}
-      {activeTab === 'about' && <AboutTab teacher={teacher} />}
-      {activeTab === 'reviews' && <ReviewsTab teacher={teacher} />}
+      {isBookingFlow ? (
+        <BookingForm teacher={teacher} onCancel={handleCancelBooking} selectedService={selectedService} />
+      ) : (
+        <>
+          {activeTab === 'classes' && <ClassesTab teacher={teacher} onBookService={handleStartBooking} />}
+          {activeTab === 'about' && <AboutTab teacher={teacher} />}
+          {activeTab === 'reviews' && <ReviewsTab teacher={teacher} />}
+        </>
+      )}
     </>
   );
 }
