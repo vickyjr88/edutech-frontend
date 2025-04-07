@@ -1,10 +1,18 @@
 
 import { User, MessageSquare, Star, Video, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogClose,
+} from "@/components/ui/dialog";
 import { useState } from "react";
+import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { Link } from "react-router-dom";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { WhatsAppMessageDialog } from "@/components/teacher/profile";
 
 interface TeacherProfileCardProps {
   teacher: {
@@ -25,10 +33,19 @@ interface TeacherProfileCardProps {
 }
 
 const TeacherProfileCard = ({ teacher }: TeacherProfileCardProps) => {
+  const [isMessageDialogOpen, setIsMessageDialogOpen] = useState(false);
   const [isVideoDialogOpen, setIsVideoDialogOpen] = useState(false);
+  const [messageText, setMessageText] = useState("");
 
   // Generate a URL-friendly name for the teacher
   const teacherUrlName = teacher.name.toLowerCase().replace(/\s+/g, '-');
+
+  const handleSendMessage = () => {
+    // In a real app, this would send the message to the backend
+    console.log("Message sent:", messageText);
+    setMessageText("");
+    setIsMessageDialogOpen(false);
+  };
 
   return (
     <div className="bg-white rounded-lg border border-gray-200 p-6 mb-8 hover:shadow-md transition-shadow">
@@ -88,7 +105,54 @@ const TeacherProfileCard = ({ teacher }: TeacherProfileCardProps) => {
           )}
           
           <div className="flex flex-wrap gap-3">
-            <WhatsAppMessageDialog teacherName={teacher.name} />
+            <Dialog open={isMessageDialogOpen} onOpenChange={setIsMessageDialogOpen}>
+              <DialogTrigger asChild>
+                <Button className="bg-kidato-blue hover:bg-kidato-dark-blue">
+                  <MessageSquare className="mr-2 h-4 w-4" />
+                  Message Teacher
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[500px]">
+                <DialogHeader>
+                  <DialogTitle>Send Message to {teacher.name}</DialogTitle>
+                </DialogHeader>
+                
+                <div className="space-y-4 py-4">
+                  <div>
+                    <label htmlFor="subject" className="block text-sm font-medium mb-1">
+                      Subject
+                    </label>
+                    <Input 
+                      id="subject" 
+                      placeholder="Enter message subject"
+                      className="w-full"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label htmlFor="message" className="block text-sm font-medium mb-1">
+                      Message
+                    </label>
+                    <Textarea
+                      id="message"
+                      value={messageText}
+                      onChange={(e) => setMessageText(e.target.value)}
+                      placeholder="Type your message here..."
+                      className="w-full min-h-[150px]"
+                    />
+                  </div>
+                  
+                  <div className="flex justify-end gap-3 pt-2">
+                    <DialogClose asChild>
+                      <Button variant="outline">Cancel</Button>
+                    </DialogClose>
+                    <Button onClick={handleSendMessage} disabled={!messageText.trim()}>
+                      Send Message
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
 
             {teacher.videoProfileUrl && (
               <Dialog open={isVideoDialogOpen} onOpenChange={setIsVideoDialogOpen}>
