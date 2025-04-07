@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { ArrowLeft, Calendar, Clock, Star, Users } from "lucide-react";
+import { ArrowLeft, Calendar, Clock, Star, Users, Hash } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 import { ClassItemProps } from "@/components/common/ClassCard";
 import { Button } from "@/components/ui/button";
@@ -122,6 +122,14 @@ const ClassDetails = () => {
               <div>
                 <h3 className="font-medium text-gray-900">Class Size</h3>
                 <p className="text-gray-600">{classItem.spots}</p>
+              </div>
+            </div>
+            
+            <div className="flex items-start gap-3">
+              <Hash className="h-5 w-5 text-gray-400 mt-1" />
+              <div>
+                <h3 className="font-medium text-gray-900">Number of Sessions</h3>
+                <p className="text-gray-600">12 sessions</p>
               </div>
             </div>
           </div>
