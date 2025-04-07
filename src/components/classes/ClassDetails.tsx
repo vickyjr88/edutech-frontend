@@ -104,7 +104,7 @@ const ClassDetails = () => {
             <div className="flex items-start gap-3">
               <Calendar className="h-5 w-5 text-gray-400 mt-1" />
               <div>
-                <h3 className="font-medium text-gray-900">Schedule</h3>
+                <h3 className="font-medium text-gray-900">Cohort Days</h3>
                 <p className="text-gray-600">{classItem.time}</p>
               </div>
             </div>
@@ -130,6 +130,22 @@ const ClassDetails = () => {
               <div>
                 <h3 className="font-medium text-gray-900">Number of Sessions</h3>
                 <p className="text-gray-600">12 sessions</p>
+              </div>
+            </div>
+            
+            <div className="flex items-start gap-3">
+              <Users className="h-5 w-5 text-gray-400 mt-1" />
+              <div>
+                <h3 className="font-medium text-gray-900">Teaching Team Size</h3>
+                <p className="text-gray-600">2 instructors</p>
+              </div>
+            </div>
+            
+            <div className="flex items-start gap-3">
+              <Star className="h-5 w-5 text-gray-400 mt-1" />
+              <div>
+                <h3 className="font-medium text-gray-900">Reviews</h3>
+                <p className="text-gray-600">3 reviews</p>
               </div>
             </div>
           </div>
