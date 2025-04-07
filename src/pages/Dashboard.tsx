@@ -9,6 +9,8 @@ import CurrentClasses from "@/components/dashboard/CurrentClasses";
 import UpcomingAssignments from "@/components/dashboard/UpcomingAssignments";
 import LearningProgress from "@/components/dashboard/LearningProgress";
 import RecentActivity from "@/components/dashboard/RecentActivity";
+import DailyChallenges from "@/components/dashboard/DailyChallenges";
+import StudentLevel from "@/components/dashboard/StudentLevel";
 
 const Dashboard = () => {
   const [userName] = useState("John Doe");
@@ -28,7 +30,7 @@ const Dashboard = () => {
         </div>
         <nav className="flex-1 px-4 py-6 space-y-1">
           <Link 
-            to="/dashboard" 
+            to="/student-dashboard" 
             className="flex items-center px-4 py-3 text-sm font-medium rounded-md bg-kidato-light-blue text-kidato-blue"
           >
             <Home className="mr-3 h-5 w-5" />
@@ -79,19 +81,24 @@ const Dashboard = () => {
             <div className="lg:col-span-2">
               <CurrentClasses />
             </div>
-            <div>
+            <div className="space-y-6">
+              <StudentLevel />
               <UpcomingAssignments />
             </div>
           </div>
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
-            <LearningProgress />
+            <DailyChallenges />
             <RecentActivity />
+          </div>
+          
+          <div className="mt-6">
+            <LearningProgress />
           </div>
         </main>
       </div>
     </div>
   );
-};
+}
 
 export default Dashboard;
