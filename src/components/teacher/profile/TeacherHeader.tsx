@@ -1,12 +1,9 @@
 
-import { Star, Check, Globe } from "lucide-react";
-import { Award, BookOpen, Monitor, Users, GraduationCap } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { MethodologyItem, StrategyItem } from "../professional-profile";
-import MessageTeacherDialog from "./MessageTeacherDialog";
+import { Star, Video, MapPin, BookOpen, School, Laptop } from "lucide-react";
+import { WhatsAppMessageDialog } from "./index";
 import VideoProfileDialog from "./VideoProfileDialog";
-
-const CertificateIcon = Award;
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 
 interface TeacherHeaderProps {
   teacher: {
@@ -17,157 +14,119 @@ interface TeacherHeaderProps {
     schoolStatus?: "active" | "past";
     rating: number;
     ratingCount: number;
-    bio: string;
     videoProfileUrl?: string;
-    methodologies: MethodologyItem[];
-    strategies: StrategyItem[];
-    languages: Array<{
-      id: string;
-      language: string;
-      description?: string;
-      isCertified?: boolean;
-    }>;
-    certifications: Array<{
-      id: string;
-      name: string;
-      issuer: string;
-      date: string;
-      isVerified: boolean;
-    }>;
-    // Adding optional teaching info fields
     teachingMode?: "online" | "offline" | "hybrid";
     grades?: string[];
     subjects?: string[];
     curriculum?: string[];
-  }
+  };
 }
 
 export default function TeacherHeader({ teacher }: TeacherHeaderProps) {
-  // Default teaching info if not provided
-  const teachingInfo = {
-    mode: teacher.teachingMode || "hybrid",
-    grades: teacher.grades || ["Grade 6-8", "Grade 9-12"],
-    subjects: teacher.subjects || ["Science", "Mathematics"],
-    curriculum: teacher.curriculum || ["National Curriculum", "IB", "Cambridge"]
-  };
+  const teachingModeIcon = teacher.teachingMode === "online" 
+    ? <Laptop className="w-4 h-4" />
+    : <MapPin className="w-4 h-4" />;
+  
+  const teachingModeText = teacher.teachingMode === "online"
+    ? "Online Teacher"
+    : teacher.teachingMode === "offline"
+      ? "In-person Teacher"
+      : "Hybrid Teacher";
 
   return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden mb-10">
-      <div className="bg-kidato-blue/10 p-8">
-        <div className="flex flex-col md:flex-row gap-8 items-center md:items-start">
-          <div className="w-40 h-40 rounded-full border-4 border-white shadow-lg overflow-hidden bg-white relative">
+    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
+      <div className="flex flex-col md:flex-row gap-6">
+        {/* Teacher Image */}
+        <div className="flex-shrink-0">
+          <div className="w-32 h-32 md:w-40 md:h-40 rounded-xl bg-gray-200 overflow-hidden">
             <img 
               src={teacher.imageSrc} 
               alt={teacher.name} 
               className="w-full h-full object-cover"
             />
-            <div className="absolute bottom-0 right-0 bg-kidato-blue text-white p-1 rounded-full">
-              <Check className="h-4 w-4" />
-            </div>
           </div>
+        </div>
 
-          <div className="flex-1 text-center md:text-left">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">{teacher.name}</h1>
-            <div className="flex flex-wrap items-center gap-2 justify-center md:justify-start mb-3">
-              <p className="text-lg text-kidato-blue font-medium">{teacher.position}</p>
+        {/* Teacher Info */}
+        <div className="flex-grow">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+            <div>
+              <h1 className="text-2xl md:text-3xl font-bold text-gray-900">{teacher.name}</h1>
+              <p className="text-kidato-blue font-medium mt-1 flex items-center gap-1">
+                <BookOpen className="inline-block w-4 h-4" />
+                {teacher.position}
+              </p>
+              
               {teacher.school && (
-                <div className="flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800">
-                  <span>{teacher.school}</span>
+                <p className="text-gray-600 mt-1 flex items-center gap-1">
+                  <School className="inline-block w-4 h-4" />
+                  {teacher.school}
                   {teacher.schoolStatus && (
-                    <span className={`ml-1 text-xs px-1.5 py-0.5 rounded-full ${
-                      teacher.schoolStatus === 'active' 
-                        ? 'bg-green-100 text-green-800' 
-                        : 'bg-amber-100 text-amber-800'
-                    }`}>
-                      {teacher.schoolStatus === 'active' ? 'Current' : 'Past'}
+                    <span className={`text-xs rounded-full px-2 py-0.5 ml-2 
+                      ${teacher.schoolStatus === "active" ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}`}>
+                      {teacher.schoolStatus === "active" ? "Current" : "Past"}
                     </span>
                   )}
-                </div>
+                </p>
               )}
             </div>
-            
-            {/* New row with teaching information */}
-            <div className="flex flex-wrap items-center gap-3 justify-center md:justify-start mb-4">
-              <div className="flex items-center gap-1 px-3 py-1.5 rounded-full text-sm bg-indigo-50 text-indigo-700">
-                <Monitor className="h-4 w-4" />
-                <span>
-                  {teachingInfo.mode === "online" ? "Online" : 
-                   teachingInfo.mode === "offline" ? "In-person" : 
-                   "Online & In-person"}
-                </span>
-              </div>
-              
-              <div className="flex items-center gap-1 px-3 py-1.5 rounded-full text-sm bg-teal-50 text-teal-700">
-                <GraduationCap className="h-4 w-4" />
-                <span>{teachingInfo.grades.join(", ")}</span>
-              </div>
-              
-              <div className="flex items-center gap-1 px-3 py-1.5 rounded-full text-sm bg-amber-50 text-amber-700">
-                <BookOpen className="h-4 w-4" />
-                <span>{teachingInfo.subjects.join(", ")}</span>
-              </div>
-              
-              <div className="flex items-center gap-1 px-3 py-1.5 rounded-full text-sm bg-purple-50 text-purple-700">
-                <Users className="h-4 w-4" />
-                <span>{teachingInfo.curriculum.join(", ")}</span>
-              </div>
-            </div>
-            
-            <div className="flex flex-wrap gap-4 justify-center md:justify-start mb-6">
-              <div className="flex items-center gap-1 bg-yellow-50 px-3 py-1.5 rounded-full">
-                <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
-                <span className="font-medium">{teacher.rating}</span>
-                <span className="text-gray-500 text-sm">({teacher.ratingCount} reviews)</span>
-              </div>
-              
-              {teacher.languages.length > 0 && (
-                <div className="flex items-center gap-1 bg-blue-50 px-3 py-1.5 rounded-full">
-                  <Globe className="h-4 w-4 text-blue-500" />
-                  <span className="font-medium">{teacher.languages.length} languages</span>
-                </div>
-              )}
-              
-              {teacher.certifications.length > 0 && (
-                <div className="flex items-center gap-1 bg-green-50 px-3 py-1.5 rounded-full">
-                  <CertificateIcon className="h-4 w-4 text-green-500" />
-                  <span className="font-medium">{teacher.certifications.filter(c => c.isVerified).length} verified certificates</span>
-                </div>
-              )}
-            </div>
-            
-            <p className="text-gray-700 mb-6">{teacher.bio}</p>
-            
-            <div className="mb-6">
-              <div className="flex flex-wrap gap-2">
-                {teacher.methodologies.map(methodology => (
-                  <Badge 
-                    key={methodology.id} 
-                    className="bg-blue-100 text-blue-800 hover:bg-blue-200"
-                  >
-                    {methodology.methodology}
-                  </Badge>
-                ))}
-                {teacher.strategies.map(strategy => (
-                  <Badge 
-                    key={strategy.id} 
-                    className="bg-green-100 text-green-800 hover:bg-green-200"
-                  >
-                    {strategy.strategy}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-            
-            <div className="flex flex-wrap gap-3 justify-center md:justify-start">
-              <MessageTeacherDialog teacherName={teacher.name} />
+
+            <div className="flex flex-col xs:flex-row gap-2">
+              <WhatsAppMessageDialog teacherName={teacher.name} />
               
               {teacher.videoProfileUrl && (
-                <VideoProfileDialog 
+                <VideoProfileDialog
                   teacherName={teacher.name}
                   videoUrl={teacher.videoProfileUrl}
                 />
               )}
             </div>
+          </div>
+
+          <div className="flex flex-wrap gap-2 mb-4">
+            <Badge variant="outline" className="flex items-center gap-1 py-1">
+              {teachingModeIcon}
+              {teachingModeText}
+            </Badge>
+            
+            <Badge variant="outline" className="flex items-center gap-1 py-1">
+              <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
+              {teacher.rating} ({teacher.ratingCount} reviews)
+            </Badge>
+            
+            {teacher.grades && teacher.grades.length > 0 && (
+              <Badge variant="outline" className="py-1">
+                Grades: {teacher.grades.join(", ")}
+              </Badge>
+            )}
+          </div>
+
+          <div className="space-y-3">
+            {teacher.subjects && teacher.subjects.length > 0 && (
+              <div>
+                <h3 className="text-sm font-medium text-gray-700 mb-1">Subjects</h3>
+                <div className="flex flex-wrap gap-1">
+                  {teacher.subjects.map((subject, idx) => (
+                    <Badge key={idx} variant="secondary" className="bg-kidato-light-blue/40">
+                      {subject}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+            
+            {teacher.curriculum && teacher.curriculum.length > 0 && (
+              <div>
+                <h3 className="text-sm font-medium text-gray-700 mb-1">Curriculum</h3>
+                <div className="flex flex-wrap gap-1">
+                  {teacher.curriculum.map((item, idx) => (
+                    <Badge key={idx} variant="outline" className="border-kidato-blue text-kidato-blue">
+                      {item}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
