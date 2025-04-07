@@ -147,7 +147,7 @@ const ClassDetails = () => {
                 <Users className="h-5 w-5 text-gray-400 mt-1 flex-shrink-0" />
                 <div className="min-w-0">
                   <h3 className="font-medium text-gray-900">Class Size</h3>
-                  <p className="text-gray-600">{classItem.spots}</p>
+                  <p className="text-gray-600">10 spots per cohort</p>
                 </div>
               </div>
               
