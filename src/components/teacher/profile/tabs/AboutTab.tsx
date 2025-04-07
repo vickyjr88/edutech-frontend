@@ -1,6 +1,6 @@
 
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Book, Award, Globe, GraduationCap, Briefcase, Laptop } from "lucide-react";
+import { Book, Award, Globe, GraduationCap, Briefcase, Laptop, FileText } from "lucide-react";
 import CardWithCheckIcon from "../CardWithCheckIcon";
 import { MethodologyItem, StrategyItem, LanguageItem } from "../../professional-profile";
 
@@ -8,6 +8,7 @@ const CertificateIcon = Award;
 
 interface AboutTabProps {
   teacher: {
+    bio: string;
     education: Array<{
       id: string;
       institution: string;
@@ -43,6 +44,21 @@ interface AboutTabProps {
 export default function AboutTab({ teacher }: AboutTabProps) {
   return (
     <>
+      {/* Teacher Bio Card - Full Width */}
+      <div className="mb-10">
+        <Card>
+          <CardHeader className="pb-3">
+            <div className="flex items-center gap-2">
+              <FileText className="h-5 w-5 text-kidato-blue" />
+              <CardTitle className="text-xl">Bio</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <p className="text-gray-700">{teacher.bio}</p>
+          </CardContent>
+        </Card>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
         <Card>
           <CardHeader className="pb-3">
