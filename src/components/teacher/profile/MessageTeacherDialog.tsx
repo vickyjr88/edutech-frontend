@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { MessageCircle } from "lucide-react";
+import { MessageSquare } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -31,7 +31,7 @@ export default function MessageTeacherDialog({ teacherName }: MessageTeacherDial
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         <Button className="bg-kidato-blue hover:bg-kidato-dark-blue">
-          <MessageCircle className="mr-2 h-4 w-4" />
+          <MessageSquare className="mr-2 h-4 w-4" />
           Message Teacher
         </Button>
       </DialogTrigger>

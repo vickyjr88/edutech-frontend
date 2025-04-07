@@ -1,5 +1,5 @@
 
-import { User, MessageSquare, Star, Video, BookOpen, MessageCircle } from "lucide-react";
+import { User, MessageSquare, Star, Video, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -108,7 +108,7 @@ const TeacherProfileCard = ({ teacher }: TeacherProfileCardProps) => {
             <Dialog open={isMessageDialogOpen} onOpenChange={setIsMessageDialogOpen}>
               <DialogTrigger asChild>
                 <Button className="bg-kidato-blue hover:bg-kidato-dark-blue">
-                  <MessageCircle className="mr-2 h-4 w-4" />
+                  <MessageSquare className="mr-2 h-4 w-4" />
                   Message Teacher
                 </Button>
               </DialogTrigger>
