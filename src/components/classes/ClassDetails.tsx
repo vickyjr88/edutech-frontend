@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowLeft, Calendar, Clock, Star, Users, Hash, BookOpen, FileText, Image, Video, FileBox } from "lucide-react";
+import { ArrowLeft, Calendar, Clock, Star, Users, Hash, BookOpen, FileText, Image, Video, FileBox, Heart } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 import { ClassItemProps } from "@/components/common/ClassCard";
 import { Button } from "@/components/ui/button";
@@ -58,6 +58,7 @@ const ClassDetails = () => {
   const { id } = useParams<{ id: string }>();
   const [isEnrollmentOpen, setIsEnrollmentOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'about' | 'lesson-plans' | 'cohorts' | 'teaching-team' | 'reviews'>('about');
+  const [isBookmarked, setIsBookmarked] = useState(false);
   
   const classItem = getMockClassById(id || "");
   
@@ -69,6 +70,10 @@ const ClassDetails = () => {
     rating: classItem.rating,
     bio: `With over 8 years of teaching experience, ${classItem.teacher.split(' ')[1]} is passionate about making learning engaging and accessible for all students. Their teaching approach combines traditional methods with innovative techniques to ensure student success.`,
     videoProfileUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ"
+  };
+  
+  const handleBookmark = () => {
+    setIsBookmarked(!isBookmarked);
   };
   
   return (
@@ -540,8 +545,13 @@ const ClassDetails = () => {
               </DialogContent>
             </Dialog>
             
-            <Button variant="outline" className="w-full">
-              Request More Information
+            <Button 
+              variant="outline" 
+              className="w-full flex items-center justify-center gap-2"
+              onClick={handleBookmark}
+            >
+              <Heart className={`h-4 w-4 ${isBookmarked ? "fill-red-500 text-red-500" : ""}`} />
+              {isBookmarked ? "Bookmarked" : "Bookmark this Class"}
             </Button>
           </div>
         </div>
