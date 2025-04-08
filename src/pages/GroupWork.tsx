@@ -1,0 +1,271 @@
+
+import { useState } from "react";
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Home, Book, User, Settings, LogOut, MessageSquare, Star, Sparkles, PieChart, Users, Target, Calendar, Award, Plus, UserPlus } from "lucide-react";
+import StudentDashboardHeader from "@/components/dashboard/StudentDashboardHeader";
+import KidatoMascot from "@/components/dashboard/KidatoMascot";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+
+const GroupWork = () => {
+  const [userName] = useState("John Doe");
+
+  // Mock data for groups
+  const groups = [
+    {
+      id: 1,
+      name: "Math Study Group",
+      members: 4,
+      subject: "Mathematics",
+      nextMeeting: "Tomorrow, 3:00 PM",
+      assignment: "Algebra Quiz Prep",
+      avatars: ["JD", "AM", "RK", "SL"],
+    },
+    {
+      id: 2,
+      name: "Science Project Team",
+      members: 3,
+      subject: "Science",
+      nextMeeting: "Wednesday, 4:30 PM",
+      assignment: "Ecosystem Presentation",
+      avatars: ["JD", "BT", "MP"],
+    },
+    {
+      id: 3,
+      name: "Coding Challenge Squad",
+      members: 5,
+      subject: "Computer Science",
+      nextMeeting: "Friday, 5:00 PM",
+      assignment: "Game Development Project",
+      avatars: ["JD", "RJ", "KL", "DN", "AL"],
+    }
+  ];
+
+  return (
+    <div className="flex min-h-screen bg-gradient-to-b from-blue-50 to-white">
+      {/* Sidebar - Same as Dashboard */}
+      <aside className="hidden md:flex flex-col w-64 bg-white border-r border-blue-100 shadow-md rounded-tr-xl rounded-br-xl mr-2 overflow-hidden">
+        <div className="p-6">
+          <Link to="/" className="flex items-center">
+            <img 
+              src="/lovable-uploads/15671e94-4ac9-490c-95b6-aa4fe6bbc23c.png" 
+              alt="Kidato Logo" 
+              className="h-10"
+            />
+            <Sparkles className="h-4 w-4 ml-1 text-yellow-400" />
+          </Link>
+        </div>
+        
+        <nav className="flex-1 px-4 py-2 space-y-1">
+          <h3 className="px-4 text-xs font-semibold uppercase text-gray-500 mb-2">Main</h3>
+          <Link 
+            to="/student-dashboard" 
+            className="flex items-center px-4 py-3 text-sm font-medium rounded-xl text-gray-700 hover:bg-blue-50 transition-all"
+          >
+            <Home className="mr-3 h-5 w-5" />
+            Dashboard
+          </Link>
+          
+          <h3 className="px-4 mt-5 text-xs font-semibold uppercase text-gray-500 mb-2">Learning</h3>
+          <Link 
+            to="/courses" 
+            className="flex items-center px-4 py-3 text-sm font-medium rounded-xl text-gray-700 hover:bg-blue-50 transition-all"
+          >
+            <Book className="mr-3 h-5 w-5" />
+            My Courses
+          </Link>
+          <Link 
+            to="/learning-progress" 
+            className="flex items-center px-4 py-3 text-sm font-medium rounded-xl text-gray-700 hover:bg-blue-50 transition-all"
+          >
+            <PieChart className="mr-3 h-5 w-5" />
+            Learning Goals
+          </Link>
+          <Link 
+            to="/challenges" 
+            className="flex items-center px-4 py-3 text-sm font-medium rounded-xl text-gray-700 hover:bg-blue-50 transition-all"
+          >
+            <Target className="mr-3 h-5 w-5" />
+            Quests & Challenges
+          </Link>
+          <Link 
+            to="/group-work" 
+            className="flex items-center px-4 py-3 text-sm font-medium rounded-xl bg-gradient-to-r from-kidato-light-blue to-blue-100 text-kidato-blue shadow-sm transition-all hover:shadow-md"
+          >
+            <Users className="mr-3 h-5 w-5" />
+            Group Work
+            <Star className="ml-auto h-4 w-4 text-yellow-400" />
+          </Link>
+          
+          <h3 className="px-4 mt-5 text-xs font-semibold uppercase text-gray-500 mb-2">Communication</h3>
+          <Link 
+            to="/messaging" 
+            className="flex items-center px-4 py-3 text-sm font-medium rounded-xl text-gray-700 hover:bg-blue-50 transition-all"
+          >
+            <MessageSquare className="mr-3 h-5 w-5" />
+            Messages
+          </Link>
+          <Link 
+            to="/schedule" 
+            className="flex items-center px-4 py-3 text-sm font-medium rounded-xl text-gray-700 hover:bg-blue-50 transition-all"
+          >
+            <Calendar className="mr-3 h-5 w-5" />
+            Schedule
+          </Link>
+          
+          <h3 className="px-4 mt-5 text-xs font-semibold uppercase text-gray-500 mb-2">Account</h3>
+          <Link 
+            to="/profile" 
+            className="flex items-center px-4 py-3 text-sm font-medium rounded-xl text-gray-700 hover:bg-blue-50 transition-all"
+          >
+            <User className="mr-3 h-5 w-5" />
+            Profile
+          </Link>
+          <Link 
+            to="/achievements" 
+            className="flex items-center px-4 py-3 text-sm font-medium rounded-xl text-gray-700 hover:bg-blue-50 transition-all"
+          >
+            <Award className="mr-3 h-5 w-5" />
+            Achievements
+          </Link>
+          <Link 
+            to="/settings" 
+            className="flex items-center px-4 py-3 text-sm font-medium rounded-xl text-gray-700 hover:bg-blue-50 transition-all"
+          >
+            <Settings className="mr-3 h-5 w-5" />
+            Settings
+          </Link>
+        </nav>
+        
+        <div className="p-4 border-t border-blue-100">
+          <Link to="/">
+            <Button variant="ghost" className="w-full flex items-center justify-center rounded-xl hover:bg-red-50 hover:text-red-500 transition-colors">
+              <LogOut className="mr-2 h-4 w-4" />
+              Sign Out
+            </Button>
+          </Link>
+        </div>
+      </aside>
+
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col">
+        {/* Top Nav */}
+        <StudentDashboardHeader userName={userName} />
+
+        {/* Content */}
+        <main className="p-4 sm:p-6 flex-1 overflow-y-auto">
+          <div className="max-w-7xl mx-auto">
+            <div className="flex justify-between items-center mb-6">
+              <h1 className="text-2xl font-bold text-gray-800">Group Work</h1>
+              <Button className="bg-kidato-blue hover:bg-kidato-dark-blue rounded-xl flex items-center gap-2">
+                <Plus className="h-4 w-4" />
+                Create New Group
+              </Button>
+            </div>
+            
+            {/* My Groups */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+              {groups.map((group) => (
+                <Card key={group.id} className="overflow-hidden border-2 border-blue-100">
+                  <CardHeader className="pb-3 bg-gradient-to-r from-blue-50 to-purple-50">
+                    <div className="flex justify-between">
+                      <div>
+                        <p className="text-xs text-blue-600 font-medium mb-1">{group.subject}</p>
+                        <CardTitle className="text-lg font-bold">{group.name}</CardTitle>
+                      </div>
+                      <Badge variant="outline" className="border-blue-200 bg-blue-50 text-blue-600">
+                        {group.members} members
+                      </Badge>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="p-4">
+                    <div className="space-y-3">
+                      <div>
+                        <p className="text-xs text-gray-500">Assignment</p>
+                        <p className="font-medium">{group.assignment}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-500">Next Meeting</p>
+                        <p className="font-medium">{group.nextMeeting}</p>
+                      </div>
+                      <div className="flex justify-between items-center pt-2">
+                        <div className="flex -space-x-2">
+                          {group.avatars.map((avatar, index) => (
+                            <Avatar key={index} className="border-2 border-white h-8 w-8">
+                              <AvatarFallback className="bg-blue-100 text-blue-500 text-xs">
+                                {avatar}
+                              </AvatarFallback>
+                            </Avatar>
+                          ))}
+                        </div>
+                        <Button variant="outline" size="sm" className="flex items-center gap-1 h-8 rounded-lg border-blue-200 text-blue-600">
+                          <MessageSquare className="h-3 w-3" /> 
+                          Chat
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+
+              {/* Join a Group Card */}
+              <Card className="border-2 border-dashed border-blue-200 bg-blue-50/30 flex flex-col items-center justify-center p-6">
+                <div className="text-center space-y-4">
+                  <div className="bg-blue-100 h-12 w-12 rounded-full flex items-center justify-center mx-auto">
+                    <UserPlus className="h-6 w-6 text-blue-500" />
+                  </div>
+                  <div>
+                    <h3 className="font-medium text-lg">Join a Group</h3>
+                    <p className="text-sm text-gray-500 mt-1">Find study groups based on your classes</p>
+                  </div>
+                  <Button variant="outline" className="border-blue-200 text-blue-600">
+                    Browse Groups
+                  </Button>
+                </div>
+              </Card>
+            </div>
+            
+            {/* Group Recommendations */}
+            <Card className="mb-6">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg font-bold flex items-center">
+                  <Users className="mr-2 h-5 w-5 text-blue-500" />
+                  Recommended Groups
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="bg-green-50 rounded-lg p-4 flex justify-between items-center">
+                    <div>
+                      <p className="font-medium">Advanced Math Study Group</p>
+                      <p className="text-sm text-gray-600">6 members • Mathematics</p>
+                    </div>
+                    <Button variant="outline" size="sm" className="h-8 rounded-lg border-green-200 text-green-600">
+                      Join
+                    </Button>
+                  </div>
+                  <div className="bg-purple-50 rounded-lg p-4 flex justify-between items-center">
+                    <div>
+                      <p className="font-medium">Python Programming Team</p>
+                      <p className="text-sm text-gray-600">4 members • Computer Science</p>
+                    </div>
+                    <Button variant="outline" size="sm" className="h-8 rounded-lg border-purple-200 text-purple-600">
+                      Join
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </main>
+      </div>
+
+      {/* Kidato AI Mascot */}
+      <KidatoMascot />
+    </div>
+  );
+}
+
+export default GroupWork;

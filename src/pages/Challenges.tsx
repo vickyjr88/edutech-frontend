@@ -2,23 +2,17 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Home, Book, User, Settings, LogOut, MessageSquare, Star, Sparkles, Rocket, PieChart, Users, Target, Calendar, Award } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Home, Book, User, Settings, LogOut, MessageSquare, Star, Sparkles, PieChart, Users, Target, Calendar, Award, Trophy } from "lucide-react";
 import StudentDashboardHeader from "@/components/dashboard/StudentDashboardHeader";
-import StudentStatCards from "@/components/dashboard/StudentStatCards";
-import CurrentClasses from "@/components/dashboard/CurrentClasses";
-import UpcomingAssignments from "@/components/dashboard/UpcomingAssignments";
-import LearningProgress from "@/components/dashboard/LearningProgress";
-import RecentActivity from "@/components/dashboard/RecentActivity";
-import DailyChallenges from "@/components/dashboard/DailyChallenges";
-import StudentLevel from "@/components/dashboard/StudentLevel";
 import KidatoMascot from "@/components/dashboard/KidatoMascot";
 
-const Dashboard = () => {
+const Challenges = () => {
   const [userName] = useState("John Doe");
 
   return (
     <div className="flex min-h-screen bg-gradient-to-b from-blue-50 to-white">
-      {/* Sidebar */}
+      {/* Sidebar - Same as Dashboard */}
       <aside className="hidden md:flex flex-col w-64 bg-white border-r border-blue-100 shadow-md rounded-tr-xl rounded-br-xl mr-2 overflow-hidden">
         <div className="p-6">
           <Link to="/" className="flex items-center">
@@ -35,11 +29,10 @@ const Dashboard = () => {
           <h3 className="px-4 text-xs font-semibold uppercase text-gray-500 mb-2">Main</h3>
           <Link 
             to="/student-dashboard" 
-            className="flex items-center px-4 py-3 text-sm font-medium rounded-xl bg-gradient-to-r from-kidato-light-blue to-blue-100 text-kidato-blue shadow-sm transition-all hover:shadow-md"
+            className="flex items-center px-4 py-3 text-sm font-medium rounded-xl text-gray-700 hover:bg-blue-50 transition-all"
           >
             <Home className="mr-3 h-5 w-5" />
             Dashboard
-            <Star className="ml-auto h-4 w-4 text-yellow-400" />
           </Link>
           
           <h3 className="px-4 mt-5 text-xs font-semibold uppercase text-gray-500 mb-2">Learning</h3>
@@ -59,10 +52,11 @@ const Dashboard = () => {
           </Link>
           <Link 
             to="/challenges" 
-            className="flex items-center px-4 py-3 text-sm font-medium rounded-xl text-gray-700 hover:bg-blue-50 transition-all"
+            className="flex items-center px-4 py-3 text-sm font-medium rounded-xl bg-gradient-to-r from-kidato-light-blue to-blue-100 text-kidato-blue shadow-sm transition-all hover:shadow-md"
           >
             <Target className="mr-3 h-5 w-5" />
             Quests & Challenges
+            <Star className="ml-auto h-4 w-4 text-yellow-400" />
           </Link>
           <Link 
             to="/group-work" 
@@ -131,34 +125,33 @@ const Dashboard = () => {
         {/* Content */}
         <main className="p-4 sm:p-6 flex-1 overflow-y-auto">
           <div className="max-w-7xl mx-auto">
-            <StudentStatCards />
-            
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
-              <div className="lg:col-span-2">
-                <CurrentClasses />
-              </div>
-              <div className="space-y-6">
-                <StudentLevel />
-                <UpcomingAssignments />
-              </div>
+            <div className="flex justify-between items-center mb-6">
+              <h1 className="text-2xl font-bold text-gray-800">Quests & Challenges</h1>
             </div>
             
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
-              <DailyChallenges />
-              <RecentActivity />
-            </div>
-            
-            <div className="mt-6">
-              <LearningProgress />
-            </div>
-            
-            <div className="flex justify-center mt-8 mb-4">
-              <div className="inline-flex items-center gap-2 bg-blue-50 px-4 py-2 rounded-full text-blue-600 text-sm">
-                <Rocket className="h-4 w-4" />
-                <span>Ready for more learning adventures!</span>
-                <Sparkles className="h-4 w-4" />
-              </div>
-            </div>
+            {/* Active Challenges */}
+            <Card className="mb-6 border-2 border-blue-100">
+              <CardHeader className="bg-gradient-to-r from-blue-50 to-purple-50 pb-2">
+                <CardTitle className="text-lg font-bold flex items-center">
+                  <Trophy className="mr-2 h-5 w-5 text-yellow-500" />
+                  Active Challenges
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6">
+                <div className="bg-gradient-to-r from-blue-50 via-purple-50 to-blue-50 p-8 rounded-xl text-center">
+                  <div className="flex flex-col items-center justify-center space-y-4">
+                    <Trophy className="h-16 w-16 text-yellow-500" />
+                    <h2 className="text-xl font-bold">Quests & Challenges Coming Soon!</h2>
+                    <p className="text-gray-600 max-w-md mx-auto">
+                      We're building an exciting system of interactive quests and challenges to make learning even more fun. Check back soon!
+                    </p>
+                    <Button className="bg-kidato-blue hover:bg-kidato-dark-blue mt-2">
+                      Get Notified When Ready
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </main>
       </div>
@@ -169,4 +162,4 @@ const Dashboard = () => {
   );
 }
 
-export default Dashboard;
+export default Challenges;

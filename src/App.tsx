@@ -22,6 +22,11 @@ import ClassDetailsPage from "./pages/ClassDetailsPage";
 import TeacherProfilePage from "./pages/TeacherProfilePage";
 import TeacherProfilesPage from "./pages/TeacherProfilesPage";
 import Messaging from "./pages/Messaging";
+import LearningGoals from "./pages/LearningGoals";
+import GroupWork from "./pages/GroupWork";
+import Challenges from "./pages/Challenges";
+import Schedule from "./pages/Schedule";
+import Achievements from "./pages/Achievements";
 
 // Create a client
 const queryClient = new QueryClient();
@@ -45,11 +50,8 @@ const App = () => {
               <Route path="/teachers" element={<TeacherProfilesPage />} />
               <Route path="/class/:id" element={<ClassDetailsPage />} />
               <Route path="/teacher/:teacherId" element={<TeacherProfilePage />} />
-              <Route path="/messaging" element={
-                <ProtectedRoute>
-                  <Messaging />
-                </ProtectedRoute>
-              } />
+              
+              {/* Protected Routes */}
               <Route path="/student-dashboard" element={
                 <ProtectedRoute>
                   <Dashboard />
@@ -61,6 +63,36 @@ const App = () => {
               <Route path="/teacher-dashboard" element={
                 <ProtectedRoute>
                   <TeacherDashboard />
+                </ProtectedRoute>
+              } />
+              <Route path="/learning-progress" element={
+                <ProtectedRoute>
+                  <LearningGoals />
+                </ProtectedRoute>
+              } />
+              <Route path="/group-work" element={
+                <ProtectedRoute>
+                  <GroupWork />
+                </ProtectedRoute>
+              } />
+              <Route path="/challenges" element={
+                <ProtectedRoute>
+                  <Challenges />
+                </ProtectedRoute>
+              } />
+              <Route path="/schedule" element={
+                <ProtectedRoute>
+                  <Schedule />
+                </ProtectedRoute>
+              } />
+              <Route path="/achievements" element={
+                <ProtectedRoute>
+                  <Achievements />
+                </ProtectedRoute>
+              } />
+              <Route path="/messaging" element={
+                <ProtectedRoute>
+                  <Messaging />
                 </ProtectedRoute>
               } />
               <Route path="*" element={<NotFound />} />
