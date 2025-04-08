@@ -9,7 +9,8 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { CheckCircle2, XCircle, Loader2 } from "lucide-react";
+import { CheckCircle2, XCircle, Loader2, Wifi, Globe, Smartphone, Signal } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface JoinClassDialogProps {
   isOpen: boolean;
@@ -27,69 +28,145 @@ export default function JoinClassDialog({
     browser: null as boolean | null,
     connection: null as boolean | null,
   });
+  const [connectionDetails, setConnectionDetails] = useState({
+    browserName: "",
+    browserVersion: "",
+    isp: "Detecting...",
+    connectionType: "Detecting...",
+    bandwidth: "Calculating...",
+  });
+  const [showConnectionDetails, setShowConnectionDetails] = useState(false);
 
   // Run the checks when the dialog opens
   useEffect(() => {
     if (isOpen) {
       runSystemChecks();
+      setTimeout(() => {
+        setShowConnectionDetails(true);
+      }, 800); // Show details after a delay for animation effect
     } else {
       // Reset state when dialog closes
       setCheckingConnection(false);
       setCheckResults({ browser: null, connection: null });
+      setShowConnectionDetails(false);
     }
   }, [isOpen]);
 
   const runSystemChecks = async () => {
     setCheckingConnection(true);
     
-    // Check browser compatibility
-    const isBrowserCompatible = checkBrowserCompatibility();
+    // Check browser compatibility and get browser details
+    const browserDetails = getBrowserDetails();
+    const isBrowserCompatible = browserDetails.isCompatible;
+    
+    setConnectionDetails(prev => ({
+      ...prev,
+      browserName: browserDetails.name,
+      browserVersion: browserDetails.version
+    }));
     
     setCheckResults(prev => ({
       ...prev,
       browser: isBrowserCompatible,
     }));
     
-    // Check internet connection
+    // Check internet connection and get network details
     try {
-      const isConnectionGood = await checkInternetConnection();
+      const connectionInfo = await checkInternetConnection();
       setCheckResults(prev => ({
         ...prev,
-        connection: isConnectionGood,
+        connection: connectionInfo.isGood,
       }));
+      
+      // Get connection details after a delay (simulating API call to get ISP info)
+      setTimeout(() => {
+        // In a real app, we would make an API call to a service like ipinfo.io
+        // For this demo, we'll use mock data
+        setConnectionDetails(prev => ({
+          ...prev,
+          isp: "FastNet Internet Services",
+          connectionType: navigator.connection ? 
+            (navigator.connection as any).effectiveType || "Unknown" : 
+            connectionInfo.isGood ? "Broadband" : "Unstable",
+          bandwidth: connectionInfo.speed + " Mbps"
+        }));
+      }, 1500);
+      
     } catch (error) {
       setCheckResults(prev => ({
         ...prev,
         connection: false,
+      }));
+      setConnectionDetails(prev => ({
+        ...prev,
+        isp: "Unable to detect",
+        connectionType: "Connection issues",
+        bandwidth: "Unavailable"
       }));
     }
     
     setCheckingConnection(false);
   };
 
-  const checkBrowserCompatibility = (): boolean => {
-    // Simple browser compatibility check
-    const isChrome = navigator.userAgent.indexOf("Chrome") > -1;
-    const isFirefox = navigator.userAgent.indexOf("Firefox") > -1;
-    const isSafari = navigator.userAgent.indexOf("Safari") > -1;
-    const isEdge = navigator.userAgent.indexOf("Edg") > -1;
+  const getBrowserDetails = () => {
+    const userAgent = navigator.userAgent;
+    let name = "Unknown Browser";
+    let version = "";
+    let isCompatible = false;
     
-    return isChrome || isFirefox || isSafari || isEdge;
+    // Check for Chrome
+    if (/Chrome/.test(userAgent) && !/Chromium|Edge|Edg/.test(userAgent)) {
+      name = "Chrome";
+      version = userAgent.match(/Chrome\/(\d+\.\d+)/)?.[1] || "";
+      isCompatible = true;
+    } 
+    // Check for Firefox
+    else if (/Firefox/.test(userAgent)) {
+      name = "Firefox";
+      version = userAgent.match(/Firefox\/(\d+\.\d+)/)?.[1] || "";
+      isCompatible = true;
+    } 
+    // Check for Safari
+    else if (/Safari/.test(userAgent) && !/Chrome/.test(userAgent)) {
+      name = "Safari";
+      version = userAgent.match(/Version\/(\d+\.\d+)/)?.[1] || "";
+      isCompatible = true;
+    } 
+    // Check for Edge
+    else if (/Edg|Edge/.test(userAgent)) {
+      name = "Microsoft Edge";
+      version = userAgent.match(/Edg\/(\d+\.\d+)/)?.[1] || 
+               userAgent.match(/Edge\/(\d+\.\d+)/)?.[1] || "";
+      isCompatible = true;
+    } 
+    // Check for Internet Explorer (not compatible)
+    else if (/MSIE|Trident/.test(userAgent)) {
+      name = "Internet Explorer";
+      version = userAgent.match(/MSIE (\d+\.\d+)/)?.[1] || 
+                userAgent.match(/rv:(\d+\.\d+)/)?.[1] || "";
+      isCompatible = false;
+    }
+    
+    return { name, version, isCompatible };
   };
 
-  const checkInternetConnection = (): Promise<boolean> => {
+  const checkInternetConnection = (): Promise<{ isGood: boolean, speed: string }> => {
     return new Promise((resolve) => {
-      // Simple connection check by loading a small image
       const start = Date.now();
       const img = new Image();
       
+      // Simple connection check by loading a small image
       img.onload = () => {
         const loadTime = Date.now() - start;
-        resolve(loadTime < 3000); // Consider connection good if load time is less than 3 seconds
+        const connectionSpeed = Math.floor(10000 / loadTime); // Simple estimation
+        resolve({
+          isGood: loadTime < 3000, 
+          speed: connectionSpeed.toString()
+        });
       };
       
       img.onerror = () => {
-        resolve(false);
+        resolve({ isGood: false, speed: "0" });
       };
       
       // Try to load Google's favicon as a test
@@ -97,7 +174,7 @@ export default function JoinClassDialog({
       
       // Set a timeout for the check
       setTimeout(() => {
-        resolve(false);
+        resolve({ isGood: false, speed: "0" });
       }, 5000);
     });
   };
@@ -113,54 +190,136 @@ export default function JoinClassDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Join "{classTitle}"</DialogTitle>
-          <DialogDescription>
-            Let's make sure your system is ready for the virtual classroom.
+      <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto animate-fade-in">
+        <DialogHeader className="space-y-3">
+          <DialogTitle className="text-2xl font-bold text-kidato-blue">
+            Join "{classTitle}"
+          </DialogTitle>
+          <DialogDescription className="text-base">
+            Let's make sure your system is ready for the virtual classroom!
           </DialogDescription>
         </DialogHeader>
         
-        <div className="py-6 space-y-4">
+        <div className="py-6 space-y-6">
           {checkingConnection ? (
-            <div className="flex flex-col items-center justify-center py-4">
-              <Loader2 className="h-8 w-8 text-kidato-blue animate-spin mb-2" />
-              <p className="text-center text-gray-600">Checking your system...</p>
+            <div className="flex flex-col items-center justify-center py-8 animate-pulse">
+              <div className="relative">
+                <Loader2 className="h-16 w-16 text-kidato-blue animate-spin mb-4" />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <Globe className="h-6 w-6 text-kidato-blue" />
+                </div>
+              </div>
+              <p className="text-center text-xl font-medium text-gray-700 mt-4">Checking your system...</p>
+              <p className="text-center text-gray-500 mt-1">This will only take a moment</p>
             </div>
           ) : (
-            <>
-              <div className="flex items-center justify-between border-b pb-2">
-                <span className="font-medium">Browser Compatibility</span>
-                {checkResults.browser === null ? (
-                  <span className="text-gray-500">Checking...</span>
-                ) : checkResults.browser ? (
-                  <CheckCircle2 className="h-5 w-5 text-green-500" />
-                ) : (
-                  <div className="flex items-center text-red-500">
-                    <XCircle className="h-5 w-5 mr-1" />
-                    <span className="text-sm">Not compatible</span>
+            <div className={cn("space-y-8 transition-all duration-500", 
+              showConnectionDetails ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10")}>
+              {/* System Check Results */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="bg-gray-50 p-5 rounded-xl border border-gray-200">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="bg-kidato-light-blue p-2 rounded-lg">
+                      <Smartphone className="h-6 w-6 text-kidato-blue" />
+                    </div>
+                    <h3 className="font-semibold text-lg">Browser Check</h3>
                   </div>
-                )}
+                  
+                  <div className="flex items-center justify-between border-b pb-3 mb-3">
+                    <span className="font-medium">Browser</span>
+                    <span className="font-semibold">{connectionDetails.browserName} {connectionDetails.browserVersion}</span>
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium">Compatibility</span>
+                    {checkResults.browser === null ? (
+                      <span className="text-gray-500">Checking...</span>
+                    ) : checkResults.browser ? (
+                      <div className="flex items-center text-green-500">
+                        <CheckCircle2 className="h-5 w-5 mr-1" />
+                        <span className="font-medium">Compatible</span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center text-red-500">
+                        <XCircle className="h-5 w-5 mr-1" />
+                        <span className="font-medium">Not compatible</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                
+                <div className="bg-gray-50 p-5 rounded-xl border border-gray-200">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="bg-kidato-light-blue p-2 rounded-lg">
+                      <Wifi className="h-6 w-6 text-kidato-blue" />
+                    </div>
+                    <h3 className="font-semibold text-lg">Connection Check</h3>
+                  </div>
+                  
+                  <div className="flex items-center justify-between border-b pb-3 mb-3">
+                    <span className="font-medium">Connection</span>
+                    {checkResults.connection === null ? (
+                      <span className="text-gray-500">Checking...</span>
+                    ) : checkResults.connection ? (
+                      <div className="flex items-center text-green-500">
+                        <CheckCircle2 className="h-5 w-5 mr-1" />
+                        <span className="font-medium">Good</span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center text-red-500">
+                        <XCircle className="h-5 w-5 mr-1" />
+                        <span className="font-medium">Poor</span>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium">Bandwidth</span>
+                    <span className="font-semibold">{connectionDetails.bandwidth}</span>
+                  </div>
+                </div>
               </div>
               
-              <div className="flex items-center justify-between border-b pb-2">
-                <span className="font-medium">Internet Connection</span>
-                {checkResults.connection === null ? (
-                  <span className="text-gray-500">Checking...</span>
-                ) : checkResults.connection ? (
-                  <CheckCircle2 className="h-5 w-5 text-green-500" />
-                ) : (
-                  <div className="flex items-center text-red-500">
-                    <XCircle className="h-5 w-5 mr-1" />
-                    <span className="text-sm">Poor connection</span>
+              {/* Network Details */}
+              <div className="bg-gray-50 p-5 rounded-xl border border-gray-200">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="bg-kidato-light-blue p-2 rounded-lg">
+                    <Signal className="h-6 w-6 text-kidato-blue" />
                   </div>
-                )}
+                  <h3 className="font-semibold text-lg">Network Details</h3>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2">
+                  <div className="flex items-center justify-between py-2 border-b">
+                    <span className="font-medium">Service Provider</span>
+                    <span className="font-semibold">{connectionDetails.isp}</span>
+                  </div>
+                  
+                  <div className="flex items-center justify-between py-2 border-b">
+                    <span className="font-medium">Connection Type</span>
+                    <span className="font-semibold">{connectionDetails.connectionType}</span>
+                  </div>
+                </div>
               </div>
-            </>
+              
+              {/* Recommendation */}
+              <div className={cn(
+                "p-4 rounded-xl border text-center transition-all duration-300",
+                allChecksPassed 
+                  ? "bg-green-50 border-green-200 text-green-700" 
+                  : "bg-orange-50 border-orange-200 text-orange-700"
+              )}>
+                <p className="font-medium">
+                  {allChecksPassed 
+                    ? "Your system is ready! You can join the class now." 
+                    : "Your system may have some issues. You might experience problems during the class."}
+                </p>
+              </div>
+            </div>
           )}
         </div>
         
-        <DialogFooter className="flex flex-col sm:flex-row sm:justify-between gap-2">
+        <DialogFooter className="flex flex-col sm:flex-row sm:justify-between gap-3 pt-2">
           <Button 
             variant="outline" 
             onClick={() => setIsOpen(false)}
@@ -172,7 +331,12 @@ export default function JoinClassDialog({
           <Button
             disabled={!allChecksPassed || checkingConnection}
             onClick={joinClass}
-            className={`${allChecksPassed ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-400 cursor-not-allowed'} sm:order-2 order-1`}
+            className={cn(
+              "sm:order-2 order-1 text-white font-medium text-base px-6 py-2 transition-all duration-300",
+              allChecksPassed && !checkingConnection
+                ? "bg-green-500 hover:bg-green-600 scale-100 hover:scale-105"
+                : "bg-gray-400 cursor-not-allowed"
+            )}
           >
             {checkingConnection ? (
               <>
