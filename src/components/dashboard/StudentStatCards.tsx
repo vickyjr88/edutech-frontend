@@ -174,8 +174,8 @@ export default function StudentStatCards() {
                     <div className="mt-2.5">
                       <Progress 
                         value={stat.progress} 
-                        className="h-2 rounded-full overflow-hidden" 
-                        indicatorClassName={`${getColorClass(stat.color, 'bg').replace('bg-', 'bg-').replace('-50', '-500')}`}
+                        className="h-2 rounded-full overflow-hidden"
+                        indicatorClassName={getColorClass(stat.color, 'bg').replace('bg-', 'bg-').replace('-50', '-500')}
                       />
                     </div>
                   )}

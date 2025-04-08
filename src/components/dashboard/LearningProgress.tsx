@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/select";
 import { BookOpen, Brain, Sparkles, Star, PieChart } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
+import { cn } from "@/lib/utils";
 
 export default function LearningProgress() {
   const [selectedClass, setSelectedClass] = useState("all");
@@ -79,16 +80,11 @@ export default function LearningProgress() {
                 </div>
               </div>
               <div className="w-full bg-gray-100 rounded-full h-3 overflow-hidden relative p-0.5">
-                <div 
-                  className={`h-2 rounded-full ${getProgressColor(subject.color)} transition-all duration-700 ease-out`} 
-                  style={{ width: `${subject.progress}%` }}
-                >
-                  {subject.progress > 30 && (
-                    <div className="absolute h-full w-full flex items-center justify-center">
-                      <div className="h-1 bg-white/30 rounded-full w-[90%]"></div>
-                    </div>
-                  )}
-                </div>
+                <Progress 
+                  value={subject.progress} 
+                  className="h-2 rounded-full overflow-hidden" 
+                  indicatorClassName={getProgressColor(subject.color)}
+                />
               </div>
             </div>
           ))}
@@ -102,14 +98,11 @@ export default function LearningProgress() {
               <span className="font-bold text-blue-600">66%</span>
             </div>
             <div className="w-full bg-gray-100 rounded-full h-4 overflow-hidden relative p-0.5">
-              <div 
-                className="bg-gradient-to-r from-blue-500 to-purple-500 h-3 rounded-full transition-all duration-700 ease-out"
-                style={{ width: "66%" }}
-              >
-                <div className="absolute h-full w-full flex items-center justify-center">
-                  <div className="h-1.5 bg-white/30 rounded-full w-[90%]"></div>
-                </div>
-              </div>
+              <Progress 
+                value={66} 
+                className="h-3 rounded-full overflow-hidden"
+                indicatorClassName="bg-gradient-to-r from-blue-500 to-purple-500" 
+              />
             </div>
             
             <div className="mt-4 text-center">
