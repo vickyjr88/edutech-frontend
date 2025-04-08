@@ -1,7 +1,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Check, XCircle, Circle, Award, Star, ChevronUp } from "lucide-react";
+import { Check, XCircle, Circle, Award, Star, ChevronUp, Flame } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
