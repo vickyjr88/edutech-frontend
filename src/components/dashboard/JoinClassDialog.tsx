@@ -9,8 +9,17 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { CheckCircle2, XCircle, Loader2, Wifi, Globe, Smartphone, Signal } from "lucide-react";
+import { CheckCircle2, XCircle, Loader2, Wifi, Globe, Smartphone, Signal, MapPin } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+// Add NetworkInformation type definition for TypeScript
+interface NetworkInformation {
+  effectiveType?: string;
+  downlink?: number;
+  rtt?: number;
+  saveData?: boolean;
+  type?: string;
+}
 
 interface JoinClassDialogProps {
   isOpen: boolean;
@@ -34,6 +43,7 @@ export default function JoinClassDialog({
     isp: "Detecting...",
     connectionType: "Detecting...",
     bandwidth: "Calculating...",
+    location: "Detecting...",
   });
   const [showConnectionDetails, setShowConnectionDetails] = useState(false);
 
@@ -73,6 +83,7 @@ export default function JoinClassDialog({
     // Check internet connection and get network details
     try {
       const connectionInfo = await checkInternetConnection();
+      
       setCheckResults(prev => ({
         ...prev,
         connection: connectionInfo.isGood,
@@ -81,15 +92,16 @@ export default function JoinClassDialog({
       // Get connection details after a delay (simulating API call to get ISP info)
       setTimeout(() => {
         // In a real app, we would make an API call to a service like ipinfo.io
-        // For this demo, we'll use mock data
-        setConnectionDetails(prev => ({
-          ...prev,
-          isp: "FastNet Internet Services",
-          connectionType: navigator.connection ? 
-            (navigator.connection as any).effectiveType || "Unknown" : 
-            connectionInfo.isGood ? "Broadband" : "Unstable",
-          bandwidth: connectionInfo.speed + " Mbps"
-        }));
+        // For this demo, we'll use mock data and attempt to get geolocation
+        getLocationInfo().then(locationInfo => {
+          setConnectionDetails(prev => ({
+            ...prev,
+            isp: "FastNet Internet Services",
+            connectionType: getConnectionType(),
+            bandwidth: connectionInfo.speed + " Mbps",
+            location: locationInfo
+          }));
+        });
       }, 1500);
       
     } catch (error) {
@@ -101,11 +113,52 @@ export default function JoinClassDialog({
         ...prev,
         isp: "Unable to detect",
         connectionType: "Connection issues",
-        bandwidth: "Unavailable"
+        bandwidth: "Unavailable",
+        location: "Location unavailable"
       }));
     }
     
     setCheckingConnection(false);
+  };
+
+  // Safe way to access navigator.connection with TypeScript
+  const getConnectionType = () => {
+    // Cast navigator to have a connection property of NetworkInformation type
+    const navigatorWithConnection = navigator as Navigator & { connection?: NetworkInformation };
+    
+    if (navigatorWithConnection.connection) {
+      return navigatorWithConnection.connection.effectiveType || "Unknown";
+    }
+    return "Broadband";
+  };
+
+  const getLocationInfo = (): Promise<string> => {
+    return new Promise((resolve) => {
+      // Try to get geolocation
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            // In a real app, we would use the coordinates to get the actual location name
+            // For this demo, we'll use mock data based on coordinates
+            const latitude = position.coords.latitude.toFixed(2);
+            const longitude = position.coords.longitude.toFixed(2);
+            resolve(`Approximate location: ${latitude}, ${longitude}`);
+          },
+          () => {
+            // If geolocation is blocked or fails
+            resolve("Location access denied");
+          }
+        );
+      } else {
+        // Browser doesn't support geolocation
+        resolve("Geolocation not supported");
+      }
+      
+      // Set a timeout in case geolocation takes too long
+      setTimeout(() => {
+        resolve("Nairobi, Kenya (Estimated)");
+      }, 3000);
+    });
   };
 
   const getBrowserDetails = () => {
@@ -190,7 +243,7 @@ export default function JoinClassDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto animate-fade-in">
+      <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto animate-fade-in">
         <DialogHeader className="space-y-3">
           <DialogTitle className="text-2xl font-bold text-kidato-blue">
             Join "{classTitle}"
@@ -299,6 +352,25 @@ export default function JoinClassDialog({
                     <span className="font-medium">Connection Type</span>
                     <span className="font-semibold">{connectionDetails.connectionType}</span>
                   </div>
+                </div>
+              </div>
+              
+              {/* Location Details - New Section */}
+              <div className="bg-gray-50 p-5 rounded-xl border border-gray-200 animate-fade-in">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="bg-kidato-light-blue p-2 rounded-lg">
+                    <MapPin className="h-6 w-6 text-kidato-blue" />
+                  </div>
+                  <h3 className="font-semibold text-lg">Your Location</h3>
+                </div>
+                
+                <div className="flex items-center justify-between py-2">
+                  <span className="font-medium">Detected Location</span>
+                  <span className="font-semibold">{connectionDetails.location}</span>
+                </div>
+                
+                <div className="mt-3 text-xs text-gray-500">
+                  <p>Location is approximated based on your internet connection. Accurate location requires permission.</p>
                 </div>
               </div>
               
