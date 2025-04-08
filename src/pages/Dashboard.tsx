@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Home, Book, User, Settings, LogOut } from "lucide-react";
+import { Home, Book, User, Settings, LogOut, MessageSquare } from "lucide-react";
 import StudentDashboardHeader from "@/components/dashboard/StudentDashboardHeader";
 import StudentStatCards from "@/components/dashboard/StudentStatCards";
 import CurrentClasses from "@/components/dashboard/CurrentClasses";
@@ -35,6 +35,13 @@ const Dashboard = () => {
           >
             <Home className="mr-3 h-5 w-5" />
             Dashboard
+          </Link>
+          <Link 
+            to="/messaging" 
+            className="flex items-center px-4 py-3 text-sm font-medium rounded-md text-gray-700 hover:bg-gray-100"
+          >
+            <MessageSquare className="mr-3 h-5 w-5" />
+            Messages
           </Link>
           <Link 
             to="/courses" 

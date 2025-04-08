@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -20,6 +21,7 @@ import AllClasses from "./pages/AllClasses";
 import ClassDetailsPage from "./pages/ClassDetailsPage";
 import TeacherProfilePage from "./pages/TeacherProfilePage";
 import TeacherProfilesPage from "./pages/TeacherProfilesPage";
+import Messaging from "./pages/Messaging";
 
 // Create a client
 const queryClient = new QueryClient();
@@ -43,6 +45,11 @@ const App = () => {
               <Route path="/teachers" element={<TeacherProfilesPage />} />
               <Route path="/class/:id" element={<ClassDetailsPage />} />
               <Route path="/teacher/:teacherId" element={<TeacherProfilePage />} />
+              <Route path="/messaging" element={
+                <ProtectedRoute>
+                  <Messaging />
+                </ProtectedRoute>
+              } />
               <Route path="/student-dashboard" element={
                 <ProtectedRoute>
                   <Dashboard />
