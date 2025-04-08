@@ -92,7 +92,6 @@ export default function JoinClassDialog({
       // Get connection details after a delay (simulating API call to get ISP info)
       setTimeout(() => {
         // In a real app, we would make an API call to a service like ipinfo.io
-        // For this demo, we'll use mock data and attempt to get geolocation
         getLocationInfo().then(locationInfo => {
           setConnectionDetails(prev => ({
             ...prev,
@@ -114,7 +113,7 @@ export default function JoinClassDialog({
         isp: "Unable to detect",
         connectionType: "Connection issues",
         bandwidth: "Unavailable",
-        location: "Location unavailable"
+        location: "Unable to detect location"
       }));
     }
     
@@ -134,30 +133,11 @@ export default function JoinClassDialog({
 
   const getLocationInfo = (): Promise<string> => {
     return new Promise((resolve) => {
-      // Try to get geolocation
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-          (position) => {
-            // In a real app, we would use the coordinates to get the actual location name
-            // For this demo, we'll use mock data based on coordinates
-            const latitude = position.coords.latitude.toFixed(2);
-            const longitude = position.coords.longitude.toFixed(2);
-            resolve(`Approximate location: ${latitude}, ${longitude}`);
-          },
-          () => {
-            // If geolocation is blocked or fails
-            resolve("Location access denied");
-          }
-        );
-      } else {
-        // Browser doesn't support geolocation
-        resolve("Geolocation not supported");
-      }
-      
-      // Set a timeout in case geolocation takes too long
+      // For privacy and simplicity, we'll use a mock location
+      // In a real app, you might use an IP geolocation API
       setTimeout(() => {
-        resolve("Nairobi, Kenya (Estimated)");
-      }, 3000);
+        resolve("Nairobi, Kenya");
+      }, 1000);
     });
   };
 
@@ -243,7 +223,7 @@ export default function JoinClassDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto animate-fade-in">
+      <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto animate-fade-in p-6">
         <DialogHeader className="space-y-3">
           <DialogTitle className="text-2xl font-bold text-kidato-blue">
             Join "{classTitle}"
@@ -253,9 +233,9 @@ export default function JoinClassDialog({
           </DialogDescription>
         </DialogHeader>
         
-        <div className="py-6 space-y-6">
+        <div className="py-4 space-y-5">
           {checkingConnection ? (
-            <div className="flex flex-col items-center justify-center py-8 animate-pulse">
+            <div className="flex flex-col items-center justify-center py-6 animate-pulse">
               <div className="relative">
                 <Loader2 className="h-16 w-16 text-kidato-blue animate-spin mb-4" />
                 <div className="absolute inset-0 flex items-center justify-center">
@@ -266,19 +246,19 @@ export default function JoinClassDialog({
               <p className="text-center text-gray-500 mt-1">This will only take a moment</p>
             </div>
           ) : (
-            <div className={cn("space-y-8 transition-all duration-500", 
+            <div className={cn("space-y-5 transition-all duration-500", 
               showConnectionDetails ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10")}>
-              {/* System Check Results */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="bg-gray-50 p-5 rounded-xl border border-gray-200">
-                  <div className="flex items-center gap-3 mb-4">
+              {/* System Check Results - Compact Layout */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                  <div className="flex items-center gap-2 mb-3">
                     <div className="bg-kidato-light-blue p-2 rounded-lg">
-                      <Smartphone className="h-6 w-6 text-kidato-blue" />
+                      <Smartphone className="h-5 w-5 text-kidato-blue" />
                     </div>
                     <h3 className="font-semibold text-lg">Browser Check</h3>
                   </div>
                   
-                  <div className="flex items-center justify-between border-b pb-3 mb-3">
+                  <div className="flex items-center justify-between border-b pb-2 mb-2">
                     <span className="font-medium">Browser</span>
                     <span className="font-semibold">{connectionDetails.browserName} {connectionDetails.browserVersion}</span>
                   </div>
@@ -301,15 +281,15 @@ export default function JoinClassDialog({
                   </div>
                 </div>
                 
-                <div className="bg-gray-50 p-5 rounded-xl border border-gray-200">
-                  <div className="flex items-center gap-3 mb-4">
+                <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                  <div className="flex items-center gap-2 mb-3">
                     <div className="bg-kidato-light-blue p-2 rounded-lg">
-                      <Wifi className="h-6 w-6 text-kidato-blue" />
+                      <Wifi className="h-5 w-5 text-kidato-blue" />
                     </div>
                     <h3 className="font-semibold text-lg">Connection Check</h3>
                   </div>
                   
-                  <div className="flex items-center justify-between border-b pb-3 mb-3">
+                  <div className="flex items-center justify-between border-b pb-2 mb-2">
                     <span className="font-medium">Connection</span>
                     {checkResults.connection === null ? (
                       <span className="text-gray-500">Checking...</span>
@@ -333,44 +313,41 @@ export default function JoinClassDialog({
                 </div>
               </div>
               
-              {/* Network Details */}
-              <div className="bg-gray-50 p-5 rounded-xl border border-gray-200">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="bg-kidato-light-blue p-2 rounded-lg">
-                    <Signal className="h-6 w-6 text-kidato-blue" />
-                  </div>
-                  <h3 className="font-semibold text-lg">Network Details</h3>
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2">
-                  <div className="flex items-center justify-between py-2 border-b">
-                    <span className="font-medium">Service Provider</span>
-                    <span className="font-semibold">{connectionDetails.isp}</span>
+              {/* Network & Location Info - Combined into one row */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="bg-kidato-light-blue p-2 rounded-lg">
+                      <Signal className="h-5 w-5 text-kidato-blue" />
+                    </div>
+                    <h3 className="font-semibold text-lg">Network Details</h3>
                   </div>
                   
-                  <div className="flex items-center justify-between py-2 border-b">
-                    <span className="font-medium">Connection Type</span>
-                    <span className="font-semibold">{connectionDetails.connectionType}</span>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between py-1 border-b">
+                      <span className="font-medium">Service Provider</span>
+                      <span className="font-semibold">{connectionDetails.isp}</span>
+                    </div>
+                    
+                    <div className="flex items-center justify-between py-1">
+                      <span className="font-medium">Connection Type</span>
+                      <span className="font-semibold">{connectionDetails.connectionType}</span>
+                    </div>
                   </div>
                 </div>
-              </div>
-              
-              {/* Location Details - New Section */}
-              <div className="bg-gray-50 p-5 rounded-xl border border-gray-200 animate-fade-in">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="bg-kidato-light-blue p-2 rounded-lg">
-                    <MapPin className="h-6 w-6 text-kidato-blue" />
+                
+                <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 animate-fade-in">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="bg-kidato-light-blue p-2 rounded-lg">
+                      <MapPin className="h-5 w-5 text-kidato-blue" />
+                    </div>
+                    <h3 className="font-semibold text-lg">Your Location</h3>
                   </div>
-                  <h3 className="font-semibold text-lg">Your Location</h3>
-                </div>
-                
-                <div className="flex items-center justify-between py-2">
-                  <span className="font-medium">Detected Location</span>
-                  <span className="font-semibold">{connectionDetails.location}</span>
-                </div>
-                
-                <div className="mt-3 text-xs text-gray-500">
-                  <p>Location is approximated based on your internet connection. Accurate location requires permission.</p>
+                  
+                  <div className="flex items-center justify-between py-1">
+                    <span className="font-medium">Detected Location</span>
+                    <span className="font-semibold">{connectionDetails.location}</span>
+                  </div>
                 </div>
               </div>
               
@@ -391,7 +368,7 @@ export default function JoinClassDialog({
           )}
         </div>
         
-        <DialogFooter className="flex flex-col sm:flex-row sm:justify-between gap-3 pt-2">
+        <DialogFooter className="flex flex-col sm:flex-row sm:justify-between gap-3">
           <Button 
             variant="outline" 
             onClick={() => setIsOpen(false)}
