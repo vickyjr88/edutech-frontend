@@ -4,9 +4,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ChevronRight, Users, Clock } from "lucide-react";
 import { Link } from "react-router-dom";
+import JoinClassDialog from "./JoinClassDialog";
 
 export default function CurrentClasses() {
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [isJoinDialogOpen, setIsJoinDialogOpen] = useState(false);
   
   // Update current time every minute
   useEffect(() => {
@@ -134,7 +136,10 @@ export default function CurrentClasses() {
             
             <div className="flex p-3 bg-gray-50 border-t">
               {classToDisplay.sessionTime <= currentTime ? (
-                <Button className="flex-1 bg-green-600 hover:bg-green-700">
+                <Button 
+                  className="flex-1 bg-green-600 hover:bg-green-700"
+                  onClick={() => setIsJoinDialogOpen(true)}
+                >
                   Join Class Now
                 </Button>
               ) : (
@@ -145,7 +150,7 @@ export default function CurrentClasses() {
               
               <Button variant="ghost" className="ml-2" asChild>
                 <Link to={`/class/${classToDisplay.id}`}>
-                  <ChevronRight className="h-4 w-4" />
+                  View Details
                 </Link>
               </Button>
             </div>
@@ -159,6 +164,14 @@ export default function CurrentClasses() {
           </div>
         )}
       </CardContent>
+      
+      {classToDisplay && (
+        <JoinClassDialog
+          isOpen={isJoinDialogOpen}
+          setIsOpen={setIsJoinDialogOpen}
+          classTitle={classToDisplay.title}
+        />
+      )}
     </Card>
   );
 }
