@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ChevronRight, Users, Clock, BookOpen, Calendar, Award, Star, CheckCircle2, Bookmark } from "lucide-react";
+import { ChevronRight, Users, Clock, BookOpen, Calendar, Award, Star, CheckCircle2, Bookmark, Info, Target } from "lucide-react";
 import { Link } from "react-router-dom";
 import JoinClassDialog from "./JoinClassDialog";
 
@@ -36,6 +36,8 @@ export default function CurrentClasses() {
       curriculum: "National Curriculum",
       classType: "Academic",
       nextTopic: "Fractions & Decimals",
+      previousTopic: "Number Systems", 
+      todaysObjectives: ["Understand fraction to decimal conversion", "Solve mixed number problems", "Compare decimal values"],
       homeworkDue: "Thursday",
       totalLessonsCompleted: 8,
       totalLessons: 12,
@@ -58,6 +60,8 @@ export default function CurrentClasses() {
       curriculum: "Cambridge",
       classType: "Exam Prep",
       nextTopic: "Cellular Structure",
+      previousTopic: "Introduction to Biology",
+      todaysObjectives: ["Identify cell organelles", "Draw and label plant cells", "Compare animal and plant cells"],
       homeworkDue: "Friday",
       totalLessonsCompleted: 5,
       totalLessons: 12,
@@ -80,6 +84,8 @@ export default function CurrentClasses() {
       curriculum: "National Curriculum",
       classType: "Non-Academic",
       nextTopic: "JavaScript Functions",
+      previousTopic: "HTML & CSS Basics",
+      todaysObjectives: ["Write basic JavaScript functions", "Understand function parameters", "Return values from functions"],
       homeworkDue: "Next Monday",
       totalLessonsCompleted: 3,
       totalLessons: 10,
@@ -102,6 +108,8 @@ export default function CurrentClasses() {
       curriculum: "International Baccalaureate",
       classType: "Tutoring",
       nextTopic: "Creative Writing",
+      previousTopic: "Poetry Analysis",
+      todaysObjectives: ["Create character outlines", "Draft short story beginnings", "Apply narrative structure concepts"],
       homeworkDue: "Wednesday",
       totalLessonsCompleted: 6,
       totalLessons: 12,
@@ -226,28 +234,43 @@ export default function CurrentClasses() {
                         <div className="flex items-start justify-between mb-1">
                           <div>
                             <h3 className="font-bold text-gray-900 text-lg">{classItem.title}</h3>
-                            <p className="text-sm text-gray-600">{classItem.teacher}</p>
                             
-                            <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1">
-                              <div className="text-xs text-gray-500">
-                                <span className="font-medium">Grade:</span> {classItem.grade}
-                              </div>
-                              <div className="text-xs text-gray-500">
-                                <span className="font-medium">Subject:</span> {classItem.subject}
-                              </div>
-                              <div className="text-xs text-gray-500">
-                                <span className="font-medium">Curriculum:</span> {classItem.curriculum}
-                              </div>
-                              <div className="text-xs text-gray-500">
-                                <span className="font-medium">Next topic:</span> {classItem.nextTopic}
-                              </div>
+                            {/* Class details right below the title */}
+                            <div className="flex flex-wrap gap-1 mt-1 mb-2">
+                              <span className="text-xs bg-gray-100 px-2 py-0.5 rounded-full">{classItem.grade}</span>
+                              <span className="text-xs bg-gray-100 px-2 py-0.5 rounded-full">{classItem.subject}</span>
+                              <span className="text-xs bg-gray-100 px-2 py-0.5 rounded-full">{classItem.curriculum}</span>
                             </div>
+                            
+                            <p className="text-sm text-gray-600">{classItem.teacher}</p>
                           </div>
                           {index === 0 && isCurrentClass && (
                             <span className="animate-pulse bg-green-500 text-white text-xs px-2 py-1 rounded-full">
                               Live now!
                             </span>
                           )}
+                        </div>
+                        
+                        {/* Topic Information Section */}
+                        <div className="mt-3 p-2 bg-white/70 rounded-lg border border-gray-200">
+                          <div className="flex items-start space-x-2 mb-2">
+                            <Target className="h-4 w-4 text-blue-500 mt-0.5" />
+                            <div>
+                              <span className="text-xs font-medium text-blue-600">Today's Topic:</span>
+                              <p className="text-sm font-medium">{classItem.nextTopic}</p>
+                              <p className="text-xs text-gray-500">Previous: {classItem.previousTopic}</p>
+                            </div>
+                          </div>
+                          
+                          {/* Today's Objectives */}
+                          <div className="mt-2">
+                            <p className="text-xs font-medium text-blue-600 mb-1">Today's Objectives:</p>
+                            <ul className="text-xs space-y-0.5 pl-4 list-disc">
+                              {classItem.todaysObjectives.map((objective, i) => (
+                                <li key={i}>{objective}</li>
+                              ))}
+                            </ul>
+                          </div>
                         </div>
                         
                         {/* Class Info Badges */}
