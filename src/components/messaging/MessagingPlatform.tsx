@@ -17,7 +17,8 @@ import {
   FileText,
   Paperclip,
   Image,
-  Smile
+  Smile,
+  Settings
 } from "lucide-react";
 import MessageItem from "./MessageItem";
 import ChannelsList from "./ChannelsList";
