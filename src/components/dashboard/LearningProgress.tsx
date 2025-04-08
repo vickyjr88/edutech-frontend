@@ -9,6 +9,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { BookOpen, Brain, Sparkles, Star, PieChart } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
 
 export default function LearningProgress() {
   const [selectedClass, setSelectedClass] = useState("all");

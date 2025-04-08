@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ChevronRight, Users, Clock, BookOpen } from "lucide-react";
+import { ChevronRight, Users, Clock, BookOpen, Calendar, Award, Star, CheckCircle2, Bookmark } from "lucide-react";
 import { Link } from "react-router-dom";
 import JoinClassDialog from "./JoinClassDialog";
 
@@ -10,6 +10,7 @@ export default function CurrentClasses() {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [isJoinDialogOpen, setIsJoinDialogOpen] = useState(false);
   const [selectedClass, setSelectedClass] = useState<any>(null);
+  const [bookmarkedClasses, setBookmarkedClasses] = useState<string[]>([]);
   
   // Update current time every minute
   useEffect(() => {
@@ -33,6 +34,11 @@ export default function CurrentClasses() {
       grade: "Grade 6",
       subject: "Mathematics",
       curriculum: "National Curriculum",
+      classType: "Academic",
+      nextTopic: "Fractions & Decimals",
+      homeworkDue: "Thursday",
+      totalLessonsCompleted: 8,
+      totalLessons: 12,
       color: "bg-green-100 border-green-400",
       iconBg: "bg-green-200",
       buttonColor: "bg-green-500 hover:bg-green-600",
@@ -50,6 +56,11 @@ export default function CurrentClasses() {
       grade: "Grade 8",
       subject: "Biology",
       curriculum: "Cambridge",
+      classType: "Exam Prep",
+      nextTopic: "Cellular Structure",
+      homeworkDue: "Friday",
+      totalLessonsCompleted: 5,
+      totalLessons: 12,
       color: "bg-purple-100 border-purple-400",
       iconBg: "bg-purple-200",
       buttonColor: "bg-purple-500 hover:bg-purple-600",
@@ -67,6 +78,11 @@ export default function CurrentClasses() {
       grade: "Grade 10",
       subject: "Computer Science",
       curriculum: "National Curriculum",
+      classType: "Non-Academic",
+      nextTopic: "JavaScript Functions",
+      homeworkDue: "Next Monday",
+      totalLessonsCompleted: 3,
+      totalLessons: 10,
       color: "bg-blue-100 border-blue-400",
       iconBg: "bg-blue-200",
       buttonColor: "bg-blue-500 hover:bg-blue-600",
@@ -84,6 +100,11 @@ export default function CurrentClasses() {
       grade: "Grade 7",
       subject: "English Literature",
       curriculum: "International Baccalaureate",
+      classType: "Tutoring",
+      nextTopic: "Creative Writing",
+      homeworkDue: "Wednesday",
+      totalLessonsCompleted: 6,
+      totalLessons: 12,
       color: "bg-yellow-100 border-yellow-400",
       iconBg: "bg-yellow-200",
       buttonColor: "bg-yellow-500 hover:bg-yellow-600",
@@ -127,10 +148,22 @@ export default function CurrentClasses() {
     setIsJoinDialogOpen(true);
   };
 
+  const toggleBookmark = (classId: string) => {
+    setBookmarkedClasses(prev => 
+      prev.includes(classId) 
+        ? prev.filter(id => id !== classId)
+        : [...prev, classId]
+    );
+  };
+
+  const formatProgressText = (completed: number, total: number) => {
+    return `${completed}/${total} lessons`;
+  };
+
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="text-lg font-medium flex items-center">
+    <Card className="border-2 border-blue-100 rounded-xl overflow-hidden shadow-md transform transition-all hover:shadow-lg">
+      <CardHeader className="flex flex-row items-center justify-between pb-2 bg-gradient-to-r from-blue-50 to-purple-50">
+        <CardTitle className="text-lg font-bold flex items-center">
           <BookOpen className="mr-2 h-5 w-5 text-kidato-blue" />
           My Classes
         </CardTitle>
@@ -144,13 +177,38 @@ export default function CurrentClasses() {
             classesToDisplay.map((classItem, index) => {
               const isCurrentClass = classItem.sessionTime <= currentTime;
               const minutesSinceStart = isCurrentClass ? getMinutesSinceStart(classItem.sessionTime) : null;
+              const isBookmarked = bookmarkedClasses.includes(classItem.id);
               
               return (
                 <div 
                   key={classItem.id} 
-                  className={`rounded-lg border-2 overflow-hidden shadow-sm transition-all hover:shadow-md ${classItem.color}`}
+                  className={`rounded-xl border-2 overflow-hidden shadow-sm transition-all hover:shadow-md ${classItem.color} animate-fade-in`}
+                  style={{ animationDelay: `${index * 150}ms` }}
                 >
                   <div className="flex flex-col">
+                    {/* Class Header */}
+                    <div className="p-3 bg-white/40 backdrop-blur-sm flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <div className={`${classItem.iconBg} p-1.5 rounded-lg`}>
+                          {classItem.classType === "Academic" && <BookOpen className="h-4 w-4" />}
+                          {classItem.classType === "Exam Prep" && <Award className="h-4 w-4" />}
+                          {classItem.classType === "Non-Academic" && <Star className="h-4 w-4" />}
+                          {classItem.classType === "Tutoring" && <Users className="h-4 w-4" />}
+                        </div>
+                        <span className="text-xs font-medium">{classItem.classType}</span>
+                      </div>
+                      
+                      <button 
+                        onClick={(e) => {
+                          e.preventDefault();
+                          toggleBookmark(classItem.id);
+                        }}
+                        className="text-gray-500 hover:text-yellow-500 transition-colors"
+                      >
+                        <Bookmark className={`h-4 w-4 ${isBookmarked ? "fill-yellow-400 text-yellow-500" : ""}`} />
+                      </button>
+                    </div>
+                    
                     <div className="flex flex-col sm:flex-row p-4">
                       {/* Teacher Image - Made responsive with consistent dimensions */}
                       <div className="sm:w-24 flex justify-center mb-4 sm:mb-0">
@@ -177,8 +235,11 @@ export default function CurrentClasses() {
                               <div className="text-xs text-gray-500">
                                 <span className="font-medium">Subject:</span> {classItem.subject}
                               </div>
-                              <div className="text-xs text-gray-500 col-span-1 sm:col-span-2">
+                              <div className="text-xs text-gray-500">
                                 <span className="font-medium">Curriculum:</span> {classItem.curriculum}
+                              </div>
+                              <div className="text-xs text-gray-500">
+                                <span className="font-medium">Next topic:</span> {classItem.nextTopic}
                               </div>
                             </div>
                           </div>
@@ -189,6 +250,7 @@ export default function CurrentClasses() {
                           )}
                         </div>
                         
+                        {/* Class Info Badges */}
                         <div className="flex flex-wrap gap-2 mt-3 mb-3">
                           <div className={`flex items-center text-xs px-2 py-1 rounded-full ${classItem.iconBg}`}>
                             <Users className="h-3 w-3 mr-1" />
@@ -202,10 +264,16 @@ export default function CurrentClasses() {
                                 : classItem.nextSession}
                             </span>
                           </div>
+                          {classItem.homeworkDue && (
+                            <div className={`flex items-center text-xs px-2 py-1 rounded-full ${classItem.iconBg}`}>
+                              <Calendar className="h-3 w-3 mr-1" />
+                              <span>Homework due: {classItem.homeworkDue}</span>
+                            </div>
+                          )}
                         </div>
                         
                         {/* Progress Bar */}
-                        <div className="w-full mb-3">
+                        <div className="w-full mb-1">
                           <div className="w-full bg-gray-200 rounded-full h-2.5">
                             <div 
                               className={`h-2.5 rounded-full`} 
@@ -216,27 +284,50 @@ export default function CurrentClasses() {
                             ></div>
                           </div>
                           <div className="flex justify-between mt-1">
-                            <span className="text-xs text-gray-500">Progress</span>
+                            <span className="text-xs text-gray-500">
+                              {formatProgressText(classItem.totalLessonsCompleted, classItem.totalLessons)}
+                            </span>
                             <span className="text-xs font-medium">{classItem.progress}%</span>
                           </div>
                         </div>
                       </div>
                     </div>
                     
-                    {/* Buttons Row - Moved to separate row below progress */}
-                    <div className="px-4 pb-4 flex justify-end gap-2 flex-wrap">
-                      <Button 
-                        className={classItem.buttonColor}
-                        onClick={() => handleJoinClass(classItem)}
-                        size="sm"
-                      >
-                        Join Class
-                      </Button>
-                      <Button variant="outline" size="sm" asChild>
-                        <Link to={`/class/${classItem.id}`}>
-                          View Details
-                        </Link>
-                      </Button>
+                    {/* Next Class Info & Buttons Row */}
+                    <div className="bg-white/60 backdrop-blur-sm border-t border-gray-200 p-3">
+                      <div className="flex justify-between items-center mb-3">
+                        <div className="flex items-center">
+                          <Clock className="h-3.5 w-3.5 text-gray-500 mr-1.5" />
+                          <span className="text-xs font-medium text-gray-700">
+                            {isCurrentClass ? "Current session" : "Next session"}:
+                          </span>
+                          <span className="text-xs ml-1 text-gray-800">
+                            {classItem.nextSession}
+                          </span>
+                        </div>
+                        
+                        {isCurrentClass && (
+                          <span className="flex items-center text-green-600 text-xs">
+                            <CheckCircle2 className="h-3.5 w-3.5 mr-1" />
+                            In progress
+                          </span>
+                        )}
+                      </div>
+                      
+                      <div className="flex justify-end gap-2 flex-wrap">
+                        <Button 
+                          className={classItem.buttonColor}
+                          onClick={() => handleJoinClass(classItem)}
+                          size="sm"
+                        >
+                          Join Class
+                        </Button>
+                        <Button variant="outline" size="sm" asChild>
+                          <Link to={`/class/${classItem.id}`}>
+                            View Details
+                          </Link>
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </div>
