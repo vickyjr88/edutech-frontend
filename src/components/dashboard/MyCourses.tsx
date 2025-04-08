@@ -1,5 +1,4 @@
-
-import { Book, Code, Flask, Calculator, GraduationCap, Laptop } from "lucide-react";
+import { Book, Code, Beaker, Calculator, GraduationCap, Laptop } from "lucide-react";
 import CourseCard, { CourseProps } from "./CourseCard";
 
 const coursesData: CourseProps[] = [
@@ -21,7 +20,7 @@ const coursesData: CourseProps[] = [
     teacher: "Prof. James Wilson",
     nextLesson: "Wednesday, 2:15 PM",
     color: "#33C3F0",
-    icon: <Flask className="h-5 w-5 text-blue-500" />
+    icon: <Beaker className="h-5 w-5 text-blue-500" />
   },
   {
     id: "cs-intro",
