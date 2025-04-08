@@ -150,56 +150,62 @@ export default function CurrentClasses() {
                   key={classItem.id} 
                   className={`rounded-lg border-2 overflow-hidden shadow-sm transition-all hover:shadow-md ${classItem.color}`}
                 >
-                  <div className="flex flex-col sm:flex-row">
-                    <div className="sm:w-1/6 p-4 flex justify-center items-center">
-                      <img 
-                        src={classItem.teacherImage} 
-                        alt={classItem.teacher} 
-                        className="w-20 h-20 object-cover rounded-full border-2 border-white shadow-sm"
-                      />
-                    </div>
-                    <div className="flex-1 p-4">
-                      <div className="flex items-start justify-between mb-1">
-                        <div>
-                          <h3 className="font-bold text-gray-900 text-lg">{classItem.title}</h3>
-                          <p className="text-sm text-gray-600">{classItem.teacher}</p>
-                          
-                          <div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1">
-                            <div className="text-xs text-gray-500">
-                              <span className="font-medium">Grade:</span> {classItem.grade}
-                            </div>
-                            <div className="text-xs text-gray-500">
-                              <span className="font-medium">Subject:</span> {classItem.subject}
-                            </div>
-                            <div className="text-xs text-gray-500 col-span-2">
-                              <span className="font-medium">Curriculum:</span> {classItem.curriculum}
+                  <div className="flex flex-col">
+                    <div className="flex flex-col sm:flex-row p-4">
+                      {/* Teacher Image - Made responsive with consistent dimensions */}
+                      <div className="sm:w-24 flex justify-center mb-4 sm:mb-0">
+                        <div className="w-16 h-16 sm:w-20 sm:h-20 relative rounded-full overflow-hidden border-2 border-white shadow-sm">
+                          <img 
+                            src={classItem.teacherImage} 
+                            alt={classItem.teacher} 
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      </div>
+                      
+                      {/* Class Details */}
+                      <div className="flex-1">
+                        <div className="flex items-start justify-between mb-1">
+                          <div>
+                            <h3 className="font-bold text-gray-900 text-lg">{classItem.title}</h3>
+                            <p className="text-sm text-gray-600">{classItem.teacher}</p>
+                            
+                            <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1">
+                              <div className="text-xs text-gray-500">
+                                <span className="font-medium">Grade:</span> {classItem.grade}
+                              </div>
+                              <div className="text-xs text-gray-500">
+                                <span className="font-medium">Subject:</span> {classItem.subject}
+                              </div>
+                              <div className="text-xs text-gray-500 col-span-1 sm:col-span-2">
+                                <span className="font-medium">Curriculum:</span> {classItem.curriculum}
+                              </div>
                             </div>
                           </div>
+                          {index === 0 && isCurrentClass && (
+                            <span className="animate-pulse bg-green-500 text-white text-xs px-2 py-1 rounded-full">
+                              Live now!
+                            </span>
+                          )}
                         </div>
-                        {index === 0 && isCurrentClass && (
-                          <span className="animate-pulse bg-green-500 text-white text-xs px-2 py-1 rounded-full">
-                            Live now!
-                          </span>
-                        )}
-                      </div>
-                      
-                      <div className="flex flex-wrap gap-2 mt-3 mb-3">
-                        <div className={`flex items-center text-xs px-2 py-1 rounded-full ${classItem.iconBg}`}>
-                          <Users className="h-3 w-3 mr-1" />
-                          <span>{classItem.students} friends</span>
+                        
+                        <div className="flex flex-wrap gap-2 mt-3 mb-3">
+                          <div className={`flex items-center text-xs px-2 py-1 rounded-full ${classItem.iconBg}`}>
+                            <Users className="h-3 w-3 mr-1" />
+                            <span>{classItem.students} friends</span>
+                          </div>
+                          <div className={`flex items-center text-xs px-2 py-1 rounded-full ${classItem.iconBg}`}>
+                            <Clock className="h-3 w-3 mr-1" />
+                            <span>
+                              {isCurrentClass 
+                                ? `Started ${minutesSinceStart} mins ago` 
+                                : classItem.nextSession}
+                            </span>
+                          </div>
                         </div>
-                        <div className={`flex items-center text-xs px-2 py-1 rounded-full ${classItem.iconBg}`}>
-                          <Clock className="h-3 w-3 mr-1" />
-                          <span>
-                            {isCurrentClass 
-                              ? `Started ${minutesSinceStart} mins ago` 
-                              : classItem.nextSession}
-                          </span>
-                        </div>
-                      </div>
-                      
-                      <div className="flex flex-col sm:flex-row items-center justify-between">
-                        <div className="w-full sm:w-2/3 mb-3 sm:mb-0">
+                        
+                        {/* Progress Bar */}
+                        <div className="w-full mb-3">
                           <div className="w-full bg-gray-200 rounded-full h-2.5">
                             <div 
                               className={`h-2.5 rounded-full`} 
@@ -214,21 +220,23 @@ export default function CurrentClasses() {
                             <span className="text-xs font-medium">{classItem.progress}%</span>
                           </div>
                         </div>
-                        
-                        <div className="flex flex-col sm:flex-row gap-2">
-                          <Button 
-                            className={classItem.buttonColor}
-                            onClick={() => handleJoinClass(classItem)}
-                          >
-                            Join Class
-                          </Button>
-                          <Button variant="outline" asChild>
-                            <Link to={`/class/${classItem.id}`}>
-                              View Details
-                            </Link>
-                          </Button>
-                        </div>
                       </div>
+                    </div>
+                    
+                    {/* Buttons Row - Moved to separate row below progress */}
+                    <div className="px-4 pb-4 flex justify-end gap-2 flex-wrap">
+                      <Button 
+                        className={classItem.buttonColor}
+                        onClick={() => handleJoinClass(classItem)}
+                        size="sm"
+                      >
+                        Join Class
+                      </Button>
+                      <Button variant="outline" size="sm" asChild>
+                        <Link to={`/class/${classItem.id}`}>
+                          View Details
+                        </Link>
+                      </Button>
                     </div>
                   </div>
                 </div>
