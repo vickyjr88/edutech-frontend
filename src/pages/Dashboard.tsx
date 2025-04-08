@@ -12,7 +12,6 @@ import RecentActivity from "@/components/dashboard/RecentActivity";
 import DailyChallenges from "@/components/dashboard/DailyChallenges";
 import StudentLevel from "@/components/dashboard/StudentLevel";
 import KidatoMascot from "@/components/dashboard/KidatoMascot";
-import MyCourses from "@/components/dashboard/MyCourses";
 
 const Dashboard = () => {
   const [userName] = useState("John Doe");
@@ -133,11 +132,6 @@ const Dashboard = () => {
         <main className="p-4 sm:p-6 flex-1 overflow-y-auto">
           <div className="max-w-7xl mx-auto">
             <StudentStatCards />
-            
-            {/* My Courses Section */}
-            <div className="mt-6">
-              <MyCourses />
-            </div>
             
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
               <div className="lg:col-span-2">
