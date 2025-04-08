@@ -1,11 +1,13 @@
 
 import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogDescription,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { CheckCircle2, XCircle, Loader2, Wifi, Globe, Smartphone, Signal, MapPin } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -349,36 +351,54 @@ export default function JoinClassDialog({
                 </div>
               </div>
               
-              {/* Join Class Button - Replacing the recommendation text */}
-              {allChecksPassed && !checkingConnection && (
-                <button
-                  onClick={joinClass}
-                  className="w-full py-4 bg-green-500 hover:bg-green-600 text-white font-medium text-lg rounded-xl transition-all duration-300 transform hover:scale-[1.02] flex items-center justify-center gap-2 shadow-md"
-                >
-                  <Globe className="h-5 w-5" />
-                  Join "{classTitle}" Now
-                </button>
-              )}
-              
-              {/* Show warning if checks failed */}
-              {!allChecksPassed && !checkingConnection && (
-                <div className="p-4 rounded-xl border bg-orange-50 border-orange-200 text-center">
-                  <p className="font-medium text-orange-700">
-                    Your system may have some issues. You might experience problems during the class.
-                  </p>
-                </div>
-              )}
-              
-              {/* Show loading button while checking */}
-              {checkingConnection && (
-                <div className="w-full py-4 bg-gray-400 text-white font-medium text-lg rounded-xl flex items-center justify-center gap-2">
-                  <Loader2 className="animate-spin h-5 w-5" />
-                  Checking your system...
-                </div>
-              )}
+              {/* Recommendation */}
+              <div className={cn(
+                "p-4 rounded-xl border text-center transition-all duration-300",
+                allChecksPassed 
+                  ? "bg-green-50 border-green-200 text-green-700" 
+                  : "bg-orange-50 border-orange-200 text-orange-700"
+              )}>
+                <p className="font-medium">
+                  {allChecksPassed 
+                    ? "Your system is ready! You can join the class now." 
+                    : "Your system may have some issues. You might experience problems during the class."}
+                </p>
+              </div>
             </div>
           )}
         </div>
+        
+        <DialogFooter className="flex flex-col sm:flex-row sm:justify-between gap-3">
+          <Button 
+            variant="outline" 
+            onClick={() => setIsOpen(false)}
+            className="sm:order-1 order-2"
+          >
+            Cancel
+          </Button>
+          
+          <Button
+            disabled={!allChecksPassed || checkingConnection}
+            onClick={joinClass}
+            className={cn(
+              "sm:order-2 order-1 text-white font-medium text-base px-6 py-2 transition-all duration-300",
+              allChecksPassed && !checkingConnection
+                ? "bg-green-500 hover:bg-green-600 scale-100 hover:scale-105"
+                : "bg-gray-400 cursor-not-allowed"
+            )}
+          >
+            {checkingConnection ? (
+              <>
+                <Loader2 className="animate-spin h-4 w-4 mr-2" />
+                Checking...
+              </>
+            ) : allChecksPassed ? (
+              "Join Class Now"
+            ) : (
+              "System Check Failed"
+            )}
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
