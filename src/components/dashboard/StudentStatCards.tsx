@@ -6,14 +6,20 @@ import {
   GraduationCap,
   Calendar,
   Trophy,
-  Flame
+  Flame,
+  ChevronUp,
+  Info
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 export default function StudentStatCards() {
+  const { toast } = useToast();
   const [hovered, setHovered] = useState<number | null>(null);
+  const [animatePoints, setAnimatePoints] = useState<boolean>(false);
   
   const stats = [
     {
@@ -25,7 +31,8 @@ export default function StudentStatCards() {
       badge: {
         text: "New class available",
         variant: "info" as const
-      }
+      },
+      tooltip: "Classes you're currently taking"
     },
     {
       title: "Learning Hours",
@@ -36,7 +43,8 @@ export default function StudentStatCards() {
       badge: {
         text: "Personal best",
         variant: "warning" as const
-      }
+      },
+      tooltip: "Total hours spent learning on the platform"
     },
     {
       title: "Completion Rate",
@@ -44,7 +52,8 @@ export default function StudentStatCards() {
       icon: GraduationCap,
       color: "green",
       detail: "Above average",
-      progress: 87
+      progress: 87,
+      tooltip: "Percentage of assigned tasks you've completed"
     },
     {
       title: "Learning Streak",
@@ -56,7 +65,10 @@ export default function StudentStatCards() {
       badge: {
         text: "On fire!",
         variant: "warning" as const
-      }
+      },
+      tooltip: "Consecutive days you've logged in and completed at least one activity",
+      clickable: true,
+      clickMessage: "Your streak multiplies your XP! Keep coming back daily."
     },
     {
       title: "Achievements",
@@ -67,47 +79,95 @@ export default function StudentStatCards() {
       badge: {
         text: "New badge",
         variant: "info" as const
-      }
+      },
+      tooltip: "Badges and achievements you've earned",
+      clickable: true,
+      clickMessage: "View all your achievements and badges in your profile."
     }
   ];
 
+  const handleCardClick = (stat: any) => {
+    if (stat.clickable) {
+      toast({
+        title: stat.title,
+        description: stat.clickMessage,
+      });
+
+      if (stat.title === "Learning Streak") {
+        setAnimatePoints(true);
+        setTimeout(() => setAnimatePoints(false), 2000);
+      }
+    }
+  };
+
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
-      {stats.map((stat, index) => (
-        <Card 
-          key={index} 
-          className={`overflow-hidden transition-all duration-300 ${
-            hovered === index ? 'shadow-lg transform -translate-y-1' : ''
-          }`}
-          onMouseEnter={() => setHovered(index)}
-          onMouseLeave={() => setHovered(null)}
-        >
-          <CardContent className="p-4">
-            <div className="flex items-center mb-2">
-              <div className={`bg-${stat.color}-50 p-2 rounded-full mr-3 flex-shrink-0`}>
-                <stat.icon className={`h-5 w-5 text-${stat.color}-500`} />
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-xs text-gray-500">{stat.title}</p>
-                <p className="font-semibold text-xl truncate">{stat.value}</p>
-              </div>
-              {stat.badge && (
-                <Badge variant={stat.badge.variant} className="ml-auto text-xs">
-                  {stat.badge.text}
-                </Badge>
-              )}
-            </div>
-            {stat.detail && (
-              <p className="text-xs text-gray-500 mt-1">{stat.detail}</p>
-            )}
-            {stat.progress && (
-              <div className="mt-2">
-                <Progress value={stat.progress} className="h-1" />
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      ))}
-    </div>
+    <TooltipProvider>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
+        {stats.map((stat, index) => (
+          <Tooltip key={index}>
+            <TooltipTrigger asChild>
+              <Card 
+                className={`overflow-hidden transition-all duration-300 ${
+                  hovered === index ? 'shadow-lg transform -translate-y-1' : ''
+                } ${stat.clickable ? 'cursor-pointer' : ''}`}
+                onMouseEnter={() => setHovered(index)}
+                onMouseLeave={() => setHovered(null)}
+                onClick={() => handleCardClick(stat)}
+              >
+                <CardContent className="p-4">
+                  <div className="flex items-center mb-2">
+                    <div className={`bg-${stat.color}-50 p-2 rounded-full mr-3 flex-shrink-0 ${
+                      stat.title === "Learning Streak" ? 'group-hover:animate-pulse' : ''
+                    }`}>
+                      <stat.icon className={`h-5 w-5 text-${stat.color}-500`} />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center justify-between">
+                        <p className="text-xs text-gray-500">{stat.title}</p>
+                        {stat.tooltip && (
+                          <Info className="h-3 w-3 text-gray-400" />
+                        )}
+                      </div>
+                      <div className="flex items-center">
+                        <p className="font-semibold text-xl truncate">{stat.value}</p>
+                        {stat.title === "Learning Streak" && animatePoints && (
+                          <div className="ml-2 text-xs font-semibold text-green-500 animate-fade-in">
+                            <div className="flex items-center">
+                              <ChevronUp className="h-3 w-3" />
+                              <span>x2 XP</span>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    {stat.badge && (
+                      <Badge variant={stat.badge.variant} className="ml-auto text-xs">
+                        {stat.badge.text}
+                      </Badge>
+                    )}
+                  </div>
+                  {stat.detail && (
+                    <p className="text-xs text-gray-500 mt-1">{stat.detail}</p>
+                  )}
+                  {stat.progress && (
+                    <div className="mt-2">
+                      <Progress value={stat.progress} className="h-1" />
+                    </div>
+                  )}
+                  {stat.clickable && hovered === index && (
+                    <div className="mt-2 text-xs text-blue-500 flex justify-end animate-fade-in">
+                      Click for details
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>{stat.tooltip}</p>
+            </TooltipContent>
+          </Tooltip>
+        ))}
+      </div>
+    </TooltipProvider>
   );
 }
