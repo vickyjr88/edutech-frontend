@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,7 +11,6 @@ export default function CurrentClasses() {
   const [selectedClass, setSelectedClass] = useState<any>(null);
   const [bookmarkedClasses, setBookmarkedClasses] = useState<string[]>([]);
   
-  // Update current time every minute
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentTime(new Date());
@@ -112,12 +110,10 @@ export default function CurrentClasses() {
     }
   ];
 
-  // Sort classes by session time
   const sortedClasses = [...classes].sort((a, b) => 
     a.sessionTime.getTime() - b.sessionTime.getTime()
   );
 
-  // Find current (ongoing) class if any
   const currentClass = sortedClasses.find(cls => {
     const now = currentTime.getTime();
     const classTime = cls.sessionTime.getTime();
@@ -125,17 +121,15 @@ export default function CurrentClasses() {
     return timeDiffMinutes >= 0 && timeDiffMinutes < 60;
   });
 
-  // Get next classes (excluding current class)
   const upcomingClasses = sortedClasses
     .filter(cls => cls.sessionTime > currentTime)
     .filter(cls => !currentClass || cls.id !== currentClass.id)
-    .slice(0, currentClass ? 2 : 3); // Show 2 upcoming if there's a current class, otherwise 3
+    .slice(0, currentClass ? 2 : 3);
 
   const classesToDisplay = currentClass 
     ? [currentClass, ...upcomingClasses] 
     : upcomingClasses;
 
-  // Calculate minutes since class started (if class is ongoing)
   const getMinutesSinceStart = (classTime: Date) => {
     if (classTime > currentTime) return null;
     
@@ -186,16 +180,29 @@ export default function CurrentClasses() {
                   style={{ animationDelay: `${index * 150}ms` }}
                 >
                   <div className="flex flex-col">
-                    {/* Class Header */}
                     <div className="p-3 bg-white/40 backdrop-blur-sm flex items-center justify-between">
-                      <div className="flex items-center space-x-2">
-                        <div className={`${classItem.iconBg} p-1.5 rounded-lg`}>
-                          {classItem.classType === "Academic" && <BookOpen className="h-4 w-4" />}
-                          {classItem.classType === "Exam Prep" && <Award className="h-4 w-4" />}
-                          {classItem.classType === "Non-Academic" && <Star className="h-4 w-4" />}
-                          {classItem.classType === "Tutoring" && <Users className="h-4 w-4" />}
+                      <div className="flex flex-col space-y-1">
+                        <div className="flex items-center space-x-2">
+                          <div className={`${classItem.iconBg} p-1.5 rounded-lg`}>
+                            {classItem.classType === "Academic" && <BookOpen className="h-4 w-4" />}
+                            {classItem.classType === "Exam Prep" && <Award className="h-4 w-4" />}
+                            {classItem.classType === "Non-Academic" && <Star className="h-4 w-4" />}
+                            {classItem.classType === "Tutoring" && <Users className="h-4 w-4" />}
+                          </div>
+                          <span className="text-xs font-medium">{classItem.classType}</span>
                         </div>
-                        <span className="text-xs font-medium">{classItem.classType}</span>
+                        
+                        <div className="flex flex-wrap gap-1 ml-7">
+                          <span className="text-xs text-gray-600 bg-gray-100 px-1.5 py-0.5 rounded-full">
+                            {classItem.grade}
+                          </span>
+                          <span className="text-xs text-gray-600 bg-gray-100 px-1.5 py-0.5 rounded-full">
+                            {classItem.subject}
+                          </span>
+                          <span className="text-xs text-gray-600 bg-gray-100 px-1.5 py-0.5 rounded-full">
+                            {classItem.curriculum}
+                          </span>
+                        </div>
                       </div>
                       
                       <button 
@@ -210,7 +217,6 @@ export default function CurrentClasses() {
                     </div>
                     
                     <div className="flex flex-col sm:flex-row p-4">
-                      {/* Teacher Image - Made responsive with consistent dimensions */}
                       <div className="sm:w-24 flex justify-center mb-4 sm:mb-0">
                         <div className="w-16 h-16 sm:w-20 sm:h-20 relative rounded-full overflow-hidden border-2 border-white shadow-sm">
                           <img 
@@ -221,23 +227,13 @@ export default function CurrentClasses() {
                         </div>
                       </div>
                       
-                      {/* Class Details */}
                       <div className="flex-1">
                         <div className="flex items-start justify-between mb-1">
                           <div>
                             <h3 className="font-bold text-gray-900 text-lg">{classItem.title}</h3>
                             <p className="text-sm text-gray-600">{classItem.teacher}</p>
                             
-                            <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1">
-                              <div className="text-xs text-gray-500">
-                                <span className="font-medium">Grade:</span> {classItem.grade}
-                              </div>
-                              <div className="text-xs text-gray-500">
-                                <span className="font-medium">Subject:</span> {classItem.subject}
-                              </div>
-                              <div className="text-xs text-gray-500">
-                                <span className="font-medium">Curriculum:</span> {classItem.curriculum}
-                              </div>
+                            <div className="mt-2 flex flex-wrap gap-2">
                               <div className="text-xs text-gray-500">
                                 <span className="font-medium">Next topic:</span> {classItem.nextTopic}
                               </div>
@@ -250,7 +246,6 @@ export default function CurrentClasses() {
                           )}
                         </div>
                         
-                        {/* Class Info Badges */}
                         <div className="flex flex-wrap gap-2 mt-3 mb-3">
                           <div className={`flex items-center text-xs px-2 py-1 rounded-full ${classItem.iconBg}`}>
                             <Users className="h-3 w-3 mr-1" />
@@ -272,7 +267,6 @@ export default function CurrentClasses() {
                           )}
                         </div>
                         
-                        {/* Progress Bar */}
                         <div className="w-full mb-1">
                           <div className="w-full bg-gray-200 rounded-full h-2.5">
                             <div 
@@ -293,7 +287,6 @@ export default function CurrentClasses() {
                       </div>
                     </div>
                     
-                    {/* Next Class Info & Buttons Row */}
                     <div className="bg-white/60 backdrop-blur-sm border-t border-gray-200 p-3">
                       <div className="flex justify-between items-center mb-3">
                         <div className="flex items-center">
