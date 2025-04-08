@@ -115,7 +115,7 @@ export default function StudentStatCards() {
                 onClick={() => handleCardClick(stat)}
               >
                 <CardContent className="p-4">
-                  <div className="flex items-center mb-2">
+                  <div className="flex items-start mb-2">
                     <div className={`bg-${stat.color}-50 p-2 rounded-full mr-3 flex-shrink-0 ${
                       stat.title === "Learning Streak" ? 'group-hover:animate-pulse' : ''
                     }`}>
@@ -123,15 +123,15 @@ export default function StudentStatCards() {
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center justify-between">
-                        <p className="text-xs text-gray-500">{stat.title}</p>
+                        <p className="text-xs text-gray-500 truncate">{stat.title}</p>
                         {stat.tooltip && (
-                          <Info className="h-3 w-3 text-gray-400" />
+                          <Info className="h-3 w-3 text-gray-400 ml-1 flex-shrink-0" />
                         )}
                       </div>
-                      <div className="flex items-center">
+                      <div className="flex items-center flex-wrap gap-1">
                         <p className="font-semibold text-xl truncate">{stat.value}</p>
                         {stat.title === "Learning Streak" && animatePoints && (
-                          <div className="ml-2 text-xs font-semibold text-green-500 animate-fade-in">
+                          <div className="ml-1 text-xs font-semibold text-green-500 animate-fade-in flex-shrink-0">
                             <div className="flex items-center">
                               <ChevronUp className="h-3 w-3" />
                               <span>x2 XP</span>
@@ -140,15 +140,17 @@ export default function StudentStatCards() {
                         )}
                       </div>
                     </div>
+                  </div>
+                  <div className="flex items-center justify-between flex-wrap">
+                    {stat.detail && (
+                      <p className="text-xs text-gray-500 truncate max-w-full">{stat.detail}</p>
+                    )}
                     {stat.badge && (
-                      <Badge variant={stat.badge.variant} className="ml-auto text-xs">
+                      <Badge variant={stat.badge.variant} className="text-xs truncate mt-1 h-5 px-1.5">
                         {stat.badge.text}
                       </Badge>
                     )}
                   </div>
-                  {stat.detail && (
-                    <p className="text-xs text-gray-500 mt-1">{stat.detail}</p>
-                  )}
                   {stat.progress && (
                     <div className="mt-2">
                       <Progress value={stat.progress} className="h-1" />
@@ -162,7 +164,7 @@ export default function StudentStatCards() {
                 </CardContent>
               </Card>
             </TooltipTrigger>
-            <TooltipContent>
+            <TooltipContent side="bottom">
               <p>{stat.tooltip}</p>
             </TooltipContent>
           </Tooltip>
