@@ -7,7 +7,6 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
-  DialogFooter,
 } from "@/components/ui/dialog";
 import { CheckCircle2, XCircle, Loader2, Wifi, Globe, Smartphone, Signal, MapPin } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -351,54 +350,46 @@ export default function JoinClassDialog({
                 </div>
               </div>
               
-              {/* Recommendation */}
-              <div className={cn(
-                "p-4 rounded-xl border text-center transition-all duration-300",
-                allChecksPassed 
-                  ? "bg-green-50 border-green-200 text-green-700" 
-                  : "bg-orange-50 border-orange-200 text-orange-700"
-              )}>
-                <p className="font-medium">
-                  {allChecksPassed 
-                    ? "Your system is ready! You can join the class now." 
-                    : "Your system may have some issues. You might experience problems during the class."}
-                </p>
+              {/* Recommendation and Join Button */}
+              <div className="flex flex-col items-center justify-center space-y-4 pt-3">
+                <div className={cn(
+                  "w-full p-4 rounded-xl border text-center transition-all duration-300",
+                  allChecksPassed 
+                    ? "bg-green-50 border-green-200 text-green-700" 
+                    : "bg-orange-50 border-orange-200 text-orange-700"
+                )}>
+                  <p className="font-medium">
+                    {allChecksPassed 
+                      ? "Your system is ready! You can join the class now." 
+                      : "Your system may have some issues. You might experience problems during the class."}
+                  </p>
+                </div>
+                
+                <Button
+                  onClick={joinClass}
+                  disabled={!allChecksPassed || checkingConnection}
+                  className={cn(
+                    "mt-2 w-full md:w-1/2 text-white font-medium text-base px-6 py-5 transition-all duration-300",
+                    allChecksPassed && !checkingConnection
+                      ? "bg-green-500 hover:bg-green-600 scale-100 hover:scale-105"
+                      : "bg-gray-400 cursor-not-allowed"
+                  )}
+                >
+                  {checkingConnection ? (
+                    <>
+                      <Loader2 className="animate-spin h-4 w-4 mr-2" />
+                      Checking...
+                    </>
+                  ) : allChecksPassed ? (
+                    "Join Class Now"
+                  ) : (
+                    "System Check Failed"
+                  )}
+                </Button>
               </div>
             </div>
           )}
         </div>
-        
-        <DialogFooter className="flex flex-col sm:flex-row sm:justify-between gap-3">
-          <Button 
-            variant="outline" 
-            onClick={() => setIsOpen(false)}
-            className="sm:order-1 order-2"
-          >
-            Cancel
-          </Button>
-          
-          <Button
-            disabled={!allChecksPassed || checkingConnection}
-            onClick={joinClass}
-            className={cn(
-              "sm:order-2 order-1 text-white font-medium text-base px-6 py-2 transition-all duration-300",
-              allChecksPassed && !checkingConnection
-                ? "bg-green-500 hover:bg-green-600 scale-100 hover:scale-105"
-                : "bg-gray-400 cursor-not-allowed"
-            )}
-          >
-            {checkingConnection ? (
-              <>
-                <Loader2 className="animate-spin h-4 w-4 mr-2" />
-                Checking...
-              </>
-            ) : allChecksPassed ? (
-              "Join Class Now"
-            ) : (
-              "System Check Failed"
-            )}
-          </Button>
-        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
