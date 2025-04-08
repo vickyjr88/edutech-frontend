@@ -11,6 +11,7 @@ import LearningProgress from "@/components/dashboard/LearningProgress";
 import RecentActivity from "@/components/dashboard/RecentActivity";
 import DailyChallenges from "@/components/dashboard/DailyChallenges";
 import StudentLevel from "@/components/dashboard/StudentLevel";
+import KidatoMascot from "@/components/dashboard/KidatoMascot";
 
 const Dashboard = () => {
   const [userName] = useState("John Doe");
@@ -104,6 +105,9 @@ const Dashboard = () => {
           </div>
         </main>
       </div>
+
+      {/* Kidato AI Mascot */}
+      <KidatoMascot />
     </div>
   );
 }
