@@ -25,10 +25,14 @@ export default function CurrentClasses() {
       id: "math101",
       title: "Math Fundamentals",
       teacher: "Ms. Sarah Johnson",
+      teacherImage: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=200&h=200&q=80",
       nextSession: "Today, 3:30 PM",
       sessionTime: new Date(currentTime.getFullYear(), currentTime.getMonth(), currentTime.getDate(), 15, 30),
       progress: 65,
       students: 24,
+      grade: "Grade 6",
+      subject: "Mathematics",
+      curriculum: "National Curriculum",
       color: "bg-green-100 border-green-400",
       iconBg: "bg-green-200",
       buttonColor: "bg-green-500 hover:bg-green-600",
@@ -38,10 +42,14 @@ export default function CurrentClasses() {
       id: "science205",
       title: "Science Explorers",
       teacher: "Dr. Michael Chen",
+      teacherImage: "https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=200&h=200&q=80",
       nextSession: "Tomorrow, 4:00 PM",
       sessionTime: new Date(currentTime.getFullYear(), currentTime.getMonth(), currentTime.getDate() + 1, 16, 0),
       progress: 42,
       students: 18,
+      grade: "Grade 8",
+      subject: "Biology",
+      curriculum: "Cambridge",
       color: "bg-purple-100 border-purple-400",
       iconBg: "bg-purple-200",
       buttonColor: "bg-purple-500 hover:bg-purple-600",
@@ -51,10 +59,14 @@ export default function CurrentClasses() {
       id: "coding101",
       title: "Intro to Coding",
       teacher: "Mr. David Park",
+      teacherImage: "https://images.unsplash.com/photo-1519389950473-47ba0277781c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=200&h=200&q=80",
       nextSession: "Thursday, 2:15 PM",
       sessionTime: new Date(currentTime.getFullYear(), currentTime.getMonth(), currentTime.getDate() + 3, 14, 15),
       progress: 28,
       students: 15,
+      grade: "Grade 10",
+      subject: "Computer Science",
+      curriculum: "National Curriculum",
       color: "bg-blue-100 border-blue-400",
       iconBg: "bg-blue-200",
       buttonColor: "bg-blue-500 hover:bg-blue-600",
@@ -64,10 +76,14 @@ export default function CurrentClasses() {
       id: "english101",
       title: "English Adventures",
       teacher: "Ms. Emily Rodriguez",
+      teacherImage: "https://images.unsplash.com/photo-1649972904349-6e44c42644a7?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=200&h=200&q=80",
       nextSession: "Friday, 1:30 PM",
       sessionTime: new Date(currentTime.getFullYear(), currentTime.getMonth(), currentTime.getDate() + 4, 13, 30),
       progress: 50,
       students: 22,
+      grade: "Grade 7",
+      subject: "English Literature",
+      curriculum: "International Baccalaureate",
       color: "bg-yellow-100 border-yellow-400",
       iconBg: "bg-yellow-200",
       buttonColor: "bg-yellow-500 hover:bg-yellow-600",
@@ -135,11 +151,11 @@ export default function CurrentClasses() {
                   className={`rounded-lg border-2 overflow-hidden shadow-sm transition-all hover:shadow-md ${classItem.color}`}
                 >
                   <div className="flex flex-col sm:flex-row">
-                    <div className="sm:w-1/4">
+                    <div className="sm:w-1/6 p-4 flex justify-center items-center">
                       <img 
-                        src={classItem.image} 
-                        alt={classItem.title} 
-                        className="w-full h-32 sm:h-full object-cover"
+                        src={classItem.teacherImage} 
+                        alt={classItem.teacher} 
+                        className="w-20 h-20 object-cover rounded-full border-2 border-white shadow-sm"
                       />
                     </div>
                     <div className="flex-1 p-4">
@@ -147,6 +163,18 @@ export default function CurrentClasses() {
                         <div>
                           <h3 className="font-bold text-gray-900 text-lg">{classItem.title}</h3>
                           <p className="text-sm text-gray-600">{classItem.teacher}</p>
+                          
+                          <div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1">
+                            <div className="text-xs text-gray-500">
+                              <span className="font-medium">Grade:</span> {classItem.grade}
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              <span className="font-medium">Subject:</span> {classItem.subject}
+                            </div>
+                            <div className="text-xs text-gray-500 col-span-2">
+                              <span className="font-medium">Curriculum:</span> {classItem.curriculum}
+                            </div>
+                          </div>
                         </div>
                         {index === 0 && isCurrentClass && (
                           <span className="animate-pulse bg-green-500 text-white text-xs px-2 py-1 rounded-full">
@@ -170,32 +198,36 @@ export default function CurrentClasses() {
                         </div>
                       </div>
                       
-                      <div className="w-full bg-gray-200 rounded-full h-2.5 mt-auto">
-                        <div 
-                          className={`h-2.5 rounded-full`} 
-                          style={{ 
-                            width: `${classItem.progress}%`,
-                            backgroundColor: classItem.buttonColor.split(' ')[0].replace('bg-', '#').replace('green-500', '22c55e').replace('purple-500', 'a855f7').replace('blue-500', '3b82f6').replace('yellow-500', 'eab308')
-                          }}
-                        ></div>
-                      </div>
-                      <div className="flex justify-between mt-1">
-                        <span className="text-xs text-gray-500">Progress</span>
-                        <span className="text-xs font-medium">{classItem.progress}%</span>
-                      </div>
-                      
-                      <div className="flex flex-col sm:flex-row gap-2 mt-4">
-                        <Button 
-                          className={classItem.buttonColor}
-                          onClick={() => handleJoinClass(classItem)}
-                        >
-                          Join Class
-                        </Button>
-                        <Button variant="outline" asChild>
-                          <Link to={`/class/${classItem.id}`}>
-                            View Details
-                          </Link>
-                        </Button>
+                      <div className="flex flex-col sm:flex-row items-center justify-between">
+                        <div className="w-full sm:w-2/3 mb-3 sm:mb-0">
+                          <div className="w-full bg-gray-200 rounded-full h-2.5">
+                            <div 
+                              className={`h-2.5 rounded-full`} 
+                              style={{ 
+                                width: `${classItem.progress}%`,
+                                backgroundColor: classItem.buttonColor.split(' ')[0].replace('bg-', '#').replace('green-500', '22c55e').replace('purple-500', 'a855f7').replace('blue-500', '3b82f6').replace('yellow-500', 'eab308')
+                              }}
+                            ></div>
+                          </div>
+                          <div className="flex justify-between mt-1">
+                            <span className="text-xs text-gray-500">Progress</span>
+                            <span className="text-xs font-medium">{classItem.progress}%</span>
+                          </div>
+                        </div>
+                        
+                        <div className="flex flex-col sm:flex-row gap-2">
+                          <Button 
+                            className={classItem.buttonColor}
+                            onClick={() => handleJoinClass(classItem)}
+                          >
+                            Join Class
+                          </Button>
+                          <Button variant="outline" asChild>
+                            <Link to={`/class/${classItem.id}`}>
+                              View Details
+                            </Link>
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   </div>
