@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Home, Book, User, Settings, LogOut, MessageSquare, Star, Sparkles, PieChart, Users, Target, Calendar, Award, Plus } from "lucide-react";
+import { Home, Book, User, Settings, LogOut, MessageSquare, Star, Sparkles, PieChart, Users, Target, Calendar, Award, Plus, BarChart2 } from "lucide-react";
 import StudentDashboardHeader from "@/components/dashboard/StudentDashboardHeader";
 import LearningProgress from "@/components/dashboard/LearningProgress";
 import GoalFormDialog from "@/components/dashboard/GoalFormDialog";
@@ -20,43 +20,79 @@ const LearningGoals = () => {
   
   const shortTermGoals = [
     {
+      id: "st1",
       title: "Complete Mathematics Module 3",
       dueIn: "5 days",
       progress: 75,
-      color: "blue"
+      color: "blue",
+      description: "Finish all exercises in Module 3",
+      subject: "Mathematics",
+      dueDate: "April 15, 2025",
+      setBy: "teacher",
+      goalTarget: "Complete all exercises"
     },
     {
+      id: "st2",
       title: "Finish Science Project",
       dueIn: "2 days",
       progress: 50,
-      color: "purple"
+      color: "purple",
+      description: "Complete the ecosystem model for biology class",
+      subject: "Science",
+      dueDate: "April 12, 2025",
+      setBy: "teacher",
+      goalTarget: "Submit final project"
     },
     {
+      id: "st3",
       title: "Submit Coding Challenge",
       dueIn: "tomorrow",
       progress: 90,
-      color: "green"
+      color: "green",
+      description: "Finish the weekly coding challenge",
+      subject: "Computer Science",
+      dueDate: "April 10, 2025",
+      setBy: "self",
+      goalTarget: "Submit working solution"
     }
   ];
   
   const longTermGoals = [
     {
+      id: "lt1",
       title: "Master Algebra Concepts",
       dueIn: "End of semester",
       progress: 40,
-      color: "blue"
+      color: "blue",
+      description: "Master all key algebra concepts for the final exam",
+      subject: "Mathematics",
+      dueDate: "June 20, 2025",
+      setBy: "self",
+      goalTarget: "Pass final exam with A grade"
     },
     {
+      id: "lt2",
       title: "Complete Science Curriculum",
       dueIn: "End of year",
       progress: 35,
-      color: "purple"
+      color: "purple",
+      description: "Complete all required science modules for the year",
+      subject: "Science",
+      dueDate: "Dec 15, 2025",
+      setBy: "teacher",
+      goalTarget: "Complete all modules with passing grade"
     },
     {
+      id: "lt3",
       title: "Build Final Coding Project",
       dueIn: "Next month",
       progress: 15,
-      color: "orange"
+      color: "orange",
+      description: "Build a full-stack web application as final project",
+      subject: "Computer Science",
+      dueDate: "May 30, 2025",
+      setBy: "teacher",
+      goalTarget: "Deploy working application"
     }
   ];
   
@@ -80,6 +116,41 @@ const LearningGoals = () => {
       description: `Your goal progress has been updated to ${progress}%. ${timeSpent ? `Time spent: ${timeSpent}` : ''}`,
     });
   };
+
+  // Function to render the progress color class
+  const getProgressColorClass = (color: string) => {
+    const colorMap: Record<string, string> = {
+      blue: "text-blue-600",
+      purple: "text-purple-600",
+      green: "text-green-600",
+      orange: "text-orange-600",
+      yellow: "text-yellow-600"
+    };
+    
+    return colorMap[color] || "text-blue-600";
+  };
+
+  // Function to render a goal item with update button
+  const renderGoalItem = (goal: any) => (
+    <li key={goal.id} className="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
+      <div className="flex-grow">
+        <p className="font-medium">{goal.title}</p>
+        <p className="text-sm text-gray-600">Due in {goal.dueIn}</p>
+      </div>
+      <div className="flex items-center gap-3">
+        <p className={`font-bold ${getProgressColorClass(goal.color)}`}>{goal.progress}%</p>
+        <Button 
+          variant="outline" 
+          size="sm"
+          className="flex items-center gap-1 border-blue-300 hover:bg-blue-100"
+          onClick={() => handleEditGoal(goal)}
+        >
+          <BarChart2 className="h-3 w-3" />
+          Update Progress
+        </Button>
+      </div>
+    </li>
+  );
 
   return (
     <div className="flex min-h-screen bg-gradient-to-b from-blue-50 to-white">
@@ -215,17 +286,7 @@ const LearningGoals = () => {
                 </CardHeader>
                 <CardContent className="p-6">
                   <ul className="space-y-4">
-                    {shortTermGoals.map((goal, index) => (
-                      <li key={index} className="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
-                        <div>
-                          <p className="font-medium">{goal.title}</p>
-                          <p className="text-sm text-gray-600">Due in {goal.dueIn}</p>
-                        </div>
-                        <div className="w-20 text-center">
-                          <p className={`font-bold text-${goal.color}-600`}>{goal.progress}%</p>
-                        </div>
-                      </li>
-                    ))}
+                    {shortTermGoals.map(renderGoalItem)}
                     <li className="mt-4">
                       <Button 
                         variant="outline"
@@ -249,17 +310,7 @@ const LearningGoals = () => {
                 </CardHeader>
                 <CardContent className="p-6">
                   <ul className="space-y-4">
-                    {longTermGoals.map((goal, index) => (
-                      <li key={index} className="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
-                        <div>
-                          <p className="font-medium">{goal.title}</p>
-                          <p className="text-sm text-gray-600">{goal.dueIn}</p>
-                        </div>
-                        <div className="w-20 text-center">
-                          <p className={`font-bold text-${goal.color}-600`}>{goal.progress}%</p>
-                        </div>
-                      </li>
-                    ))}
+                    {longTermGoals.map(renderGoalItem)}
                     <li className="mt-4">
                       <Button 
                         variant="outline"
