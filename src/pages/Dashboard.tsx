@@ -28,9 +28,15 @@ const Dashboard = () => {
   
   const handleUpdateGoal = (goalId: string, progress: number, notes: string, timeSpent?: string) => {
     console.log("Quest updated:", { goalId, progress, notes, timeSpent });
+    
+    const isGroupQuest = selectedGoal?.questMode === "group";
+    const progressMessage = isGroupQuest 
+      ? `Your group quest progress has been updated to ${progress}%. ${timeSpent ? `Time spent: ${timeSpent}` : ''}`
+      : `Your quest progress has been updated to ${progress}%. ${timeSpent ? `Time spent: ${timeSpent}` : ''}`;
+    
     toast({
       title: "Progress Updated",
-      description: `Your quest progress has been updated to ${progress}%. ${timeSpent ? `Time spent: ${timeSpent}` : ''}`,
+      description: progressMessage,
     });
   };
 

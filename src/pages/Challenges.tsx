@@ -10,6 +10,13 @@ import LearningProgress from "@/components/dashboard/LearningProgress";
 import GoalFormDialog from "@/components/dashboard/GoalFormDialog";
 import GoalTrackingDialog from "@/components/dashboard/GoalTrackingDialog";
 import { useToast } from "@/components/ui/use-toast";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
 
 const Challenges = () => {
   const [userName] = useState("John Doe");
@@ -29,7 +36,8 @@ const Challenges = () => {
       subject: "Mathematics",
       dueDate: "April 15, 2025",
       setBy: "teacher",
-      goalTarget: "Complete all exercises"
+      goalTarget: "Complete all exercises",
+      questMode: "individual"
     },
     {
       id: "st2",
@@ -41,7 +49,8 @@ const Challenges = () => {
       subject: "Science",
       dueDate: "April 12, 2025",
       setBy: "teacher",
-      goalTarget: "Submit final project"
+      goalTarget: "Submit final project",
+      questMode: "individual"
     },
     {
       id: "st3",
@@ -53,7 +62,8 @@ const Challenges = () => {
       subject: "Computer Science",
       dueDate: "April 10, 2025",
       setBy: "self",
-      goalTarget: "Submit working solution"
+      goalTarget: "Submit working solution",
+      questMode: "individual"
     }
   ];
   
@@ -68,7 +78,8 @@ const Challenges = () => {
       subject: "Mathematics",
       dueDate: "June 20, 2025",
       setBy: "self",
-      goalTarget: "Pass final exam with A grade"
+      goalTarget: "Pass final exam with A grade",
+      questMode: "individual"
     },
     {
       id: "lt2",
@@ -80,7 +91,8 @@ const Challenges = () => {
       subject: "Science",
       dueDate: "Dec 15, 2025",
       setBy: "teacher",
-      goalTarget: "Complete all modules with passing grade"
+      goalTarget: "Complete all modules with passing grade",
+      questMode: "individual"
     },
     {
       id: "lt3",
@@ -92,16 +104,74 @@ const Challenges = () => {
       subject: "Computer Science",
       dueDate: "May 30, 2025",
       setBy: "teacher",
-      goalTarget: "Deploy working application"
+      goalTarget: "Deploy working application",
+      questMode: "group"
+    }
+  ];
+  
+  // Group quests
+  const groupQuests = [
+    {
+      id: "g1",
+      title: "Team Science Fair Project",
+      dueIn: "2 weeks",
+      progress: 30,
+      color: "green",
+      description: "Develop an interactive science exhibit for the school fair",
+      subject: "Science",
+      dueDate: "April 24, 2025",
+      setBy: "teacher",
+      goalTarget: "Complete and present exhibit",
+      questMode: "group",
+      members: ["John Doe", "Amy Martin", "Robert Kim", "Sarah Lopez"]
+    },
+    {
+      id: "g2",
+      title: "Math Olympiad Preparation",
+      dueIn: "1 month",
+      progress: 45,
+      color: "blue",
+      description: "Work together to prepare for the upcoming Math Olympiad",
+      subject: "Mathematics",
+      dueDate: "May 15, 2025",
+      setBy: "coach",
+      goalTarget: "Score at least 80% on practice tests",
+      questMode: "group",
+      members: ["John Doe", "Kevin Li", "David Ng"]
+    },
+    {
+      id: "g3",
+      title: "Coding Hackathon Project",
+      dueIn: "3 weeks",
+      progress: 25,
+      color: "purple",
+      description: "Create an educational game for the school hackathon",
+      subject: "Computer Science",
+      dueDate: "April 30, 2025",
+      setBy: "self",
+      goalTarget: "Complete a working game prototype",
+      questMode: "group",
+      members: ["John Doe", "Alex Brown", "Lisa Chang", "Michael Scott"]
     }
   ];
   
   const handleCreateGoal = (values: any) => {
     console.log("New quest created:", values);
+    const message = values.questMode === "group" 
+      ? `Your new group quest "${values.title}" has been created successfully.` 
+      : `Your new quest "${values.title}" has been created successfully.`;
+    
     toast({
       title: "Quest Created",
-      description: `Your new quest "${values.title}" has been created successfully.`,
+      description: message,
     });
+    
+    // If it's a group quest, we would typically send invites to members here
+    if (values.questMode === "group") {
+      console.log("Group quest created - would send invites to members");
+      // In a real implementation, you would show a dialog to select members
+      // or handle group creation workflow
+    }
   };
   
   const handleEditGoal = (goal: any) => {
@@ -134,7 +204,14 @@ const Challenges = () => {
   const renderGoalItem = (goal: any) => (
     <li key={goal.id} className="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
       <div className="flex-grow">
-        <p className="font-medium">{goal.title}</p>
+        <div className="flex items-center gap-2">
+          <p className="font-medium">{goal.title}</p>
+          {goal.questMode === "group" && (
+            <Badge variant="outline" className="bg-blue-100 text-blue-600 border-blue-200 flex items-center gap-1">
+              <Users className="h-3 w-3" /> Group
+            </Badge>
+          )}
+        </div>
         <p className="text-sm text-gray-600">Due in {goal.dueIn}</p>
       </div>
       <div className="flex items-center gap-3">
@@ -148,6 +225,51 @@ const Challenges = () => {
           <BarChart2 className="h-3 w-3" />
           Update Progress
         </Button>
+      </div>
+    </li>
+  );
+  
+  // Function to render a group member avatar
+  const renderGroupMemberInitials = (member: string) => {
+    const initials = member.split(' ').map(n => n[0]).join('');
+    return (
+      <div key={member} className="h-7 w-7 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-medium border border-white">
+        {initials}
+      </div>
+    );
+  };
+  
+  // Function to render a group quest item
+  const renderGroupQuestItem = (quest: any) => (
+    <li key={quest.id} className="flex flex-col p-3 bg-blue-50 rounded-lg">
+      <div className="flex justify-between items-center mb-2">
+        <div className="flex-grow">
+          <div className="flex items-center gap-2">
+            <p className="font-medium">{quest.title}</p>
+            <Badge variant="outline" className="bg-blue-100 text-blue-600 border-blue-200 flex items-center gap-1">
+              <Users className="h-3 w-3" /> Group
+            </Badge>
+          </div>
+          <p className="text-sm text-gray-600">Due in {quest.dueIn}</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <p className={`font-bold ${getProgressColorClass(quest.color)}`}>{quest.progress}%</p>
+          <Button 
+            variant="outline" 
+            size="sm"
+            className="flex items-center gap-1 border-blue-300 hover:bg-blue-100"
+            onClick={() => handleEditGoal(quest)}
+          >
+            <BarChart2 className="h-3 w-3" />
+            Update Progress
+          </Button>
+        </div>
+      </div>
+      <div className="flex items-center mt-1">
+        <span className="text-xs text-gray-600 mr-2">Team:</span>
+        <div className="flex -space-x-2">
+          {quest.members.map(renderGroupMemberInitials)}
+        </div>
       </div>
     </li>
   );
@@ -270,55 +392,170 @@ const Challenges = () => {
             
             <LearningProgress onEditGoal={handleEditGoal} />
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
-              <Card>
-                <CardHeader className="bg-gradient-to-r from-blue-50 to-purple-50 pb-2">
-                  <CardTitle className="text-lg font-bold flex items-center">
-                    <Trophy className="mr-2 h-5 w-5 text-yellow-500" />
-                    Active Challenges
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-6">
-                  <ul className="space-y-4">
-                    {questChallenges.map(renderGoalItem)}
-                    <li className="mt-4">
-                      <Button 
-                        variant="outline"
-                        onClick={() => setIsGoalFormOpen(true)}
-                        className="w-full border-dashed border-gray-300 hover:border-blue-300 hover:bg-blue-50 text-gray-500 hover:text-blue-500 flex items-center justify-center gap-2"
-                      >
-                        <Plus className="h-4 w-4" />
-                        Add New Challenge
-                      </Button>
-                    </li>
-                  </ul>
-                </CardContent>
-              </Card>
+            <Tabs defaultValue="all" className="mt-8">
+              <TabsList className="grid grid-cols-3 mb-6">
+                <TabsTrigger value="all">All Quests</TabsTrigger>
+                <TabsTrigger value="individual">Individual Quests</TabsTrigger>
+                <TabsTrigger value="group">Group Quests</TabsTrigger>
+              </TabsList>
               
-              <Card>
-                <CardHeader className="bg-gradient-to-r from-blue-50 to-purple-50 pb-2">
-                  <CardTitle className="text-lg font-bold flex items-center">
-                    <Target className="mr-2 h-5 w-5 text-blue-500" />
-                    Long-term Quests
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-6">
-                  <ul className="space-y-4">
-                    {longTermQuests.map(renderGoalItem)}
-                    <li className="mt-4">
-                      <Button 
-                        variant="outline"
-                        onClick={() => setIsGoalFormOpen(true)}
-                        className="w-full border-dashed border-gray-300 hover:border-blue-300 hover:bg-blue-50 text-gray-500 hover:text-blue-500 flex items-center justify-center gap-2"
-                      >
-                        <Plus className="h-4 w-4" />
-                        Add New Quest
-                      </Button>
-                    </li>
-                  </ul>
-                </CardContent>
-              </Card>
-            </div>
+              <TabsContent value="all">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <Card>
+                    <CardHeader className="bg-gradient-to-r from-blue-50 to-purple-50 pb-2">
+                      <CardTitle className="text-lg font-bold flex items-center">
+                        <Trophy className="mr-2 h-5 w-5 text-yellow-500" />
+                        Active Challenges
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-6">
+                      <ul className="space-y-4">
+                        {questChallenges.map(renderGoalItem)}
+                        <li className="mt-4">
+                          <Button 
+                            variant="outline"
+                            onClick={() => setIsGoalFormOpen(true)}
+                            className="w-full border-dashed border-gray-300 hover:border-blue-300 hover:bg-blue-50 text-gray-500 hover:text-blue-500 flex items-center justify-center gap-2"
+                          >
+                            <Plus className="h-4 w-4" />
+                            Add New Challenge
+                          </Button>
+                        </li>
+                      </ul>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardHeader className="bg-gradient-to-r from-blue-50 to-purple-50 pb-2">
+                      <CardTitle className="text-lg font-bold flex items-center">
+                        <Target className="mr-2 h-5 w-5 text-blue-500" />
+                        Long-term Quests
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-6">
+                      <ul className="space-y-4">
+                        {longTermQuests.map(renderGoalItem)}
+                        <li className="mt-4">
+                          <Button 
+                            variant="outline"
+                            onClick={() => setIsGoalFormOpen(true)}
+                            className="w-full border-dashed border-gray-300 hover:border-blue-300 hover:bg-blue-50 text-gray-500 hover:text-blue-500 flex items-center justify-center gap-2"
+                          >
+                            <Plus className="h-4 w-4" />
+                            Add New Quest
+                          </Button>
+                        </li>
+                      </ul>
+                    </CardContent>
+                  </Card>
+                </div>
+                
+                <Card className="mt-6">
+                  <CardHeader className="bg-gradient-to-r from-blue-50 to-purple-50 pb-2">
+                    <CardTitle className="text-lg font-bold flex items-center">
+                      <Users className="mr-2 h-5 w-5 text-green-500" />
+                      Group Quests
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-6">
+                    <ul className="space-y-4">
+                      {groupQuests.map(renderGroupQuestItem)}
+                      <li className="mt-4">
+                        <Button 
+                          variant="outline"
+                          onClick={() => setIsGoalFormOpen(true)}
+                          className="w-full border-dashed border-gray-300 hover:border-blue-300 hover:bg-blue-50 text-gray-500 hover:text-blue-500 flex items-center justify-center gap-2"
+                        >
+                          <Plus className="h-4 w-4" />
+                          <Users className="h-4 w-4 mx-1" />
+                          Create Group Quest
+                        </Button>
+                      </li>
+                    </ul>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+              
+              <TabsContent value="individual">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <Card>
+                    <CardHeader className="bg-gradient-to-r from-blue-50 to-purple-50 pb-2">
+                      <CardTitle className="text-lg font-bold flex items-center">
+                        <Trophy className="mr-2 h-5 w-5 text-yellow-500" />
+                        Active Challenges
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-6">
+                      <ul className="space-y-4">
+                        {questChallenges.filter(quest => quest.questMode === "individual").map(renderGoalItem)}
+                        <li className="mt-4">
+                          <Button 
+                            variant="outline"
+                            onClick={() => setIsGoalFormOpen(true)}
+                            className="w-full border-dashed border-gray-300 hover:border-blue-300 hover:bg-blue-50 text-gray-500 hover:text-blue-500 flex items-center justify-center gap-2"
+                          >
+                            <Plus className="h-4 w-4" />
+                            Add New Challenge
+                          </Button>
+                        </li>
+                      </ul>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardHeader className="bg-gradient-to-r from-blue-50 to-purple-50 pb-2">
+                      <CardTitle className="text-lg font-bold flex items-center">
+                        <Target className="mr-2 h-5 w-5 text-blue-500" />
+                        Long-term Quests
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-6">
+                      <ul className="space-y-4">
+                        {longTermQuests.filter(quest => quest.questMode === "individual").map(renderGoalItem)}
+                        <li className="mt-4">
+                          <Button 
+                            variant="outline"
+                            onClick={() => setIsGoalFormOpen(true)}
+                            className="w-full border-dashed border-gray-300 hover:border-blue-300 hover:bg-blue-50 text-gray-500 hover:text-blue-500 flex items-center justify-center gap-2"
+                          >
+                            <Plus className="h-4 w-4" />
+                            Add New Quest
+                          </Button>
+                        </li>
+                      </ul>
+                    </CardContent>
+                  </Card>
+                </div>
+              </TabsContent>
+              
+              <TabsContent value="group">
+                <Card>
+                  <CardHeader className="bg-gradient-to-r from-blue-50 to-purple-50 pb-2">
+                    <CardTitle className="text-lg font-bold flex items-center">
+                      <Users className="mr-2 h-5 w-5 text-green-500" />
+                      Group Quests
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-6">
+                    <ul className="space-y-4">
+                      {groupQuests.map(renderGroupQuestItem)}
+                      {longTermQuests.filter(quest => quest.questMode === "group").map(renderGoalItem)}
+                      <li className="mt-4">
+                        <Button 
+                          variant="outline"
+                          onClick={() => setIsGoalFormOpen(true)}
+                          className="w-full border-dashed border-gray-300 hover:border-blue-300 hover:bg-blue-50 text-gray-500 hover:text-blue-500 flex items-center justify-center gap-2"
+                        >
+                          <Plus className="h-4 w-4" />
+                          <Users className="h-4 w-4 mx-1" />
+                          Create Group Quest
+                        </Button>
+                      </li>
+                    </ul>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
           </div>
         </main>
       </div>

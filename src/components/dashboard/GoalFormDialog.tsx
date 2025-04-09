@@ -2,7 +2,7 @@
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Calendar, Target, Book, Brain, PieChart, BookOpen, TrendingUp } from "lucide-react";
+import { Calendar, Target, Book, Brain, PieChart, BookOpen, TrendingUp, Users } from "lucide-react";
 import { format } from "date-fns";
 
 import {
@@ -43,6 +43,9 @@ const formSchema = z.object({
   questType: z.enum(["short", "long"], { 
     required_error: "Please select a quest type" 
   }),
+  questMode: z.enum(["individual", "group"], {
+    required_error: "Please select if this is an individual or group quest"
+  }),
   setBy: z.enum(["self", "teacher", "parent", "coach"], { 
     required_error: "Please select who set this quest" 
   }),
@@ -77,6 +80,7 @@ export default function GoalFormDialog({ isOpen, setIsOpen, onSubmit }: GoalForm
       description: "",
       subject: "",
       questType: "short",
+      questMode: "individual",
       setBy: "self",
       goalTarget: "",
       startDate: new Date(),
@@ -94,7 +98,7 @@ export default function GoalFormDialog({ isOpen, setIsOpen, onSubmit }: GoalForm
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogContent className="sm:max-w-[650px] p-0 overflow-hidden">
+      <DialogContent className="sm:max-w-[700px] p-0 overflow-hidden">
         <DialogHeader className="p-6 pb-2 bg-gradient-to-r from-blue-50 to-purple-50">
           <DialogTitle className="text-xl flex items-center">
             <Target className="mr-2 h-5 w-5 text-blue-500" />
@@ -271,7 +275,7 @@ export default function GoalFormDialog({ isOpen, setIsOpen, onSubmit }: GoalForm
                 name="questType"
                 render={({ field }) => (
                   <FormItem className="space-y-3">
-                    <FormLabel>Quest Type</FormLabel>
+                    <FormLabel>Quest Duration</FormLabel>
                     <FormControl>
                       <RadioGroup
                         onValueChange={field.onChange}
@@ -301,6 +305,42 @@ export default function GoalFormDialog({ isOpen, setIsOpen, onSubmit }: GoalForm
                 )}
               />
             </div>
+            
+            <FormField
+              control={form.control}
+              name="questMode"
+              render={({ field }) => (
+                <FormItem className="space-y-3">
+                  <FormLabel>Quest Mode</FormLabel>
+                  <FormControl>
+                    <RadioGroup
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                      className="flex space-x-4"
+                    >
+                      <FormItem className="flex items-center space-x-2 space-y-0">
+                        <FormControl>
+                          <RadioGroupItem value="individual" />
+                        </FormControl>
+                        <FormLabel className="font-normal cursor-pointer">
+                          Individual Quest
+                        </FormLabel>
+                      </FormItem>
+                      <FormItem className="flex items-center space-x-2 space-y-0">
+                        <FormControl>
+                          <RadioGroupItem value="group" />
+                        </FormControl>
+                        <FormLabel className="font-normal cursor-pointer flex items-center">
+                          <Users className="h-4 w-4 mr-1.5 text-blue-500" />
+                          Group Quest
+                        </FormLabel>
+                      </FormItem>
+                    </RadioGroup>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             <FormField
               control={form.control}
