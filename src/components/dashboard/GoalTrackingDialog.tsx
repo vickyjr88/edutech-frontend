@@ -15,13 +15,33 @@ import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { CheckCircle, Target, TrendingUp, History, Award } from "lucide-react";
+import { CheckCircle, Target, TrendingUp, History, Award, Clock } from "lucide-react";
+import { 
+  Form, 
+  FormField, 
+  FormItem, 
+  FormLabel, 
+  FormControl, 
+  FormDescription, 
+  FormMessage 
+} from "@/components/ui/form";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+
+const updateFormSchema = z.object({
+  timeSpent: z.string().min(1, { message: "Please enter time spent" }),
+  progressPercent: z.number().min(0).max(100),
+  notes: z.string().optional(),
+});
+
+type UpdateFormValues = z.infer<typeof updateFormSchema>;
 
 type GoalTrackingDialogProps = {
   isOpen: boolean;
   setIsOpen: (open: boolean) => void;
   goal: any;
-  onUpdateGoal: (goalId: string, progress: number, notes: string) => void;
+  onUpdateGoal: (goalId: string, progress: number, notes: string, timeSpent?: string) => void;
 };
 
 export default function GoalTrackingDialog({ 
@@ -30,13 +50,22 @@ export default function GoalTrackingDialog({
   goal, 
   onUpdateGoal 
 }: GoalTrackingDialogProps) {
-  const [progress, setProgress] = useState(goal ? goal.progress : 0);
-  const [notes, setNotes] = useState("");
+  const [progressPercent, setProgressPercent] = useState(goal ? goal.progress : 0);
   
-  const handleUpdate = () => {
+  const form = useForm<UpdateFormValues>({
+    resolver: zodResolver(updateFormSchema),
+    defaultValues: {
+      timeSpent: "1",
+      progressPercent: goal ? goal.progress : 0,
+      notes: "",
+    },
+  });
+  
+  const handleUpdate = (values: UpdateFormValues) => {
     if (goal) {
-      onUpdateGoal(goal.id, progress, notes);
+      onUpdateGoal(goal.id, values.progressPercent, values.notes, values.timeSpent);
       setIsOpen(false);
+      form.reset();
     }
   };
   
@@ -50,9 +79,9 @@ export default function GoalTrackingDialog({
   
   // Mock history data for demonstration
   const progressHistory = [
-    { date: "April 5, 2025", progress: 20, note: "Started working on the goal" },
-    { date: "April 10, 2025", progress: 35, note: "Completed the first milestone" },
-    { date: "April 17, 2025", progress: goal.progress, note: "Made significant progress" }
+    { date: "April 5, 2025", progress: 20, note: "Started working on the goal", timeSpent: "2 hours" },
+    { date: "April 10, 2025", progress: 35, note: "Completed the first milestone", timeSpent: "3 hours" },
+    { date: "April 17, 2025", progress: goal.progress, note: "Made significant progress", timeSpent: "4 hours" }
   ];
   
   // Mock milestone data
@@ -64,13 +93,18 @@ export default function GoalTrackingDialog({
     { title: "Final submission", completed: goal.progress >= 100, date: goal.dueDate }
   ];
   
+  // Calculate time commitment metrics
+  const totalTimeCommitment = goal.timeCommitment ? `${goal.timeCommitment} ${goal.timeFrequency}` : "Not specified";
+  const timeSpentSoFar = progressHistory.reduce((acc, entry) => acc + parseInt(entry.timeSpent), 0);
+  const timeRemaining = goal.timeCommitment ? goal.timeCommitment - timeSpentSoFar : "Unknown";
+  
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
-      <SheetContent side="left" className="sm:max-w-[550px] max-h-[100vh] overflow-y-auto p-6">
+      <SheetContent side="left" className="sm:max-w-[600px] p-6">
         <SheetHeader>
           <SheetTitle className="text-xl flex items-center">
             <Target className="mr-2 h-5 w-5 text-blue-500" />
-            {goal.name}
+            {goal.name || goal.title}
           </SheetTitle>
           <SheetDescription>
             {goal.description}
@@ -102,8 +136,8 @@ export default function GoalTrackingDialog({
                 <span className="font-medium">{goal.dueDate}</span>
               </div>
               <div>
-                <span className="text-gray-500 block">Target:</span>
-                <span className="font-medium">{goal.goalTarget}</span>
+                <span className="text-gray-500 block">Time Commitment:</span>
+                <span className="font-medium">{totalTimeCommitment}</span>
               </div>
             </div>
           </div>
@@ -125,37 +159,94 @@ export default function GoalTrackingDialog({
             </TabsList>
             
             <TabsContent value="update" className="space-y-4">
-              <div className="space-y-4">
-                <div>
-                  <label className="text-sm font-medium">Update Progress: {progress}%</label>
-                  <Slider
-                    min={0}
-                    max={100}
-                    step={1}
-                    value={[progress]}
-                    onValueChange={(vals) => setProgress(vals[0])}
-                    className="py-4"
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(handleUpdate)} className="space-y-4">
+                  <div className="bg-blue-50 p-4 rounded-lg space-y-4">
+                    <h3 className="font-medium flex items-center">
+                      <Clock className="h-4 w-4 mr-2" />
+                      Record Time Spent
+                    </h3>
+                    
+                    <FormField
+                      control={form.control}
+                      name="timeSpent"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>How much time did you spend on this goal?</FormLabel>
+                          <div className="flex items-center space-x-2">
+                            <FormControl>
+                              <Input type="number" min="0.5" step="0.5" {...field} className="w-24" />
+                            </FormControl>
+                            <span className="text-sm text-gray-500">
+                              {goal.timeFrequency === "hours" ? "hours" : 
+                               goal.timeFrequency === "days" ? "days" : 
+                               goal.timeFrequency === "weeks" ? "weeks" : "months"}
+                            </span>
+                          </div>
+                          <FormDescription>
+                            Time remaining: {typeof timeRemaining === "number" && timeRemaining > 0 ? timeRemaining : "Completed"} {goal.timeFrequency}
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="progressPercent"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Update Progress: {field.value}%</FormLabel>
+                          <FormControl>
+                            <Slider
+                              min={0}
+                              max={100}
+                              step={1}
+                              value={[field.value]}
+                              onValueChange={(vals) => field.onChange(vals[0])}
+                              className="py-4"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <FormField
+                    control={form.control}
+                    name="notes"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Notes on Progress</FormLabel>
+                        <FormControl>
+                          <Textarea 
+                            placeholder="What have you accomplished? What challenges did you face?"
+                            className="resize-none"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
-                </div>
-                
-                <div>
-                  <label className="text-sm font-medium block mb-2">Notes on Progress</label>
-                  <Textarea 
-                    placeholder="What have you accomplished? What challenges did you face?"
-                    className="resize-none"
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
-                  />
-                </div>
-                
-                <div className="bg-blue-50 p-3 rounded-lg text-sm">
-                  <h4 className="font-medium text-blue-700 mb-1">Tip for Success</h4>
-                  <p className="text-blue-600">
-                    Breaking down your goal into smaller tasks can help make it more manageable. 
-                    Try to set specific milestones to track your progress more effectively.
-                  </p>
-                </div>
-              </div>
+                  
+                  <div className="bg-blue-50 p-3 rounded-lg text-sm">
+                    <h4 className="font-medium text-blue-700 mb-1">Tip for Success</h4>
+                    <p className="text-blue-600">
+                      Breaking down your goal into smaller tasks can help make it more manageable. 
+                      Try to set specific milestones to track your progress more effectively.
+                    </p>
+                  </div>
+                  
+                  <SheetFooter className="mt-4 pt-4 border-t">
+                    <SheetClose asChild>
+                      <Button type="button" variant="outline">Close</Button>
+                    </SheetClose>
+                    <Button type="submit">Save Progress</Button>
+                  </SheetFooter>
+                </form>
+              </Form>
             </TabsContent>
             
             <TabsContent value="milestones" className="space-y-3">
@@ -189,9 +280,15 @@ export default function GoalTrackingDialog({
                 <div key={index} className="bg-gray-50 p-3 rounded-lg border border-gray-200">
                   <div className="flex justify-between items-center mb-1">
                     <span className="font-medium">{entry.date}</span>
-                    <span className="text-sm bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
-                      {entry.progress}%
-                    </span>
+                    <div className="flex items-center space-x-2">
+                      <span className="text-sm bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
+                        {entry.progress}%
+                      </span>
+                      <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full flex items-center">
+                        <Clock className="h-3 w-3 mr-1" />
+                        {entry.timeSpent}
+                      </span>
+                    </div>
                   </div>
                   <p className="text-sm text-gray-600">{entry.note}</p>
                 </div>
@@ -199,13 +296,6 @@ export default function GoalTrackingDialog({
             </TabsContent>
           </Tabs>
         </div>
-        
-        <SheetFooter className="mt-4">
-          <SheetClose asChild>
-            <Button type="button" variant="outline">Close</Button>
-          </SheetClose>
-          <Button type="button" onClick={handleUpdate}>Save Progress</Button>
-        </SheetFooter>
       </SheetContent>
     </Sheet>
   );

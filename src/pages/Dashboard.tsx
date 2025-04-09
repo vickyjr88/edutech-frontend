@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -25,11 +26,11 @@ const Dashboard = () => {
     setIsTrackingOpen(true);
   };
   
-  const handleUpdateGoal = (goalId: string, progress: number, notes: string) => {
-    console.log("Goal updated:", { goalId, progress, notes });
+  const handleUpdateGoal = (goalId: string, progress: number, notes: string, timeSpent?: string) => {
+    console.log("Goal updated:", { goalId, progress, notes, timeSpent });
     toast({
       title: "Progress Updated",
-      description: `Your goal progress has been updated to ${progress}%.`,
+      description: `Your goal progress has been updated to ${progress}%. ${timeSpent ? `Time spent: ${timeSpent}` : ''}`,
     });
   };
 

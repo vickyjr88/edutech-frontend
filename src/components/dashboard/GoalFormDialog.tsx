@@ -41,8 +41,8 @@ const formSchema = z.object({
   duration: z.enum(["short-term", "long-term"]),
   dueDate: z.date().optional(),
   startDate: z.date().optional(),
-  targetTime: z.string().optional(),
-  timeUnit: z.enum(["hours", "days", "weeks", "months", "years"]).default("days"),
+  timeCommitment: z.string().min(1, { message: "Please specify a time commitment." }),
+  timeFrequency: z.enum(["hours", "days", "weeks", "months"]).default("hours"),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -65,8 +65,8 @@ export default function GoalFormDialog({ isOpen, setIsOpen, onSubmit }: GoalForm
       subject: "",
       priority: "medium",
       duration: "short-term",
-      timeUnit: "days",
-      targetTime: "7",
+      timeFrequency: "hours",
+      timeCommitment: "1",
     },
   });
   
@@ -85,7 +85,7 @@ export default function GoalFormDialog({ isOpen, setIsOpen, onSubmit }: GoalForm
   
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogContent className="sm:max-w-[550px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Set a New Goal</DialogTitle>
           <DialogDescription>
@@ -189,7 +189,6 @@ export default function GoalFormDialog({ isOpen, setIsOpen, onSubmit }: GoalForm
                           selected={field.value}
                           onSelect={field.onChange}
                           initialFocus
-                          className="p-3 pointer-events-auto"
                         />
                       </PopoverContent>
                     </Popover>
@@ -225,7 +224,6 @@ export default function GoalFormDialog({ isOpen, setIsOpen, onSubmit }: GoalForm
                           selected={field.value}
                           onSelect={field.onChange}
                           initialFocus
-                          className="p-3 pointer-events-auto"
                         />
                       </PopoverContent>
                     </Popover>
@@ -269,43 +267,46 @@ export default function GoalFormDialog({ isOpen, setIsOpen, onSubmit }: GoalForm
               )}
             />
             
-            {/* Row 5: Target Time & Unit */}
-            <div className="grid grid-cols-3 gap-2">
-              <div className="col-span-2">
-                <FormField
-                  control={form.control}
-                  name="targetTime"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Target Time</FormLabel>
-                      <FormControl>
-                        <Input type="number" placeholder="7" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+            {/* Row 5: Time Commitment Configuration */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-blue-50 p-4 rounded-lg">
               <FormField
                 control={form.control}
-                name="timeUnit"
+                name="timeCommitment"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Unit</FormLabel>
+                    <FormLabel>Time Commitment</FormLabel>
+                    <FormControl>
+                      <Input type="number" min="1" placeholder="1" {...field} />
+                    </FormControl>
+                    <FormDescription>
+                      How much time you plan to spend on this goal
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="timeFrequency"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Frequency</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Days" />
+                          <SelectValue placeholder="Select frequency" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="hours">Hours</SelectItem>
-                        <SelectItem value="days">Days</SelectItem>
-                        <SelectItem value="weeks">Weeks</SelectItem>
-                        <SelectItem value="months">Months</SelectItem>
-                        <SelectItem value="years">Years</SelectItem>
+                        <SelectItem value="hours">Hours (total)</SelectItem>
+                        <SelectItem value="days">Days (per week)</SelectItem>
+                        <SelectItem value="weeks">Weeks (total)</SelectItem>
+                        <SelectItem value="months">Months (total)</SelectItem>
                       </SelectContent>
                     </Select>
+                    <FormDescription>
+                      How you want to measure your time
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
