@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -161,11 +162,14 @@ export default function CurrentClasses() {
           <BookOpen className="mr-2 h-5 w-5 text-kidato-blue" />
           My Classes
         </CardTitle>
-        <Button variant="ghost" size="sm" asChild>
-          <Link to="/courses" className="text-kidato-blue hover:text-kidato-blue/90 text-sm">View all</Link>
+        <Button variant="ghost" size="sm" asChild className="px-4">
+          <Link to="/courses" className="text-kidato-blue hover:text-kidato-blue/90 text-sm flex items-center">
+            View all
+            <ChevronRight className="ml-1 h-4 w-4" />
+          </Link>
         </Button>
       </CardHeader>
-      <CardContent>
+      <CardContent className="pt-4">
         <div className="space-y-4">
           {classesToDisplay.length > 0 ? (
             classesToDisplay.map((classItem, index) => {
