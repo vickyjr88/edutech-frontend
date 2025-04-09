@@ -37,7 +37,7 @@ const Dashboard = () => {
             to="/student-dashboard" 
             className="flex items-center px-4 py-3 text-sm font-medium rounded-xl bg-gradient-to-r from-kidato-light-blue to-blue-100 text-kidato-blue shadow-sm transition-all hover:shadow-md"
           >
-            <Home className="mr-3 h-5 w-5 text-blue-600" />
+            <Home className="mr-3 h-5 w-5" />
             Dashboard
             <Star className="ml-auto h-4 w-4 text-yellow-400" />
           </Link>
@@ -47,28 +47,28 @@ const Dashboard = () => {
             to="/courses" 
             className="flex items-center px-4 py-3 text-sm font-medium rounded-xl text-gray-700 hover:bg-blue-50 transition-all"
           >
-            <Book className="mr-3 h-5 w-5 text-purple-600" />
+            <Book className="mr-3 h-5 w-5" />
             My Courses
           </Link>
           <Link 
             to="/learning-progress" 
             className="flex items-center px-4 py-3 text-sm font-medium rounded-xl text-gray-700 hover:bg-blue-50 transition-all"
           >
-            <PieChart className="mr-3 h-5 w-5 text-cyan-600" />
+            <PieChart className="mr-3 h-5 w-5" />
             Learning Goals
           </Link>
           <Link 
             to="/challenges" 
             className="flex items-center px-4 py-3 text-sm font-medium rounded-xl text-gray-700 hover:bg-blue-50 transition-all"
           >
-            <Target className="mr-3 h-5 w-5 text-amber-500" />
+            <Target className="mr-3 h-5 w-5" />
             Quests & Challenges
           </Link>
           <Link 
             to="/group-work" 
             className="flex items-center px-4 py-3 text-sm font-medium rounded-xl text-gray-700 hover:bg-blue-50 transition-all"
           >
-            <Users className="mr-3 h-5 w-5 text-green-600" />
+            <Users className="mr-3 h-5 w-5" />
             Group Work
             <span className="ml-auto bg-blue-100 text-blue-600 text-xs px-2 py-0.5 rounded-full">New</span>
           </Link>
@@ -78,14 +78,14 @@ const Dashboard = () => {
             to="/messaging" 
             className="flex items-center px-4 py-3 text-sm font-medium rounded-xl text-gray-700 hover:bg-blue-50 transition-all"
           >
-            <MessageSquare className="mr-3 h-5 w-5 text-rose-500" />
+            <MessageSquare className="mr-3 h-5 w-5" />
             Messages
           </Link>
           <Link 
             to="/schedule" 
             className="flex items-center px-4 py-3 text-sm font-medium rounded-xl text-gray-700 hover:bg-blue-50 transition-all"
           >
-            <Calendar className="mr-3 h-5 w-5 text-indigo-600" />
+            <Calendar className="mr-3 h-5 w-5" />
             Schedule
           </Link>
           
@@ -94,21 +94,21 @@ const Dashboard = () => {
             to="/profile" 
             className="flex items-center px-4 py-3 text-sm font-medium rounded-xl text-gray-700 hover:bg-blue-50 transition-all"
           >
-            <User className="mr-3 h-5 w-5 text-sky-600" />
+            <User className="mr-3 h-5 w-5" />
             Profile
           </Link>
           <Link 
             to="/achievements" 
             className="flex items-center px-4 py-3 text-sm font-medium rounded-xl text-gray-700 hover:bg-blue-50 transition-all"
           >
-            <Award className="mr-3 h-5 w-5 text-yellow-600" />
+            <Award className="mr-3 h-5 w-5" />
             Achievements
           </Link>
           <Link 
             to="/settings" 
             className="flex items-center px-4 py-3 text-sm font-medium rounded-xl text-gray-700 hover:bg-blue-50 transition-all"
           >
-            <Settings className="mr-3 h-5 w-5 text-slate-600" />
+            <Settings className="mr-3 h-5 w-5" />
             Settings
           </Link>
         </nav>

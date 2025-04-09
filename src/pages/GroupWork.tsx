@@ -22,7 +22,6 @@ const GroupWork = () => {
       nextMeeting: "Tomorrow, 3:00 PM",
       assignment: "Algebra Quiz Prep",
       avatars: ["JD", "AM", "RK", "SL"],
-      color: "blue"
     },
     {
       id: 2,
@@ -32,7 +31,6 @@ const GroupWork = () => {
       nextMeeting: "Wednesday, 4:30 PM",
       assignment: "Ecosystem Presentation",
       avatars: ["JD", "BT", "MP"],
-      color: "purple"
     },
     {
       id: 3,
@@ -42,32 +40,8 @@ const GroupWork = () => {
       nextMeeting: "Friday, 5:00 PM",
       assignment: "Game Development Project",
       avatars: ["JD", "RJ", "KL", "DN", "AL"],
-      color: "green"
     }
   ];
-  
-  // Function to get badge colors based on subject
-  const getBadgeColorClass = (color: string) => {
-    const colorMap: Record<string, string> = {
-      blue: "bg-blue-100 text-blue-600",
-      purple: "bg-purple-100 text-purple-600",
-      green: "bg-green-100 text-green-600",
-      indigo: "bg-indigo-100 text-indigo-600",
-      pink: "bg-pink-100 text-pink-600",
-      amber: "bg-amber-100 text-amber-600",
-    };
-    return colorMap[color] || "bg-gray-100 text-gray-600";
-  };
-  
-  // Function to get avatar colors based on group
-  const getAvatarColorClass = (groupColor: string, index: number) => {
-    const colorMap: Record<string, string> = {
-      blue: "bg-blue-100 text-blue-500",
-      purple: "bg-purple-100 text-purple-500",
-      green: "bg-green-100 text-green-500"
-    };
-    return colorMap[groupColor] || "bg-gray-100 text-gray-500";
-  };
 
   return (
     <div className="flex min-h-screen bg-gradient-to-b from-blue-50 to-white">
@@ -90,7 +64,7 @@ const GroupWork = () => {
             to="/student-dashboard" 
             className="flex items-center px-4 py-3 text-sm font-medium rounded-xl text-gray-700 hover:bg-blue-50 transition-all"
           >
-            <Home className="mr-3 h-5 w-5 text-blue-600" />
+            <Home className="mr-3 h-5 w-5" />
             Dashboard
           </Link>
           
@@ -99,28 +73,28 @@ const GroupWork = () => {
             to="/courses" 
             className="flex items-center px-4 py-3 text-sm font-medium rounded-xl text-gray-700 hover:bg-blue-50 transition-all"
           >
-            <Book className="mr-3 h-5 w-5 text-purple-600" />
+            <Book className="mr-3 h-5 w-5" />
             My Courses
           </Link>
           <Link 
             to="/learning-progress" 
             className="flex items-center px-4 py-3 text-sm font-medium rounded-xl text-gray-700 hover:bg-blue-50 transition-all"
           >
-            <PieChart className="mr-3 h-5 w-5 text-cyan-600" />
+            <PieChart className="mr-3 h-5 w-5" />
             Learning Goals
           </Link>
           <Link 
             to="/challenges" 
             className="flex items-center px-4 py-3 text-sm font-medium rounded-xl text-gray-700 hover:bg-blue-50 transition-all"
           >
-            <Target className="mr-3 h-5 w-5 text-amber-500" />
+            <Target className="mr-3 h-5 w-5" />
             Quests & Challenges
           </Link>
           <Link 
             to="/group-work" 
             className="flex items-center px-4 py-3 text-sm font-medium rounded-xl bg-gradient-to-r from-kidato-light-blue to-blue-100 text-kidato-blue shadow-sm transition-all hover:shadow-md"
           >
-            <Users className="mr-3 h-5 w-5 text-green-600" />
+            <Users className="mr-3 h-5 w-5" />
             Group Work
             <Star className="ml-auto h-4 w-4 text-yellow-400" />
           </Link>
@@ -130,14 +104,14 @@ const GroupWork = () => {
             to="/messaging" 
             className="flex items-center px-4 py-3 text-sm font-medium rounded-xl text-gray-700 hover:bg-blue-50 transition-all"
           >
-            <MessageSquare className="mr-3 h-5 w-5 text-rose-500" />
+            <MessageSquare className="mr-3 h-5 w-5" />
             Messages
           </Link>
           <Link 
             to="/schedule" 
             className="flex items-center px-4 py-3 text-sm font-medium rounded-xl text-gray-700 hover:bg-blue-50 transition-all"
           >
-            <Calendar className="mr-3 h-5 w-5 text-indigo-600" />
+            <Calendar className="mr-3 h-5 w-5" />
             Schedule
           </Link>
           
@@ -146,21 +120,21 @@ const GroupWork = () => {
             to="/profile" 
             className="flex items-center px-4 py-3 text-sm font-medium rounded-xl text-gray-700 hover:bg-blue-50 transition-all"
           >
-            <User className="mr-3 h-5 w-5 text-sky-600" />
+            <User className="mr-3 h-5 w-5" />
             Profile
           </Link>
           <Link 
             to="/achievements" 
             className="flex items-center px-4 py-3 text-sm font-medium rounded-xl text-gray-700 hover:bg-blue-50 transition-all"
           >
-            <Award className="mr-3 h-5 w-5 text-yellow-600" />
+            <Award className="mr-3 h-5 w-5" />
             Achievements
           </Link>
           <Link 
             to="/settings" 
             className="flex items-center px-4 py-3 text-sm font-medium rounded-xl text-gray-700 hover:bg-blue-50 transition-all"
           >
-            <Settings className="mr-3 h-5 w-5 text-slate-600" />
+            <Settings className="mr-3 h-5 w-5" />
             Settings
           </Link>
         </nav>
@@ -195,13 +169,13 @@ const GroupWork = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
               {groups.map((group) => (
                 <Card key={group.id} className="overflow-hidden border-2 border-blue-100">
-                  <CardHeader className={`pb-3 bg-gradient-to-r from-${group.color}-50 to-${group.color === "purple" ? "indigo" : group.color === "green" ? "teal" : "blue"}-50`}>
+                  <CardHeader className="pb-3 bg-gradient-to-r from-blue-50 to-purple-50">
                     <div className="flex justify-between">
                       <div>
-                        <p className={`text-xs text-${group.color}-600 font-medium mb-1`}>{group.subject}</p>
+                        <p className="text-xs text-blue-600 font-medium mb-1">{group.subject}</p>
                         <CardTitle className="text-lg font-bold">{group.name}</CardTitle>
                       </div>
-                      <Badge className={getBadgeColorClass(group.color)}>
+                      <Badge variant="outline" className="border-blue-200 bg-blue-50 text-blue-600">
                         {group.members} members
                       </Badge>
                     </div>
@@ -220,17 +194,13 @@ const GroupWork = () => {
                         <div className="flex -space-x-2">
                           {group.avatars.map((avatar, index) => (
                             <Avatar key={index} className="border-2 border-white h-8 w-8">
-                              <AvatarFallback className={getAvatarColorClass(group.color, index)}>
+                              <AvatarFallback className="bg-blue-100 text-blue-500 text-xs">
                                 {avatar}
                               </AvatarFallback>
                             </Avatar>
                           ))}
                         </div>
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          className={`flex items-center gap-1 h-8 rounded-lg border-${group.color}-200 text-${group.color}-600`}
-                        >
+                        <Button variant="outline" size="sm" className="flex items-center gap-1 h-8 rounded-lg border-blue-200 text-blue-600">
                           <MessageSquare className="h-3 w-3" /> 
                           Chat
                         </Button>
@@ -259,9 +229,9 @@ const GroupWork = () => {
             
             {/* Group Recommendations */}
             <Card className="mb-6">
-              <CardHeader className="pb-3 bg-gradient-to-r from-blue-50 to-purple-50">
+              <CardHeader className="pb-3">
                 <CardTitle className="text-lg font-bold flex items-center">
-                  <Users className="mr-2 h-5 w-5 text-green-600" />
+                  <Users className="mr-2 h-5 w-5 text-blue-500" />
                   Recommended Groups
                 </CardTitle>
               </CardHeader>
