@@ -27,10 +27,10 @@ const Dashboard = () => {
   };
   
   const handleUpdateGoal = (goalId: string, progress: number, notes: string, timeSpent?: string) => {
-    console.log("Goal updated:", { goalId, progress, notes, timeSpent });
+    console.log("Quest updated:", { goalId, progress, notes, timeSpent });
     toast({
       title: "Progress Updated",
-      description: `Your goal progress has been updated to ${progress}%. ${timeSpent ? `Time spent: ${timeSpent}` : ''}`,
+      description: `Your quest progress has been updated to ${progress}%. ${timeSpent ? `Time spent: ${timeSpent}` : ''}`,
     });
   };
 
@@ -66,13 +66,6 @@ const Dashboard = () => {
           >
             <Book className="mr-3 h-5 w-5" />
             My Courses
-          </Link>
-          <Link 
-            to="/learning-progress" 
-            className="flex items-center px-4 py-3 text-sm font-medium rounded-xl text-gray-700 hover:bg-blue-50 transition-all"
-          >
-            <PieChart className="mr-3 h-5 w-5" />
-            Learning Goals
           </Link>
           <Link 
             to="/challenges" 

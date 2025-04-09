@@ -1,167 +1,127 @@
 
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogDescription,
-  DialogFooter,
-  DialogClose
-} from "@/components/ui/dialog";
-import { 
-  Form, 
-  FormField, 
-  FormItem, 
-  FormLabel, 
-  FormControl, 
-  FormDescription, 
-  FormMessage 
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar as CalendarIcon } from "lucide-react";
+import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import { Calendar, Target, Book, Brain, PieChart, BookOpen, TrendingUp } from "lucide-react";
 import { format } from "date-fns";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { cn } from "@/lib/utils";
 
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Calendar as CalendarPrimitive } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+
+// Define schema for the form
 const formSchema = z.object({
-  title: z.string().min(3, { message: "Goal title must be at least 3 characters." }),
-  description: z.string().optional(),
-  type: z.enum(["academic", "non-academic"]),
-  subject: z.string().optional(),
-  priority: z.enum(["high", "medium", "low"]),
-  duration: z.enum(["short-term", "long-term"]),
-  dueDate: z.date().optional(),
-  startDate: z.date().optional(),
-  timeCommitment: z.string().min(1, { message: "Please specify a time commitment." }),
-  timeFrequency: z.enum(["hours", "days", "weeks", "months"]).default("hours"),
+  title: z.string().min(3, { message: "Title must be at least 3 characters" }),
+  description: z.string().min(10, { message: "Description must be at least 10 characters" }),
+  subject: z.string().min(1, { message: "Please select a subject" }),
+  questType: z.enum(["short", "long"], { 
+    required_error: "Please select a quest type" 
+  }),
+  setBy: z.enum(["self", "teacher", "parent", "coach"], { 
+    required_error: "Please select who set this quest" 
+  }),
+  goalTarget: z.string().min(3, { message: "Target must be at least 3 characters" }),
+  startDate: z.date({
+    required_error: "Start date is required",
+  }),
+  dueDate: z.date({
+    required_error: "Due date is required",
+  }).refine(date => date > new Date(), {
+    message: "Due date must be in the future",
+  }),
+  timeAmount: z.string().min(1, { message: "Time amount is required" }),
+  timeFrequency: z.enum(["hours", "days", "weeks", "months"], {
+    required_error: "Please select a time frequency"
+  }),
 });
 
-type FormValues = z.infer<typeof formSchema>;
+type GoalFormValues = z.infer<typeof formSchema>;
 
 type GoalFormDialogProps = {
   isOpen: boolean;
   setIsOpen: (open: boolean) => void;
-  onSubmit: (values: FormValues) => void;
+  onSubmit: (values: GoalFormValues) => void;
 };
 
 export default function GoalFormDialog({ isOpen, setIsOpen, onSubmit }: GoalFormDialogProps) {
-  const [selectedSubject, setSelectedSubject] = useState<string>("");
-  
-  const form = useForm<FormValues>({
+  const form = useForm<GoalFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       title: "",
       description: "",
-      type: "academic",
       subject: "",
-      priority: "medium",
-      duration: "short-term",
+      questType: "short",
+      setBy: "self",
+      goalTarget: "",
+      startDate: new Date(),
+      dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
+      timeAmount: "1",
       timeFrequency: "hours",
-      timeCommitment: "1",
     },
   });
-  
-  const goalType = form.watch("type");
 
-  const handleSubmit = (values: FormValues) => {
+  function handleSubmit(values: GoalFormValues) {
     onSubmit(values);
-    form.reset();
     setIsOpen(false);
-  };
-  
-  const subjects = {
-    academic: ["Mathematics", "Science", "English", "History", "Computer Science", "Art", "Music", "Physical Education", "Foreign Languages", "Other"],
-    "non-academic": ["Reading", "Musical Instrument", "Sports", "Coding", "Art & Craft", "Volunteering", "Health & Fitness", "Social Skills", "Other"]
-  };
-  
+    form.reset();
+  }
+
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Set a New Goal</DialogTitle>
+      <DialogContent className="sm:max-w-[650px] p-0 overflow-hidden">
+        <DialogHeader className="p-6 pb-2 bg-gradient-to-r from-blue-50 to-purple-50">
+          <DialogTitle className="text-xl flex items-center">
+            <Target className="mr-2 h-5 w-5 text-blue-500" />
+            Create New Quest
+          </DialogTitle>
           <DialogDescription>
-            Create a new goal to track your learning progress. Fill in the details below.
+            Set up a new learning quest or challenge to track your progress.
           </DialogDescription>
         </DialogHeader>
-        
+
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-            {/* Row 1: Goal Type & Subject */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <FormField
-                control={form.control}
-                name="type"
-                render={({ field }) => (
-                  <FormItem className="space-y-3">
-                    <FormLabel>Goal Type</FormLabel>
-                    <FormControl>
-                      <RadioGroup
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                        className="flex flex-col space-y-1"
-                      >
-                        <FormItem className="flex items-center space-x-3 space-y-0">
-                          <FormControl>
-                            <RadioGroupItem value="academic" />
-                          </FormControl>
-                          <FormLabel className="font-normal">Academic</FormLabel>
-                        </FormItem>
-                        <FormItem className="flex items-center space-x-3 space-y-0">
-                          <FormControl>
-                            <RadioGroupItem value="non-academic" />
-                          </FormControl>
-                          <FormLabel className="font-normal">Non-Academic</FormLabel>
-                        </FormItem>
-                      </RadioGroup>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="subject"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Subject</FormLabel>
-                    <Select 
-                      onValueChange={(value) => {
-                        field.onChange(value);
-                        setSelectedSubject(value);
-                      }}
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a subject" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {subjects[goalType === "academic" ? "academic" : "non-academic"].map((subject) => (
-                          <SelectItem key={subject} value={subject}>
-                            {subject}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-            
-            {/* Row 2: Start Date & Due Date */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4 p-6">
+            <FormField
+              control={form.control}
+              name="title"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Quest Title</FormLabel>
+                  <FormControl>
+                    <Input placeholder="e.g., Master Algebra Fundamentals" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="startDate"
@@ -172,22 +132,24 @@ export default function GoalFormDialog({ isOpen, setIsOpen, onSubmit }: GoalForm
                       <PopoverTrigger asChild>
                         <FormControl>
                           <Button
-                            variant={"outline"}
-                            className={cn(
-                              "w-full pl-3 text-left font-normal",
-                              !field.value && "text-muted-foreground"
-                            )}
+                            variant="outline"
+                            className="pl-3 text-left font-normal"
                           >
-                            {field.value ? format(field.value, "PPP") : <span>Pick a start date</span>}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                            {field.value ? (
+                              format(field.value, "PPP")
+                            ) : (
+                              <span>Pick a date</span>
+                            )}
+                            <Calendar className="ml-auto h-4 w-4 opacity-50" />
                           </Button>
                         </FormControl>
                       </PopoverTrigger>
                       <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
+                        <CalendarPrimitive
                           mode="single"
                           selected={field.value}
                           onSelect={field.onChange}
+                          disabled={(date) => date < new Date("2023-01-01")}
                           initialFocus
                         />
                       </PopoverContent>
@@ -196,7 +158,7 @@ export default function GoalFormDialog({ isOpen, setIsOpen, onSubmit }: GoalForm
                   </FormItem>
                 )}
               />
-              
+
               <FormField
                 control={form.control}
                 name="dueDate"
@@ -207,22 +169,24 @@ export default function GoalFormDialog({ isOpen, setIsOpen, onSubmit }: GoalForm
                       <PopoverTrigger asChild>
                         <FormControl>
                           <Button
-                            variant={"outline"}
-                            className={cn(
-                              "w-full pl-3 text-left font-normal",
-                              !field.value && "text-muted-foreground"
-                            )}
+                            variant="outline"
+                            className="pl-3 text-left font-normal"
                           >
-                            {field.value ? format(field.value, "PPP") : <span>Pick a due date</span>}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                            {field.value ? (
+                              format(field.value, "PPP")
+                            ) : (
+                              <span>Pick a date</span>
+                            )}
+                            <Calendar className="ml-auto h-4 w-4 opacity-50" />
                           </Button>
                         </FormControl>
                       </PopoverTrigger>
                       <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
+                        <CalendarPrimitive
                           mode="single"
                           selected={field.value}
                           onSelect={field.onChange}
+                          disabled={(date) => date < new Date()}
                           initialFocus
                         />
                       </PopoverContent>
@@ -232,127 +196,185 @@ export default function GoalFormDialog({ isOpen, setIsOpen, onSubmit }: GoalForm
                 )}
               />
             </div>
-            
-            {/* Row 3: Goal Title */}
-            <FormField
-              control={form.control}
-              name="title"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Goal Title</FormLabel>
-                  <FormControl>
-                    <Input placeholder="E.g., Master algebra equations" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            {/* Row 4: Goal Description */}
+
             <FormField
               control={form.control}
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Description</FormLabel>
+                  <FormLabel>Quest Description</FormLabel>
                   <FormControl>
-                    <Textarea 
-                      placeholder="Describe what you want to achieve with this goal..."
-                      className="resize-none"
-                      {...field} 
+                    <Textarea
+                      placeholder="Describe your quest and what you want to achieve..."
+                      className="resize-none min-h-[80px]"
+                      {...field}
                     />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            
-            {/* Row 5: Time Commitment Configuration */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-blue-50 p-4 rounded-lg">
+
+            <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="timeCommitment"
+                name="subject"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Time Commitment</FormLabel>
+                    <FormLabel>Subject</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a subject" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="Mathematics">
+                          <div className="flex items-center">
+                            <PieChart className="h-4 w-4 mr-2 text-blue-500" />
+                            Mathematics
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="Science">
+                          <div className="flex items-center">
+                            <Brain className="h-4 w-4 mr-2 text-purple-500" />
+                            Science
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="English">
+                          <div className="flex items-center">
+                            <Book className="h-4 w-4 mr-2 text-green-500" />
+                            English
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="Computer Science">
+                          <div className="flex items-center">
+                            <BookOpen className="h-4 w-4 mr-2 text-orange-500" />
+                            Computer Science
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="Other">
+                          <div className="flex items-center">
+                            <TrendingUp className="h-4 w-4 mr-2 text-gray-500" />
+                            Other
+                          </div>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="questType"
+                render={({ field }) => (
+                  <FormItem className="space-y-3">
+                    <FormLabel>Quest Type</FormLabel>
                     <FormControl>
-                      <Input type="number" min="1" placeholder="1" {...field} />
+                      <RadioGroup
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                        className="flex space-x-4"
+                      >
+                        <FormItem className="flex items-center space-x-2 space-y-0">
+                          <FormControl>
+                            <RadioGroupItem value="short" />
+                          </FormControl>
+                          <FormLabel className="font-normal cursor-pointer">
+                            Challenge (Short-term)
+                          </FormLabel>
+                        </FormItem>
+                        <FormItem className="flex items-center space-x-2 space-y-0">
+                          <FormControl>
+                            <RadioGroupItem value="long" />
+                          </FormControl>
+                          <FormLabel className="font-normal cursor-pointer">
+                            Quest (Long-term)
+                          </FormLabel>
+                        </FormItem>
+                      </RadioGroup>
                     </FormControl>
-                    <FormDescription>
-                      How much time you plan to spend on this goal
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="timeFrequency"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Frequency</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select frequency" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="hours">Hours (total)</SelectItem>
-                        <SelectItem value="days">Days (per week)</SelectItem>
-                        <SelectItem value="weeks">Weeks (total)</SelectItem>
-                        <SelectItem value="months">Months (total)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormDescription>
-                      How you want to measure your time
-                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
               />
             </div>
-            
-            {/* Row 6: Priority & Duration */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+            <FormField
+              control={form.control}
+              name="goalTarget"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Quest Target</FormLabel>
+                  <FormControl>
+                    <Input placeholder="e.g., Complete 20 practice problems" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-3">
+                <FormLabel className="block">Time Commitment</FormLabel>
+                <div className="flex space-x-2">
+                  <FormField
+                    control={form.control}
+                    name="timeAmount"
+                    render={({ field }) => (
+                      <FormItem className="flex-1">
+                        <FormControl>
+                          <Input type="number" min="1" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="timeFrequency"
+                    render={({ field }) => (
+                      <FormItem className="flex-1">
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select unit" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="hours">Hours</SelectItem>
+                            <SelectItem value="days">Days</SelectItem>
+                            <SelectItem value="weeks">Weeks</SelectItem>
+                            <SelectItem value="months">Months</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+
               <FormField
                 control={form.control}
-                name="priority"
+                name="setBy"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Priority</FormLabel>
+                    <FormLabel>Quest Creator</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select priority" />
+                          <SelectValue placeholder="Who created this quest?" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="high">High</SelectItem>
-                        <SelectItem value="medium">Medium</SelectItem>
-                        <SelectItem value="low">Low</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="duration"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Duration</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select duration" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="short-term">Short-term</SelectItem>
-                        <SelectItem value="long-term">Long-term</SelectItem>
+                        <SelectItem value="self">Self</SelectItem>
+                        <SelectItem value="teacher">Teacher</SelectItem>
+                        <SelectItem value="parent">Parent</SelectItem>
+                        <SelectItem value="coach">Coach</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -360,12 +382,12 @@ export default function GoalFormDialog({ isOpen, setIsOpen, onSubmit }: GoalForm
                 )}
               />
             </div>
-            
-            <DialogFooter>
-              <DialogClose asChild>
-                <Button type="button" variant="outline">Cancel</Button>
-              </DialogClose>
-              <Button type="submit">Create Goal</Button>
+
+            <DialogFooter className="mt-6 pt-4 border-t flex justify-between">
+              <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>
+                Cancel
+              </Button>
+              <Button type="submit">Create Quest</Button>
             </DialogFooter>
           </form>
         </Form>

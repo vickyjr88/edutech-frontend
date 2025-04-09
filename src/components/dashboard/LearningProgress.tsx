@@ -8,10 +8,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { BookOpen, Brain, Sparkles, Star, PieChart, Award, BarChart, TrendingUp, Target } from "lucide-react";
+import { BookOpen, Brain, Sparkles, Star, PieChart, Award, BarChart, TrendingUp, Target, Trophy } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 
 export default function LearningProgress({ onEditGoal }: { onEditGoal: (goal: any) => void }) {
   const [selectedFilter, setSelectedFilter] = useState("all");
@@ -20,7 +19,7 @@ export default function LearningProgress({ onEditGoal }: { onEditGoal: (goal: an
   const goals = [
     { 
       id: "1",
-      name: "Mathematics", 
+      name: "Mathematics Quest", 
       progress: 75, 
       icon: PieChart, 
       color: "blue",
@@ -33,7 +32,7 @@ export default function LearningProgress({ onEditGoal }: { onEditGoal: (goal: an
     },
     { 
       id: "2",
-      name: "Science Project", 
+      name: "Science Challenge", 
       progress: 60, 
       icon: Brain, 
       color: "purple", 
@@ -46,7 +45,7 @@ export default function LearningProgress({ onEditGoal }: { onEditGoal: (goal: an
     },
     { 
       id: "3",
-      name: "Coding Skills", 
+      name: "Coding Adventure", 
       progress: 40, 
       icon: BookOpen, 
       color: "green", 
@@ -59,7 +58,7 @@ export default function LearningProgress({ onEditGoal }: { onEditGoal: (goal: an
     },
     { 
       id: "4",
-      name: "Reading Challenge", 
+      name: "Reading Quest", 
       progress: 90, 
       icon: BookOpen, 
       color: "orange", 
@@ -72,7 +71,7 @@ export default function LearningProgress({ onEditGoal }: { onEditGoal: (goal: an
     },
     { 
       id: "5",
-      name: "Piano Practice", 
+      name: "Piano Challenge", 
       progress: 65, 
       icon: TrendingUp, 
       color: "yellow", 
@@ -85,7 +84,7 @@ export default function LearningProgress({ onEditGoal }: { onEditGoal: (goal: an
     },
     { 
       id: "6",
-      name: "Soccer Skills", 
+      name: "Soccer Skills Quest", 
       progress: 80, 
       icon: Target, 
       color: "blue", 
@@ -162,17 +161,17 @@ export default function LearningProgress({ onEditGoal }: { onEditGoal: (goal: an
     <Card className="border-2 border-blue-100 rounded-xl overflow-hidden shadow-md">
       <CardHeader className="flex flex-row items-center justify-between pb-2 bg-gradient-to-r from-blue-50 to-purple-50">
         <CardTitle className="text-lg font-bold flex items-center">
-          <Target className="mr-2 h-5 w-5 text-blue-500" />
-          Learning Goals
+          <Trophy className="mr-2 h-5 w-5 text-yellow-500" />
+          Your Adventure Progress
         </CardTitle>
         <Select value={selectedFilter} onValueChange={setSelectedFilter}>
           <SelectTrigger className="w-[160px] border-blue-100 bg-white rounded-xl">
-            <SelectValue placeholder="Filter goals" />
+            <SelectValue placeholder="Filter quests" />
           </SelectTrigger>
           <SelectContent className="rounded-xl border-blue-100">
-            <SelectItem value="all">All Goals</SelectItem>
-            <SelectItem value="academic">Academic Goals</SelectItem>
-            <SelectItem value="non-academic">Non-Academic Goals</SelectItem>
+            <SelectItem value="all">All Quests</SelectItem>
+            <SelectItem value="academic">Academic Quests</SelectItem>
+            <SelectItem value="non-academic">Non-Academic Quests</SelectItem>
           </SelectContent>
         </Select>
       </CardHeader>
@@ -224,7 +223,7 @@ export default function LearningProgress({ onEditGoal }: { onEditGoal: (goal: an
             <div className="flex justify-between items-center mb-2 text-sm">
               <span className="font-bold text-blue-600 flex items-center">
                 <Star className="h-4 w-4 mr-1.5 text-yellow-400" />
-                Overall Goal Progress
+                Overall Adventure Progress
               </span>
               <span className="font-bold text-blue-600">66%</span>
             </div>
@@ -239,7 +238,7 @@ export default function LearningProgress({ onEditGoal }: { onEditGoal: (goal: an
             <div className="mt-4 text-center">
               <span className="text-xs bg-blue-50 text-blue-600 px-3 py-1 rounded-full inline-flex items-center">
                 <Sparkles className="h-3 w-3 mr-1" />
-                Keep going to reach your goals!
+                Keep going on your learning adventure!
               </span>
             </div>
           </div>

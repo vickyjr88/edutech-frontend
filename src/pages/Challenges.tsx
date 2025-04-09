@@ -3,12 +3,154 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Home, Book, User, Settings, LogOut, MessageSquare, Star, Sparkles, PieChart, Users, Target, Calendar, Award, Trophy } from "lucide-react";
+import { Home, Book, User, Settings, LogOut, MessageSquare, Star, Sparkles, PieChart, Users, Target, Calendar, Award, Trophy, Plus, BarChart2 } from "lucide-react";
 import StudentDashboardHeader from "@/components/dashboard/StudentDashboardHeader";
 import KidatoMascot from "@/components/dashboard/KidatoMascot";
+import LearningProgress from "@/components/dashboard/LearningProgress";
+import GoalFormDialog from "@/components/dashboard/GoalFormDialog";
+import GoalTrackingDialog from "@/components/dashboard/GoalTrackingDialog";
+import { useToast } from "@/components/ui/use-toast";
 
 const Challenges = () => {
   const [userName] = useState("John Doe");
+  const [isGoalFormOpen, setIsGoalFormOpen] = useState(false);
+  const [isTrackingOpen, setIsTrackingOpen] = useState(false);
+  const [selectedGoal, setSelectedGoal] = useState<any>(null);
+  const { toast } = useToast();
+  
+  const questChallenges = [
+    {
+      id: "st1",
+      title: "Complete Mathematics Module 3",
+      dueIn: "5 days",
+      progress: 75,
+      color: "blue",
+      description: "Finish all exercises in Module 3",
+      subject: "Mathematics",
+      dueDate: "April 15, 2025",
+      setBy: "teacher",
+      goalTarget: "Complete all exercises"
+    },
+    {
+      id: "st2",
+      title: "Finish Science Project",
+      dueIn: "2 days",
+      progress: 50,
+      color: "purple",
+      description: "Complete the ecosystem model for biology class",
+      subject: "Science",
+      dueDate: "April 12, 2025",
+      setBy: "teacher",
+      goalTarget: "Submit final project"
+    },
+    {
+      id: "st3",
+      title: "Submit Coding Challenge",
+      dueIn: "tomorrow",
+      progress: 90,
+      color: "green",
+      description: "Finish the weekly coding challenge",
+      subject: "Computer Science",
+      dueDate: "April 10, 2025",
+      setBy: "self",
+      goalTarget: "Submit working solution"
+    }
+  ];
+  
+  const longTermQuests = [
+    {
+      id: "lt1",
+      title: "Master Algebra Concepts",
+      dueIn: "End of semester",
+      progress: 40,
+      color: "blue",
+      description: "Master all key algebra concepts for the final exam",
+      subject: "Mathematics",
+      dueDate: "June 20, 2025",
+      setBy: "self",
+      goalTarget: "Pass final exam with A grade"
+    },
+    {
+      id: "lt2",
+      title: "Complete Science Curriculum",
+      dueIn: "End of year",
+      progress: 35,
+      color: "purple",
+      description: "Complete all required science modules for the year",
+      subject: "Science",
+      dueDate: "Dec 15, 2025",
+      setBy: "teacher",
+      goalTarget: "Complete all modules with passing grade"
+    },
+    {
+      id: "lt3",
+      title: "Build Final Coding Project",
+      dueIn: "Next month",
+      progress: 15,
+      color: "orange",
+      description: "Build a full-stack web application as final project",
+      subject: "Computer Science",
+      dueDate: "May 30, 2025",
+      setBy: "teacher",
+      goalTarget: "Deploy working application"
+    }
+  ];
+  
+  const handleCreateGoal = (values: any) => {
+    console.log("New quest created:", values);
+    toast({
+      title: "Quest Created",
+      description: `Your new quest "${values.title}" has been created successfully.`,
+    });
+  };
+  
+  const handleEditGoal = (goal: any) => {
+    setSelectedGoal(goal);
+    setIsTrackingOpen(true);
+  };
+  
+  const handleUpdateGoal = (goalId: string, progress: number, notes: string, timeSpent?: string) => {
+    console.log("Quest updated:", { goalId, progress, notes, timeSpent });
+    toast({
+      title: "Progress Updated",
+      description: `Your quest progress has been updated to ${progress}%. ${timeSpent ? `Time spent: ${timeSpent}` : ''}`,
+    });
+  };
+
+  // Function to render the progress color class
+  const getProgressColorClass = (color: string) => {
+    const colorMap: Record<string, string> = {
+      blue: "text-blue-600",
+      purple: "text-purple-600",
+      green: "text-green-600",
+      orange: "text-orange-600",
+      yellow: "text-yellow-600"
+    };
+    
+    return colorMap[color] || "text-blue-600";
+  };
+
+  // Function to render a goal item with update button
+  const renderGoalItem = (goal: any) => (
+    <li key={goal.id} className="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
+      <div className="flex-grow">
+        <p className="font-medium">{goal.title}</p>
+        <p className="text-sm text-gray-600">Due in {goal.dueIn}</p>
+      </div>
+      <div className="flex items-center gap-3">
+        <p className={`font-bold ${getProgressColorClass(goal.color)}`}>{goal.progress}%</p>
+        <Button 
+          variant="outline" 
+          size="sm"
+          className="flex items-center gap-1 border-blue-300 hover:bg-blue-100"
+          onClick={() => handleEditGoal(goal)}
+        >
+          <BarChart2 className="h-3 w-3" />
+          Update Progress
+        </Button>
+      </div>
+    </li>
+  );
 
   return (
     <div className="flex min-h-screen bg-gradient-to-b from-blue-50 to-white">
@@ -42,13 +184,6 @@ const Challenges = () => {
           >
             <Book className="mr-3 h-5 w-5" />
             My Courses
-          </Link>
-          <Link 
-            to="/learning-progress" 
-            className="flex items-center px-4 py-3 text-sm font-medium rounded-xl text-gray-700 hover:bg-blue-50 transition-all"
-          >
-            <PieChart className="mr-3 h-5 w-5" />
-            Learning Goals
           </Link>
           <Link 
             to="/challenges" 
@@ -117,47 +252,91 @@ const Challenges = () => {
         </div>
       </aside>
 
-      {/* Main Content */}
       <div className="flex-1 flex flex-col">
-        {/* Top Nav */}
         <StudentDashboardHeader userName={userName} />
-
-        {/* Content */}
+        
         <main className="p-4 sm:p-6 flex-1 overflow-y-auto">
           <div className="max-w-7xl mx-auto">
             <div className="flex justify-between items-center mb-6">
               <h1 className="text-2xl font-bold text-gray-800">Quests & Challenges</h1>
+              <Button 
+                onClick={() => setIsGoalFormOpen(true)} 
+                className="bg-kidato-blue hover:bg-kidato-dark-blue rounded-xl flex items-center gap-2"
+              >
+                <Plus className="h-4 w-4" />
+                Create New Quest
+              </Button>
             </div>
             
-            {/* Active Challenges */}
-            <Card className="mb-6 border-2 border-blue-100">
-              <CardHeader className="bg-gradient-to-r from-blue-50 to-purple-50 pb-2">
-                <CardTitle className="text-lg font-bold flex items-center">
-                  <Trophy className="mr-2 h-5 w-5 text-yellow-500" />
-                  Active Challenges
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-6">
-                <div className="bg-gradient-to-r from-blue-50 via-purple-50 to-blue-50 p-8 rounded-xl text-center">
-                  <div className="flex flex-col items-center justify-center space-y-4">
-                    <Trophy className="h-16 w-16 text-yellow-500" />
-                    <h2 className="text-xl font-bold">Quests & Challenges Coming Soon!</h2>
-                    <p className="text-gray-600 max-w-md mx-auto">
-                      We're building an exciting system of interactive quests and challenges to make learning even more fun. Check back soon!
-                    </p>
-                    <Button className="bg-kidato-blue hover:bg-kidato-dark-blue mt-2">
-                      Get Notified When Ready
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <LearningProgress onEditGoal={handleEditGoal} />
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+              <Card>
+                <CardHeader className="bg-gradient-to-r from-blue-50 to-purple-50 pb-2">
+                  <CardTitle className="text-lg font-bold flex items-center">
+                    <Trophy className="mr-2 h-5 w-5 text-yellow-500" />
+                    Active Challenges
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-6">
+                  <ul className="space-y-4">
+                    {questChallenges.map(renderGoalItem)}
+                    <li className="mt-4">
+                      <Button 
+                        variant="outline"
+                        onClick={() => setIsGoalFormOpen(true)}
+                        className="w-full border-dashed border-gray-300 hover:border-blue-300 hover:bg-blue-50 text-gray-500 hover:text-blue-500 flex items-center justify-center gap-2"
+                      >
+                        <Plus className="h-4 w-4" />
+                        Add New Challenge
+                      </Button>
+                    </li>
+                  </ul>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader className="bg-gradient-to-r from-blue-50 to-purple-50 pb-2">
+                  <CardTitle className="text-lg font-bold flex items-center">
+                    <Target className="mr-2 h-5 w-5 text-blue-500" />
+                    Long-term Quests
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-6">
+                  <ul className="space-y-4">
+                    {longTermQuests.map(renderGoalItem)}
+                    <li className="mt-4">
+                      <Button 
+                        variant="outline"
+                        onClick={() => setIsGoalFormOpen(true)}
+                        className="w-full border-dashed border-gray-300 hover:border-blue-300 hover:bg-blue-50 text-gray-500 hover:text-blue-500 flex items-center justify-center gap-2"
+                      >
+                        <Plus className="h-4 w-4" />
+                        Add New Quest
+                      </Button>
+                    </li>
+                  </ul>
+                </CardContent>
+              </Card>
+            </div>
           </div>
         </main>
       </div>
 
-      {/* Kidato AI Mascot */}
       <KidatoMascot />
+      
+      <GoalFormDialog 
+        isOpen={isGoalFormOpen} 
+        setIsOpen={setIsGoalFormOpen} 
+        onSubmit={handleCreateGoal}
+      />
+      
+      <GoalTrackingDialog 
+        isOpen={isTrackingOpen}
+        setIsOpen={setIsTrackingOpen}
+        goal={selectedGoal}
+        onUpdateGoal={handleUpdateGoal}
+      />
     </div>
   );
 }

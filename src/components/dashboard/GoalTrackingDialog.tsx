@@ -15,7 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { CheckCircle, Target, TrendingUp, History, Award, Clock } from "lucide-react";
+import { CheckCircle, Target, TrendingUp, History, Award, Clock, Trophy } from "lucide-react";
 import { 
   Form, 
   FormField, 
@@ -79,18 +79,18 @@ export default function GoalTrackingDialog({
   
   // Mock history data for demonstration
   const progressHistory = [
-    { date: "April 5, 2025", progress: 20, note: "Started working on the goal", timeSpent: "2 hours" },
+    { date: "April 5, 2025", progress: 20, note: "Started working on the quest", timeSpent: "2 hours" },
     { date: "April 10, 2025", progress: 35, note: "Completed the first milestone", timeSpent: "3 hours" },
     { date: "April 17, 2025", progress: goal.progress, note: "Made significant progress", timeSpent: "4 hours" }
   ];
   
   // Mock milestone data
   const milestones = [
-    { title: "Start project", completed: true, date: "April 4, 2025" },
-    { title: "Complete research", completed: true, date: "April 10, 2025" },
-    { title: "First draft", completed: goal.progress >= 50, date: "April 20, 2025" },
+    { title: "Begin the adventure", completed: true, date: "April 4, 2025" },
+    { title: "Complete research phase", completed: true, date: "April 10, 2025" },
+    { title: "First major milestone", completed: goal.progress >= 50, date: "April 20, 2025" },
     { title: "Review and revisions", completed: goal.progress >= 75, date: "May 10, 2025" },
-    { title: "Final submission", completed: goal.progress >= 100, date: goal.dueDate }
+    { title: "Quest completion", completed: goal.progress >= 100, date: goal.dueDate }
   ];
   
   // Calculate time commitment metrics
@@ -103,7 +103,7 @@ export default function GoalTrackingDialog({
       <SheetContent side="left" className="sm:max-w-[600px] p-6">
         <SheetHeader>
           <SheetTitle className="text-xl flex items-center">
-            <Target className="mr-2 h-5 w-5 text-blue-500" />
+            <Trophy className="mr-2 h-5 w-5 text-yellow-500" />
             {goal.name || goal.title}
           </SheetTitle>
           <SheetDescription>
@@ -112,7 +112,7 @@ export default function GoalTrackingDialog({
         </SheetHeader>
         
         <div className="py-6">
-          <div className="bg-gray-50 p-4 rounded-lg mb-4">
+          <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-4 rounded-lg mb-4">
             <div className="flex justify-between items-center mb-2">
               <span className="text-sm font-medium">Current Progress</span>
               <span className="font-bold text-blue-600">{goal.progress}%</span>
@@ -128,7 +128,7 @@ export default function GoalTrackingDialog({
                 <span className="font-medium">{goal.subject}</span>
               </div>
               <div>
-                <span className="text-gray-500 block">Set By:</span>
+                <span className="text-gray-500 block">Quest Creator:</span>
                 <span className="font-medium capitalize">{goal.setBy}</span>
               </div>
               <div>
@@ -149,7 +149,7 @@ export default function GoalTrackingDialog({
                 Update
               </TabsTrigger>
               <TabsTrigger value="milestones" className="flex items-center">
-                <Award className="h-4 w-4 mr-2" />
+                <Trophy className="h-4 w-4 mr-2" />
                 Milestones
               </TabsTrigger>
               <TabsTrigger value="history" className="flex items-center">
@@ -172,7 +172,7 @@ export default function GoalTrackingDialog({
                       name="timeSpent"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>How much time did you spend on this goal?</FormLabel>
+                          <FormLabel>How much time did you spend on this quest?</FormLabel>
                           <div className="flex items-center space-x-2">
                             <FormControl>
                               <Input type="number" min="0.5" step="0.5" {...field} className="w-24" />
@@ -218,10 +218,10 @@ export default function GoalTrackingDialog({
                     name="notes"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Notes on Progress</FormLabel>
+                        <FormLabel>Adventure Notes</FormLabel>
                         <FormControl>
                           <Textarea 
-                            placeholder="What have you accomplished? What challenges did you face?"
+                            placeholder="What have you accomplished? What challenges did you face in your quest?"
                             className="resize-none"
                             {...field}
                           />
@@ -232,16 +232,16 @@ export default function GoalTrackingDialog({
                   />
                   
                   <div className="bg-blue-50 p-3 rounded-lg text-sm">
-                    <h4 className="font-medium text-blue-700 mb-1">Tip for Success</h4>
+                    <h4 className="font-medium text-blue-700 mb-1">Quest Tip</h4>
                     <p className="text-blue-600">
-                      Breaking down your goal into smaller tasks can help make it more manageable. 
-                      Try to set specific milestones to track your progress more effectively.
+                      Breaking down your quest into smaller milestones can help make your adventure more manageable. 
+                      Set specific targets to track your progress more effectively.
                     </p>
                   </div>
                   
                   <SheetFooter className="mt-4 pt-4 border-t">
                     <SheetClose asChild>
-                      <Button type="button" variant="outline">Close</Button>
+                      <Button type="button" variant="outline">Cancel</Button>
                     </SheetClose>
                     <Button type="submit">Save Progress</Button>
                   </SheetFooter>
