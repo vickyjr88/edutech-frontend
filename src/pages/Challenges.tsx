@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -109,7 +108,6 @@ const Challenges = () => {
     }
   ];
   
-  // Group quests
   const groupQuests = [
     {
       id: "g1",
@@ -166,11 +164,8 @@ const Challenges = () => {
       description: message,
     });
     
-    // If it's a group quest, we would typically send invites to members here
     if (values.questMode === "group") {
       console.log("Group quest created - would send invites to members");
-      // In a real implementation, you would show a dialog to select members
-      // or handle group creation workflow
     }
   };
   
@@ -187,7 +182,6 @@ const Challenges = () => {
     });
   };
 
-  // Function to render the progress color class
   const getProgressColorClass = (color: string) => {
     const colorMap: Record<string, string> = {
       blue: "text-blue-600",
@@ -200,7 +194,6 @@ const Challenges = () => {
     return colorMap[color] || "text-blue-600";
   };
 
-  // Function to render a goal item with update button
   const renderGoalItem = (goal: any) => (
     <li key={goal.id} className="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
       <div className="flex-grow">
@@ -229,7 +222,6 @@ const Challenges = () => {
     </li>
   );
   
-  // Function to render a group member avatar
   const renderGroupMemberInitials = (member: string) => {
     const initials = member.split(' ').map(n => n[0]).join('');
     return (
@@ -239,7 +231,6 @@ const Challenges = () => {
     );
   };
   
-  // Function to render a group quest item
   const renderGroupQuestItem = (quest: any) => (
     <li key={quest.id} className="flex flex-col p-3 bg-blue-50 rounded-lg">
       <div className="flex justify-between items-center mb-2">
@@ -276,7 +267,6 @@ const Challenges = () => {
 
   return (
     <div className="flex min-h-screen bg-gradient-to-b from-blue-50 to-white">
-      {/* Sidebar - Same as Dashboard */}
       <aside className="hidden md:flex flex-col w-64 bg-white border-r border-blue-100 shadow-md rounded-tr-xl rounded-br-xl mr-2 overflow-hidden">
         <div className="p-6">
           <Link to="/" className="flex items-center">

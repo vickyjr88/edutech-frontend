@@ -6,13 +6,14 @@ import { Calendar, Target, Book, Brain, PieChart, BookOpen, TrendingUp, Users } 
 import { format } from "date-fns";
 
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog";
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+  SheetFooter,
+  SheetClose,
+} from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -97,20 +98,20 @@ export default function GoalFormDialog({ isOpen, setIsOpen, onSubmit }: GoalForm
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogContent className="sm:max-w-[700px] p-0 overflow-hidden">
-        <DialogHeader className="p-6 pb-2 bg-gradient-to-r from-blue-50 to-purple-50">
-          <DialogTitle className="text-xl flex items-center">
+    <Sheet open={isOpen} onOpenChange={setIsOpen}>
+      <SheetContent side="right" className="w-full sm:max-w-[600px] overflow-y-auto">
+        <SheetHeader className="pb-2 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg mb-4 p-4">
+          <SheetTitle className="text-xl flex items-center">
             <Target className="mr-2 h-5 w-5 text-blue-500" />
             Create New Quest
-          </DialogTitle>
-          <DialogDescription>
+          </SheetTitle>
+          <SheetDescription>
             Set up a new learning quest or challenge to track your progress.
-          </DialogDescription>
-        </DialogHeader>
+          </SheetDescription>
+        </SheetHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4 p-6">
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4 px-1">
             <FormField
               control={form.control}
               name="title"
@@ -125,7 +126,7 @@ export default function GoalFormDialog({ isOpen, setIsOpen, onSubmit }: GoalForm
               )}
             />
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="startDate"
@@ -219,7 +220,7 @@ export default function GoalFormDialog({ isOpen, setIsOpen, onSubmit }: GoalForm
               )}
             />
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="subject"
@@ -356,7 +357,7 @@ export default function GoalFormDialog({ isOpen, setIsOpen, onSubmit }: GoalForm
               )}
             />
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-3">
                 <FormLabel className="block">Time Commitment</FormLabel>
                 <div className="flex space-x-2">
@@ -423,15 +424,17 @@ export default function GoalFormDialog({ isOpen, setIsOpen, onSubmit }: GoalForm
               />
             </div>
 
-            <DialogFooter className="mt-6 pt-4 border-t flex justify-between">
-              <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>
-                Cancel
-              </Button>
+            <SheetFooter className="mt-6 pt-4 border-t">
+              <SheetClose asChild>
+                <Button type="button" variant="outline">
+                  Cancel
+                </Button>
+              </SheetClose>
               <Button type="submit">Create Quest</Button>
-            </DialogFooter>
+            </SheetFooter>
           </form>
         </Form>
-      </DialogContent>
-    </Dialog>
+      </SheetContent>
+    </Sheet>
   );
 }
