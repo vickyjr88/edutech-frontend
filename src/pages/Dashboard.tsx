@@ -12,9 +12,27 @@ import RecentActivity from "@/components/dashboard/RecentActivity";
 import DailyChallenges from "@/components/dashboard/DailyChallenges";
 import StudentLevel from "@/components/dashboard/StudentLevel";
 import KidatoMascot from "@/components/dashboard/KidatoMascot";
+import GoalTrackingDialog from "@/components/dashboard/GoalTrackingDialog";
+import { useToast } from "@/components/ui/use-toast";
 
 const Dashboard = () => {
   const [userName] = useState("John Doe");
+  const [isTrackingOpen, setIsTrackingOpen] = useState(false);
+  const [selectedGoal, setSelectedGoal] = useState<any>(null);
+  const { toast } = useToast();
+  
+  const handleEditGoal = (goal: any) => {
+    setSelectedGoal(goal);
+    setIsTrackingOpen(true);
+  };
+  
+  const handleUpdateGoal = (goalId: string, progress: number, notes: string) => {
+    console.log("Goal updated:", { goalId, progress, notes });
+    toast({
+      title: "Progress Updated",
+      description: `Your goal progress has been updated to ${progress}%.`,
+    });
+  };
 
   return (
     <div className="flex min-h-screen bg-gradient-to-b from-blue-50 to-white">
@@ -149,7 +167,7 @@ const Dashboard = () => {
             </div>
             
             <div className="mt-6">
-              <LearningProgress />
+              <LearningProgress onEditGoal={handleEditGoal} />
             </div>
             
             <div className="flex justify-center mt-8 mb-4">
@@ -165,6 +183,14 @@ const Dashboard = () => {
 
       {/* Kidato AI Mascot */}
       <KidatoMascot />
+      
+      {/* Goal Tracking Dialog */}
+      <GoalTrackingDialog 
+        isOpen={isTrackingOpen}
+        setIsOpen={setIsTrackingOpen}
+        goal={selectedGoal}
+        onUpdateGoal={handleUpdateGoal}
+      />
     </div>
   );
 }
