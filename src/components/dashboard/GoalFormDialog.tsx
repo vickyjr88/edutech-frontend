@@ -111,54 +111,20 @@ export default function GoalFormDialog({ isOpen, setIsOpen, onSubmit }: GoalForm
         </SheetHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4 px-1">
-            <FormField
-              control={form.control}
-              name="title"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Quest Title</FormLabel>
-                  <FormControl>
-                    <Input placeholder="e.g., Master Algebra Fundamentals" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6 px-1">
+            {/* Basic Quest Information Section */}
+            <div className="space-y-4 border-b pb-4">
+              <h3 className="font-medium text-sm text-muted-foreground">Basic Information</h3>
+              
               <FormField
                 control={form.control}
-                name="startDate"
+                name="title"
                 render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel>Start Date</FormLabel>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant="outline"
-                            className="pl-3 text-left font-normal"
-                          >
-                            {field.value ? (
-                              format(field.value, "PPP")
-                            ) : (
-                              <span>Pick a date</span>
-                            )}
-                            <Calendar className="ml-auto h-4 w-4 opacity-50" />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <CalendarPrimitive
-                          mode="single"
-                          selected={field.value}
-                          onSelect={field.onChange}
-                          disabled={(date) => date < new Date("2023-01-01")}
-                          initialFocus
-                        />
-                      </PopoverContent>
-                    </Popover>
+                  <FormItem>
+                    <FormLabel>Quest Title</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g., Master Algebra Fundamentals" {...field} />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -166,61 +132,22 @@ export default function GoalFormDialog({ isOpen, setIsOpen, onSubmit }: GoalForm
 
               <FormField
                 control={form.control}
-                name="dueDate"
+                name="description"
                 render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel>Due Date</FormLabel>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant="outline"
-                            className="pl-3 text-left font-normal"
-                          >
-                            {field.value ? (
-                              format(field.value, "PPP")
-                            ) : (
-                              <span>Pick a date</span>
-                            )}
-                            <Calendar className="ml-auto h-4 w-4 opacity-50" />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <CalendarPrimitive
-                          mode="single"
-                          selected={field.value}
-                          onSelect={field.onChange}
-                          disabled={(date) => date < new Date()}
-                          initialFocus
-                        />
-                      </PopoverContent>
-                    </Popover>
+                  <FormItem>
+                    <FormLabel>Quest Description</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Describe your quest and what you want to achieve..."
+                        className="resize-none min-h-[80px]"
+                        {...field}
+                      />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-            </div>
-
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Quest Description</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Describe your quest and what you want to achieve..."
-                      className="resize-none min-h-[80px]"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              
               <FormField
                 control={form.control}
                 name="subject"
@@ -273,91 +200,201 @@ export default function GoalFormDialog({ isOpen, setIsOpen, onSubmit }: GoalForm
 
               <FormField
                 control={form.control}
-                name="questType"
+                name="goalTarget"
                 render={({ field }) => (
-                  <FormItem className="space-y-3">
-                    <FormLabel>Quest Duration</FormLabel>
+                  <FormItem>
+                    <FormLabel>Quest Target</FormLabel>
                     <FormControl>
-                      <RadioGroup
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                        className="flex space-x-4"
-                      >
-                        <FormItem className="flex items-center space-x-2 space-y-0">
-                          <FormControl>
-                            <RadioGroupItem value="short" />
-                          </FormControl>
-                          <FormLabel className="font-normal cursor-pointer">
-                            Challenge (Short-term)
-                          </FormLabel>
-                        </FormItem>
-                        <FormItem className="flex items-center space-x-2 space-y-0">
-                          <FormControl>
-                            <RadioGroupItem value="long" />
-                          </FormControl>
-                          <FormLabel className="font-normal cursor-pointer">
-                            Quest (Long-term)
-                          </FormLabel>
-                        </FormItem>
-                      </RadioGroup>
+                      <Input placeholder="e.g., Complete 20 practice problems" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
             </div>
-            
-            <FormField
-              control={form.control}
-              name="questMode"
-              render={({ field }) => (
-                <FormItem className="space-y-3">
-                  <FormLabel>Quest Mode</FormLabel>
-                  <FormControl>
-                    <RadioGroup
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                      className="flex space-x-4"
-                    >
-                      <FormItem className="flex items-center space-x-2 space-y-0">
-                        <FormControl>
-                          <RadioGroupItem value="individual" />
-                        </FormControl>
-                        <FormLabel className="font-normal cursor-pointer">
-                          Individual Quest
-                        </FormLabel>
-                      </FormItem>
-                      <FormItem className="flex items-center space-x-2 space-y-0">
-                        <FormControl>
-                          <RadioGroupItem value="group" />
-                        </FormControl>
-                        <FormLabel className="font-normal cursor-pointer flex items-center">
-                          <Users className="h-4 w-4 mr-1.5 text-blue-500" />
-                          Group Quest
-                        </FormLabel>
-                      </FormItem>
-                    </RadioGroup>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
 
-            <FormField
-              control={form.control}
-              name="goalTarget"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Quest Target</FormLabel>
-                  <FormControl>
-                    <Input placeholder="e.g., Complete 20 practice problems" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {/* Quest Type and Mode Section */}
+            <div className="space-y-4 border-b pb-4">
+              <h3 className="font-medium text-sm text-muted-foreground">Quest Type & Mode</h3>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="questType"
+                  render={({ field }) => (
+                    <FormItem className="space-y-3">
+                      <FormLabel>Quest Duration</FormLabel>
+                      <FormControl>
+                        <RadioGroup
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                          className="flex space-x-4"
+                        >
+                          <FormItem className="flex items-center space-x-2 space-y-0">
+                            <FormControl>
+                              <RadioGroupItem value="short" />
+                            </FormControl>
+                            <FormLabel className="font-normal cursor-pointer">
+                              Challenge (Short-term)
+                            </FormLabel>
+                          </FormItem>
+                          <FormItem className="flex items-center space-x-2 space-y-0">
+                            <FormControl>
+                              <RadioGroupItem value="long" />
+                            </FormControl>
+                            <FormLabel className="font-normal cursor-pointer">
+                              Quest (Long-term)
+                            </FormLabel>
+                          </FormItem>
+                        </RadioGroup>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="questMode"
+                  render={({ field }) => (
+                    <FormItem className="space-y-3">
+                      <FormLabel>Quest Mode</FormLabel>
+                      <FormControl>
+                        <RadioGroup
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                          className="flex space-x-4"
+                        >
+                          <FormItem className="flex items-center space-x-2 space-y-0">
+                            <FormControl>
+                              <RadioGroupItem value="individual" />
+                            </FormControl>
+                            <FormLabel className="font-normal cursor-pointer">
+                              Individual Quest
+                            </FormLabel>
+                          </FormItem>
+                          <FormItem className="flex items-center space-x-2 space-y-0">
+                            <FormControl>
+                              <RadioGroupItem value="group" />
+                            </FormControl>
+                            <FormLabel className="font-normal cursor-pointer flex items-center">
+                              <Users className="h-4 w-4 mr-1.5 text-blue-500" />
+                              Group Quest
+                            </FormLabel>
+                          </FormItem>
+                        </RadioGroup>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <FormField
+                control={form.control}
+                name="setBy"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Quest Creator</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Who created this quest?" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="self">Self</SelectItem>
+                        <SelectItem value="teacher">Teacher</SelectItem>
+                        <SelectItem value="parent">Parent</SelectItem>
+                        <SelectItem value="coach">Coach</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            {/* Time and Schedule Section */}
+            <div className="space-y-4">
+              <h3 className="font-medium text-sm text-muted-foreground">Time & Schedule</h3>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="startDate"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col">
+                      <FormLabel>Start Date</FormLabel>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant="outline"
+                              className="pl-3 text-left font-normal"
+                            >
+                              {field.value ? (
+                                format(field.value, "PPP")
+                              ) : (
+                                <span>Pick a date</span>
+                              )}
+                              <Calendar className="ml-auto h-4 w-4 opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <CalendarPrimitive
+                            mode="single"
+                            selected={field.value}
+                            onSelect={field.onChange}
+                            disabled={(date) => date < new Date("2023-01-01")}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="dueDate"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col">
+                      <FormLabel>Due Date</FormLabel>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant="outline"
+                              className="pl-3 text-left font-normal"
+                            >
+                              {field.value ? (
+                                format(field.value, "PPP")
+                              ) : (
+                                <span>Pick a date</span>
+                              )}
+                              <Calendar className="ml-auto h-4 w-4 opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <CalendarPrimitive
+                            mode="single"
+                            selected={field.value}
+                            onSelect={field.onChange}
+                            disabled={(date) => date < new Date()}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
               <div className="space-y-3">
                 <FormLabel className="block">Time Commitment</FormLabel>
                 <div className="flex space-x-2">
@@ -398,30 +435,6 @@ export default function GoalFormDialog({ isOpen, setIsOpen, onSubmit }: GoalForm
                   />
                 </div>
               </div>
-
-              <FormField
-                control={form.control}
-                name="setBy"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Quest Creator</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Who created this quest?" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="self">Self</SelectItem>
-                        <SelectItem value="teacher">Teacher</SelectItem>
-                        <SelectItem value="parent">Parent</SelectItem>
-                        <SelectItem value="coach">Coach</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
             </div>
 
             <SheetFooter className="mt-6 pt-4 border-t">
