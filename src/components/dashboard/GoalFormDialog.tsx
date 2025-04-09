@@ -38,24 +38,27 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 
 // Define schema for the form
 const formSchema = z.object({
-  title: z.string().min(3, { message: "Title must be at least 3 characters" }),
-  description: z.string().min(10, { message: "Description must be at least 10 characters" }),
+  questType: z.enum(["academic", "non-academic"], { 
+    required_error: "Please select quest type" 
+  }),
   subject: z.string().min(1, { message: "Please select a subject" }),
-  questType: z.enum(["short", "long"], { 
-    required_error: "Please select a quest type" 
+  questDuration: z.enum(["short", "long"], { 
+    required_error: "Please select a quest duration" 
   }),
   questMode: z.enum(["individual", "group"], {
     required_error: "Please select if this is an individual or group quest"
   }),
+  title: z.string().min(3, { message: "Title must be at least 3 characters" }),
+  description: z.string().min(10, { message: "Description must be at least 10 characters" }),
+  goalTarget: z.string().min(3, { message: "Target must be at least 3 characters" }),
   setBy: z.enum(["self", "teacher", "parent", "coach"], { 
     required_error: "Please select who set this quest" 
   }),
-  goalTarget: z.string().min(3, { message: "Target must be at least 3 characters" }),
   startDate: z.date({
     required_error: "Start date is required",
   }),
   dueDate: z.date({
-    required_error: "Due date is required",
+    required_error: "Due date must be in the future",
   }).refine(date => date > new Date(), {
     message: "Due date must be in the future",
   }),
@@ -77,11 +80,12 @@ export default function GoalFormDialog({ isOpen, setIsOpen, onSubmit }: GoalForm
   const form = useForm<GoalFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      questType: "academic",
+      subject: "",
+      questDuration: "short",
+      questMode: "individual",
       title: "",
       description: "",
-      subject: "",
-      questType: "short",
-      questMode: "individual",
       setBy: "self",
       goalTarget: "",
       startDate: new Date(),
@@ -112,42 +116,32 @@ export default function GoalFormDialog({ isOpen, setIsOpen, onSubmit }: GoalForm
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6 px-1">
-            {/* Basic Quest Information Section */}
+            {/* Section 1: Quest Classification */}
             <div className="space-y-4 border-b pb-4">
-              <h3 className="font-medium text-sm text-muted-foreground">Basic Information</h3>
+              <h3 className="font-medium text-sm text-muted-foreground">Quest Classification</h3>
               
               <FormField
                 control={form.control}
-                name="title"
+                name="questType"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Quest Title</FormLabel>
-                    <FormControl>
-                      <Input placeholder="e.g., Master Algebra Fundamentals" {...field} />
-                    </FormControl>
+                    <FormLabel>Quest Type</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select quest type" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="academic">Academic</SelectItem>
+                        <SelectItem value="non-academic">Non-Academic</SelectItem>
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
               />
 
-              <FormField
-                control={form.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Quest Description</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="Describe your quest and what you want to achieve..."
-                        className="resize-none min-h-[80px]"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
               <FormField
                 control={form.control}
                 name="subject"
@@ -198,29 +192,10 @@ export default function GoalFormDialog({ isOpen, setIsOpen, onSubmit }: GoalForm
                 )}
               />
 
-              <FormField
-                control={form.control}
-                name="goalTarget"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Quest Target</FormLabel>
-                    <FormControl>
-                      <Input placeholder="e.g., Complete 20 practice problems" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            {/* Quest Type and Mode Section */}
-            <div className="space-y-4 border-b pb-4">
-              <h3 className="font-medium text-sm text-muted-foreground">Quest Type & Mode</h3>
-              
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
-                  name="questType"
+                  name="questDuration"
                   render={({ field }) => (
                     <FormItem className="space-y-3">
                       <FormLabel>Quest Duration</FormLabel>
@@ -289,34 +264,61 @@ export default function GoalFormDialog({ isOpen, setIsOpen, onSubmit }: GoalForm
                   )}
                 />
               </div>
+            </div>
+
+            {/* Section 2: Quest Details */}
+            <div className="space-y-4 border-b pb-4">
+              <h3 className="font-medium text-sm text-muted-foreground">Quest Details</h3>
+              
+              <FormField
+                control={form.control}
+                name="title"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Quest Title</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g., Master Algebra Fundamentals" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
               <FormField
                 control={form.control}
-                name="setBy"
+                name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Quest Creator</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Who created this quest?" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="self">Self</SelectItem>
-                        <SelectItem value="teacher">Teacher</SelectItem>
-                        <SelectItem value="parent">Parent</SelectItem>
-                        <SelectItem value="coach">Coach</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <FormLabel>Quest Description</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Describe your quest and what you want to achieve..."
+                        className="resize-none min-h-[80px]"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="goalTarget"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Quest Target</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g., Complete 20 practice problems" {...field} />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
             </div>
 
-            {/* Time and Schedule Section */}
-            <div className="space-y-4">
+            {/* Section 3: Time & Schedule */}
+            <div className="space-y-4 border-b pb-4">
               <h3 className="font-medium text-sm text-muted-foreground">Time & Schedule</h3>
               
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -435,6 +437,35 @@ export default function GoalFormDialog({ isOpen, setIsOpen, onSubmit }: GoalForm
                   />
                 </div>
               </div>
+            </div>
+
+            {/* Section 4: Basic Information */}
+            <div className="space-y-4">
+              <h3 className="font-medium text-sm text-muted-foreground">Basic Information</h3>
+              
+              <FormField
+                control={form.control}
+                name="setBy"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Quest Creator</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Who created this quest?" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="self">Self</SelectItem>
+                        <SelectItem value="teacher">Teacher</SelectItem>
+                        <SelectItem value="parent">Parent</SelectItem>
+                        <SelectItem value="coach">Coach</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
 
             <SheetFooter className="mt-6 pt-4 border-t">
