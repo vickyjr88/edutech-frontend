@@ -24,12 +24,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar } from "lucide-react";
+import { Calendar as CalendarIcon } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { format } from "date-fns";
-import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 
@@ -41,6 +41,9 @@ const formSchema = z.object({
   priority: z.enum(["high", "medium", "low"]),
   duration: z.enum(["short-term", "long-term"]),
   dueDate: z.date().optional(),
+  startDate: z.date().optional(),
+  targetTime: z.string().optional(),
+  timeUnit: z.enum(["hours", "days", "weeks", "months", "years"]).default("days"),
   startingProgress: z.number().min(0).max(100),
 });
 
@@ -65,6 +68,8 @@ export default function GoalFormDialog({ isOpen, setIsOpen, onSubmit }: GoalForm
       priority: "medium",
       duration: "short-term",
       startingProgress: 0,
+      timeUnit: "days",
+      targetTime: "7",
     },
   });
   
@@ -93,38 +98,7 @@ export default function GoalFormDialog({ isOpen, setIsOpen, onSubmit }: GoalForm
         
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-            <FormField
-              control={form.control}
-              name="title"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Goal Title</FormLabel>
-                  <FormControl>
-                    <Input placeholder="E.g., Master algebra equations" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Description (Optional)</FormLabel>
-                  <FormControl>
-                    <Textarea 
-                      placeholder="Describe what you want to achieve with this goal..."
-                      className="resize-none"
-                      {...field} 
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
+            {/* Row 1: Goal Type & Subject */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <FormField
                 control={form.control}
@@ -189,6 +163,122 @@ export default function GoalFormDialog({ isOpen, setIsOpen, onSubmit }: GoalForm
               />
             </div>
             
+            {/* Row 2: Start Date & Target Time */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <FormField
+                control={form.control}
+                name="startDate"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col">
+                    <FormLabel>Start Date</FormLabel>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant={"outline"}
+                            className={cn(
+                              "w-full pl-3 text-left font-normal",
+                              !field.value && "text-muted-foreground"
+                            )}
+                          >
+                            {field.value ? format(field.value, "PPP") : <span>Pick a start date</span>}
+                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={field.value}
+                          onSelect={field.onChange}
+                          initialFocus
+                          className="p-3 pointer-events-auto"
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <div className="grid grid-cols-3 gap-2">
+                <div className="col-span-2">
+                  <FormField
+                    control={form.control}
+                    name="targetTime"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Target Time</FormLabel>
+                        <FormControl>
+                          <Input type="number" placeholder="7" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <FormField
+                  control={form.control}
+                  name="timeUnit"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Unit</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Days" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="hours">Hours</SelectItem>
+                          <SelectItem value="days">Days</SelectItem>
+                          <SelectItem value="weeks">Weeks</SelectItem>
+                          <SelectItem value="months">Months</SelectItem>
+                          <SelectItem value="years">Years</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </div>
+            
+            {/* Row 3: Goal Title */}
+            <FormField
+              control={form.control}
+              name="title"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Goal Title</FormLabel>
+                  <FormControl>
+                    <Input placeholder="E.g., Master algebra equations" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            {/* Row 4: Goal Description */}
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Description</FormLabel>
+                  <FormControl>
+                    <Textarea 
+                      placeholder="Describe what you want to achieve with this goal..."
+                      className="resize-none"
+                      {...field} 
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            {/* Row 5: Priority & Duration */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <FormField
                 control={form.control}
@@ -235,7 +325,7 @@ export default function GoalFormDialog({ isOpen, setIsOpen, onSubmit }: GoalForm
                 )}
               />
             </div>
-            
+
             <FormField
               control={form.control}
               name="dueDate"
@@ -252,17 +342,18 @@ export default function GoalFormDialog({ isOpen, setIsOpen, onSubmit }: GoalForm
                             !field.value && "text-muted-foreground"
                           )}
                         >
-                          {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
-                          <Calendar className="ml-auto h-4 w-4 opacity-50" />
+                          {field.value ? format(field.value, "PPP") : <span>Pick a due date</span>}
+                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                         </Button>
                       </FormControl>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">
-                      <CalendarComponent
+                      <Calendar
                         mode="single"
                         selected={field.value}
                         onSelect={field.onChange}
                         initialFocus
+                        className="p-3 pointer-events-auto"
                       />
                     </PopoverContent>
                   </Popover>

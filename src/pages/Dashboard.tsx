@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -36,7 +35,6 @@ const Dashboard = () => {
 
   return (
     <div className="flex min-h-screen bg-gradient-to-b from-blue-50 to-white">
-      {/* Sidebar */}
       <aside className="hidden md:flex flex-col w-64 bg-white border-r border-blue-100 shadow-md rounded-tr-xl rounded-br-xl mr-2 overflow-hidden">
         <div className="p-6">
           <Link to="/" className="flex items-center">
@@ -141,12 +139,9 @@ const Dashboard = () => {
         </div>
       </aside>
 
-      {/* Main Content */}
       <div className="flex-1 flex flex-col">
-        {/* Top Nav */}
         <StudentDashboardHeader userName={userName} />
 
-        {/* Content */}
         <main className="p-4 sm:p-6 flex-1 overflow-y-auto">
           <div className="max-w-7xl mx-auto">
             <StudentStatCards />
@@ -181,10 +176,8 @@ const Dashboard = () => {
         </main>
       </div>
 
-      {/* Kidato AI Mascot */}
       <KidatoMascot />
       
-      {/* Goal Tracking Dialog */}
       <GoalTrackingDialog 
         isOpen={isTrackingOpen}
         setIsOpen={setIsTrackingOpen}

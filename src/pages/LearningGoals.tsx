@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -18,7 +17,6 @@ const LearningGoals = () => {
   const [selectedGoal, setSelectedGoal] = useState<any>(null);
   const { toast } = useToast();
   
-  // Mock short-term goals
   const shortTermGoals = [
     {
       title: "Complete Mathematics Module 3",
@@ -40,7 +38,6 @@ const LearningGoals = () => {
     }
   ];
   
-  // Mock long-term goals
   const longTermGoals = [
     {
       title: "Master Algebra Concepts",
@@ -85,7 +82,6 @@ const LearningGoals = () => {
 
   return (
     <div className="flex min-h-screen bg-gradient-to-b from-blue-50 to-white">
-      {/* Sidebar - Same as Dashboard */}
       <aside className="hidden md:flex flex-col w-64 bg-white border-r border-blue-100 shadow-md rounded-tr-xl rounded-br-xl mr-2 overflow-hidden">
         <div className="p-6">
           <Link to="/" className="flex items-center">
@@ -190,12 +186,9 @@ const LearningGoals = () => {
         </div>
       </aside>
 
-      {/* Main Content */}
       <div className="flex-1 flex flex-col">
-        {/* Top Nav */}
         <StudentDashboardHeader userName={userName} />
-
-        {/* Content */}
+        
         <main className="p-4 sm:p-6 flex-1 overflow-y-auto">
           <div className="max-w-7xl mx-auto">
             <div className="flex justify-between items-center mb-6">
@@ -209,10 +202,8 @@ const LearningGoals = () => {
               </Button>
             </div>
             
-            {/* Current Progress */}
             <LearningProgress onEditGoal={handleEditGoal} />
             
-            {/* Goal Setting Section */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
               <Card>
                 <CardHeader className="bg-gradient-to-r from-blue-50 to-purple-50 pb-2">
@@ -286,10 +277,8 @@ const LearningGoals = () => {
         </main>
       </div>
 
-      {/* Kidato AI Mascot */}
       <KidatoMascot />
       
-      {/* Dialogs */}
       <GoalFormDialog 
         isOpen={isGoalFormOpen} 
         setIsOpen={setIsGoalFormOpen} 
