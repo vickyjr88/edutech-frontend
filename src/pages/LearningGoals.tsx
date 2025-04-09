@@ -6,10 +6,82 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Home, Book, User, Settings, LogOut, MessageSquare, Star, Sparkles, PieChart, Users, Target, Calendar, Award, Plus } from "lucide-react";
 import StudentDashboardHeader from "@/components/dashboard/StudentDashboardHeader";
 import LearningProgress from "@/components/dashboard/LearningProgress";
+import GoalFormDialog from "@/components/dashboard/GoalFormDialog";
+import GoalTrackingDialog from "@/components/dashboard/GoalTrackingDialog";
+import { useToast } from "@/components/ui/use-toast";
 import KidatoMascot from "@/components/dashboard/KidatoMascot";
 
 const LearningGoals = () => {
   const [userName] = useState("John Doe");
+  const [isGoalFormOpen, setIsGoalFormOpen] = useState(false);
+  const [isTrackingOpen, setIsTrackingOpen] = useState(false);
+  const [selectedGoal, setSelectedGoal] = useState<any>(null);
+  const { toast } = useToast();
+  
+  // Mock short-term goals
+  const shortTermGoals = [
+    {
+      title: "Complete Mathematics Module 3",
+      dueIn: "5 days",
+      progress: 75,
+      color: "blue"
+    },
+    {
+      title: "Finish Science Project",
+      dueIn: "2 days",
+      progress: 50,
+      color: "purple"
+    },
+    {
+      title: "Submit Coding Challenge",
+      dueIn: "tomorrow",
+      progress: 90,
+      color: "green"
+    }
+  ];
+  
+  // Mock long-term goals
+  const longTermGoals = [
+    {
+      title: "Master Algebra Concepts",
+      dueIn: "End of semester",
+      progress: 40,
+      color: "blue"
+    },
+    {
+      title: "Complete Science Curriculum",
+      dueIn: "End of year",
+      progress: 35,
+      color: "purple"
+    },
+    {
+      title: "Build Final Coding Project",
+      dueIn: "Next month",
+      progress: 15,
+      color: "orange"
+    }
+  ];
+  
+  const handleCreateGoal = (values: any) => {
+    console.log("New goal created:", values);
+    toast({
+      title: "Goal Created",
+      description: `Your new goal "${values.title}" has been created successfully.`,
+    });
+  };
+  
+  const handleEditGoal = (goal: any) => {
+    setSelectedGoal(goal);
+    setIsTrackingOpen(true);
+  };
+  
+  const handleUpdateGoal = (goalId: string, progress: number, notes: string) => {
+    console.log("Goal updated:", { goalId, progress, notes });
+    toast({
+      title: "Progress Updated",
+      description: `Your goal progress has been updated to ${progress}%.`,
+    });
+  };
 
   return (
     <div className="flex min-h-screen bg-gradient-to-b from-blue-50 to-white">
@@ -128,24 +200,20 @@ const LearningGoals = () => {
           <div className="max-w-7xl mx-auto">
             <div className="flex justify-between items-center mb-6">
               <h1 className="text-2xl font-bold text-gray-800">Learning Goals</h1>
-              <Button className="bg-kidato-blue hover:bg-kidato-dark-blue rounded-xl flex items-center gap-2">
+              <Button 
+                onClick={() => setIsGoalFormOpen(true)} 
+                className="bg-kidato-blue hover:bg-kidato-dark-blue rounded-xl flex items-center gap-2"
+              >
                 <Plus className="h-4 w-4" />
                 Add New Goal
               </Button>
             </div>
             
             {/* Current Progress */}
-            <Card className="mb-6">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg font-bold">Current Learning Progress</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <LearningProgress />
-              </CardContent>
-            </Card>
+            <LearningProgress onEditGoal={handleEditGoal} />
             
             {/* Goal Setting Section */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
               <Card>
                 <CardHeader className="bg-gradient-to-r from-blue-50 to-purple-50 pb-2">
                   <CardTitle className="text-lg font-bold flex items-center">
@@ -155,32 +223,26 @@ const LearningGoals = () => {
                 </CardHeader>
                 <CardContent className="p-6">
                   <ul className="space-y-4">
-                    <li className="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
-                      <div>
-                        <p className="font-medium">Complete Mathematics Module 3</p>
-                        <p className="text-sm text-gray-600">Due in 5 days</p>
-                      </div>
-                      <div className="w-20 text-center">
-                        <p className="font-bold text-blue-600">75%</p>
-                      </div>
-                    </li>
-                    <li className="flex justify-between items-center p-3 bg-purple-50 rounded-lg">
-                      <div>
-                        <p className="font-medium">Finish Science Project</p>
-                        <p className="text-sm text-gray-600">Due in 2 days</p>
-                      </div>
-                      <div className="w-20 text-center">
-                        <p className="font-bold text-purple-600">50%</p>
-                      </div>
-                    </li>
-                    <li className="flex justify-between items-center p-3 bg-green-50 rounded-lg">
-                      <div>
-                        <p className="font-medium">Submit Coding Challenge</p>
-                        <p className="text-sm text-gray-600">Due tomorrow</p>
-                      </div>
-                      <div className="w-20 text-center">
-                        <p className="font-bold text-green-600">90%</p>
-                      </div>
+                    {shortTermGoals.map((goal, index) => (
+                      <li key={index} className="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
+                        <div>
+                          <p className="font-medium">{goal.title}</p>
+                          <p className="text-sm text-gray-600">Due in {goal.dueIn}</p>
+                        </div>
+                        <div className="w-20 text-center">
+                          <p className={`font-bold text-${goal.color}-600`}>{goal.progress}%</p>
+                        </div>
+                      </li>
+                    ))}
+                    <li className="mt-4">
+                      <Button 
+                        variant="outline"
+                        onClick={() => setIsGoalFormOpen(true)}
+                        className="w-full border-dashed border-gray-300 hover:border-blue-300 hover:bg-blue-50 text-gray-500 hover:text-blue-500 flex items-center justify-center gap-2"
+                      >
+                        <Plus className="h-4 w-4" />
+                        Add Short-term Goal
+                      </Button>
                     </li>
                   </ul>
                 </CardContent>
@@ -195,32 +257,26 @@ const LearningGoals = () => {
                 </CardHeader>
                 <CardContent className="p-6">
                   <ul className="space-y-4">
-                    <li className="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
-                      <div>
-                        <p className="font-medium">Master Algebra Concepts</p>
-                        <p className="text-sm text-gray-600">End of semester</p>
-                      </div>
-                      <div className="w-20 text-center">
-                        <p className="font-bold text-blue-600">40%</p>
-                      </div>
-                    </li>
-                    <li className="flex justify-between items-center p-3 bg-purple-50 rounded-lg">
-                      <div>
-                        <p className="font-medium">Complete Science Curriculum</p>
-                        <p className="text-sm text-gray-600">End of year</p>
-                      </div>
-                      <div className="w-20 text-center">
-                        <p className="font-bold text-purple-600">35%</p>
-                      </div>
-                    </li>
-                    <li className="flex justify-between items-center p-3 bg-orange-50 rounded-lg">
-                      <div>
-                        <p className="font-medium">Build Final Coding Project</p>
-                        <p className="text-sm text-gray-600">Next month</p>
-                      </div>
-                      <div className="w-20 text-center">
-                        <p className="font-bold text-orange-600">15%</p>
-                      </div>
+                    {longTermGoals.map((goal, index) => (
+                      <li key={index} className="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
+                        <div>
+                          <p className="font-medium">{goal.title}</p>
+                          <p className="text-sm text-gray-600">{goal.dueIn}</p>
+                        </div>
+                        <div className="w-20 text-center">
+                          <p className={`font-bold text-${goal.color}-600`}>{goal.progress}%</p>
+                        </div>
+                      </li>
+                    ))}
+                    <li className="mt-4">
+                      <Button 
+                        variant="outline"
+                        onClick={() => setIsGoalFormOpen(true)}
+                        className="w-full border-dashed border-gray-300 hover:border-blue-300 hover:bg-blue-50 text-gray-500 hover:text-blue-500 flex items-center justify-center gap-2"
+                      >
+                        <Plus className="h-4 w-4" />
+                        Add Long-term Goal
+                      </Button>
                     </li>
                   </ul>
                 </CardContent>
@@ -232,6 +288,20 @@ const LearningGoals = () => {
 
       {/* Kidato AI Mascot */}
       <KidatoMascot />
+      
+      {/* Dialogs */}
+      <GoalFormDialog 
+        isOpen={isGoalFormOpen} 
+        setIsOpen={setIsGoalFormOpen} 
+        onSubmit={handleCreateGoal}
+      />
+      
+      <GoalTrackingDialog 
+        isOpen={isTrackingOpen}
+        setIsOpen={setIsTrackingOpen}
+        goal={selectedGoal}
+        onUpdateGoal={handleUpdateGoal}
+      />
     </div>
   );
 }
