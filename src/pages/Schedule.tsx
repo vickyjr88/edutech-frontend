@@ -59,13 +59,8 @@ const Schedule = () => {
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Left Sidebar - Events List */}
-              <div className="md:col-span-1">
-                <UpcomingEvents />
-              </div>
-              
-              {/* Main Calendar Area */}
-              <div className="md:col-span-2">
+              {/* Main Calendar Area - now spans 2 columns and comes first */}
+              <div className="md:col-span-2 order-2 md:order-1">
                 <Card className="border-2 border-blue-100">
                   <CardHeader className="bg-gradient-to-r from-blue-50 to-purple-50 pb-2">
                     <div className="flex justify-between items-center">
@@ -86,6 +81,11 @@ const Schedule = () => {
                     <ScheduleCalendar view={view} />
                   </CardContent>
                 </Card>
+              </div>
+              
+              {/* Right Sidebar - Events List */}
+              <div className="md:col-span-1 order-1 md:order-2">
+                <UpcomingEvents />
               </div>
             </div>
           </div>
