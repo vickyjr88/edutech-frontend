@@ -80,7 +80,7 @@ export function DayView({ date }: DayViewProps) {
                     >
                       <div className="font-medium">{event.title}</div>
                       <div className="text-sm">{event.time}</div>
-                      <div className="text-sm mt-1">{event.location}</div>
+                      <div className="text-sm">{event.location}</div>
                       {event.description && (
                         <div className="text-sm mt-1 text-gray-600">{event.description}</div>
                       )}
@@ -108,7 +108,7 @@ export function DayView({ date }: DayViewProps) {
           eventToEdit={{
             id: "",
             title: "",
-            date: format(new Date(date).setHours(selectedHour, 0, 0, 0), "yyyy-MM-dd'T'HH:mm"),
+            date: new Date(date).setHours(selectedHour, 0, 0, 0),
             time: `${selectedHour % 12 === 0 ? '12' : selectedHour % 12}:00 ${selectedHour >= 12 ? 'PM' : 'AM'}`,
             location: "",
             description: "",
