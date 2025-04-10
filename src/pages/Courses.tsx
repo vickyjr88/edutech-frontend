@@ -3,13 +3,13 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Clock, CheckCircle, Filter } from "lucide-react";
+import { Clock, CheckCircle, Filter, MessageSquare, Users, Calendar } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
 import StudentDashboardHeader from "@/components/dashboard/StudentDashboardHeader";
 import StudentSidebar from "@/components/dashboard/StudentSidebar";
 import KidatoMascot from "@/components/dashboard/KidatoMascot";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Star, Users } from "lucide-react";
 
 const Courses = () => {
   const [userName] = useState("John Doe");
@@ -21,34 +21,42 @@ const Courses = () => {
     {
       id: "math101",
       title: "Mathematics Fundamentals",
-      teacher: "Dr. Sarah Johnson",
+      subject: "Mathematics",
+      description: "Master essential math concepts for academic success and problem-solving skills.",
       progress: 68,
       nextClass: "Tuesday, 2:00 PM",
-      image: "/lovable-uploads/15671e94-4ac9-490c-95b6-aa4fe6bbc23c.png"
+      dueDate: "April 20, 2025",
+      members: 3
     },
     {
       id: "eng205",
       title: "Creative Writing Workshop",
-      teacher: "Prof. Michael Thompson",
+      subject: "English",
+      description: "Develop your creative writing skills through guided exercises and peer feedback.",
       progress: 42,
       nextClass: "Wednesday, 10:30 AM",
-      image: "/lovable-uploads/15671e94-4ac9-490c-95b6-aa4fe6bbc23c.png"
+      dueDate: "May 15, 2025",
+      members: 5
     },
     {
       id: "sci110",
       title: "Introduction to Biology",
-      teacher: "Dr. Emma Rodriguez",
+      subject: "Science",
+      description: "Explore the fundamentals of biology, from cells to ecosystems and everything in between.",
       progress: 75,
       nextClass: "Thursday, 1:15 PM",
-      image: "/lovable-uploads/15671e94-4ac9-490c-95b6-aa4fe6bbc23c.png"
+      dueDate: "April 30, 2025",
+      members: 4
     },
     {
       id: "art150",
       title: "Digital Art & Design",
-      teacher: "Ms. Olivia Chen",
+      subject: "Art",
+      description: "Learn digital art techniques using industry-standard software and design principles.",
       progress: 89,
       nextClass: "Monday, 3:45 PM",
-      image: "/lovable-uploads/15671e94-4ac9-490c-95b6-aa4fe6bbc23c.png"
+      dueDate: "June 5, 2025",
+      members: 6
     }
   ];
 
@@ -56,26 +64,29 @@ const Courses = () => {
     {
       id: "math202",
       title: "Advanced Mathematics",
-      teacher: "Dr. Robert Miller",
-      rating: 4.8,
-      students: 324,
-      image: "/lovable-uploads/15671e94-4ac9-490c-95b6-aa4fe6bbc23c.png"
+      subject: "Mathematics",
+      description: "Take your math skills to the next level with advanced concepts and problem-solving.",
+      nextClass: "Monday, 1:00 PM",
+      dueDate: "May 25, 2025",
+      members: 3
     },
     {
       id: "phys101",
       title: "Physics Fundamentals",
-      teacher: "Prof. Lisa Wang",
-      rating: 4.7,
-      students: 256,
-      image: "/lovable-uploads/15671e94-4ac9-490c-95b6-aa4fe6bbc23c.png"
+      subject: "Science",
+      description: "Discover the basic principles that govern the physical world around us.",
+      nextClass: "Thursday, 11:30 AM",
+      dueDate: "June 10, 2025",
+      members: 4
     },
     {
       id: "code101",
       title: "Introduction to Coding",
-      teacher: "Mr. Alex Jackson",
-      rating: 4.9,
-      students: 412,
-      image: "/lovable-uploads/15671e94-4ac9-490c-95b6-aa4fe6bbc23c.png"
+      subject: "Technology",
+      description: "Begin your coding journey with the basics of programming logic and syntax.",
+      nextClass: "Friday, 2:15 PM",
+      dueDate: "May 30, 2025",
+      members: 5
     }
   ];
   
@@ -83,20 +94,26 @@ const Courses = () => {
     {
       id: "hist101",
       title: "World History",
-      teacher: "Dr. James Peterson",
-      grade: "A",
+      subject: "History",
+      description: "A comprehensive overview of major world events and their impact on society.",
       completedDate: "March 15, 2025",
-      image: "/lovable-uploads/15671e94-4ac9-490c-95b6-aa4fe6bbc23c.png"
+      grade: "A"
     },
     {
       id: "chem101",
       title: "Chemistry Basics",
-      teacher: "Dr. Helen Garcia",
-      grade: "B+",
+      subject: "Science",
+      description: "An introduction to the fundamental principles of chemistry and laboratory practice.",
       completedDate: "January 22, 2025",
-      image: "/lovable-uploads/15671e94-4ac9-490c-95b6-aa4fe6bbc23c.png"
+      grade: "B+"
     }
   ];
+
+  // Generate avatar initials for demo
+  const generateInitials = (index: number) => {
+    const initials = ["JD", "TS", "EW", "AM", "KP", "RJ"];
+    return initials[index % initials.length];
+  };
 
   return (
     <div className="flex min-h-screen bg-gradient-to-b from-blue-50 to-white">
@@ -148,43 +165,63 @@ const Courses = () => {
               <TabsContent value="enrolled">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                   {enrolledCourses.map((course) => (
-                    <Card key={course.id} className="overflow-hidden border border-blue-100 shadow-sm hover:shadow-md transition-shadow">
-                      <div className="flex flex-col md:flex-row">
-                        <div className="w-full md:w-1/3 bg-gradient-to-r from-blue-100 to-purple-100 flex items-center justify-center p-4">
-                          <img src={course.image} alt={course.title} className="h-16 mx-auto" />
+                    <Card key={course.id} className="overflow-hidden border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+                      <CardContent className="p-6">
+                        <div className="flex justify-between items-start mb-4">
+                          <div>
+                            <h3 className="text-xl font-bold text-gray-800 mb-1">{course.title}</h3>
+                            <Badge variant="secondary" className="bg-blue-100 text-blue-700 hover:bg-blue-200">
+                              {course.subject}
+                            </Badge>
+                          </div>
+                          <Button variant="ghost" className="rounded-full p-2 h-auto" size="icon">
+                            <MessageSquare className="h-5 w-5 text-gray-500" />
+                          </Button>
                         </div>
-                        <div className="w-full md:w-2/3 p-4">
-                          <h3 className="text-lg font-medium mb-1">{course.title}</h3>
-                          <p className="text-sm text-gray-600 mb-3">{course.teacher}</p>
-                          
-                          <div className="mb-4">
-                            <div className="flex justify-between text-sm mb-1">
-                              <span>Progress</span>
-                              <span className="font-medium">{course.progress}%</span>
-                            </div>
-                            <div className="w-full h-2 bg-gray-100 rounded-full">
-                              <div 
-                                className="h-2 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full" 
-                                style={{ width: `${course.progress}%` }}
-                              ></div>
-                            </div>
+
+                        <div className="mb-6">
+                          <div className="flex justify-between items-center mb-1">
+                            <span className="text-sm text-gray-600">Progress</span>
+                            <span className="font-medium">{course.progress}%</span>
                           </div>
-                          
-                          <div className="flex items-center text-sm text-gray-600 mb-4">
-                            <Clock className="h-3.5 w-3.5 mr-1.5 text-blue-500" />
-                            <p>Next Class: {course.nextClass}</p>
+                          <Progress value={course.progress} className="h-2" />
+                        </div>
+
+                        <p className="text-gray-600 mb-6">{course.description}</p>
+
+                        <div className="flex flex-col space-y-3 mb-6">
+                          <div className="flex items-center text-gray-600">
+                            <Users className="h-4 w-4 mr-2 text-blue-500" />
+                            <span>{course.members} Members</span>
                           </div>
-                          
+                          <div className="flex items-center text-gray-600">
+                            <Clock className="h-4 w-4 mr-2 text-blue-500" />
+                            <span>{course.nextClass}</span>
+                          </div>
+                          <div className="flex items-center text-gray-600">
+                            <Calendar className="h-4 w-4 mr-2 text-blue-500" />
+                            <span>Due: {course.dueDate}</span>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-between">
+                          <div className="flex -space-x-2">
+                            {[...Array(3)].map((_, i) => (
+                              <Avatar key={i} className="border-2 border-white w-8 h-8 bg-blue-200">
+                                <AvatarFallback className="text-xs text-blue-700">
+                                  {generateInitials(i)}
+                                </AvatarFallback>
+                              </Avatar>
+                            ))}
+                          </div>
                           <div className="flex gap-2">
-                            <Button variant="outline" size="sm" className="flex-1">
-                              Resources
-                            </Button>
-                            <Button size="sm" className="flex-1 bg-kidato-blue hover:bg-kidato-dark-blue">
-                              Continue
+                            <Button variant="outline" size="sm">Materials</Button>
+                            <Button size="sm" className="bg-indigo-600 hover:bg-indigo-700">
+                              Update Progress
                             </Button>
                           </div>
                         </div>
-                      </div>
+                      </CardContent>
                     </Card>
                   ))}
                 </div>
@@ -194,33 +231,43 @@ const Courses = () => {
               <TabsContent value="recommended">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                   {recommendedCourses.map((course) => (
-                    <Card key={course.id} className="overflow-hidden border border-blue-100 shadow-sm hover:shadow-md transition-shadow">
-                      <div className="flex flex-col md:flex-row">
-                        <div className="w-full md:w-1/3 bg-gradient-to-r from-blue-50 to-purple-50 flex items-center justify-center p-4">
-                          <img src={course.image} alt={course.title} className="h-16 mx-auto" />
-                        </div>
-                        <div className="w-full md:w-2/3 p-4">
-                          <h3 className="text-lg font-medium mb-1">{course.title}</h3>
-                          <p className="text-sm text-gray-600 mb-3">{course.teacher}</p>
-                          
-                          <div className="flex items-center gap-2 mb-4">
-                            <div className="bg-yellow-100 text-yellow-700 px-2 py-1 rounded-full text-xs flex items-center">
-                              <Star className="h-3 w-3 mr-1 fill-yellow-400 stroke-yellow-400" />
-                              {course.rating}
-                            </div>
-                            <div className="bg-blue-100 text-blue-700 px-2 py-1 rounded-full text-xs flex items-center">
-                              <Users className="h-3 w-3 mr-1" />
-                              {course.students} students
-                            </div>
+                    <Card key={course.id} className="overflow-hidden border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+                      <CardContent className="p-6">
+                        <div className="flex justify-between items-start mb-4">
+                          <div>
+                            <h3 className="text-xl font-bold text-gray-800 mb-1">{course.title}</h3>
+                            <Badge variant="secondary" className="bg-blue-100 text-blue-700 hover:bg-blue-200">
+                              {course.subject}
+                            </Badge>
                           </div>
-                          
-                          <div className="mt-auto">
-                            <Button className="w-full bg-kidato-blue hover:bg-kidato-dark-blue">
-                              View Details
-                            </Button>
+                          <Button variant="ghost" className="rounded-full p-2 h-auto" size="icon">
+                            <MessageSquare className="h-5 w-5 text-gray-500" />
+                          </Button>
+                        </div>
+
+                        <p className="text-gray-600 mb-6">{course.description}</p>
+
+                        <div className="flex flex-col space-y-3 mb-6">
+                          <div className="flex items-center text-gray-600">
+                            <Users className="h-4 w-4 mr-2 text-blue-500" />
+                            <span>{course.members} Members</span>
+                          </div>
+                          <div className="flex items-center text-gray-600">
+                            <Clock className="h-4 w-4 mr-2 text-blue-500" />
+                            <span>{course.nextClass}</span>
+                          </div>
+                          <div className="flex items-center text-gray-600">
+                            <Calendar className="h-4 w-4 mr-2 text-blue-500" />
+                            <span>Due: {course.dueDate}</span>
                           </div>
                         </div>
-                      </div>
+
+                        <div className="flex justify-end">
+                          <Button className="bg-kidato-blue hover:bg-kidato-dark-blue">
+                            Enroll Now
+                          </Button>
+                        </div>
+                      </CardContent>
                     </Card>
                   ))}
                 </div>
@@ -230,33 +277,34 @@ const Courses = () => {
               <TabsContent value="completed">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                   {completedCourses.map((course) => (
-                    <Card key={course.id} className="overflow-hidden border border-blue-100 shadow-sm hover:shadow-md transition-shadow">
-                      <div className="flex flex-col md:flex-row">
-                        <div className="w-full md:w-1/3 bg-gradient-to-r from-green-50 to-blue-50 flex items-center justify-center p-4 relative">
-                          <img src={course.image} alt={course.title} className="h-16 mx-auto" />
-                          <div className="absolute top-3 right-3 bg-green-500 text-white p-1 rounded-full">
-                            <CheckCircle className="h-4 w-4" />
+                    <Card key={course.id} className="overflow-hidden border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+                      <CardContent className="p-6">
+                        <div className="flex justify-between items-start mb-4">
+                          <div>
+                            <h3 className="text-xl font-bold text-gray-800 mb-1">{course.title}</h3>
+                            <Badge variant="secondary" className="bg-blue-100 text-blue-700 hover:bg-blue-200">
+                              {course.subject}
+                            </Badge>
                           </div>
+                          <Badge variant="success" className="bg-green-100 text-green-700">
+                            Grade: {course.grade}
+                          </Badge>
                         </div>
-                        <div className="w-full md:w-2/3 p-4">
-                          <h3 className="text-lg font-medium mb-1">{course.title}</h3>
-                          <p className="text-sm text-gray-600 mb-3">{course.teacher}</p>
-                          
-                          <div className="flex justify-between mb-4">
-                            <span className="text-sm text-gray-600">Completed: {course.completedDate}</span>
-                            <span className="font-medium text-green-600">Grade: {course.grade}</span>
-                          </div>
-                          
-                          <div className="flex gap-2">
-                            <Button variant="outline" size="sm" className="flex-1">
-                              View Certificate
-                            </Button>
-                            <Button size="sm" className="flex-1 bg-kidato-blue hover:bg-kidato-dark-blue">
-                              Review Course
-                            </Button>
-                          </div>
+
+                        <p className="text-gray-600 mb-6">{course.description}</p>
+
+                        <div className="flex items-center mb-6">
+                          <CheckCircle className="h-4 w-4 mr-2 text-green-500" />
+                          <span className="text-gray-600">Completed: {course.completedDate}</span>
                         </div>
-                      </div>
+
+                        <div className="flex justify-end gap-2">
+                          <Button variant="outline">View Certificate</Button>
+                          <Button className="bg-kidato-blue hover:bg-kidato-dark-blue">
+                            Course Review
+                          </Button>
+                        </div>
+                      </CardContent>
                     </Card>
                   ))}
                 </div>
