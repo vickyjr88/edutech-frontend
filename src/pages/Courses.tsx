@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -145,42 +146,45 @@ const Courses = () => {
               
               {/* Enrolled Courses */}
               <TabsContent value="enrolled">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                   {enrolledCourses.map((course) => (
                     <Card key={course.id} className="overflow-hidden border border-blue-100 shadow-sm hover:shadow-md transition-shadow">
-                      <div className="h-36 bg-gradient-to-r from-blue-100 to-purple-100 flex items-center justify-center">
-                        <img src={course.image} alt={course.title} className="h-16 mx-auto" />
+                      <div className="flex flex-col md:flex-row">
+                        <div className="w-full md:w-1/3 bg-gradient-to-r from-blue-100 to-purple-100 flex items-center justify-center p-4">
+                          <img src={course.image} alt={course.title} className="h-16 mx-auto" />
+                        </div>
+                        <div className="w-full md:w-2/3 p-4">
+                          <h3 className="text-lg font-medium mb-1">{course.title}</h3>
+                          <p className="text-sm text-gray-600 mb-3">{course.teacher}</p>
+                          
+                          <div className="mb-4">
+                            <div className="flex justify-between text-sm mb-1">
+                              <span>Progress</span>
+                              <span className="font-medium">{course.progress}%</span>
+                            </div>
+                            <div className="w-full h-2 bg-gray-100 rounded-full">
+                              <div 
+                                className="h-2 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full" 
+                                style={{ width: `${course.progress}%` }}
+                              ></div>
+                            </div>
+                          </div>
+                          
+                          <div className="flex items-center text-sm text-gray-600 mb-4">
+                            <Clock className="h-3.5 w-3.5 mr-1.5 text-blue-500" />
+                            <p>Next Class: {course.nextClass}</p>
+                          </div>
+                          
+                          <div className="flex gap-2">
+                            <Button variant="outline" size="sm" className="flex-1">
+                              Resources
+                            </Button>
+                            <Button size="sm" className="flex-1 bg-kidato-blue hover:bg-kidato-dark-blue">
+                              Continue
+                            </Button>
+                          </div>
+                        </div>
                       </div>
-                      <CardHeader className="p-4 pb-0">
-                        <CardTitle className="text-lg font-medium">{course.title}</CardTitle>
-                        <p className="text-sm text-gray-600">{course.teacher}</p>
-                      </CardHeader>
-                      <CardContent className="p-4">
-                        <div className="mb-4">
-                          <div className="flex justify-between text-sm mb-1">
-                            <span>Progress</span>
-                            <span className="font-medium">{course.progress}%</span>
-                          </div>
-                          <div className="w-full h-2 bg-gray-100 rounded-full">
-                            <div 
-                              className="h-2 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full" 
-                              style={{ width: `${course.progress}%` }}
-                            ></div>
-                          </div>
-                        </div>
-                        <div className="flex items-center text-sm text-gray-600 mb-4">
-                          <Clock className="h-3.5 w-3.5 mr-1.5 text-blue-500" />
-                          <p>Next Class: {course.nextClass}</p>
-                        </div>
-                        <div className="mt-4 flex gap-2">
-                          <Button variant="outline" size="sm" className="flex-1">
-                            Resources
-                          </Button>
-                          <Button size="sm" className="flex-1 bg-kidato-blue hover:bg-kidato-dark-blue">
-                            Continue
-                          </Button>
-                        </div>
-                      </CardContent>
                     </Card>
                   ))}
                 </div>
@@ -188,33 +192,35 @@ const Courses = () => {
               
               {/* Recommended Courses */}
               <TabsContent value="recommended">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                   {recommendedCourses.map((course) => (
                     <Card key={course.id} className="overflow-hidden border border-blue-100 shadow-sm hover:shadow-md transition-shadow">
-                      <div className="h-36 bg-gradient-to-r from-blue-50 to-purple-50 flex items-center justify-center">
-                        <img src={course.image} alt={course.title} className="h-16 mx-auto" />
+                      <div className="flex flex-col md:flex-row">
+                        <div className="w-full md:w-1/3 bg-gradient-to-r from-blue-50 to-purple-50 flex items-center justify-center p-4">
+                          <img src={course.image} alt={course.title} className="h-16 mx-auto" />
+                        </div>
+                        <div className="w-full md:w-2/3 p-4">
+                          <h3 className="text-lg font-medium mb-1">{course.title}</h3>
+                          <p className="text-sm text-gray-600 mb-3">{course.teacher}</p>
+                          
+                          <div className="flex items-center gap-2 mb-4">
+                            <div className="bg-yellow-100 text-yellow-700 px-2 py-1 rounded-full text-xs flex items-center">
+                              <Star className="h-3 w-3 mr-1 fill-yellow-400 stroke-yellow-400" />
+                              {course.rating}
+                            </div>
+                            <div className="bg-blue-100 text-blue-700 px-2 py-1 rounded-full text-xs flex items-center">
+                              <Users className="h-3 w-3 mr-1" />
+                              {course.students} students
+                            </div>
+                          </div>
+                          
+                          <div className="mt-auto">
+                            <Button className="w-full bg-kidato-blue hover:bg-kidato-dark-blue">
+                              View Details
+                            </Button>
+                          </div>
+                        </div>
                       </div>
-                      <CardHeader className="p-4 pb-0">
-                        <CardTitle className="text-lg font-medium">{course.title}</CardTitle>
-                        <p className="text-sm text-gray-600">{course.teacher}</p>
-                      </CardHeader>
-                      <CardContent className="p-4">
-                        <div className="flex items-center gap-2 mb-4">
-                          <div className="bg-yellow-100 text-yellow-700 px-2 py-1 rounded-full text-xs flex items-center">
-                            <Star className="h-3 w-3 mr-1 fill-yellow-400 stroke-yellow-400" />
-                            {course.rating}
-                          </div>
-                          <div className="bg-blue-100 text-blue-700 px-2 py-1 rounded-full text-xs flex items-center">
-                            <Users className="h-3 w-3 mr-1" />
-                            {course.students} students
-                          </div>
-                        </div>
-                        <div className="mt-4">
-                          <Button className="w-full bg-kidato-blue hover:bg-kidato-dark-blue">
-                            View Details
-                          </Button>
-                        </div>
-                      </CardContent>
                     </Card>
                   ))}
                 </div>
@@ -222,33 +228,35 @@ const Courses = () => {
               
               {/* Completed Courses */}
               <TabsContent value="completed">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                   {completedCourses.map((course) => (
                     <Card key={course.id} className="overflow-hidden border border-blue-100 shadow-sm hover:shadow-md transition-shadow">
-                      <div className="h-36 bg-gradient-to-r from-green-50 to-blue-50 flex items-center justify-center relative">
-                        <img src={course.image} alt={course.title} className="h-16 mx-auto" />
-                        <div className="absolute top-3 right-3 bg-green-500 text-white p-1 rounded-full">
-                          <CheckCircle className="h-4 w-4" />
+                      <div className="flex flex-col md:flex-row">
+                        <div className="w-full md:w-1/3 bg-gradient-to-r from-green-50 to-blue-50 flex items-center justify-center p-4 relative">
+                          <img src={course.image} alt={course.title} className="h-16 mx-auto" />
+                          <div className="absolute top-3 right-3 bg-green-500 text-white p-1 rounded-full">
+                            <CheckCircle className="h-4 w-4" />
+                          </div>
+                        </div>
+                        <div className="w-full md:w-2/3 p-4">
+                          <h3 className="text-lg font-medium mb-1">{course.title}</h3>
+                          <p className="text-sm text-gray-600 mb-3">{course.teacher}</p>
+                          
+                          <div className="flex justify-between mb-4">
+                            <span className="text-sm text-gray-600">Completed: {course.completedDate}</span>
+                            <span className="font-medium text-green-600">Grade: {course.grade}</span>
+                          </div>
+                          
+                          <div className="flex gap-2">
+                            <Button variant="outline" size="sm" className="flex-1">
+                              View Certificate
+                            </Button>
+                            <Button size="sm" className="flex-1 bg-kidato-blue hover:bg-kidato-dark-blue">
+                              Review Course
+                            </Button>
+                          </div>
                         </div>
                       </div>
-                      <CardHeader className="p-4 pb-0">
-                        <CardTitle className="text-lg font-medium">{course.title}</CardTitle>
-                        <p className="text-sm text-gray-600">{course.teacher}</p>
-                      </CardHeader>
-                      <CardContent className="p-4">
-                        <div className="flex justify-between mb-4">
-                          <span className="text-sm text-gray-600">Completed: {course.completedDate}</span>
-                          <span className="font-medium text-green-600">Grade: {course.grade}</span>
-                        </div>
-                        <div className="mt-4 flex gap-2">
-                          <Button variant="outline" size="sm" className="flex-1">
-                            View Certificate
-                          </Button>
-                          <Button size="sm" className="flex-1 bg-kidato-blue hover:bg-kidato-dark-blue">
-                            Review Course
-                          </Button>
-                        </div>
-                      </CardContent>
                     </Card>
                   ))}
                 </div>
