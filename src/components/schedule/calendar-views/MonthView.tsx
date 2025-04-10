@@ -3,6 +3,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { format, isSameDay } from "date-fns";
 import { mockEvents } from "../mockScheduleData";
 import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface MonthViewProps {
   month: Date;
@@ -29,7 +30,7 @@ export function MonthView({ month, onDateSelect }: MonthViewProps) {
         classNames={{
           day_selected: "bg-blue-100 text-blue-700 hover:bg-blue-200 hover:text-blue-800 focus:bg-blue-100 focus:text-blue-700",
           day_today: "border border-blue-500 text-blue-900 bg-blue-50",
-          cell: "h-24 p-0 relative", // Increased height for more room
+          cell: "h-28 p-0 relative", // Increased height even more for better spacing
           day: "h-full w-full p-0"
         }}
         components={{
@@ -38,27 +39,36 @@ export function MonthView({ month, onDateSelect }: MonthViewProps) {
             const events = eventsByDate[dateStr] || [];
             
             return (
-              <div className="flex flex-col h-full w-full p-1">
-                {/* Date number in top corner */}
-                <div className="text-right text-sm font-medium p-1">
+              <div className="flex flex-col h-full w-full">
+                {/* Date number in top-right corner with clearer styling */}
+                <div className="text-right text-sm font-medium p-1.5 border-b border-gray-100">
                   {props.date.getDate()}
                 </div>
                 
-                {/* Event badges - stacked vertically */}
-                <div className="flex flex-col gap-1 mt-1 overflow-hidden">
+                {/* Event badges - neatly stacked with consistent spacing */}
+                <div className="flex flex-col gap-1.5 p-1 overflow-hidden">
                   {events.slice(0, 2).map((event, i) => (
-                    <Badge 
-                      key={i} 
-                      className={`text-xs truncate py-0.5 px-1.5 ${getEventBadgeClass(event.type)}`}
-                      title={event.title} // Show full title on hover
-                    >
-                      <span className="truncate block max-w-full">{event.title}</span>
-                    </Badge>
+                    <TooltipProvider key={i}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Badge 
+                            className={`text-xs truncate py-1 px-2 cursor-default ${getEventBadgeClass(event.type)}`}
+                          >
+                            <span className="truncate block max-w-full">{event.title}</span>
+                          </Badge>
+                        </TooltipTrigger>
+                        <TooltipContent side="top">
+                          <div className="text-sm font-medium">{event.title}</div>
+                          <div className="text-xs">{event.time}</div>
+                          {event.location && <div className="text-xs">{event.location}</div>}
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                   ))}
                   
-                  {/* More indicator - positioned at bottom */}
+                  {/* More indicator - position at bottom with improved styling */}
                   {events.length > 2 && (
-                    <div className="text-xs text-gray-500 mt-auto text-center">
+                    <div className="text-xs bg-gray-100 rounded-sm px-2 py-0.5 text-gray-600 mt-auto text-center mx-1 mb-1">
                       +{events.length - 2} more
                     </div>
                   )}
