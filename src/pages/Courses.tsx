@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,7 +12,8 @@ import {
   Calendar, 
   ExternalLink, 
   Download,
-  BookOpen
+  BookOpen,
+  ArrowRight
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import StudentDashboardHeader from "@/components/dashboard/StudentDashboardHeader";
@@ -77,6 +79,37 @@ const Courses = () => {
     }
   ];
 
+  // Mock teacher data
+  const matchingTeachers = [
+    {
+      id: "teacher1",
+      name: "Sarah Johnson",
+      avatar: "SJ",
+      subject: "Mathematics",
+      rating: 4.8,
+      description: "Experienced math teacher with 10+ years specializing in algebra and calculus. Uses interactive methods to make complex concepts easy to understand.",
+      availability: "Weekdays afternoons"
+    },
+    {
+      id: "teacher2",
+      name: "Michael Rodriguez",
+      avatar: "MR",
+      subject: "Science",
+      rating: 4.9,
+      description: "Physics and chemistry expert with a talent for engaging experiments. Makes science come alive with real-world applications.",
+      availability: "Evenings and weekends"
+    },
+    {
+      id: "teacher3",
+      name: "Emma Wilson",
+      avatar: "EW",
+      subject: "English",
+      rating: 4.7,
+      description: "Creative writing coach and literature enthusiast. Helps students develop their unique voice while mastering grammar and structure.",
+      availability: "Monday, Wednesday, Friday"
+    }
+  ];
+
   const recommendedCourses = [
     {
       id: "math202",
@@ -85,7 +118,8 @@ const Courses = () => {
       description: "Take your math skills to the next level with advanced concepts and problem-solving.",
       nextClass: "Monday, 1:00 PM",
       dueDate: "May 25, 2025",
-      members: 3
+      members: 3,
+      matchingTeacher: "teacher1"
     },
     {
       id: "phys101",
@@ -94,7 +128,8 @@ const Courses = () => {
       description: "Discover the basic principles that govern the physical world around us.",
       nextClass: "Thursday, 11:30 AM",
       dueDate: "June 10, 2025",
-      members: 4
+      members: 4,
+      matchingTeacher: "teacher2"
     },
     {
       id: "code101",
@@ -103,7 +138,8 @@ const Courses = () => {
       description: "Begin your coding journey with the basics of programming logic and syntax.",
       nextClass: "Friday, 2:15 PM",
       dueDate: "May 30, 2025",
-      members: 5
+      members: 5,
+      matchingTeacher: "teacher3"
     }
   ];
   
@@ -130,6 +166,10 @@ const Courses = () => {
   const generateInitials = (index: number) => {
     const initials = ["JD", "TS", "EW", "AM", "KP", "RJ"];
     return initials[index % initials.length];
+  };
+
+  const getMatchingTeacher = (teacherId: string) => {
+    return matchingTeachers.find(teacher => teacher.id === teacherId);
   };
 
   return (
@@ -175,49 +215,99 @@ const Courses = () => {
                 </TabsTrigger>
               </TabsList>
               
-              {/* Matching Classes & Teachers Cards */}
+              {/* Matching Classes & Teachers Cards - Now one per row with teacher connections */}
               <TabsContent value="matching">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                  {recommendedCourses.map((course) => (
-                    <Card key={course.id} className="overflow-hidden border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
-                      <CardContent className="p-6">
-                        <div className="flex justify-between items-start mb-4">
-                          <div>
-                            <h3 className="text-xl font-bold text-gray-800 mb-1">{course.title}</h3>
-                            <Badge variant="secondary" className="bg-blue-100 text-blue-700 hover:bg-blue-200">
-                              {course.subject}
-                            </Badge>
-                          </div>
-                          <Button variant="ghost" className="rounded-full p-2 h-auto" size="icon">
-                            <MessageSquare className="h-5 w-5 text-gray-500" />
-                          </Button>
-                        </div>
+                <div className="space-y-6 mb-8">
+                  {recommendedCourses.map((course) => {
+                    const matchingTeacher = getMatchingTeacher(course.matchingTeacher);
+                    
+                    return (
+                      <div key={course.id} className="flex flex-col lg:flex-row gap-6">
+                        {/* Class Card */}
+                        <Card className="flex-1 overflow-hidden border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+                          <CardContent className="p-6">
+                            <div className="flex justify-between items-start mb-4">
+                              <div>
+                                <h3 className="text-xl font-bold text-gray-800 mb-1">{course.title}</h3>
+                                <Badge variant="secondary" className="bg-blue-100 text-blue-700 hover:bg-blue-200">
+                                  {course.subject}
+                                </Badge>
+                              </div>
+                              <Button variant="ghost" className="rounded-full p-2 h-auto" size="icon">
+                                <MessageSquare className="h-5 w-5 text-gray-500" />
+                              </Button>
+                            </div>
 
-                        <p className="text-gray-600 mb-6">{course.description}</p>
+                            <p className="text-gray-600 mb-6">{course.description}</p>
 
-                        <div className="flex flex-col space-y-3 mb-6">
-                          <div className="flex items-center text-gray-600">
-                            <Users className="h-4 w-4 mr-2 text-blue-500" />
-                            <span>{course.members} Members</span>
-                          </div>
-                          <div className="flex items-center text-gray-600">
-                            <Clock className="h-4 w-4 mr-2 text-blue-500" />
-                            <span>{course.nextClass}</span>
-                          </div>
-                          <div className="flex items-center text-gray-600">
-                            <Calendar className="h-4 w-4 mr-2 text-blue-500" />
-                            <span>Due: {course.dueDate}</span>
-                          </div>
-                        </div>
+                            <div className="flex flex-col space-y-3 mb-6">
+                              <div className="flex items-center text-gray-600">
+                                <Users className="h-4 w-4 mr-2 text-blue-500" />
+                                <span>{course.members} Members</span>
+                              </div>
+                              <div className="flex items-center text-gray-600">
+                                <Clock className="h-4 w-4 mr-2 text-blue-500" />
+                                <span>{course.nextClass}</span>
+                              </div>
+                              <div className="flex items-center text-gray-600">
+                                <Calendar className="h-4 w-4 mr-2 text-blue-500" />
+                                <span>Due: {course.dueDate}</span>
+                              </div>
+                            </div>
 
-                        <div className="flex justify-end">
-                          <Button className="bg-kidato-blue hover:bg-kidato-dark-blue">
-                            Enroll Now
-                          </Button>
+                            <div className="flex justify-end">
+                              <Button className="bg-kidato-blue hover:bg-kidato-dark-blue">
+                                Enroll Now
+                              </Button>
+                            </div>
+                          </CardContent>
+                        </Card>
+                        
+                        {/* Arrow Connecting to Teacher */}
+                        <div className="hidden lg:flex items-center justify-center">
+                          <ArrowRight className="h-10 w-10 text-blue-400" />
                         </div>
-                      </CardContent>
-                    </Card>
-                  ))}
+                        
+                        {/* Teacher Card */}
+                        {matchingTeacher && (
+                          <Card className="flex-1 overflow-hidden border border-gray-100 shadow-sm hover:shadow-md transition-shadow bg-gradient-to-br from-blue-50 to-white">
+                            <CardContent className="p-6">
+                              <div className="flex items-start gap-4">
+                                <Avatar className="h-14 w-14 border-2 border-blue-200 bg-blue-100">
+                                  <AvatarFallback className="text-blue-700 font-medium">
+                                    {matchingTeacher.avatar}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <div>
+                                  <h3 className="text-xl font-bold text-gray-800">{matchingTeacher.name}</h3>
+                                  <div className="flex items-center gap-2 mt-1">
+                                    <Badge variant="secondary" className="bg-blue-100 text-blue-700 hover:bg-blue-200">
+                                      {matchingTeacher.subject}
+                                    </Badge>
+                                    <span className="text-amber-500 font-medium">★ {matchingTeacher.rating}</span>
+                                  </div>
+                                </div>
+                              </div>
+                              
+                              <p className="text-gray-600 my-4">{matchingTeacher.description}</p>
+                              
+                              <div className="flex items-center text-gray-600 mb-4">
+                                <Clock className="h-4 w-4 mr-2 text-blue-500" />
+                                <span>Available: {matchingTeacher.availability}</span>
+                              </div>
+
+                              <div className="flex justify-end space-x-2">
+                                <Button variant="outline">View Profile</Button>
+                                <Button className="bg-kidato-blue hover:bg-kidato-dark-blue">
+                                  Message Teacher
+                                </Button>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </TabsContent>
               
