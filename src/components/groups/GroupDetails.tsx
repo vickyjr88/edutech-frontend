@@ -11,13 +11,22 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
-import { CalendarDays, Clock, Users, MessageSquare, FileText, CheckCircle2 } from "lucide-react";
+import { CalendarDays, Clock, Users, MessageSquare, FileText, CheckCircle2, Plus, Trash2 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import { useToast } from "@/hooks/use-toast";
 
 interface Member {
   id: number;
   name: string;
   image: string;
+}
+
+interface Task {
+  id: number;
+  title: string;
+  completed: boolean;
+  assignedTo?: number;
 }
 
 interface GroupDetailsProps {
@@ -32,13 +41,83 @@ interface GroupDetailsProps {
     members: Member[];
     meetingTime: string;
     deadline: string;
+    tasks?: Task[];
   } | null;
 }
 
 const GroupDetails = ({ open, onOpenChange, group }: GroupDetailsProps) => {
   const [activeTab, setActiveTab] = useState("overview");
+  const [newTaskTitle, setNewTaskTitle] = useState("");
+  const [localTasks, setLocalTasks] = useState<Task[]>([]);
+  const { toast } = useToast();
   
   if (!group) return null;
+  
+  // Initialize local tasks from group or empty array if none
+  useState(() => {
+    if (group && group.tasks) {
+      setLocalTasks(group.tasks);
+    }
+  });
+
+  const tasks = group.tasks || localTasks;
+  
+  const toggleTaskCompletion = (taskId: number) => {
+    const updatedTasks = tasks.map(task => 
+      task.id === taskId ? { ...task, completed: !task.completed } : task
+    );
+    
+    setLocalTasks(updatedTasks);
+    
+    // Calculate new progress based on completed tasks
+    const completedTasksCount = updatedTasks.filter(task => task.completed).length;
+    const newProgress = updatedTasks.length > 0 
+      ? Math.round((completedTasksCount / updatedTasks.length) * 100) 
+      : 0;
+    
+    toast({
+      title: "Task status updated",
+      description: `Progress updated to ${newProgress}%`,
+    });
+  };
+  
+  const addNewTask = () => {
+    if (!newTaskTitle.trim()) return;
+    
+    const newTask: Task = {
+      id: Date.now(),
+      title: newTaskTitle,
+      completed: false
+    };
+    
+    const updatedTasks = [...tasks, newTask];
+    setLocalTasks(updatedTasks);
+    setNewTaskTitle("");
+    
+    toast({
+      title: "Task added",
+      description: "New task has been added to the group",
+    });
+  };
+  
+  const deleteTask = (taskId: number) => {
+    const updatedTasks = tasks.filter(task => task.id !== taskId);
+    setLocalTasks(updatedTasks);
+    
+    toast({
+      title: "Task deleted",
+      description: "The task has been removed from the group",
+    });
+  };
+  
+  // Calculate progress based on completed tasks
+  const calculateTaskProgress = () => {
+    if (tasks.length === 0) return group.progress || 0;
+    const completedTasksCount = tasks.filter(task => task.completed).length;
+    return Math.round((completedTasksCount / tasks.length) * 100);
+  };
+  
+  const taskProgress = calculateTaskProgress();
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -75,9 +154,9 @@ const GroupDetails = ({ open, onOpenChange, group }: GroupDetailsProps) => {
             <div className="mb-4">
               <div className="flex justify-between text-sm mb-1">
                 <span className="text-gray-600">Progress</span>
-                <span className="font-medium">{group.progress}%</span>
+                <span className="font-medium">{taskProgress}%</span>
               </div>
-              <Progress value={group.progress} className="h-2" />
+              <Progress value={taskProgress} className="h-2" />
             </div>
             
             <div className="bg-gray-50 p-4 rounded-lg border border-gray-100">
@@ -135,14 +214,54 @@ const GroupDetails = ({ open, onOpenChange, group }: GroupDetailsProps) => {
           </TabsContent>
           
           <TabsContent value="tasks" className="space-y-4">
-            <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-100">
-              <p className="text-center text-yellow-700">No tasks have been created for this group yet.</p>
-            </div>
+            {tasks.length === 0 ? (
+              <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-100">
+                <p className="text-center text-yellow-700">No tasks have been created for this group yet.</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {tasks.map(task => (
+                  <div 
+                    key={task.id} 
+                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-100"
+                  >
+                    <div className="flex items-center gap-3">
+                      <Button 
+                        variant="outline" 
+                        size="icon" 
+                        className={`rounded-full p-0 h-6 w-6 ${task.completed ? 'bg-green-100 text-green-700 border-green-300' : 'bg-gray-100'}`}
+                        onClick={() => toggleTaskCompletion(task.id)}
+                      >
+                        {task.completed && <CheckCircle2 className="h-4 w-4" />}
+                      </Button>
+                      <span className={task.completed ? 'line-through text-gray-500' : ''}>{task.title}</span>
+                    </div>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50"
+                      onClick={() => deleteTask(task.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
             
-            <Button className="w-full">
-              <CheckCircle2 className="mr-2 h-4 w-4" />
-              Add New Task
-            </Button>
+            <div className="flex gap-2">
+              <Input 
+                placeholder="Add a new task..." 
+                value={newTaskTitle}
+                onChange={(e) => setNewTaskTitle(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && addNewTask()}
+                className="flex-1"
+              />
+              <Button onClick={addNewTask}>
+                <Plus className="mr-2 h-4 w-4" />
+                Add Task
+              </Button>
+            </div>
           </TabsContent>
           
           <TabsContent value="resources" className="space-y-4">
