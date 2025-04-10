@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -31,7 +30,7 @@ import {
 
 const Courses = () => {
   const [userName] = useState("John Doe");
-  const [selectedTab, setSelectedTab] = useState("enrolled");
+  const [selectedTab, setSelectedTab] = useState("matching");
   const [filterOpen, setFilterOpen] = useState(false);
   
   // Mock student courses data
@@ -126,7 +125,7 @@ const Courses = () => {
       grade: "B+"
     }
   ];
-
+  
   // Generate avatar initials for demo
   const generateInitials = (index: number) => {
     const initials = ["JD", "TS", "EW", "AM", "KP", "RJ"];
@@ -165,16 +164,62 @@ const Courses = () => {
               </div>
             </div>
             
-            {/* Course Tabs */}
-            <Tabs defaultValue="enrolled" className="mb-8" onValueChange={setSelectedTab}>
+            {/* Course Tabs - Updated Order and Tab Names */}
+            <Tabs defaultValue="matching" className="mb-8" onValueChange={setSelectedTab}>
               <TabsList className="mb-6 bg-blue-50/50 p-1 border border-blue-100">
+                <TabsTrigger value="matching" className="data-[state=active]:bg-white data-[state=active]:text-kidato-blue data-[state=active]:shadow-sm rounded-md">
+                  Matching Classes & Teachers
+                </TabsTrigger>
                 <TabsTrigger value="enrolled" className="data-[state=active]:bg-white data-[state=active]:text-kidato-blue data-[state=active]:shadow-sm rounded-md">
                   Enrolled Classes
                 </TabsTrigger>
-                <TabsTrigger value="recommended" className="data-[state=active]:bg-white data-[state=active]:text-kidato-blue data-[state=active]:shadow-sm rounded-md">
-                  Recommended for You
-                </TabsTrigger>
               </TabsList>
+              
+              {/* Matching Classes & Teachers Cards */}
+              <TabsContent value="matching">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                  {recommendedCourses.map((course) => (
+                    <Card key={course.id} className="overflow-hidden border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+                      <CardContent className="p-6">
+                        <div className="flex justify-between items-start mb-4">
+                          <div>
+                            <h3 className="text-xl font-bold text-gray-800 mb-1">{course.title}</h3>
+                            <Badge variant="secondary" className="bg-blue-100 text-blue-700 hover:bg-blue-200">
+                              {course.subject}
+                            </Badge>
+                          </div>
+                          <Button variant="ghost" className="rounded-full p-2 h-auto" size="icon">
+                            <MessageSquare className="h-5 w-5 text-gray-500" />
+                          </Button>
+                        </div>
+
+                        <p className="text-gray-600 mb-6">{course.description}</p>
+
+                        <div className="flex flex-col space-y-3 mb-6">
+                          <div className="flex items-center text-gray-600">
+                            <Users className="h-4 w-4 mr-2 text-blue-500" />
+                            <span>{course.members} Members</span>
+                          </div>
+                          <div className="flex items-center text-gray-600">
+                            <Clock className="h-4 w-4 mr-2 text-blue-500" />
+                            <span>{course.nextClass}</span>
+                          </div>
+                          <div className="flex items-center text-gray-600">
+                            <Calendar className="h-4 w-4 mr-2 text-blue-500" />
+                            <span>Due: {course.dueDate}</span>
+                          </div>
+                        </div>
+
+                        <div className="flex justify-end">
+                          <Button className="bg-kidato-blue hover:bg-kidato-dark-blue">
+                            Enroll Now
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </TabsContent>
               
               {/* Enrolled Courses Table */}
               <TabsContent value="enrolled">
@@ -318,52 +363,6 @@ const Courses = () => {
                       </div>
                     </CardContent>
                   </Card>
-                </div>
-              </TabsContent>
-              
-              {/* Recommended Courses Cards */}
-              <TabsContent value="recommended">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                  {recommendedCourses.map((course) => (
-                    <Card key={course.id} className="overflow-hidden border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
-                      <CardContent className="p-6">
-                        <div className="flex justify-between items-start mb-4">
-                          <div>
-                            <h3 className="text-xl font-bold text-gray-800 mb-1">{course.title}</h3>
-                            <Badge variant="secondary" className="bg-blue-100 text-blue-700 hover:bg-blue-200">
-                              {course.subject}
-                            </Badge>
-                          </div>
-                          <Button variant="ghost" className="rounded-full p-2 h-auto" size="icon">
-                            <MessageSquare className="h-5 w-5 text-gray-500" />
-                          </Button>
-                        </div>
-
-                        <p className="text-gray-600 mb-6">{course.description}</p>
-
-                        <div className="flex flex-col space-y-3 mb-6">
-                          <div className="flex items-center text-gray-600">
-                            <Users className="h-4 w-4 mr-2 text-blue-500" />
-                            <span>{course.members} Members</span>
-                          </div>
-                          <div className="flex items-center text-gray-600">
-                            <Clock className="h-4 w-4 mr-2 text-blue-500" />
-                            <span>{course.nextClass}</span>
-                          </div>
-                          <div className="flex items-center text-gray-600">
-                            <Calendar className="h-4 w-4 mr-2 text-blue-500" />
-                            <span>Due: {course.dueDate}</span>
-                          </div>
-                        </div>
-
-                        <div className="flex justify-end">
-                          <Button className="bg-kidato-blue hover:bg-kidato-dark-blue">
-                            Enroll Now
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
                 </div>
               </TabsContent>
             </Tabs>
