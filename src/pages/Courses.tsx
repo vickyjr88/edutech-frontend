@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,7 +12,8 @@ import {
   ExternalLink, 
   Download,
   BookOpen,
-  ArrowRight
+  ArrowRight,
+  UserRound
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import StudentDashboardHeader from "@/components/dashboard/StudentDashboardHeader";
@@ -110,6 +110,7 @@ const Courses = () => {
     }
   ];
 
+  // Updated recommended courses with social proof - added students array
   const recommendedCourses = [
     {
       id: "math202",
@@ -119,7 +120,12 @@ const Courses = () => {
       nextClass: "Monday, 1:00 PM",
       dueDate: "May 25, 2025",
       members: 3,
-      matchingTeacher: "teacher1"
+      matchingTeacher: "teacher1",
+      students: [
+        { name: "Tina Smith", avatar: "TS", shared: 2 },
+        { name: "Alex Miller", avatar: "AM", shared: 1 },
+        { name: "Emma Wong", avatar: "EW", shared: 3 }
+      ]
     },
     {
       id: "phys101",
@@ -129,7 +135,12 @@ const Courses = () => {
       nextClass: "Thursday, 11:30 AM",
       dueDate: "June 10, 2025",
       members: 4,
-      matchingTeacher: "teacher2"
+      matchingTeacher: "teacher2",
+      students: [
+        { name: "Kevin Parker", avatar: "KP", shared: 2 },
+        { name: "Rachel Johnson", avatar: "RJ", shared: 1 },
+        { name: "Emma Wong", avatar: "EW", shared: 1 }
+      ]
     },
     {
       id: "code101",
@@ -139,7 +150,12 @@ const Courses = () => {
       nextClass: "Friday, 2:15 PM",
       dueDate: "May 30, 2025",
       members: 5,
-      matchingTeacher: "teacher3"
+      matchingTeacher: "teacher3",
+      students: [
+        { name: "Tina Smith", avatar: "TS", shared: 1 },
+        { name: "Kevin Parker", avatar: "KP", shared: 2 },
+        { name: "Rachel Johnson", avatar: "RJ", shared: 1 }
+      ]
     }
   ];
   
@@ -215,7 +231,7 @@ const Courses = () => {
                 </TabsTrigger>
               </TabsList>
               
-              {/* Matching Classes & Teachers Cards - Now one per row with teacher connections */}
+              {/* Matching Classes & Teachers Cards - Enhanced with social proof */}
               <TabsContent value="matching">
                 <div className="space-y-6 mb-8">
                   {recommendedCourses.map((course) => {
@@ -252,6 +268,27 @@ const Courses = () => {
                               <div className="flex items-center text-gray-600">
                                 <Calendar className="h-4 w-4 mr-2 text-blue-500" />
                                 <span>Due: {course.dueDate}</span>
+                              </div>
+                            </div>
+                            
+                            {/* Social Proof - Students you know taking this course */}
+                            <div className="bg-blue-50 p-3 rounded-lg mb-6">
+                              <div className="flex items-center mb-2">
+                                <UserRound className="h-4 w-4 mr-2 text-blue-600" />
+                                <span className="text-sm font-medium text-blue-800">Classmates taking this course</span>
+                              </div>
+                              <div className="flex flex-wrap gap-2">
+                                {course.students.map((student, i) => (
+                                  <div key={i} className="flex items-center bg-white rounded-full py-1 px-3 border border-blue-100">
+                                    <Avatar className="h-6 w-6 mr-2">
+                                      <AvatarFallback className="bg-blue-100 text-xs text-blue-700">{student.avatar}</AvatarFallback>
+                                    </Avatar>
+                                    <span className="text-xs">{student.name}</span>
+                                    <Badge variant="outline" className="ml-2 text-[10px] px-1 py-0 h-4 bg-blue-50">
+                                      {student.shared} shared {student.shared > 1 ? "classes" : "class"}
+                                    </Badge>
+                                  </div>
+                                ))}
                               </div>
                             </div>
 
@@ -457,7 +494,7 @@ const Courses = () => {
               </TabsContent>
             </Tabs>
 
-            {/* Advanced Course Filters - Only shows when filter button is clicked */}
+            {/* Advanced Course Filters */}
             {filterOpen && (
               <Card className="mb-8 border border-blue-100">
                 <CardHeader className="bg-blue-50/50 pb-2">
