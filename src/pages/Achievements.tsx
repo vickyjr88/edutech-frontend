@@ -1,14 +1,31 @@
 
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Award } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import StudentDashboardHeader from "@/components/dashboard/StudentDashboardHeader";
 import StudentSidebar from "@/components/dashboard/StudentSidebar";
 import KidatoMascot from "@/components/dashboard/KidatoMascot";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import AchievementsList from "@/components/achievements/AchievementsList";
+import LeaderboardTable from "@/components/achievements/LeaderboardTable";
+import AchievementsSummary from "@/components/achievements/AchievementsSummary";
+import { mockAchievements, mockLeaderboardData, mockRecentAchievements } from "@/components/achievements/mockData";
 
 const Achievements = () => {
   const [userName] = useState("John Doe");
+  const currentUserId = 104; // ID matching John Doe in the leaderboard data
+  
+  // Achievement summary data
+  const summaryData = {
+    totalAchievements: 15,
+    unlockedAchievements: 4,
+    totalXP: 575,
+    levelInfo: {
+      current: 5,
+      xpForNext: 1000,
+      currentXP: 575,
+      title: "Knowledge Explorer"
+    },
+    streak: 9
+  };
 
   return (
     <div className="flex min-h-screen bg-gradient-to-b from-blue-50 to-white">
@@ -26,29 +43,33 @@ const Achievements = () => {
               <h1 className="text-2xl font-bold text-gray-800">Achievements</h1>
             </div>
             
-            {/* Coming Soon Message */}
-            <Card className="mb-6 border-2 border-blue-100">
-              <CardHeader className="bg-gradient-to-r from-blue-50 to-purple-50 pb-2">
-                <CardTitle className="text-lg font-bold flex items-center">
-                  <Award className="mr-2 h-5 w-5 text-yellow-500" />
-                  Achievements & Badges
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-6">
-                <div className="bg-gradient-to-r from-blue-50 via-purple-50 to-blue-50 p-8 rounded-xl text-center">
-                  <div className="flex flex-col items-center justify-center space-y-4">
-                    <Award className="h-16 w-16 text-yellow-500" />
-                    <h2 className="text-xl font-bold">Achievements Coming Soon!</h2>
-                    <p className="text-gray-600 max-w-md mx-auto">
-                      We're creating an exciting system of badges and achievements to celebrate your learning milestones!
-                    </p>
-                    <Button className="bg-kidato-blue hover:bg-kidato-dark-blue mt-2">
-                      Get Notified When Ready
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <div className="space-y-6">
+              {/* Achievement Summary */}
+              <AchievementsSummary {...summaryData} />
+              
+              <Tabs defaultValue="all" className="space-y-6">
+                <TabsList>
+                  <TabsTrigger value="all">All Achievements</TabsTrigger>
+                  <TabsTrigger value="recent">Recently Earned</TabsTrigger>
+                  <TabsTrigger value="leaderboard">Leaderboard</TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="all" className="space-y-6">
+                  <AchievementsList achievements={mockAchievements} />
+                </TabsContent>
+                
+                <TabsContent value="recent" className="space-y-6">
+                  <AchievementsList 
+                    achievements={mockRecentAchievements} 
+                    title="Recently Earned Achievements" 
+                  />
+                </TabsContent>
+                
+                <TabsContent value="leaderboard" className="space-y-6">
+                  <LeaderboardTable entries={mockLeaderboardData} currentUserId={currentUserId} />
+                </TabsContent>
+              </Tabs>
+            </div>
           </div>
         </main>
       </div>
