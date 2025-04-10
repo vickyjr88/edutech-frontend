@@ -1,4 +1,3 @@
-
 import { AchievementType } from "./AchievementsList";
 import { LeaderboardEntryType } from "./LeaderboardTable";
 
@@ -27,7 +26,7 @@ export const mockAchievements: AchievementType[] = [
     id: 3,
     name: "Science Explorer",
     description: "Complete all experiments in the Basic Science course",
-    icon: "Flask",
+    icon: "Beaker",
     category: "academic",
     xpValue: 200,
     progress: 75,

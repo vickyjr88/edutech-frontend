@@ -6,13 +6,13 @@ import {
   Brain, 
   Clock, 
   Code, 
-  Flask, 
   Lightbulb, 
   Medal, 
   Puzzle, 
   Sparkles, 
   Star, 
-  Trophy 
+  Trophy,
+  Beaker
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -34,7 +34,7 @@ const achievementIconMap = {
   "Brain": Brain,
   "Clock": Clock,
   "Code": Code,
-  "Flask": Flask,
+  "Flask": Beaker, // Changed Flask to Beaker which is available in lucide-react
   "Lightbulb": Lightbulb,
   "Medal": Medal,
   "Puzzle": Puzzle,
