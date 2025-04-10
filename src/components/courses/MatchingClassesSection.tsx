@@ -56,7 +56,53 @@ const MatchingClassesSection = ({ recommendedCourses, matchingTeachers }: Matchi
         
         return (
           <div key={course.id} className="flex flex-col lg:flex-row gap-6">
-            {/* Class Card */}
+            {/* Teacher Card - Now First */}
+            {matchingTeacher && (
+              <Card className="flex-1 overflow-hidden border border-gray-100 shadow-sm hover:shadow-md transition-shadow bg-gradient-to-br from-blue-50 to-white">
+                <CardContent className="p-6">
+                  <div className="flex items-start gap-4">
+                    <Avatar className="h-14 w-14 border-2 border-blue-200 bg-blue-100">
+                      <AvatarFallback className="text-blue-700 font-medium">
+                        {matchingTeacher.avatar}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <h3 className="text-xl font-bold text-gray-800">{matchingTeacher.name}</h3>
+                      <div className="flex items-center gap-2 mt-1">
+                        <Badge variant="secondary" className="bg-blue-100 text-blue-700 hover:bg-blue-200">
+                          {matchingTeacher.subject}
+                        </Badge>
+                        <div className="flex items-center text-amber-500">
+                          <Star className="h-3.5 w-3.5 fill-amber-500 mr-1" />
+                          <span className="font-medium">{matchingTeacher.rating}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <p className="text-gray-600 my-4">{matchingTeacher.description}</p>
+                  
+                  <div className="flex items-center text-gray-600 mb-4">
+                    <Clock className="h-4 w-4 mr-2 text-blue-500" />
+                    <span>Available: {matchingTeacher.availability}</span>
+                  </div>
+
+                  <div className="flex justify-end space-x-2">
+                    <Button variant="outline">View Profile</Button>
+                    <Button className="bg-kidato-blue hover:bg-kidato-dark-blue">
+                      Message Teacher
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+            
+            {/* Arrow Connecting Teacher to Class */}
+            <div className="hidden lg:flex items-center justify-center">
+              <ArrowRight className="h-10 w-10 text-blue-400" />
+            </div>
+            
+            {/* Class Card - Now Second */}
             <Card className="flex-1 overflow-hidden border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
               <CardContent className="p-6">
                 <div className="flex justify-between items-start mb-4">
@@ -139,52 +185,6 @@ const MatchingClassesSection = ({ recommendedCourses, matchingTeachers }: Matchi
                 </div>
               </CardContent>
             </Card>
-            
-            {/* Arrow Connecting to Teacher */}
-            <div className="hidden lg:flex items-center justify-center">
-              <ArrowRight className="h-10 w-10 text-blue-400" />
-            </div>
-            
-            {/* Teacher Card */}
-            {matchingTeacher && (
-              <Card className="flex-1 overflow-hidden border border-gray-100 shadow-sm hover:shadow-md transition-shadow bg-gradient-to-br from-blue-50 to-white">
-                <CardContent className="p-6">
-                  <div className="flex items-start gap-4">
-                    <Avatar className="h-14 w-14 border-2 border-blue-200 bg-blue-100">
-                      <AvatarFallback className="text-blue-700 font-medium">
-                        {matchingTeacher.avatar}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <h3 className="text-xl font-bold text-gray-800">{matchingTeacher.name}</h3>
-                      <div className="flex items-center gap-2 mt-1">
-                        <Badge variant="secondary" className="bg-blue-100 text-blue-700 hover:bg-blue-200">
-                          {matchingTeacher.subject}
-                        </Badge>
-                        <div className="flex items-center text-amber-500">
-                          <Star className="h-3.5 w-3.5 fill-amber-500 mr-1" />
-                          <span className="font-medium">{matchingTeacher.rating}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <p className="text-gray-600 my-4">{matchingTeacher.description}</p>
-                  
-                  <div className="flex items-center text-gray-600 mb-4">
-                    <Clock className="h-4 w-4 mr-2 text-blue-500" />
-                    <span>Available: {matchingTeacher.availability}</span>
-                  </div>
-
-                  <div className="flex justify-end space-x-2">
-                    <Button variant="outline">View Profile</Button>
-                    <Button className="bg-kidato-blue hover:bg-kidato-dark-blue">
-                      Message Teacher
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
           </div>
         );
       })}
