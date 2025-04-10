@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { 
   Dialog,
   DialogContent,
@@ -51,15 +51,17 @@ const GroupDetails = ({ open, onOpenChange, group }: GroupDetailsProps) => {
   const [localTasks, setLocalTasks] = useState<Task[]>([]);
   const { toast } = useToast();
   
-  if (!group) return null;
-  
-  // Initialize local tasks from group or empty array if none
-  useState(() => {
+  // Initialize local tasks when group changes
+  useEffect(() => {
     if (group && group.tasks) {
       setLocalTasks(group.tasks);
+    } else {
+      setLocalTasks([]);
     }
-  });
+  }, [group]);
 
+  if (!group) return null;
+  
   const tasks = group.tasks || localTasks;
   
   const toggleTaskCompletion = (taskId: number) => {
