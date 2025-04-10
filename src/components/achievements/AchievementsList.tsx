@@ -34,7 +34,7 @@ const achievementIconMap = {
   "Brain": Brain,
   "Clock": Clock,
   "Code": Code,
-  "Flask": Beaker, // Changed Flask to Beaker which is available in lucide-react
+  "Beaker": Beaker, // Changed from Flask to Beaker
   "Lightbulb": Lightbulb,
   "Medal": Medal,
   "Puzzle": Puzzle,
