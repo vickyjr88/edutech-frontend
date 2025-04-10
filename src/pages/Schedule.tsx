@@ -14,7 +14,7 @@ import { UpcomingEvents } from "@/components/schedule/UpcomingEvents";
 
 const Schedule = () => {
   const [userName] = useState("John Doe");
-  const [view, setView] = useState<"month" | "week" | "day">("month");
+  const [view, setView] = useState<"month" | "week" | "day">("day");
 
   return (
     <div className="flex min-h-screen bg-gradient-to-b from-blue-50 to-white">
@@ -70,9 +70,9 @@ const Schedule = () => {
                       </CardTitle>
                       <Tabs value={view} onValueChange={(v) => setView(v as "month" | "week" | "day")} className="ml-auto">
                         <TabsList>
-                          <TabsTrigger value="month">Month</TabsTrigger>
-                          <TabsTrigger value="week">Week</TabsTrigger>
                           <TabsTrigger value="day">Day</TabsTrigger>
+                          <TabsTrigger value="week">Week</TabsTrigger>
+                          <TabsTrigger value="month">Month</TabsTrigger>
                         </TabsList>
                       </Tabs>
                     </div>
