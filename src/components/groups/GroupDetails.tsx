@@ -11,10 +11,20 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
-import { CalendarDays, Clock, Users, MessageSquare, FileText, CheckCircle2, Plus, Trash2 } from "lucide-react";
+import { CalendarDays, Clock, Users, MessageSquare, FileText, CheckCircle2, Plus, Trash2, Calendar } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from "@/components/ui/select";
+import { format } from "date-fns";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 interface Member {
   id: number;
@@ -27,6 +37,7 @@ interface Task {
   title: string;
   completed: boolean;
   assignedTo?: number;
+  dueDate?: string;
 }
 
 interface GroupDetailsProps {
@@ -49,6 +60,8 @@ const GroupDetails = ({ open, onOpenChange, group }: GroupDetailsProps) => {
   const [activeTab, setActiveTab] = useState("overview");
   const [newTaskTitle, setNewTaskTitle] = useState("");
   const [localTasks, setLocalTasks] = useState<Task[]>([]);
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+  const [selectedMember, setSelectedMember] = useState<number | undefined>(undefined);
   const { toast } = useToast();
   
   // Initialize local tasks when group changes
@@ -89,12 +102,16 @@ const GroupDetails = ({ open, onOpenChange, group }: GroupDetailsProps) => {
     const newTask: Task = {
       id: Date.now(),
       title: newTaskTitle,
-      completed: false
+      completed: false,
+      assignedTo: selectedMember,
+      dueDate: selectedDate ? format(selectedDate, 'yyyy-MM-dd') : undefined
     };
     
     const updatedTasks = [...tasks, newTask];
     setLocalTasks(updatedTasks);
     setNewTaskTitle("");
+    setSelectedDate(undefined);
+    setSelectedMember(undefined);
     
     toast({
       title: "Task added",
@@ -120,6 +137,13 @@ const GroupDetails = ({ open, onOpenChange, group }: GroupDetailsProps) => {
   };
   
   const taskProgress = calculateTaskProgress();
+
+  // Get member name by id
+  const getMemberName = (memberId?: number) => {
+    if (!memberId) return "Unassigned";
+    const member = group.members.find(m => m.id === memberId);
+    return member ? member.name : "Unknown";
+  };
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -225,9 +249,9 @@ const GroupDetails = ({ open, onOpenChange, group }: GroupDetailsProps) => {
                 {tasks.map(task => (
                   <div 
                     key={task.id} 
-                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-100"
+                    className="flex flex-wrap items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-100"
                   >
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 mb-1 sm:mb-0">
                       <Button 
                         variant="outline" 
                         size="icon" 
@@ -238,28 +262,85 @@ const GroupDetails = ({ open, onOpenChange, group }: GroupDetailsProps) => {
                       </Button>
                       <span className={task.completed ? 'line-through text-gray-500' : ''}>{task.title}</span>
                     </div>
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50"
-                      onClick={() => deleteTask(task.id)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    
+                    <div className="flex flex-wrap items-center gap-2 ml-9 sm:ml-0">
+                      {task.assignedTo && (
+                        <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                          {getMemberName(task.assignedTo)}
+                        </Badge>
+                      )}
+                      
+                      {task.dueDate && (
+                        <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
+                          <Calendar className="mr-1 h-3 w-3" /> {task.dueDate}
+                        </Badge>
+                      )}
+                      
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50"
+                        onClick={() => deleteTask(task.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
                 ))}
               </div>
             )}
             
-            <div className="flex gap-2">
+            <div className="space-y-3 p-4 border border-gray-100 rounded-lg bg-gray-50">
+              <h3 className="font-medium">Add New Task</h3>
+              
               <Input 
-                placeholder="Add a new task..." 
+                placeholder="Task title..." 
                 value={newTaskTitle}
                 onChange={(e) => setNewTaskTitle(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && addNewTask()}
-                className="flex-1"
+                className="w-full"
               />
-              <Button onClick={addNewTask}>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start text-left font-normal"
+                    >
+                      <Calendar className="mr-2 h-4 w-4" />
+                      {selectedDate ? format(selectedDate, 'PPP') : <span className="text-muted-foreground">Set due date</span>}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <CalendarComponent
+                      mode="single"
+                      selected={selectedDate}
+                      onSelect={setSelectedDate}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+                
+                <Select value={selectedMember?.toString()} onValueChange={(value) => setSelectedMember(value ? parseInt(value) : undefined)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Assign to member" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">Unassigned</SelectItem>
+                    {group.members.map(member => (
+                      <SelectItem key={member.id} value={member.id.toString()}>
+                        {member.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <Button 
+                onClick={addNewTask} 
+                className="w-full bg-kidato-blue hover:bg-kidato-dark-blue"
+                disabled={!newTaskTitle.trim()}
+              >
                 <Plus className="mr-2 h-4 w-4" />
                 Add Task
               </Button>
