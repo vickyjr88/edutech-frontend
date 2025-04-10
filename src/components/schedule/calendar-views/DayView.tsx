@@ -1,4 +1,3 @@
-
 import { format } from "date-fns";
 import { mockEvents } from "../mockScheduleData";
 import { cn } from "@/lib/utils";
@@ -26,7 +25,6 @@ export function DayView({ date }: DayViewProps) {
   const handleAddEvent = (hour: number) => {
     setSelectedHour(hour);
     
-    // Set the selected date with the right hour
     const newDate = new Date(date);
     newDate.setHours(hour, 0, 0, 0);
     
@@ -37,9 +35,7 @@ export function DayView({ date }: DayViewProps) {
     <>
       <div className="bg-white rounded-md shadow-sm border">
         <div className="grid grid-cols-1">
-          {/* Time grid */}
           {hours.map((hour, idx) => {
-            // Filter events for this specific hour
             const hourEvents = events.filter(event => 
               new Date(event.date).getHours() === hour
             );
@@ -97,7 +93,6 @@ export function DayView({ date }: DayViewProps) {
         </div>
       </div>
 
-      {/* Event Form Dialog for quick add via time slot */}
       {selectedHour !== null && (
         <EventFormDialog
           open={showAddEventDialog}
@@ -106,7 +101,7 @@ export function DayView({ date }: DayViewProps) {
             if (!open) setSelectedHour(null);
           }}
           eventToEdit={{
-            id: "",
+            id: 0,
             title: "",
             date: new Date(new Date(date).setHours(selectedHour || 0, 0, 0, 0)).toString(),
             time: `${selectedHour !== null ? (selectedHour % 12 === 0 ? '12' : selectedHour % 12) : '12'}:00 ${selectedHour !== null && selectedHour >= 12 ? 'PM' : 'AM'}`,
