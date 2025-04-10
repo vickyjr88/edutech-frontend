@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,17 +5,22 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { CalendarDays, Clock, Users, Target, MessageSquare } from "lucide-react";
+import { CalendarDays, Clock, Users, Target, MessageSquare, UserPlus } from "lucide-react";
 import StudentDashboardHeader from "@/components/dashboard/StudentDashboardHeader";
 import StudentSidebar from "@/components/dashboard/StudentSidebar";
 import KidatoMascot from "@/components/dashboard/KidatoMascot";
+import CreateGroupDialog from "@/components/groups/CreateGroupDialog";
+import GroupDetails from "@/components/groups/GroupDetails";
 
 const GroupWork = () => {
   const [userName] = useState("John Doe");
   const [activeTab, setActiveTab] = useState("current");
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
+  const [selectedGroup, setSelectedGroup] = useState<any>(null);
 
   // Mock data for group projects
-  const currentGroups = [
+  const [currentGroups, setCurrentGroups] = useState([
     {
       id: 1,
       name: "Math Problem Solvers",
@@ -46,7 +50,7 @@ const GroupWork = () => {
       deadline: "May 15, 2025",
       description: "Preparing a research project on renewable energy sources for the national science fair competition."
     }
-  ];
+  ]);
   
   const completedGroups = [
     {
@@ -81,7 +85,20 @@ const GroupWork = () => {
 
   const handleUpdateGoal = (groupId: number, progress: number) => {
     console.log("Updating group progress:", { groupId, progress });
-    // This would update the progress in a real application
+    setCurrentGroups(currentGroups.map(group => 
+      group.id === groupId 
+        ? { ...group, progress: Math.min(progress, 100) } 
+        : group
+    ));
+  };
+
+  const handleGroupCreate = (newGroup: any) => {
+    setCurrentGroups([...currentGroups, newGroup]);
+  };
+
+  const openGroupDetails = (group: any) => {
+    setSelectedGroup(group);
+    setDetailsDialogOpen(true);
   };
 
   return (
@@ -103,7 +120,11 @@ const GroupWork = () => {
               </div>
               <div className="flex gap-2 mt-2 sm:mt-0">
                 <Button variant="outline">Find Groups</Button>
-                <Button className="bg-kidato-blue hover:bg-kidato-dark-blue">
+                <Button 
+                  className="bg-kidato-blue hover:bg-kidato-dark-blue"
+                  onClick={() => setCreateDialogOpen(true)}
+                >
+                  <UserPlus className="mr-2 h-4 w-4" />
                   Create Group
                 </Button>
               </div>
@@ -189,7 +210,13 @@ const GroupWork = () => {
                             )}
                           </div>
                           <div className="flex space-x-2">
-                            <Button variant="outline" size="sm">Materials</Button>
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => openGroupDetails(group)}
+                            >
+                              Details
+                            </Button>
                             <Button 
                               className="bg-kidato-blue hover:bg-kidato-dark-blue" 
                               size="sm"
@@ -341,6 +368,19 @@ const GroupWork = () => {
           </div>
         </main>
       </div>
+
+      {/* Dialogs */}
+      <CreateGroupDialog 
+        open={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
+        onGroupCreate={handleGroupCreate}
+      />
+      
+      <GroupDetails
+        open={detailsDialogOpen}
+        onOpenChange={setDetailsDialogOpen}
+        group={selectedGroup}
+      />
 
       {/* Kidato AI Mascot */}
       <KidatoMascot />
