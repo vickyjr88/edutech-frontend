@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar as CalendarIcon, Plus, Filter, ChevronDown } from "lucide-react";
+import { Calendar as CalendarIcon, Plus, Filter, ChevronDown, RefreshCw } from "lucide-react";
 import StudentDashboardHeader from "@/components/dashboard/StudentDashboardHeader";
 import StudentSidebar from "@/components/dashboard/StudentSidebar";
 import KidatoMascot from "@/components/dashboard/KidatoMascot";
@@ -10,14 +10,29 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { UpcomingEvents } from "@/components/schedule/UpcomingEvents";
 import { EventFormDialog } from "@/components/schedule/EventFormDialog";
 import { Toaster } from "@/components/ui/toaster";
+import { toast } from "@/hooks/use-toast";
 
 const Schedule = () => {
   const [userName] = useState("John Doe");
   const [view, setView] = useState<"month" | "week" | "day">("day");
   const [showAddEventDialog, setShowAddEventDialog] = useState(false);
+  
+  const handleGoogleSync = () => {
+    toast({
+      title: "Sync initiated",
+      description: "Syncing with Google Calendar...",
+    });
+    
+    // Simulate syncing process
+    setTimeout(() => {
+      toast({
+        title: "Sync complete",
+        description: "Your schedule has been synced with Google Calendar",
+      });
+    }, 2000);
+  };
 
   return (
     <div className="flex min-h-screen bg-gradient-to-b from-blue-50 to-white">
@@ -34,6 +49,15 @@ const Schedule = () => {
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
               <h1 className="text-2xl font-bold text-gray-800">Schedule</h1>
               <div className="flex items-center gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="flex items-center gap-2"
+                  onClick={handleGoogleSync}
+                >
+                  <RefreshCw size={16} />
+                  <span>Sync with Google Calendar</span>
+                </Button>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button variant="outline" size="sm" className="flex items-center gap-2">
@@ -65,35 +89,28 @@ const Schedule = () => {
               </div>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Main Calendar Area - now spans 2 columns and comes first */}
-              <div className="md:col-span-2 order-2 md:order-1">
-                <Card className="border-2 border-blue-100">
-                  <CardHeader className="bg-gradient-to-r from-blue-50 to-purple-50 pb-2">
-                    <div className="flex justify-between items-center">
-                      <CardTitle className="text-lg font-bold flex items-center">
-                        <CalendarIcon className="mr-2 h-5 w-5 text-blue-500" />
-                        Your Schedule
-                      </CardTitle>
-                      <Tabs value={view} onValueChange={(v) => setView(v as "month" | "week" | "day")} className="ml-auto">
-                        <TabsList>
-                          <TabsTrigger value="day">Day</TabsTrigger>
-                          <TabsTrigger value="week">Week</TabsTrigger>
-                          <TabsTrigger value="month">Month</TabsTrigger>
-                        </TabsList>
-                      </Tabs>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="p-6">
-                    <ScheduleCalendar view={view} />
-                  </CardContent>
-                </Card>
-              </div>
-              
-              {/* Right Sidebar - Events List */}
-              <div className="md:col-span-1 order-1 md:order-2">
-                <UpcomingEvents />
-              </div>
+            {/* Full-width Calendar Area */}
+            <div className="w-full">
+              <Card className="border-2 border-blue-100">
+                <CardHeader className="bg-gradient-to-r from-blue-50 to-purple-50 pb-2">
+                  <div className="flex justify-between items-center">
+                    <CardTitle className="text-lg font-bold flex items-center">
+                      <CalendarIcon className="mr-2 h-5 w-5 text-blue-500" />
+                      Your Schedule
+                    </CardTitle>
+                    <Tabs value={view} onValueChange={(v) => setView(v as "month" | "week" | "day")} className="ml-auto">
+                      <TabsList>
+                        <TabsTrigger value="day">Day</TabsTrigger>
+                        <TabsTrigger value="week">Week</TabsTrigger>
+                        <TabsTrigger value="month">Month</TabsTrigger>
+                      </TabsList>
+                    </Tabs>
+                  </div>
+                </CardHeader>
+                <CardContent className="p-6">
+                  <ScheduleCalendar view={view} />
+                </CardContent>
+              </Card>
             </div>
           </div>
         </main>
