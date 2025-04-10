@@ -2,8 +2,9 @@
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { 
-  Home, Book, MessageSquare, User, Settings, LogOut, 
-  Sparkles, Target, Users, Calendar, Award 
+  Home, Book, MessageSquare, User, LogOut, 
+  Sparkles, Target, Users, Calendar, Award,
+  BellDot
 } from "lucide-react";
 
 const StudentSidebar = () => {
@@ -12,6 +13,11 @@ const StudentSidebar = () => {
 
   // Helper function to determine if a link is active
   const isActive = (path: string) => currentPath === path;
+
+  // Mock notification states
+  const hasNewMatches = true;
+  const hasGroupInvites = true;
+  const hasUnreadMessages = false;
 
   return (
     <aside className="hidden md:flex flex-col w-64 bg-white border-r border-blue-100 shadow-md rounded-tr-xl rounded-br-xl mr-2 overflow-hidden">
@@ -48,11 +54,17 @@ const StudentSidebar = () => {
             isActive("/courses") 
               ? "bg-gradient-to-r from-kidato-light-blue to-blue-100 text-kidato-blue shadow-sm" 
               : "text-gray-700 hover:bg-blue-50"
-          } transition-all`}
+          } transition-all relative`}
         >
           <Book className="mr-3 h-5 w-5" />
           My Courses
           {isActive("/courses") && <Sparkles className="ml-auto h-4 w-4 text-yellow-400" />}
+          {!isActive("/courses") && hasNewMatches && (
+            <span className="absolute right-3 flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+            </span>
+          )}
         </Link>
         <Link 
           to="/challenges" 
@@ -72,16 +84,30 @@ const StudentSidebar = () => {
             isActive("/group-work") 
               ? "bg-gradient-to-r from-kidato-light-blue to-blue-100 text-kidato-blue shadow-sm" 
               : "text-gray-700 hover:bg-blue-50"
-          } transition-all`}
+          } transition-all relative`}
         >
           <Users className="mr-3 h-5 w-5" />
           Group Work
           {isActive("/group-work") && <Sparkles className="ml-auto h-4 w-4 text-yellow-400" />}
-          {!isActive("/group-work") && (
-            <span className="ml-auto bg-blue-100 text-blue-600 text-xs px-2 py-0.5 rounded-full">
-              New
-            </span>
+          {!isActive("/group-work") && hasGroupInvites && (
+            <div className="ml-auto flex items-center">
+              <BellDot className="h-4 w-4 text-blue-600" />
+            </div>
           )}
+        </Link>
+        
+        {/* Moved Achievements from Account section to here */}
+        <Link 
+          to="/achievements" 
+          className={`flex items-center px-4 py-3 text-sm font-medium rounded-xl ${
+            isActive("/achievements") 
+              ? "bg-gradient-to-r from-kidato-light-blue to-blue-100 text-kidato-blue shadow-sm" 
+              : "text-gray-700 hover:bg-blue-50"
+          } transition-all`}
+        >
+          <Award className="mr-3 h-5 w-5" />
+          Achievements
+          {isActive("/achievements") && <Sparkles className="ml-auto h-4 w-4 text-yellow-400" />}
         </Link>
         
         <h3 className="px-4 mt-5 text-xs font-semibold uppercase text-gray-500 mb-2">COMMUNICATION</h3>
@@ -91,11 +117,16 @@ const StudentSidebar = () => {
             isActive("/messaging") 
               ? "bg-gradient-to-r from-kidato-light-blue to-blue-100 text-kidato-blue shadow-sm" 
               : "text-gray-700 hover:bg-blue-50"
-          } transition-all`}
+          } transition-all relative`}
         >
           <MessageSquare className="mr-3 h-5 w-5" />
           Messages
           {isActive("/messaging") && <Sparkles className="ml-auto h-4 w-4 text-yellow-400" />}
+          {!isActive("/messaging") && hasUnreadMessages && (
+            <span className="ml-auto bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">
+              3
+            </span>
+          )}
         </Link>
         <Link 
           to="/schedule" 
@@ -122,18 +153,6 @@ const StudentSidebar = () => {
           <User className="mr-3 h-5 w-5" />
           Profile
           {isActive("/profile") && <Sparkles className="ml-auto h-4 w-4 text-yellow-400" />}
-        </Link>
-        <Link 
-          to="/achievements" 
-          className={`flex items-center px-4 py-3 text-sm font-medium rounded-xl ${
-            isActive("/achievements") 
-              ? "bg-gradient-to-r from-kidato-light-blue to-blue-100 text-kidato-blue shadow-sm" 
-              : "text-gray-700 hover:bg-blue-50"
-          } transition-all`}
-        >
-          <Award className="mr-3 h-5 w-5" />
-          Achievements
-          {isActive("/achievements") && <Sparkles className="ml-auto h-4 w-4 text-yellow-400" />}
         </Link>
       </nav>
       
