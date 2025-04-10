@@ -27,6 +27,7 @@ import GroupWork from "./pages/GroupWork";
 import Challenges from "./pages/Challenges";
 import Schedule from "./pages/Schedule";
 import Achievements from "./pages/Achievements";
+import Courses from "./pages/Courses";
 
 // Create a client
 const queryClient = new QueryClient();
@@ -93,6 +94,11 @@ const App = () => {
               <Route path="/messaging" element={
                 <ProtectedRoute>
                   <Messaging />
+                </ProtectedRoute>
+              } />
+              <Route path="/courses" element={
+                <ProtectedRoute>
+                  <Courses />
                 </ProtectedRoute>
               } />
               <Route path="*" element={<NotFound />} />
