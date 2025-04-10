@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -44,8 +45,9 @@ const Courses = () => {
       description: "Master essential math concepts for academic success and problem-solving skills.",
       progress: 68,
       nextClass: "Tuesday, 2:00 PM",
-      dueDate: "April 20, 2025",
-      members: 3
+      enrollmentDeadline: "April 20, 2025",
+      enrolledCount: 9,
+      maxCapacity: 12
     },
     {
       id: "eng205",
@@ -54,8 +56,9 @@ const Courses = () => {
       description: "Develop your creative writing skills through guided exercises and peer feedback.",
       progress: 42,
       nextClass: "Wednesday, 10:30 AM",
-      dueDate: "May 15, 2025",
-      members: 5
+      enrollmentDeadline: "May 15, 2025",
+      enrolledCount: 7,
+      maxCapacity: 12
     },
     {
       id: "sci110",
@@ -64,8 +67,9 @@ const Courses = () => {
       description: "Explore the fundamentals of biology, from cells to ecosystems and everything in between.",
       progress: 75,
       nextClass: "Thursday, 1:15 PM",
-      dueDate: "April 30, 2025",
-      members: 4
+      enrollmentDeadline: "April 30, 2025",
+      enrolledCount: 8,
+      maxCapacity: 12
     },
     {
       id: "art150",
@@ -74,8 +78,9 @@ const Courses = () => {
       description: "Learn digital art techniques using industry-standard software and design principles.",
       progress: 89,
       nextClass: "Monday, 3:45 PM",
-      dueDate: "June 5, 2025",
-      members: 6
+      enrollmentDeadline: "June 5, 2025",
+      enrolledCount: 10,
+      maxCapacity: 16
     }
   ];
 
@@ -110,7 +115,7 @@ const Courses = () => {
     }
   ];
 
-  // Updated recommended courses with social proof - added students array
+  // Updated recommended courses with social proof and enrollment data
   const recommendedCourses = [
     {
       id: "math202",
@@ -118,8 +123,9 @@ const Courses = () => {
       subject: "Mathematics",
       description: "Take your math skills to the next level with advanced concepts and problem-solving.",
       nextClass: "Monday, 1:00 PM",
-      dueDate: "May 25, 2025",
-      members: 3,
+      enrollmentDeadline: "May 25, 2025",
+      enrolledCount: 7,
+      maxCapacity: 10,
       matchingTeacher: "teacher1",
       students: [
         { name: "Tina Smith", avatar: "TS", shared: 2 },
@@ -133,8 +139,9 @@ const Courses = () => {
       subject: "Science",
       description: "Discover the basic principles that govern the physical world around us.",
       nextClass: "Thursday, 11:30 AM",
-      dueDate: "June 10, 2025",
-      members: 4,
+      enrollmentDeadline: "June 10, 2025",
+      enrolledCount: 8,
+      maxCapacity: 12,
       matchingTeacher: "teacher2",
       students: [
         { name: "Kevin Parker", avatar: "KP", shared: 2 },
@@ -148,8 +155,9 @@ const Courses = () => {
       subject: "Technology",
       description: "Begin your coding journey with the basics of programming logic and syntax.",
       nextClass: "Friday, 2:15 PM",
-      dueDate: "May 30, 2025",
-      members: 5,
+      enrollmentDeadline: "May 30, 2025",
+      enrolledCount: 5,
+      maxCapacity: 10,
       matchingTeacher: "teacher3",
       students: [
         { name: "Tina Smith", avatar: "TS", shared: 1 },
@@ -259,7 +267,7 @@ const Courses = () => {
                             <div className="flex flex-col space-y-3 mb-6">
                               <div className="flex items-center text-gray-600">
                                 <Users className="h-4 w-4 mr-2 text-blue-500" />
-                                <span>{course.members} Members</span>
+                                <span><strong>{course.enrolledCount}</strong> enrolled / <strong>{course.maxCapacity - course.enrolledCount}</strong> spots remaining</span>
                               </div>
                               <div className="flex items-center text-gray-600">
                                 <Clock className="h-4 w-4 mr-2 text-blue-500" />
@@ -267,7 +275,7 @@ const Courses = () => {
                               </div>
                               <div className="flex items-center text-gray-600">
                                 <Calendar className="h-4 w-4 mr-2 text-blue-500" />
-                                <span>Due: {course.dueDate}</span>
+                                <span>Enrollment deadline: {course.enrollmentDeadline}</span>
                               </div>
                             </div>
                             
@@ -366,8 +374,8 @@ const Courses = () => {
                               <TableHead className="w-[250px]">Course</TableHead>
                               <TableHead>Progress</TableHead>
                               <TableHead>Next Class</TableHead>
-                              <TableHead>Due Date</TableHead>
-                              <TableHead>Members</TableHead>
+                              <TableHead>Enrollment Deadline</TableHead>
+                              <TableHead>Participants</TableHead>
                               <TableHead className="text-right">Actions</TableHead>
                             </TableRow>
                           </TableHeader>
@@ -400,18 +408,21 @@ const Courses = () => {
                                 <TableCell>
                                   <div className="flex items-center">
                                     <Calendar className="h-3.5 w-3.5 text-gray-400 mr-1" />
-                                    <span className="text-sm">{course.dueDate}</span>
+                                    <span className="text-sm">{course.enrollmentDeadline}</span>
                                   </div>
                                 </TableCell>
                                 <TableCell>
-                                  <div className="flex -space-x-2">
-                                    {[...Array(3)].map((_, i) => (
-                                      <Avatar key={i} className="border-2 border-white w-7 h-7 bg-blue-200">
-                                        <AvatarFallback className="text-xs text-blue-700">
-                                          {generateInitials(i)}
-                                        </AvatarFallback>
-                                      </Avatar>
-                                    ))}
+                                  <div className="flex items-center">
+                                    <span className="text-sm font-medium mr-2">{course.enrolledCount}/{course.maxCapacity}</span>
+                                    <div className="flex -space-x-2">
+                                      {[...Array(3)].map((_, i) => (
+                                        <Avatar key={i} className="border-2 border-white w-7 h-7 bg-blue-200">
+                                          <AvatarFallback className="text-xs text-blue-700">
+                                            {generateInitials(i)}
+                                          </AvatarFallback>
+                                        </Avatar>
+                                      ))}
+                                    </div>
                                   </div>
                                 </TableCell>
                                 <TableCell className="text-right">
