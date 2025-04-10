@@ -21,7 +21,7 @@ export function MonthView({ month, onDateSelect }: MonthViewProps) {
   }, {} as Record<string, typeof mockEvents>);
   
   return (
-    <div className="bg-white rounded-md shadow-sm border">
+    <div className="bg-white rounded-md shadow-sm border w-full">
       <Calendar
         mode="single"
         month={month}
@@ -30,8 +30,13 @@ export function MonthView({ month, onDateSelect }: MonthViewProps) {
         classNames={{
           day_selected: "bg-blue-100 text-blue-700 hover:bg-blue-200 hover:text-blue-800 focus:bg-blue-100 focus:text-blue-700",
           day_today: "border border-blue-500 text-blue-900 bg-blue-50",
-          cell: "h-28 p-0 relative", // Increased height even more for better spacing
-          day: "h-full w-full p-0"
+          cell: "h-28 p-0 relative", // Increased height for better spacing
+          day: "h-full w-full p-0",
+          table: "w-full border-collapse space-y-1",
+          head_row: "flex w-full",
+          head_cell: "text-muted-foreground rounded-md w-full font-normal text-[0.8rem] py-2",
+          row: "flex w-full mt-2",
+          months: "w-full flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0"
         }}
         components={{
           DayContent: (props) => {
