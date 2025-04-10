@@ -28,7 +28,9 @@ export function MonthView({ month, onDateSelect }: MonthViewProps) {
         className="w-full"
         classNames={{
           day_selected: "bg-blue-100 text-blue-700 hover:bg-blue-200 hover:text-blue-800 focus:bg-blue-100 focus:text-blue-700",
-          day_today: "border border-blue-500 text-blue-900 bg-blue-50"
+          day_today: "border border-blue-500 text-blue-900 bg-blue-50",
+          cell: "h-24 p-0 relative", // Increased height for more room
+          day: "h-full w-full p-0"
         }}
         components={{
           DayContent: (props) => {
@@ -36,21 +38,27 @@ export function MonthView({ month, onDateSelect }: MonthViewProps) {
             const events = eventsByDate[dateStr] || [];
             
             return (
-              <div className="relative h-full w-full p-2">
-                <div className="text-center mb-1">
+              <div className="flex flex-col h-full w-full p-1">
+                {/* Date number in top corner */}
+                <div className="text-right text-sm font-medium p-1">
                   {props.date.getDate()}
                 </div>
-                <div className="flex flex-col gap-1">
+                
+                {/* Event badges - stacked vertically */}
+                <div className="flex flex-col gap-1 mt-1 overflow-hidden">
                   {events.slice(0, 2).map((event, i) => (
                     <Badge 
                       key={i} 
                       className={`text-xs truncate py-0.5 px-1.5 ${getEventBadgeClass(event.type)}`}
+                      title={event.title} // Show full title on hover
                     >
-                      {event.title}
+                      <span className="truncate block max-w-full">{event.title}</span>
                     </Badge>
                   ))}
+                  
+                  {/* More indicator - positioned at bottom */}
                   {events.length > 2 && (
-                    <div className="text-xs text-gray-500 text-center">
+                    <div className="text-xs text-gray-500 mt-auto text-center">
                       +{events.length - 2} more
                     </div>
                   )}
