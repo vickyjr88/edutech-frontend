@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Check, XCircle, Circle, Award, Star, ChevronUp, Flame } from "lucide-react";
@@ -79,7 +78,6 @@ export default function DailyChallenges() {
     
     setChalllenges(updatedChallenges);
     
-    // Update the challenge that was just completed
     const completedChallenge = challenges.find(c => c.id === id);
     
     if (completedChallenge) {
@@ -96,7 +94,7 @@ export default function DailyChallenges() {
   return (
     <Card>
       <CardHeader className="pb-2 flex flex-row items-center justify-between">
-        <CardTitle className="text-lg font-medium">Daily Challenges</CardTitle>
+        <CardTitle className="text-lg font-medium">Daily Quests & Challenges</CardTitle>
         <div className="flex items-center">
           <div className="bg-yellow-50 p-1 rounded-md mr-2">
             <Flame className="h-5 w-5 text-orange-500" />
