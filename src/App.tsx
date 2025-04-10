@@ -28,6 +28,7 @@ import Schedule from "./pages/Schedule";
 import Achievements from "./pages/Achievements";
 import Courses from "./pages/Courses";
 import Profile from "./pages/Profile";
+import ParentsDashboard from "./pages/ParentsDashboard";
 
 // Create a client
 const queryClient = new QueryClient();
@@ -64,6 +65,11 @@ const App = () => {
               <Route path="/teacher-dashboard" element={
                 <ProtectedRoute>
                   <TeacherDashboard />
+                </ProtectedRoute>
+              } />
+              <Route path="/parents-dashboard" element={
+                <ProtectedRoute>
+                  <ParentsDashboard />
                 </ProtectedRoute>
               } />
               <Route path="/group-work" element={
