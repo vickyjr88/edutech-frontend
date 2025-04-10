@@ -14,7 +14,11 @@ import {
   Download,
   BookOpen,
   ArrowRight,
-  UserRound
+  UserRound,
+  DollarSign,
+  Star,
+  Sparkles,
+  Clock3
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import StudentDashboardHeader from "@/components/dashboard/StudentDashboardHeader";
@@ -47,7 +51,9 @@ const Courses = () => {
       nextClass: "Tuesday, 2:00 PM",
       enrollmentDeadline: "April 20, 2025",
       enrolledCount: 9,
-      maxCapacity: 12
+      maxCapacity: 12,
+      rating: 4.7,
+      cost: "$15/class"
     },
     {
       id: "eng205",
@@ -58,7 +64,9 @@ const Courses = () => {
       nextClass: "Wednesday, 10:30 AM",
       enrollmentDeadline: "May 15, 2025",
       enrolledCount: 7,
-      maxCapacity: 12
+      maxCapacity: 12,
+      rating: 4.5,
+      cost: "$12/class"
     },
     {
       id: "sci110",
@@ -69,7 +77,9 @@ const Courses = () => {
       nextClass: "Thursday, 1:15 PM",
       enrollmentDeadline: "April 30, 2025",
       enrolledCount: 8,
-      maxCapacity: 12
+      maxCapacity: 12,
+      rating: 4.8,
+      cost: "$14/class"
     },
     {
       id: "art150",
@@ -80,7 +90,9 @@ const Courses = () => {
       nextClass: "Monday, 3:45 PM",
       enrollmentDeadline: "June 5, 2025",
       enrolledCount: 10,
-      maxCapacity: 16
+      maxCapacity: 16,
+      rating: 4.9,
+      cost: "$18/class"
     }
   ];
 
@@ -115,7 +127,7 @@ const Courses = () => {
     }
   ];
 
-  // Updated recommended courses with social proof and enrollment data
+  // Updated recommended courses with social proof, enrollment data, rating and cost
   const recommendedCourses = [
     {
       id: "math202",
@@ -127,6 +139,10 @@ const Courses = () => {
       enrolledCount: 7,
       maxCapacity: 10,
       matchingTeacher: "teacher1",
+      isFeatured: true,
+      isNew: false,
+      rating: 4.9,
+      cost: "$17/class",
       students: [
         { name: "Tina Smith", avatar: "TS", shared: 2 },
         { name: "Alex Miller", avatar: "AM", shared: 1 },
@@ -143,6 +159,10 @@ const Courses = () => {
       enrolledCount: 8,
       maxCapacity: 12,
       matchingTeacher: "teacher2",
+      isFeatured: false,
+      isNew: true,
+      rating: 4.7,
+      cost: "$15/class",
       students: [
         { name: "Kevin Parker", avatar: "KP", shared: 2 },
         { name: "Rachel Johnson", avatar: "RJ", shared: 1 },
@@ -159,6 +179,10 @@ const Courses = () => {
       enrolledCount: 5,
       maxCapacity: 10,
       matchingTeacher: "teacher3",
+      isFeatured: true,
+      isNew: true,
+      rating: 4.8,
+      cost: "$16/class",
       students: [
         { name: "Tina Smith", avatar: "TS", shared: 1 },
         { name: "Kevin Parker", avatar: "KP", shared: 2 },
@@ -174,7 +198,9 @@ const Courses = () => {
       subject: "History",
       description: "A comprehensive overview of major world events and their impact on society.",
       completedDate: "March 15, 2025",
-      grade: "A"
+      grade: "A",
+      rating: 4.6,
+      cost: "$14/class"
     },
     {
       id: "chem101",
@@ -182,7 +208,9 @@ const Courses = () => {
       subject: "Science",
       description: "An introduction to the fundamental principles of chemistry and laboratory practice.",
       completedDate: "January 22, 2025",
-      grade: "B+"
+      grade: "B+",
+      rating: 4.5,
+      cost: "$13/class"
     }
   ];
   
@@ -251,11 +279,34 @@ const Courses = () => {
                         <Card className="flex-1 overflow-hidden border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
                           <CardContent className="p-6">
                             <div className="flex justify-between items-start mb-4">
-                              <div>
-                                <h3 className="text-xl font-bold text-gray-800 mb-1">{course.title}</h3>
-                                <Badge variant="secondary" className="bg-blue-100 text-blue-700 hover:bg-blue-200">
-                                  {course.subject}
-                                </Badge>
+                              <div className="flex flex-col">
+                                <div className="flex items-center gap-2 mb-2">
+                                  <h3 className="text-xl font-bold text-gray-800">{course.title}</h3>
+                                  {course.isFeatured && (
+                                    <Badge variant="outline" className="border-amber-300 bg-amber-50 text-amber-700">
+                                      <Sparkles className="h-3 w-3 mr-1 text-amber-500" />
+                                      Featured
+                                    </Badge>
+                                  )}
+                                  {course.isNew && (
+                                    <Badge variant="outline" className="border-green-300 bg-green-50 text-green-700">
+                                      New
+                                    </Badge>
+                                  )}
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <Badge variant="secondary" className="bg-blue-100 text-blue-700 hover:bg-blue-200">
+                                    {course.subject}
+                                  </Badge>
+                                  <div className="flex items-center text-amber-500">
+                                    <Star className="h-3.5 w-3.5 fill-amber-500 mr-1" />
+                                    <span className="font-medium">{course.rating}</span>
+                                  </div>
+                                  <div className="flex items-center text-gray-700">
+                                    <DollarSign className="h-3.5 w-3.5 text-gray-500 mr-0.5" />
+                                    <span>{course.cost}</span>
+                                  </div>
+                                </div>
                               </div>
                               <Button variant="ghost" className="rounded-full p-2 h-auto" size="icon">
                                 <MessageSquare className="h-5 w-5 text-gray-500" />
@@ -329,7 +380,10 @@ const Courses = () => {
                                     <Badge variant="secondary" className="bg-blue-100 text-blue-700 hover:bg-blue-200">
                                       {matchingTeacher.subject}
                                     </Badge>
-                                    <span className="text-amber-500 font-medium">★ {matchingTeacher.rating}</span>
+                                    <div className="flex items-center text-amber-500">
+                                      <Star className="h-3.5 w-3.5 fill-amber-500 mr-1" />
+                                      <span className="font-medium">{matchingTeacher.rating}</span>
+                                    </div>
                                   </div>
                                 </div>
                               </div>
@@ -376,6 +430,7 @@ const Courses = () => {
                               <TableHead>Next Class</TableHead>
                               <TableHead>Enrollment Deadline</TableHead>
                               <TableHead>Participants</TableHead>
+                              <TableHead>Price</TableHead>
                               <TableHead className="text-right">Actions</TableHead>
                             </TableRow>
                           </TableHeader>
@@ -385,9 +440,15 @@ const Courses = () => {
                                 <TableCell className="font-medium">
                                   <div>
                                     <div className="font-semibold">{course.title}</div>
-                                    <Badge variant="secondary" className="bg-blue-100 text-blue-700 hover:bg-blue-200 mt-1">
-                                      {course.subject}
-                                    </Badge>
+                                    <div className="flex items-center gap-2 mt-1">
+                                      <Badge variant="secondary" className="bg-blue-100 text-blue-700 hover:bg-blue-200">
+                                        {course.subject}
+                                      </Badge>
+                                      <div className="flex items-center text-amber-500">
+                                        <Star className="h-3.5 w-3.5 fill-amber-500 mr-1" />
+                                        <span className="font-medium">{course.rating}</span>
+                                      </div>
+                                    </div>
                                   </div>
                                 </TableCell>
                                 <TableCell>
@@ -425,6 +486,12 @@ const Courses = () => {
                                     </div>
                                   </div>
                                 </TableCell>
+                                <TableCell>
+                                  <div className="flex items-center text-gray-700">
+                                    <DollarSign className="h-3.5 w-3.5 text-gray-500 mr-0.5" />
+                                    <span>{course.cost}</span>
+                                  </div>
+                                </TableCell>
                                 <TableCell className="text-right">
                                   <div className="flex justify-end gap-2">
                                     <Button variant="outline" size="sm" className="h-8">Materials</Button>
@@ -457,6 +524,8 @@ const Courses = () => {
                               <TableHead className="w-[250px]">Course</TableHead>
                               <TableHead>Completed Date</TableHead>
                               <TableHead>Grade</TableHead>
+                              <TableHead>Rating</TableHead>
+                              <TableHead>Price</TableHead>
                               <TableHead className="text-right">Actions</TableHead>
                             </TableRow>
                           </TableHeader>
@@ -481,6 +550,18 @@ const Courses = () => {
                                   <Badge variant="outline" className="bg-green-100 text-green-700 hover:bg-green-200">
                                     {course.grade}
                                   </Badge>
+                                </TableCell>
+                                <TableCell>
+                                  <div className="flex items-center text-amber-500">
+                                    <Star className="h-3.5 w-3.5 fill-amber-500 mr-1" />
+                                    <span className="font-medium">{course.rating}</span>
+                                  </div>
+                                </TableCell>
+                                <TableCell>
+                                  <div className="flex items-center text-gray-700">
+                                    <DollarSign className="h-3.5 w-3.5 text-gray-500 mr-0.5" />
+                                    <span>{course.cost}</span>
+                                  </div>
                                 </TableCell>
                                 <TableCell className="text-right">
                                   <div className="flex justify-end gap-2">
