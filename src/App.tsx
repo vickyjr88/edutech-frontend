@@ -1,4 +1,5 @@
 
+import React from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -35,86 +36,88 @@ const queryClient = new QueryClient();
 
 const App = () => {
   return (
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <TooltipProvider>
-          <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/signup" element={<Signup />} />
-              <Route path="/auth/callback" element={<AuthCallback />} />
-              <Route path="/for-teachers" element={<ForTeachers />} />
-              <Route path="/for-parents" element={<ForParents />} />
-              <Route path="/for-students" element={<ForStudents />} />
-              <Route path="/how-it-works" element={<HowItWorks />} />
-              <Route path="/all-classes" element={<AllClasses />} />
-              <Route path="/teachers" element={<TeacherProfilesPage />} />
-              <Route path="/class/:id" element={<ClassDetailsPage />} />
-              <Route path="/teacher/:teacherId" element={<TeacherProfilePage />} />
-              
-              {/* Protected Routes */}
-              <Route path="/student-dashboard" element={
-                <ProtectedRoute>
-                  <Dashboard />
-                </ProtectedRoute>
-              } />
-              <Route path="/dashboard" element={
-                <Navigate to="/student-dashboard" replace />
-              } />
-              <Route path="/teacher-dashboard" element={
-                <ProtectedRoute>
-                  <TeacherDashboard />
-                </ProtectedRoute>
-              } />
-              <Route path="/parents-dashboard" element={
-                <ProtectedRoute>
-                  <ParentsDashboard />
-                </ProtectedRoute>
-              } />
-              <Route path="/group-work" element={
-                <ProtectedRoute>
-                  <GroupWork />
-                </ProtectedRoute>
-              } />
-              <Route path="/challenges" element={
-                <ProtectedRoute>
-                  <Challenges />
-                </ProtectedRoute>
-              } />
-              <Route path="/schedule" element={
-                <ProtectedRoute>
-                  <Schedule />
-                </ProtectedRoute>
-              } />
-              <Route path="/achievements" element={
-                <ProtectedRoute>
-                  <Achievements />
-                </ProtectedRoute>
-              } />
-              <Route path="/profile" element={
-                <ProtectedRoute>
-                  <Profile />
-                </ProtectedRoute>
-              } />
-              <Route path="/messaging" element={
-                <ProtectedRoute>
-                  <Messaging />
-                </ProtectedRoute>
-              } />
-              <Route path="/courses" element={
-                <ProtectedRoute>
-                  <Courses />
-                </ProtectedRoute>
-              } />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-            <Toaster />
-            <Sonner />
-          </BrowserRouter>
-        </TooltipProvider>
-      </AuthProvider>
-    </QueryClientProvider>
+    <React.StrictMode>
+      <QueryClientProvider client={queryClient}>
+        <BrowserRouter>
+          <AuthProvider>
+            <TooltipProvider>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/signup" element={<Signup />} />
+                <Route path="/auth/callback" element={<AuthCallback />} />
+                <Route path="/for-teachers" element={<ForTeachers />} />
+                <Route path="/for-parents" element={<ForParents />} />
+                <Route path="/for-students" element={<ForStudents />} />
+                <Route path="/how-it-works" element={<HowItWorks />} />
+                <Route path="/all-classes" element={<AllClasses />} />
+                <Route path="/teachers" element={<TeacherProfilesPage />} />
+                <Route path="/class/:id" element={<ClassDetailsPage />} />
+                <Route path="/teacher/:teacherId" element={<TeacherProfilePage />} />
+                
+                {/* Protected Routes */}
+                <Route path="/student-dashboard" element={
+                  <ProtectedRoute>
+                    <Dashboard />
+                  </ProtectedRoute>
+                } />
+                <Route path="/dashboard" element={
+                  <Navigate to="/student-dashboard" replace />
+                } />
+                <Route path="/teacher-dashboard" element={
+                  <ProtectedRoute>
+                    <TeacherDashboard />
+                  </ProtectedRoute>
+                } />
+                <Route path="/parents-dashboard" element={
+                  <ProtectedRoute>
+                    <ParentsDashboard />
+                  </ProtectedRoute>
+                } />
+                <Route path="/group-work" element={
+                  <ProtectedRoute>
+                    <GroupWork />
+                  </ProtectedRoute>
+                } />
+                <Route path="/challenges" element={
+                  <ProtectedRoute>
+                    <Challenges />
+                  </ProtectedRoute>
+                } />
+                <Route path="/schedule" element={
+                  <ProtectedRoute>
+                    <Schedule />
+                  </ProtectedRoute>
+                } />
+                <Route path="/achievements" element={
+                  <ProtectedRoute>
+                    <Achievements />
+                  </ProtectedRoute>
+                } />
+                <Route path="/profile" element={
+                  <ProtectedRoute>
+                    <Profile />
+                  </ProtectedRoute>
+                } />
+                <Route path="/messaging" element={
+                  <ProtectedRoute>
+                    <Messaging />
+                  </ProtectedRoute>
+                } />
+                <Route path="/courses" element={
+                  <ProtectedRoute>
+                    <Courses />
+                  </ProtectedRoute>
+                } />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+              <Toaster />
+              <Sonner />
+            </TooltipProvider>
+          </AuthProvider>
+        </BrowserRouter>
+      </QueryClientProvider>
+    </React.StrictMode>
   );
 };
 
