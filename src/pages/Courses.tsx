@@ -1,11 +1,14 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Home, Book, User, Settings, LogOut, MessageSquare, Star, Sparkles, PieChart, Users, Target, Calendar, Award, Clock, CheckCircle, Filter } from "lucide-react";
+import { Clock, CheckCircle, Filter } from "lucide-react";
 import StudentDashboardHeader from "@/components/dashboard/StudentDashboardHeader";
+import StudentSidebar from "@/components/dashboard/StudentSidebar";
 import KidatoMascot from "@/components/dashboard/KidatoMascot";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Star, Users } from "lucide-react";
 
 const Courses = () => {
   const [userName] = useState("John Doe");
@@ -96,88 +99,7 @@ const Courses = () => {
 
   return (
     <div className="flex min-h-screen bg-gradient-to-b from-blue-50 to-white">
-      {/* Sidebar - Same as Dashboard */}
-      <aside className="hidden md:flex flex-col w-64 bg-white border-r border-blue-100 shadow-md rounded-tr-xl rounded-br-xl mr-2 overflow-hidden">
-        <div className="p-6">
-          <Link to="/" className="flex items-center">
-            <img 
-              src="/lovable-uploads/15671e94-4ac9-490c-95b6-aa4fe6bbc23c.png" 
-              alt="Kidato Logo" 
-              className="h-10"
-            />
-            <Sparkles className="h-4 w-4 ml-1 text-yellow-400" />
-          </Link>
-        </div>
-        
-        <nav className="flex-1 px-4 py-2 space-y-1">
-          <h3 className="px-4 text-xs font-semibold uppercase text-gray-500 mb-2">Main</h3>
-          <Link 
-            to="/student-dashboard" 
-            className="flex items-center px-4 py-3 text-sm font-medium rounded-xl text-gray-700 hover:bg-blue-50 transition-all"
-          >
-            <Home className="mr-3 h-5 w-5" />
-            Dashboard
-          </Link>
-          
-          <h3 className="px-4 mt-5 text-xs font-semibold uppercase text-gray-500 mb-2">Learning</h3>
-          <Link 
-            to="/courses" 
-            className="flex items-center px-4 py-3 text-sm font-medium rounded-xl bg-gradient-to-r from-kidato-light-blue to-blue-100 text-kidato-blue shadow-sm transition-all hover:shadow-md"
-          >
-            <Book className="mr-3 h-5 w-5" />
-            My Courses
-            <Star className="ml-auto h-4 w-4 text-yellow-400" />
-          </Link>
-          
-          <h3 className="px-4 mt-5 text-xs font-semibold uppercase text-gray-500 mb-2">Communication</h3>
-          <Link 
-            to="/messaging" 
-            className="flex items-center px-4 py-3 text-sm font-medium rounded-xl text-gray-700 hover:bg-blue-50 transition-all"
-          >
-            <MessageSquare className="mr-3 h-5 w-5" />
-            Messages
-          </Link>
-          <Link 
-            to="/schedule" 
-            className="flex items-center px-4 py-3 text-sm font-medium rounded-xl text-gray-700 hover:bg-blue-50 transition-all"
-          >
-            <Calendar className="mr-3 h-5 w-5" />
-            Schedule
-          </Link>
-          
-          <h3 className="px-4 mt-5 text-xs font-semibold uppercase text-gray-500 mb-2">Account</h3>
-          <Link 
-            to="/profile" 
-            className="flex items-center px-4 py-3 text-sm font-medium rounded-xl text-gray-700 hover:bg-blue-50 transition-all"
-          >
-            <User className="mr-3 h-5 w-5" />
-            Profile
-          </Link>
-          <Link 
-            to="/achievements" 
-            className="flex items-center px-4 py-3 text-sm font-medium rounded-xl text-gray-700 hover:bg-blue-50 transition-all"
-          >
-            <Award className="mr-3 h-5 w-5" />
-            Achievements
-          </Link>
-          <Link 
-            to="/settings" 
-            className="flex items-center px-4 py-3 text-sm font-medium rounded-xl text-gray-700 hover:bg-blue-50 transition-all"
-          >
-            <Settings className="mr-3 h-5 w-5" />
-            Settings
-          </Link>
-        </nav>
-        
-        <div className="p-4 border-t border-blue-100">
-          <Link to="/">
-            <Button variant="ghost" className="w-full flex items-center justify-center rounded-xl hover:bg-red-50 hover:text-red-500 transition-colors">
-              <LogOut className="mr-2 h-4 w-4" />
-              Sign Out
-            </Button>
-          </Link>
-        </div>
-      </aside>
+      <StudentSidebar />
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
