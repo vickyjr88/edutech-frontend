@@ -108,7 +108,7 @@ export function DayView({ date }: DayViewProps) {
           eventToEdit={{
             id: "",
             title: "",
-            date: new Date(date).setHours(selectedHour, 0, 0, 0),
+            date: new Date(date.getTime()).setHours(selectedHour, 0, 0, 0),
             time: `${selectedHour % 12 === 0 ? '12' : selectedHour % 12}:00 ${selectedHour >= 12 ? 'PM' : 'AM'}`,
             location: "",
             description: "",
