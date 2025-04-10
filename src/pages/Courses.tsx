@@ -3,13 +3,31 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Clock, CheckCircle, Filter, MessageSquare, Users, Calendar } from "lucide-react";
+import { 
+  Clock, 
+  CheckCircle, 
+  Filter, 
+  MessageSquare, 
+  Users, 
+  Calendar, 
+  ExternalLink, 
+  Download,
+  BookOpen
+} from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import StudentDashboardHeader from "@/components/dashboard/StudentDashboardHeader";
 import StudentSidebar from "@/components/dashboard/StudentSidebar";
 import KidatoMascot from "@/components/dashboard/KidatoMascot";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 const Courses = () => {
   const [userName] = useState("John Doe");
@@ -156,78 +174,154 @@ const Courses = () => {
                 <TabsTrigger value="recommended" className="data-[state=active]:bg-white data-[state=active]:text-kidato-blue data-[state=active]:shadow-sm rounded-md">
                   Recommended for You
                 </TabsTrigger>
-                <TabsTrigger value="completed" className="data-[state=active]:bg-white data-[state=active]:text-kidato-blue data-[state=active]:shadow-sm rounded-md">
-                  Completed Classes
-                </TabsTrigger>
               </TabsList>
               
-              {/* Enrolled Courses */}
+              {/* Enrolled Courses Table */}
               <TabsContent value="enrolled">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                  {enrolledCourses.map((course) => (
-                    <Card key={course.id} className="overflow-hidden border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
-                      <CardContent className="p-6">
-                        <div className="flex justify-between items-start mb-4">
-                          <div>
-                            <h3 className="text-xl font-bold text-gray-800 mb-1">{course.title}</h3>
-                            <Badge variant="secondary" className="bg-blue-100 text-blue-700 hover:bg-blue-200">
-                              {course.subject}
-                            </Badge>
-                          </div>
-                          <Button variant="ghost" className="rounded-full p-2 h-auto" size="icon">
-                            <MessageSquare className="h-5 w-5 text-gray-500" />
-                          </Button>
-                        </div>
-
-                        <div className="mb-6">
-                          <div className="flex justify-between items-center mb-1">
-                            <span className="text-sm text-gray-600">Progress</span>
-                            <span className="font-medium">{course.progress}%</span>
-                          </div>
-                          <Progress value={course.progress} className="h-2" />
-                        </div>
-
-                        <p className="text-gray-600 mb-6">{course.description}</p>
-
-                        <div className="flex flex-col space-y-3 mb-6">
-                          <div className="flex items-center text-gray-600">
-                            <Users className="h-4 w-4 mr-2 text-blue-500" />
-                            <span>{course.members} Members</span>
-                          </div>
-                          <div className="flex items-center text-gray-600">
-                            <Clock className="h-4 w-4 mr-2 text-blue-500" />
-                            <span>{course.nextClass}</span>
-                          </div>
-                          <div className="flex items-center text-gray-600">
-                            <Calendar className="h-4 w-4 mr-2 text-blue-500" />
-                            <span>Due: {course.dueDate}</span>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center justify-between">
-                          <div className="flex -space-x-2">
-                            {[...Array(3)].map((_, i) => (
-                              <Avatar key={i} className="border-2 border-white w-8 h-8 bg-blue-200">
-                                <AvatarFallback className="text-xs text-blue-700">
-                                  {generateInitials(i)}
-                                </AvatarFallback>
-                              </Avatar>
+                <div className="mb-8">
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-lg font-medium flex items-center">
+                        <BookOpen className="mr-2 h-5 w-5 text-blue-500" />
+                        Current Classes
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="rounded-md border">
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead className="w-[250px]">Course</TableHead>
+                              <TableHead>Progress</TableHead>
+                              <TableHead>Next Class</TableHead>
+                              <TableHead>Due Date</TableHead>
+                              <TableHead>Members</TableHead>
+                              <TableHead className="text-right">Actions</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {enrolledCourses.map((course) => (
+                              <TableRow key={course.id}>
+                                <TableCell className="font-medium">
+                                  <div>
+                                    <div className="font-semibold">{course.title}</div>
+                                    <Badge variant="secondary" className="bg-blue-100 text-blue-700 hover:bg-blue-200 mt-1">
+                                      {course.subject}
+                                    </Badge>
+                                  </div>
+                                </TableCell>
+                                <TableCell>
+                                  <div className="w-[100px]">
+                                    <div className="flex justify-between items-center mb-1">
+                                      <span className="text-xs text-gray-600"></span>
+                                      <span className="text-xs font-medium">{course.progress}%</span>
+                                    </div>
+                                    <Progress value={course.progress} className="h-2" />
+                                  </div>
+                                </TableCell>
+                                <TableCell>
+                                  <div className="flex items-center">
+                                    <Clock className="h-3.5 w-3.5 text-gray-400 mr-1" />
+                                    <span className="text-sm">{course.nextClass}</span>
+                                  </div>
+                                </TableCell>
+                                <TableCell>
+                                  <div className="flex items-center">
+                                    <Calendar className="h-3.5 w-3.5 text-gray-400 mr-1" />
+                                    <span className="text-sm">{course.dueDate}</span>
+                                  </div>
+                                </TableCell>
+                                <TableCell>
+                                  <div className="flex -space-x-2">
+                                    {[...Array(3)].map((_, i) => (
+                                      <Avatar key={i} className="border-2 border-white w-7 h-7 bg-blue-200">
+                                        <AvatarFallback className="text-xs text-blue-700">
+                                          {generateInitials(i)}
+                                        </AvatarFallback>
+                                      </Avatar>
+                                    ))}
+                                  </div>
+                                </TableCell>
+                                <TableCell className="text-right">
+                                  <div className="flex justify-end gap-2">
+                                    <Button variant="outline" size="sm" className="h-8">Materials</Button>
+                                    <Button size="sm" className="bg-indigo-600 hover:bg-indigo-700 h-8">
+                                      Update Progress
+                                    </Button>
+                                  </div>
+                                </TableCell>
+                              </TableRow>
                             ))}
-                          </div>
-                          <div className="flex gap-2">
-                            <Button variant="outline" size="sm">Materials</Button>
-                            <Button size="sm" className="bg-indigo-600 hover:bg-indigo-700">
-                              Update Progress
-                            </Button>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Completed Courses Table */}
+                  <Card className="mt-8">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-lg font-medium flex items-center">
+                        <CheckCircle className="mr-2 h-5 w-5 text-green-500" />
+                        Completed Classes
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="rounded-md border">
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead className="w-[250px]">Course</TableHead>
+                              <TableHead>Completed Date</TableHead>
+                              <TableHead>Grade</TableHead>
+                              <TableHead className="text-right">Actions</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {completedCourses.map((course) => (
+                              <TableRow key={course.id}>
+                                <TableCell className="font-medium">
+                                  <div>
+                                    <div className="font-semibold">{course.title}</div>
+                                    <Badge variant="secondary" className="bg-blue-100 text-blue-700 hover:bg-blue-200 mt-1">
+                                      {course.subject}
+                                    </Badge>
+                                  </div>
+                                </TableCell>
+                                <TableCell>
+                                  <div className="flex items-center">
+                                    <Calendar className="h-3.5 w-3.5 text-gray-400 mr-1" />
+                                    <span className="text-sm">{course.completedDate}</span>
+                                  </div>
+                                </TableCell>
+                                <TableCell>
+                                  <Badge variant="outline" className="bg-green-100 text-green-700 hover:bg-green-200">
+                                    {course.grade}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell className="text-right">
+                                  <div className="flex justify-end gap-2">
+                                    <Button variant="outline" size="sm" className="h-8">
+                                      <Download className="h-3.5 w-3.5 mr-1" />
+                                      Certificate
+                                    </Button>
+                                    <Button size="sm" className="bg-kidato-blue hover:bg-kidato-dark-blue h-8">
+                                      <ExternalLink className="h-3.5 w-3.5 mr-1" />
+                                      Review
+                                    </Button>
+                                  </div>
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    </CardContent>
+                  </Card>
                 </div>
               </TabsContent>
               
-              {/* Recommended Courses */}
+              {/* Recommended Courses Cards */}
               <TabsContent value="recommended">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                   {recommendedCourses.map((course) => (
@@ -265,43 +359,6 @@ const Courses = () => {
                         <div className="flex justify-end">
                           <Button className="bg-kidato-blue hover:bg-kidato-dark-blue">
                             Enroll Now
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </TabsContent>
-              
-              {/* Completed Courses */}
-              <TabsContent value="completed">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                  {completedCourses.map((course) => (
-                    <Card key={course.id} className="overflow-hidden border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
-                      <CardContent className="p-6">
-                        <div className="flex justify-between items-start mb-4">
-                          <div>
-                            <h3 className="text-xl font-bold text-gray-800 mb-1">{course.title}</h3>
-                            <Badge variant="secondary" className="bg-blue-100 text-blue-700 hover:bg-blue-200">
-                              {course.subject}
-                            </Badge>
-                          </div>
-                          <Badge variant="success" className="bg-green-100 text-green-700">
-                            Grade: {course.grade}
-                          </Badge>
-                        </div>
-
-                        <p className="text-gray-600 mb-6">{course.description}</p>
-
-                        <div className="flex items-center mb-6">
-                          <CheckCircle className="h-4 w-4 mr-2 text-green-500" />
-                          <span className="text-gray-600">Completed: {course.completedDate}</span>
-                        </div>
-
-                        <div className="flex justify-end gap-2">
-                          <Button variant="outline">View Certificate</Button>
-                          <Button className="bg-kidato-blue hover:bg-kidato-dark-blue">
-                            Course Review
                           </Button>
                         </div>
                       </CardContent>
