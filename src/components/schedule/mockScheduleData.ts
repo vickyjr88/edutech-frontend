@@ -19,7 +19,7 @@ const nextWeek = new Date();
 nextWeek.setDate(today.getDate() + 7);
 
 // Mock events data
-export const mockEvents: ScheduleEvent[] = [
+export let mockEvents: ScheduleEvent[] = [
   {
     id: 1,
     title: "Math Class",
@@ -141,3 +141,31 @@ export const mockEvents: ScheduleEvent[] = [
     duration: 2
   }
 ];
+
+// Helper function to generate a new ID
+const getNextId = (): number => {
+  const maxId = mockEvents.reduce((max, event) => Math.max(max, event.id), 0);
+  return maxId + 1;
+};
+
+// CRUD operations
+export const addEvent = (event: Omit<ScheduleEvent, 'id'>): ScheduleEvent => {
+  const newEvent = { ...event, id: getNextId() };
+  mockEvents = [...mockEvents, newEvent as ScheduleEvent];
+  return newEvent as ScheduleEvent;
+};
+
+export const updateEvent = (updatedEvent: ScheduleEvent): ScheduleEvent => {
+  mockEvents = mockEvents.map(event => 
+    event.id === updatedEvent.id ? updatedEvent : event
+  );
+  return updatedEvent;
+};
+
+export const deleteEvent = (id: number): void => {
+  mockEvents = mockEvents.filter(event => event.id !== id);
+};
+
+export const getEvent = (id: number): ScheduleEvent | undefined => {
+  return mockEvents.find(event => event.id === id);
+};

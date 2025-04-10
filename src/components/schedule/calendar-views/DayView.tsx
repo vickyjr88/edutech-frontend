@@ -2,6 +2,7 @@
 import { format } from "date-fns";
 import { mockEvents } from "../mockScheduleData";
 import { cn } from "@/lib/utils";
+import { EventActions } from "../EventActions";
 
 interface DayViewProps {
   date: Date;
@@ -42,7 +43,7 @@ export function DayView({ date }: DayViewProps) {
                   <div 
                     key={eventIdx}
                     className={cn(
-                      "mb-1 p-2 rounded-lg",
+                      "mb-1 p-2 rounded-lg relative group",
                       getEventClass(event.type)
                     )}
                   >
@@ -52,6 +53,10 @@ export function DayView({ date }: DayViewProps) {
                     {event.description && (
                       <div className="text-sm mt-1 text-gray-600">{event.description}</div>
                     )}
+                    <EventActions 
+                      event={event} 
+                      className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                    />
                   </div>
                 ))}
               </div>

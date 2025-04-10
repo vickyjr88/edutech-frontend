@@ -1,111 +1,108 @@
 
-import { Calendar, Clock, MapPin, Sparkles, Book, Users, Gift, Award } from "lucide-react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { format, isSameDay } from "date-fns";
-import { mockEvents } from "./mockScheduleData";
+import { CalendarClock } from "lucide-react";
+import { format, isToday, isTomorrow, parseISO } from "date-fns";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { mockEvents, ScheduleEvent } from "./mockScheduleData";
+import { Separator } from "@/components/ui/separator";
+import { EventActions } from "./EventActions";
 
 export function UpcomingEvents() {
-  const today = new Date();
-  const events = [...mockEvents].sort((a, b) => 
-    new Date(a.date).getTime() - new Date(b.date).getTime()
-  );
-  
+  const [events, setEvents] = useState<ScheduleEvent[]>([]);
+
+  // Update events when mockEvents changes
+  useEffect(() => {
+    // Sort events by date
+    const sortedEvents = [...mockEvents].sort((a, b) => {
+      return new Date(a.date).getTime() - new Date(b.date).getTime();
+    });
+    
+    // Get only upcoming events (today and future)
+    const upcomingEvents = sortedEvents.filter(event => {
+      const eventDate = new Date(event.date);
+      const now = new Date();
+      return eventDate >= new Date(now.setHours(0, 0, 0, 0));
+    });
+    
+    setEvents(upcomingEvents.slice(0, 8)); // Show first 8 upcoming events
+  }, [mockEvents]);
+
+  const formatEventDate = (dateStr: string) => {
+    const date = parseISO(dateStr);
+    if (isToday(date)) {
+      return "Today";
+    } else if (isTomorrow(date)) {
+      return "Tomorrow";
+    } else {
+      return format(date, "EEE, MMM d");
+    }
+  };
+
+  const getEventBadgeClass = (type: string) => {
+    switch (type) {
+      case "class":
+        return "bg-blue-100 text-blue-700";
+      case "hangout":
+        return "bg-green-100 text-green-700";
+      case "birthday":
+        return "bg-amber-100 text-amber-700";
+      case "achievement":
+        return "bg-purple-100 text-purple-700";
+      case "assignment":
+        return "bg-rose-100 text-rose-700";
+      default:
+        return "bg-gray-100 text-gray-700";
+    }
+  };
+
   return (
-    <Card className="border-2 border-blue-100">
+    <Card className="border-2 border-blue-100 h-full">
       <CardHeader className="bg-gradient-to-r from-blue-50 to-purple-50 pb-2">
         <CardTitle className="text-lg font-bold flex items-center">
-          <Calendar className="mr-2 h-5 w-5 text-blue-500" />
+          <CalendarClock className="mr-2 h-5 w-5 text-blue-500" />
           Upcoming Events
         </CardTitle>
       </CardHeader>
       <CardContent className="p-4">
-        <div className="space-y-4">
-          {events.slice(0, 5).map((event, idx) => {
-            const eventDate = new Date(event.date);
-            const isToday = isSameDay(eventDate, today);
-            const eventIcon = getEventIcon(event.type);
-            
-            return (
-              <div key={idx} className="border-b border-gray-100 pb-4 last:border-0 last:pb-0">
-                <div className="flex justify-between items-start">
-                  <h3 className="font-medium">{event.title}</h3>
-                  <Badge className={getEventBadgeClass(event.type)}>
-                    {formatEventType(event.type)}
-                  </Badge>
-                </div>
-                <div className="mt-2 space-y-1 text-sm text-gray-600">
-                  <div className="flex items-center">
-                    <Calendar className="h-3.5 w-3.5 mr-2 text-gray-400" />
-                    <span>{isToday ? "Today" : format(eventDate, "MMM d, yyyy")}</span>
-                  </div>
-                  <div className="flex items-center">
-                    <Clock className="h-3.5 w-3.5 mr-2 text-gray-400" />
-                    <span>{event.time}</span>
-                  </div>
-                  {event.location && (
-                    <div className="flex items-center">
-                      <MapPin className="h-3.5 w-3.5 mr-2 text-gray-400" />
-                      <span>{event.location}</span>
-                    </div>
-                  )}
-                  {event.description && (
-                    <div className="flex items-start mt-2">
-                      <span className="mr-2">{eventIcon}</span>
-                      <span className="text-gray-500">{event.description}</span>
-                    </div>
-                  )}
-                </div>
+        <ScrollArea className="h-[calc(100vh-250px)]">
+          <div className="space-y-1">
+            {events.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                No upcoming events
               </div>
-            );
-          })}
-        </div>
-        
-        <div className="mt-4 text-center">
-          <Button variant="outline" size="sm" className="w-full">
-            View All Events
-          </Button>
-        </div>
+            ) : (
+              events.map((event, index) => (
+                <div key={event.id}>
+                  {(index === 0 || formatEventDate(event.date) !== formatEventDate(events[index - 1].date)) && (
+                    <div className="sticky top-0 bg-white pt-2 pb-1 font-medium text-sm text-gray-500 z-10">
+                      {formatEventDate(event.date)}
+                    </div>
+                  )}
+                  <div className="group relative p-3 rounded-md hover:bg-gray-50 transition-colors">
+                    <div className="flex justify-between">
+                      <Badge className={getEventBadgeClass(event.type)}>
+                        {event.type.charAt(0).toUpperCase() + event.type.slice(1)}
+                      </Badge>
+                      <EventActions 
+                        event={event} 
+                        className="opacity-0 group-hover:opacity-100 transition-opacity"
+                      />
+                    </div>
+                    <h3 className="font-medium mt-1">{event.title}</h3>
+                    <div className="text-xs text-gray-500 mt-1">{event.time}</div>
+                    {event.location && (
+                      <div className="text-xs text-gray-500">{event.location}</div>
+                    )}
+                  </div>
+                  {index < events.length - 1 && <Separator className="my-1" />}
+                </div>
+              ))
+            )}
+          </div>
+        </ScrollArea>
       </CardContent>
     </Card>
   );
-}
-
-function getEventBadgeClass(type: string) {
-  switch (type) {
-    case "class":
-      return "bg-blue-100 text-blue-700 hover:bg-blue-200";
-    case "hangout":
-      return "bg-green-100 text-green-700 hover:bg-green-200";
-    case "birthday":
-      return "bg-amber-100 text-amber-700 hover:bg-amber-200";
-    case "achievement":
-      return "bg-purple-100 text-purple-700 hover:bg-purple-200";
-    case "assignment":
-      return "bg-rose-100 text-rose-700 hover:bg-rose-200";
-    default:
-      return "bg-gray-100 text-gray-700 hover:bg-gray-200";
-  }
-}
-
-function formatEventType(type: string) {
-  return type.charAt(0).toUpperCase() + type.slice(1);
-}
-
-function getEventIcon(type: string) {
-  switch (type) {
-    case "class":
-      return <Book className="h-4 w-4 text-blue-500" />;
-    case "hangout":
-      return <Users className="h-4 w-4 text-green-500" />;
-    case "birthday":
-      return <Gift className="h-4 w-4 text-amber-500" />;
-    case "achievement":
-      return <Award className="h-4 w-4 text-purple-500" />;
-    case "assignment":
-      return <Sparkles className="h-4 w-4 text-rose-500" />;
-    default:
-      return <Calendar className="h-4 w-4 text-gray-500" />;
-  }
 }

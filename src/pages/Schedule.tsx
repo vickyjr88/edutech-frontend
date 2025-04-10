@@ -11,10 +11,13 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { UpcomingEvents } from "@/components/schedule/UpcomingEvents";
+import { EventFormDialog } from "@/components/schedule/EventFormDialog";
+import { Toaster } from "@/components/ui/toaster";
 
 const Schedule = () => {
   const [userName] = useState("John Doe");
   const [view, setView] = useState<"month" | "week" | "day">("day");
+  const [showAddEventDialog, setShowAddEventDialog] = useState(false);
 
   return (
     <div className="flex min-h-screen bg-gradient-to-b from-blue-50 to-white">
@@ -52,7 +55,11 @@ const Schedule = () => {
                     </div>
                   </PopoverContent>
                 </Popover>
-                <Button size="sm" className="bg-kidato-blue hover:bg-kidato-dark-blue">
+                <Button 
+                  size="sm" 
+                  className="bg-kidato-blue hover:bg-kidato-dark-blue"
+                  onClick={() => setShowAddEventDialog(true)}
+                >
                   <Plus size={16} className="mr-1" /> Add Event
                 </Button>
               </div>
@@ -94,6 +101,15 @@ const Schedule = () => {
 
       {/* Kidato AI Mascot */}
       <KidatoMascot />
+
+      {/* Add Event Dialog */}
+      <EventFormDialog 
+        open={showAddEventDialog}
+        onOpenChange={setShowAddEventDialog}
+      />
+
+      {/* Toaster for notifications */}
+      <Toaster />
     </div>
   );
 };
