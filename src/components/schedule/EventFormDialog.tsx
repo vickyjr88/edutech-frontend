@@ -1,6 +1,5 @@
 
 import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,6 +8,14 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { format } from "date-fns";
 import { ScheduleEvent, addEvent, updateEvent } from "./mockScheduleData";
 import { toast } from "@/hooks/use-toast";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetFooter
+} from "@/components/ui/sheet";
 
 interface EventFormDialogProps {
   open: boolean;
@@ -76,11 +83,14 @@ export const EventFormDialog = ({ open, onOpenChange, eventToEdit }: EventFormDi
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
-        <DialogHeader>
-          <DialogTitle>{isEditing ? "Edit Event" : "Add Event"}</DialogTitle>
-        </DialogHeader>
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent className="sm:max-w-md overflow-y-auto">
+        <SheetHeader>
+          <SheetTitle>{isEditing ? "Edit Event" : "Add Event"}</SheetTitle>
+          <SheetDescription>
+            {isEditing ? "Make changes to your event here" : "Fill in the details for your new event"}
+          </SheetDescription>
+        </SheetHeader>
 
         <div className="grid gap-4 py-4">
           <div className="grid gap-2">
@@ -180,11 +190,11 @@ export const EventFormDialog = ({ open, onOpenChange, eventToEdit }: EventFormDi
           </div>
         </div>
 
-        <DialogFooter>
+        <SheetFooter className="sm:justify-between mt-4">
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
           <Button onClick={handleSubmit}>{isEditing ? "Update" : "Create"} Event</Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
   );
 };
