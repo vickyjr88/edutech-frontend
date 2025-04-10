@@ -22,7 +22,6 @@ import ClassDetailsPage from "./pages/ClassDetailsPage";
 import TeacherProfilePage from "./pages/TeacherProfilePage";
 import TeacherProfilesPage from "./pages/TeacherProfilesPage";
 import Messaging from "./pages/Messaging";
-import LearningGoals from "./pages/LearningGoals";
 import GroupWork from "./pages/GroupWork";
 import Challenges from "./pages/Challenges";
 import Schedule from "./pages/Schedule";
@@ -65,11 +64,6 @@ const App = () => {
               <Route path="/teacher-dashboard" element={
                 <ProtectedRoute>
                   <TeacherDashboard />
-                </ProtectedRoute>
-              } />
-              <Route path="/learning-progress" element={
-                <ProtectedRoute>
-                  <LearningGoals />
                 </ProtectedRoute>
               } />
               <Route path="/group-work" element={

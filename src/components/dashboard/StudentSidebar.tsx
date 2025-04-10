@@ -2,8 +2,8 @@
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { 
-  Home, Book, User, Settings, LogOut, MessageSquare, 
-  Star, Sparkles, PieChart, Users, Target, Calendar, Award 
+  Home, Book, MessageSquare, User, Settings, LogOut, 
+  Sparkles, Target, Users, Calendar, Award 
 } from "lucide-react";
 
 const StudentSidebar = () => {
@@ -27,7 +27,7 @@ const StudentSidebar = () => {
       </div>
       
       <nav className="flex-1 px-4 py-2 space-y-1">
-        <h3 className="px-4 text-xs font-semibold uppercase text-gray-500 mb-2">Main</h3>
+        <h3 className="px-4 text-xs font-semibold uppercase text-gray-500 mb-2">MAIN</h3>
         <Link 
           to="/student-dashboard" 
           className={`flex items-center px-4 py-3 text-sm font-medium rounded-xl ${
@@ -38,10 +38,10 @@ const StudentSidebar = () => {
         >
           <Home className="mr-3 h-5 w-5" />
           Dashboard
-          {isActive("/student-dashboard") && <Star className="ml-auto h-4 w-4 text-yellow-400" />}
+          {isActive("/student-dashboard") && <Sparkles className="ml-auto h-4 w-4 text-yellow-400" />}
         </Link>
         
-        <h3 className="px-4 mt-5 text-xs font-semibold uppercase text-gray-500 mb-2">Learning</h3>
+        <h3 className="px-4 mt-5 text-xs font-semibold uppercase text-gray-500 mb-2">LEARNING</h3>
         <Link 
           to="/courses" 
           className={`flex items-center px-4 py-3 text-sm font-medium rounded-xl ${
@@ -52,19 +52,7 @@ const StudentSidebar = () => {
         >
           <Book className="mr-3 h-5 w-5" />
           My Courses
-          {isActive("/courses") && <Star className="ml-auto h-4 w-4 text-yellow-400" />}
-        </Link>
-        <Link 
-          to="/learning-goals" 
-          className={`flex items-center px-4 py-3 text-sm font-medium rounded-xl ${
-            isActive("/learning-goals") 
-              ? "bg-gradient-to-r from-kidato-light-blue to-blue-100 text-kidato-blue shadow-sm" 
-              : "text-gray-700 hover:bg-blue-50"
-          } transition-all`}
-        >
-          <PieChart className="mr-3 h-5 w-5" />
-          Learning Goals
-          {isActive("/learning-goals") && <Star className="ml-auto h-4 w-4 text-yellow-400" />}
+          {isActive("/courses") && <Sparkles className="ml-auto h-4 w-4 text-yellow-400" />}
         </Link>
         <Link 
           to="/challenges" 
@@ -76,7 +64,7 @@ const StudentSidebar = () => {
         >
           <Target className="mr-3 h-5 w-5" />
           Quests & Challenges
-          {isActive("/challenges") && <Star className="ml-auto h-4 w-4 text-yellow-400" />}
+          {isActive("/challenges") && <Sparkles className="ml-auto h-4 w-4 text-yellow-400" />}
         </Link>
         <Link 
           to="/group-work" 
@@ -88,7 +76,7 @@ const StudentSidebar = () => {
         >
           <Users className="mr-3 h-5 w-5" />
           Group Work
-          {isActive("/group-work") && <Star className="ml-auto h-4 w-4 text-yellow-400" />}
+          {isActive("/group-work") && <Sparkles className="ml-auto h-4 w-4 text-yellow-400" />}
           {!isActive("/group-work") && (
             <span className="ml-auto bg-blue-100 text-blue-600 text-xs px-2 py-0.5 rounded-full">
               New
@@ -96,7 +84,7 @@ const StudentSidebar = () => {
           )}
         </Link>
         
-        <h3 className="px-4 mt-5 text-xs font-semibold uppercase text-gray-500 mb-2">Communication</h3>
+        <h3 className="px-4 mt-5 text-xs font-semibold uppercase text-gray-500 mb-2">COMMUNICATION</h3>
         <Link 
           to="/messaging" 
           className={`flex items-center px-4 py-3 text-sm font-medium rounded-xl ${
@@ -107,7 +95,7 @@ const StudentSidebar = () => {
         >
           <MessageSquare className="mr-3 h-5 w-5" />
           Messages
-          {isActive("/messaging") && <Star className="ml-auto h-4 w-4 text-yellow-400" />}
+          {isActive("/messaging") && <Sparkles className="ml-auto h-4 w-4 text-yellow-400" />}
         </Link>
         <Link 
           to="/schedule" 
@@ -119,10 +107,10 @@ const StudentSidebar = () => {
         >
           <Calendar className="mr-3 h-5 w-5" />
           Schedule
-          {isActive("/schedule") && <Star className="ml-auto h-4 w-4 text-yellow-400" />}
+          {isActive("/schedule") && <Sparkles className="ml-auto h-4 w-4 text-yellow-400" />}
         </Link>
         
-        <h3 className="px-4 mt-5 text-xs font-semibold uppercase text-gray-500 mb-2">Account</h3>
+        <h3 className="px-4 mt-5 text-xs font-semibold uppercase text-gray-500 mb-2">ACCOUNT</h3>
         <Link 
           to="/profile" 
           className={`flex items-center px-4 py-3 text-sm font-medium rounded-xl ${
@@ -133,7 +121,7 @@ const StudentSidebar = () => {
         >
           <User className="mr-3 h-5 w-5" />
           Profile
-          {isActive("/profile") && <Star className="ml-auto h-4 w-4 text-yellow-400" />}
+          {isActive("/profile") && <Sparkles className="ml-auto h-4 w-4 text-yellow-400" />}
         </Link>
         <Link 
           to="/achievements" 
@@ -145,19 +133,7 @@ const StudentSidebar = () => {
         >
           <Award className="mr-3 h-5 w-5" />
           Achievements
-          {isActive("/achievements") && <Star className="ml-auto h-4 w-4 text-yellow-400" />}
-        </Link>
-        <Link 
-          to="/settings" 
-          className={`flex items-center px-4 py-3 text-sm font-medium rounded-xl ${
-            isActive("/settings") 
-              ? "bg-gradient-to-r from-kidato-light-blue to-blue-100 text-kidato-blue shadow-sm" 
-              : "text-gray-700 hover:bg-blue-50"
-          } transition-all`}
-        >
-          <Settings className="mr-3 h-5 w-5" />
-          Settings
-          {isActive("/settings") && <Star className="ml-auto h-4 w-4 text-yellow-400" />}
+          {isActive("/achievements") && <Sparkles className="ml-auto h-4 w-4 text-yellow-400" />}
         </Link>
       </nav>
       
