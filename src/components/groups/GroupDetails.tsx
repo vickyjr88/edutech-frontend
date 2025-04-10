@@ -321,12 +321,15 @@ const GroupDetails = ({ open, onOpenChange, group }: GroupDetailsProps) => {
                   </PopoverContent>
                 </Popover>
                 
-                <Select value={selectedMember?.toString()} onValueChange={(value) => setSelectedMember(value ? parseInt(value) : undefined)}>
+                <Select 
+                  value={selectedMember?.toString() || undefined} 
+                  onValueChange={(value) => setSelectedMember(value ? parseInt(value) : undefined)}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Assign to member" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Unassigned</SelectItem>
+                    <SelectItem value="unassigned">Unassigned</SelectItem>
                     {group.members.map(member => (
                       <SelectItem key={member.id} value={member.id.toString()}>
                         {member.name}
