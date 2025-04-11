@@ -5,13 +5,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Calculator, DollarSign, Calendar, Clock, Users } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
-import { Toggle } from "@/components/ui/toggle";
 
 const EarningsCalculator = () => {
   const [students, setStudents] = useState(10);
   const [hoursPerWeek, setHoursPerWeek] = useState(20);
-  const [ratePerHour, setRatePerHour] = useState(5);
-  const [isCurrencyKsh, setIsCurrencyKsh] = useState(false);
+  const [ratePerHour, setRatePerHour] = useState(645); // Default to KSh (5 USD * 129)
+  const [isCurrencyKsh, setIsCurrencyKsh] = useState(true); // Set KSh as default
   
   // Exchange rate (1 USD = 129 KSh approximately)
   const exchangeRate = 129;
@@ -25,11 +24,22 @@ const EarningsCalculator = () => {
     const yearlyEarnings = monthlyEarnings * 12;
 
     return {
-      daily: dailyEarnings.toFixed(2),
-      weekly: weeklyEarnings.toFixed(2),
-      monthly: monthlyEarnings.toFixed(2),
-      yearly: yearlyEarnings.toFixed(2)
+      daily: formatCurrency(dailyEarnings),
+      weekly: formatCurrency(weeklyEarnings),
+      monthly: formatCurrency(monthlyEarnings),
+      yearly: formatCurrency(yearlyEarnings)
     };
+  };
+
+  // Format currency based on selected currency
+  const formatCurrency = (amount) => {
+    if (isCurrencyKsh) {
+      // Format for KSh with a space and "/=" suffix
+      return `KSh ${amount.toLocaleString('en-KE', { maximumFractionDigits: 0 })} /=`;
+    } else {
+      // Format for USD
+      return `$${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    }
   };
 
   const toggleCurrency = () => {
@@ -118,8 +128,12 @@ const EarningsCalculator = () => {
 
                   <div>
                     <div className="flex justify-between items-center mb-2">
-                      <Label htmlFor="rate" className="text-gray-700">Rate Per Hour ({currencySymbol})</Label>
-                      <span className="text-sm text-gray-500">{currencySymbol}{ratePerHour}</span>
+                      <Label htmlFor="rate" className="text-gray-700">
+                        Rate Per Hour ({isCurrencyKsh ? "KSh" : "$"})
+                      </Label>
+                      <span className="text-sm text-gray-500">
+                        {isCurrencyKsh ? "KSh " : "$"}{ratePerHour}
+                      </span>
                     </div>
                     <div className="flex items-center gap-2">
                       <DollarSign className="text-gray-500 w-4 h-4" />
@@ -148,28 +162,28 @@ const EarningsCalculator = () => {
                   <div className="bg-white p-4 rounded-lg shadow-sm">
                     <div className="text-sm text-gray-500">Daily</div>
                     <div className="flex items-center">
-                      <span className="text-2xl font-bold text-green-600">{currencySymbol}{earnings.daily}</span>
+                      <span className="text-2xl font-bold text-green-600">{earnings.daily}</span>
                     </div>
                   </div>
 
                   <div className="bg-white p-4 rounded-lg shadow-sm">
                     <div className="text-sm text-gray-500">Weekly</div>
                     <div className="flex items-center">
-                      <span className="text-2xl font-bold text-green-600">{currencySymbol}{earnings.weekly}</span>
+                      <span className="text-2xl font-bold text-green-600">{earnings.weekly}</span>
                     </div>
                   </div>
 
                   <div className="bg-white p-4 rounded-lg shadow-sm">
                     <div className="text-sm text-gray-500">Monthly</div>
                     <div className="flex items-center">
-                      <span className="text-2xl font-bold text-green-600">{currencySymbol}{earnings.monthly}</span>
+                      <span className="text-2xl font-bold text-green-600">{earnings.monthly}</span>
                     </div>
                   </div>
 
                   <div className="bg-white p-4 rounded-lg shadow-sm">
                     <div className="text-sm text-gray-500">Yearly</div>
                     <div className="flex items-center">
-                      <span className="text-2xl font-bold text-green-600">{currencySymbol}{earnings.yearly}</span>
+                      <span className="text-2xl font-bold text-green-600">{earnings.yearly}</span>
                     </div>
                   </div>
                 </div>
