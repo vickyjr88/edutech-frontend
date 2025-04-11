@@ -142,7 +142,7 @@ const ClassCard = ({
                     width: `${classItem.progress}%`,
                     backgroundColor: isCurrentClass 
                       ? "#ea384c" // Red color for live classes
-                      : classItem.buttonColor.split(' ')[0].replace('bg-', '#').replace('green-500', '22c55e').replace('purple-500', 'a855f7').replace('blue-500', '3b82f6').replace('yellow-500', 'eab308')
+                      : classItem.buttonColor.split(' ')[0].replace('bg-', '#').replace('green-500', '#9b87f5').replace('purple-500', '#a855f7').replace('blue-500', '#3b82f6').replace('yellow-500', '#eab308')
                   }}
                 ></div>
               </div>
@@ -178,7 +178,7 @@ const ClassCard = ({
           
           <div className="flex justify-end gap-2 flex-wrap">
             <Button 
-              className={isCurrentClass ? "bg-red-600 hover:bg-red-700 text-white" : classItem.buttonColor}
+              className={isCurrentClass ? "bg-red-600 hover:bg-red-700 text-white" : classItem.buttonColor.replace('bg-green-500', 'bg-purple-500')}
               onClick={() => onJoinClass(classItem)}
               size="sm"
             >
