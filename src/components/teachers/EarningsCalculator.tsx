@@ -189,7 +189,8 @@ const EarningsCalculator = () => {
                 </div>
 
                 <div className="mt-6 text-sm text-gray-600">
-                  <p>These calculations are estimates based on your inputs. Actual earnings may vary based on class sizes, scheduling, and other factors.</p>
+                  <p className="mb-2">These calculations show gross revenue estimates based on your inputs. Actual earnings may vary based on class sizes, scheduling, and other factors.</p>
+                  <p className="font-medium">Note: Kidato takes a platform fee of 15-30% from gross revenue, depending on your approval status and experience level.</p>
                 </div>
               </div>
             </div>
