@@ -9,13 +9,56 @@ import {
   Flame,
   ChevronUp,
   Info,
-  Sparkles
+  Sparkles,
+  Award,
+  Star
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+
+// Shared data that will be used across components
+export const studentProgressData = {
+  streak: 7,
+  achievements: {
+    total: 12,
+    unlocked: 8,
+    recent: [
+      { 
+        name: "Quick Learner", 
+        date: "Today", 
+        icon: Sparkles, 
+        color: "text-blue-500", 
+        description: "Completed 5 lessons in a single day",
+        xpEarned: 50
+      },
+      { 
+        name: "Math Wizard", 
+        date: "Yesterday", 
+        icon: Award, 
+        color: "text-purple-500",
+        description: "Scored 95% or higher on 3 consecutive math quizzes",
+        xpEarned: 100
+      },
+      { 
+        name: "Reading Champion", 
+        date: "Last week", 
+        icon: Trophy, 
+        color: "text-green-500",
+        description: "Finished reading 5 books this month",
+        xpEarned: 150
+      },
+    ]
+  },
+  level: {
+    current: 5,
+    xpForNext: 1250,
+    currentXP: 850,
+    title: "Scholar"
+  }
+};
 
 export default function StudentStatCards() {
   const { toast } = useToast();
@@ -57,33 +100,20 @@ export default function StudentStatCards() {
       tooltip: "Percentage of assigned tasks you've completed"
     },
     {
-      title: "Learning Streak",
-      value: "7 days",
-      icon: Flame,
-      color: "orange",
-      detail: "Keep it up!",
-      progress: 70,
+      title: "Achievements & Streak",
+      value: `${studentProgressData.achievements.unlocked}/${studentProgressData.achievements.total}`,
+      icon: Trophy,
+      secondaryIcon: Flame,
+      color: "yellow",
+      detail: `${studentProgressData.streak}-day streak`,
       badge: {
         text: "On fire!",
         variant: "warning" as const
       },
-      tooltip: "Consecutive days you've logged in and completed at least one activity",
+      progress: (studentProgressData.streak / 10) * 100, // Assuming 10 days is the max streak goal
+      tooltip: "Your achievements and learning streak multiply your XP",
       clickable: true,
-      clickMessage: "Your streak multiplies your XP! Keep coming back daily."
-    },
-    {
-      title: "Achievements",
-      value: "12",
-      icon: Trophy,
-      color: "yellow",
-      detail: "2 new this month",
-      badge: {
-        text: "New badge",
-        variant: "info" as const
-      },
-      tooltip: "Badges and achievements you've earned",
-      clickable: true,
-      clickMessage: "View all your achievements and badges in your profile."
+      clickMessage: "Your achievements and streak give you XP multipliers!"
     }
   ];
 
@@ -94,7 +124,7 @@ export default function StudentStatCards() {
         description: stat.clickMessage,
       });
 
-      if (stat.title === "Learning Streak") {
+      if (stat.title === "Achievements & Streak") {
         setAnimatePoints(true);
         setTimeout(() => setAnimatePoints(false), 2000);
       }
@@ -116,7 +146,7 @@ export default function StudentStatCards() {
 
   return (
     <TooltipProvider>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         {stats.map((stat, index) => (
           <Tooltip key={index}>
             <TooltipTrigger asChild>
@@ -133,12 +163,9 @@ export default function StudentStatCards() {
                 <CardContent className="p-4">
                   <div className="flex items-start mb-3">
                     <div className={`${getColorClass(stat.color, 'bg')} p-2.5 rounded-full mr-3 flex-shrink-0 ${
-                      stat.title === "Learning Streak" ? 'animate-pulse' : ''
+                      stat.title.includes("Streak") ? 'animate-pulse' : ''
                     }`}>
                       <stat.icon className={`h-5 w-5 ${getColorClass(stat.color, 'text')}`} />
-                      {stat.clickable && (
-                        <Sparkles className={`h-3 w-3 absolute -top-1 -right-1 ${getColorClass(stat.color, 'text')}`} />
-                      )}
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center justify-between">
@@ -149,7 +176,14 @@ export default function StudentStatCards() {
                       </div>
                       <div className="flex items-center flex-wrap gap-1">
                         <p className="font-bold text-xl truncate">{stat.value}</p>
-                        {stat.title === "Learning Streak" && animatePoints && (
+                        {stat.title === "Achievements & Streak" && (
+                          <div className="ml-2 flex items-center">
+                            <div className="bg-orange-50 p-1 rounded-full">
+                              <Flame className="h-4 w-4 text-orange-500" />
+                            </div>
+                          </div>
+                        )}
+                        {stat.title === "Achievements & Streak" && animatePoints && (
                           <div className="ml-1 text-xs font-semibold text-green-500 animate-bounce flex-shrink-0">
                             <div className="flex items-center">
                               <ChevronUp className="h-3 w-3" />
@@ -162,7 +196,15 @@ export default function StudentStatCards() {
                   </div>
                   <div className="flex items-center justify-between flex-wrap">
                     {stat.detail && (
-                      <p className="text-xs text-gray-500 truncate max-w-[75%]">{stat.detail}</p>
+                      <p className="text-xs text-gray-500 truncate max-w-[75%]">
+                        {stat.detail}
+                        {stat.title === "Achievements & Streak" && (
+                          <span className="ml-1 inline-flex items-center">
+                            <Star className="h-3 w-3 text-yellow-500 mr-1" />
+                            <span className="text-purple-600 font-medium">Level {studentProgressData.level.current}</span>
+                          </span>
+                        )}
+                      </p>
                     )}
                     {stat.badge && (
                       <Badge variant={stat.badge.variant} className="text-xs truncate mt-1 h-5 px-1.5 rounded-full">

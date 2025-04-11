@@ -4,41 +4,19 @@ import { Progress } from "@/components/ui/progress";
 import { ChevronUp, Award, Sparkles, Star, Trophy } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { studentProgressData } from "./StudentStatCards";
 
 export default function StudentLevel() {
   const { toast } = useToast();
   const [selectedAchievement, setSelectedAchievement] = useState<number | null>(null);
-  const currentLevel = 5;
-  const xpToNextLevel = 1250;
-  const currentXP = 850;
-  const progressPercentage = (currentXP / xpToNextLevel) * 100;
   
-  const recentAchievements = [
-    { 
-      name: "Quick Learner", 
-      date: "Today", 
-      icon: Sparkles, 
-      color: "text-blue-500", 
-      description: "Completed 5 lessons in a single day",
-      xpEarned: 50
-    },
-    { 
-      name: "Math Wizard", 
-      date: "Yesterday", 
-      icon: Award, 
-      color: "text-purple-500",
-      description: "Scored 95% or higher on 3 consecutive math quizzes",
-      xpEarned: 100
-    },
-    { 
-      name: "Reading Champion", 
-      date: "Last week", 
-      icon: Trophy, 
-      color: "text-green-500",
-      description: "Finished reading 5 books this month",
-      xpEarned: 150
-    },
-  ];
+  // Using the shared data from StudentStatCards
+  const { level, streak, achievements } = studentProgressData;
+  const currentLevel = level.current;
+  const xpToNextLevel = level.xpForNext;
+  const currentXP = level.currentXP;
+  const progressPercentage = (currentXP / xpToNextLevel) * 100;
+  const recentAchievements = achievements.recent;
 
   const handleAchievementClick = (index: number) => {
     setSelectedAchievement(index === selectedAchievement ? null : index);
@@ -64,7 +42,23 @@ export default function StudentLevel() {
             </div>
           </div>
           <h3 className="text-lg font-semibold">Level {currentLevel}</h3>
-          <div className="text-sm text-gray-500 mt-1">Scholar</div>
+          <div className="text-sm text-gray-500 mt-1">{level.title}</div>
+          
+          <div className="flex items-center justify-center mt-2 space-x-2">
+            <div className="bg-yellow-50 p-1.5 rounded-md flex items-center">
+              <Trophy className="h-4 w-4 text-yellow-500 mr-1" />
+              <span className="text-xs font-medium">
+                {achievements.unlocked}/{achievements.total} Achievements
+              </span>
+            </div>
+            
+            <div className="bg-orange-50 p-1.5 rounded-md flex items-center">
+              <Award className="h-4 w-4 text-orange-500 mr-1" />
+              <span className="text-xs font-medium">
+                {streak}-day streak
+              </span>
+            </div>
+          </div>
         </div>
         
         <div className="mb-6">
