@@ -86,12 +86,10 @@ const StudentSidebar = () => {
         <div className="flex items-center px-4 py-3 text-sm font-medium rounded-xl text-gray-500 cursor-not-allowed">
           <Award className="mr-3 h-5 w-5" />
           Achievements
-          <span className="ml-auto bg-amber-100 text-amber-700 text-xs px-2 py-0.5 rounded-full">Coming Soon</span>
         </div>
         <div className="flex items-center px-4 py-3 text-sm font-medium rounded-xl text-gray-500 cursor-not-allowed">
           <Target className="mr-3 h-5 w-5" />
           Quests & Challenges
-          <span className="ml-auto bg-amber-100 text-amber-700 text-xs px-2 py-0.5 rounded-full">Coming Soon</span>
         </div>
         
         <h3 className="px-4 mt-5 text-xs font-semibold uppercase text-gray-500 mb-2">COMMUNICATION</h3>
