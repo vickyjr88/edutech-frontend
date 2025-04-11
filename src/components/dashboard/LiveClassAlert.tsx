@@ -15,11 +15,14 @@ const LiveClassAlert = ({ currentClass, onJoinClass, isReminder = false }: LiveC
   
   return (
     <Alert 
-      className={`mb-4 ${isReminder ? 'bg-white border border-red-200' : 'bg-gradient-to-r from-red-50 to-orange-50 border-l-4 border-l-red-500'} ${!isReminder && 'animate-pulse'}`}
+      className={`mb-4 ${isReminder ? 'bg-white border border-red-200' : 'bg-gradient-to-r from-red-50 to-orange-50 border-red-200'} ${!isReminder && 'animate-pulse'}`}
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center">
-          <BellRing className="h-5 w-5 text-red-500 mr-2" />
+          <div className="flex items-center">
+            <div className="h-3 w-3 rounded-full bg-red-600 mr-2 animate-pulse"></div>
+            <BellRing className="h-5 w-5 text-red-500 mr-2" />
+          </div>
           <AlertDescription className="text-red-800 font-medium">
             You have a live class happening now: {currentClass.title}
           </AlertDescription>

@@ -1,3 +1,4 @@
+
 import { Clock, Calendar, ArrowRight, Video } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -44,8 +45,11 @@ const InProgressLessonsCard = ({ inProgressLessons, onContinueLearning }: InProg
     return null;
   }
 
+  // Background color for live class: #FDF2F2 (soft red)
+  // Background color for regular classes: #EFF6FF (soft blue)
+
   return (
-    <Card className={`border-2 ${liveLesson ? 'border-red-400' : 'border-blue-100'}`}>
+    <Card className={`${liveLesson ? 'border-red-400' : 'border-blue-100'}`}>
       <CardHeader className={`pb-2 ${liveLesson ? 'bg-gradient-to-r from-red-50 to-orange-50' : 'bg-blue-50'}`}>
         <CardTitle className="text-lg font-medium flex items-center">
           {liveLesson ? (
@@ -58,11 +62,11 @@ const InProgressLessonsCard = ({ inProgressLessons, onContinueLearning }: InProg
       </CardHeader>
       <CardContent>
         {liveLesson ? (
-          <div key={liveLesson.id} className="bg-red-50 p-4 rounded-lg border border-red-100 mb-4 animate-pulse">
+          <div key={liveLesson.id} className="bg-red-50/70 p-4 rounded-lg border border-red-100 mb-4">
             <div className="flex flex-wrap justify-between items-center">
               <div>
-                <h3 className="font-medium text-red-800">
-                  <span className="inline-block mr-1">🔴</span> 
+                <h3 className="font-medium text-red-800 flex items-center">
+                  <span className="inline-flex items-center justify-center h-4 w-4 rounded-full bg-red-600 mr-2 animate-pulse"></span> 
                   LIVE NOW: {liveLesson.title}
                 </h3>
                 <div className="flex items-center mt-1 text-sm text-red-700">
@@ -86,9 +90,9 @@ const InProgressLessonsCard = ({ inProgressLessons, onContinueLearning }: InProg
                 <span>Progress</span>
                 <span>{liveLesson.completedPercentage}%</span>
               </div>
-              <div className="w-full bg-red-200 rounded-full h-2">
+              <div className="w-full bg-red-200 rounded-full h-2.5">
                 <div 
-                  className="bg-red-600 h-2 rounded-full" 
+                  className="bg-red-600 h-2.5 rounded-full" 
                   style={{ width: `${liveLesson.completedPercentage}%` }}
                 ></div>
               </div>
@@ -98,7 +102,7 @@ const InProgressLessonsCard = ({ inProgressLessons, onContinueLearning }: InProg
         
         {/* Other in progress lessons */}
         {inProgressLessons.filter(lesson => lesson.id !== liveLesson?.id).map(lesson => (
-          <div key={lesson.id} className="bg-blue-50 p-4 rounded-lg border border-blue-100">
+          <div key={lesson.id} className="bg-blue-50/70 p-4 rounded-lg border border-blue-100 transition-all hover:shadow-md">
             <div className="flex flex-wrap justify-between items-center">
               <div>
                 <h3 className="font-medium text-blue-800">{lesson.title}</h3>
@@ -123,9 +127,9 @@ const InProgressLessonsCard = ({ inProgressLessons, onContinueLearning }: InProg
                 <span>Progress</span>
                 <span>{lesson.completedPercentage}%</span>
               </div>
-              <div className="w-full bg-blue-200 rounded-full h-2">
+              <div className="w-full bg-blue-200 rounded-full h-2.5">
                 <div 
-                  className="bg-blue-600 h-2 rounded-full" 
+                  className="bg-blue-600 h-2.5 rounded-full" 
                   style={{ width: `${lesson.completedPercentage}%` }}
                 ></div>
               </div>
