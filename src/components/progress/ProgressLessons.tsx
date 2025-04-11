@@ -207,11 +207,16 @@ const ProgressLessons = ({ courseId }: ProgressLessonsProps) => {
                     <TableCell>
                       {lesson.grade || "-"}
                     </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-right flex justify-end gap-2">
                       {lesson.status === "completed" ? (
-                        <Button size="sm" variant="outline">
-                          Review Notes
-                        </Button>
+                        <>
+                          <Button size="sm" variant="outline">
+                            Lesson Plan
+                          </Button>
+                          <Button size="sm" variant="secondary">
+                            Review Lesson
+                          </Button>
+                        </>
                       ) : lesson.status === "in-progress" ? (
                         <Button size="sm">
                           Continue
