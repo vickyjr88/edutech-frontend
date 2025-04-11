@@ -1,4 +1,3 @@
-
 import { BookOpen, DollarSign, Clock, Calendar, ShieldCheck, Award, CreditCard } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -100,12 +99,12 @@ const ForTeachers = () => {
   const earningOptions = [
     {
       title: "One-on-One Sessions",
-      rate: "$15-30",
+      rate: "$5-30",
       period: "hour"
     },
     {
       title: "Small Group Classes",
-      rate: "$25-45",
+      rate: "$15-45",
       period: "hour"
     },
     {
@@ -134,7 +133,6 @@ const ForTeachers = () => {
           benefits={benefits}
         />
 
-        {/* Add Earnings Calculator here */}
         <EarningsCalculator />
         
         <JoinStepsSection 

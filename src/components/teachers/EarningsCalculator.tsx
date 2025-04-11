@@ -4,16 +4,23 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Calculator, DollarSign, Calendar, Clock, Users } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Toggle } from "@/components/ui/toggle";
 
 const EarningsCalculator = () => {
   const [students, setStudents] = useState(10);
   const [hoursPerWeek, setHoursPerWeek] = useState(20);
-  const [ratePerHour, setRatePerHour] = useState(25);
+  const [ratePerHour, setRatePerHour] = useState(5);
+  const [isCurrencyKsh, setIsCurrencyKsh] = useState(false);
+  
+  // Exchange rate (1 USD = 129 KSh approximately)
+  const exchangeRate = 129;
 
   // Calculate earnings
   const calculateEarnings = () => {
-    const dailyEarnings = (ratePerHour * hoursPerWeek * students) / 5; // Assuming 5 working days
-    const weeklyEarnings = ratePerHour * hoursPerWeek * students;
+    const rate = isCurrencyKsh ? ratePerHour : ratePerHour * (isCurrencyKsh ? 1 : 1);
+    const dailyEarnings = (rate * hoursPerWeek * students) / 5; // Assuming 5 working days
+    const weeklyEarnings = rate * hoursPerWeek * students;
     const monthlyEarnings = weeklyEarnings * 4; // Approximating 4 weeks per month
     const yearlyEarnings = monthlyEarnings * 12;
 
@@ -25,7 +32,22 @@ const EarningsCalculator = () => {
     };
   };
 
+  const toggleCurrency = () => {
+    setIsCurrencyKsh(!isCurrencyKsh);
+    // Convert the rate when switching currency
+    if (!isCurrencyKsh) {
+      // Converting from USD to KSh
+      setRatePerHour(Math.round(ratePerHour * exchangeRate));
+    } else {
+      // Converting from KSh to USD
+      setRatePerHour(Math.round(ratePerHour / exchangeRate));
+    }
+  };
+
+  const currencySymbol = isCurrencyKsh ? "KSh" : "$";
   const earnings = calculateEarnings();
+
+  const minRate = isCurrencyKsh ? 5 * exchangeRate : 5;
 
   return (
     <section className="py-12 bg-gradient-to-b from-blue-50 to-white">
@@ -35,6 +57,15 @@ const EarningsCalculator = () => {
           <p className="mt-4 text-xl text-gray-600">
             Estimate your potential income as a Kidato teacher
           </p>
+          <div className="flex items-center justify-center mt-4 space-x-2">
+            <span className={!isCurrencyKsh ? "font-bold" : ""}>USD ($)</span>
+            <Switch 
+              checked={isCurrencyKsh}
+              onCheckedChange={toggleCurrency}
+              className="mx-2"
+            />
+            <span className={isCurrencyKsh ? "font-bold" : ""}>KSh</span>
+          </div>
         </div>
 
         <Card className="shadow-lg border-2 border-blue-100">
@@ -87,17 +118,17 @@ const EarningsCalculator = () => {
 
                   <div>
                     <div className="flex justify-between items-center mb-2">
-                      <Label htmlFor="rate" className="text-gray-700">Rate Per Hour ($)</Label>
-                      <span className="text-sm text-gray-500">${ratePerHour}.00</span>
+                      <Label htmlFor="rate" className="text-gray-700">Rate Per Hour ({currencySymbol})</Label>
+                      <span className="text-sm text-gray-500">{currencySymbol}{ratePerHour}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <DollarSign className="text-gray-500 w-4 h-4" />
                       <Input
                         id="rate"
                         type="range"
-                        min={15}
-                        max={100}
-                        step={5}
+                        min={minRate}
+                        max={isCurrencyKsh ? 5000 : 50}
+                        step={isCurrencyKsh ? 100 : 1}
                         value={ratePerHour}
                         onChange={(e) => setRatePerHour(parseInt(e.target.value))}
                         className="h-2"
@@ -117,28 +148,28 @@ const EarningsCalculator = () => {
                   <div className="bg-white p-4 rounded-lg shadow-sm">
                     <div className="text-sm text-gray-500">Daily</div>
                     <div className="flex items-center">
-                      <span className="text-2xl font-bold text-green-600">${earnings.daily}</span>
+                      <span className="text-2xl font-bold text-green-600">{currencySymbol}{earnings.daily}</span>
                     </div>
                   </div>
 
                   <div className="bg-white p-4 rounded-lg shadow-sm">
                     <div className="text-sm text-gray-500">Weekly</div>
                     <div className="flex items-center">
-                      <span className="text-2xl font-bold text-green-600">${earnings.weekly}</span>
+                      <span className="text-2xl font-bold text-green-600">{currencySymbol}{earnings.weekly}</span>
                     </div>
                   </div>
 
                   <div className="bg-white p-4 rounded-lg shadow-sm">
                     <div className="text-sm text-gray-500">Monthly</div>
                     <div className="flex items-center">
-                      <span className="text-2xl font-bold text-green-600">${earnings.monthly}</span>
+                      <span className="text-2xl font-bold text-green-600">{currencySymbol}{earnings.monthly}</span>
                     </div>
                   </div>
 
                   <div className="bg-white p-4 rounded-lg shadow-sm">
                     <div className="text-sm text-gray-500">Yearly</div>
                     <div className="flex items-center">
-                      <span className="text-2xl font-bold text-green-600">${earnings.yearly}</span>
+                      <span className="text-2xl font-bold text-green-600">{currencySymbol}{earnings.yearly}</span>
                     </div>
                   </div>
                 </div>
