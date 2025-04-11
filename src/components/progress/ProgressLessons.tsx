@@ -20,6 +20,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import LessonReviewModal from "./LessonReviewModal";
 
 interface ProgressLessonsProps {
   courseId?: string;
@@ -86,6 +87,8 @@ const getMockLessonsData = () => {
 const ProgressLessons = ({ courseId }: ProgressLessonsProps) => {
   const [lessons, setLessons] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [reviewModalOpen, setReviewModalOpen] = useState(false);
+  const [selectedLesson, setSelectedLesson] = useState<any>(null);
 
   useEffect(() => {
     // Simulating API call
@@ -99,6 +102,11 @@ const ProgressLessons = ({ courseId }: ProgressLessonsProps) => {
 
     fetchData();
   }, [courseId]);
+
+  const handleReviewLesson = (lesson: any) => {
+    setSelectedLesson(lesson);
+    setReviewModalOpen(true);
+  };
 
   if (loading) {
     return <div className="text-center py-8">Loading lessons data...</div>;
@@ -213,7 +221,11 @@ const ProgressLessons = ({ courseId }: ProgressLessonsProps) => {
                           <Button size="sm" variant="outline">
                             Lesson Plan
                           </Button>
-                          <Button size="sm" variant="secondary">
+                          <Button 
+                            size="sm" 
+                            variant="secondary"
+                            onClick={() => handleReviewLesson(lesson)}
+                          >
                             Review Lesson
                           </Button>
                         </>
@@ -234,6 +246,16 @@ const ProgressLessons = ({ courseId }: ProgressLessonsProps) => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Review Modal */}
+      {selectedLesson && (
+        <LessonReviewModal
+          isOpen={reviewModalOpen}
+          onClose={() => setReviewModalOpen(false)}
+          lessonTitle={selectedLesson.title}
+          lessonId={selectedLesson.id}
+        />
+      )}
     </div>
   );
 };
