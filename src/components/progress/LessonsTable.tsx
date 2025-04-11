@@ -80,7 +80,7 @@ const LessonsTable = ({ lessons, onReviewLesson, onContinueLearning }: LessonsTa
                     size="sm"
                     onClick={() => onContinueLearning(lesson)}
                   >
-                    Continue
+                    Join Class
                   </Button>
                 ) : (
                   <Button size="sm" variant="outline" disabled>

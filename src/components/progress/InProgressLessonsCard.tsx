@@ -40,7 +40,7 @@ const InProgressLessonsCard = ({ inProgressLessons, onContinueLearning }: InProg
                   className="bg-blue-600 hover:bg-blue-700"
                   onClick={() => onContinueLearning(lesson)}
                 >
-                  Continue Learning <ArrowRight className="ml-1 h-4 w-4" />
+                  Join Class <ArrowRight className="ml-1 h-4 w-4" />
                 </Button>
               </div>
             </div>
