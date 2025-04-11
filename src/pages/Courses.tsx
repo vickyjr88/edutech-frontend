@@ -19,7 +19,7 @@ import {
 
 const Courses = () => {
   const [userName] = useState("John Doe");
-  const [selectedTab, setSelectedTab] = useState("matching");
+  const [selectedTab, setSelectedTab] = useState("enrolled");
   const [filterOpen, setFilterOpen] = useState(false);
 
   return (
@@ -55,23 +55,15 @@ const Courses = () => {
             </div>
             
             {/* Course Tabs */}
-            <Tabs defaultValue="matching" className="mb-8" onValueChange={setSelectedTab}>
+            <Tabs defaultValue="enrolled" className="mb-8" onValueChange={setSelectedTab}>
               <TabsList className="mb-6 bg-blue-50/50 p-1 border border-blue-100">
-                <TabsTrigger value="matching" className="data-[state=active]:bg-white data-[state=active]:text-kidato-blue data-[state=active]:shadow-sm rounded-md">
-                  Matching Classes & Teachers
-                </TabsTrigger>
                 <TabsTrigger value="enrolled" className="data-[state=active]:bg-white data-[state=active]:text-kidato-blue data-[state=active]:shadow-sm rounded-md">
                   Enrolled Classes
                 </TabsTrigger>
+                <TabsTrigger value="matching" className="data-[state=active]:bg-white data-[state=active]:text-kidato-blue data-[state=active]:shadow-sm rounded-md">
+                  Matching Classes & Teachers
+                </TabsTrigger>
               </TabsList>
-              
-              {/* Matching Classes & Teachers Cards */}
-              <TabsContent value="matching">
-                <MatchingClassesSection 
-                  recommendedCourses={mockRecommendedCourses} 
-                  matchingTeachers={mockTeachers} 
-                />
-              </TabsContent>
               
               {/* Enrolled Courses Table */}
               <TabsContent value="enrolled">
@@ -79,6 +71,14 @@ const Courses = () => {
                   <EnrolledClassesTable enrolledCourses={mockEnrolledCourses} />
                   <CompletedClassesTable completedCourses={mockCompletedCourses} />
                 </div>
+              </TabsContent>
+              
+              {/* Matching Classes & Teachers Cards */}
+              <TabsContent value="matching">
+                <MatchingClassesSection 
+                  recommendedCourses={mockRecommendedCourses} 
+                  matchingTeachers={mockTeachers} 
+                />
               </TabsContent>
             </Tabs>
 
