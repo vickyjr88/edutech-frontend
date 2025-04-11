@@ -92,11 +92,6 @@ const ClassCard = ({
               <div>
                 <h3 className="font-bold text-gray-900 text-lg">
                   {classItem.title}
-                  {isCurrentClass && (
-                    <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
-                      LIVE
-                    </span>
-                  )}
                 </h3>
                 <p className="text-sm text-gray-600">{classItem.teacher}</p>
                 
@@ -156,7 +151,7 @@ const ClassCard = ({
           </div>
         </div>
         
-        <div className="bg-white/60 backdrop-blur-sm border-t border-gray-200 p-3">
+        <div className="bg-white/60 backdrop-blur-sm p-3">
           <div className="flex justify-between items-center mb-3">
             <div className="flex items-center">
               <Clock className="h-3.5 w-3.5 text-gray-500 mr-1.5" />
