@@ -1,15 +1,18 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ChevronRight, Users, Clock, BookOpen, Calendar, Award, Star, CheckCircle2, Bookmark } from "lucide-react";
+import { ChevronRight, Users, Clock, Calendar, Award, Star, CheckCircle2, Bookmark, BookOpen, BellRing } from "lucide-react";
 import { Link } from "react-router-dom";
 import JoinClassDialog from "./JoinClassDialog";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export default function CurrentClasses() {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [isJoinDialogOpen, setIsJoinDialogOpen] = useState(false);
   const [selectedClass, setSelectedClass] = useState<any>(null);
   const [bookmarkedClasses, setBookmarkedClasses] = useState<string[]>([]);
+  const [isAlertVisible, setIsAlertVisible] = useState(true);
   
   useEffect(() => {
     const timer = setInterval(() => {
@@ -159,7 +162,7 @@ export default function CurrentClasses() {
       <CardHeader className="flex flex-row items-center justify-between pb-2 bg-gradient-to-r from-blue-50 to-purple-50">
         <CardTitle className="text-lg font-bold flex items-center">
           <BookOpen className="mr-2 h-5 w-5 text-kidato-blue" />
-          My Classes
+          Today's Lessons
         </CardTitle>
         <Button variant="ghost" size="sm" asChild className="px-4">
           <Link to="/courses" className="text-kidato-blue hover:text-kidato-blue/90 text-sm flex items-center">
@@ -169,6 +172,29 @@ export default function CurrentClasses() {
         </Button>
       </CardHeader>
       <CardContent className="pt-4">
+        {currentClass && isAlertVisible && (
+          <Alert 
+            className="mb-4 bg-gradient-to-r from-red-50 to-orange-50 border-l-4 border-l-red-500 animate-pulse"
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <BellRing className="h-5 w-5 text-red-500 mr-2" />
+                <AlertDescription className="text-red-800 font-medium">
+                  You have a live class happening now: {currentClass.title}
+                </AlertDescription>
+              </div>
+              <Button 
+                size="sm" 
+                variant="outline" 
+                className="border-red-300 text-red-600 hover:bg-red-100"
+                onClick={() => handleJoinClass(currentClass)}
+              >
+                Join Now
+              </Button>
+            </div>
+          </Alert>
+        )}
+        
         <div className="space-y-4">
           {classesToDisplay.length > 0 ? (
             classesToDisplay.map((classItem, index) => {
@@ -179,7 +205,7 @@ export default function CurrentClasses() {
               return (
                 <div 
                   key={classItem.id} 
-                  className={`rounded-xl border-2 overflow-hidden shadow-sm transition-all hover:shadow-md ${classItem.color} animate-fade-in`}
+                  className={`rounded-xl border-2 overflow-hidden shadow-sm transition-all hover:shadow-md ${classItem.color} ${isCurrentClass ? 'ring-2 ring-red-400 ring-offset-1' : ''} animate-fade-in`}
                   style={{ animationDelay: `${index * 150}ms` }}
                 >
                   <div className="flex flex-col">
@@ -227,13 +253,26 @@ export default function CurrentClasses() {
                             alt={classItem.teacher} 
                             className="w-full h-full object-cover"
                           />
+                          {isCurrentClass && (
+                            <div className="absolute bottom-0 right-0 w-6 h-6 bg-red-500 rounded-full border-2 border-white flex items-center justify-center">
+                              <div className="w-2 h-2 bg-white rounded-full animate-ping absolute"></div>
+                              <div className="w-2 h-2 bg-white rounded-full"></div>
+                            </div>
+                          )}
                         </div>
                       </div>
                       
                       <div className="flex-1">
                         <div className="flex items-start justify-between mb-1">
                           <div>
-                            <h3 className="font-bold text-gray-900 text-lg">{classItem.title}</h3>
+                            <h3 className="font-bold text-gray-900 text-lg">
+                              {classItem.title}
+                              {isCurrentClass && (
+                                <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
+                                  LIVE
+                                </span>
+                              )}
+                            </h3>
                             <p className="text-sm text-gray-600">{classItem.teacher}</p>
                             
                             <div className="mt-2 flex flex-wrap gap-2">
@@ -243,7 +282,7 @@ export default function CurrentClasses() {
                             </div>
                           </div>
                           {index === 0 && isCurrentClass && (
-                            <span className="animate-pulse bg-green-500 text-white text-xs px-2 py-1 rounded-full">
+                            <span className="animate-pulse bg-red-500 text-white text-xs px-2 py-1 rounded-full">
                               Live now!
                             </span>
                           )}
@@ -254,7 +293,7 @@ export default function CurrentClasses() {
                             <Users className="h-3 w-3 mr-1" />
                             <span>{classItem.students} friends</span>
                           </div>
-                          <div className={`flex items-center text-xs px-2 py-1 rounded-full ${classItem.iconBg}`}>
+                          <div className={`flex items-center text-xs px-2 py-1 rounded-full ${isCurrentClass ? 'bg-red-100' : classItem.iconBg}`}>
                             <Clock className="h-3 w-3 mr-1" />
                             <span>
                               {isCurrentClass 
@@ -276,7 +315,9 @@ export default function CurrentClasses() {
                               className={`h-2.5 rounded-full`} 
                               style={{ 
                                 width: `${classItem.progress}%`,
-                                backgroundColor: classItem.buttonColor.split(' ')[0].replace('bg-', '#').replace('green-500', '22c55e').replace('purple-500', 'a855f7').replace('blue-500', '3b82f6').replace('yellow-500', 'eab308')
+                                backgroundColor: isCurrentClass 
+                                  ? "#ea384c" // Red color for live classes
+                                  : classItem.buttonColor.split(' ')[0].replace('bg-', '#').replace('green-500', '22c55e').replace('purple-500', 'a855f7').replace('blue-500', '3b82f6').replace('yellow-500', 'eab308')
                               }}
                             ></div>
                           </div>
@@ -303,8 +344,8 @@ export default function CurrentClasses() {
                         </div>
                         
                         {isCurrentClass && (
-                          <span className="flex items-center text-green-600 text-xs">
-                            <CheckCircle2 className="h-3.5 w-3.5 mr-1" />
+                          <span className="flex items-center text-red-600 text-xs">
+                            <div className="h-2 w-2 bg-red-500 rounded-full mr-1.5 animate-pulse"></div>
                             In progress
                           </span>
                         )}
@@ -312,11 +353,11 @@ export default function CurrentClasses() {
                       
                       <div className="flex justify-end gap-2 flex-wrap">
                         <Button 
-                          className={classItem.buttonColor}
+                          className={isCurrentClass ? "bg-red-600 hover:bg-red-700 text-white" : classItem.buttonColor}
                           onClick={() => handleJoinClass(classItem)}
                           size="sm"
                         >
-                          Join Class
+                          {isCurrentClass ? "Join Now" : "Join Class"}
                         </Button>
                         <Button variant="outline" size="sm" asChild>
                           <Link to={`/course-progress/${classItem.id}`}>
