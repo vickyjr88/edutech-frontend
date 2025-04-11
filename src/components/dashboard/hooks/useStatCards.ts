@@ -78,7 +78,8 @@ export const useStatCards = () => {
     }
   ];
 
-  const handleCardClick = (stat: any) => {
+  // Update type from 'any' to a more specific type
+  const handleCardClick = (stat: StatCardData) => {
     if (stat.clickable) {
       toast({
         title: stat.title,

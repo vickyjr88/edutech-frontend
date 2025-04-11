@@ -32,6 +32,8 @@ export interface StatCardProps {
   isHovered: boolean;
   index: number;
   animatePoints?: boolean;
+  onMouseEnter: () => void;
+  onMouseLeave: () => void;
 }
 
 const StatCard: React.FC<StatCardProps> = ({
@@ -49,7 +51,9 @@ const StatCard: React.FC<StatCardProps> = ({
   onCardClick,
   isHovered,
   index,
-  animatePoints
+  animatePoints,
+  onMouseEnter,
+  onMouseLeave
 }) => {
   return (
     <Tooltip>
@@ -63,8 +67,10 @@ const StatCard: React.FC<StatCardProps> = ({
           onClick={() => onCardClick({ 
             title, value, icon: Icon, secondaryIcon: SecondaryIcon, color, 
             detail, badge, progress, tooltip, clickable, clickMessage, 
-            onCardClick, isHovered, index, animatePoints
+            onCardClick, isHovered, index, animatePoints, onMouseEnter, onMouseLeave
           })}
+          onMouseEnter={onMouseEnter}
+          onMouseLeave={onMouseLeave}
         >
           <CardContent className="p-4">
             <div className="flex items-start mb-3">
