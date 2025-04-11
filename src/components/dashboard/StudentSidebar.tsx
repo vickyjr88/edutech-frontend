@@ -3,8 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { 
   Home, Book, MessageSquare, User, LogOut, 
-  Sparkles, Target, Users, Calendar, Award,
-  BellDot
+  Sparkles, Award, Users, Calendar
 } from "lucide-react";
 
 const StudentSidebar = () => {
@@ -83,14 +82,18 @@ const StudentSidebar = () => {
             </div>
           )}
         </Link>
-        <div className="flex items-center px-4 py-3 text-sm font-medium rounded-xl text-gray-500 cursor-not-allowed">
+        <Link 
+          to="/achievements" 
+          className={`flex items-center px-4 py-3 text-sm font-medium rounded-xl ${
+            isActive("/achievements") 
+              ? "bg-gradient-to-r from-kidato-light-blue to-blue-100 text-kidato-blue shadow-sm" 
+              : "text-gray-700 hover:bg-blue-50"
+          } transition-all`}
+        >
           <Award className="mr-3 h-5 w-5" />
           Achievements
-        </div>
-        <div className="flex items-center px-4 py-3 text-sm font-medium rounded-xl text-gray-500 cursor-not-allowed">
-          <Target className="mr-3 h-5 w-5" />
-          Quests & Challenges
-        </div>
+          {isActive("/achievements") && <Sparkles className="ml-auto h-4 w-4 text-yellow-400" />}
+        </Link>
         
         <h3 className="px-4 mt-5 text-xs font-semibold uppercase text-gray-500 mb-2">COMMUNICATION</h3>
         <Link 
