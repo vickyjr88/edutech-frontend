@@ -1,19 +1,40 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { initializeSessionTimes } from "./mockClassData";
+import { useToast } from "@/hooks/use-toast";
+import { showClassReminder } from "./LiveClassAlert";
 
 export function useClassesData() {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [bookmarkedClasses, setBookmarkedClasses] = useState<string[]>([]);
   const [isAlertVisible, setIsAlertVisible] = useState(true);
+  const [lastReminderTime, setLastReminderTime] = useState(0);
+  const { toast } = useToast();
   
   useEffect(() => {
+    // Update current time every minute
     const timer = setInterval(() => {
       setCurrentTime(new Date());
     }, 60000);
     
     return () => clearInterval(timer);
   }, []);
+  
+  // Check for live class and show reminder every 5 minutes
+  useEffect(() => {
+    if (!currentClass) return;
+    
+    const reminderInterval = setInterval(() => {
+      const now = Date.now();
+      // Show reminder every 5 minutes (300000 ms)
+      if (now - lastReminderTime > 300000) {
+        showClassReminder(toast, currentClass, handleJoinClass);
+        setLastReminderTime(now);
+      }
+    }, 60000); // Check every minute
+    
+    return () => clearInterval(reminderInterval);
+  }, [currentClass, lastReminderTime]);
   
   const allClasses = initializeSessionTimes(currentTime);
   
@@ -52,6 +73,24 @@ export function useClassesData() {
     );
   };
   
+  const handleJoinClass = useCallback((classItem: any) => {
+    // This function will be provided by CurrentClasses.tsx
+    // We're defining it here so we can use it in the reminder
+    console.log("Joining class:", classItem.title);
+    // The actual implementation will be passed from CurrentClasses
+  }, []);
+  
+  // Show initial reminder when component loads and there's a live class
+  useEffect(() => {
+    if (currentClass && Date.now() - lastReminderTime > 300000) {
+      // Only show on initial load
+      setTimeout(() => {
+        showClassReminder(toast, currentClass, handleJoinClass);
+        setLastReminderTime(Date.now());
+      }, 3000); // Show after 3 seconds to let the page load
+    }
+  }, []);
+  
   return {
     currentTime,
     currentClass,
@@ -60,6 +99,7 @@ export function useClassesData() {
     isAlertVisible,
     setIsAlertVisible,
     getMinutesSinceStart,
-    toggleBookmark
+    toggleBookmark,
+    handleJoinClass
   };
 }

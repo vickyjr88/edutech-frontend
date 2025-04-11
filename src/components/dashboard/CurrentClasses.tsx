@@ -14,6 +14,12 @@ export default function CurrentClasses() {
   const [isJoinDialogOpen, setIsJoinDialogOpen] = useState(false);
   const [selectedClass, setSelectedClass] = useState<any>(null);
   
+  // Create a function to handle joining a class
+  const handleJoinClass = (classItem: any) => {
+    setSelectedClass(classItem);
+    setIsJoinDialogOpen(true);
+  };
+  
   const { 
     currentClass, 
     classesToDisplay, 
@@ -24,11 +30,6 @@ export default function CurrentClasses() {
     toggleBookmark 
   } = useClassesData();
   
-  const handleJoinClass = (classItem: any) => {
-    setSelectedClass(classItem);
-    setIsJoinDialogOpen(true);
-  };
-
   return (
     <Card className="border-2 border-blue-100 rounded-xl overflow-hidden shadow-md transform transition-all hover:shadow-lg">
       <CardHeader className="flex flex-row items-center justify-between pb-2 bg-gradient-to-r from-blue-50 to-purple-50">

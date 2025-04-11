@@ -2,18 +2,20 @@
 import { BellRing } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 
 interface LiveClassAlertProps {
   currentClass: any;
   onJoinClass: (classItem: any) => void;
+  isReminder?: boolean;
 }
 
-const LiveClassAlert = ({ currentClass, onJoinClass }: LiveClassAlertProps) => {
+const LiveClassAlert = ({ currentClass, onJoinClass, isReminder = false }: LiveClassAlertProps) => {
   if (!currentClass) return null;
   
   return (
     <Alert 
-      className="mb-4 bg-gradient-to-r from-red-50 to-orange-50 border-l-4 border-l-red-500 animate-pulse"
+      className={`mb-4 ${isReminder ? 'bg-white border border-red-200' : 'bg-gradient-to-r from-red-50 to-orange-50 border-l-4 border-l-red-500'} ${!isReminder && 'animate-pulse'}`}
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center">
@@ -33,6 +35,25 @@ const LiveClassAlert = ({ currentClass, onJoinClass }: LiveClassAlertProps) => {
       </div>
     </Alert>
   );
+};
+
+// This function creates a class reminder that can be used with the toast system
+export const showClassReminder = (toast: any, currentClass: any, onJoinClass: (classItem: any) => void) => {
+  if (!currentClass) return;
+
+  toast({
+    duration: 10000, // Stay visible for 10 seconds
+    className: "bg-white border-red-200 shadow-lg",
+    description: (
+      <div className="w-full">
+        <LiveClassAlert 
+          currentClass={currentClass} 
+          onJoinClass={onJoinClass} 
+          isReminder={true} 
+        />
+      </div>
+    ),
+  });
 };
 
 export default LiveClassAlert;
