@@ -3,11 +3,9 @@ import { useState } from "react";
 import ParentSidebar from "@/components/parents/ParentSidebar";
 import ParentDashboardHeader from "@/components/parents/ParentDashboardHeader";
 import ChildrenOverview from "@/components/parents/ChildrenOverview";
-import UpcomingEvents from "@/components/parents/UpcomingEvents";
 import ActivityFeed from "@/components/parents/ActivityFeed";
 import AcademicProgress from "@/components/parents/AcademicProgress";
 import AttendanceWidget from "@/components/parents/AttendanceWidget";
-import NotificationsPanel from "@/components/parents/NotificationsPanel";
 import ChildrenLiveStatus from "@/components/parents/ChildrenLiveStatus";
 import ImportantReminders from "@/components/parents/ImportantReminders";
 
@@ -35,15 +33,10 @@ const ParentsDashboard = () => {
             
             <ChildrenOverview />
             
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
-              <div className="lg:col-span-2 space-y-6">
-                <ActivityFeed />
-                <AcademicProgress />
-              </div>
-              <div className="space-y-6">
-                <NotificationsPanel />
-                <UpcomingEvents />
-              </div>
+            {/* Activity and Progress Row */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+              <ActivityFeed />
+              <AcademicProgress />
             </div>
           </div>
         </main>
