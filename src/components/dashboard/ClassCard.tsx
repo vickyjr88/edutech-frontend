@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -30,7 +29,7 @@ const ClassCard = ({
   
   return (
     <div 
-      className={`rounded-xl border-2 overflow-hidden shadow-sm transition-all hover:shadow-md ${classItem.color} ${isCurrentClass ? 'ring-2 ring-red-400 ring-offset-1' : ''} animate-fade-in`}
+      className={`rounded-xl overflow-hidden shadow-sm transition-all hover:shadow-md ${classItem.color} ${isCurrentClass ? 'border-2 border-amber-400' : ''} animate-fade-in`}
       style={{ animationDelay: `${index * 150}ms` }}
     >
       <div className="flex flex-col">
