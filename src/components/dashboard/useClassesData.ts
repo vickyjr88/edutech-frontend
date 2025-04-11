@@ -20,28 +20,13 @@ export function useClassesData() {
     return () => clearInterval(timer);
   }, []);
   
-  // Check for live class and show reminder every 5 minutes
-  useEffect(() => {
-    if (!currentClass) return;
-    
-    const reminderInterval = setInterval(() => {
-      const now = Date.now();
-      // Show reminder every 5 minutes (300000 ms)
-      if (now - lastReminderTime > 300000) {
-        showClassReminder(toast, currentClass, handleJoinClass);
-        setLastReminderTime(now);
-      }
-    }, 60000); // Check every minute
-    
-    return () => clearInterval(reminderInterval);
-  }, [currentClass, lastReminderTime]);
-  
   const allClasses = initializeSessionTimes(currentTime);
   
   const sortedClasses = [...allClasses].sort((a, b) => 
     a.sessionTime.getTime() - b.sessionTime.getTime()
   );
 
+  // Define currentClass before it's used in any other function
   const currentClass = sortedClasses.find(cls => {
     const now = currentTime.getTime();
     const classTime = cls.sessionTime.getTime();
@@ -80,6 +65,22 @@ export function useClassesData() {
     // The actual implementation will be passed from CurrentClasses
   }, []);
   
+  // Check for live class and show reminder every 5 minutes
+  useEffect(() => {
+    if (!currentClass) return;
+    
+    const reminderInterval = setInterval(() => {
+      const now = Date.now();
+      // Show reminder every 5 minutes (300000 ms)
+      if (now - lastReminderTime > 300000) {
+        showClassReminder(toast, currentClass, handleJoinClass);
+        setLastReminderTime(now);
+      }
+    }, 60000); // Check every minute
+    
+    return () => clearInterval(reminderInterval);
+  }, [currentClass, lastReminderTime, toast, handleJoinClass]);
+  
   // Show initial reminder when component loads and there's a live class
   useEffect(() => {
     if (currentClass && Date.now() - lastReminderTime > 300000) {
@@ -89,7 +90,7 @@ export function useClassesData() {
         setLastReminderTime(Date.now());
       }, 3000); // Show after 3 seconds to let the page load
     }
-  }, []);
+  }, [currentClass, lastReminderTime, toast, handleJoinClass]);
   
   return {
     currentTime,
