@@ -6,7 +6,6 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import JoinClassDialog from "./JoinClassDialog";
 import ClassCard from "./ClassCard";
-import LiveClassAlert from "./LiveClassAlert";
 import EmptyClassesState from "./EmptyClassesState";
 import { useClassesData } from "./useClassesData";
 
@@ -24,8 +23,6 @@ export default function CurrentClasses() {
     currentClass, 
     classesToDisplay, 
     bookmarkedClasses, 
-    isAlertVisible,
-    setIsAlertVisible,
     getMinutesSinceStart, 
     toggleBookmark 
   } = useClassesData();
@@ -45,13 +42,6 @@ export default function CurrentClasses() {
         </Button>
       </CardHeader>
       <CardContent className="pt-4">
-        {currentClass && isAlertVisible && (
-          <LiveClassAlert 
-            currentClass={currentClass} 
-            onJoinClass={handleJoinClass} 
-          />
-        )}
-        
         <div className="space-y-4">
           {classesToDisplay.length > 0 ? (
             classesToDisplay.map((classItem, index) => {

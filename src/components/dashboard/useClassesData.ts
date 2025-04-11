@@ -7,7 +7,6 @@ import { showClassReminder } from "./LiveClassAlert";
 export function useClassesData() {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [bookmarkedClasses, setBookmarkedClasses] = useState<string[]>([]);
-  const [isAlertVisible, setIsAlertVisible] = useState(true);
   const [lastReminderTime, setLastReminderTime] = useState(0);
   const { toast } = useToast();
   
@@ -97,8 +96,6 @@ export function useClassesData() {
     currentClass,
     classesToDisplay,
     bookmarkedClasses,
-    isAlertVisible,
-    setIsAlertVisible,
     getMinutesSinceStart,
     toggleBookmark,
     handleJoinClass
