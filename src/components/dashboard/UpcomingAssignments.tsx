@@ -1,65 +1,31 @@
 
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { FileCheck } from "lucide-react";
-import { useState } from "react";
+import { FileCheck, ExternalLink } from "lucide-react";
+import { Link } from "react-router-dom";
 import AssignmentDialog from "../progress/AssignmentDialog";
+import { getMockAssignmentsData } from "../progress/data/mockAssignmentsData";
 
 export default function UpcomingAssignments() {
   const [selectedAssignment, setSelectedAssignment] = useState<any>(null);
   const [assignmentDialogOpen, setAssignmentDialogOpen] = useState(false);
+  const [assignments, setAssignments] = useState<any[]>([]);
 
-  const assignments = [
-    {
-      id: "a1",
-      title: "Algebra Quiz",
-      course: "Math Fundamentals",
-      lesson: "Week 2: Linear Equations",
-      dueDate: "Today",
-      dueTime: "11:59 PM",
-      isUrgent: true,
-      status: "in_progress",
-      type: "individual",
-      description: "Complete the online algebra quiz covering linear equations, inequalities, and basic graphing.",
-      resources: [
-        { id: "r1", name: "Algebra Quiz Instructions.pdf", type: "pdf", size: "245 KB" }
-      ],
-      videoLinks: [
-        { id: "v1", title: "Algebra Quiz Review", url: "https://www.youtube.com/watch?v=example1" }
-      ]
-    },
-    {
-      id: "a2",
-      title: "Lab Report",
-      course: "Science Explorers",
-      lesson: "Unit 3: Chemical Reactions",
-      dueDate: "Tomorrow",
-      dueTime: "3:00 PM",
-      isUrgent: false,
-      status: "in_progress",
-      type: "individual",
-      description: "Write a lab report based on the experiment conducted in class. Include methodology, results, and discussion sections.",
-      resources: [
-        { id: "r2", name: "Lab Report Template.docx", type: "docx", size: "120 KB" }
-      ]
-    },
-    {
-      id: "a3",
-      title: "Code Project",
-      course: "Intro to Coding",
-      lesson: "Module 4: Basic Programming",
-      dueDate: "Friday",
-      dueTime: "5:00 PM",
-      isUrgent: false,
-      status: "upcoming",
-      type: "individual",
-      description: "Create a simple game using the programming concepts we've covered in class so far.",
-      videoLinks: [
-        { id: "v2", title: "Game Programming Tutorial", url: "https://www.youtube.com/watch?v=example2" }
-      ]
-    }
-  ];
+  // Fetch assignments data from the same source as the course progress page
+  useEffect(() => {
+    const allAssignments = getMockAssignmentsData();
+    
+    // Filter to get only upcoming or in-progress assignments
+    const upcomingAssignments = allAssignments
+      .filter(assignment => 
+        assignment.status === "upcoming" || 
+        assignment.status === "in_progress")
+      .slice(0, 3); // Limit to 3 assignments for the dashboard
+    
+    setAssignments(upcomingAssignments);
+  }, []);
 
   const handleViewAssignment = (assignment: any) => {
     setSelectedAssignment(assignment);
@@ -78,36 +44,45 @@ export default function UpcomingAssignments() {
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          {assignments.map((assignment) => (
-            <div 
-              key={assignment.id} 
-              className="border rounded-md p-3"
-            >
-              <div className="flex justify-between items-start mb-1">
-                <h3 className="font-medium text-gray-900">{assignment.title}</h3>
-                {assignment.isUrgent && (
-                  <Badge variant="destructive" className="text-xs">Due soon</Badge>
-                )}
-              </div>
-              <p className="text-sm text-gray-600 mb-2">{assignment.course}</p>
-              <div className="flex justify-between items-center">
-                <span className="text-xs text-gray-500">
-                  Due {assignment.dueDate}, {assignment.dueTime}
-                </span>
-                <Button 
-                  size="sm" 
-                  variant="outline"
-                  onClick={() => handleViewAssignment(assignment)}
-                >
-                  <FileCheck className="h-3.5 w-3.5 mr-1" />
-                  View
-                </Button>
-              </div>
+          {assignments.length === 0 ? (
+            <div className="text-center py-4 text-gray-500">
+              No upcoming assignments
             </div>
-          ))}
-          <Button variant="ghost" size="sm" className="w-full mt-2">
-            View all assignments
-          </Button>
+          ) : (
+            assignments.map((assignment) => (
+              <div 
+                key={assignment.id} 
+                className="border rounded-md p-3"
+              >
+                <div className="flex justify-between items-start mb-1">
+                  <h3 className="font-medium text-gray-900">{assignment.title}</h3>
+                  {(assignment.dueDate === "Today" || assignment.dueDate === "Tomorrow") && (
+                    <Badge variant="destructive" className="text-xs">Due soon</Badge>
+                  )}
+                </div>
+                <p className="text-sm text-gray-600 mb-2">{assignment.course}</p>
+                <div className="flex justify-between items-center">
+                  <span className="text-xs text-gray-500">
+                    Due {assignment.dueDate}
+                  </span>
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    onClick={() => handleViewAssignment(assignment)}
+                  >
+                    <FileCheck className="h-3.5 w-3.5 mr-1" />
+                    View
+                  </Button>
+                </div>
+              </div>
+            ))
+          )}
+          <Link to="/course-progress/math101">
+            <Button variant="ghost" size="sm" className="w-full mt-2">
+              <ExternalLink className="h-3.5 w-3.5 mr-1" />
+              View all assignments
+            </Button>
+          </Link>
         </div>
       </CardContent>
 
