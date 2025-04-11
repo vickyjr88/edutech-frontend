@@ -24,18 +24,24 @@ const ParentsDashboard = () => {
           <div className="max-w-7xl mx-auto">
             {/* Quick Status Panel */}
             <div className="mb-6">
-              <ChildrenLiveStatus />
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+              {/* First row - LiveStatus and ImportantReminders */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <ChildrenLiveStatus />
                 <ImportantReminders />
+              </div>
+              {/* Second row - ActivityFeed and AttendanceWidget */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                <div className="col-span-2">
+                  <ActivityFeed />
+                </div>
                 <AttendanceWidget />
               </div>
             </div>
             
             <ChildrenOverview />
             
-            {/* Activity and Progress Row */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-              <ActivityFeed />
+            {/* Academic Progress Row */}
+            <div className="mt-6">
               <AcademicProgress />
             </div>
           </div>
