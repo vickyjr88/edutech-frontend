@@ -10,7 +10,6 @@ import AttendanceWidget from "@/components/parents/AttendanceWidget";
 import NotificationsPanel from "@/components/parents/NotificationsPanel";
 import ChildrenLiveStatus from "@/components/parents/ChildrenLiveStatus";
 import ImportantReminders from "@/components/parents/ImportantReminders";
-import QuickActions from "@/components/parents/QuickActions";
 
 const ParentsDashboard = () => {
   const [parentName] = useState("Kate Johnson");
@@ -30,7 +29,7 @@ const ParentsDashboard = () => {
               <ChildrenLiveStatus />
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
                 <ImportantReminders />
-                <QuickActions />
+                <AttendanceWidget />
               </div>
             </div>
             
@@ -44,7 +43,6 @@ const ParentsDashboard = () => {
               <div className="space-y-6">
                 <NotificationsPanel />
                 <UpcomingEvents />
-                <AttendanceWidget />
               </div>
             </div>
           </div>
