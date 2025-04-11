@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -320,8 +319,8 @@ export default function CurrentClasses() {
                           Join Class
                         </Button>
                         <Button variant="outline" size="sm" asChild>
-                          <Link to={`/class/${classItem.id}`}>
-                            View Details
+                          <Link to={`/course-progress/${classItem.id}`}>
+                            View Progress
                           </Link>
                         </Button>
                       </div>
