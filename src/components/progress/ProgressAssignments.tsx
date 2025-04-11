@@ -23,6 +23,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import AssignmentDialog from "./AssignmentDialog";
+import { useToast } from "@/components/ui/use-toast";
 
 interface ProgressAssignmentsProps {
   courseId?: string;
@@ -40,7 +42,8 @@ const getMockAssignmentsData = () => {
       score: "95%",
       grade: "A",
       feedback: "Excellent work with clear solutions.",
-      type: "individual"
+      type: "individual",
+      description: "Complete the worksheet on basic arithmetic operations including addition, subtraction, multiplication and division."
     },
     {
       id: "assignment2",
@@ -48,7 +51,8 @@ const getMockAssignmentsData = () => {
       status: "pending_review",
       submitDate: "Feb 12, 2025",
       dueDate: "Feb 12, 2025",
-      type: "individual"
+      type: "individual",
+      description: "Solve the given word problems using appropriate mathematical operations and show your work."
     },
     {
       id: "assignment3",
@@ -57,14 +61,16 @@ const getMockAssignmentsData = () => {
       dueDate: "Feb 20, 2025",
       progress: 30,
       type: "group",
-      groupMembers: 3
+      groupMembers: 3,
+      description: "Work with your group to create a presentation explaining how mathematics is used in everyday life with at least 5 examples."
     },
     {
       id: "assignment4",
       title: "Fractions and Decimals",
       status: "upcoming",
       dueDate: "Feb 28, 2025",
-      type: "individual"
+      type: "individual",
+      description: "Complete the worksheet on converting fractions to decimals and vice versa. Include practice problems with mixed numbers."
     },
     {
       id: "assignment5",
@@ -72,7 +78,8 @@ const getMockAssignmentsData = () => {
       status: "late",
       dueDate: "Feb 10, 2025",
       type: "individual",
-      lateBy: "2 days"
+      lateBy: "2 days",
+      description: "Solve these advanced math problems that incorporate multiple concepts learned in class."
     },
   ];
 };
@@ -80,6 +87,9 @@ const getMockAssignmentsData = () => {
 const ProgressAssignments = ({ courseId }: ProgressAssignmentsProps) => {
   const [assignments, setAssignments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedAssignment, setSelectedAssignment] = useState<any>(null);
+  const [assignmentDialogOpen, setAssignmentDialogOpen] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
     // Simulating API call
@@ -93,6 +103,26 @@ const ProgressAssignments = ({ courseId }: ProgressAssignmentsProps) => {
 
     fetchData();
   }, [courseId]);
+
+  const handleViewAssignment = (assignment: any) => {
+    setSelectedAssignment(assignment);
+    setAssignmentDialogOpen(true);
+  };
+
+  const handleUpdateAssignment = (assignmentId: string, updatedData: any) => {
+    const updatedAssignments = assignments.map(assignment => 
+      assignment.id === assignmentId 
+        ? { ...assignment, ...updatedData } 
+        : assignment
+    );
+    
+    setAssignments(updatedAssignments);
+    
+    toast({
+      title: "Assignment Updated",
+      description: "Your assignment has been submitted successfully!",
+    });
+  };
 
   if (loading) {
     return <div className="text-center py-8">Loading assignments data...</div>;
@@ -143,31 +173,31 @@ const ProgressAssignments = ({ courseId }: ProgressAssignmentsProps) => {
     switch (assignment.status) {
       case "completed":
         return (
-          <Button size="sm" variant="outline">
+          <Button size="sm" variant="outline" onClick={() => handleViewAssignment(assignment)}>
             <Eye className="h-3.5 w-3.5 mr-1" /> View Feedback
           </Button>
         );
       case "pending_review":
         return (
-          <Button size="sm" variant="outline" disabled>
-            <Clock className="h-3.5 w-3.5 mr-1" /> Awaiting Feedback
+          <Button size="sm" variant="outline" onClick={() => handleViewAssignment(assignment)}>
+            <Clock className="h-3.5 w-3.5 mr-1" /> View Submission
           </Button>
         );
       case "in_progress":
         return (
-          <Button size="sm" className="bg-green-600 hover:bg-green-700">
+          <Button size="sm" className="bg-green-600 hover:bg-green-700" onClick={() => handleViewAssignment(assignment)}>
             <Upload className="h-3.5 w-3.5 mr-1" /> Submit
           </Button>
         );
       case "upcoming":
         return (
-          <Button size="sm" variant="outline">
+          <Button size="sm" variant="outline" onClick={() => handleViewAssignment(assignment)}>
             <FileCheck className="h-3.5 w-3.5 mr-1" /> View Assignment
           </Button>
         );
       case "late":
         return (
-          <Button size="sm" className="bg-red-600 hover:bg-red-700">
+          <Button size="sm" className="bg-red-600 hover:bg-red-700" onClick={() => handleViewAssignment(assignment)}>
             <Upload className="h-3.5 w-3.5 mr-1" /> Submit Late
           </Button>
         );
@@ -320,6 +350,16 @@ const ProgressAssignments = ({ courseId }: ProgressAssignmentsProps) => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Assignment Dialog */}
+      {selectedAssignment && (
+        <AssignmentDialog
+          isOpen={assignmentDialogOpen}
+          onClose={() => setAssignmentDialogOpen(false)}
+          assignment={selectedAssignment}
+          onUpdateAssignment={handleUpdateAssignment}
+        />
+      )}
     </div>
   );
 };

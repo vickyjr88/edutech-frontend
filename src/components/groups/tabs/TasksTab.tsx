@@ -3,7 +3,7 @@ import TaskItem from "../tasks/TaskItem";
 import AddTaskForm from "../tasks/AddTaskForm";
 import { FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 
 interface Member {
   id: number;
