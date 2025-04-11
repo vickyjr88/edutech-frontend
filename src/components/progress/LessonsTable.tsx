@@ -83,9 +83,9 @@ const LessonsTable = ({ lessons, onReviewLesson, onContinueLearning }: LessonsTa
                     Join Class
                   </Button>
                 ) : (
-                  <Button size="sm" variant="outline" disabled>
-                    Start
-                  </Button>
+                  <div className="text-sm text-gray-500 italic">
+                    Scheduled
+                  </div>
                 )}
               </TableCell>
             </TableRow>
