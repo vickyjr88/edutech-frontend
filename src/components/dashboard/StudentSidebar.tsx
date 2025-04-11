@@ -67,18 +67,6 @@ const StudentSidebar = () => {
           )}
         </Link>
         <Link 
-          to="/challenges" 
-          className={`flex items-center px-4 py-3 text-sm font-medium rounded-xl ${
-            isActive("/challenges") 
-              ? "bg-gradient-to-r from-kidato-light-blue to-blue-100 text-kidato-blue shadow-sm" 
-              : "text-gray-700 hover:bg-blue-50"
-          } transition-all`}
-        >
-          <Target className="mr-3 h-5 w-5" />
-          Quests & Challenges
-          {isActive("/challenges") && <Sparkles className="ml-auto h-4 w-4 text-yellow-400" />}
-        </Link>
-        <Link 
           to="/group-work" 
           className={`flex items-center px-4 py-3 text-sm font-medium rounded-xl ${
             isActive("/group-work") 
@@ -95,20 +83,16 @@ const StudentSidebar = () => {
             </div>
           )}
         </Link>
-        
-        {/* Moved Achievements from Account section to here */}
-        <Link 
-          to="/achievements" 
-          className={`flex items-center px-4 py-3 text-sm font-medium rounded-xl ${
-            isActive("/achievements") 
-              ? "bg-gradient-to-r from-kidato-light-blue to-blue-100 text-kidato-blue shadow-sm" 
-              : "text-gray-700 hover:bg-blue-50"
-          } transition-all`}
-        >
+        <div className="flex items-center px-4 py-3 text-sm font-medium rounded-xl text-gray-500 cursor-not-allowed">
           <Award className="mr-3 h-5 w-5" />
           Achievements
-          {isActive("/achievements") && <Sparkles className="ml-auto h-4 w-4 text-yellow-400" />}
-        </Link>
+          <span className="ml-auto bg-amber-100 text-amber-700 text-xs px-2 py-0.5 rounded-full">Coming Soon</span>
+        </div>
+        <div className="flex items-center px-4 py-3 text-sm font-medium rounded-xl text-gray-500 cursor-not-allowed">
+          <Target className="mr-3 h-5 w-5" />
+          Quests & Challenges
+          <span className="ml-auto bg-amber-100 text-amber-700 text-xs px-2 py-0.5 rounded-full">Coming Soon</span>
+        </div>
         
         <h3 className="px-4 mt-5 text-xs font-semibold uppercase text-gray-500 mb-2">COMMUNICATION</h3>
         <Link 
