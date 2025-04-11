@@ -28,6 +28,7 @@ import Challenges from "./pages/Challenges";
 import Schedule from "./pages/Schedule";
 import Achievements from "./pages/Achievements";
 import Courses from "./pages/Courses";
+import CourseProgress from "./pages/CourseProgress";
 import Profile from "./pages/Profile";
 import ParentsDashboard from "./pages/ParentsDashboard";
 
@@ -107,6 +108,11 @@ const App = () => {
                 <Route path="/courses" element={
                   <ProtectedRoute>
                     <Courses />
+                  </ProtectedRoute>
+                } />
+                <Route path="/course-progress/:courseId" element={
+                  <ProtectedRoute>
+                    <CourseProgress />
                   </ProtectedRoute>
                 } />
                 <Route path="*" element={<NotFound />} />

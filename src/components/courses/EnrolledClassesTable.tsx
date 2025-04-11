@@ -26,6 +26,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Link } from "react-router-dom";
 
 export interface EnrolledCourse {
   id: string;
@@ -159,9 +160,14 @@ const EnrolledClassesTable = ({ enrolledCourses }: EnrolledClassesTableProps) =>
                     )}
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button size="sm" className="bg-indigo-600 hover:bg-indigo-700 h-8">
-                      View Progress
-                    </Button>
+                    <Link to={`/course-progress/${course.id}`}>
+                      <Button 
+                        size="sm" 
+                        className="bg-indigo-600 hover:bg-indigo-700 h-8"
+                      >
+                        View Progress
+                      </Button>
+                    </Link>
                   </TableCell>
                 </TableRow>
               ))}
