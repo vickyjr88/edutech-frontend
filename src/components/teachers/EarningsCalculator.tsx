@@ -5,31 +5,51 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Calculator, DollarSign, Calendar, Clock, Users } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 const EarningsCalculator = () => {
   const [students, setStudents] = useState(10);
-  const [hoursPerDay, setHoursPerDay] = useState(4); // Changed from hoursPerWeek to hoursPerDay with a default of 4
+  const [hoursPerDay, setHoursPerDay] = useState(4);
   const [ratePerHour, setRatePerHour] = useState(645); // Default to KSh (5 USD * 129)
   const [isCurrencyKsh, setIsCurrencyKsh] = useState(true); // Set KSh as default
+  const [teachingFormat, setTeachingFormat] = useState("group"); // "one-on-one" or "group"
   
   // Exchange rate (1 USD = 129 KSh approximately)
   const exchangeRate = 129;
 
   // Calculate earnings
   const calculateEarnings = () => {
-    const rate = isCurrencyKsh ? ratePerHour : ratePerHour * (isCurrencyKsh ? 1 : 1);
-    const weeklyHours = hoursPerDay * 5; // Convert hours per day to weekly hours (5 working days)
-    const dailyEarnings = rate * hoursPerDay * students;
-    const weeklyEarnings = dailyEarnings * 5; // 5 working days per week
-    const monthlyEarnings = weeklyEarnings * 4; // Approximating 4 weeks per month
-    const yearlyEarnings = monthlyEarnings * 12;
+    let rate = isCurrencyKsh ? ratePerHour : ratePerHour * (isCurrencyKsh ? 1 : 1);
+    
+    // Adjust rate based on teaching format
+    if (teachingFormat === "one-on-one") {
+      // For one-on-one, we calculate per student directly
+      const dailyEarnings = rate * hoursPerDay;
+      const weeklyEarnings = dailyEarnings * 5; // 5 working days per week
+      const monthlyEarnings = weeklyEarnings * 4; // Approximating 4 weeks per month
+      const yearlyEarnings = monthlyEarnings * 12;
 
-    return {
-      daily: formatCurrency(dailyEarnings),
-      weekly: formatCurrency(weeklyEarnings),
-      monthly: formatCurrency(monthlyEarnings),
-      yearly: formatCurrency(yearlyEarnings)
-    };
+      return {
+        daily: formatCurrency(dailyEarnings),
+        weekly: formatCurrency(weeklyEarnings),
+        monthly: formatCurrency(monthlyEarnings),
+        yearly: formatCurrency(yearlyEarnings)
+      };
+    } else {
+      // For group teaching
+      const weeklyHours = hoursPerDay * 5; // Convert hours per day to weekly hours (5 working days)
+      const dailyEarnings = rate * hoursPerDay * students;
+      const weeklyEarnings = dailyEarnings * 5; // 5 working days per week
+      const monthlyEarnings = weeklyEarnings * 4; // Approximating 4 weeks per month
+      const yearlyEarnings = monthlyEarnings * 12;
+
+      return {
+        daily: formatCurrency(dailyEarnings),
+        weekly: formatCurrency(weeklyEarnings),
+        monthly: formatCurrency(monthlyEarnings),
+        yearly: formatCurrency(yearlyEarnings)
+      };
+    }
   };
 
   // Format currency based on selected currency
@@ -101,24 +121,48 @@ const EarningsCalculator = () => {
                 </h3>
 
                 <div className="space-y-4">
-                  <div>
-                    <div className="flex justify-between items-center mb-2">
-                      <Label htmlFor="students" className="text-gray-700">Number of Students</Label>
-                      <span className="text-sm text-gray-500">{students} students</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Users className="text-gray-500 w-4 h-4" />
-                      <Input
-                        id="students"
-                        type="range"
-                        min={1}
-                        max={50}
-                        value={students}
-                        onChange={(e) => setStudents(parseInt(e.target.value))}
-                        className="h-2"
-                      />
-                    </div>
+                  <div className="bg-blue-50 p-4 rounded-lg">
+                    <Label className="text-gray-700 font-medium mb-2 block">Teaching Format</Label>
+                    <RadioGroup 
+                      value={teachingFormat} 
+                      onValueChange={setTeachingFormat}
+                      className="flex space-x-8"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="one-on-one" id="one-on-one" />
+                        <Label htmlFor="one-on-one" className="text-sm font-medium">
+                          One-on-One
+                        </Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="group" id="group" />
+                        <Label htmlFor="group" className="text-sm font-medium">
+                          Group Class
+                        </Label>
+                      </div>
+                    </RadioGroup>
                   </div>
+
+                  {teachingFormat === "group" && (
+                    <div>
+                      <div className="flex justify-between items-center mb-2">
+                        <Label htmlFor="students" className="text-gray-700">Number of Students</Label>
+                        <span className="text-sm text-gray-500">{students} students</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Users className="text-gray-500 w-4 h-4" />
+                        <Input
+                          id="students"
+                          type="range"
+                          min={1}
+                          max={50}
+                          value={students}
+                          onChange={(e) => setStudents(parseInt(e.target.value))}
+                          className="h-2"
+                        />
+                      </div>
+                    </div>
+                  )}
 
                   <div>
                     <div className="flex justify-between items-center mb-2">
