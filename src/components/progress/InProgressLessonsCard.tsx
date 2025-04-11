@@ -45,11 +45,12 @@ const InProgressLessonsCard = ({ inProgressLessons, onContinueLearning }: InProg
     return null;
   }
 
-  // Background color for live class: #FDF2F2 (soft red)
-  // Background color for regular classes: #EFF6FF (soft blue)
+  // Softer background colors
+  // Background color for live class: soft peach gradient
+  // Background color for regular classes: soft blue
 
   return (
-    <Card className={`${liveLesson ? 'border-red-400' : 'border-blue-100'}`}>
+    <Card className={`${liveLesson ? 'border-red-300' : 'border-blue-100'}`}>
       <CardHeader className={`pb-2 ${liveLesson ? 'bg-gradient-to-r from-red-50 to-orange-50' : 'bg-blue-50'}`}>
         <CardTitle className="text-lg font-medium flex items-center">
           {liveLesson ? (
@@ -90,9 +91,9 @@ const InProgressLessonsCard = ({ inProgressLessons, onContinueLearning }: InProg
                 <span>Progress</span>
                 <span>{liveLesson.completedPercentage}%</span>
               </div>
-              <div className="w-full bg-red-200 rounded-full h-2.5">
+              <div className="w-full bg-orange-100 rounded-full h-2.5">
                 <div 
-                  className="bg-red-600 h-2.5 rounded-full" 
+                  className="bg-amber-400 h-2.5 rounded-full" 
                   style={{ width: `${liveLesson.completedPercentage}%` }}
                 ></div>
               </div>
@@ -127,9 +128,9 @@ const InProgressLessonsCard = ({ inProgressLessons, onContinueLearning }: InProg
                 <span>Progress</span>
                 <span>{lesson.completedPercentage}%</span>
               </div>
-              <div className="w-full bg-blue-200 rounded-full h-2.5">
+              <div className="w-full bg-blue-100 rounded-full h-2.5">
                 <div 
-                  className="bg-blue-600 h-2.5 rounded-full" 
+                  className="bg-blue-400 h-2.5 rounded-full" 
                   style={{ width: `${lesson.completedPercentage}%` }}
                 ></div>
               </div>

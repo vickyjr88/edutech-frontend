@@ -15,22 +15,22 @@ const LiveClassAlert = ({ currentClass, onJoinClass, isReminder = false }: LiveC
   
   return (
     <Alert 
-      className={`mb-4 ${isReminder ? 'bg-white border border-red-200' : 'bg-gradient-to-r from-red-50 to-orange-50 border-red-200'} ${!isReminder && 'animate-pulse'}`}
+      className={`mb-4 ${isReminder ? 'bg-white border border-amber-200' : 'bg-gradient-to-r from-orange-50 to-amber-50 border-amber-200'} ${!isReminder && 'animate-pulse'}`}
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center">
           <div className="flex items-center">
-            <div className="h-3 w-3 rounded-full bg-red-600 mr-2 animate-pulse"></div>
-            <BellRing className="h-5 w-5 text-red-500 mr-2" />
+            <div className="h-3 w-3 rounded-full bg-amber-500 mr-2 animate-pulse"></div>
+            <BellRing className="h-5 w-5 text-amber-500 mr-2" />
           </div>
-          <AlertDescription className="text-red-800 font-medium">
+          <AlertDescription className="text-amber-800 font-medium">
             You have a live class happening now: {currentClass.title}
           </AlertDescription>
         </div>
         <Button 
           size="sm" 
           variant="outline" 
-          className="border-red-300 text-red-600 hover:bg-red-100"
+          className="border-amber-300 text-amber-600 hover:bg-amber-100"
           onClick={() => onJoinClass(currentClass)}
         >
           Join Now
@@ -46,7 +46,7 @@ export const showClassReminder = (toast: any, currentClass: any, onJoinClass: (c
 
   toast({
     duration: 10000, // Stay visible for 10 seconds
-    className: "bg-white border-red-200 shadow-lg",
+    className: "bg-white border-amber-200 shadow-lg",
     position: "top-right",
     description: (
       <div className="w-full">

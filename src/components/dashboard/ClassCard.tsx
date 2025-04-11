@@ -136,7 +136,7 @@ const ClassCard = ({
                   style={{ 
                     width: `${classItem.progress}%`,
                     backgroundColor: isCurrentClass 
-                      ? "#ea384c" // Red color for live classes
+                      ? "#f59e0b" // Amber color for live classes instead of red
                       : classItem.buttonColor.split(' ')[0].replace('bg-', '#').replace('green-500', '#9b87f5').replace('purple-500', '#a855f7').replace('blue-500', '#3b82f6').replace('yellow-500', '#eab308')
                   }}
                 ></div>
