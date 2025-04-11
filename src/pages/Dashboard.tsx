@@ -10,7 +10,6 @@ import CurrentClasses from "@/components/dashboard/CurrentClasses";
 import UpcomingAssignments from "@/components/dashboard/UpcomingAssignments";
 import LearningProgress from "@/components/dashboard/LearningProgress";
 import RecentActivity from "@/components/dashboard/RecentActivity";
-import DailyChallenges from "@/components/dashboard/DailyChallenges";
 import StudentLevel from "@/components/dashboard/StudentLevel";
 import KidatoMascot from "@/components/dashboard/KidatoMascot";
 import GoalTrackingDialog from "@/components/dashboard/GoalTrackingDialog";
@@ -57,14 +56,13 @@ const Dashboard = () => {
                 <CurrentClasses />
               </div>
               <div className="space-y-6">
-                <StudentLevel />
+                <RecentActivity />
                 <UpcomingAssignments />
               </div>
             </div>
             
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
-              <DailyChallenges />
-              <RecentActivity />
+              <StudentLevel />
             </div>
             
             <div className="mt-6">
