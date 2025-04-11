@@ -39,19 +39,19 @@ const CourseProgress = () => {
               <p className="text-gray-600">Track your learning journey</p>
             </div>
 
-            <Tabs defaultValue="overview" className="mb-8">
+            <Tabs defaultValue="lessons" className="mb-8">
               <TabsList className="mb-6 bg-blue-50/50 p-1 border border-blue-100">
-                <TabsTrigger 
-                  value="overview" 
-                  className="data-[state=active]:bg-white data-[state=active]:text-kidato-blue data-[state=active]:shadow-sm rounded-md"
-                >
-                  Overview
-                </TabsTrigger>
                 <TabsTrigger 
                   value="lessons" 
                   className="data-[state=active]:bg-white data-[state=active]:text-kidato-blue data-[state=active]:shadow-sm rounded-md"
                 >
                   Lessons
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="assignments" 
+                  className="data-[state=active]:bg-white data-[state=active]:text-kidato-blue data-[state=active]:shadow-sm rounded-md"
+                >
+                  Assignments
                 </TabsTrigger>
                 <TabsTrigger 
                   value="quizzes" 
@@ -60,27 +60,27 @@ const CourseProgress = () => {
                   Quizzes
                 </TabsTrigger>
                 <TabsTrigger 
-                  value="assignments" 
+                  value="overview" 
                   className="data-[state=active]:bg-white data-[state=active]:text-kidato-blue data-[state=active]:shadow-sm rounded-md"
                 >
-                  Assignments
+                  Overview
                 </TabsTrigger>
               </TabsList>
               
-              <TabsContent value="overview">
-                <ProgressOverview courseId={courseId} />
-              </TabsContent>
-              
               <TabsContent value="lessons">
                 <ProgressLessons courseId={courseId} />
+              </TabsContent>
+              
+              <TabsContent value="assignments">
+                <ProgressAssignments courseId={courseId} />
               </TabsContent>
               
               <TabsContent value="quizzes">
                 <ProgressQuizzes courseId={courseId} />
               </TabsContent>
               
-              <TabsContent value="assignments">
-                <ProgressAssignments courseId={courseId} />
+              <TabsContent value="overview">
+                <ProgressOverview courseId={courseId} />
               </TabsContent>
             </Tabs>
           </div>

@@ -21,6 +21,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import LessonReviewModal from "./LessonReviewModal";
+import JoinClassDialog from "@/components/dashboard/JoinClassDialog";
 
 interface ProgressLessonsProps {
   courseId?: string;
@@ -89,6 +90,8 @@ const ProgressLessons = ({ courseId }: ProgressLessonsProps) => {
   const [loading, setLoading] = useState(true);
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
   const [selectedLesson, setSelectedLesson] = useState<any>(null);
+  const [joinClassOpen, setJoinClassOpen] = useState(false);
+  const [selectedInProgressLesson, setSelectedInProgressLesson] = useState<any>(null);
 
   useEffect(() => {
     // Simulating API call
@@ -106,6 +109,11 @@ const ProgressLessons = ({ courseId }: ProgressLessonsProps) => {
   const handleReviewLesson = (lesson: any) => {
     setSelectedLesson(lesson);
     setReviewModalOpen(true);
+  };
+
+  const handleContinueLearning = (lesson: any) => {
+    setSelectedInProgressLesson(lesson);
+    setJoinClassOpen(true);
   };
 
   if (loading) {
@@ -141,7 +149,10 @@ const ProgressLessons = ({ courseId }: ProgressLessonsProps) => {
                     </div>
                   </div>
                   <div className="mt-2 sm:mt-0">
-                    <Button className="bg-blue-600 hover:bg-blue-700">
+                    <Button 
+                      className="bg-blue-600 hover:bg-blue-700"
+                      onClick={() => handleContinueLearning(lesson)}
+                    >
                       Continue Learning <ArrowRight className="ml-1 h-4 w-4" />
                     </Button>
                   </div>
@@ -230,7 +241,10 @@ const ProgressLessons = ({ courseId }: ProgressLessonsProps) => {
                           </Button>
                         </>
                       ) : lesson.status === "in-progress" ? (
-                        <Button size="sm">
+                        <Button 
+                          size="sm"
+                          onClick={() => handleContinueLearning(lesson)}
+                        >
                           Continue
                         </Button>
                       ) : (
@@ -254,6 +268,15 @@ const ProgressLessons = ({ courseId }: ProgressLessonsProps) => {
           onClose={() => setReviewModalOpen(false)}
           lessonTitle={selectedLesson.title}
           lessonId={selectedLesson.id}
+        />
+      )}
+
+      {/* Join Class Dialog */}
+      {selectedInProgressLesson && (
+        <JoinClassDialog
+          isOpen={joinClassOpen}
+          setIsOpen={setJoinClassOpen}
+          classTitle={selectedInProgressLesson.title}
         />
       )}
     </div>
