@@ -8,6 +8,7 @@ import JoinStepsSection from "@/components/teachers/JoinStepsSection";
 import TestimonialsSection from "@/components/teachers/TestimonialsSection";
 import RequirementsSection from "@/components/teachers/RequirementsSection";
 import CTASection from "@/components/common/CTASection";
+import EarningsCalculator from "@/components/teachers/EarningsCalculator";
 
 const ForTeachers = () => {
   const benefits = [
@@ -132,6 +133,9 @@ const ForTeachers = () => {
           subtitle="Our platform offers the perfect environment for passionate educators to thrive."
           benefits={benefits}
         />
+
+        {/* Add Earnings Calculator here */}
+        <EarningsCalculator />
         
         <JoinStepsSection 
           title="How to Join Our Teaching Community"
