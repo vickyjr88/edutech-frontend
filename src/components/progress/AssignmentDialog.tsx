@@ -259,36 +259,35 @@ const AssignmentDialog = ({ isOpen, onClose, assignment, onUpdateAssignment }: A
             {/* Form for submitting assignment */}
             {isEditable && (
               <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                  {/* Form fields in two columns */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* Column 1 */}
-                    <div className="space-y-4">
-                      {/* Answer field */}
-                      <FormField
-                        control={form.control}
-                        name="answer"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Your Notes (optional)</FormLabel>
-                            <FormControl>
-                              <Textarea 
-                                placeholder="Add any notes or comments about your submission..." 
-                                className="min-h-24"
-                                {...field}
-                              />
-                            </FormControl>
-                          </FormItem>
-                        )}
-                      />
-                      
-                      {/* File upload */}
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5 pt-2">
+                  <div className="grid grid-cols-1 gap-5">
+                    {/* Answer field */}
+                    <FormField
+                      control={form.control}
+                      name="answer"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-sm font-medium">Your Notes</FormLabel>
+                          <FormControl>
+                            <Textarea 
+                              placeholder="Add any notes or comments about your submission..." 
+                              className="min-h-28 resize-none"
+                              {...field}
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                    
+                    {/* Submission options in a grid layout */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                      {/* Upload file */}
                       <FormField
                         control={form.control}
                         name="attachedFile"
                         render={({ field: { value, onChange, ...field } }) => (
                           <FormItem>
-                            <FormLabel>Upload Your Assignment</FormLabel>
+                            <FormLabel className="text-sm font-medium">Upload Your Assignment</FormLabel>
                             <FormControl>
                               <FormFileUpload
                                 label="Upload Assignment File"
@@ -299,79 +298,80 @@ const AssignmentDialog = ({ isOpen, onClose, assignment, onUpdateAssignment }: A
                               />
                             </FormControl>
                             {fileSelected && (
-                              <p className="text-xs text-green-600">
+                              <p className="text-xs text-green-600 mt-1">
                                 {fileSelected.name} selected ({Math.round(fileSelected.size/1024)} KB)
                               </p>
                             )}
                           </FormItem>
                         )}
                       />
-                    </div>
-                    
-                    {/* Column 2 */}
-                    <div className="space-y-4">
+                      
                       {/* External Link */}
-                      <FormField
-                        control={form.control}
-                        name="externalLink"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Or Add Link (Google Doc, etc.)</FormLabel>
-                            <FormControl>
-                              <div className="flex items-center">
-                                <div className="bg-gray-100 p-2 rounded-l-md">
-                                  <Link className="h-4 w-4 text-gray-500" />
-                                </div>
-                                <Input
-                                  placeholder="https://docs.google.com/..."
-                                  className="rounded-l-none"
-                                  {...field}
-                                />
-                              </div>
-                            </FormControl>
-                          </FormItem>
-                        )}
-                      />
-
-                      {/* Difficulty Rating */}
-                      <FormField
-                        control={form.control}
-                        name="difficultyRating"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Rate Assignment Difficulty</FormLabel>
-                            <FormControl>
-                              <RadioGroup
-                                onValueChange={field.onChange}
-                                defaultValue={field.value}
-                                className="flex space-x-1"
-                              >
-                                {[1, 2, 3, 4, 5].map((rating) => (
-                                  <div key={rating} className="flex flex-col items-center">
-                                    <div className="flex items-center space-x-2">
-                                      <RadioGroupItem value={rating.toString()} id={`r${rating}`} />
-                                    </div>
-                                    <label
-                                      htmlFor={`r${rating}`}
-                                      className="text-xs mt-1"
-                                    >
-                                      {rating}
-                                    </label>
+                      <div className="space-y-4">
+                        <FormField
+                          control={form.control}
+                          name="externalLink"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-sm font-medium">Add Link (Google Doc, etc.)</FormLabel>
+                              <FormControl>
+                                <div className="flex items-center">
+                                  <div className="bg-gray-100 p-2 rounded-l-md">
+                                    <Link className="h-4 w-4 text-gray-500" />
                                   </div>
-                                ))}
-                                <div className="flex items-center space-x-2 text-xs text-gray-500 ml-2">
-                                  <span>Easy</span>
-                                  <span className="ml-24">Hard</span>
+                                  <Input
+                                    placeholder="https://docs.google.com/..."
+                                    className="rounded-l-none"
+                                    {...field}
+                                  />
                                 </div>
-                              </RadioGroup>
-                            </FormControl>
-                          </FormItem>
-                        )}
-                      />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+
+                        {/* Difficulty Rating */}
+                        <FormField
+                          control={form.control}
+                          name="difficultyRating"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-sm font-medium">Rate Assignment Difficulty</FormLabel>
+                              <FormControl>
+                                <div className="bg-gray-50 rounded-md border p-3">
+                                  <RadioGroup
+                                    onValueChange={field.onChange}
+                                    defaultValue={field.value}
+                                    className="flex justify-between"
+                                  >
+                                    <div className="flex items-center justify-between w-full px-4">
+                                      <span className="text-xs text-gray-500">Easy</span>
+                                      <div className="flex space-x-4">
+                                        {[1, 2, 3, 4, 5].map((rating) => (
+                                          <div key={rating} className="flex flex-col items-center">
+                                            <RadioGroupItem value={rating.toString()} id={`r${rating}`} />
+                                            <label
+                                              htmlFor={`r${rating}`}
+                                              className="text-xs mt-1"
+                                            >
+                                              {rating}
+                                            </label>
+                                          </div>
+                                        ))}
+                                      </div>
+                                      <span className="text-xs text-gray-500">Hard</span>
+                                    </div>
+                                  </RadioGroup>
+                                </div>
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                      </div>
                     </div>
                   </div>
                   
-                  <DialogFooter className="px-6 pb-6">
+                  <DialogFooter className="pt-3">
                     <Button type="button" variant="outline" onClick={onClose}>
                       Cancel
                     </Button>
