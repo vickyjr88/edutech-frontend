@@ -36,8 +36,8 @@ const AchievementsSummary = ({
   const progressToNextLevel = (actualLevelInfo.currentXP / actualLevelInfo.xpForNext) * 100;
   
   return (
-    <Card className="border-2 border-blue-100">
-      <CardHeader className="bg-gradient-to-r from-blue-50 to-purple-50 pb-2">
+    <Card className="border border-blue-200 bg-blue-50">
+      <CardHeader className="bg-gradient-to-r from-blue-100 to-purple-100 pb-2">
         <CardTitle className="text-lg font-bold flex items-center">
           <Star className="mr-2 h-5 w-5 text-yellow-500" />
           Achievement Summary
@@ -67,19 +67,19 @@ const AchievementsSummary = ({
           
           <div className="flex-1 flex flex-col justify-center">
             <div className="grid grid-cols-3 gap-4 text-center">
-              <div className="p-3 rounded-lg bg-blue-50">
+              <div className="p-3 rounded-lg bg-blue-100">
                 <Award className="h-6 w-6 text-blue-500 mx-auto mb-2" />
                 <div className="font-bold text-xl">{actualUnlockedAchievements}/{actualTotalAchievements}</div>
                 <div className="text-xs text-gray-500">Achievements</div>
               </div>
               
-              <div className="p-3 rounded-lg bg-purple-50">
+              <div className="p-3 rounded-lg bg-purple-100">
                 <Star className="h-6 w-6 text-purple-500 mx-auto mb-2" />
                 <div className="font-bold text-xl">{actualTotalXP}</div>
                 <div className="text-xs text-gray-500">Total XP</div>
               </div>
               
-              <div className="p-3 rounded-lg bg-amber-50">
+              <div className="p-3 rounded-lg bg-amber-100">
                 <Clock className="h-6 w-6 text-amber-500 mx-auto mb-2" />
                 <div className="font-bold text-xl">{actualStreak}</div>
                 <div className="text-xs text-gray-500">Day Streak</div>
