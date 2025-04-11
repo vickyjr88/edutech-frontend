@@ -9,7 +9,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 const EarningsCalculator = () => {
   const [students, setStudents] = useState(10);
-  const [hoursPerDay, setHoursPerDay] = useState(4);
+  const [hoursPerWeek, setHoursPerWeek] = useState(20); // Changed from hoursPerDay to hoursPerWeek with default 20
   const [ratePerHour, setRatePerHour] = useState(645); // Default to KSh (5 USD * 129)
   const [isCurrencyKsh, setIsCurrencyKsh] = useState(true); // Set KSh as default
   const [teachingFormat, setTeachingFormat] = useState("group"); // "one-on-one" or "group"
@@ -24,8 +24,8 @@ const EarningsCalculator = () => {
     // Adjust rate based on teaching format
     if (teachingFormat === "one-on-one") {
       // For one-on-one, we calculate per student directly
-      const dailyEarnings = rate * hoursPerDay;
-      const weeklyEarnings = dailyEarnings * 5; // 5 working days per week
+      const dailyEarnings = rate * (hoursPerWeek / 5); // Convert weekly hours to daily (5 working days)
+      const weeklyEarnings = rate * hoursPerWeek;
       const monthlyEarnings = weeklyEarnings * 4; // Approximating 4 weeks per month
       const yearlyEarnings = monthlyEarnings * 12;
 
@@ -37,9 +37,8 @@ const EarningsCalculator = () => {
       };
     } else {
       // For group teaching
-      const weeklyHours = hoursPerDay * 5; // Convert hours per day to weekly hours (5 working days)
-      const dailyEarnings = rate * hoursPerDay * students;
-      const weeklyEarnings = dailyEarnings * 5; // 5 working days per week
+      const dailyEarnings = rate * (hoursPerWeek / 5) * students; // Convert weekly hours to daily
+      const weeklyEarnings = rate * hoursPerWeek * students;
       const monthlyEarnings = weeklyEarnings * 4; // Approximating 4 weeks per month
       const yearlyEarnings = monthlyEarnings * 12;
 
@@ -166,8 +165,8 @@ const EarningsCalculator = () => {
 
                   <div>
                     <div className="flex justify-between items-center mb-2">
-                      <Label htmlFor="hours" className="text-gray-700">Hours Per Day</Label>
-                      <span className="text-sm text-gray-500">{hoursPerDay} hours</span>
+                      <Label htmlFor="hours" className="text-gray-700">Hours Per Week</Label>
+                      <span className="text-sm text-gray-500">{hoursPerWeek} hours</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <Clock className="text-gray-500 w-4 h-4" />
@@ -175,9 +174,9 @@ const EarningsCalculator = () => {
                         id="hours"
                         type="range"
                         min={1}
-                        max={8}
-                        value={hoursPerDay}
-                        onChange={(e) => setHoursPerDay(parseInt(e.target.value))}
+                        max={40}
+                        value={hoursPerWeek}
+                        onChange={(e) => setHoursPerWeek(parseInt(e.target.value))}
                         className="h-2"
                       />
                     </div>
