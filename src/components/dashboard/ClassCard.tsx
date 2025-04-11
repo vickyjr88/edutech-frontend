@@ -79,7 +79,7 @@ const ClassCard = ({
                 className="w-full h-full object-cover"
               />
               {isCurrentClass && (
-                <div className="absolute bottom-0 right-0 w-6 h-6 bg-red-500 rounded-full border-2 border-white flex items-center justify-center">
+                <div className="absolute bottom-0 right-0 w-6 h-6 bg-amber-500 rounded-full border-2 border-white flex items-center justify-center">
                   <div className="w-2 h-2 bg-white rounded-full animate-ping absolute"></div>
                   <div className="w-2 h-2 bg-white rounded-full"></div>
                 </div>
@@ -102,7 +102,7 @@ const ClassCard = ({
                 </div>
               </div>
               {index === 0 && isCurrentClass && (
-                <span className="animate-pulse bg-red-500 text-white text-xs px-2 py-1 rounded-full">
+                <span className="animate-pulse bg-amber-500 text-white text-xs px-2 py-1 rounded-full">
                   Live now!
                 </span>
               )}
@@ -113,7 +113,7 @@ const ClassCard = ({
                 <Users className="h-3 w-3 mr-1" />
                 <span>{classItem.students} friends</span>
               </div>
-              <div className={`flex items-center text-xs px-2 py-1 rounded-full ${isCurrentClass ? 'bg-red-100' : classItem.iconBg}`}>
+              <div className={`flex items-center text-xs px-2 py-1 rounded-full ${isCurrentClass ? 'bg-orange-100' : classItem.iconBg}`}>
                 <Clock className="h-3 w-3 mr-1" />
                 <span>
                   {isCurrentClass 
@@ -164,8 +164,8 @@ const ClassCard = ({
             </div>
             
             {isCurrentClass && (
-              <span className="flex items-center text-red-600 text-xs">
-                <div className="h-2 w-2 bg-red-500 rounded-full mr-1.5 animate-pulse"></div>
+              <span className="flex items-center text-amber-600 text-xs">
+                <div className="h-2 w-2 bg-amber-500 rounded-full mr-1.5 animate-pulse"></div>
                 In progress
               </span>
             )}
@@ -173,7 +173,7 @@ const ClassCard = ({
           
           <div className="flex justify-end gap-2 flex-wrap">
             <Button 
-              className={isCurrentClass ? "bg-red-600 hover:bg-red-700 text-white" : classItem.buttonColor.replace('bg-green-500', 'bg-purple-500')}
+              className={isCurrentClass ? "bg-amber-600 hover:bg-amber-700 text-white" : classItem.buttonColor.replace('bg-green-500', 'bg-purple-500')}
               onClick={() => onJoinClass(classItem)}
               size="sm"
             >
