@@ -22,24 +22,22 @@ const ParentsDashboard = () => {
 
         <main className="p-4 sm:p-6 flex-1 overflow-y-auto">
           <div className="max-w-7xl mx-auto">
-            {/* Quick Status Panel */}
-            <div className="mb-6">
-              {/* First row - LiveStatus and ImportantReminders in two columns */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                <ChildrenLiveStatus />
-                <ImportantReminders />
-              </div>
-              
-              {/* Second row - ActivityFeed and AttendanceWidget */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="col-span-2">
-                  <ActivityFeed />
-                </div>
-                <AttendanceWidget />
-              </div>
+            {/* Row 1: Children live classes status and attendance */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <ChildrenLiveStatus />
+              <AttendanceWidget />
             </div>
             
-            <ChildrenOverview />
+            {/* Row 2: Important reminders and recent activities */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <ImportantReminders />
+              <ActivityFeed />
+            </div>
+            
+            {/* Children Overview Row */}
+            <div className="mb-6">
+              <ChildrenOverview />
+            </div>
             
             {/* Academic Progress Row */}
             <div className="mt-6">
