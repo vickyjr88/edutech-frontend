@@ -44,6 +44,7 @@ export const showClassReminder = (toast: any, currentClass: any, onJoinClass: (c
   toast({
     duration: 10000, // Stay visible for 10 seconds
     className: "bg-white border-red-200 shadow-lg",
+    position: "top-right",
     description: (
       <div className="w-full">
         <LiveClassAlert 
