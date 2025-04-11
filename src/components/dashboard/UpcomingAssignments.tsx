@@ -15,34 +15,49 @@ export default function UpcomingAssignments() {
       id: "a1",
       title: "Algebra Quiz",
       course: "Math Fundamentals",
+      lesson: "Week 2: Linear Equations",
       dueDate: "Today",
       dueTime: "11:59 PM",
       isUrgent: true,
       status: "in_progress",
       type: "individual",
-      description: "Complete the online algebra quiz covering linear equations, inequalities, and basic graphing."
+      description: "Complete the online algebra quiz covering linear equations, inequalities, and basic graphing.",
+      resources: [
+        { id: "r1", name: "Algebra Quiz Instructions.pdf", type: "pdf", size: "245 KB" }
+      ],
+      videoLinks: [
+        { id: "v1", title: "Algebra Quiz Review", url: "https://www.youtube.com/watch?v=example1" }
+      ]
     },
     {
       id: "a2",
       title: "Lab Report",
       course: "Science Explorers",
+      lesson: "Unit 3: Chemical Reactions",
       dueDate: "Tomorrow",
       dueTime: "3:00 PM",
       isUrgent: false,
       status: "in_progress",
       type: "individual",
-      description: "Write a lab report based on the experiment conducted in class. Include methodology, results, and discussion sections."
+      description: "Write a lab report based on the experiment conducted in class. Include methodology, results, and discussion sections.",
+      resources: [
+        { id: "r2", name: "Lab Report Template.docx", type: "docx", size: "120 KB" }
+      ]
     },
     {
       id: "a3",
       title: "Code Project",
       course: "Intro to Coding",
+      lesson: "Module 4: Basic Programming",
       dueDate: "Friday",
       dueTime: "5:00 PM",
       isUrgent: false,
       status: "upcoming",
       type: "individual",
-      description: "Create a simple game using the programming concepts we've covered in class so far."
+      description: "Create a simple game using the programming concepts we've covered in class so far.",
+      videoLinks: [
+        { id: "v2", title: "Game Programming Tutorial", url: "https://www.youtube.com/watch?v=example2" }
+      ]
     }
   ];
 
