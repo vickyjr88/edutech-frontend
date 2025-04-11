@@ -3,7 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { 
   Home, Book, MessageSquare, User, LogOut, 
-  Sparkles, Award, Users, Calendar
+  Sparkles, Award, Users, Calendar, BellDot
 } from "lucide-react";
 
 const StudentSidebar = () => {
