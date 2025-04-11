@@ -3,8 +3,10 @@ import {
   BookOpen, 
   Clock, 
   Calendar, 
-  Star, 
-  DollarSign 
+  Star,
+  FileText,
+  Users,
+  BookMarked
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
@@ -36,7 +38,12 @@ export interface EnrolledCourse {
   enrolledCount: number;
   maxCapacity: number;
   rating: number;
-  cost: string;
+  cost?: string;
+  activityStatus?: {
+    type: 'assignment' | 'group' | 'quiz';
+    label: string;
+    dueDate: string;
+  };
 }
 
 interface EnrolledClassesTableProps {
@@ -48,6 +55,20 @@ const EnrolledClassesTable = ({ enrolledCourses }: EnrolledClassesTableProps) =>
   const generateInitials = (index: number) => {
     const initials = ["JD", "TS", "EW", "AM", "KP", "RJ"];
     return initials[index % initials.length];
+  };
+
+  // Render appropriate icon based on activity type
+  const getActivityIcon = (type: 'assignment' | 'group' | 'quiz') => {
+    switch (type) {
+      case 'assignment':
+        return <FileText className="h-4 w-4 text-blue-500" />;
+      case 'group':
+        return <Users className="h-4 w-4 text-purple-500" />;
+      case 'quiz':
+        return <BookMarked className="h-4 w-4 text-amber-500" />;
+      default:
+        return <FileText className="h-4 w-4 text-blue-500" />;
+    }
   };
 
   return (
@@ -68,7 +89,7 @@ const EnrolledClassesTable = ({ enrolledCourses }: EnrolledClassesTableProps) =>
                 <TableHead>Next Class</TableHead>
                 <TableHead>Enrollment Deadline</TableHead>
                 <TableHead>Participants</TableHead>
-                <TableHead>Price</TableHead>
+                <TableHead>Activity Status</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -125,18 +146,22 @@ const EnrolledClassesTable = ({ enrolledCourses }: EnrolledClassesTableProps) =>
                     </div>
                   </TableCell>
                   <TableCell>
-                    <div className="flex items-center text-gray-700">
-                      <DollarSign className="h-3.5 w-3.5 text-gray-500 mr-0.5" />
-                      <span>{course.cost}</span>
-                    </div>
+                    {course.activityStatus ? (
+                      <div className="flex items-center">
+                        {getActivityIcon(course.activityStatus.type)}
+                        <div className="ml-2">
+                          <p className="text-sm font-medium">{course.activityStatus.label}</p>
+                          <p className="text-xs text-gray-500">Due: {course.activityStatus.dueDate}</p>
+                        </div>
+                      </div>
+                    ) : (
+                      <span className="text-sm text-gray-500">No upcoming activities</span>
+                    )}
                   </TableCell>
                   <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button variant="outline" size="sm" className="h-8">Materials</Button>
-                      <Button size="sm" className="bg-indigo-600 hover:bg-indigo-700 h-8">
-                        Update Progress
-                      </Button>
-                    </div>
+                    <Button size="sm" className="bg-indigo-600 hover:bg-indigo-700 h-8">
+                      View Progress
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))}
