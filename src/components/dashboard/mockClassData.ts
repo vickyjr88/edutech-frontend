@@ -17,9 +17,9 @@ export const classes = [
     homeworkDue: "Thursday",
     totalLessonsCompleted: 8,
     totalLessons: 12,
-    color: "bg-green-100 border-green-400",
-    iconBg: "bg-green-200",
-    buttonColor: "bg-green-500 hover:bg-green-600",
+    color: "bg-white border-gray-200",
+    iconBg: "bg-gray-100",
+    buttonColor: "bg-purple-500 hover:bg-purple-600",
     image: "https://images.unsplash.com/photo-1635070041078-e363dbe005cb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=200&h=100&q=80"
   },
   {
