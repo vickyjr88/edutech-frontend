@@ -209,7 +209,7 @@ const EarningsCalculator = () => {
 
               <div className="bg-blue-50 p-6 rounded-lg">
                 <h3 className="text-xl font-semibold text-gray-800 mb-6 flex items-center">
-                  <DollarSign className="mr-2 h-5 w-5 text-green-600" />
+                  <DollarSign className="mr-2 h-5 w-5 text-kidato-blue" />
                   Your Potential Earnings
                 </h3>
 
@@ -217,28 +217,28 @@ const EarningsCalculator = () => {
                   <div className="bg-white p-4 rounded-lg shadow-sm">
                     <div className="text-sm text-gray-500">Daily</div>
                     <div className="flex items-center">
-                      <span className="text-2xl font-bold text-green-600">{earnings.daily}</span>
+                      <span className="text-2xl font-bold text-kidato-blue">{earnings.daily}</span>
                     </div>
                   </div>
 
                   <div className="bg-white p-4 rounded-lg shadow-sm">
                     <div className="text-sm text-gray-500">Weekly</div>
                     <div className="flex items-center">
-                      <span className="text-2xl font-bold text-green-600">{earnings.weekly}</span>
+                      <span className="text-2xl font-bold text-kidato-blue">{earnings.weekly}</span>
                     </div>
                   </div>
 
                   <div className="bg-white p-4 rounded-lg shadow-sm">
                     <div className="text-sm text-gray-500">Monthly</div>
                     <div className="flex items-center">
-                      <span className="text-2xl font-bold text-green-600">{earnings.monthly}</span>
+                      <span className="text-2xl font-bold text-kidato-blue">{earnings.monthly}</span>
                     </div>
                   </div>
 
                   <div className="bg-white p-4 rounded-lg shadow-sm">
                     <div className="text-sm text-gray-500">Yearly</div>
                     <div className="flex items-center">
-                      <span className="text-2xl font-bold text-green-600">{earnings.yearly}</span>
+                      <span className="text-2xl font-bold text-kidato-blue">{earnings.yearly}</span>
                     </div>
                   </div>
                 </div>
