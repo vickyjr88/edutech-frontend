@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -6,13 +7,15 @@ import { Calculator, DollarSign, Calendar, Clock, Users } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Slider } from "@/components/ui/slider";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const EarningsCalculator = () => {
+  const isMobile = useIsMobile();
   const [students, setStudents] = useState(10);
-  const [hoursPerWeek, setHoursPerWeek] = useState(20); // Changed from hoursPerDay to hoursPerWeek with default 20
-  const [ratePerHour, setRatePerHour] = useState(645); // Default to KSh (5 USD * 129)
-  const [isCurrencyKsh, setIsCurrencyKsh] = useState(true); // Set KSh as default
-  const [teachingFormat, setTeachingFormat] = useState("group"); // "one-on-one" or "group"
+  const [hoursPerWeek, setHoursPerWeek] = useState(20);
+  const [ratePerHour, setRatePerHour] = useState(645);
+  const [isCurrencyKsh, setIsCurrencyKsh] = useState(true);
+  const [teachingFormat, setTeachingFormat] = useState("group");
   
   // Exchange rate (1 USD = 129 KSh approximately)
   const exchangeRate = 129;
@@ -92,14 +95,14 @@ const EarningsCalculator = () => {
   const minRate = isCurrencyKsh ? 5 * exchangeRate : 5;
 
   return (
-    <section className="py-12 bg-gradient-to-b from-blue-50 to-white">
+    <section className="py-8 md:py-12 bg-gradient-to-b from-blue-50 to-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-8">
-          <h2 className="text-3xl font-bold text-gray-900">Earnings Calculator</h2>
-          <p className="mt-4 text-xl text-gray-600">
+        <div className="text-center mb-6 md:mb-8">
+          <h2 className="text-2xl md:text-3xl font-bold text-gray-900">Earnings Calculator</h2>
+          <p className="mt-2 md:mt-4 text-base md:text-xl text-gray-600">
             Estimate your potential income as a Kidato teacher
           </p>
-          <div className="flex items-center justify-center mt-4 space-x-2">
+          <div className="flex items-center justify-center mt-3 md:mt-4 space-x-2">
             <span className={!isCurrencyKsh ? "font-bold" : ""}>USD ($)</span>
             <Switch 
               checked={isCurrencyKsh}
@@ -111,21 +114,21 @@ const EarningsCalculator = () => {
         </div>
 
         <Card className="shadow-lg border-2 border-blue-100">
-          <CardContent className="p-6">
-            <div className="grid gap-8 md:grid-cols-2">
-              <div className="space-y-6">
-                <h3 className="text-xl font-semibold text-gray-800 mb-4 flex items-center">
-                  <Calculator className="mr-2 h-5 w-5 text-kidato-blue" />
+          <CardContent className={`p-4 md:p-6 ${isMobile ? 'overflow-x-hidden' : ''}`}>
+            <div className="grid gap-6 md:gap-8 md:grid-cols-2">
+              <div className="space-y-5 md:space-y-6">
+                <h3 className="text-lg md:text-xl font-semibold text-gray-800 mb-3 md:mb-4 flex items-center">
+                  <Calculator className="mr-2 h-4 w-4 md:h-5 md:w-5 text-kidato-blue" />
                   Customize Your Teaching
                 </h3>
 
                 <div className="space-y-4">
-                  <div className="bg-blue-50 p-4 rounded-lg">
-                    <Label className="text-gray-700 font-medium mb-2 block">Teaching Format</Label>
+                  <div className="bg-blue-50 p-3 md:p-4 rounded-lg">
+                    <Label className="text-gray-700 font-medium mb-1 md:mb-2 block">Teaching Format</Label>
                     <RadioGroup 
                       value={teachingFormat} 
                       onValueChange={setTeachingFormat}
-                      className="flex space-x-8"
+                      className="flex flex-col sm:flex-row sm:space-x-8 space-y-2 sm:space-y-0"
                     >
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem value="one-on-one" id="one-on-one" />
@@ -144,60 +147,58 @@ const EarningsCalculator = () => {
 
                   {teachingFormat === "group" && (
                     <div>
-                      <div className="flex justify-between items-center mb-2">
-                        <Label htmlFor="students" className="text-gray-700">Number of Students</Label>
-                        <span className="text-sm text-gray-500">{students} students</span>
+                      <div className="flex justify-between items-center mb-1 md:mb-2">
+                        <Label htmlFor="students" className="text-gray-700 text-sm md:text-base">Number of Students</Label>
+                        <span className="text-xs md:text-sm text-gray-500">{students} students</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Users className="text-gray-500 w-4 h-4" />
-                        <Input
+                        <Users className="text-gray-500 w-4 h-4 hidden sm:block" />
+                        <Slider
                           id="students"
-                          type="range"
                           min={1}
                           max={50}
-                          value={students}
-                          onChange={(e) => setStudents(parseInt(e.target.value))}
-                          className="h-2"
+                          value={[students]}
+                          onValueChange={(values) => setStudents(values[0])}
+                          className="w-full"
                         />
                       </div>
                     </div>
                   )}
 
                   <div>
-                    <div className="flex justify-between items-center mb-2">
-                      <Label htmlFor="hours" className="text-gray-700">Hours Per Week</Label>
-                      <span className="text-sm text-gray-500">{hoursPerWeek} hours</span>
+                    <div className="flex justify-between items-center mb-1 md:mb-2">
+                      <Label htmlFor="hours" className="text-gray-700 text-sm md:text-base">Hours Per Week</Label>
+                      <span className="text-xs md:text-sm text-gray-500">{hoursPerWeek} hours</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Clock className="text-gray-500 w-4 h-4" />
-                      <Input
+                      <Clock className="text-gray-500 w-4 h-4 hidden sm:block" />
+                      <Slider
                         id="hours"
-                        type="range"
                         min={1}
                         max={40}
-                        value={hoursPerWeek}
-                        onChange={(e) => setHoursPerWeek(parseInt(e.target.value))}
-                        className="h-2"
+                        value={[hoursPerWeek]}
+                        onValueChange={(values) => setHoursPerWeek(values[0])}
+                        className="w-full"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <div className="flex justify-between items-center mb-2">
-                      <Label htmlFor="rate" className="text-gray-700">
+                    <div className="flex justify-between items-center mb-1 md:mb-2">
+                      <Label htmlFor="rate" className="text-gray-700 text-sm md:text-base">
                         Rate Per Hour ({isCurrencyKsh ? "KSh" : "$"})
                       </Label>
-                      <span className="text-sm text-gray-500">
+                      <span className="text-xs md:text-sm text-gray-500">
                         {isCurrencyKsh ? "KSh " : "$"}{ratePerHour}
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <DollarSign className="text-gray-500 w-4 h-4" />
+                      <DollarSign className="text-gray-500 w-4 h-4 hidden sm:block" />
                       <Slider
                         id="rate"
-                        min={isCurrencyKsh ? 5 * 129 : 5}  // Minimum rate
-                        max={isCurrencyKsh ? 50 * 129 : 50}  // Maximum rate
-                        step={isCurrencyKsh ? 129 : 1}  // Step size based on currency
+                        min={isCurrencyKsh ? 5 * 129 : 5}
+                        max={isCurrencyKsh ? 50 * 129 : 50}
+                        step={isCurrencyKsh ? 129 : 1}
                         value={[ratePerHour]}
                         onValueChange={(values) => setRatePerHour(values[0])}
                         className="w-full"
@@ -207,43 +208,43 @@ const EarningsCalculator = () => {
                 </div>
               </div>
 
-              <div className="bg-blue-50 p-6 rounded-lg">
-                <h3 className="text-xl font-semibold text-gray-800 mb-6 flex items-center">
-                  <DollarSign className="mr-2 h-5 w-5 text-kidato-blue" />
+              <div className="bg-blue-50 p-4 md:p-6 rounded-lg">
+                <h3 className="text-lg md:text-xl font-semibold text-gray-800 mb-4 md:mb-6 flex items-center">
+                  <DollarSign className="mr-2 h-4 w-4 md:h-5 md:w-5 text-kidato-blue" />
                   Your Potential Earnings
                 </h3>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-white p-4 rounded-lg shadow-sm">
-                    <div className="text-sm text-gray-500">Daily</div>
+                <div className="grid grid-cols-2 gap-3 md:gap-4">
+                  <div className="bg-white p-3 md:p-4 rounded-lg shadow-sm">
+                    <div className="text-xs md:text-sm text-gray-500">Daily</div>
                     <div className="flex items-center">
-                      <span className="text-2xl font-bold text-kidato-blue">{earnings.daily}</span>
+                      <span className="text-lg md:text-2xl font-bold text-kidato-blue">{earnings.daily}</span>
                     </div>
                   </div>
 
-                  <div className="bg-white p-4 rounded-lg shadow-sm">
-                    <div className="text-sm text-gray-500">Weekly</div>
+                  <div className="bg-white p-3 md:p-4 rounded-lg shadow-sm">
+                    <div className="text-xs md:text-sm text-gray-500">Weekly</div>
                     <div className="flex items-center">
-                      <span className="text-2xl font-bold text-kidato-blue">{earnings.weekly}</span>
+                      <span className="text-lg md:text-2xl font-bold text-kidato-blue">{earnings.weekly}</span>
                     </div>
                   </div>
 
-                  <div className="bg-white p-4 rounded-lg shadow-sm">
-                    <div className="text-sm text-gray-500">Monthly</div>
+                  <div className="bg-white p-3 md:p-4 rounded-lg shadow-sm">
+                    <div className="text-xs md:text-sm text-gray-500">Monthly</div>
                     <div className="flex items-center">
-                      <span className="text-2xl font-bold text-kidato-blue">{earnings.monthly}</span>
+                      <span className="text-lg md:text-2xl font-bold text-kidato-blue">{earnings.monthly}</span>
                     </div>
                   </div>
 
-                  <div className="bg-white p-4 rounded-lg shadow-sm">
-                    <div className="text-sm text-gray-500">Yearly</div>
+                  <div className="bg-white p-3 md:p-4 rounded-lg shadow-sm">
+                    <div className="text-xs md:text-sm text-gray-500">Yearly</div>
                     <div className="flex items-center">
-                      <span className="text-2xl font-bold text-kidato-blue">{earnings.yearly}</span>
+                      <span className="text-lg md:text-2xl font-bold text-kidato-blue">{earnings.yearly}</span>
                     </div>
                   </div>
                 </div>
 
-                <div className="mt-6 text-sm text-gray-600">
+                <div className="mt-4 md:mt-6 text-xs md:text-sm text-gray-600">
                   <p className="mb-2">These calculations show gross revenue estimates based on your inputs. Actual earnings may vary based on class sizes, scheduling, and other factors.</p>
                   <p className="font-medium">Note: Kidato takes a platform fee of 15-30% from gross revenue, depending on your approval status and experience level.</p>
                 </div>
