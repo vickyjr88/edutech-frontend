@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -6,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Calculator, DollarSign, Calendar, Clock, Users } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Slider } from "@/components/ui/slider";
 
 const EarningsCalculator = () => {
   const [students, setStudents] = useState(10);
@@ -193,14 +193,14 @@ const EarningsCalculator = () => {
                     </div>
                     <div className="flex items-center gap-2">
                       <DollarSign className="text-gray-500 w-4 h-4" />
-                      <Input
+                      <Slider
                         id="rate"
-                        type="number"
-                        min={minRate}
-                        value={ratePerHour}
-                        onChange={handleRateChange}
+                        min={isCurrencyKsh ? 5 * 129 : 5}  // Minimum rate
+                        max={isCurrencyKsh ? 50 * 129 : 50}  // Maximum rate
+                        step={isCurrencyKsh ? 129 : 1}  // Step size based on currency
+                        value={[ratePerHour]}
+                        onValueChange={(values) => setRatePerHour(values[0])}
                         className="w-full"
-                        placeholder={`Enter rate (min: ${minRate})`}
                       />
                     </div>
                   </div>
