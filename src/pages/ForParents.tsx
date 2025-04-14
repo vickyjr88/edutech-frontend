@@ -1,10 +1,13 @@
-import { Check, Shield, Star, Clock, Users, BookOpen, GraduationCap, CreditCard, BookText, GraduationCap as Education, Award } from "lucide-react";
+import { useState } from "react";
+import { Check, Shield, Star, Clock, Users, BookOpen, GraduationCap, CreditCard, BookText, Award } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import CurriculumGradeFilter from "@/components/courses/CurriculumGradeFilter";
+import PackageDetailsDialog from "@/components/courses/PackageDetailsDialog";
 
 const ForParents = () => {
   const benefits = [
@@ -30,13 +33,159 @@ const ForParents = () => {
     }
   ];
 
+  const [selectedCurriculum, setSelectedCurriculum] = useState("");
+  const [selectedGrade, setSelectedGrade] = useState("");
+  const [isPackageDialogOpen, setIsPackageDialogOpen] = useState(false);
+  const [selectedPackage, setSelectedPackage] = useState<any>(null);
+
+  const handleFilterChange = (curriculum: string, grade: string) => {
+    setSelectedCurriculum(curriculum);
+    setSelectedGrade(grade);
+  };
+
+  const openPackageDetails = (packageData: any) => {
+    setSelectedPackage(packageData);
+    setIsPackageDialogOpen(true);
+  };
+
+  const getFilteredPackages = () => {
+    if (!selectedCurriculum && !selectedGrade) {
+      return popularSubjects;
+    }
+    
+    return popularSubjects.filter(subject => {
+      const matchesCurriculum = !selectedCurriculum || subject.curriculum === selectedCurriculum;
+      const matchesGrade = !selectedGrade || subject.grade === selectedGrade;
+      return matchesCurriculum && matchesGrade;
+    });
+  };
+
+  const packageDetailsData = {
+    "igcse-6": {
+      id: "igcse-6",
+      name: "IGCSE Grade 6 Package",
+      curriculum: "IGCSE",
+      grade: "6",
+      subjects: [
+        "Mathematics", 
+        "English Language", 
+        "Science (Physics, Chemistry, Biology)", 
+        "Geography",
+        "History",
+        "Computer Science",
+        "Art and Design"
+      ],
+      hasCheckpoint: true,
+      developmentTips: [
+        "Encourage regular reading to build vocabulary and comprehension skills essential for IGCSE",
+        "Establish a consistent homework routine to build good study habits",
+        "Consider joining at least one extracurricular activity to develop social skills",
+        "Use educational apps and games to reinforce concepts learned in class",
+        "Schedule regular breaks during study time to maintain focus and retention"
+      ],
+      description: "Comprehensive preparation for Grade 6 IGCSE students with checkpoint exams focus"
+    },
+    "ib-7": {
+      id: "ib-7",
+      name: "IB MYP Year 7 Package",
+      curriculum: "IB",
+      grade: "7",
+      subjects: [
+        "Mathematics", 
+        "Language and Literature", 
+        "Sciences", 
+        "Individuals and Societies",
+        "Language Acquisition",
+        "Design",
+        "Arts",
+        "Physical and Health Education"
+      ],
+      hasCheckpoint: false,
+      developmentTips: [
+        "Focus on developing critical thinking skills through discussions and debates",
+        "Encourage global perspective by following international news and events",
+        "Support inquiry-based learning by asking open-ended questions",
+        "Help establish connections between different subject areas",
+        "Practice time management skills for longer-term projects"
+      ],
+      description: "Holistic education following the IB Middle Years Programme framework"
+    },
+    "kenyan-4": {
+      id: "kenyan-4",
+      name: "Kenyan Curriculum Grade 4",
+      curriculum: "Kenyan",
+      grade: "4",
+      subjects: [
+        "Mathematics", 
+        "English", 
+        "Kiswahili", 
+        "Science and Technology",
+        "Social Studies",
+        "Creative Arts",
+        "Religious Education",
+        "Agriculture"
+      ],
+      hasCheckpoint: true,
+      developmentTips: [
+        "Emphasize bilingual development with both English and Kiswahili practice",
+        "Reinforce local cultural knowledge alongside academic subjects",
+        "Engage in practical applications of science and agriculture concepts",
+        "Develop strong mental arithmetic skills through daily practice",
+        "Encourage participation in group activities to build teamwork"
+      ],
+      description: "Complete curriculum coverage for Kenyan education system"
+    }
+  };
+
   const popularSubjects = [
-    { name: "Mathematics", level: "Primary & Secondary", popularity: "Most Popular" },
-    { name: "Science", level: "Primary & Secondary", popularity: "Popular" },
-    { name: "English Language Arts", level: "All Levels", popularity: "Popular" },
-    { name: "Coding & Computer Science", level: "Age 8+", popularity: "Trending" },
-    { name: "Foreign Languages", level: "All Ages", popularity: "Growing" },
-    { name: "Homework Help", level: "All Subjects", popularity: "Essential" },
+    { 
+      name: "IGCSE Grade 6 Package", 
+      level: "Primary", 
+      popularity: "Most Popular",
+      curriculum: "igcse",
+      grade: "6",
+      id: "igcse-6"
+    },
+    { 
+      name: "IB MYP Year 7 Package", 
+      level: "Secondary", 
+      popularity: "Popular",
+      curriculum: "ib",
+      grade: "7",
+      id: "ib-7"
+    },
+    { 
+      name: "American Curriculum Grade 5", 
+      level: "Primary", 
+      popularity: "Popular",
+      curriculum: "american",
+      grade: "5",
+      id: "american-5"
+    },
+    { 
+      name: "British Year 9 Package", 
+      level: "Secondary", 
+      popularity: "Trending",
+      curriculum: "british",
+      grade: "9",
+      id: "british-9"
+    },
+    { 
+      name: "Kenyan Curriculum Grade 4", 
+      level: "Primary", 
+      popularity: "Growing",
+      curriculum: "kenyan",
+      grade: "4",
+      id: "kenyan-4"
+    },
+    { 
+      name: "IGCSE Grade 8 Package", 
+      level: "Secondary", 
+      popularity: "Essential",
+      curriculum: "igcse",
+      grade: "8",
+      id: "igcse-8"
+    },
   ];
 
   const testimonials = [
@@ -155,14 +304,16 @@ const ForParents = () => {
         <section className="py-16 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold text-gray-900">Popular Learning Opportunities</h2>
+              <h2 className="text-3xl font-bold text-gray-900">Popular Learning Packages</h2>
               <p className="mt-4 text-xl text-gray-600 max-w-3xl mx-auto">
-                Discover the subjects and programs that are helping students excel across Africa.
+                Find the perfect full home learning package for your child based on their curriculum and grade level.
               </p>
             </div>
             
+            <CurriculumGradeFilter onFilterChange={handleFilterChange} />
+            
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {popularSubjects.map((subject, index) => (
+              {getFilteredPackages().map((subject, index) => (
                 <Card key={index} className="border-gray-200 hover:shadow-md transition-shadow duration-300">
                   <CardContent className="p-5">
                     <div className="flex justify-between items-start">
@@ -173,8 +324,27 @@ const ForParents = () => {
                       <Badge className="bg-kidato-orange">{subject.popularity}</Badge>
                     </div>
                     <div className="mt-4 flex justify-end">
-                      <Button variant="outline" className="text-kidato-orange border-kidato-orange hover:bg-orange-50">
-                        <Link to="/explore-classes">Explore</Link>
+                      <Button 
+                        variant="outline" 
+                        className="text-kidato-orange border-kidato-orange hover:bg-orange-50"
+                        onClick={() => openPackageDetails(packageDetailsData[subject.id] || {
+                          id: subject.id,
+                          name: subject.name,
+                          curriculum: subject.curriculum,
+                          grade: subject.grade,
+                          subjects: ["Mathematics", "English", "Science", "Social Studies", "Arts"],
+                          hasCheckpoint: subject.grade === "6" || subject.grade === "9",
+                          developmentTips: [
+                            "Establish consistent homework routines",
+                            "Encourage reading for at least 30 minutes daily",
+                            "Practice concepts through real-world applications",
+                            "Balance screen time with physical activities",
+                            "Maintain regular communication with teachers"
+                          ],
+                          description: `Complete package for ${subject.curriculum.toUpperCase()} curriculum Grade ${subject.grade}`
+                        })}
+                      >
+                        View Details
                       </Button>
                     </div>
                   </CardContent>
@@ -394,6 +564,11 @@ const ForParents = () => {
         </section>
       </main>
       <Footer />
+      <PackageDetailsDialog 
+        open={isPackageDialogOpen} 
+        onOpenChange={setIsPackageDialogOpen}
+        packageDetail={selectedPackage}
+      />
     </div>
   );
 };
