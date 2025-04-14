@@ -1,5 +1,4 @@
-
-import { Check, Shield, Star, Clock, Users, BookOpen, GraduationCap, CreditCard } from "lucide-react";
+import { Check, Shield, Star, Clock, Users, BookOpen, GraduationCap, CreditCard, BookText, GraduationCap as Education, Award } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -68,7 +67,6 @@ const ForParents = () => {
     <div className="min-h-screen flex flex-col">
       <Navbar />
       <main className="flex-grow pt-16">
-        {/* Hero Section */}
         <section className="bg-gradient-to-r from-kidato-orange to-orange-500 text-white py-20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="max-w-3xl">
@@ -86,7 +84,6 @@ const ForParents = () => {
           </div>
         </section>
         
-        {/* Benefits Section */}
         <section className="py-16 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-12">
@@ -110,7 +107,6 @@ const ForParents = () => {
           </div>
         </section>
         
-        {/* How It Works Section */}
         <section className="py-16 bg-gray-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-12">
@@ -156,7 +152,6 @@ const ForParents = () => {
           </div>
         </section>
         
-        {/* Popular Subjects Section */}
         <section className="py-16 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-12">
@@ -189,7 +184,6 @@ const ForParents = () => {
           </div>
         </section>
         
-        {/* Parent Testimonials */}
         <section className="py-16 bg-kidato-light-blue">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-12">
@@ -228,7 +222,6 @@ const ForParents = () => {
           </div>
         </section>
         
-        {/* Pricing Section */}
         <section className="py-16 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-12">
@@ -241,65 +234,75 @@ const ForParents = () => {
             <div className="grid gap-8 md:grid-cols-3">
               {[
                 {
-                  title: "One-on-One Tutoring",
-                  price: "$15-30",
+                  title: "One-on-One Tuition Classes",
+                  price: "$15-35",
                   unit: "per hour",
+                  icon: Users,
                   features: [
                     "Personalized attention",
                     "Curriculum-aligned instruction",
                     "Flexible scheduling",
                     "Regular progress reports"
                   ],
+                  description: "Personalized instruction tailored to individual student needs.",
                   cta: "Find a Tutor",
                   link: "/find-tutors"
                 },
                 {
-                  title: "Small Group Classes",
-                  price: "$8-15",
-                  unit: "per hour",
+                  title: "Learning Packages",
+                  price: "$250-500",
+                  unit: "per package",
+                  icon: BookText,
                   features: [
-                    "3-6 students per class",
-                    "Social learning environment",
-                    "More affordable option",
-                    "Weekly scheduled sessions"
+                    "8-12 sessions bundled",
+                    "Comprehensive subject coverage",
+                    "End of term assessments",
+                    "Discounted rates"
                   ],
-                  cta: "Browse Classes",
-                  link: "/explore-classes",
+                  description: "Complete learning solutions for students seeking full online education.",
+                  cta: "View Packages",
+                  link: "/learning-packages",
                   highlighted: true
                 },
                 {
-                  title: "Learning Packages",
-                  price: "$100-250",
-                  unit: "per package",
+                  title: "Exam-Prep",
+                  price: "$25-60",
+                  unit: "per hour",
+                  icon: Education,
                   features: [
-                    "8-12 sessions bundled",
-                    "Discounted rates",
-                    "Comprehensive subject coverage",
-                    "End of package assessment"
+                    "Targeted test strategies",
+                    "Practice exams",
+                    "Personalized feedback",
+                    "Confidence building"
                   ],
-                  cta: "View Packages",
-                  link: "/learning-packages"
+                  description: "Specialized sessions focused on test preparation and exam strategies.",
+                  cta: "Prep for Exams",
+                  link: "/exam-prep"
                 }
               ].map((plan, index) => (
-                <Card key={index} className={`border-gray-200 hover:shadow-md transition-shadow duration-300 overflow-hidden ${plan.highlighted ? 'border-kidato-orange border-2' : ''}`}>
+                <Card key={index} className={`border-gray-200 hover:shadow-md transition-shadow duration-300 overflow-hidden relative ${plan.highlighted ? 'border-kidato-orange border-2' : ''}`}>
                   {plan.highlighted && (
-                    <div className="bg-kidato-orange text-white text-center py-1 text-sm font-medium">
-                      Most Popular
+                    <div className="bg-kidato-orange text-white text-center py-1.5 text-sm font-medium">
+                      Recommended
                     </div>
                   )}
-                  <CardHeader className="text-center pb-0">
+                  <CardHeader className={`text-center pb-0 ${plan.highlighted ? 'pt-6' : 'pt-8'}`}>
+                    <div className={`rounded-full mx-auto w-14 h-14 flex items-center justify-center mb-4 ${plan.highlighted ? 'bg-orange-100' : 'bg-blue-100'}`}>
+                      <plan.icon className={`h-7 w-7 ${plan.highlighted ? 'text-kidato-orange' : 'text-kidato-blue'}`} />
+                    </div>
                     <h3 className="text-xl font-bold text-gray-900">{plan.title}</h3>
                     <div className="mt-2">
-                      <span className="text-3xl font-bold text-kidato-blue">{plan.price}</span>
+                      <span className={`text-3xl font-bold ${plan.highlighted ? 'text-kidato-orange' : 'text-kidato-blue'}`}>{plan.price}</span>
                       <span className="text-gray-600"> {plan.unit}</span>
                     </div>
+                    <p className="mt-2 text-gray-600 text-sm">{plan.description}</p>
                   </CardHeader>
                   <CardContent className="pt-4">
                     <ul className="space-y-3 mb-6">
                       {plan.features.map((feature, i) => (
                         <li key={i} className="flex items-start">
-                          <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" />
-                          <span className="text-gray-600">{feature}</span>
+                          <Check className={`h-5 w-5 ${plan.highlighted ? 'text-kidato-orange' : 'text-green-500'} mr-2 flex-shrink-0`} />
+                          <span className="text-gray-600 text-sm">{feature}</span>
                         </li>
                       ))}
                     </ul>
@@ -309,6 +312,13 @@ const ForParents = () => {
                       <Link to={plan.link}>{plan.cta}</Link>
                     </Button>
                   </CardContent>
+                  {plan.highlighted && (
+                    <div className="absolute top-0 right-0">
+                      <div className="bg-kidato-orange text-white py-1 px-3 rounded-bl-lg text-xs font-medium">
+                        Best Value
+                      </div>
+                    </div>
+                  )}
                 </Card>
               ))}
             </div>
@@ -323,7 +333,6 @@ const ForParents = () => {
           </div>
         </section>
         
-        {/* FAQ Section */}
         <section className="py-16 bg-gray-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-12">
@@ -372,7 +381,6 @@ const ForParents = () => {
           </div>
         </section>
         
-        {/* CTA Section */}
         <section className="py-20 bg-kidato-orange text-white text-center">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <h2 className="text-3xl font-bold mb-6">Give Your Child the Learning Support They Deserve</h2>
