@@ -37,7 +37,8 @@ const EarningsCalculator = () => {
     ratePerHour,
     hoursPerWeek,
     students,
-    currentCurrency
+    currentCurrency,
+    isMobile
   );
 
   return (

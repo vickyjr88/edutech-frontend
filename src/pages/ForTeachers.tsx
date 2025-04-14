@@ -1,3 +1,4 @@
+
 import { BookOpen, DollarSign, Clock, Calendar, ShieldCheck, Award, CreditCard } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -98,19 +99,28 @@ const ForTeachers = () => {
 
   const earningOptions = [
     {
-      title: "One-on-One Sessions",
-      rate: "$5-30",
-      period: "hour"
+      title: "One-on-One Tuition Classes",
+      rate: "$15-35",
+      period: "hour",
+      description: "Personalized instruction tailored to individual student needs."
     },
     {
-      title: "Small Group Classes",
-      rate: "$15-45",
-      period: "hour"
+      title: "Group Classes",
+      rate: "$20-50",
+      period: "hour",
+      description: "Teaching multiple students with similar educational goals."
     },
     {
-      title: "Course Creation",
-      rate: "$100-300",
-      period: "course"
+      title: "Exam-Prep",
+      rate: "$25-60",
+      period: "hour",
+      description: "Specialized sessions focused on test preparation and exam strategies."
+    },
+    {
+      title: "Online Schooling",
+      rate: "$10-30",
+      period: "lesson",
+      description: "Regular curriculum-based lessons delivered through our online platform."
     }
   ];
 

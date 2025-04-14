@@ -2,14 +2,20 @@
 import { CurrencyType, EarningsType } from './types';
 
 // Format currency based on selected currency
-export const formatCurrency = (amount: number, currentCurrency: CurrencyType): string => {
+export const formatCurrency = (amount: number, currentCurrency: CurrencyType, isMobile = false): string => {
+  // Round the amount for mobile display
+  const displayAmount = isMobile ? Math.round(amount / 1000) * 1000 : amount;
+  
   // Format based on current currency
   if (currentCurrency.code === "KSH") {
     // Format for KSh with a space and "/=" suffix
-    return `${currentCurrency.symbol} ${amount.toLocaleString('en-KE', { maximumFractionDigits: 0 })} /=`;
+    return `${currentCurrency.symbol} ${displayAmount.toLocaleString('en-KE', { maximumFractionDigits: 0 })} ${isMobile ? 'K' : '/='}`;
   } else {
     // Format for other currencies
-    return `${currentCurrency.symbol}${amount.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+    if (isMobile && displayAmount >= 1000) {
+      return `${currentCurrency.symbol}${Math.round(displayAmount/1000)}K`;
+    }
+    return `${currentCurrency.symbol}${displayAmount.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
   }
 };
 
@@ -19,7 +25,8 @@ export const calculateEarnings = (
   ratePerHour: number, 
   hoursPerWeek: number, 
   students: number,
-  currentCurrency: CurrencyType
+  currentCurrency: CurrencyType,
+  isMobile = false
 ): EarningsType => {
   const rate = ratePerHour;
   
@@ -32,10 +39,10 @@ export const calculateEarnings = (
     const yearlyEarnings = monthlyEarnings * 12;
 
     return {
-      daily: formatCurrency(dailyEarnings, currentCurrency),
-      weekly: formatCurrency(weeklyEarnings, currentCurrency),
-      monthly: formatCurrency(monthlyEarnings, currentCurrency),
-      yearly: formatCurrency(yearlyEarnings, currentCurrency)
+      daily: formatCurrency(dailyEarnings, currentCurrency, isMobile),
+      weekly: formatCurrency(weeklyEarnings, currentCurrency, isMobile),
+      monthly: formatCurrency(monthlyEarnings, currentCurrency, isMobile),
+      yearly: formatCurrency(yearlyEarnings, currentCurrency, isMobile)
     };
   } else {
     // For group teaching
@@ -45,10 +52,10 @@ export const calculateEarnings = (
     const yearlyEarnings = monthlyEarnings * 12;
 
     return {
-      daily: formatCurrency(dailyEarnings, currentCurrency),
-      weekly: formatCurrency(weeklyEarnings, currentCurrency),
-      monthly: formatCurrency(monthlyEarnings, currentCurrency),
-      yearly: formatCurrency(yearlyEarnings, currentCurrency)
+      daily: formatCurrency(dailyEarnings, currentCurrency, isMobile),
+      weekly: formatCurrency(weeklyEarnings, currentCurrency, isMobile),
+      monthly: formatCurrency(monthlyEarnings, currentCurrency, isMobile),
+      yearly: formatCurrency(yearlyEarnings, currentCurrency, isMobile)
     };
   }
 };
