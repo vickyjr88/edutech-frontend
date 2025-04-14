@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Check, Shield, Star, Clock, Users, BookOpen, GraduationCap, CreditCard, BookText, Award, PieChart, Medal, Brain, FileText, BarChart, BookOpenCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -61,54 +62,948 @@ const ForParents = () => {
   };
 
   const packageDetailsData = {
+    // IGCSE Curriculum Packages
+    "igcse-1": {
+      id: "igcse-1",
+      name: "IGCSE Grade/Year 1 Package",
+      curriculum: "IGCSE",
+      grade: "1",
+      subjects: [
+        "Early Literacy", 
+        "Early Numeracy", 
+        "Science Discovery", 
+        "Art and Design",
+        "Physical Education",
+        "Music",
+        "Personal, Social and Emotional Development"
+      ],
+      hasCheckpoint: false,
+      developmentTips: [
+        "Establish a consistent reading routine with simple picture books",
+        "Practice counting and number recognition through everyday activities",
+        "Encourage curiosity by allowing exploration of natural environments",
+        "Support fine motor skills development through drawing and craft activities",
+        "Allow for plenty of physical activity to develop gross motor skills"
+      ],
+      description: "Foundation stage learning with focus on literacy, numeracy and social development"
+    },
+    "igcse-2": {
+      id: "igcse-2",
+      name: "IGCSE Grade/Year 2 Package",
+      curriculum: "IGCSE",
+      grade: "2",
+      subjects: [
+        "English", 
+        "Mathematics", 
+        "Science", 
+        "History and Geography",
+        "Art and Design",
+        "Physical Education",
+        "Music"
+      ],
+      hasCheckpoint: false,
+      developmentTips: [
+        "Read together daily, encouraging your child to read simple texts independently",
+        "Practice addition and subtraction with numbers up to 20",
+        "Explore simple science concepts through home experiments",
+        "Discuss family history and local geography to build awareness",
+        "Encourage creative expression through art and music"
+      ],
+      description: "Building on literacy and numeracy foundations with introduction to broader subjects"
+    },
+    "igcse-3": {
+      id: "igcse-3",
+      name: "IGCSE Grade/Year 3 Package",
+      curriculum: "IGCSE",
+      grade: "3",
+      subjects: [
+        "English", 
+        "Mathematics", 
+        "Science", 
+        "Humanities",
+        "Art and Design",
+        "Physical Education",
+        "Computing",
+        "Modern Foreign Language Introduction"
+      ],
+      hasCheckpoint: false,
+      developmentTips: [
+        "Encourage independent reading with chapter books at appropriate levels",
+        "Practice multiplication tables and division concepts",
+        "Support scientific inquiry with structured experiments",
+        "Begin discussions about different cultures and global awareness",
+        "Introduce basic computer skills and digital literacy"
+      ],
+      description: "Developing independent learning skills with broader subject exposure"
+    },
+    "igcse-4": {
+      id: "igcse-4",
+      name: "IGCSE Grade/Year 4 Package",
+      curriculum: "IGCSE",
+      grade: "4",
+      subjects: [
+        "English", 
+        "Mathematics", 
+        "Science", 
+        "Geography",
+        "History",
+        "Art and Design",
+        "Computing",
+        "Modern Foreign Language",
+        "Physical Education"
+      ],
+      hasCheckpoint: false,
+      developmentTips: [
+        "Focus on reading comprehension and interpretation",
+        "Develop written expression with structured paragraphs",
+        "Practice mathematical problem-solving with real-world examples",
+        "Encourage independent research projects on topics of interest",
+        "Build typing skills and responsible technology usage"
+      ],
+      description: "Advancing core skills with introduction to more specialized subjects"
+    },
+    "igcse-5": {
+      id: "igcse-5",
+      name: "IGCSE Grade/Year 5 Package",
+      curriculum: "IGCSE",
+      grade: "5",
+      subjects: [
+        "English Language", 
+        "Mathematics", 
+        "Science", 
+        "Geography",
+        "History",
+        "Art and Design",
+        "Computing",
+        "Modern Foreign Language",
+        "Physical Education"
+      ],
+      hasCheckpoint: false,
+      developmentTips: [
+        "Focus on developing strong essay writing skills",
+        "Practice mathematical reasoning and multi-step problems",
+        "Begin preparation for Primary Checkpoint exams the following year",
+        "Encourage critical thinking through debates and discussions",
+        "Support increasing independence in study habits"
+      ],
+      description: "Pre-checkpoint year focused on solidifying primary knowledge"
+    },
     "igcse-6": {
       id: "igcse-6",
-      name: "IGCSE Grade 6 Package",
+      name: "IGCSE Grade/Year 6 Package",
       curriculum: "IGCSE",
       grade: "6",
       subjects: [
-        "Mathematics", 
         "English Language", 
+        "Mathematics", 
         "Science (Physics, Chemistry, Biology)", 
         "Geography",
         "History",
         "Computer Science",
-        "Art and Design"
+        "Art and Design",
+        "Modern Foreign Language"
       ],
       hasCheckpoint: true,
       developmentTips: [
-        "Encourage regular reading to build vocabulary and comprehension skills essential for IGCSE",
-        "Establish a consistent homework routine to build good study habits",
-        "Consider joining at least one extracurricular activity to develop social skills",
-        "Use educational apps and games to reinforce concepts learned in class",
-        "Schedule regular breaks during study time to maintain focus and retention"
+        "Establish regular revision schedules in preparation for checkpoint exams",
+        "Practice past checkpoint papers to build exam confidence",
+        "Develop time management skills for exam situations",
+        "Maintain a balance between checkpoint preparation and overall education",
+        "Use mind maps and other visual tools to connect concepts across subjects"
       ],
-      description: "Comprehensive preparation for Grade 6 IGCSE students with checkpoint exams focus"
+      description: "Primary Checkpoint preparation year with comprehensive assessment focus"
     },
-    "ib-7": {
-      id: "ib-7",
-      name: "IB MYP Year 7 Package",
-      curriculum: "IB",
+    "igcse-7": {
+      id: "igcse-7",
+      name: "IGCSE Grade/Year 7 Package",
+      curriculum: "IGCSE",
       grade: "7",
       subjects: [
+        "English Language", 
+        "English Literature", 
         "Mathematics", 
-        "Language and Literature", 
-        "Sciences", 
-        "Individuals and Societies",
-        "Language Acquisition",
-        "Design",
+        "Coordinated Sciences (Physics, Chemistry, Biology)",
+        "Geography",
+        "History",
+        "Computer Science",
+        "Modern Foreign Language",
+        "Art and Design",
+        "Music"
+      ],
+      hasCheckpoint: false,
+      developmentTips: [
+        "Begin developing more sophisticated analytical writing skills",
+        "Strengthen algebraic understanding in mathematics",
+        "Focus on the scientific method and laboratory skills",
+        "Encourage wider reading beyond the curriculum",
+        "Start connecting learning across different subject areas"
+      ],
+      description: "First year of lower secondary with deeper subject specialization"
+    },
+    "igcse-8": {
+      id: "igcse-8",
+      name: "IGCSE Grade/Year 8 Package",
+      curriculum: "IGCSE",
+      grade: "8",
+      subjects: [
+        "English Language", 
+        "English Literature", 
+        "Mathematics", 
+        "Physics",
+        "Chemistry",
+        "Biology",
+        "Geography",
+        "History",
+        "Computer Science",
+        "Modern Foreign Language",
+        "Art and Design"
+      ],
+      hasCheckpoint: false,
+      developmentTips: [
+        "Develop note-taking and organization skills for multiple subjects",
+        "Practice longer-form writing with proper citations and research",
+        "Build study skills to manage the increasing academic workload",
+        "Begin discussions about IGCSE subject choices for Year 10",
+        "Encourage extracurricular activities to develop well-rounded skills"
+      ],
+      description: "Building toward secondary checkpoint with subject specialization"
+    },
+    "igcse-9": {
+      id: "igcse-9",
+      name: "IGCSE Grade/Year 9 Package",
+      curriculum: "IGCSE",
+      grade: "9",
+      subjects: [
+        "English Language", 
+        "English Literature", 
+        "Mathematics", 
+        "Physics",
+        "Chemistry",
+        "Biology",
+        "Geography",
+        "History",
+        "Computer Science",
+        "Modern Foreign Language",
+        "Global Perspectives"
+      ],
+      hasCheckpoint: true,
+      developmentTips: [
+        "Focus on secondary checkpoint exam preparation",
+        "Finalize IGCSE subject choices for Years 10-11",
+        "Practice past checkpoint papers to identify strengths and weaknesses",
+        "Develop effective revision techniques suited to learning style",
+        "Begin thinking about longer-term academic and career goals"
+      ],
+      description: "Secondary Checkpoint year with IGCSE preparation focus"
+    },
+    
+    // IB Curriculum Packages
+    "ib-1": {
+      id: "ib-1",
+      name: "IB PYP Year 1 Package",
+      curriculum: "IB",
+      grade: "1",
+      subjects: [
+        "Language", 
+        "Mathematics", 
+        "Science", 
+        "Social Studies",
         "Arts",
+        "Personal, Social and Physical Education"
+      ],
+      hasCheckpoint: false,
+      developmentTips: [
+        "Support inquiry-based learning by asking open-ended questions",
+        "Encourage reflection on learning experiences",
+        "Help your child make connections between classroom learning and the world",
+        "Foster international-mindedness through discussions about different cultures",
+        "Support the development of the IB Learner Profile attributes at home"
+      ],
+      description: "IB Primary Years Programme foundation with transdisciplinary themes"
+    },
+    "ib-2": {
+      id: "ib-2",
+      name: "IB PYP Year 2 Package",
+      curriculum: "IB",
+      grade: "2",
+      subjects: [
+        "Language", 
+        "Mathematics", 
+        "Science", 
+        "Social Studies",
+        "Arts",
+        "Personal, Social and Physical Education"
+      ],
+      hasCheckpoint: false,
+      developmentTips: [
+        "Support transdisciplinary learning by connecting subjects at home",
+        "Encourage questions and curiosity about the world",
+        "Practice reflection on both successes and challenges",
+        "Support your child in taking action based on their learning",
+        "Promote international-mindedness through exposure to diverse perspectives"
+      ],
+      description: "Building on PYP foundations with increased inquiry depth"
+    },
+    "ib-3": {
+      id: "ib-3",
+      name: "IB PYP Year 3 Package",
+      curriculum: "IB",
+      grade: "3",
+      subjects: [
+        "Language", 
+        "Mathematics", 
+        "Science", 
+        "Social Studies",
+        "Arts",
+        "Personal, Social and Physical Education"
+      ],
+      hasCheckpoint: false,
+      developmentTips: [
+        "Support the development of research skills using various resources",
+        "Encourage critical thinking by evaluating information",
+        "Help your child connect global issues to local contexts",
+        "Foster independence in learning and time management",
+        "Support language development in mother tongue and other languages"
+      ],
+      description: "Developing deeper conceptual understanding through inquiry"
+    },
+    "ib-4": {
+      id: "ib-4",
+      name: "IB PYP Year 4 Package",
+      curriculum: "IB",
+      grade: "4",
+      subjects: [
+        "Language", 
+        "Mathematics", 
+        "Science", 
+        "Social Studies",
+        "Arts",
+        "Personal, Social and Physical Education"
+      ],
+      hasCheckpoint: false,
+      developmentTips: [
+        "Support increasingly complex research projects",
+        "Encourage critical analysis of multiple perspectives",
+        "Help your child take meaningful action based on learning",
+        "Promote self-management and organizational skills",
+        "Support the development of communication skills across languages"
+      ],
+      description: "Advanced PYP with greater emphasis on global contexts"
+    },
+    "ib-5": {
+      id: "ib-5",
+      name: "IB PYP Year 5 Package",
+      curriculum: "IB",
+      grade: "5",
+      subjects: [
+        "Language", 
+        "Mathematics", 
+        "Science", 
+        "Social Studies",
+        "Arts",
+        "Personal, Social and Physical Education"
+      ],
+      hasCheckpoint: false,
+      developmentTips: [
+        "Support preparation for the PYP Exhibition project",
+        "Encourage deeper research with multiple sources",
+        "Help develop presentation and communication skills",
+        "Foster collaboration with peers on group projects",
+        "Support the transition to the more subject-focused MYP"
+      ],
+      description: "Final PYP year with Exhibition preparation"
+    },
+    "ib-6": {
+      id: "ib-6",
+      name: "IB MYP Year 1 Package",
+      curriculum: "IB",
+      grade: "6",
+      subjects: [
+        "Language and Literature", 
+        "Language Acquisition", 
+        "Mathematics", 
+        "Sciences",
+        "Individuals and Societies",
+        "Arts",
+        "Design",
         "Physical and Health Education"
       ],
       hasCheckpoint: false,
       developmentTips: [
-        "Focus on developing critical thinking skills through discussions and debates",
-        "Encourage global perspective by following international news and events",
-        "Support inquiry-based learning by asking open-ended questions",
-        "Help establish connections between different subject areas",
-        "Practice time management skills for longer-term projects"
+        "Support the transition to subject-specific learning",
+        "Help develop approaches to learning (ATL) skills",
+        "Encourage connections between subjects through global contexts",
+        "Support the development of conceptual understanding",
+        "Foster service as action activities connected to learning"
       ],
-      description: "Holistic education following the IB Middle Years Programme framework"
+      description: "First MYP year focusing on transition from PYP"
+    },
+    "ib-7": {
+      id: "ib-7",
+      name: "IB MYP Year 2 Package",
+      curriculum: "IB",
+      grade: "7",
+      subjects: [
+        "Language and Literature", 
+        "Language Acquisition", 
+        "Mathematics", 
+        "Sciences",
+        "Individuals and Societies",
+        "Arts",
+        "Design",
+        "Physical and Health Education"
+      ],
+      hasCheckpoint: false,
+      developmentTips: [
+        "Support increasing subject-specific rigor",
+        "Encourage interdisciplinary thinking across subjects",
+        "Help develop research skills using academic sources",
+        "Support the development of critical and creative thinking",
+        "Foster service as action initiatives based on personal interests"
+      ],
+      description: "Building MYP foundations with greater subject depth"
+    },
+    "ib-8": {
+      id: "ib-8",
+      name: "IB MYP Year 3 Package",
+      curriculum: "IB",
+      grade: "8",
+      subjects: [
+        "Language and Literature", 
+        "Language Acquisition", 
+        "Mathematics", 
+        "Sciences",
+        "Individuals and Societies",
+        "Arts",
+        "Design",
+        "Physical and Health Education"
+      ],
+      hasCheckpoint: false,
+      developmentTips: [
+        "Support more sophisticated analysis in all subjects",
+        "Encourage evaluation of information and sources",
+        "Help develop time management for longer projects",
+        "Support the development of academic writing skills",
+        "Foster critical engagement with global issues"
+      ],
+      description: "Advancing MYP skills with more complex inquiry"
+    },
+    
+    // American Curriculum Packages
+    "american-1": {
+      id: "american-1",
+      name: "American Curriculum Grade 1",
+      curriculum: "American",
+      grade: "1",
+      subjects: [
+        "English Language Arts", 
+        "Mathematics", 
+        "Science", 
+        "Social Studies",
+        "Art",
+        "Music",
+        "Physical Education"
+      ],
+      hasCheckpoint: false,
+      developmentTips: [
+        "Practice foundational reading skills with phonics games",
+        "Reinforce addition and subtraction with everyday examples",
+        "Explore science through simple experiments at home",
+        "Discuss community helpers and neighborhood geography",
+        "Establish consistent homework routines"
+      ],
+      description: "Common Core aligned with foundational literacy and numeracy focus"
+    },
+    "american-2": {
+      id: "american-2",
+      name: "American Curriculum Grade 2",
+      curriculum: "American",
+      grade: "2",
+      subjects: [
+        "English Language Arts", 
+        "Mathematics", 
+        "Science", 
+        "Social Studies",
+        "Art",
+        "Music",
+        "Physical Education",
+        "Computer Skills"
+      ],
+      hasCheckpoint: false,
+      developmentTips: [
+        "Focus on reading fluency and simple comprehension",
+        "Practice addition and subtraction with regrouping",
+        "Explore habitats and life cycles through observation",
+        "Discuss historical figures and their contributions",
+        "Develop independence in completing homework tasks"
+      ],
+      description: "Building literacy fluency with introduction to STEM concepts"
+    },
+    "american-3": {
+      id: "american-3",
+      name: "American Curriculum Grade 3",
+      curriculum: "American",
+      grade: "3",
+      subjects: [
+        "English Language Arts", 
+        "Mathematics", 
+        "Science", 
+        "Social Studies",
+        "Art",
+        "Music",
+        "Physical Education",
+        "Computer Science"
+      ],
+      hasCheckpoint: false,
+      developmentTips: [
+        "Focus on reading comprehension with chapter books",
+        "Practice multiplication and division concepts",
+        "Develop scientific inquiry skills through structured experiments",
+        "Explore community and state history",
+        "Introduce keyboarding and basic digital skills"
+      ],
+      description: "Common Core with state standardized testing preparation"
+    },
+    "american-4": {
+      id: "american-4",
+      name: "American Curriculum Grade 4",
+      curriculum: "American",
+      grade: "4",
+      subjects: [
+        "English Language Arts", 
+        "Mathematics", 
+        "Science", 
+        "Social Studies",
+        "Art",
+        "Music",
+        "Physical Education",
+        "Computer Science"
+      ],
+      hasCheckpoint: false,
+      developmentTips: [
+        "Develop essay writing with proper paragraph structure",
+        "Master multiplication facts and introduce fractions",
+        "Conduct experiments with variables and recording results",
+        "Study state history and geography in depth",
+        "Practice research skills using both digital and print resources"
+      ],
+      description: "Advanced elementary skills with state standards alignment"
+    },
+    "american-5": {
+      id: "american-5",
+      name: "American Curriculum Grade 5",
+      curriculum: "American",
+      grade: "5",
+      subjects: [
+        "English Language Arts", 
+        "Mathematics", 
+        "Science", 
+        "Social Studies",
+        "Art",
+        "Music",
+        "Physical Education",
+        "Computer Science",
+        "Health"
+      ],
+      hasCheckpoint: false,
+      developmentTips: [
+        "Focus on critical reading across fiction and nonfiction",
+        "Master fractions, decimals, and early algebraic concepts",
+        "Prepare for middle school transition with organizational skills",
+        "Develop research projects with multiple sources",
+        "Practice presentation skills across subjects"
+      ],
+      description: "Final elementary grade with middle school preparation"
+    },
+    "american-6": {
+      id: "american-6",
+      name: "American Curriculum Grade 6",
+      curriculum: "American",
+      grade: "6",
+      subjects: [
+        "English Language Arts", 
+        "Mathematics", 
+        "Earth Science", 
+        "World History",
+        "Physical Education",
+        "Electives (Art, Music, Technology)"
+      ],
+      hasCheckpoint: false,
+      developmentTips: [
+        "Adapt to multiple teachers and subject transitions",
+        "Develop organization systems for assignments across classes",
+        "Practice note-taking strategies for different subjects",
+        "Begin using planners or digital tools to track homework",
+        "Build independence in study habits and time management"
+      ],
+      description: "Middle school transition with departmentalized instruction"
+    },
+    "american-7": {
+      id: "american-7",
+      name: "American Curriculum Grade 7",
+      curriculum: "American",
+      grade: "7",
+      subjects: [
+        "English Language Arts", 
+        "Pre-Algebra/Mathematics", 
+        "Life Science", 
+        "U.S. History",
+        "Physical Education",
+        "Electives (Foreign Language, Art, Music, Technology)"
+      ],
+      hasCheckpoint: false,
+      developmentTips: [
+        "Focus on analytical reading of more complex texts",
+        "Strengthen pre-algebra skills for high school preparation",
+        "Develop laboratory skills in science",
+        "Practice thesis-driven essay writing",
+        "Build effective study strategies for tests and quizzes"
+      ],
+      description: "Core middle school curriculum with elective options"
+    },
+    "american-8": {
+      id: "american-8",
+      name: "American Curriculum Grade 8",
+      curriculum: "American",
+      grade: "8",
+      subjects: [
+        "English Language Arts", 
+        "Algebra I/Mathematics", 
+        "Physical Science", 
+        "Civics/Government",
+        "Physical Education",
+        "Electives (Foreign Language, Art, Music, Technology)"
+      ],
+      hasCheckpoint: false,
+      developmentTips: [
+        "Prepare for high school transition through rigorous academics",
+        "Master algebra concepts as foundation for high school math",
+        "Develop stronger analytical writing skills",
+        "Practice advanced research with proper citations",
+        "Begin considering four-year high school planning"
+      ],
+      description: "Final middle school year with high school preparation"
+    },
+    
+    // British Curriculum Packages
+    "british-1": {
+      id: "british-1",
+      name: "British Year 1 Package",
+      curriculum: "British",
+      grade: "1",
+      subjects: [
+        "English", 
+        "Mathematics", 
+        "Science", 
+        "History",
+        "Geography",
+        "Art and Design",
+        "Music",
+        "Computing",
+        "Physical Education"
+      ],
+      hasCheckpoint: false,
+      developmentTips: [
+        "Focus on phonics for reading development",
+        "Practice counting, addition and subtraction to 20",
+        "Explore the natural world through observation",
+        "Discuss family history and familiar places",
+        "Develop fine motor skills through varied activities"
+      ],
+      description: "Key Stage 1 foundation with phonics and early numeracy"
+    },
+    "british-2": {
+      id: "british-2",
+      name: "British Year 2 Package",
+      curriculum: "British",
+      grade: "2",
+      subjects: [
+        "English", 
+        "Mathematics", 
+        "Science", 
+        "History",
+        "Geography",
+        "Art and Design",
+        "Music",
+        "Computing",
+        "Physical Education"
+      ],
+      hasCheckpoint: false,
+      developmentTips: [
+        "Support reading fluency and comprehension",
+        "Reinforce number bonds and place value",
+        "Practice descriptive writing with interesting vocabulary",
+        "Explore materials and their properties through experiments",
+        "Prepare for Key Stage 1 SATs assessments"
+      ],
+      description: "Final Key Stage 1 year with SATs preparation"
+    },
+    "british-3": {
+      id: "british-3",
+      name: "British Year 3 Package",
+      curriculum: "British",
+      grade: "3",
+      subjects: [
+        "English", 
+        "Mathematics", 
+        "Science", 
+        "History",
+        "Geography",
+        "Art and Design",
+        "Music",
+        "Computing",
+        "Physical Education",
+        "Modern Foreign Language"
+      ],
+      hasCheckpoint: false,
+      developmentTips: [
+        "Focus on reading comprehension with more complex texts",
+        "Master times tables up to 12×12",
+        "Develop cursive handwriting skills",
+        "Support increasing independence in homework",
+        "Encourage research using different sources"
+      ],
+      description: "Lower Key Stage 2 transition with broader subject focus"
+    },
+    "british-4": {
+      id: "british-4",
+      name: "British Year 4 Package",
+      curriculum: "British",
+      grade: "4",
+      subjects: [
+        "English", 
+        "Mathematics", 
+        "Science", 
+        "History",
+        "Geography",
+        "Art and Design",
+        "Music",
+        "Computing",
+        "Physical Education",
+        "Modern Foreign Language"
+      ],
+      hasCheckpoint: false,
+      developmentTips: [
+        "Strengthen grammar and punctuation skills",
+        "Develop mathematical reasoning and problem-solving",
+        "Support scientific inquiry with predictions and conclusions",
+        "Help organize multiday homework assignments",
+        "Encourage wider reading across genres"
+      ],
+      description: "Building Key Stage 2 foundations with deeper subject knowledge"
+    },
+    "british-5": {
+      id: "british-5",
+      name: "British Year 5 Package",
+      curriculum: "British",
+      grade: "5",
+      subjects: [
+        "English", 
+        "Mathematics", 
+        "Science", 
+        "History",
+        "Geography",
+        "Art and Design",
+        "Music",
+        "Computing",
+        "Physical Education",
+        "Modern Foreign Language"
+      ],
+      hasCheckpoint: false,
+      developmentTips: [
+        "Develop more sophisticated writing across different genres",
+        "Master fractions, decimals and percentages",
+        "Begin preparing for Year 6 SATs with regular practice",
+        "Encourage critical evaluation of information sources",
+        "Support independent project work and research"
+      ],
+      description: "Upper Key Stage 2 with pre-SATs preparation"
+    },
+    "british-6": {
+      id: "british-6",
+      name: "British Year 6 Package",
+      curriculum: "British",
+      grade: "6",
+      subjects: [
+        "English", 
+        "Mathematics", 
+        "Science", 
+        "History",
+        "Geography",
+        "Art and Design",
+        "Music",
+        "Computing",
+        "Physical Education",
+        "Modern Foreign Language"
+      ],
+      hasCheckpoint: true,
+      developmentTips: [
+        "Focus on SATs preparation with practice tests",
+        "Master key grammar, punctuation and spelling rules",
+        "Develop mathematical reasoning and problem-solving",
+        "Prepare for secondary school transition",
+        "Build confidence in test-taking strategies"
+      ],
+      description: "Final Key Stage 2 year with SATs examination focus"
+    },
+    "british-7": {
+      id: "british-7",
+      name: "British Year 7 Package",
+      curriculum: "British",
+      grade: "7",
+      subjects: [
+        "English", 
+        "Mathematics", 
+        "Science", 
+        "History",
+        "Geography",
+        "Modern Foreign Languages",
+        "Design and Technology",
+        "Art and Design",
+        "Music",
+        "Computing",
+        "Physical Education"
+      ],
+      hasCheckpoint: false,
+      developmentTips: [
+        "Support transition to multiple teachers and subjects",
+        "Develop organizational skills for different classes",
+        "Help establish homework routines with planner",
+        "Encourage wider reading to support English development",
+        "Build independence in preparation and revision"
+      ],
+      description: "Key Stage 3 transition year with broader subject range"
+    },
+    "british-8": {
+      id: "british-8",
+      name: "British Year 8 Package",
+      curriculum: "British",
+      grade: "8",
+      subjects: [
+        "English", 
+        "Mathematics", 
+        "Science (Physics, Chemistry, Biology)", 
+        "History",
+        "Geography",
+        "Modern Foreign Languages",
+        "Design and Technology",
+        "Art and Design",
+        "Music",
+        "Computing",
+        "Physical Education"
+      ],
+      hasCheckpoint: false,
+      developmentTips: [
+        "Focus on developing analytical writing skills",
+        "Support algebraic thinking and mathematical problem-solving",
+        "Help organize revision schedules for end-of-year exams",
+        "Encourage critical engagement with different perspectives",
+        "Begin discussing GCSE options for Year 10"
+      ],
+      description: "Middle Key Stage 3 with deeper subject specialization"
+    },
+    "british-9": {
+      id: "british-9",
+      name: "British Year 9 Package",
+      curriculum: "British",
+      grade: "9",
+      subjects: [
+        "English", 
+        "Mathematics", 
+        "Science (Physics, Chemistry, Biology)", 
+        "History",
+        "Geography",
+        "Modern Foreign Languages",
+        "Design and Technology",
+        "Art and Design",
+        "Music",
+        "Computing",
+        "Physical Education"
+      ],
+      hasCheckpoint: false,
+      developmentTips: [
+        "Support GCSE subject selection process",
+        "Focus on developing study skills for GCSE preparation",
+        "Encourage deeper research skills with academic sources",
+        "Help establish effective revision techniques",
+        "Build independence in academic organization and planning"
+      ],
+      description: "Final Key Stage 3 year with GCSE preparation focus"
+    },
+    
+    // Kenyan Curriculum Packages
+    "kenyan-1": {
+      id: "kenyan-1",
+      name: "Kenyan Curriculum Grade 1",
+      curriculum: "Kenyan",
+      grade: "1",
+      subjects: [
+        "English", 
+        "Kiswahili", 
+        "Mathematics", 
+        "Environmental Activities",
+        "Hygiene and Nutrition",
+        "Religious Education",
+        "Movement and Creative Activities"
+      ],
+      hasCheckpoint: false,
+      developmentTips: [
+        "Support bilingual development in English and Kiswahili",
+        "Use local materials to reinforce numeracy concepts",
+        "Explore the immediate environment through guided observation",
+        "Incorporate indigenous knowledge in learning activities",
+        "Encourage creative expression through art and movement"
+      ],
+      description: "CBC foundation with integrated learning approach"
+    },
+    "kenyan-2": {
+      id: "kenyan-2",
+      name: "Kenyan Curriculum Grade 2",
+      curriculum: "Kenyan",
+      grade: "2",
+      subjects: [
+        "English", 
+        "Kiswahili", 
+        "Mathematics", 
+        "Environmental Activities",
+        "Hygiene and Nutrition",
+        "Religious Education",
+        "Movement and Creative Activities"
+      ],
+      hasCheckpoint: false,
+      developmentTips: [
+        "Continue bilingual literacy development with reading practice",
+        "Reinforce mathematical operations with everyday examples",
+        "Support environmental exploration beyond the immediate surroundings",
+        "Practice hygiene habits consistently at home",
+        "Encourage storytelling in both English and Kiswahili"
+      ],
+      description: "Building on CBC foundations with practical skills focus"
+    },
+    "kenyan-3": {
+      id: "kenyan-3",
+      name: "Kenyan Curriculum Grade 3",
+      curriculum: "Kenyan",
+      grade: "3",
+      subjects: [
+        "English", 
+        "Kiswahili", 
+        "Mathematics", 
+        "Environmental Activities",
+        "Hygiene and Nutrition",
+        "Religious Education",
+        "Movement and Creative Activities",
+        "Indigenous Language"
+      ],
+      hasCheckpoint: true,
+      developmentTips: [
+        "Prepare for the Grade 3 national assessment",
+        "Support the development of reading fluency in multiple languages",
+        "Practice mathematical problem-solving with local contexts",
+        "Involve your child in community activities to connect learning",
+        "Reinforce value-based education at home"
+      ],
+      description: "First CBC assessment stage with holistic development focus"
     },
     "kenyan-4": {
       id: "kenyan-4",
@@ -116,24 +1011,135 @@ const ForParents = () => {
       curriculum: "Kenyan",
       grade: "4",
       subjects: [
-        "Mathematics", 
         "English", 
         "Kiswahili", 
+        "Mathematics", 
         "Science and Technology", 
         "Social Studies",
         "Creative Arts",
         "Religious Education",
-        "Agriculture"
+        "Agriculture",
+        "Physical and Health Education"
+      ],
+      hasCheckpoint: false,
+      developmentTips: [
+        "Support transition to the upper primary curriculum structure",
+        "Encourage practical application of science concepts at home",
+        "Develop agricultural awareness through home gardening projects",
+        "Reinforce reading comprehension with varied texts",
+        "Support digital literacy with appropriate technology exposure"
+      ],
+      description: "Upper primary transition with subject specialization"
+    },
+    "kenyan-5": {
+      id: "kenyan-5",
+      name: "Kenyan Curriculum Grade 5",
+      curriculum: "Kenyan",
+      grade: "5",
+      subjects: [
+        "English", 
+        "Kiswahili", 
+        "Mathematics", 
+        "Science and Technology", 
+        "Social Studies",
+        "Creative Arts",
+        "Religious Education",
+        "Agriculture",
+        "Physical and Health Education",
+        "Home Science"
+      ],
+      hasCheckpoint: false,
+      developmentTips: [
+        "Support intermediate skills in core subjects",
+        "Encourage critical thinking about social and environmental issues",
+        "Develop entrepreneurial mindset through practical projects",
+        "Support community service and values development",
+        "Practice time management with increasing workload"
+      ],
+      description: "Intermediate upper primary with practical skills integration"
+    },
+    "kenyan-6": {
+      id: "kenyan-6",
+      name: "Kenyan Curriculum Grade 6",
+      curriculum: "Kenyan",
+      grade: "6",
+      subjects: [
+        "English", 
+        "Kiswahili", 
+        "Mathematics", 
+        "Science and Technology", 
+        "Social Studies",
+        "Creative Arts",
+        "Religious Education",
+        "Agriculture",
+        "Physical and Health Education",
+        "Home Science"
       ],
       hasCheckpoint: true,
       developmentTips: [
-        "Emphasize bilingual development with both English and Kiswahili practice",
-        "Reinforce local cultural knowledge alongside academic subjects",
-        "Engage in practical applications of science and agriculture concepts",
-        "Develop strong mental arithmetic skills through daily practice",
-        "Encourage participation in group activities to build teamwork"
+        "Prepare for the Grade 6 national assessment",
+        "Support exam preparation with regular practice",
+        "Develop strong study habits for junior secondary preparation",
+        "Encourage critical thinking and problem-solving skills",
+        "Support career exploration based on strengths and interests"
       ],
-      description: "Complete curriculum coverage for Kenyan education system"
+      description: "Final upper primary year with national assessment focus"
+    },
+    "kenyan-7": {
+      id: "kenyan-7",
+      name: "Kenyan Curriculum Grade 7",
+      curriculum: "Kenyan",
+      grade: "7",
+      subjects: [
+        "English", 
+        "Kiswahili", 
+        "Mathematics", 
+        "Integrated Science", 
+        "Health Education",
+        "Social Studies",
+        "Pre-Technical and Pre-Career Education",
+        "Creative Arts",
+        "Religious Education",
+        "Agriculture",
+        "Business Studies"
+      ],
+      hasCheckpoint: false,
+      developmentTips: [
+        "Support transition to junior secondary school structure",
+        "Help identify areas of strength for future specialization",
+        "Develop digital literacy skills for modern learning",
+        "Encourage participation in clubs and societies",
+        "Support the development of independent study habits"
+      ],
+      description: "First junior secondary year with career exploration focus"
+    },
+    "kenyan-8": {
+      id: "kenyan-8",
+      name: "Kenyan Curriculum Grade 8",
+      curriculum: "Kenyan",
+      grade: "8",
+      subjects: [
+        "English", 
+        "Kiswahili", 
+        "Mathematics", 
+        "Integrated Science", 
+        "Health Education",
+        "Social Studies",
+        "Pre-Technical and Pre-Career Education",
+        "Business Studies",
+        "Religious Education",
+        "Agriculture",
+        "Optional Subjects"
+      ],
+      hasCheckpoint: false,
+      developmentTips: [
+        "Support exploration of career pathways through subject choices",
+        "Develop stronger research and analytical skills",
+        "Encourage community service aligned with interests",
+        "Support time management with increasing academic demands",
+        "Help identify strengths for Senior School pathway selection"
+      ],
+      description: "Second junior secondary year with pathway preparation"
     }
   };
 
@@ -217,6 +1223,33 @@ const ForParents = () => {
       grade: "8",
       id: "igcse-8",
       description: "Advanced preparation for future IGCSE exams"
+    },
+    { 
+      name: "American Curriculum Grade 3", 
+      level: "Primary", 
+      popularity: "Recommended",
+      curriculum: "american",
+      grade: "3",
+      id: "american-3",
+      description: "Common Core with state standardized testing preparation"
+    },
+    { 
+      name: "British Year 6 Package", 
+      level: "Primary", 
+      popularity: "Important",
+      curriculum: "british",
+      grade: "6",
+      id: "british-6",
+      description: "Final Key Stage 2 with SATs examination focus"
+    },
+    { 
+      name: "Kenyan Curriculum Grade 7", 
+      level: "Secondary", 
+      popularity: "New",
+      curriculum: "kenyan",
+      grade: "7",
+      id: "kenyan-7",
+      description: "First junior secondary year with career exploration"
     },
   ];
 
@@ -361,6 +1394,9 @@ const ForParents = () => {
                         subject.popularity === "Trending" ? "bg-pink-500" :
                         subject.popularity === "Essential" ? "bg-amber-500" :
                         subject.popularity === "Growing" ? "bg-green-500" :
+                        subject.popularity === "Recommended" ? "bg-purple-500" :
+                        subject.popularity === "Important" ? "bg-indigo-500" :
+                        subject.popularity === "New" ? "bg-teal-500" :
                         "bg-blue-500"
                       } text-white py-1 px-3 rounded-bl-lg text-xs font-medium`}>
                         {subject.popularity}
@@ -431,7 +1467,7 @@ const ForParents = () => {
                           curriculum: subject.curriculum,
                           grade: subject.grade,
                           subjects: ["Mathematics", "English", "Science", "Social Studies", "Arts"],
-                          hasCheckpoint: subject.grade === "6" || subject.grade === "9",
+                          hasCheckpoint: subject.grade === "6" || subject.grade === "9" || subject.grade === "3",
                           developmentTips: [
                             "Establish consistent homework routines",
                             "Encourage reading for at least 30 minutes daily",

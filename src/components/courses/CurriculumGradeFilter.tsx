@@ -23,6 +23,12 @@ const CurriculumGradeFilter = ({ onFilterChange }: CurriculumGradeFilterProps) =
     onFilterChange(curriculum, grade);
   };
 
+  const handleClearFilters = () => {
+    setCurriculum("");
+    setGrade("");
+    onFilterChange("", "");
+  };
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
       <div>
@@ -77,12 +83,20 @@ const CurriculumGradeFilter = ({ onFilterChange }: CurriculumGradeFilterProps) =
         </Select>
       </div>
       
-      <div className="flex items-end">
+      <div className="flex items-end space-x-2">
         <Button 
           onClick={handleApplyFilter}
-          className="w-full bg-kidato-blue hover:bg-kidato-dark-blue"
+          className="flex-1 bg-kidato-blue hover:bg-kidato-dark-blue"
         >
           Apply Filter
+        </Button>
+        
+        <Button 
+          onClick={handleClearFilters}
+          variant="outline" 
+          className="border-gray-300"
+        >
+          Clear
         </Button>
       </div>
     </div>
