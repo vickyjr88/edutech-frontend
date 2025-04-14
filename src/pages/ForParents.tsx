@@ -119,7 +119,7 @@ const ForParents = () => {
         "Mathematics", 
         "English", 
         "Kiswahili", 
-        "Science and Technology",
+        "Science and Technology", 
         "Social Studies",
         "Creative Arts",
         "Religious Education",
@@ -438,7 +438,7 @@ const ForParents = () => {
                   title: "Exam-Prep",
                   price: "$25-60",
                   unit: "per hour",
-                  icon: Education,
+                  icon: GraduationCap,
                   features: [
                     "Targeted test strategies",
                     "Practice exams",
