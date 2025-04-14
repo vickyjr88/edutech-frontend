@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Check, Shield, Star, Clock, Users, BookOpen, GraduationCap, CreditCard, BookText, Award } from "lucide-react";
+import { Check, Shield, Star, Clock, Users, BookOpen, GraduationCap, CreditCard, BookText, Award, PieChart, Medal, Brain, FileText, BarChart, BookOpenCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -137,6 +137,32 @@ const ForParents = () => {
     }
   };
 
+  const getCurriculumIcon = (curriculum: string) => {
+    switch(curriculum) {
+      case "igcse": return BookOpenCheck;
+      case "ib": return GraduationCap;
+      case "american": return FileText;
+      case "british": return BookOpen;
+      case "kenyan": return BookText;
+      default: return BookText;
+    }
+  };
+
+  const getSubjectCount = (id: string) => {
+    if (packageDetailsData[id]) {
+      return packageDetailsData[id].subjects.length;
+    }
+    return 5; // Default number if not found in the detailed data
+  };
+
+  const getLevelColor = (level: string) => {
+    switch(level) {
+      case "Primary": return "text-green-700";
+      case "Secondary": return "text-blue-700";
+      default: return "text-gray-700";
+    }
+  };
+
   const popularSubjects = [
     { 
       name: "IGCSE Grade 6 Package", 
@@ -144,7 +170,8 @@ const ForParents = () => {
       popularity: "Most Popular",
       curriculum: "igcse",
       grade: "6",
-      id: "igcse-6"
+      id: "igcse-6",
+      description: "Complete foundation with checkpoint exam preparation"
     },
     { 
       name: "IB MYP Year 7 Package", 
@@ -152,7 +179,8 @@ const ForParents = () => {
       popularity: "Popular",
       curriculum: "ib",
       grade: "7",
-      id: "ib-7"
+      id: "ib-7",
+      description: "Holistic education with inquiry-based learning"
     },
     { 
       name: "American Curriculum Grade 5", 
@@ -160,7 +188,8 @@ const ForParents = () => {
       popularity: "Popular",
       curriculum: "american",
       grade: "5",
-      id: "american-5"
+      id: "american-5",
+      description: "Common Core aligned with project-based learning"
     },
     { 
       name: "British Year 9 Package", 
@@ -168,7 +197,8 @@ const ForParents = () => {
       popularity: "Trending",
       curriculum: "british",
       grade: "9",
-      id: "british-9"
+      id: "british-9",
+      description: "Key Stage 3 with comprehensive assessment"
     },
     { 
       name: "Kenyan Curriculum Grade 4", 
@@ -176,7 +206,8 @@ const ForParents = () => {
       popularity: "Growing",
       curriculum: "kenyan",
       grade: "4",
-      id: "kenyan-4"
+      id: "kenyan-4",
+      description: "Competency-based curriculum with bilingual focus"
     },
     { 
       name: "IGCSE Grade 8 Package", 
@@ -184,7 +215,8 @@ const ForParents = () => {
       popularity: "Essential",
       curriculum: "igcse",
       grade: "8",
-      id: "igcse-8"
+      id: "igcse-8",
+      description: "Advanced preparation for future IGCSE exams"
     },
   ];
 
@@ -312,21 +344,87 @@ const ForParents = () => {
             
             <CurriculumGradeFilter onFilterChange={handleFilterChange} />
             
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {getFilteredPackages().map((subject, index) => (
-                <Card key={index} className="border-gray-200 hover:shadow-md transition-shadow duration-300">
-                  <CardContent className="p-5">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h3 className="text-xl font-semibold text-gray-900 mb-1">{subject.name}</h3>
-                        <p className="text-sm text-gray-600">{subject.level}</p>
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {getFilteredPackages().map((subject, index) => {
+                const CurriculumIcon = getCurriculumIcon(subject.curriculum);
+                const subjectCount = getSubjectCount(subject.id);
+                const levelClass = getLevelColor(subject.level);
+                
+                return (
+                  <Card 
+                    key={index} 
+                    className="border border-gray-200 hover:shadow-lg hover:scale-[1.02] transition-all duration-300 overflow-hidden group"
+                  >
+                    <div className="relative">
+                      <div className={`absolute top-0 right-0 z-10 ${
+                        subject.popularity === "Most Popular" ? "bg-kidato-orange" :
+                        subject.popularity === "Trending" ? "bg-pink-500" :
+                        subject.popularity === "Essential" ? "bg-amber-500" :
+                        subject.popularity === "Growing" ? "bg-green-500" :
+                        "bg-blue-500"
+                      } text-white py-1 px-3 rounded-bl-lg text-xs font-medium`}>
+                        {subject.popularity}
                       </div>
-                      <Badge className="bg-kidato-orange">{subject.popularity}</Badge>
+                      <div className={`h-1.5 w-full ${
+                        subject.curriculum === "igcse" ? "bg-indigo-500" :
+                        subject.curriculum === "ib" ? "bg-sky-500" :
+                        subject.curriculum === "american" ? "bg-rose-500" :
+                        subject.curriculum === "british" ? "bg-emerald-500" :
+                        "bg-amber-500"
+                      }`}></div>
                     </div>
-                    <div className="mt-4 flex justify-end">
+                    <CardContent className="p-6">
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex-1">
+                          <div className="flex items-center">
+                            <div className={`rounded-full p-2 mr-3 ${
+                              subject.curriculum === "igcse" ? "bg-indigo-100 text-indigo-600" :
+                              subject.curriculum === "ib" ? "bg-sky-100 text-sky-600" :
+                              subject.curriculum === "american" ? "bg-rose-100 text-rose-600" :
+                              subject.curriculum === "british" ? "bg-emerald-100 text-emerald-600" :
+                              "bg-amber-100 text-amber-600"
+                            }`}>
+                              <CurriculumIcon className="h-5 w-5" />
+                            </div>
+                            <h3 className="text-xl font-bold text-gray-900">{subject.name}</h3>
+                          </div>
+                          <div className="flex items-center mt-2">
+                            <span className={`text-sm font-medium ${levelClass} flex items-center`}>
+                              {subject.level === "Primary" ? (
+                                <BookOpen className={`h-4 w-4 mr-1 ${levelClass}`} />
+                              ) : (
+                                <GraduationCap className={`h-4 w-4 mr-1 ${levelClass}`} />
+                              )}
+                              {subject.level}
+                            </span>
+                            <span className="mx-2 text-gray-300">•</span>
+                            <span className="text-sm text-gray-600 flex items-center">
+                              <BookText className="h-4 w-4 mr-1 text-gray-500" />
+                              {subjectCount} Subjects
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <p className="text-sm text-gray-600 mb-6">{subject.description}</p>
+                      
+                      <div className="mt-2 flex flex-col space-y-2">
+                        <div className="flex items-center text-sm text-gray-600">
+                          <Check className="h-4 w-4 text-green-500 mr-2" />
+                          <span>Curriculum-aligned content</span>
+                        </div>
+                        <div className="flex items-center text-sm text-gray-600">
+                          <Check className="h-4 w-4 text-green-500 mr-2" />
+                          <span>Regular assessments</span>
+                        </div>
+                        <div className="flex items-center text-sm text-gray-600">
+                          <Check className="h-4 w-4 text-green-500 mr-2" />
+                          <span>Learning materials included</span>
+                        </div>
+                      </div>
+
                       <Button 
-                        variant="outline" 
-                        className="text-kidato-orange border-kidato-orange hover:bg-orange-50"
+                        className="w-full mt-6 bg-white border-2 border-kidato-orange text-kidato-orange hover:bg-orange-50 group-hover:bg-kidato-orange group-hover:text-white transition-colors"
                         onClick={() => openPackageDetails(packageDetailsData[subject.id] || {
                           id: subject.id,
                           name: subject.name,
@@ -344,12 +442,12 @@ const ForParents = () => {
                           description: `Complete package for ${subject.curriculum.toUpperCase()} curriculum Grade ${subject.grade}`
                         })}
                       >
-                        View Details
+                        <span>View Details</span>
                       </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
           </div>
         </section>
