@@ -8,6 +8,9 @@ import AcademicProgress from "@/components/parents/AcademicProgress";
 import AttendanceWidget from "@/components/parents/AttendanceWidget";
 import ChildrenLiveStatus from "@/components/parents/ChildrenLiveStatus";
 import ImportantReminders from "@/components/parents/ImportantReminders";
+import QuickActions from "@/components/parents/QuickActions";
+import EducationalGoals from "@/components/parents/EducationalGoals";
+import FamilyCalendar from "@/components/parents/FamilyCalendar";
 
 const ParentsDashboard = () => {
   const [parentName] = useState("Kate Johnson");
@@ -20,26 +23,37 @@ const ParentsDashboard = () => {
         <ParentDashboardHeader parentName={parentName} />
 
         <main className="p-4 sm:p-6 flex-1 overflow-y-auto">
-          <div className="max-w-7xl mx-auto">
+          <div className="max-w-7xl mx-auto space-y-4">
+            {/* Quick Actions Row */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <QuickActions />
+              <FamilyCalendar />
+            </div>
+            
+            {/* Educational Goals Row */}
+            <div className="mb-4">
+              <EducationalGoals />
+            </div>
+
             {/* Row 1: Children live classes status and attendance */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <ChildrenLiveStatus />
               <AttendanceWidget />
             </div>
             
             {/* Row 2: Important reminders and recent activities */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <ImportantReminders />
               <ActivityFeed />
             </div>
             
             {/* Children Overview Row */}
-            <div className="mb-6">
+            <div>
               <ChildrenOverview />
             </div>
             
             {/* Academic Progress Row */}
-            <div className="mt-6">
+            <div>
               <AcademicProgress />
             </div>
           </div>
