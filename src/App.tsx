@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -31,6 +30,14 @@ import Courses from "./pages/Courses";
 import CourseProgress from "./pages/CourseProgress";
 import Profile from "./pages/Profile";
 import ParentsDashboard from "./pages/ParentsDashboard";
+import ParentsSchedule from "./pages/ParentsSchedule";
+import ParentsCourses from "./pages/ParentsCourses";
+import ParentsTeachers from "./pages/ParentsTeachers";
+import ParentsMessages from "./pages/ParentsMessages";
+import ParentsReports from "./pages/ParentsReports";
+import ParentsProgress from "./pages/ParentsProgress";
+import ParentsBilling from "./pages/ParentsBilling";
+import ChildDashboard from "./pages/ChildDashboard";
 
 // Create a client
 const queryClient = new QueryClient();
@@ -115,6 +122,49 @@ const App = () => {
                     <CourseProgress />
                   </ProtectedRoute>
                 } />
+                
+                {/* Parent Routes */}
+                <Route path="/parents-schedule" element={
+                  <ProtectedRoute>
+                    <ParentsSchedule />
+                  </ProtectedRoute>
+                } />
+                <Route path="/parents-courses" element={
+                  <ProtectedRoute>
+                    <ParentsCourses />
+                  </ProtectedRoute>
+                } />
+                <Route path="/parents-teachers" element={
+                  <ProtectedRoute>
+                    <ParentsTeachers />
+                  </ProtectedRoute>
+                } />
+                <Route path="/parents-messages" element={
+                  <ProtectedRoute>
+                    <ParentsMessages />
+                  </ProtectedRoute>
+                } />
+                <Route path="/parents-reports" element={
+                  <ProtectedRoute>
+                    <ParentsReports />
+                  </ProtectedRoute>
+                } />
+                <Route path="/parents-progress" element={
+                  <ProtectedRoute>
+                    <ParentsProgress />
+                  </ProtectedRoute>
+                } />
+                <Route path="/parents-billing" element={
+                  <ProtectedRoute>
+                    <ParentsBilling />
+                  </ProtectedRoute>
+                } />
+                <Route path="/child-dashboard/:childId" element={
+                  <ProtectedRoute>
+                    <ChildDashboard />
+                  </ProtectedRoute>
+                } />
+                
                 <Route path="*" element={<NotFound />} />
               </Routes>
               <Toaster />
