@@ -2,6 +2,38 @@
 import ParentSidebar from "@/components/parents/ParentSidebar";
 import ParentDashboardHeader from "@/components/parents/ParentDashboardHeader";
 import { Calendar } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+
+const mockSchedule = [
+  {
+    id: 1,
+    childName: "Emma",
+    subject: "Mathematics",
+    teacher: "Mr. Williams",
+    time: "09:00 AM - 10:30 AM",
+    day: "Monday",
+    status: "upcoming"
+  },
+  {
+    id: 2,
+    childName: "Noah",
+    subject: "Science",
+    teacher: "Ms. Rodriguez",
+    time: "11:00 AM - 12:30 PM",
+    day: "Monday",
+    status: "upcoming"
+  },
+  {
+    id: 3,
+    childName: "Emma",
+    subject: "English",
+    teacher: "Mrs. Thompson",
+    time: "02:00 PM - 03:30 PM",
+    day: "Monday",
+    status: "upcoming"
+  }
+];
 
 const ParentsSchedule = () => {
   return (
@@ -18,9 +50,25 @@ const ParentsSchedule = () => {
               <h1 className="text-2xl font-bold">Learning Schedule</h1>
             </div>
             
-            {/* Schedule content will go here */}
-            <div className="grid gap-6">
-              {/* Add your schedule components here */}
+            <div className="grid gap-4">
+              {mockSchedule.map((class_) => (
+                <Card key={class_.id}>
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="font-semibold">{class_.subject}</h3>
+                        <p className="text-sm text-gray-600">Student: {class_.childName}</p>
+                        <p className="text-sm text-gray-600">Teacher: {class_.teacher}</p>
+                      </div>
+                      <div className="text-right">
+                        <Badge variant="outline" className="mb-2">{class_.status}</Badge>
+                        <p className="text-sm font-medium">{class_.time}</p>
+                        <p className="text-sm text-gray-600">{class_.day}</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
             </div>
           </div>
         </main>

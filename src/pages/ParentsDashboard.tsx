@@ -16,7 +16,6 @@ const ParentsDashboard = () => {
     <div className="flex min-h-screen bg-gradient-to-b from-blue-50 to-white">
       <ParentSidebar />
 
-      {/* Main Content */}
       <div className="flex-1 flex flex-col">
         <ParentDashboardHeader parentName={parentName} />
 
