@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -30,14 +31,14 @@ import Courses from "./pages/Courses";
 import CourseProgress from "./pages/CourseProgress";
 import Profile from "./pages/Profile";
 import ParentsDashboard from "./pages/ParentsDashboard";
-import ParentsSchedule from "./pages/ParentsSchedule";
-import ParentsCourses from "./pages/ParentsCourses";
-import ParentsTeachers from "./pages/ParentsTeachers";
-import ParentsMessages from "./pages/ParentsMessages";
-import ParentsReports from "./pages/ParentsReports";
-import ParentsProgress from "./pages/ParentsProgress";
-import ParentsBilling from "./pages/ParentsBilling";
-import ChildDashboard from "./pages/ChildDashboard";
+import ParentsSchedule from "./pages/parents/ParentsSchedule";
+import ParentsCourses from "./pages/parents/ParentsCourses";
+import ParentsTeachers from "./pages/parents/ParentsTeachers";
+import ParentsMessages from "./pages/parents/ParentsMessages";
+import ParentsReports from "./pages/parents/ParentsReports";
+import ParentsProgress from "./pages/parents/ParentsProgress";
+import ParentsBilling from "./pages/parents/ParentsBilling";
+import ChildDashboard from "./pages/parents/ChildDashboard";
 
 // Create a client
 const queryClient = new QueryClient();
