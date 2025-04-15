@@ -1,8 +1,7 @@
+
 import { Link } from "react-router-dom";
-import { ArrowRight, BarChart3, Users, BookOpen, Award, Bell, Calendar, CheckCircle, MoreVertical, User } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
 
 const Hero = () => {
   return (
@@ -26,7 +25,10 @@ const Hero = () => {
                 </Button>
               </Link>
               <Link to="/courses">
-                <Button variant="outline" className="w-full sm:w-auto text-lg px-6 py-5">
+                <Button 
+                  variant="outline" 
+                  className="w-full sm:w-auto text-lg px-6 py-5 border-2 border-kidato-blue text-kidato-blue hover:bg-kidato-blue/10 transition-colors duration-300"
+                >
                   Explore Courses
                 </Button>
               </Link>

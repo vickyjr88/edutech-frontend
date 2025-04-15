@@ -30,7 +30,11 @@ const HeroSection = ({
               <Link to={primaryButtonLink}>{primaryButtonText}</Link>
             </Button>
             {secondaryButtonText && secondaryButtonLink && (
-              <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10">
+              <Button 
+                size="lg" 
+                variant="outline" 
+                className="border-2 border-white text-white hover:bg-white/20 hover:text-white transition-colors duration-300"
+              >
                 <Link to={secondaryButtonLink}>{secondaryButtonText}</Link>
               </Button>
             )}

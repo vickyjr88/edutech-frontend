@@ -12,9 +12,18 @@ const ClassesHero = () => {
             <p className="text-xl max-w-3xl mb-6">
               Explore live, interactive classes taught by Africa's top educators designed to inspire and challenge your child.
             </p>
-            <Button size="lg" className="bg-white text-kidato-blue hover:bg-gray-100">
-              Start Learning Today
-            </Button>
+            <div className="space-x-4">
+              <Button size="lg" className="bg-white text-kidato-blue hover:bg-gray-100">
+                Start Learning Today
+              </Button>
+              <Button 
+                size="lg" 
+                variant="outline" 
+                className="border-2 border-white text-white hover:bg-white/20 hover:text-white transition-colors duration-300"
+              >
+                Learn More
+              </Button>
+            </div>
           </div>
           
           <HeroStats />
