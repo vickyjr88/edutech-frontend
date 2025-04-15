@@ -7,7 +7,6 @@ import ActivityFeed from "@/components/parents/ActivityFeed";
 import AcademicProgress from "@/components/parents/AcademicProgress";
 import AttendanceWidget from "@/components/parents/AttendanceWidget";
 import ChildrenLiveStatus from "@/components/parents/ChildrenLiveStatus";
-import ImportantReminders from "@/components/parents/ImportantReminders";
 import QuickActions from "@/components/parents/QuickActions";
 import EducationalGoals from "@/components/parents/EducationalGoals";
 import FamilyCalendar from "@/components/parents/FamilyCalendar";
@@ -23,38 +22,30 @@ const ParentsDashboard = () => {
         <ParentDashboardHeader parentName={parentName} />
 
         <main className="p-4 sm:p-6 flex-1 overflow-y-auto">
-          <div className="max-w-7xl mx-auto space-y-4">
-            {/* Quick Actions Row */}
+          <div className="max-w-7xl mx-auto space-y-6">
+            {/* Top Row: Quick Actions and Calendar */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               <QuickActions />
               <FamilyCalendar />
             </div>
-            
-            {/* Educational Goals Row */}
-            <div className="mb-4">
-              <EducationalGoals />
-            </div>
 
-            {/* Row 1: Children live classes status and attendance */}
+            {/* Middle Row: Live Status and Attendance */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <ChildrenLiveStatus />
               <AttendanceWidget />
             </div>
-            
-            {/* Row 2: Important reminders and recent activities */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <ImportantReminders />
-              <ActivityFeed />
-            </div>
-            
-            {/* Children Overview Row */}
-            <div>
-              <ChildrenOverview />
-            </div>
-            
-            {/* Academic Progress Row */}
-            <div>
-              <AcademicProgress />
+
+            {/* Children Overview Section */}
+            <ChildrenOverview />
+
+            {/* Bottom Row: Combined Progress and Activity Feed */}
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+              <div className="xl:col-span-2">
+                <AcademicProgress />
+              </div>
+              <div className="space-y-4">
+                <ActivityFeed />
+              </div>
             </div>
           </div>
         </main>
