@@ -1,7 +1,7 @@
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { MessageSquare, Bell, Calendar, FileText, Video, HelpCircle } from "lucide-react";
+import { MessageSquare, Bell, Calendar, FileText, Video, HelpCircle, Target as TargetIcon } from "lucide-react";
 
 const QuickActions = () => {
   return (
@@ -27,7 +27,7 @@ const QuickActions = () => {
             variant="outline" 
             className="flex items-center justify-start text-green-600 border-green-200 hover:bg-green-50"
           >
-            <Target className="h-4 w-4 mr-2" />
+            <TargetIcon className="h-4 w-4 mr-2" />
             Track Progress
           </Button>
           <Button 
