@@ -1,7 +1,7 @@
 
 project_id = "zstptpicdjmvjizhmfhr"
 
-[api]
+[client]
 enabled = true
 port = 54321
 schemas = ["public", "storage"]

@@ -7,8 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import AuthLayout from "@/components/auth/AuthLayout";
 import { toast } from "@/components/ui/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { api, authService, studentService } from "@/integrations/api";
 
 interface LocationState {
   from?: {
@@ -45,7 +45,7 @@ const Login = () => {
     setIsLoading(true);
     
     try {
-      const { data, error: signInError } = await supabase.auth.signInWithPassword({
+      const { data, error: signInError } = await authService.login({
         email,
         password,
       });
@@ -58,9 +58,11 @@ const Login = () => {
       });
 
       // Check if user is a tutor to redirect to correct dashboard
-      const userRole = data.user?.user_metadata?.role;
-      if (userRole === "tutor") {
-        navigate("/teacher-dashboard");
+      const userRole = data.user?.role;
+      if (userRole === "teacher") {
+        navigate("/teachers-dashboard");
+      }if (userRole === "student") {
+        navigate("/students-dashboard");
       } else {
         navigate(from);
       }
@@ -85,7 +87,7 @@ const Login = () => {
   const handleSocialLogin = async (provider: 'google' | 'facebook') => {
     try {
       setIsLoading(true);
-      const { error } = await supabase.auth.signInWithOAuth({
+      const { error } = await authService.signInWithOAuth({
         provider,
         options: {
           redirectTo: window.location.origin + '/auth/callback',

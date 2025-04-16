@@ -25,7 +25,7 @@ import {
   LanguageItem
 } from "./professional-profile";
 import VideoStep from "./professional-profile/VideoStep";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/api/client.ts";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { fetchExperienceRecords } from "./professional-profile/utils/experienceUtils";

@@ -104,7 +104,7 @@ const AcademicSubjectsStep = ({ subjects, setSubjects, onSubjectsChange }: Acade
           if (onSubjectsChange) onSubjectsChange();
         }
       } else {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+         
         const { id, ...newSubject } = currentSubject;
         const newId = await addAcademicSubject(newSubject);
         if (newId) {

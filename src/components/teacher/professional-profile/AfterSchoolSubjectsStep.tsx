@@ -104,7 +104,7 @@ const AfterSchoolSubjectsStep = ({ subjects, setSubjects, onSubjectsChange }: Af
           if (onSubjectsChange) onSubjectsChange();
         }
       } else {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+         
         const { id, ...newSubject } = currentSubject;
         const newId = await addAfterSchoolSubject(newSubject);
         if (newId) {

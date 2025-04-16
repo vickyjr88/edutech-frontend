@@ -1,5 +1,5 @@
 
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/api/client.ts";
 
 export type TechnicalSkillItem = {
   id: string;

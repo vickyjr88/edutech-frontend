@@ -1,5 +1,5 @@
 
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/api/client.ts";
 import { useToast } from "@/hooks/use-toast";
 
 export type AfterSchoolSubjectItem = {

@@ -1,5 +1,5 @@
 
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/api/client.ts";
 
 export const TEACHING_METHODOLOGIES = [
   "Bloom's Taxonomy",

@@ -11,7 +11,7 @@ import ClassSetupForm from "@/components/teacher/ClassSetupForm";
 import CreateClassForm from "@/components/teacher/CreateClassForm";
 import EnrollStudentsPage from "@/components/teacher/enrollment/EnrollStudentsPage";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/api/client.ts";
 import { Json } from "@/integrations/supabase/types";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 

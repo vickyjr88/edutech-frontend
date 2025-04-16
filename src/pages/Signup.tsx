@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "@/components/ui/use-toast";
 import AuthLayout from "@/components/auth/AuthLayout";
-import { supabase } from "@/integrations/supabase/client";
+import {authService} from "@/integrations/api";
 
 const SignUp = () => {
   const [name, setName] = useState("");
@@ -39,15 +39,11 @@ const SignUp = () => {
     
     try {
       // Sign up with Supabase
-      const { data, error: signUpError } = await supabase.auth.signUp({
+      const { data, error: signUpError } = await authService.register({
         email,
         password,
-        options: {
-          data: {
-            full_name: name,
-            role: userRole,
-          },
-        },
+        fullName: name,
+        role: userRole,
       });
 
       if (signUpError) throw signUpError;
@@ -56,10 +52,13 @@ const SignUp = () => {
         title: "Account created!",
         description: "Your account has been created successfully.",
       });
-      
       // Redirect based on user role
-      if (userRole === "tutor") {
+      if (userRole === "teacher") {
         navigate("/teacher-dashboard");
+      }else if (userRole === "parent") {
+        navigate("/parents-dashboard");
+      }else if (userRole === "student") {
+        navigate("/students-dashboard");
       } else {
         navigate("/dashboard");
       }

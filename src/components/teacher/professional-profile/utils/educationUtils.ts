@@ -1,7 +1,7 @@
 
 import { InstitutionType } from "../types";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import {Education, teacherService} from "@/integrations/api/services/teacher.service.ts";
 
 // Format date from YYYY-MM to YYYY-MM-DD for database storage
 export const formatDateForDatabase = (dateString: string): string => {
@@ -25,30 +25,49 @@ export const saveEducationRecord = async (
   }
 ) => {
   const formattedData = {
-    user_id: userId,
-    institution_type: educationData.institutionType,
-    institution_name: educationData.institution,
-    degree: educationData.degree || null,
-    details: educationData.details || null,
-    start_date: formatDateForDatabase(educationData.startDate),
-    end_date: educationData.currentlyStudying 
-      ? null 
-      : (educationData.endDate ? formatDateForDatabase(educationData.endDate) : null),
-    currently_studying: educationData.currentlyStudying
-  };
+      user_id: userId,
+      institution_type: educationData.institutionType,
+      institution_name: educationData.institution,
+      degree: educationData.degree || null,
+      details: educationData.details || null,
+      start_date: formatDateForDatabase(educationData.startDate),
+      end_date: educationData.currentlyStudying
+          ? null
+          : (educationData.endDate ? formatDateForDatabase(educationData.endDate) : null),
+      currently_studying: educationData.currentlyStudying
+  } as unknown as Education;
   
   console.log("Saving education data:", formattedData);
-  
-  const { data, error } = await supabase
-    .from('teacher_education')
-    .upsert(formattedData)
-    .select();
-  
-  if (error) {
-    throw error;
-  }
-  
-  return data;
+
+    // Determine if we're creating a new record or updating an existing one
+    const isUpdate = !!formattedData['id'];
+
+    let result;
+    // if (isUpdate) {
+    //     // Update existing education record
+    //     const { data, error } = await teacherService.updateEducation(
+    //         formattedData.id,
+    //         formattedData
+    //     );
+    //
+    //     if (error) {
+    //         throw error;
+    //     }
+    //
+    //     result = data;
+    // } else
+    // {
+        // Create new education record
+        const { data, error } = await teacherService.addEducation(formattedData);
+
+        if (error) {
+            throw error;
+        }
+
+        result = data;
+    // }
+
+    return result;
 };
 
 // Validation functions

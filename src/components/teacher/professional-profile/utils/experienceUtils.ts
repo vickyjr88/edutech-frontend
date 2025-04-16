@@ -1,6 +1,6 @@
 
 import { InstitutionType, ExperienceItem } from "../types";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/api/client.ts";
 
 // Format date from YYYY-MM to YYYY-MM-DD for database storage
 export const formatDateForDatabase = (dateString: string): string => {

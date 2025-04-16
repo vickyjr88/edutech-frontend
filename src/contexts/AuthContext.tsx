@@ -1,7 +1,7 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { User, Session } from "@supabase/supabase-js";
+import { User, Session } from "@/integrations/api/types/auth.types";
+import {authService} from "@/integrations/api";
 
 interface AuthContextType {
   user: User | null;
@@ -19,26 +19,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     // Set up auth state listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, newSession) => {
-        setSession(newSession);
-        setUser(newSession?.user ?? null);
-        setIsLoading(false);
-      }
-    );
-
-    // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
-      setSession(currentSession);
-      setUser(currentSession?.user ?? null);
+    const unsubscribe = authService.onAuthStateChange((newSession) => {
+      setSession(newSession);
+      setUser(newSession?.user ?? null);
       setIsLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    // THEN check for existing session
+    const currentSession = authService.getSession();
+    setSession(currentSession);
+    setUser(currentSession?.user ?? null);
+
+    // If we have a session, verify it's still valid by getting current user
+    if (currentSession) {
+      authService.getCurrentUser().then(({ data }) => {
+        if (!data) {
+          // Session invalid, clear it
+          setSession(null);
+          setUser(null);
+        }
+        setIsLoading(false);
+      });
+    } else {
+      setIsLoading(false);
+    }
+
+    return () => unsubscribe();
   }, []);
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    await authService.logout();
   };
 
   return (
