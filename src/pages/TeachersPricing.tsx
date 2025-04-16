@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Building2, CheckCircle2, HelpCircle, Users2, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -9,10 +8,10 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import PricingTable from "@/components/teachers/PricingTable";
 import PricingFAQ from "@/components/teachers/PricingFAQ";
+import EarningsCalculator from "@/components/teachers/EarningsCalculator";
 
 const TeachersPricing = () => {
   const [isAnnual, setIsAnnual] = useState(false);
-  const [teacherCount, setTeacherCount] = useState(3);
 
   const plans = [
     {
@@ -62,7 +61,7 @@ const TeachersPricing = () => {
         "Priority support"
       ],
       revenueShare: "10% revenue share on all transactions",
-      cta: "Calculate Price",
+      cta: "Request for a Meeting",
       link: "/contact-sales",
       icon: Building2
     }
@@ -102,6 +101,15 @@ const TeachersPricing = () => {
         {/* Pricing Cards */}
         <section className="py-16 bg-gray-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-8">
+              <div className="flex items-center justify-center gap-3 mb-8">
+                <span className={`text-sm ${!isAnnual ? 'opacity-100' : 'opacity-70'}`}>Monthly</span>
+                <Switch checked={isAnnual} onCheckedChange={setIsAnnual} />
+                <span className={`text-sm ${isAnnual ? 'opacity-100' : 'opacity-70'}`}>
+                  Annual <span className="text-green-400">(Save 20%)</span>
+                </span>
+              </div>
+            </div>
             <div className="grid md:grid-cols-3 gap-8">
               {plans.map((plan) => (
                 <Card key={plan.name} className={`relative hover:shadow-lg transition-shadow duration-300 ${plan.popular ? 'border-indigo-500 border-2' : ''}`}>
@@ -119,9 +127,7 @@ const TeachersPricing = () => {
                     <div className="mt-4">
                       <span className="text-4xl font-bold">${plan.price}</span>
                       {plan.price > 0 && (
-                        <span className="text-gray-600 ml-2">
-                          /{isAnnual ? 'month' : 'month'}
-                        </span>
+                        <span className="text-gray-600 ml-2">/{isAnnual ? 'month' : 'month'}</span>
                       )}
                       {plan.name === "Free" && (
                         <p className="text-sm text-gray-500 mt-1">No credit card required</p>
@@ -159,47 +165,13 @@ const TeachersPricing = () => {
           </div>
         </section>
 
+        {/* Earnings Calculator Section */}
+        <EarningsCalculator />
+
         {/* Feature Comparison Table Section */}
         <section className="py-16">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <PricingTable />
-          </div>
-        </section>
-
-        {/* Calculator Section */}
-        <section className="py-16 bg-gray-50">
-          <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-8">
-              <h2 className="text-3xl font-bold mb-4">Tuition Center Plan Calculator</h2>
-              <p className="text-gray-600">Calculate your monthly cost based on the number of teachers</p>
-            </div>
-            <Card>
-              <CardContent className="p-6">
-                <div className="space-y-6">
-                  <div>
-                    <label className="text-sm font-medium mb-2 block">
-                      Number of Teachers: <span className="font-bold text-lg ml-2">{teacherCount}</span>
-                    </label>
-                    <Slider
-                      value={[teacherCount]}
-                      onValueChange={(value) => setTeacherCount(value[0])}
-                      max={10}
-                      min={1}
-                      step={1}
-                      className="my-4"
-                    />
-                  </div>
-                  <div className="bg-gray-50 p-6 rounded-lg text-center">
-                    <h3 className="text-3xl font-bold text-gray-900">
-                      ${isAnnual ? 79 + (Math.max(0, teacherCount - 3) * 32) : 99 + (Math.max(0, teacherCount - 3) * 39)}/month
-                    </h3>
-                    <p className="text-gray-600 mt-2">
-                      Base plan: ${isAnnual ? 79 : 99}/month + ${isAnnual ? 32 : 39} for each additional teacher beyond 3
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
           </div>
         </section>
 
