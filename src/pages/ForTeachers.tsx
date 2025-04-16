@@ -1,4 +1,3 @@
-
 import { BookOpen, DollarSign, Clock, Calendar, ShieldCheck, Award, CreditCard } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -133,8 +132,8 @@ const ForTeachers = () => {
           description="Join our community of passionate educators making quality education accessible across Africa."
           primaryButtonText="Apply to Teach"
           primaryButtonLink="/teacher-signup"
-          secondaryButtonText="Learn More"
-          secondaryButtonLink="/teacher-requirements"
+          secondaryButtonText="View Pricing"
+          secondaryButtonLink="/teacher-pricing"
         />
         
         <BenefitsSection 
