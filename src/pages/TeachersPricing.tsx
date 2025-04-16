@@ -1,9 +1,8 @@
-import { useState } from "react";
+import React from "react";
 import { Building2, CheckCircle2, HelpCircle, Users2, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
-import { Slider } from "@/components/ui/slider";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import PricingTable from "@/components/teachers/PricingTable";
@@ -84,16 +83,13 @@ const TeachersPricing = () => {
               <Button size="lg" className="bg-indigo-600 hover:bg-indigo-700">
                 Start for Free
               </Button>
-              <Button size="lg" variant="outline" className="border-2 text-white hover:bg-white hover:text-kidato-blue">
+              <Button 
+                size="lg" 
+                variant="outline" 
+                className="border-2 border-white text-white hover:bg-white hover:text-kidato-blue transition-colors"
+              >
                 Compare Plans
               </Button>
-            </div>
-            <div className="flex items-center justify-center gap-3 mt-8">
-              <span className={`text-sm ${!isAnnual ? 'opacity-100' : 'opacity-70'}`}>Monthly</span>
-              <Switch checked={isAnnual} onCheckedChange={setIsAnnual} />
-              <span className={`text-sm ${isAnnual ? 'opacity-100' : 'opacity-70'}`}>
-                Annual <span className="text-green-400">(Save 20%)</span>
-              </span>
             </div>
           </div>
         </section>
@@ -127,13 +123,7 @@ const TeachersPricing = () => {
                     <div className="mt-4">
                       <span className="text-4xl font-bold">${plan.price}</span>
                       {plan.price > 0 && (
-                        <span className="text-gray-600 ml-2">/{isAnnual ? 'month' : 'month'}</span>
-                      )}
-                      {plan.name === "Free" && (
-                        <p className="text-sm text-gray-500 mt-1">No credit card required</p>
-                      )}
-                      {plan.name === "Pro" && (
-                        <p className="text-sm text-gray-500 mt-1">Billed monthly</p>
+                        <span className="text-gray-600 ml-2">/month</span>
                       )}
                       {plan.pricePerTeacher && (
                         <p className="text-sm text-gray-600 mt-1">
@@ -182,7 +172,11 @@ const TeachersPricing = () => {
             <p className="text-lg mb-8 max-w-2xl mx-auto">
               Our B2B plans offer custom pricing, dedicated support, and enterprise features for larger educational institutions.
             </p>
-            <Button size="lg" variant="outline" className="border-2 border-white text-white hover:bg-white hover:text-indigo-700">
+            <Button 
+              size="lg" 
+              variant="outline" 
+              className="border-2 border-white text-white hover:bg-white hover:text-indigo-700 transition-colors"
+            >
               Talk to Sales
               <HelpCircle className="ml-2 h-5 w-5" />
             </Button>
@@ -197,7 +191,10 @@ const TeachersPricing = () => {
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <h2 className="text-3xl font-bold mb-4">Ready to Start Teaching?</h2>
             <p className="text-xl mb-8">Join thousands of educators already using Kidato</p>
-            <Button size="lg" className="bg-white text-kidato-blue hover:bg-gray-100">
+            <Button 
+              size="lg" 
+              className="bg-white text-kidato-blue hover:bg-gray-100"
+            >
               Create Your Account
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
