@@ -39,6 +39,7 @@ import ParentsReports from "./pages/parents/ParentsReports";
 import ParentsProgress from "./pages/parents/ParentsProgress";
 import ParentsBilling from "./pages/parents/ParentsBilling";
 import ChildDashboard from "./pages/parents/ChildDashboard";
+import TeachersPricing from "./pages/TeachersPricing";
 
 // Create a client
 const queryClient = new QueryClient();
@@ -63,6 +64,7 @@ const App = () => {
                 <Route path="/teachers" element={<TeacherProfilesPage />} />
                 <Route path="/class/:id" element={<ClassDetailsPage />} />
                 <Route path="/teacher/:teacherId" element={<TeacherProfilePage />} />
+                <Route path="/teacher-pricing" element={<TeachersPricing />} />
                 
                 {/* Protected Routes */}
                 <Route path="/student-dashboard" element={

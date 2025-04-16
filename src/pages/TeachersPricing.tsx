@@ -5,8 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
-import PricingTable from "@/components/pricing/PricingTable";
-import PricingFAQ from "@/components/pricing/PricingFAQ";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
