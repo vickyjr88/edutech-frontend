@@ -7,57 +7,62 @@ import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import PricingTable from "@/components/teachers/PricingTable";
+import PricingFAQ from "@/components/teachers/PricingFAQ";
 
 const TeachersPricing = () => {
   const [isAnnual, setIsAnnual] = useState(false);
-  const [teacherCount, setTeacherCount] = useState(1);
+  const [teacherCount, setTeacherCount] = useState(3);
 
   const plans = [
     {
       name: "Free",
       price: 0,
-      description: "Perfect for solo tutors just starting out",
+      description: "Perfect for getting started",
       features: [
-        "Up to 5 active students",
-        "Basic analytics",
-        "Live class tools",
+        "Up to 5 students",
+        "Basic scheduling tools",
+        "Basic learning materials",
         "Student progress tracking",
       ],
-      revenueShare: "15% per transaction",
-      cta: "Start for Free",
+      revenueShare: "30% revenue share on all transactions",
+      cta: "Get Started",
       link: "/teacher-signup",
       icon: Users2
     },
     {
       name: "Pro",
-      price: isAnnual ? 29 : 39,
-      description: "For dedicated educators growing their practice",
+      price: isAnnual ? 23 : 29,
+      description: "For dedicated individual tutors",
       features: [
-        "Up to 50 active students",
-        "Advanced analytics",
+        "Unlimited students",
+        "Advanced scheduling",
+        "Premium learning materials",
+        "Detailed analytics",
         "Custom branding",
-        "Priority support",
-        "Downloadable resources",
+        "Payment processing"
       ],
-      revenueShare: "10% per transaction",
-      cta: "Upgrade to Pro",
+      revenueShare: "15% revenue share on all transactions",
+      cta: "Choose Pro",
       link: "/teacher-signup?plan=pro",
-      icon: CheckCircle2
+      icon: CheckCircle2,
+      popular: true
     },
     {
       name: "Tuition Center",
-      price: isAnnual ? 99 : 129,
-      description: "For established educational centers",
-      pricePerTeacher: isAnnual ? 19 : 29,
+      price: isAnnual ? 79 : 99,
+      description: "For coaching centers & small schools",
+      pricePerTeacher: isAnnual ? 32 : 39,
       features: [
-        "Unlimited students",
-        "Multiple teacher accounts",
-        "Center dashboard",
-        "Bulk student import",
-        "API access",
+        "Up to 3 teachers included",
+        "All Pro features",
+        "Teacher management",
+        "Admin dashboard",
+        "Centralized billing",
+        "Priority support"
       ],
-      revenueShare: "8% per transaction",
-      cta: "Get Started",
+      revenueShare: "10% revenue share on all transactions",
+      cta: "Calculate Price",
       link: "/contact-sales",
       icon: Building2
     }
@@ -74,13 +79,21 @@ const TeachersPricing = () => {
               Choose Your Teaching Plan
             </h1>
             <p className="text-xl mb-8 max-w-2xl mx-auto">
-              Flexible plans designed for solo tutors, coaching centers, and schools to maximize their teaching potential
+              Flexible plans for solo tutors, coaching centers, and schools
             </p>
-            <div className="flex items-center justify-center gap-3 mb-12">
+            <div className="flex flex-wrap items-center justify-center gap-4 mb-8">
+              <Button size="lg" className="bg-indigo-600 hover:bg-indigo-700">
+                Start for Free
+              </Button>
+              <Button size="lg" variant="outline" className="border-2 text-white hover:bg-white hover:text-kidato-blue">
+                Compare Plans
+              </Button>
+            </div>
+            <div className="flex items-center justify-center gap-3 mt-8">
               <span className={`text-sm ${!isAnnual ? 'opacity-100' : 'opacity-70'}`}>Monthly</span>
               <Switch checked={isAnnual} onCheckedChange={setIsAnnual} />
               <span className={`text-sm ${isAnnual ? 'opacity-100' : 'opacity-70'}`}>
-                Annual (Save 20%)
+                Annual <span className="text-green-400">(Save 20%)</span>
               </span>
             </div>
           </div>
@@ -91,45 +104,51 @@ const TeachersPricing = () => {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid md:grid-cols-3 gap-8">
               {plans.map((plan) => (
-                <Card key={plan.name} className="relative hover:shadow-lg transition-shadow duration-300">
+                <Card key={plan.name} className={`relative hover:shadow-lg transition-shadow duration-300 ${plan.popular ? 'border-indigo-500 border-2' : ''}`}>
+                  {plan.popular && (
+                    <div className="absolute top-0 right-0 bg-green-500 text-white text-xs px-3 py-1 rounded-bl-lg rounded-tr-lg font-medium">
+                      Most Popular
+                    </div>
+                  )}
                   <CardHeader>
                     <div className="flex items-center justify-between mb-4">
                       <plan.icon className="h-8 w-8 text-kidato-blue" />
-                      {plan.name === "Pro" && (
-                        <span className="bg-kidato-blue text-white text-xs px-3 py-1 rounded-full">
-                          Most Popular
-                        </span>
-                      )}
                     </div>
                     <CardTitle className="text-2xl font-bold">{plan.name}</CardTitle>
+                    <p className="text-sm text-gray-500 mt-1">{plan.description}</p>
                     <div className="mt-4">
                       <span className="text-4xl font-bold">${plan.price}</span>
                       {plan.price > 0 && (
                         <span className="text-gray-600 ml-2">
-                          /{isAnnual ? 'year' : 'month'}
+                          /{isAnnual ? 'month' : 'month'}
                         </span>
+                      )}
+                      {plan.name === "Free" && (
+                        <p className="text-sm text-gray-500 mt-1">No credit card required</p>
+                      )}
+                      {plan.name === "Pro" && (
+                        <p className="text-sm text-gray-500 mt-1">Billed monthly</p>
                       )}
                       {plan.pricePerTeacher && (
                         <p className="text-sm text-gray-600 mt-1">
-                          +${plan.pricePerTeacher} per additional teacher
+                          + ${plan.pricePerTeacher}/month per additional teacher
                         </p>
                       )}
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-gray-600 mb-6">{plan.description}</p>
                     <ul className="space-y-3 mb-6">
                       {plan.features.map((feature, index) => (
                         <li key={index} className="flex items-center gap-2">
-                          <CheckCircle2 className="h-5 w-5 text-green-500" />
+                          <CheckCircle2 className="h-5 w-5 text-green-500 flex-shrink-0" />
                           <span>{feature}</span>
                         </li>
                       ))}
                     </ul>
                     <p className="text-sm text-gray-500 mb-6">
-                      Revenue share: {plan.revenueShare}
+                      {plan.revenueShare}
                     </p>
-                    <Button className="w-full bg-kidato-blue hover:bg-kidato-dark-blue">
+                    <Button className={`w-full ${plan.popular ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-kidato-blue hover:bg-kidato-dark-blue'}`}>
                       {plan.cta}
                       <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
@@ -140,19 +159,26 @@ const TeachersPricing = () => {
           </div>
         </section>
 
-        {/* Calculator Section */}
+        {/* Feature Comparison Table Section */}
         <section className="py-16">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <PricingTable />
+          </div>
+        </section>
+
+        {/* Calculator Section */}
+        <section className="py-16 bg-gray-50">
           <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-8">
-              <h2 className="text-3xl font-bold mb-4">Calculate Your Tuition Center Cost</h2>
-              <p className="text-gray-600">Adjust the slider to see pricing for your team size</p>
+              <h2 className="text-3xl font-bold mb-4">Tuition Center Plan Calculator</h2>
+              <p className="text-gray-600">Calculate your monthly cost based on the number of teachers</p>
             </div>
             <Card>
               <CardContent className="p-6">
                 <div className="space-y-6">
                   <div>
                     <label className="text-sm font-medium mb-2 block">
-                      Number of Teachers: {teacherCount}
+                      Number of Teachers: <span className="font-bold text-lg ml-2">{teacherCount}</span>
                     </label>
                     <Slider
                       value={[teacherCount]}
@@ -160,61 +186,39 @@ const TeachersPricing = () => {
                       max={10}
                       min={1}
                       step={1}
+                      className="my-4"
                     />
                   </div>
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <div className="flex justify-between items-center">
-                      <span>Monthly Cost:</span>
-                      <span className="text-2xl font-bold">
-                        ${129 + (teacherCount - 1) * 29}
-                      </span>
-                    </div>
+                  <div className="bg-gray-50 p-6 rounded-lg text-center">
+                    <h3 className="text-3xl font-bold text-gray-900">
+                      ${isAnnual ? 79 + (Math.max(0, teacherCount - 3) * 32) : 99 + (Math.max(0, teacherCount - 3) * 39)}/month
+                    </h3>
+                    <p className="text-gray-600 mt-2">
+                      Base plan: ${isAnnual ? 79 : 99}/month + ${isAnnual ? 32 : 39} for each additional teacher beyond 3
+                    </p>
                   </div>
                 </div>
               </CardContent>
             </Card>
-            <div className="text-center mt-8">
-              <p className="text-gray-600 mb-4">Need more than 10 teachers?</p>
-              <Button size="lg" variant="outline" className="gap-2">
-                <HelpCircle className="h-4 w-4" />
-                Talk to Sales
-              </Button>
-            </div>
+          </div>
+        </section>
+
+        {/* Enterprise CTA Section */}
+        <section className="py-12 bg-indigo-700 text-white">
+          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h2 className="text-2xl md:text-3xl font-bold mb-4">Need more than 10 teachers?</h2>
+            <p className="text-lg mb-8 max-w-2xl mx-auto">
+              Our B2B plans offer custom pricing, dedicated support, and enterprise features for larger educational institutions.
+            </p>
+            <Button size="lg" variant="outline" className="border-2 border-white text-white hover:bg-white hover:text-indigo-700">
+              Talk to Sales
+              <HelpCircle className="ml-2 h-5 w-5" />
+            </Button>
           </div>
         </section>
 
         {/* FAQ Section */}
-        <section className="py-16 bg-gray-50">
-          <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 className="text-3xl font-bold text-center mb-12">Frequently Asked Questions</h2>
-            <div className="space-y-4">
-              <Card>
-                <CardContent className="p-6">
-                  <h3 className="font-semibold mb-2">How does revenue sharing work?</h3>
-                  <p className="text-gray-600">
-                    We take a small percentage of your earnings to cover platform costs and continue improving our services. The percentage varies by plan, with higher tiers offering lower revenue share rates.
-                  </p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="p-6">
-                  <h3 className="font-semibold mb-2">When do I get paid?</h3>
-                  <p className="text-gray-600">
-                    Payments are processed every two weeks for all completed classes. Funds are transferred directly to your linked bank account.
-                  </p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="p-6">
-                  <h3 className="font-semibold mb-2">Can I switch plans later?</h3>
-                  <p className="text-gray-600">
-                    Yes! You can upgrade or downgrade your plan at any time. Changes take effect at the start of your next billing cycle.
-                  </p>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-        </section>
+        <PricingFAQ />
 
         {/* CTA Section */}
         <section className="bg-kidato-blue text-white py-16">
