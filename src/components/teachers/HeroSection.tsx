@@ -33,7 +33,7 @@ const HeroSection = ({
               <Button 
                 size="lg" 
                 variant="outline" 
-                className="border-2 border-white text-white hover:bg-white hover:text-kidato-blue transition-colors duration-300"
+                className="border-2 border-white text-kidato-blue bg-white hover:bg-transparent hover:text-white transition-colors duration-300"
               >
                 <Link to={secondaryButtonLink}>{secondaryButtonText}</Link>
               </Button>

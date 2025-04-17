@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Building2, CheckCircle2, HelpCircle, Users2, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -87,7 +86,7 @@ const TeachersPricing = () => {
               <Button 
                 size="lg" 
                 variant="outline" 
-                className="border-2 border-white text-white hover:bg-white hover:text-kidato-blue transition-colors"
+                className="border-2 border-white text-kidato-blue bg-white hover:bg-transparent hover:text-white transition-colors duration-300"
               >
                 Compare Plans
               </Button>
