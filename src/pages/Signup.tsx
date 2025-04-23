@@ -38,7 +38,6 @@ const SignUp = () => {
     setIsLoading(true);
     
     try {
-      // Sign up with Supabase
       const { data, error: signUpError } = await authService.register({
         email,
         password,
@@ -78,7 +77,7 @@ const SignUp = () => {
   const roleLabels = {
     student: "I'm a student",
     parent: "I'm a parent",
-    tutor: "I'm a tutor"
+    teacher: "I'm a teacher"
   };
 
   return (

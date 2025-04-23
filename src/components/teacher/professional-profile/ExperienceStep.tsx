@@ -171,7 +171,7 @@ const ExperienceStep = ({ experience, setExperience }: ExperienceStepProps) => {
     setCurrentItem(prev => ({
       ...prev,
       reportingManager: {
-        ...(prev.reportingManager || { name: "", phone: "" }),
+        ...(prev.reportingManager || { name: "", phoneNumber: "" }),
         [field]: value
       }
     }));
@@ -583,7 +583,7 @@ const ExperienceStep = ({ experience, setExperience }: ExperienceStepProps) => {
                   <Input 
                     id="manager-phone"
                     type="tel"
-                    value={currentItem.reportingManager?.phone || ""}
+                    value={currentItem.reportingManager?.phoneNumber || ""}
                     onChange={(e) => updateReportingManager('phone', e.target.value)}
                     placeholder="e.g., +254712345678"
                   />

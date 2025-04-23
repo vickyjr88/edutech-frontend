@@ -5,6 +5,10 @@ export interface User {
     firstName: string;
     lastName: string;
     role: string;
+    teacherId?: string;
+    studentId?: string;
+    adminId?: string;
+    institutionId?: string;
     profilePicture?: string;
     [key: string]: any; // For any additional properties
 }

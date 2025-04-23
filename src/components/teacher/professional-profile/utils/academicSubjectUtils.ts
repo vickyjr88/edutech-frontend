@@ -1,6 +1,6 @@
 
-import { supabase } from "@/integrations/api/client.ts";
 import { useToast } from "@/hooks/use-toast";
+import {teacherService} from "@/integrations/api/services/teacher.service.ts";
 
 export type AcademicSubjectItem = {
   id: string;
@@ -12,28 +12,25 @@ export type AcademicSubjectItem = {
   isCertified: boolean;
 };
 
-export const useAcademicSubjects = (userId: string | undefined) => {
+export const useAcademicSubjects = (teacherId: string) => {
   const { toast } = useToast();
 
   const fetchAcademicSubjects = async (): Promise<AcademicSubjectItem[]> => {
-    if (!userId) return [];
 
     try {
-      const { data, error } = await supabase
-        .from('teacher_academic_subjects')
-        .select('*')
-        .eq('user_id', userId);
+      // Get all academic subjects for this teacher
+      const { data, error } = await teacherService.getTeacherAcademicSubjects(teacherId);
 
       if (error) throw error;
-
+      // Transform the data to match your expected format
       return data.map(item => ({
         id: item.id,
         curriculum: item.curriculum,
         subject: item.subject,
         grade: item.grade,
-        proficiencyLevel: item.proficiency_level,
+        proficiencyLevel: item.proficiencyLevel || item.proficiency_level,
         description: item.description || '',
-        isCertified: item.is_certified || false
+        isCertified: item.isCertified || item.is_certified || false
       }));
     } catch (error) {
       console.error("Error fetching academic subjects:", error);
@@ -47,23 +44,10 @@ export const useAcademicSubjects = (userId: string | undefined) => {
   };
 
   const addAcademicSubject = async (subject: Omit<AcademicSubjectItem, 'id'>): Promise<string | null> => {
-    if (!userId) return null;
-
+    if (!teacherId) return null;
     try {
-      const { data, error } = await supabase
-        .from('teacher_academic_subjects')
-        .insert({
-          user_id: userId,
-          curriculum: subject.curriculum,
-          subject: subject.subject,
-          grade: subject.grade,
-          proficiency_level: subject.proficiencyLevel,
-          description: subject.description,
-          is_certified: subject.isCertified
-        })
-        .select('id')
-        .single();
 
+      const { data, error } = await teacherService.addAcademicSubject(teacherId,subject);
       if (error) throw error;
 
       toast({
@@ -84,22 +68,8 @@ export const useAcademicSubjects = (userId: string | undefined) => {
   };
 
   const updateAcademicSubject = async (subject: AcademicSubjectItem): Promise<boolean> => {
-    if (!userId) return false;
-
     try {
-      const { error } = await supabase
-        .from('teacher_academic_subjects')
-        .update({
-          curriculum: subject.curriculum,
-          subject: subject.subject,
-          grade: subject.grade,
-          proficiency_level: subject.proficiencyLevel,
-          description: subject.description,
-          is_certified: subject.isCertified
-        })
-        .eq('id', subject.id)
-        .eq('user_id', userId);
-
+      const { error } = await teacherService.updateAcademicSubject(teacherId,subject);
       if (error) throw error;
 
       toast({
@@ -120,15 +90,9 @@ export const useAcademicSubjects = (userId: string | undefined) => {
   };
 
   const deleteAcademicSubject = async (id: string): Promise<boolean> => {
-    if (!userId) return false;
-
+    if (!teacherId) return false;
     try {
-      const { error } = await supabase
-        .from('teacher_academic_subjects')
-        .delete()
-        .eq('id', id)
-        .eq('user_id', userId);
-
+      const { error } = await teacherService.deleteAcademicSubject(teacherId,id);
       if (error) throw error;
 
       toast({

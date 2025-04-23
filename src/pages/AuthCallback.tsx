@@ -1,7 +1,6 @@
 
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/api/client.ts";
 import { useAuth } from "@/contexts/AuthContext";
 
 const AuthCallback = () => {
@@ -13,7 +12,6 @@ const AuthCallback = () => {
     // This effect handles the OAuth callback
     const handleAuthCallback = async () => {
       try {
-        // The session should already be set by Supabase's internal handling
         // We just need to check the result and redirect
 
         if (error) {

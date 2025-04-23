@@ -1,6 +1,5 @@
 
-import { supabase } from "@/integrations/api/client.ts";
-
+import {teacherService} from "@/integrations/api/services/teacher.service.ts";
 export type LanguageItem = {
   id: string;
   language: string;
@@ -50,23 +49,19 @@ export const INTERNATIONAL_LANGUAGES = [
 
 export const ALL_LANGUAGES = [...AFRICAN_LANGUAGES, ...INTERNATIONAL_LANGUAGES];
 
-export const fetchLanguages = async (userId: string): Promise<LanguageItem[]> => {
+export const fetchLanguages = async (teacherId): Promise<LanguageItem[]> => {
   try {
-    const { data, error } = await supabase
-      .from('teacher_languages')
-      .select('*')
-      .eq('user_id', userId);
-
+    //fetch from teacher.service getLanguageExpertise
+    const {data, error} =  await teacherService.getLanguageExpertise(teacherId);
     if (error) {
       console.error('Error fetching languages:', error);
       return [];
     }
-
     return data.map(item => ({
-      id: item.id,
+      id: item['_id'],
       language: item.language,
       description: item.description || undefined,
-      isCertified: item.is_certified || false
+      isCertified: item.isCertified || false
     }));
   } catch (error) {
     console.error('Error in fetchLanguages:', error);
@@ -75,26 +70,17 @@ export const fetchLanguages = async (userId: string): Promise<LanguageItem[]> =>
 };
 
 export const saveLanguage = async (
-  userId: string,
+  teacherId: string,
   language: LanguageItem
 ): Promise<{ success: boolean; id?: string; error?: string }> => {
   try {
-    const { data, error } = await supabase
-      .from('teacher_languages')
-      .insert({
-        user_id: userId,
-        language: language.language,
-        description: language.description || null,
-        is_certified: language.isCertified
-      })
-      .select('id')
-      .single();
-
+    //add language expertise
+    const {data, error } = await teacherService.addLanguageExpertise(teacherId,language)
     if (error) {
       throw error;
     }
 
-    return { success: true, id: data.id };
+    return { success: true, id: data._id };
   } catch (error: any) {
     console.error('Error saving language:', error);
     return { success: false, error: error.message };
@@ -102,18 +88,12 @@ export const saveLanguage = async (
 };
 
 export const updateLanguage = async (
-  language: LanguageItem
+    teacherId: string,
+    language: LanguageItem
 ): Promise<{ success: boolean; error?: string }> => {
   try {
-    const { error } = await supabase
-      .from('teacher_languages')
-      .update({
-        language: language.language,
-        description: language.description || null,
-        is_certified: language.isCertified
-      })
-      .eq('id', language.id);
-
+    //update language expertise
+    const { error } = await teacherService.updateLanguageExpertise(teacherId,language)
     if (error) {
       throw error;
     }
@@ -126,14 +106,13 @@ export const updateLanguage = async (
 };
 
 export const deleteLanguage = async (
-  languageId: string
+    teacherId: string,
+    languageId: string
 ): Promise<{ success: boolean; error?: string }> => {
   try {
-    const { error } = await supabase
-      .from('teacher_languages')
-      .delete()
-      .eq('id', languageId);
+    //delete language expertise
 
+   const {error} = await teacherService.deleteLanguageExpertise(teacherId,languageId)
     if (error) {
       throw error;
     }

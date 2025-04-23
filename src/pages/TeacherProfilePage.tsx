@@ -3,7 +3,6 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import TeacherDetails from "@/components/teacher/TeacherDetails";
 import { useEffect, useState } from "react";
-import { MethodologyItem, StrategyItem, LanguageItem } from "@/components/teacher/professional-profile";
 
 const getMockTeacher = (teacherUrlName: string) => {
   if (!teacherUrlName) {

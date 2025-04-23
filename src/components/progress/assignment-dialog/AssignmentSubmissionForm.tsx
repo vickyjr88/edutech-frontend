@@ -50,7 +50,6 @@ export const AssignmentSubmissionForm = ({
   const onSubmit = (values: AssignmentFormValues) => {
     setUploading(true);
     
-    // In a real app, this would handle file upload using Supabase Storage or similar
     setTimeout(() => {
       setUploading(false);
       

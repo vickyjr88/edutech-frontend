@@ -1,6 +1,6 @@
 
-import { supabase } from "@/integrations/api/client.ts";
 import { useToast } from "@/hooks/use-toast";
+import {teacherService} from "@/integrations/api/services/teacher.service.ts";
 
 export const TEACHING_STRATEGIES = [
   "Differentiated Instruction",
@@ -16,23 +16,19 @@ export const TEACHING_STRATEGIES = [
 ];
 
 export type StrategyItem = {
-  id: string;
+  id?: string;
   strategy: string;
   description?: string;
-  is_certified: boolean;
+  isCertified: boolean;
   isSaving?: boolean;
   isError?: boolean;
   isSuccess?: boolean;
-};
+}
 
-export const fetchStrategyRecords = async (userId: string): Promise<StrategyItem[]> => {
+export const fetchStrategyRecords = async (teacherId: string): Promise<StrategyItem[]> => {
   try {
-    const { data, error } = await supabase
-      .from('teacher_strategies' as any)
-      .select('*')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false });
-    
+    const { data, error } = await teacherService.getTeachingStrategies(teacherId);
+
     if (error) {
       throw error;
     }
@@ -41,7 +37,7 @@ export const fetchStrategyRecords = async (userId: string): Promise<StrategyItem
       id: record.id,
       strategy: record.strategy,
       description: record.description || "",
-      is_certified: record.is_certified || false
+      isCertified: record.isCertified || false
     }));
   } catch (error) {
     console.error("Error fetching strategy records:", error);
@@ -50,19 +46,17 @@ export const fetchStrategyRecords = async (userId: string): Promise<StrategyItem
 };
 
 export const saveStrategyRecord = async (
-  userId: string,
+    teacherId: string,
   item: Omit<StrategyItem, 'isSaving' | 'isError' | 'isSuccess'>
 ): Promise<StrategyItem | null> => {
   try {
-    const { data, error } = await supabase
-      .from('teacher_strategies' as any)
-      .insert({
-        user_id: userId,
-        strategy: item.strategy,
-        description: item.description || null,
-        is_certified: item.is_certified
-      })
-      .select();
+    const { data, error } = await teacherService.addTeachingStrategy(teacherId,
+        {
+          strategy: item.strategy,
+          description: item.description || null,
+          "isCertified": item.isCertified
+        }
+    );
     
     if (error) {
       throw error;
@@ -70,10 +64,10 @@ export const saveStrategyRecord = async (
     
     const newRecord = data[0] as any;
     return {
-      id: newRecord.id,
+      id: newRecord._id,
       strategy: newRecord.strategy,
       description: newRecord.description || "",
-      is_certified: newRecord.is_certified
+      isCertified: newRecord.isCertified
     };
   } catch (error) {
     console.error("Error saving strategy record:", error);
@@ -82,18 +76,15 @@ export const saveStrategyRecord = async (
 };
 
 export const updateStrategyRecord = async (
-  item: Omit<StrategyItem, 'isSaving' | 'isError' | 'isSuccess'>
+    teacherId: string, item: Omit<StrategyItem, 'isSaving' | 'isError' | 'isSuccess'>
 ): Promise<boolean> => {
   try {
-    const { error } = await supabase
-      .from('teacher_strategies' as any)
-      .update({
-        strategy: item.strategy,
-        description: item.description || null,
-        is_certified: item.is_certified
-      })
-      .eq('id', item.id);
-    
+    const { error } = await teacherService.updateTeachingStrategy(teacherId, {
+      id:item.id,
+      description:item.description,
+      strategy:item.strategy,
+      isCertified: item.isCertified
+    })
     if (error) {
       throw error;
     }
@@ -105,17 +96,12 @@ export const updateStrategyRecord = async (
   }
 };
 
-export const deleteStrategyRecord = async (id: string): Promise<boolean> => {
+export const deleteStrategyRecord = async (teacherId: string, id: string): Promise<boolean> => {
   try {
-    const { error } = await supabase
-      .from('teacher_strategies' as any)
-      .delete()
-      .eq('id', id);
-    
+    const { error } = await teacherService.deleteTeachingStrategy(teacherId, id)
     if (error) {
       throw error;
     }
-    
     return true;
   } catch (error) {
     console.error("Error deleting strategy record:", error);

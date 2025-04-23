@@ -1,6 +1,4 @@
-
-import { supabase } from "@/integrations/api/client.ts";
-
+import {teacherService} from "@/integrations/api/services/teacher.service.ts";
 export type TechnicalSkillItem = {
   id: string;
   skill: string;
@@ -27,12 +25,9 @@ export const TECHNICAL_SKILLS = [
   "Cloud Computing"
 ];
 
-export const fetchTechnicalSkills = async (userId: string): Promise<TechnicalSkillItem[]> => {
+export const fetchTechnicalSkills = async (teacherId: string): Promise<TechnicalSkillItem[]> => {
   try {
-    const { data, error } = await supabase
-      .from('teacher_technical_skills')
-      .select('*')
-      .eq('user_id', userId);
+    const {data, error} = await teacherService.getTechnicalSkills(teacherId);
 
     if (error) {
       console.error('Error fetching technical skills:', error);
@@ -52,26 +47,18 @@ export const fetchTechnicalSkills = async (userId: string): Promise<TechnicalSki
 };
 
 export const saveTechnicalSkill = async (
-  userId: string,
+  teacherId: string,
   skill: TechnicalSkillItem
 ): Promise<{ success: boolean; id?: string; error?: string }> => {
   try {
-    const { data, error } = await supabase
-      .from('teacher_technical_skills')
-      .insert({
-        user_id: userId,
-        skill: skill.skill,
-        description: skill.description || null,
-        is_certified: skill.isCertified
-      })
-      .select('id')
-      .single();
+    const { data, error } = await teacherService.addTechnicalSkills(teacherId,
+        skill)
 
     if (error) {
       throw error;
     }
 
-    return { success: true, id: data.id };
+    return { success: true, id: data['_id'] };
   } catch (error: any) {
     console.error('Error saving technical skill:', error);
     return { success: false, error: error.message };
@@ -79,17 +66,11 @@ export const saveTechnicalSkill = async (
 };
 
 export const updateTechnicalSkill = async (
-  skill: TechnicalSkillItem
+    teacherId: string,
+    skill: TechnicalSkillItem
 ): Promise<{ success: boolean; error?: string }> => {
   try {
-    const { error } = await supabase
-      .from('teacher_technical_skills')
-      .update({
-        skill: skill.skill,
-        description: skill.description || null,
-        is_certified: skill.isCertified
-      })
-      .eq('id', skill.id);
+    const {error} = await teacherService.updateTechnicalSkill(teacherId,skill)
 
     if (error) {
       throw error;
@@ -103,13 +84,11 @@ export const updateTechnicalSkill = async (
 };
 
 export const deleteTechnicalSkill = async (
-  skillId: string
+    teacherId: string,
+    skillId: string
 ): Promise<{ success: boolean; error?: string }> => {
   try {
-    const { error } = await supabase
-      .from('teacher_technical_skills')
-      .delete()
-      .eq('id', skillId);
+   const {error} = await teacherService.deleteTechnicalSkill(teacherId,skillId)
 
     if (error) {
       throw error;

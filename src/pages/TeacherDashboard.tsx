@@ -11,9 +11,7 @@ import ClassSetupForm from "@/components/teacher/ClassSetupForm";
 import CreateClassForm from "@/components/teacher/CreateClassForm";
 import EnrollStudentsPage from "@/components/teacher/enrollment/EnrollStudentsPage";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/api/client.ts";
-import { Json } from "@/integrations/supabase/types";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {teacherService} from "@/integrations/api/services/teacher.service.ts";
 
 interface TeacherProfileData {
   contact: {
@@ -75,16 +73,9 @@ const TeacherDashboard = () => {
   const fetchTeacherProfile = async () => {
     setIsLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('teacher_profiles')
-        .select('*')
-        .eq('user_id', user?.id)
-        .single();
 
+      const { data, error } = await teacherService.getProfileById(user.teacherId)
       if (error) {
-        if (error.code !== 'PGRST116') {
-          console.error("Error checking profile:", error);
-        }
         setHasProfile(false);
         setProfileData(null);
       } else {
@@ -174,15 +165,12 @@ const TeacherDashboard = () => {
     try {
       if (!user) throw new Error("User not authenticated");
 
-      const { error } = await supabase
-        .from('teacher_profiles')
-        .upsert({
-          user_id: user.id,
+      const { error } = await teacherService.updateProfile(user.teacherId,
+     {
           contact: profileData.contact,
           location: profileData.location,
-          next_of_kin: profileData.nextOfKin,
+          nextOfKin: profileData.nextOfKin,
           certification: profileData.certification,
-          updated_at: new Date().toISOString()
         });
 
       if (error) throw error;
@@ -220,11 +208,7 @@ const TeacherDashboard = () => {
     try {
       if (!user) throw new Error("User not authenticated");
       
-      const { error } = await supabase
-        .from('teacher_profiles')
-        .delete()
-        .eq('user_id', user.id);
-      
+      const { error } = await teacherService.deleteProfile(user.teacherId);
       if (error) throw error;
       
       toast({

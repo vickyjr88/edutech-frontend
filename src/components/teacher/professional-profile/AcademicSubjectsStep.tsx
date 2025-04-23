@@ -39,7 +39,7 @@ const AcademicSubjectsStep = ({ subjects, setSubjects, onSubjectsChange }: Acade
     addAcademicSubject, 
     updateAcademicSubject, 
     deleteAcademicSubject 
-  } = useAcademicSubjects(user?.id);
+  } = useAcademicSubjects(user?.teacherId);
   
   const [isLoading, setIsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);

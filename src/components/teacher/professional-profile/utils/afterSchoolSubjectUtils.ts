@@ -1,6 +1,6 @@
 
-import { supabase } from "@/integrations/api/client.ts";
 import { useToast } from "@/hooks/use-toast";
+import {teacherService} from "@/integrations/api/services/teacher.service.ts";
 
 export type AfterSchoolSubjectItem = {
   id: string;
@@ -12,29 +12,19 @@ export type AfterSchoolSubjectItem = {
   isCertified: boolean;
 };
 
-export const useAfterSchoolSubjects = (userId: string | undefined) => {
+export const useAfterSchoolSubjects = (userId: string | undefined, teacherId: string) => {
   const { toast } = useToast();
 
   const fetchAfterSchoolSubjects = async (): Promise<AfterSchoolSubjectItem[]> => {
     if (!userId) return [];
 
     try {
-      const { data, error } = await supabase
-        .from('teacher_afterschool_subjects')
-        .select('*')
-        .eq('user_id', userId);
+      // Get all academic subjects for this teacher
+      const { data, error } = await teacherService.getTeacherAcademicSubjects(teacherId);
 
       if (error) throw error;
-
-      return data.map(item => ({
-        id: item.id,
-        subject: item.subject,
-        ageRange: item.age_range,
-        gender: item.gender || '',
-        religion: item.religion || '',
-        description: item.description || '',
-        isCertified: item.is_certified || false
-      }));
+      // Transform the data to match your expected format
+      return data
     } catch (error) {
       console.error("Error fetching after-school subjects:", error);
       toast({
@@ -50,20 +40,7 @@ export const useAfterSchoolSubjects = (userId: string | undefined) => {
     if (!userId) return null;
 
     try {
-      const { data, error } = await supabase
-        .from('teacher_afterschool_subjects')
-        .insert({
-          user_id: userId,
-          subject: subject.subject,
-          age_range: subject.ageRange,
-          gender: subject.gender,
-          religion: subject.religion,
-          description: subject.description,
-          is_certified: subject.isCertified
-        })
-        .select('id')
-        .single();
-
+      const { data, error } = await teacherService.addOutOfSchoolSubject(teacherId,subject);
       if (error) throw error;
 
       toast({
@@ -87,18 +64,7 @@ export const useAfterSchoolSubjects = (userId: string | undefined) => {
     if (!userId) return false;
 
     try {
-      const { error } = await supabase
-        .from('teacher_afterschool_subjects')
-        .update({
-          subject: subject.subject,
-          age_range: subject.ageRange,
-          gender: subject.gender,
-          religion: subject.religion,
-          description: subject.description,
-          is_certified: subject.isCertified
-        })
-        .eq('id', subject.id)
-        .eq('user_id', userId);
+      const { error } = await teacherService.updateOutOfSchoolSubject(teacherId,subject)
 
       if (error) throw error;
 
@@ -123,11 +89,7 @@ export const useAfterSchoolSubjects = (userId: string | undefined) => {
     if (!userId) return false;
 
     try {
-      const { error } = await supabase
-        .from('teacher_afterschool_subjects')
-        .delete()
-        .eq('id', id)
-        .eq('user_id', userId);
+      const { error } = await teacherService.deleteOutOfSchoolSubject(id)
 
       if (error) throw error;
 

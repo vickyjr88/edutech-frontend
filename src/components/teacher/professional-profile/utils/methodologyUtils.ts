@@ -1,5 +1,5 @@
+import {teacherService} from "@/integrations/api/services/teacher.service.ts";
 
-import { supabase } from "@/integrations/api/client.ts";
 
 export const TEACHING_METHODOLOGIES = [
   "Bloom's Taxonomy",
@@ -24,13 +24,9 @@ export type MethodologyItem = {
   isSuccess?: boolean;
 };
 
-export const fetchMethodologyRecords = async (userId: string): Promise<MethodologyItem[]> => {
+export const fetchMethodologyRecords = async (teacherId: string): Promise<MethodologyItem[]> => {
   try {
-    const { data, error } = await supabase
-      .from('teacher_methodologies' as any)
-      .select('*')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false });
+    const { data, error } = await teacherService.getTeachingMethology(teacherId)
     
     if (error) {
       throw error;
@@ -49,20 +45,12 @@ export const fetchMethodologyRecords = async (userId: string): Promise<Methodolo
 };
 
 export const saveMethodologyRecord = async (
-  userId: string,
+  teacherId: string,
   item: Omit<MethodologyItem, 'isSaving' | 'isError' | 'isSuccess'>
 ): Promise<MethodologyItem | null> => {
   try {
-    const { data, error } = await supabase
-      .from('teacher_methodologies' as any)
-      .insert({
-        user_id: userId,
-        methodology: item.methodology,
-        description: item.description || null,
-        is_certified: item.is_certified
-      })
-      .select();
-    
+    const {data, error} =  await teacherService.addTeachingMethodology(teacherId,item)
+
     if (error) {
       throw error;
     }
@@ -81,18 +69,11 @@ export const saveMethodologyRecord = async (
 };
 
 export const updateMethodologyRecord = async (
-  item: Omit<MethodologyItem, 'isSaving' | 'isError' | 'isSuccess'>
+    teacherId: string,
+    item: Omit<MethodologyItem, 'isSaving' | 'isError' | 'isSuccess'>
 ): Promise<boolean> => {
   try {
-    const { error } = await supabase
-      .from('teacher_methodologies' as any)
-      .update({
-        methodology: item.methodology,
-        description: item.description || null,
-        is_certified: item.is_certified
-      })
-      .eq('id', item.id);
-    
+    const { error } = await teacherService.updateTeachingMethodology(teacherId,item)
     if (error) {
       throw error;
     }
@@ -104,12 +85,9 @@ export const updateMethodologyRecord = async (
   }
 };
 
-export const deleteMethodologyRecord = async (id: string): Promise<boolean> => {
+export const deleteMethodologyRecord = async (teacherId: string,id: string): Promise<boolean> => {
   try {
-    const { error } = await supabase
-      .from('teacher_methodologies' as any)
-      .delete()
-      .eq('id', id);
+    const { error } = await teacherService.deleteTeachingMethodology(teacherId, id)
     
     if (error) {
       throw error;

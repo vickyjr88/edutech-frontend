@@ -13,9 +13,9 @@ class ApiClient {
     constructor() {
         // Create axios instance with base configuration
         this.client = axios.create({
-            baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api',
+            baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1',
             headers: {
-                'Content-Type': 'application/json',
+                'Content-Type': 'application/json'
             },
         });
 

@@ -25,10 +25,10 @@ import {
   LanguageItem
 } from "./professional-profile";
 import VideoStep from "./professional-profile/VideoStep";
-import { supabase } from "@/integrations/api/client.ts";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { fetchExperienceRecords } from "./professional-profile/utils/experienceUtils";
+import {teacherService} from "@/integrations/api/services/teacher.service.ts";
 
 type FormItem = {
   id: string;
@@ -95,13 +95,21 @@ const TeacherProfessionalProfileForm = ({
   const fetchEducationRecords = async () => {
     try {
       setIsLoading(true);
-      
-      const { data, error } = await supabase
-        .from('teacher_education')
-        .select('*')
-        .eq('user_id', user?.id)
-        .order('created_at', { ascending: false });
-      
+
+      // Get the teacher profile first
+      const { data: profileData, error: profileError } = await teacherService.getProfileByUserId(user?.id);
+
+      if (profileError) {
+        throw profileError;
+      }
+
+      if (!profileData) {
+        return [];
+      }
+
+// Get all education records for this teacher
+      const { data, error } = await teacherService.getTeacherEducation(profileData.id);
+
       if (error) {
         throw error;
       }
@@ -109,14 +117,14 @@ const TeacherProfessionalProfileForm = ({
       if (data && data.length > 0) {
         const educationItems: EducationItem[] = data.map(record => ({
           id: record.id,
-          value: record.institution_name,
-          institution: record.institution_name,
+          value: record.value,
+          institution: record.institution,
           degree: record.degree || "",
           details: record.details || "",
-          startDate: record.start_date.substring(0, 7),
-          endDate: record.end_date ? record.end_date.substring(0, 7) : "",
-          currentlyStudying: record.currently_studying,
-          institutionType: record.institution_type as InstitutionType
+          startDate: record.startDate || "",
+          endDate: record.endDate ? record.endDate : "",
+          currentlyStudying: record.currentlyStudying,
+          institutionType: record.institutionType as InstitutionType
         }));
         
         setEducation(educationItems);

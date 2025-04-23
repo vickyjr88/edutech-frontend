@@ -89,7 +89,7 @@ const LanguagesStep = ({ languages, setLanguages }: LanguagesStepProps) => {
           isCertified: values.isCertified
         };
 
-        const { success, error } = await updateLanguage(updatedLanguage);
+        const { success, error } = await updateLanguage(user.teacherId,updatedLanguage);
 
         if (success) {
           setLanguages(prev => prev.map(item => 
@@ -158,7 +158,7 @@ const LanguagesStep = ({ languages, setLanguages }: LanguagesStepProps) => {
 
     setIsLoading(true);
     try {
-      const { success, error } = await deleteLanguage(id);
+      const { success, error } = await deleteLanguage(user.teacherId,id);
 
       if (success) {
         setLanguages(prev => prev.filter(item => item.id !== id));

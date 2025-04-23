@@ -31,6 +31,6 @@ export type ExperienceItem = {
   subjects: string[];
   reportingManager?: {
     name: string;
-    phone: string;
+    phoneNumber: string;
   };
 };

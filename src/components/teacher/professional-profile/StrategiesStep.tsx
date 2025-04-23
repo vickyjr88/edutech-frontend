@@ -18,7 +18,7 @@ const StrategiesStep = ({ strategies, setStrategies }: StrategiesStepProps) => {
     id: "",
     strategy: "",
     description: "",
-    is_certified: false
+    isCertified: false
   });
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -35,7 +35,7 @@ const StrategiesStep = ({ strategies, setStrategies }: StrategiesStepProps) => {
     
     setIsLoading(true);
     try {
-      const data = await fetchStrategyRecords(user.id);
+      const data = await fetchStrategyRecords(user.teacherId);
       if (data.length > 0) {
         setStrategies(data);
       }
@@ -85,7 +85,7 @@ const StrategiesStep = ({ strategies, setStrategies }: StrategiesStepProps) => {
     setIsSaving(true);
     try {
       if (isEditing) {
-        const success = await updateStrategyRecord(currentItem);
+        const success = await updateStrategyRecord(user.teacherId,currentItem);
         if (success) {
           setStrategies(prev => 
             prev.map(s => 
@@ -100,7 +100,7 @@ const StrategiesStep = ({ strategies, setStrategies }: StrategiesStepProps) => {
           throw new Error("Failed to update strategy");
         }
       } else {
-        const newStrategy = await saveStrategyRecord(user.id, currentItem);
+        const newStrategy = await saveStrategyRecord(user.teacherId, currentItem);
         if (newStrategy) {
           setStrategies(prev => [newStrategy, ...prev]);
           toast({
@@ -117,7 +117,7 @@ const StrategiesStep = ({ strategies, setStrategies }: StrategiesStepProps) => {
         id: "",
         strategy: "",
         description: "",
-        is_certified: false
+        isCertified: false
       });
       setIsEditing(false);
     } catch (error) {
@@ -143,7 +143,7 @@ const StrategiesStep = ({ strategies, setStrategies }: StrategiesStepProps) => {
     }
 
     try {
-      const success = await deleteStrategyRecord(id);
+      const success = await deleteStrategyRecord(user.teacherId,id);
       if (success) {
         setStrategies(prev => prev.filter(s => s.id !== id));
         toast({
@@ -168,7 +168,7 @@ const StrategiesStep = ({ strategies, setStrategies }: StrategiesStepProps) => {
       id: "",
       strategy: "",
       description: "",
-      is_certified: false
+      isCertified: false
     });
     setIsEditing(false);
   };
