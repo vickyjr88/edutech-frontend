@@ -2,9 +2,9 @@ version: 0.2
 
 env:
   secrets-manager:
-    VITE_API_URL: "/production/frontend/VITE_API_URL"
-    VITE_APP_ENV: "/production/frontend/VITE_APP_ENV"
-    PORT: "/production/frontend/PORT"
+    VITE_API_URL: "production/frontend/VITE_API_URL"
+    VITE_APP_ENV: "production/frontend/VITE_APP_ENV"
+    PORT: "production/frontend/PORT"
 
 phases:
   pre_build:
