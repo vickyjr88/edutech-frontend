@@ -44,7 +44,7 @@ RUN echo 'server { \
 }' > /etc/nginx/conf.d/default.conf.template
 
 # Use the PORT environment variable
-ENV PORT=${PORT}
+ENV PORT=${PORT:-8085}
 
 # Expose the port
 EXPOSE ${PORT}
