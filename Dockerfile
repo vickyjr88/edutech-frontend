@@ -18,8 +18,8 @@ ENV PORT=${PORT}
 COPY package*.json ./
 COPY bun.lockb ./
 
-# Install dependencies
-RUN npm ci
+# Install dependencies with legacy peer deps flag to resolve dependency issues
+RUN npm ci --legacy-peer-deps
 
 # Copy project files
 COPY . .
@@ -35,7 +35,7 @@ COPY --from=build /app/dist /usr/share/nginx/html
 
 # Create a custom nginx config for SPA routing that uses the PORT variable
 RUN echo 'server { \
-    listen $PORT; \
+    listen ${PORT}; \
     root /usr/share/nginx/html; \
     index index.html; \
     location / { \
