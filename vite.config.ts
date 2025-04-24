@@ -9,7 +9,7 @@ import 'dotenv/config';
 export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
-    port: 8080,
+    port: parseInt(process.env.PORT || '80'),
   },
   plugins: [
     react(),
