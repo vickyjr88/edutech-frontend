@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-      - rob/sandbox
+      - sandbox
 
 jobs:
   deploy:
@@ -32,5 +32,5 @@ jobs:
         run: |
           BRANCH_NAME=${GITHUB_REF#refs/heads/}
           ARCHIVE_NAME=${BRANCH_NAME//\//_}.zip
-          aws s3 cp $ARCHIVE_NAME s3://${{ secrets.S3_BUCKET_NAME }}/$ARCHIVE_NAME
+          aws s3 cp $ARCHIVE_NAME s3://${{ secrets.S3_BUCKET_NAME }}/frontend/$ARCHIVE_NAME
           echo "Uploaded $ARCHIVE_NAME to S3 bucket"
