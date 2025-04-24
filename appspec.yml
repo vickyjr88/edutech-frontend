@@ -5,6 +5,6 @@ Resources:
       Properties:
         TaskDefinition: <TASK_DEFINITION>
         LoadBalancerInfo:
-          ContainerName: "learniverse-frontend"
+          ContainerName: "kidato-frontent-prod"
           ContainerPort: ${PORT}
         PlatformVersion: "LATEST"

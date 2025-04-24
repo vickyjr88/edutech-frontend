@@ -41,7 +41,7 @@ phases:
       - test "$IMAGE_TAG" = "master" && docker push $REPOSITORY_URI:latest || echo "Skipping latest push for non-master branch"
       - echo Writing image definitions file...
       - TAG_TO_USE=$([ "$IMAGE_TAG" = "master" ] && echo "latest" || echo "$IMAGE_TAG")
-      - echo "[{\"name\":\"kidato-frontend\",\"imageUri\":\"$REPOSITORY_URI:$TAG_TO_USE\"}]" > imagedefinitions.json
+      - echo "[{\"name\":\"kidato-frontent-prod\",\"imageUri\":\"$REPOSITORY_URI:$TAG_TO_USE\"}]" > imagedefinitions.json
       - echo "Generated imagedefinitions.json:"
       - cat imagedefinitions.json
 
