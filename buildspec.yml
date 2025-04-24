@@ -1,0 +1,54 @@
+version: 0.2
+
+env:
+  secrets-manager:
+    VITE_API_URL: "/production/frontend/VITE_API_URL"
+    VITE_APP_ENV: "/production/frontend/VITE_APP_ENV"
+    PORT: "/production/frontend/PORT"
+
+phases:
+  pre_build:
+    commands:
+      - echo Logging in to Amazon ECR...
+      - echo Checking environment variables...
+      - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
+      - REPOSITORY_URI=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/kidato-frontend
+      - BRANCH_NAME=$([ -n "$CODEBUILD_WEBHOOK_HEAD_REF" ] && echo $CODEBUILD_WEBHOOK_HEAD_REF | sed 's/refs\/heads\///' || echo $CODEBUILD_SOURCE_VERSION | sed 's/.*\///')
+      - BRANCH_NAME=$([ -z "$BRANCH_NAME" ] && echo "unknown" || echo "$BRANCH_NAME")
+      - echo "Branch name is $BRANCH_NAME"
+      - IMAGE_TAG=latest
+      - echo "Image tag is $IMAGE_TAG"
+
+  build:
+    commands:
+      - echo Build started on `date`
+      - echo Building the Docker image...
+      - echo "Building Docker image with repository URI $REPOSITORY_URI"
+      - echo "Current directory $(pwd)"
+      - ls -la
+      - |
+        docker build \
+          --build-arg VITE_API_URL=$VITE_API_URL \
+          --build-arg VITE_APP_ENV=$VITE_APP_ENV \
+          --build-arg PORT=$PORT \
+          -t $REPOSITORY_URI:$IMAGE_TAG .
+      - test "$IMAGE_TAG" = "master" && docker tag $REPOSITORY_URI:$IMAGE_TAG $REPOSITORY_URI:latest || echo "Skipping latest tag for non-master branch"
+
+  post_build:
+    commands:
+      - echo Build completed on `date`
+      - echo Pushing the Docker images...
+      - docker push $REPOSITORY_URI:$IMAGE_TAG
+      - test "$IMAGE_TAG" = "master" && docker push $REPOSITORY_URI:latest || echo "Skipping latest push for non-master branch"
+      - echo Writing image definitions file...
+      - TAG_TO_USE=$([ "$IMAGE_TAG" = "master" ] && echo "latest" || echo "$IMAGE_TAG")
+      - echo "[{\"name\":\"kidato-frontend\",\"imageUri\":\"$REPOSITORY_URI:$TAG_TO_USE\"}]" > imagedefinitions.json
+      - echo "Generated imagedefinitions.json:"
+      - cat imagedefinitions.json
+
+artifacts:
+  files:
+    - imagedefinitions.json
+    - appspec.yml
+    - buildspec.yml
+  discard-paths: yes
