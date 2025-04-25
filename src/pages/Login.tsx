@@ -31,10 +31,15 @@ const Login = () => {
 
   // If user is already logged in, redirect them
   if (user) {
-    const userRole = user.user_metadata?.role;
-    if (userRole === "tutor") {
+    const userRole = user?.role;
+    if (userRole === "teacher") {
       navigate("/teacher-dashboard");
-    } else {
+    }else if (userRole === "student") {
+      navigate("/student-dashboard");
+    }else if (userRole === "parent") {
+      navigate("/parent-dashboard");
+    }
+    else {
       navigate(from);
     }
   }
@@ -53,16 +58,16 @@ const Login = () => {
       if (signInError) throw signInError;
 
       toast({
-        title: "Welcome back!",
+        title: `Welcome back ${data.user?.fullName || data.user?.email || "user"}`,
         description: "You have successfully logged in.",
       });
 
       // Check if user is a tutor to redirect to correct dashboard
       const userRole = data.user?.role;
       if (userRole === "teacher") {
-        navigate("/teachers-dashboard");
+        navigate("/teacher-dashboard");
       }if (userRole === "student") {
-        navigate("/students-dashboard");
+        navigate("/student-dashboard");
       } else {
         navigate(from);
       }

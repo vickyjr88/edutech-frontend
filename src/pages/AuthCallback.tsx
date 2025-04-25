@@ -22,10 +22,16 @@ const AuthCallback = () => {
 
         // If we have a user, redirect to the appropriate dashboard
         if (user) {
-          const userRole = user.user_metadata?.role;
-          if (userRole === "tutor") {
+          console.log("User:", user);
+          const userRole = user.role;
+          if (userRole === "teacher") {
             navigate("/teacher-dashboard");
-          } else {
+          }else if (userRole === "student") {
+            navigate("/student-dashboard");
+          }
+          if (userRole === "parent") {
+            navigate("/parent-dashboard");
+          }else {
             navigate("/dashboard");
           }
         } else {

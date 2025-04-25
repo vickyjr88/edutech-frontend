@@ -637,7 +637,7 @@ const TeacherDashboard = () => {
             <div className="space-y-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>Welcome, {user?.user_metadata?.full_name || "Teacher"}!</CardTitle>
+                  <CardTitle>Welcome, {user?.full_name || "Teacher"}!</CardTitle>
                   <CardDescription>
                     {hasProfile 
                       ? "Your profile is partially complete. Continue with the next steps to start accepting students."

@@ -40,7 +40,7 @@ class AuthService {
             if (response.data) {
                 this.setSession({
                     user: response.data.user,
-                    token: response.data.token,
+                    token: response.data['accessToken'],
                     expiresAt: this.calculateExpiryTime(24) // Assuming 24 hour token
                 });
             }
