@@ -50,22 +50,22 @@ const TeacherProfessionalProfileForm = ({
   const [isLoading, setIsLoading] = useState(true);
   
   const [education, setEducation] = useState<EducationItem[]>([{ 
-    id: "1", 
+    _id: "1", 
     value: "", 
-    institution: "",
+    institutionName: "",
     degree: "",
-    details: "",
+    additionalDetails: "",
     startDate: "",
     endDate: "",
     currentlyStudying: false,
     institutionType: "" as const
   }]);
   const [experience, setExperience] = useState<ExperienceItem[]>([{ 
-    id: "1", 
+    _id: "1", 
     position: "", 
     institution: "",
     institutionType: "",
-    details: "",
+    additionalDetails: "",
     startDate: "",
     endDate: "",
     currentlyWorking: false,
@@ -105,13 +105,13 @@ const TeacherProfessionalProfileForm = ({
       
       if (data && data.length > 0) {
         const educationItems: EducationItem[] = data.map(record => ({
-          id: record.id,
+          _id: record._id,
           value: record.value,
-          institution: record.institution,
+          institutionName: record.institutionName,
           degree: record.degree || "",
-          details: record.details || "",
-          startDate: record.startDate || "",
-          endDate: record.endDate ? record.endDate : "",
+          details: record.additionalDetails || "",
+          startDate: record.startDate ? new Date(record.startDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long' }) : "",
+          endDate: record.endDate ? new Date(record.endDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long' }) : "",
           currentlyStudying: record.currentlyStudying,
           institutionType: record.institutionType as InstitutionType
         }));

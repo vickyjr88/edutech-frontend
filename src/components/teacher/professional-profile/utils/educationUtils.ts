@@ -6,8 +6,18 @@ import {Education, teacherService} from "@/integrations/api/services/teacher.ser
 // Format date from YYYY-MM to YYYY-MM-DD for database storage
 export const formatDateForDatabase = (dateString: string): string => {
   if (!dateString) return "";
+  // Ensure the date is in YYYY-MM format first
+  const normalized = dateString.match(/^\d{4}-\d{2}$/) 
+    ? dateString 
+    : (() => {
+        const date = new Date(dateString);
+        return !isNaN(date.getTime()) 
+          ? `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}` 
+          : dateString;
+      })();
+  
   // Append day "01" to make it a valid date for PostgreSQL
-  return `${dateString}-01`;
+  return `${normalized}-01`;
 };
 
 // Save education record to database
@@ -25,6 +35,7 @@ export const saveEducationRecord = async (
   }
 ) => {
   const formattedData = {
+      id: educationData.id,
       teacherProfile: teacherId,
       institutionType: educationData.institutionType,
       institutionName: educationData.institution,
@@ -43,20 +54,20 @@ export const saveEducationRecord = async (
     const isUpdate = !!formattedData['id'];
 
     let result;
-    // if (isUpdate) {
-    //     // Update existing education record
-    //     const { data, error } = await teacherService.updateEducation(
-    //         formattedData.id,
-    //         formattedData
-    //     );
-    //
-    //     if (error) {
-    //         throw error;
-    //     }
-    //
-    //     result = data;
-    // } else
-    // {
+    if (isUpdate) {
+        // Update existing education record
+        const { data, error } = await teacherService.updateEducation(
+            formattedData.id,
+            formattedData,
+        );
+
+        if (error) {
+            throw error;
+        }
+
+        result = data;
+    } else
+    {
         // Create new education record
         const { data, error } = await teacherService.addEducation(formattedData);
 
@@ -65,7 +76,7 @@ export const saveEducationRecord = async (
         }
 
         result = data;
-    // }
+    }
 
     return result;
 };

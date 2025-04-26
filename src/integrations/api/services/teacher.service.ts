@@ -6,6 +6,7 @@ import {
     EducationItem,
     ExperienceItem, LanguageItem, MethodologyItem, StrategyItem, TechnicalSkillItem
 } from "@/components/teacher/professional-profile";
+import {formatDateForDatabase} from "@/components/teacher/professional-profile/utils/educationUtils.ts";
 
 export interface TeacherProfile {
     id: string;
@@ -100,7 +101,29 @@ export const teacherService = {
 
     // Education Management
     addEducation: (data: Education): Promise<ApiResponse<Education>> => {
-        return api.post<Education>(`/teachers/${data.teacherProfile}/education`, data);
+        // Manually normalize the date format to ensure we don't get duplicate -01 days
+        const normalizeDate = (dateStr: string): string => {
+            if (!dateStr) return "";
+            // Remove any existing -01 day that might have been added incorrectly
+            const cleaned = dateStr.replace(/-01-01$/, "-01");
+            
+            // Ensure we have a YYYY-MM format
+            const dateMatch = cleaned.match(/^(\d{4}-\d{2})(?:-\d{2})?$/);
+            if (dateMatch) {
+                return `${dateMatch[1]}-01`;
+            }
+            
+            // If it's in another format, use formatDateForDatabase
+            return formatDateForDatabase(dateStr);
+        };
+        
+        const normalizedData = {
+            ...data,
+            startDate: normalizeDate(data.startDate as string),
+            endDate: data.endDate ? normalizeDate(data.endDate as string) : null
+        };
+        
+        return api.post<Education>(`/teachers/${data.teacherProfile}/education`, normalizedData);
     },
 
     getEducation: (id: string): Promise<ApiResponse<Education>> => {
@@ -113,8 +136,34 @@ export const teacherService = {
             }
         });
     },
-    updateEducation: (id: string, data: Partial<Education>): Promise<ApiResponse<Education>> => {
-        return api.patch<Education>(`/teachers/education/${id}`, data);
+    updateEducation: (id: string, educationData: any): Promise<ApiResponse<Education>> => {
+        // Manually normalize the date format to ensure we don't get duplicate -01 days
+        const normalizeDate = (dateStr: string): string => {
+            if (!dateStr) return "";
+            // Remove any existing -01 day that might have been added incorrectly
+            const cleaned = dateStr.replace(/-01-01$/, "-01");
+            
+            // Ensure we have a YYYY-MM format
+            const dateMatch = cleaned.match(/^(\d{4}-\d{2})(?:-\d{2})?$/);
+            if (dateMatch) {
+                return `${dateMatch[1]}-01`;
+            }
+            
+            // If it's in another format, use formatDateForDatabase
+            return formatDateForDatabase(dateStr);
+        };
+        
+        return api.patch<Education>(`/teachers/${educationData.teacherProfile}/education/${id}`, {
+            institutionType: educationData.institutionType,
+            institutionName: educationData.institution,
+            degree: educationData.degree || null,
+            additionalDetails: educationData.details || null,
+            startDate: normalizeDate(educationData.startDate),
+            endDate: educationData.currentlyStudying
+                ? null
+                : (educationData.endDate ? normalizeDate(educationData.endDate) : null),
+            isCurrentlyStudying: educationData.currentlyStudying
+        });
     },
 
     deleteEducation: (id: string): Promise<ApiResponse<{ success: boolean }>> => {

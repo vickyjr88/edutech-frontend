@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Trash2, Save } from "lucide-react";
 import { InstitutionType, EducationItem } from "../types";
-import { saveEducationRecord, validateEducationData } from "../utils/educationUtils";
+import { saveEducationRecord, validateEducationData, formatDateForDatabase } from "../utils/educationUtils";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 
@@ -32,9 +32,9 @@ const EducationItemComponent = ({
   const [isSaving, setIsSaving] = useState(false);
 
   const toggleCurrentlyStudying = (checked: boolean) => {
-    onUpdate(item.id, 'currentlyStudying', checked);
+    onUpdate(item._id, 'currentlyStudying', checked);
     if (checked) {
-      onUpdate(item.id, 'endDate', '');
+      onUpdate(item._id, 'endDate', '');
     }
   };
 
@@ -52,7 +52,7 @@ const EducationItemComponent = ({
       // Validate required fields
       const validationErrors = validateEducationData(
         item.institutionType, 
-        item.institution || '', 
+        item.institutionName || '',
         item.startDate
       );
       
@@ -66,15 +66,16 @@ const EducationItemComponent = ({
       }
 
       // Set saving state
-      onUpdate(item.id, 'isSaving', true);
+      onUpdate(item._id, 'isSaving', true);
       setIsSaving(true);
       
+      // No need to convert dates manually anymore since formatDateForDatabase will handle it
       await saveEducationRecord(user.teacherId, {
-        id: item.id,
+        id: item._id,
         institutionType: item.institutionType as InstitutionType,
-        institution: item.institution || '',
+        institution: item.institutionName || '',
         degree: item.degree,
-        details: item.details,
+        details: item.additionalDetails,
         startDate: item.startDate,
         endDate: item.endDate,
         currentlyStudying: item.currentlyStudying
@@ -86,23 +87,23 @@ const EducationItemComponent = ({
       });
       
       // Update state with success indicator
-      onUpdate(item.id, 'isSuccess', true);
-      onUpdate(item.id, 'isError', false);
+      onUpdate(item._id, 'isSuccess', true);
+      onUpdate(item._id, 'isError', false);
       
       // Reset the form after successful save by clearing fields
       // This will effectively reset the form to button state in the parent component
       setTimeout(() => {
-        onUpdate(item.id, 'isSuccess', false);
-        onUpdate(item.id, 'isSaving', false);
+        onUpdate(item._id, 'isSuccess', false);
+        onUpdate(item._id, 'isSaving', false);
         setIsSaving(false);
-        onRemove(item.id);
+        onRemove(item._id);
       }, 1500);
     } catch (error) {
       console.error("Error saving education:", error);
       
       // Update state with error indicator
-      onUpdate(item.id, 'isError', true);
-      onUpdate(item.id, 'isSuccess', false);
+      onUpdate(item._id, 'isError', true);
+      onUpdate(item._id, 'isSuccess', false);
       
       toast({
         title: "Error",
@@ -111,7 +112,7 @@ const EducationItemComponent = ({
       });
       
       // Reset saving state
-      onUpdate(item.id, 'isSaving', false);
+      onUpdate(item._id, 'isSaving', false);
       setIsSaving(false);
     }
   };
@@ -124,7 +125,7 @@ const EducationItemComponent = ({
           <Button 
             variant="ghost" 
             size="sm"
-            onClick={() => onRemove(item.id)}
+            onClick={() => onRemove(item._id)}
           >
             <Trash2 className="h-4 w-4 text-red-500" />
           </Button>
@@ -133,12 +134,12 @@ const EducationItemComponent = ({
       
       <div className="space-y-4">
         <div>
-          <Label htmlFor={`edu-type-${item.id}`}>Institution Type</Label>
+          <Label htmlFor={`edu-type-${item._id}`}>Institution Type</Label>
           <Select 
             value={item.institutionType || "primary"} 
-            onValueChange={(value: InstitutionType | "") => onUpdate(item.id, 'institutionType', value || "primary")}
+            onValueChange={(value: InstitutionType | "") => onUpdate(item._id, 'institutionType', value || "primary")}
           >
-            <SelectTrigger id={`edu-type-${item.id}`}>
+            <SelectTrigger id={`edu-type-${item._id}`}>
               <SelectValue placeholder="Select institution type" />
             </SelectTrigger>
             <SelectContent>
@@ -153,43 +154,57 @@ const EducationItemComponent = ({
         </div>
         
         <div>
-          <Label htmlFor={`edu-institution-${item.id}`}>Institution Name</Label>
+          <Label htmlFor={`edu-institution-${item._id}`}>Institution Name</Label>
           <Input 
-            id={`edu-institution-${item.id}`}
-            value={item.institution || ""}
-            onChange={(e) => onUpdate(item.id, 'institution', e.target.value)}
+            id={`edu-institution-${item._id}`}
+            value={item.institutionName || ""}
+            onChange={(e) => onUpdate(item._id, 'institutionName', e.target.value)}
             placeholder="e.g., University of Nairobi"
           />
         </div>
         
         <div>
-          <Label htmlFor={`edu-degree-${item.id}`}>Degree/Certification</Label>
+          <Label htmlFor={`edu-degree-${item._id}`}>Degree/Certification</Label>
           <Input 
-            id={`edu-degree-${item.id}`}
+            id={`edu-degree-${item._id}`}
             value={item.degree || ""}
-            onChange={(e) => onUpdate(item.id, 'degree', e.target.value)}
+            onChange={(e) => onUpdate(item._id, 'degree', e.target.value)}
             placeholder="e.g., Bachelor of Education"
           />
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <Label htmlFor={`edu-start-${item.id}`}>Start Date</Label>
+            <Label htmlFor={`edu-start-${item._id}`}>Start Date</Label>
             <Input 
-              id={`edu-start-${item.id}`}
+              id={`edu-start-${item._id}`}
               type="month"
-              value={item.startDate}
-              onChange={(e) => onUpdate(item.id, 'startDate', e.target.value)}
+              value={item.startDate && !item.startDate.match(/^\d{4}-\d{2}$/) 
+                ? (() => {
+                    const date = new Date(item.startDate);
+                    return !isNaN(date.getTime()) 
+                      ? `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}` 
+                      : ""
+                  })() 
+                : item.startDate}
+              onChange={(e) => onUpdate(item._id, 'startDate', e.target.value)}
             />
           </div>
           
           <div>
-            <Label htmlFor={`edu-end-${item.id}`}>End Date</Label>
+            <Label htmlFor={`edu-end-${item._id}`}>End Date</Label>
             <Input 
-              id={`edu-end-${item.id}`}
+              id={`edu-end-${item._id}`}
               type="month"
-              value={item.endDate}
-              onChange={(e) => onUpdate(item.id, 'endDate', e.target.value)}
+              value={item.endDate && !item.endDate.match(/^\d{4}-\d{2}$/) 
+                ? (() => {
+                    const date = new Date(item.endDate);
+                    return !isNaN(date.getTime()) 
+                      ? `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}` 
+                      : ""
+                  })() 
+                : item.endDate}
+              onChange={(e) => onUpdate(item._id, 'endDate', e.target.value)}
               disabled={item.currentlyStudying}
             />
           </div>
@@ -197,12 +212,12 @@ const EducationItemComponent = ({
         
         <div className="flex items-center space-x-2">
           <Checkbox 
-            id={`edu-current-${item.id}`} 
+            id={`edu-current-${item._id}`} 
             checked={item.currentlyStudying}
             onCheckedChange={(checked) => toggleCurrentlyStudying(checked === true)}
           />
           <Label 
-            htmlFor={`edu-current-${item.id}`}
+            htmlFor={`edu-current-${item._id}`}
             className="text-sm font-normal cursor-pointer"
           >
             I am currently studying here
@@ -210,11 +225,11 @@ const EducationItemComponent = ({
         </div>
         
         <div>
-          <Label htmlFor={`edu-details-${item.id}`}>Additional Details</Label>
+          <Label htmlFor={`edu-details-${item._id}`}>Additional Details</Label>
           <Textarea
-            id={`edu-details-${item.id}`}
-            value={item.details || ""}
-            onChange={(e) => onUpdate(item.id, 'details', e.target.value)}
+            id={`edu-details-${item._id}`}
+            value={item.additionalDetails || ""}
+            onChange={(e) => onUpdate(item._id, 'additionalDetails', e.target.value)}
             placeholder="e.g., Graduated with honors, specialized in Mathematics"
           />
         </div>

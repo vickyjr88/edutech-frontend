@@ -2,11 +2,11 @@
 export type InstitutionType = "primary" | "secondary" | "college" | "university" | "vocational" | "other";
 
 export type EducationItem = {
-  id: string;
+  _id: string;
   value: string;
-  institution?: string;
+  institutionName?: string;
   degree?: string;
-  details?: string;
+  additionalDetails?: string;
   startDate: string;
   endDate: string;
   currentlyStudying: boolean;
@@ -17,11 +17,11 @@ export type EducationItem = {
 };
 
 export type ExperienceItem = {
-  id: string;
+  _id: string;
   position: string;  // Changed from 'value' to 'position'
   institution: string; // Added separate institution field
   institutionType: InstitutionType | ""; // Added institution type
-  details?: string;
+  additionalDetails?: string;
   saved?: boolean;
   startDate: string;
   endDate: string;

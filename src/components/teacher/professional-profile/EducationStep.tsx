@@ -23,7 +23,7 @@ const EducationStep = ({ education, setEducation }: EducationStepProps) => {
   
   const addItem = () => {
     const newItem = {
-      id: Date.now().toString(),
+      _id: Date.now().toString(),
       value: "",
       institution: "",
       degree: "",
@@ -34,18 +34,18 @@ const EducationStep = ({ education, setEducation }: EducationStepProps) => {
       institutionType: "" as const
     };
     setEducation([...education, newItem]);
-    setEditingId(newItem.id);
+    setEditingId(newItem._id);
   };
 
   const removeItem = (id: string) => {
     if (education.length === 1 && editingId === id) return;
-    setEducation(education.filter(item => item.id !== id));
+    setEducation(education.filter(item => item._id !== id));
     if (editingId === id) setEditingId(null);
   };
 
   const updateItem = (id: string, field: keyof EducationItem, value: any) => {
     setEducation(education.map(item => 
-      item.id === id ? { ...item, [field]: value } : item
+      item._id === id ? { ...item, [field]: value } : item
     ));
   };
   
@@ -63,7 +63,7 @@ const EducationStep = ({ education, setEducation }: EducationStepProps) => {
   const completedEducation = education.filter(edu => edu.institution && edu.institution.trim() !== "");
   
   // Show form only for items being edited or new items
-  const itemsToShow = education.filter(edu => editingId === edu.id || !completedEducation.some(c => c.id === edu.id));
+  const itemsToShow = education.filter(edu => editingId === edu._id || !completedEducation.some(c => c._id === edu._id));
 
   return (
     <div className="space-y-6">
@@ -81,7 +81,7 @@ const EducationStep = ({ education, setEducation }: EducationStepProps) => {
             </TableHeader>
             <TableBody>
               {completedEducation.map((edu) => (
-                <TableRow key={edu.id}>
+                <TableRow key={edu._id}>
                   <TableCell className="font-medium">{edu.institution}</TableCell>
                   <TableCell>{edu.degree || "—"}</TableCell>
                   <TableCell>
@@ -97,14 +97,14 @@ const EducationStep = ({ education, setEducation }: EducationStepProps) => {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => handleEdit(edu.id)}
+                        onClick={() => handleEdit(edu._id)}
                       >
                         <Pencil className="h-4 w-4" />
                       </Button>
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => removeItem(edu.id)}
+                        onClick={() => removeItem(edu._id)}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>

@@ -10,7 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { ExperienceItem, InstitutionType } from "./types";
 import { useAuth } from "@/contexts/AuthContext";
-import { saveExperienceRecord, deleteExperienceRecord, validateExperienceData } from "./utils/experienceUtils";
+import { saveExperienceRecord, deleteExperienceRecord, validateExperienceData, formatDateForDatabase } from "./utils/experienceUtils";
 import { 
   Table,
   TableBody,
@@ -30,7 +30,7 @@ const ExperienceStep = ({ experience, setExperience }: ExperienceStepProps) => {
   const { user } = useAuth();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [currentItem, setCurrentItem] = useState<ExperienceItem>({
-    id: `temp_${Date.now()}`,
+    _id: `temp_${Date.now()}`,
     position: "",
     institution: "",
     institutionType: "",
@@ -51,7 +51,7 @@ const ExperienceStep = ({ experience, setExperience }: ExperienceStepProps) => {
   const addItem = () => {
     setEditingId(null);
     setCurrentItem({
-      id: `temp_${Date.now()}`,
+      _id: `temp_${Date.now()}`,
       position: "",
       institution: "",
       institutionType: "",
@@ -81,7 +81,7 @@ const ExperienceStep = ({ experience, setExperience }: ExperienceStepProps) => {
         await deleteExperienceRecord(id);
       }
       
-      setExperience(experience.filter(item => item.id !== id));
+      setExperience(experience.filter(item => item._id !== id));
       toast({
         title: "Experience removed",
         description: "Experience entry has been removed successfully",
@@ -206,17 +206,18 @@ const ExperienceStep = ({ experience, setExperience }: ExperienceStepProps) => {
     try {
       setIsSaving(true);
       
+      // No need to convert dates, formatDateForDatabase will handle this now
       const result = await saveExperienceRecord(user.id, currentItem);
       const savedExperience = {
         ...currentItem,
-        id: result[0]?.id || currentItem.id,
+        _id: result[0]?.id || currentItem._id,
         saved: true
       };
       
       if (editingId) {
         // Update existing item
         setExperience(experience.map(item => 
-          item.id === editingId ? savedExperience : item
+          item._id === editingId ? savedExperience : item
         ));
         toast({
           title: "Experience updated",
@@ -247,7 +248,7 @@ const ExperienceStep = ({ experience, setExperience }: ExperienceStepProps) => {
   };
 
   const editItem = (id: string) => {
-    const itemToEdit = experience.find(item => item.id === id);
+    const itemToEdit = experience.find(item => item._id === id);
     if (itemToEdit) {
       setEditingId(id);
       setCurrentItem(itemToEdit);
@@ -283,7 +284,7 @@ const ExperienceStep = ({ experience, setExperience }: ExperienceStepProps) => {
             </TableHeader>
             <TableBody>
               {savedExperiences.map((exp) => (
-                <TableRow key={exp.id}>
+                <TableRow key={exp._id}>
                   <TableCell className="font-medium">
                     <div>{exp.position}</div>
                     {exp.subjects && exp.subjects.length > 0 && (
@@ -326,17 +327,17 @@ const ExperienceStep = ({ experience, setExperience }: ExperienceStepProps) => {
                       <Button 
                         variant="ghost" 
                         size="sm"
-                        onClick={() => editItem(exp.id)}
+                        onClick={() => editItem(exp._id)}
                       >
                         <Pencil className="h-4 w-4 text-blue-500" />
                       </Button>
                       <Button 
                         variant="ghost" 
                         size="sm"
-                        onClick={() => removeItem(exp.id)}
-                        disabled={isDeleting[exp.id]}
+                        onClick={() => removeItem(exp._id)}
+                        disabled={isDeleting[exp._id]}
                       >
-                        {isDeleting[exp.id] ? 
+                        {isDeleting[exp._id] ? 
                           <Loader2 className="h-4 w-4 text-red-500 animate-spin" /> : 
                           <Trash2 className="h-4 w-4 text-red-500" />
                         }
@@ -418,7 +419,14 @@ const ExperienceStep = ({ experience, setExperience }: ExperienceStepProps) => {
                 <Input 
                   id="exp-start-date"
                   type="month"
-                  value={currentItem.startDate}
+                  value={currentItem.startDate && !currentItem.startDate.match(/^\d{4}-\d{2}$/) 
+                    ? (() => {
+                        const date = new Date(currentItem.startDate);
+                        return !isNaN(date.getTime()) 
+                          ? `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}` 
+                          : ""
+                      })() 
+                    : currentItem.startDate}
                   onChange={(e) => updateCurrentItem('startDate', e.target.value)}
                 />
               </div>
@@ -428,7 +436,14 @@ const ExperienceStep = ({ experience, setExperience }: ExperienceStepProps) => {
                 <Input 
                   id="exp-end-date"
                   type="month"
-                  value={currentItem.endDate}
+                  value={currentItem.endDate && !currentItem.endDate.match(/^\d{4}-\d{2}$/) 
+                    ? (() => {
+                        const date = new Date(currentItem.endDate);
+                        return !isNaN(date.getTime()) 
+                          ? `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}` 
+                          : ""
+                      })() 
+                    : currentItem.endDate}
                   onChange={(e) => updateCurrentItem('endDate', e.target.value)}
                   disabled={currentItem.currentlyWorking}
                 />
