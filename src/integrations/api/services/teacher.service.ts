@@ -157,7 +157,7 @@ export const teacherService = {
             institutionType: educationData.institutionType,
             institutionName: educationData.institution,
             degree: educationData.degree || null,
-            additionalDetails: educationData.details || null,
+            additionalDetails: educationData.additionalDetails || null,
             startDate: normalizeDate(educationData.startDate),
             endDate: educationData.currentlyStudying
                 ? null
@@ -172,10 +172,38 @@ export const teacherService = {
 
     // Experience Management
     addExperience: (data: Experience): Promise<ApiResponse<Experience>> => {
-        return api.post<Experience>('/teachers/experience', data);
+        // Manually normalize the date format to ensure we don't get duplicate -01 days
+        const normalizeDate = (dateStr: string): string => {
+            if (!dateStr) return "";
+            // Remove any existing -01 day that might have been added incorrectly
+            const cleaned = dateStr.replace(/-01-01$/, "-01");
+            
+            // Ensure we have a YYYY-MM format
+            const dateMatch = cleaned.match(/^(\d{4}-\d{2})(?:-\d{2})?$/);
+            if (dateMatch) {
+                return `${dateMatch[1]}-01`;
+            }
+            
+            // If it's in another format, use formatDateForDatabase
+            return formatDateForDatabase(dateStr);
+        };
+        
+        const normalizedData = {
+            ...data,
+            startDate: normalizeDate(data.startDate as string),
+            endDate: data.endDate ? normalizeDate(data.endDate as string) : null,
+            // Map frontend currentlyWorking to backend isCurrentlyWorking
+            isCurrentlyWorking: (data as any).currentlyWorking,
+            teacherProfile: data.teacherProfile
+        };
+        delete normalizedData['_id'];
+        // Use the pattern consistent with other endpoints: /teachers/:teacherId/experience
+        return api.post<Experience>(`/teachers/${data.teacherProfile}/experience`, normalizedData);
     },
 
     getExperience: (id: string): Promise<ApiResponse<Experience>> => {
+        // Note: We can't use the standard path format here because we don't know the teacherId
+        // The backend should handle this special case to find the experience by ID
         return api.get<Experience>(`/teachers/experience/${id}`);
     },
     getTeacherExperiences: (teacherId: string): Promise<ApiResponse<ExperienceItem[]>> => {
@@ -187,11 +215,39 @@ export const teacherService = {
     },
 
     updateExperience: (id: string, data: Partial<Experience>): Promise<ApiResponse<Experience>> => {
-        return api.patch<Experience>(`/teachers/experience/${id}`, data);
+        // Manually normalize the date format to ensure we don't get duplicate -01 days
+        const normalizeDate = (dateStr: string): string => {
+            if (!dateStr) return "";
+            // Remove any existing -01 day that might have been added incorrectly
+            const cleaned = dateStr.replace(/-01-01$/, "-01");
+            
+            // Ensure we have a YYYY-MM format
+            const dateMatch = cleaned.match(/^(\d{4}-\d{2})(?:-\d{2})?$/);
+            if (dateMatch) {
+                return `${dateMatch[1]}-01`;
+            }
+            
+            // If it's in another format, use formatDateForDatabase
+            return formatDateForDatabase(dateStr);
+        };
+        
+        const normalizedData = {
+            ...data,
+            startDate: data.startDate ? normalizeDate(data.startDate as string) : undefined,
+            endDate: data.endDate ? normalizeDate(data.endDate as string) : null,
+            // Map frontend currentlyWorking to backend isCurrentlyWorking if it exists
+            isCurrentlyWorking: (data as any).currentlyWorking !== undefined ? (data as any).currentlyWorking : undefined
+        };
+        delete normalizedData.teacherProfile;
+        delete normalizedData.id;
+
+        // Use the pattern consistent with other endpoints: /teachers/:teacherId/experience/:id
+        return api.patch<Experience>(`/teachers/${data.teacherProfile}/experience/${id}`, normalizedData);
     },
 
-    deleteExperience: (id: string): Promise<ApiResponse<{ success: boolean }>> => {
-        return api.delete<{ success: boolean }>(`/teachers/experience/${id}`);
+    deleteExperience: (id: string, teacherId: string): Promise<ApiResponse<{ success: boolean }>> => {
+        // Use the pattern consistent with other endpoints: /teachers/:teacherId/experience/:id
+        return api.delete<{ success: boolean }>(`/teachers/${teacherId}/experience/${id}`);
     },
 
     // Additional helper methods

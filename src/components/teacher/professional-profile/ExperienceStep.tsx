@@ -78,7 +78,8 @@ const ExperienceStep = ({ experience, setExperience }: ExperienceStepProps) => {
       
       // Only attempt to delete from DB if it's not a temporary ID
       if (!id.startsWith("temp_")) {
-        await deleteExperienceRecord(id);
+        // Pass the teacherId when removing an experience record
+        await deleteExperienceRecord(id, user?.teacherId);
       }
       
       setExperience(experience.filter(item => item._id !== id));

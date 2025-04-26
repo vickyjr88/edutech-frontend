@@ -27,10 +27,10 @@ export const saveExperienceRecord = async (
     position: string;
     institution: string;
     institutionType: InstitutionType | "";
-    details?: string;
+    additionalDetails?: string;
     startDate: string;
     endDate: string;
-    currentlyWorking: boolean;
+    isCurrentlyWorking: boolean;
     subjects: string[];
     curriculums: string[];
     grades: string[];
@@ -44,9 +44,10 @@ export const saveExperienceRecord = async (
   const institutionType = experienceData.institutionType || "other";
   
   const formattedData = {
-    user_id: userId,
+    teacherProfile: userId,
     ...experienceData,
-    id: experienceData._id
+    // Ensure we have the right property name for the backend
+    additionalDetails: experienceData.additionalDetails || experienceData.additionalDetails
   };
   
   console.log("Saving experience data:", formattedData);
@@ -63,7 +64,7 @@ export const saveExperienceRecord = async (
   let result;
   if (isNewRecord) {
     // Create new experience record
-    const { data, error } = await teacherService.addExperience(experienceData);
+    const { data, error } = await teacherService.addExperience(dataToSend);
 
     if (error) {
       throw error;
@@ -112,8 +113,26 @@ export const fetchExperienceRecords = async (teacherId: string): Promise<Experie
 };
 
 // Delete experience record
-export const deleteExperienceRecord = async (id: string): Promise<void> => {
-  const { error } = await teacherService.deleteExperience(id);
+export const deleteExperienceRecord = async (id: string, teacherId?: string): Promise<void> => {
+  // If teacherId is not provided, we need to extract it from the experience record
+  if (!teacherId) {
+    try {
+      const { data, error } = await teacherService.getExperience(id);
+      if (error) {
+        throw error;
+      }
+      teacherId = data?.teacherProfile;
+    } catch (e) {
+      console.error("Failed to get teacherId for experience deletion", e);
+      throw e;
+    }
+  }
+
+  if (!teacherId) {
+    throw new Error("TeacherId is required for deleting experience");
+  }
+
+  const { error } = await teacherService.deleteExperience(id, teacherId);
   if (error) {
     throw error;
   }
