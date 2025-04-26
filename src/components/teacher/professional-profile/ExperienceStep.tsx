@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { PlusCircle, Trash2, Save, Pencil, Plus, X, Loader2 } from "lucide-react";
+import { PlusCircle, Trash2, Save, Pencil, Plus, X, Loader2, XCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { ExperienceItem, InstitutionType } from "./types";
@@ -393,8 +393,15 @@ const ExperienceStep = ({ experience, setExperience }: ExperienceStepProps) => {
         <div className="p-4 border rounded-md bg-white">
           <div className="flex justify-between items-start mb-4">
             <h4 className="font-medium text-sm">
-              {editingId ? "Edit Experience" : "Add Experience"}
+              {editingId && experience.find(exp => exp._id === editingId && exp.saved) ? "Edit Experience" : "Add Experience"}
             </h4>
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={() => setEditingId(null)}
+            >
+              <X className="h-4 w-4 text-gray-500" />
+            </Button>
           </div>
           
           <div className="space-y-4">
@@ -648,17 +655,12 @@ const ExperienceStep = ({ experience, setExperience }: ExperienceStepProps) => {
             </div>
             
             <div className="flex justify-end space-x-2">
-              {editingId && (
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setEditingId(null);
-                    addItem();
-                  }}
-                >
-                  Cancel
-                </Button>
-              )}
+              <Button
+                variant="outline"
+                onClick={() => setEditingId(null)}
+              >
+                Cancel
+              </Button>
               <Button
                 onClick={saveItem}
                 disabled={isSaving}
