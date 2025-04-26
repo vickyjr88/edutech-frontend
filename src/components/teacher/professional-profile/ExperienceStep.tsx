@@ -49,9 +49,9 @@ const ExperienceStep = ({ experience, setExperience }: ExperienceStepProps) => {
   const [isDeleting, setIsDeleting] = useState<{[key: string]: boolean}>({});
 
   const addItem = () => {
-    setEditingId(null);
+    const newId = `temp_${Date.now()}`;
     setCurrentItem({
-      _id: `temp_${Date.now()}`,
+      _id: newId,
       position: "",
       institution: "",
       institutionType: "",
@@ -66,6 +66,7 @@ const ExperienceStep = ({ experience, setExperience }: ExperienceStepProps) => {
     setNewSubject("");
     setNewCurriculum("");
     setNewGrade("");
+    setEditingId(newId);
   };
 
   const removeItem = async (id: string) => {
@@ -233,9 +234,25 @@ const ExperienceStep = ({ experience, setExperience }: ExperienceStepProps) => {
         });
       }
       
-      // Reset the form
+      // Create a new experience form after saving
+      const newId = `temp_${Date.now()}`;
+      setCurrentItem({
+        _id: newId,
+        position: "",
+        institution: "",
+        institutionType: "",
+        additionalDetails: "",
+        startDate: "",
+        endDate: "",
+        isCurrentlyWorking: false,
+        subjects: [],
+        curriculums: [],
+        grades: []
+      });
+      setNewSubject("");
+      setNewCurriculum("");
+      setNewGrade("");
       setEditingId(null);
-      addItem();
     } catch (error: any) {
       console.error("Error saving experience:", error);
       toast({
@@ -352,7 +369,7 @@ const ExperienceStep = ({ experience, setExperience }: ExperienceStepProps) => {
         </div>
       )}
       
-      {!editingId && (
+      {!editingId && savedExperiences.length > 0 ? (
         <Button
           variant="outline"
           className="w-full"
@@ -361,9 +378,18 @@ const ExperienceStep = ({ experience, setExperience }: ExperienceStepProps) => {
           <PlusCircle className="mr-2 h-4 w-4" />
           Add Experience
         </Button>
+      ) : !editingId && savedExperiences.length === 0 && (
+        <Button
+          variant="outline"
+          className="w-full"
+          onClick={addItem}
+        >
+          <PlusCircle className="mr-2 h-4 w-4" />
+          Add Your First Experience
+        </Button>
       )}
       
-      {(editingId || savedExperiences.length === 0) && (
+      {editingId && (
         <div className="p-4 border rounded-md bg-white">
           <div className="flex justify-between items-start mb-4">
             <h4 className="font-medium text-sm">

@@ -105,15 +105,16 @@ const TeacherProfessionalProfileForm = ({
       
       if (data && data.length > 0) {
         const educationItems: EducationItem[] = data.map(record => ({
-          _id: record._id,
-          value: record.value,
-          institutionName: record.institutionName,
+          _id: record._id || record.id,
+          institution: record.institution || record.institutionName,
+          institutionName: record.institutionName || record.institution,
           degree: record.degree || "",
           additionalDetails: record.additionalDetails || "",
           startDate: record.startDate ? new Date(record.startDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long' }) : "",
           endDate: record.endDate ? new Date(record.endDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long' }) : "",
-          currentlyStudying: record.currentlyStudying,
-          institutionType: record.institutionType as InstitutionType
+          currentlyStudying: record.currentlyStudying || record.isCurrentlyStudying,
+          institutionType: record.institutionType as InstitutionType,
+          saved: true
         }));
         
         setEducation(educationItems);

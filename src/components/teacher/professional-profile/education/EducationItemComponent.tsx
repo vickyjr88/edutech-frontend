@@ -90,13 +90,12 @@ const EducationItemComponent = ({
       onUpdate(item._id, 'isSuccess', true);
       onUpdate(item._id, 'isError', false);
       
-      // Reset the form after successful save by clearing fields
-      // This will effectively reset the form to button state in the parent component
+      // Mark as saved instead of removing
       setTimeout(() => {
         onUpdate(item._id, 'isSuccess', false);
         onUpdate(item._id, 'isSaving', false);
+        onUpdate(item._id, 'saved', true);
         setIsSaving(false);
-        onRemove(item._id);
       }, 1500);
     } catch (error) {
       console.error("Error saving education:", error);

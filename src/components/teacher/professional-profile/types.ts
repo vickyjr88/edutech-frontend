@@ -3,7 +3,8 @@ export type InstitutionType = "primary" | "secondary" | "college" | "university"
 
 export type EducationItem = {
   _id: string;
-  value: string;
+  value?: string;
+  institution?: string;
   institutionName?: string;
   degree?: string;
   additionalDetails?: string;
@@ -14,6 +15,7 @@ export type EducationItem = {
   isSaving?: boolean;
   isError?: boolean;
   isSuccess?: boolean;
+  saved?: boolean;
 };
 
 export type ExperienceItem = {

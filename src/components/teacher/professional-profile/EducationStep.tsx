@@ -59,8 +59,10 @@ const EducationStep = ({ education, setEducation }: EducationStepProps) => {
     setEditingId(id);
   };
 
-  // Filter out items with empty institution for the table
-  const completedEducation = education.filter(edu => edu.institution && edu.institution.trim() !== "");
+  // Filter out items that have been saved and should be displayed in the table
+  const completedEducation = education.filter(edu => edu.saved || 
+    ((edu.institution || edu.institutionName) && 
+    (edu.institution?.trim() !== "" || edu.institutionName?.trim() !== "")));
   
   // Show form only for items being edited
   const itemsToShow = education.filter(edu => editingId === edu._id);
@@ -82,7 +84,7 @@ const EducationStep = ({ education, setEducation }: EducationStepProps) => {
             <TableBody>
               {completedEducation.map((edu) => (
                 <TableRow key={edu._id}>
-                  <TableCell className="font-medium">{edu.institution}</TableCell>
+                  <TableCell className="font-medium">{edu.institution || edu.institutionName}</TableCell>
                   <TableCell>{edu.degree || "—"}</TableCell>
                   <TableCell>
                     {edu.startDate ? 
