@@ -62,8 +62,8 @@ const EducationStep = ({ education, setEducation }: EducationStepProps) => {
   // Filter out items with empty institution for the table
   const completedEducation = education.filter(edu => edu.institution && edu.institution.trim() !== "");
   
-  // Show form only for items being edited or new items
-  const itemsToShow = education.filter(edu => editingId === edu._id || !completedEducation.some(c => c._id === edu._id));
+  // Show form only for items being edited
+  const itemsToShow = education.filter(edu => editingId === edu._id);
 
   return (
     <div className="space-y-6">
@@ -120,7 +120,7 @@ const EducationStep = ({ education, setEducation }: EducationStepProps) => {
       <div className="space-y-4">
         {itemsToShow.map((edu, index) => (
           <EducationItemComponent
-            key={edu.id}
+            key={edu._id}
             item={edu}
             index={index}
             onRemove={removeItem}
@@ -136,7 +136,7 @@ const EducationStep = ({ education, setEducation }: EducationStepProps) => {
             onClick={addItem}
           >
             <PlusCircle className="mr-2 h-4 w-4" />
-            Add Another Education
+            Add Education
           </Button>
         )}
       </div>

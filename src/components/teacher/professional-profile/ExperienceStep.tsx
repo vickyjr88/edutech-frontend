@@ -34,10 +34,10 @@ const ExperienceStep = ({ experience, setExperience }: ExperienceStepProps) => {
     position: "",
     institution: "",
     institutionType: "",
-    details: "",
+    additionalDetails: "",
     startDate: "",
     endDate: "",
-    currentlyWorking: false,
+    isCurrentlyWorking: false,
     subjects: [],
     curriculums: [],
     grades: []
@@ -55,10 +55,10 @@ const ExperienceStep = ({ experience, setExperience }: ExperienceStepProps) => {
       position: "",
       institution: "",
       institutionType: "",
-      details: "",
+      additionalDetails: "",
       startDate: "",
       endDate: "",
-      currentlyWorking: false,
+      isCurrentlyWorking: false,
       subjects: [],
       curriculums: [],
       grades: []
@@ -107,7 +107,7 @@ const ExperienceStep = ({ experience, setExperience }: ExperienceStepProps) => {
 
   const updateCurrentItem = (field: keyof ExperienceItem, value: any) => {
     setCurrentItem(prev => {
-      if (field === 'currentlyWorking' && value === true) {
+      if (field === 'isCurrentlyWorking' && value === true) {
         return { ...prev, [field]: value, endDate: "" };
       }
       return { ...prev, [field]: value };
@@ -208,7 +208,7 @@ const ExperienceStep = ({ experience, setExperience }: ExperienceStepProps) => {
       setIsSaving(true);
       
       // No need to convert dates, formatDateForDatabase will handle this now
-      const result = await saveExperienceRecord(user.id, currentItem);
+      const result = await saveExperienceRecord(user.teacherId, currentItem);
       const savedExperience = {
         ...currentItem,
         _id: result[0]?.id || currentItem._id,
@@ -314,10 +314,10 @@ const ExperienceStep = ({ experience, setExperience }: ExperienceStepProps) => {
                     )}
                   </TableCell>
                   <TableCell>
-                    {formatDateRange(exp.startDate, exp.endDate, exp.currentlyWorking)}
+                    {formatDateRange(exp.startDate, exp.endDate, exp.isCurrentlyWorking)}
                   </TableCell>
                   <TableCell>
-                    {exp.currentlyWorking ? (
+                    {exp.isCurrentlyWorking ? (
                       <Badge className="bg-green-100 text-green-800 hover:bg-green-100">Current</Badge>
                     ) : (
                       <Badge variant="outline" className="text-gray-500">Past</Badge>
@@ -352,7 +352,7 @@ const ExperienceStep = ({ experience, setExperience }: ExperienceStepProps) => {
         </div>
       )}
       
-      {!editingId && savedExperiences.length > 0 && (
+      {!editingId && (
         <Button
           variant="outline"
           className="w-full"
@@ -446,7 +446,7 @@ const ExperienceStep = ({ experience, setExperience }: ExperienceStepProps) => {
                       })() 
                     : currentItem.endDate}
                   onChange={(e) => updateCurrentItem('endDate', e.target.value)}
-                  disabled={currentItem.currentlyWorking}
+                  disabled={currentItem.isCurrentlyWorking}
                 />
               </div>
             </div>
@@ -454,8 +454,8 @@ const ExperienceStep = ({ experience, setExperience }: ExperienceStepProps) => {
             <div className="flex items-center space-x-2">
               <Checkbox 
                 id="exp-current" 
-                checked={currentItem.currentlyWorking}
-                onCheckedChange={(checked) => updateCurrentItem('currentlyWorking', checked === true)}
+                checked={currentItem.isCurrentlyWorking}
+                onCheckedChange={(checked) => updateCurrentItem('isCurrentlyWorking', checked === true)}
               />
               <Label 
                 htmlFor="exp-current"
@@ -614,8 +614,8 @@ const ExperienceStep = ({ experience, setExperience }: ExperienceStepProps) => {
               <Label htmlFor="exp-details">Additional Details</Label>
               <Textarea
                 id="exp-details"
-                value={currentItem.details || ""}
-                onChange={(e) => updateCurrentItem('details', e.target.value)}
+                value={currentItem.additionalDetails || ""}
+                onChange={(e) => updateCurrentItem('additionalDetails', e.target.value)}
                 placeholder="e.g., Responsibilities, achievements, projects, etc."
                 rows={4}
               />
@@ -654,16 +654,6 @@ const ExperienceStep = ({ experience, setExperience }: ExperienceStepProps) => {
         </div>
       )}
       
-      {editingId && (
-        <Button
-          variant="outline"
-          className="w-full"
-          onClick={addItem}
-        >
-          <PlusCircle className="mr-2 h-4 w-4" />
-          Add Another Experience
-        </Button>
-      )}
     </div>
   );
 };

@@ -21,7 +21,7 @@ export const formatDateForDatabase = (dateString: string): string => {
 
 // Save experience record to database
 export const saveExperienceRecord = async (
-  userId: string,
+    teacherId: string,
   experienceData: {
     _id: string;
     position: string;
@@ -44,7 +44,7 @@ export const saveExperienceRecord = async (
   const institutionType = experienceData.institutionType || "other";
   
   const formattedData = {
-    teacherProfile: userId,
+    teacherProfile: teacherId,
     ...experienceData,
     // Ensure we have the right property name for the backend
     additionalDetails: experienceData.additionalDetails || experienceData.additionalDetails
@@ -102,11 +102,12 @@ export const fetchExperienceRecords = async (teacherId: string): Promise<Experie
     return [];
   }
   
-  // Format dates to be human-readable
+  // Format dates to be human-readable and mark as saved
   const formattedData = data.map(record => ({
     ...record,
     startDate: record.startDate ? new Date(record.startDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long' }) : "",
-    endDate: record.endDate ? new Date(record.endDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long' }) : ""
+    endDate: record.endDate ? new Date(record.endDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long' }) : "",
+    saved: true
   }));
 
   return formattedData;

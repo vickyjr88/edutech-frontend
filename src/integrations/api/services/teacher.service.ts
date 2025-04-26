@@ -192,11 +192,13 @@ export const teacherService = {
             ...data,
             startDate: normalizeDate(data.startDate as string),
             endDate: data.endDate ? normalizeDate(data.endDate as string) : null,
-            // Map frontend currentlyWorking to backend isCurrentlyWorking
-            isCurrentlyWorking: (data as any).currentlyWorking,
-            teacherProfile: data.teacherProfile
+            // Use isCurrentlyWorking which is consistent with our frontend
+            isCurrentlyWorking: data.isCurrentlyWorking,
+            teacherProfile: data.teacherProfile,
+            additionalDetails: data.additionalDetails
         };
         delete normalizedData['_id'];
+        delete normalizedData['details'];
         // Use the pattern consistent with other endpoints: /teachers/:teacherId/experience
         return api.post<Experience>(`/teachers/${data.teacherProfile}/experience`, normalizedData);
     },
@@ -235,8 +237,8 @@ export const teacherService = {
             ...data,
             startDate: data.startDate ? normalizeDate(data.startDate as string) : undefined,
             endDate: data.endDate ? normalizeDate(data.endDate as string) : null,
-            // Map frontend currentlyWorking to backend isCurrentlyWorking if it exists
-            isCurrentlyWorking: (data as any).currentlyWorking !== undefined ? (data as any).currentlyWorking : undefined
+            // Use isCurrentlyWorking which is consistent with our frontend
+            isCurrentlyWorking: data.isCurrentlyWorking !== undefined ? data.isCurrentlyWorking : undefined
         };
         delete normalizedData.teacherProfile;
         delete normalizedData.id;

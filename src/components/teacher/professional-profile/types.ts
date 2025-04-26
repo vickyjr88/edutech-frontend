@@ -25,7 +25,7 @@ export type ExperienceItem = {
   saved?: boolean;
   startDate: string;
   endDate: string;
-  currentlyWorking: boolean;
+  isCurrentlyWorking: boolean;
   curriculums: string[];
   grades: string[];
   subjects: string[];

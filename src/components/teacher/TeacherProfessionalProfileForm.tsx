@@ -68,7 +68,7 @@ const TeacherProfessionalProfileForm = ({
     additionalDetails: "",
     startDate: "",
     endDate: "",
-    currentlyWorking: false,
+    isCurrentlyWorking: false,
     subjects: [],
     curriculums: [],
     grades: []
@@ -109,7 +109,7 @@ const TeacherProfessionalProfileForm = ({
           value: record.value,
           institutionName: record.institutionName,
           degree: record.degree || "",
-          details: record.additionalDetails || "",
+          additionalDetails: record.additionalDetails || "",
           startDate: record.startDate ? new Date(record.startDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long' }) : "",
           endDate: record.endDate ? new Date(record.endDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long' }) : "",
           currentlyStudying: record.currentlyStudying,
