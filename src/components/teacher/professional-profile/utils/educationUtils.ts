@@ -12,7 +12,7 @@ export const formatDateForDatabase = (dateString: string): string => {
 
 // Save education record to database
 export const saveEducationRecord = async (
-  userId: string,
+  teacherId: string,
   educationData: {
     id: string;
     institutionType: InstitutionType;
@@ -25,16 +25,16 @@ export const saveEducationRecord = async (
   }
 ) => {
   const formattedData = {
-      user_id: userId,
-      institution_type: educationData.institutionType,
-      institution_name: educationData.institution,
+      teacherProfile: teacherId,
+      institutionType: educationData.institutionType,
+      institutionName: educationData.institution,
       degree: educationData.degree || null,
-      details: educationData.details || null,
-      start_date: formatDateForDatabase(educationData.startDate),
-      end_date: educationData.currentlyStudying
+      additionalDetails: educationData.details || null,
+      startDate: formatDateForDatabase(educationData.startDate),
+      endDate: educationData.currentlyStudying
           ? null
           : (educationData.endDate ? formatDateForDatabase(educationData.endDate) : null),
-      currently_studying: educationData.currentlyStudying
+      isCurrentlyStudying: educationData.currentlyStudying
   } as unknown as Education;
   
   console.log("Saving education data:", formattedData);

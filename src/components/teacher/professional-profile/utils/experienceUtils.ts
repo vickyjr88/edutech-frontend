@@ -77,20 +77,10 @@ export const saveExperienceRecord = async (
 };
 
 // Fetch experience records for a user
-export const fetchExperienceRecords = async (userId: string): Promise<ExperienceItem[]> => {
-  // Get the teacher profile first
-  const { data: profileData, error: profileError } = await teacherService.getProfileByUserId(userId);
-
-  if (profileError) {
-    throw profileError;
-  }
-
-  if (!profileData) {
-    return [];
-  }
+export const fetchExperienceRecords = async (teacherId: string): Promise<ExperienceItem[]> => {
 
 // Get all experiences for this teacher
-  const { data, error } = await teacherService.getTeacherExperiences(profileData.id);
+  const { data, error } = await teacherService.getTeacherExperiences(teacherId);
 
   if (error) {
     throw error;

@@ -100,7 +100,7 @@ export const teacherService = {
 
     // Education Management
     addEducation: (data: Education): Promise<ApiResponse<Education>> => {
-        return api.post<Education>('/teachers/education', data);
+        return api.post<Education>(`/teachers/${data.teacherProfile}/education`, data);
     },
 
     getEducation: (id: string): Promise<ApiResponse<Education>> => {

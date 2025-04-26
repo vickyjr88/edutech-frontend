@@ -69,7 +69,7 @@ const EducationItemComponent = ({
       onUpdate(item.id, 'isSaving', true);
       setIsSaving(true);
       
-      await saveEducationRecord(user.id, {
+      await saveEducationRecord(user.teacherId, {
         id: item.id,
         institutionType: item.institutionType as InstitutionType,
         institution: item.institution || '',

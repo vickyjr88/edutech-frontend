@@ -96,19 +96,8 @@ const TeacherProfessionalProfileForm = ({
     try {
       setIsLoading(true);
 
-      // Get the teacher profile first
-      const { data: profileData, error: profileError } = await teacherService.getProfileByUserId(user?.id);
-
-      if (profileError) {
-        throw profileError;
-      }
-
-      if (!profileData) {
-        return [];
-      }
-
 // Get all education records for this teacher
-      const { data, error } = await teacherService.getTeacherEducation(profileData.id);
+      const { data, error } = await teacherService.getTeacherEducation(user.teacherId);
 
       if (error) {
         throw error;
@@ -146,7 +135,7 @@ const TeacherProfessionalProfileForm = ({
     try {
       if (!user) return;
       
-      const experienceRecords = await fetchExperienceRecords(user.id);
+      const experienceRecords = await fetchExperienceRecords(user.teacherId);
       
       if (experienceRecords.length > 0) {
         setExperience(experienceRecords);
