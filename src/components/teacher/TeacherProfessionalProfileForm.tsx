@@ -105,7 +105,7 @@ const TeacherProfessionalProfileForm = ({
       
       if (data && data.length > 0) {
         const educationItems: EducationItem[] = data.map(record => ({
-          _id: record._id || record.id,
+          _id: record._id || record['id'],
           institution: record.institution || record.institutionName,
           institutionName: record.institutionName || record.institution,
           degree: record.degree || "",

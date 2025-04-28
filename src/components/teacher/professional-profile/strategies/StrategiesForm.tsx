@@ -64,11 +64,11 @@ const StrategiesForm = ({
       
       <div className="flex items-center space-x-2">
         <Checkbox 
-          id="is_certified" 
-          checked={currentItem.is_certified}
+          id="isCertified" 
+          checked={currentItem.isCertified}
           onCheckedChange={onCertifiedChange}
         />
-        <Label htmlFor="is_certified" className="cursor-pointer">
+        <Label htmlFor="isCertified" className="cursor-pointer">
           I am certified in this teaching strategy
         </Label>
       </div>

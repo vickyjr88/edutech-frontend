@@ -318,8 +318,17 @@ export const teacherService = {
             });
     },
     updateTeachingStrategy: (teacherId: string, teachingStrategy: StrategyItem): Promise<ApiResponse<any[]>> => {
-        return api.patch<any[]>(`/teachers/${teacherId}/strategy/${teachingStrategy._id}`,
-            teachingStrategy);
+        console.log("API call - teachingStrategy:", teachingStrategy);
+        console.log("API call - ID:", teachingStrategy._id);
+        // Ensure ID exists and is a string before using in URL
+        const strategyId = teachingStrategy._id || "";
+        console.log("Using strategy ID in URL:", strategyId);
+        const updatedStrategy = {
+            ...teachingStrategy
+        }
+        delete updatedStrategy._id;
+        return api.patch<any[]>(`/teachers/${teacherId}/strategy/${strategyId}`,
+            updatedStrategy);
     },
     deleteTeachingStrategy: (teacherId: string, id: string): Promise<ApiResponse<any[]>> => {
         return api.delete<any[]>(`/teachers/${teacherId}/strategy/${id}`);

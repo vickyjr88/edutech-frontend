@@ -33,8 +33,12 @@ export const fetchStrategyRecords = async (teacherId: string): Promise<StrategyI
       throw error;
     }
     
+    // Log the API response to see what ID field it has
+    console.log("API Strategy Records:", data);
+    
     return data.map((record: any) => ({
-      _id: record.id,
+      // Use record._id if it exists, otherwise fallback to record.id
+      _id: record._id || record.id,
       strategy: record.strategy,
       description: record.description || "",
       isCertified: record.isCertified || false
@@ -79,13 +83,21 @@ export const updateStrategyRecord = async (
     teacherId: string, item: Omit<StrategyItem, 'isSaving' | 'isError' | 'isSuccess'>
 ): Promise<boolean> => {
   try {
-    const { error } = await teacherService.updateTeachingStrategy(teacherId, {
-      _id:item._id,
-      description:item.description,
-      strategy:item.strategy,
+    console.log("Updating strategy with item:", item);
+    console.log("Item ID type:", typeof item._id, "Value:", item._id);
+    
+    const strategyToUpdate = {
+      _id: item._id,
+      description: item.description,
+      strategy: item.strategy,
       isCertified: item.isCertified
-    })
+    };
+    
+    console.log("Strategy object for API:", strategyToUpdate);
+    
+    const { error } = await teacherService.updateTeachingStrategy(teacherId, strategyToUpdate);
     if (error) {
+      console.error("API error response:", error);
       throw error;
     }
     

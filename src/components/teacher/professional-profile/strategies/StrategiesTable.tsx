@@ -27,11 +27,11 @@ const StrategiesTable = ({ strategies, onEdit, onDelete }: StrategiesTableProps)
       items={strategies}
       columnHeaders={["Strategy", "Description", "Certified"]}
       renderRow={(item) => (
-        <TableRow key={item.id}>
+        <TableRow key={item._id}>
           <TableCell className="font-medium">{item.strategy}</TableCell>
           <TableCell>{item.description || "N/A"}</TableCell>
           <TableCell>
-            {item.is_certified ? 
+            {item.isCertified ? 
               <CheckCircle2 className="h-5 w-5 text-green-600" /> : 
               <XCircle className="h-5 w-5 text-gray-400" />
             }
@@ -48,7 +48,7 @@ const StrategiesTable = ({ strategies, onEdit, onDelete }: StrategiesTableProps)
                   <Edit className="mr-2 h-4 w-4" />
                   Edit
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onDelete(item.id)}>
+                <DropdownMenuItem onClick={() => onDelete(item._id)}>
                   <Trash2 className="mr-2 h-4 w-4" />
                   Delete
                 </DropdownMenuItem>

@@ -52,7 +52,10 @@ const StrategiesStep = ({ strategies, setStrategies }: StrategiesStepProps) => {
   };
 
   const handleStrategyChange = (value: string) => {
-    setCurrentItem(prev => ({ ...prev, strategy: value }));
+    setCurrentItem(prev => {
+      console.log("Current item before strategy change:", prev);
+      return { ...prev, strategy: value };
+    });
   };
 
   const handleDescriptionChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -60,7 +63,7 @@ const StrategiesStep = ({ strategies, setStrategies }: StrategiesStepProps) => {
   };
 
   const handleCertifiedChange = (checked: boolean) => {
-    setCurrentItem(prev => ({ ...prev, is_certified: checked }));
+    setCurrentItem(prev => ({ ...prev, isCertified: checked }));
   };
 
   const handleAddOrUpdateStrategy = async () => {
@@ -133,6 +136,7 @@ const StrategiesStep = ({ strategies, setStrategies }: StrategiesStepProps) => {
   };
 
   const handleEdit = (item: StrategyItem) => {
+    console.log("Edit item received:", item);
     setCurrentItem(item);
     setIsEditing(true);
   };
