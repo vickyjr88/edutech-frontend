@@ -32,7 +32,7 @@ const EducationItemComponent = ({
   const [isSaving, setIsSaving] = useState(false);
 
   const toggleCurrentlyStudying = (checked: boolean) => {
-    onUpdate(item._id, 'currentlyStudying', checked);
+    onUpdate(item._id, 'isCurrentlyStudying', checked);
     if (checked) {
       onUpdate(item._id, 'endDate', '');
     }
@@ -78,7 +78,7 @@ const EducationItemComponent = ({
         details: item.additionalDetails,
         startDate: item.startDate,
         endDate: item.endDate,
-        currentlyStudying: item.currentlyStudying
+        currentlyStudying: item.isCurrentlyStudying
       });
       
       toast({
@@ -204,7 +204,7 @@ const EducationItemComponent = ({
                   })() 
                 : item.endDate}
               onChange={(e) => onUpdate(item._id, 'endDate', e.target.value)}
-              disabled={item.currentlyStudying}
+              disabled={item.isCurrentlyStudying}
             />
           </div>
         </div>
@@ -212,7 +212,7 @@ const EducationItemComponent = ({
         <div className="flex items-center space-x-2">
           <Checkbox 
             id={`edu-current-${item._id}`} 
-            checked={item.currentlyStudying}
+            checked={item.isCurrentlyStudying}
             onCheckedChange={(checked) => toggleCurrentlyStudying(checked === true)}
           />
           <Label 

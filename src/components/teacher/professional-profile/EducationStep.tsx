@@ -50,7 +50,7 @@ const EducationStep = ({ education, setEducation }: EducationStepProps) => {
   };
   
   const getStatus = (item: EducationItem): string => {
-    if (item.currentlyStudying) return "Currently Studying";
+    if (item.isCurrentlyStudying) return "Currently Studying";
     if (!item.institution || !item.startDate) return "Incomplete";
     return "Completed";
   };
@@ -88,7 +88,7 @@ const EducationStep = ({ education, setEducation }: EducationStepProps) => {
                   <TableCell>{edu.degree || "—"}</TableCell>
                   <TableCell>
                     {edu.startDate ? 
-                      edu.currentlyStudying ? 
+                      edu.isCurrentlyStudying ?
                         `${edu.startDate} - Present` : 
                         `${edu.startDate}${edu.endDate ? ` - ${edu.endDate}` : ''}` 
                       : "—"}

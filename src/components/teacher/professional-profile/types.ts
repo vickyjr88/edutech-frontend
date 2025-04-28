@@ -10,7 +10,7 @@ export type EducationItem = {
   additionalDetails?: string;
   startDate: string;
   endDate: string;
-  currentlyStudying: boolean;
+  isCurrentlyStudying: boolean;
   institutionType: InstitutionType | "";
   isSaving?: boolean;
   isError?: boolean;

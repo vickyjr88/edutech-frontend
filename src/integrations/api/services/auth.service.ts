@@ -18,10 +18,12 @@ export interface RegisterData {
 export interface AuthResponse {
     user: User;
     token: string;
+    refreshToken: string;
 }
 
 // Session storage keys
 const SESSION_KEY = 'kidato_session';
+const REFRESH_KEY = 'kidato_refresh_token';
 const TOKEN_KEY = 'kidato_auth_token';
 
 class AuthService {
@@ -41,6 +43,7 @@ class AuthService {
                 this.setSession({
                     user: response.data.user,
                     token: response.data['accessToken'],
+                    refreshToken: response.data['refreshToken'],
                     expiresAt: this.calculateExpiryTime(24) // Assuming 24 hour token
                 });
             }
@@ -66,6 +69,7 @@ class AuthService {
                 this.setSession({
                     user: response.data.user,
                     token: response.data.token,
+                    refreshToken: response.data.refreshToken,
                     expiresAt: this.calculateExpiryTime(24) // Assuming 24 hour token
                 });
             }
@@ -95,12 +99,13 @@ class AuthService {
 
     async refreshSession(): Promise<boolean> {
         try {
-            const response = await api.post<{ token: string; user: User }>('/auth/refresh');
+            const response = await api.post<AuthResponse>('/auth/refresh-token');
 
             if (response.data) {
                 this.setSession({
                     user: response.data.user,
                     token: response.data.token,
+                    refreshToken: response.data.refreshToken,
                     expiresAt: this.calculateExpiryTime(24)
                 });
                 return true;
@@ -177,6 +182,7 @@ class AuthService {
         if (typeof window !== 'undefined') {
             localStorage.setItem(SESSION_KEY, JSON.stringify(session));
             localStorage.setItem(TOKEN_KEY, session.token);
+            localStorage.setItem(REFRESH_KEY, session.refreshToken);
         }
 
         // Notify listeners

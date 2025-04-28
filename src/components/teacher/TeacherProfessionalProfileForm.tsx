@@ -57,7 +57,7 @@ const TeacherProfessionalProfileForm = ({
     additionalDetails: "",
     startDate: "",
     endDate: "",
-    currentlyStudying: false,
+    isCurrentlyStudying: false,
     institutionType: "" as const
   }]);
   const [experience, setExperience] = useState<ExperienceItem[]>([{ 
@@ -112,7 +112,7 @@ const TeacherProfessionalProfileForm = ({
           additionalDetails: record.additionalDetails || "",
           startDate: record.startDate ? new Date(record.startDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long' }) : "",
           endDate: record.endDate ? new Date(record.endDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long' }) : "",
-          currentlyStudying: record.currentlyStudying || record.isCurrentlyStudying,
+          isCurrentlyStudying: record.isCurrentlyStudying || record.isCurrentlyStudying,
           institutionType: record.institutionType as InstitutionType,
           saved: true
         }));
