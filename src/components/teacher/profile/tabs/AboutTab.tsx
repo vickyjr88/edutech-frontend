@@ -156,10 +156,10 @@ export default function AboutTab({ teacher }: AboutTabProps) {
             {teacher.methodologies.length > 0 ? (
               <ul className="space-y-5">
                 {teacher.methodologies.map((item) => (
-                  <CardWithCheckIcon key={item.id}>
+                  <CardWithCheckIcon key={item._id}>
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-medium text-gray-900">{item.methodology}</span>
-                      {item.is_certified && (
+                      <span className="font-medium text-gray-900">{item.name}</span>
+                      {item.isCertified && (
                         <span className="inline-flex items-center bg-green-50 text-green-700 text-xs px-2 py-0.5 rounded-full">
                           Certified
                         </span>

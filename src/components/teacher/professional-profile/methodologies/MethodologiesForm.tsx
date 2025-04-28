@@ -34,7 +34,7 @@ const MethodologiesForm = ({
       <div>
         <Label htmlFor="methodology">Teaching Methodology</Label>
         <Select 
-          value={currentItem.methodology} 
+          value={currentItem.name}
           onValueChange={onMethodologyChange}
         >
           <SelectTrigger id="methodology" className="w-full">
@@ -65,11 +65,11 @@ const MethodologiesForm = ({
       <div className="flex items-center space-x-2">
         <div className="flex items-center space-x-2">
           <Switch
-            id="is_certified"
-            checked={currentItem.is_certified}
+            id="isCertified"
+            checked={currentItem.isCertified}
             onCheckedChange={onCertifiedChange}
           />
-          <Label htmlFor="is_certified" className="cursor-pointer">
+          <Label htmlFor="isCertified" className="cursor-pointer">
             I am certified in this teaching methodology
           </Label>
         </div>
@@ -78,7 +78,7 @@ const MethodologiesForm = ({
       <ActionButtons
         isEditing={isEditing}
         isSaving={isSaving}
-        isValid={!!currentItem.methodology}
+        isValid={!!currentItem.name}
         onSave={onSave}
         onCancel={onCancel}
         saveLabel="Update Methodology"

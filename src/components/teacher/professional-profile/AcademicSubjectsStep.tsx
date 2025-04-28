@@ -44,10 +44,10 @@ const AcademicSubjectsStep = ({ subjects, setSubjects, onSubjectsChange }: Acade
   const [isLoading, setIsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [currentSubject, setCurrentSubject] = useState<AcademicSubjectItem>({
-    id: "",
+    _id: "",
     curriculum: "",
     subject: "",
-    grade: "",
+    gradeLevel: "",
     proficiencyLevel: "",
     description: "",
     isCertified: false
@@ -77,10 +77,10 @@ const AcademicSubjectsStep = ({ subjects, setSubjects, onSubjectsChange }: Acade
 
   const resetForm = () => {
     setCurrentSubject({
-      id: "",
+      _id: "",
       curriculum: "",
       subject: "",
-      grade: "",
+      gradeLevel: "",
       proficiencyLevel: "",
       description: "",
       isCertified: false
@@ -91,7 +91,7 @@ const AcademicSubjectsStep = ({ subjects, setSubjects, onSubjectsChange }: Acade
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!currentSubject.curriculum || !currentSubject.subject || !currentSubject.grade || !currentSubject.proficiencyLevel) {
+    if (!currentSubject.curriculum || !currentSubject.subject || !currentSubject.gradeLevel || !currentSubject.proficiencyLevel) {
       return;
     }
 
@@ -105,7 +105,7 @@ const AcademicSubjectsStep = ({ subjects, setSubjects, onSubjectsChange }: Acade
         }
       } else {
          
-        const { id, ...newSubject } = currentSubject;
+        const { _id, ...newSubject } = currentSubject;
         const newId = await addAcademicSubject(newSubject);
         if (newId) {
           loadSubjects();
@@ -123,9 +123,9 @@ const AcademicSubjectsStep = ({ subjects, setSubjects, onSubjectsChange }: Acade
     setIsEditing(true);
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (_id: string) => {
     if (window.confirm("Are you sure you want to delete this subject?")) {
-      const success = await deleteAcademicSubject(id);
+      const success = await deleteAcademicSubject(_id);
       if (success) {
         loadSubjects();
         if (onSubjectsChange) onSubjectsChange();
@@ -147,50 +147,100 @@ const AcademicSubjectsStep = ({ subjects, setSubjects, onSubjectsChange }: Acade
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="curriculum">Curriculum</Label>
-                <Input
+                <select
                   id="curriculum"
                   name="curriculum"
                   value={currentSubject.curriculum}
-                  onChange={handleInputChange}
-                  placeholder="e.g., CBSE, IGCSE, IB"
+                  onChange={handleInputChange as any}
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                   required
-                />
+                >
+                  <option value="">Select Curriculum</option>
+                  <option value="CBSE">CBSE (Central Board of Secondary Education)</option>
+                  <option value="IGCSE">IGCSE (International General Certificate of Secondary Education)</option>
+                  <option value="IB">IB (International Baccalaureate)</option>
+                  <option value="Cambridge">Cambridge International</option>
+                  <option value="American">American Curriculum</option>
+                  <option value="British">British Curriculum</option>
+                  <option value="Australian">Australian Curriculum</option>
+                  <option value="Canadian">Canadian Curriculum</option>
+                  <option value="Other">Other</option>
+                </select>
               </div>
               
               <div className="space-y-2">
                 <Label htmlFor="subject">Subject</Label>
-                <Input
+                <select
                   id="subject"
                   name="subject"
                   value={currentSubject.subject}
-                  onChange={handleInputChange}
-                  placeholder="e.g., Mathematics, Science"
+                  onChange={handleInputChange as any}
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                   required
-                />
+                >
+                  <option value="">Select Subject</option>
+                  <option value="Mathematics">Mathematics</option>
+                  <option value="Science">Science</option>
+                  <option value="Physics">Physics</option>
+                  <option value="Chemistry">Chemistry</option>
+                  <option value="Biology">Biology</option>
+                  <option value="Computer Science">Computer Science</option>
+                  <option value="Information Technology">Information Technology</option>
+                  <option value="English">English</option>
+                  <option value="Literature">Literature</option>
+                  <option value="History">History</option>
+                  <option value="Geography">Geography</option>
+                  <option value="Economics">Economics</option>
+                  <option value="Business Studies">Business Studies</option>
+                  <option value="Accounting">Accounting</option>
+                  <option value="Art">Art</option>
+                  <option value="Music">Music</option>
+                  <option value="Physical Education">Physical Education</option>
+                  <option value="Foreign Language">Foreign Language</option>
+                  <option value="Social Studies">Social Studies</option>
+                  <option value="Religious Studies">Religious Studies</option>
+                  <option value="Other">Other</option>
+                </select>
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="grade">Grade Level</Label>
-                <Input
-                  id="grade"
-                  name="grade"
-                  value={currentSubject.grade}
-                  onChange={handleInputChange}
-                  placeholder="e.g., K-5, 6-8, 9-12"
+                <Label htmlFor="gradeLevel">Grade Level</Label>
+                <select
+                  id="gradeLevel"
+                  name="gradeLevel"
+                  value={currentSubject.gradeLevel}
+                  onChange={handleInputChange as any}
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                   required
-                />
+                >
+                  <option value="">Select Grade Level</option>
+                  <option value="K-2">Early Elementary (K-2)</option>
+                  <option value="3-5">Late Elementary (3-5)</option>
+                  <option value="6-8">Middle School (6-8)</option>
+                  <option value="9-12">High School (9-12)</option>
+                  <option value="College">College/University</option>
+                  <option value="Adult">Adult Education</option>
+                  <option value="All Levels">All Levels</option>
+                </select>
               </div>
               
               <div className="space-y-2">
                 <Label htmlFor="proficiencyLevel">Proficiency Level</Label>
-                <Input
+                <select
                   id="proficiencyLevel"
                   name="proficiencyLevel"
                   value={currentSubject.proficiencyLevel}
-                  onChange={handleInputChange}
-                  placeholder="e.g., Beginner, Intermediate, Advanced"
+                  onChange={handleInputChange as any}
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                   required
-                />
+                >
+                  <option value="">Select Proficiency Level</option>
+                  <option value="Beginner">Beginner</option>
+                  <option value="Intermediate">Intermediate</option>
+                  <option value="Advanced">Advanced</option>
+                  <option value="Expert">Expert</option>
+                  <option value="Master">Master</option>
+                </select>
               </div>
             </div>
             
@@ -255,10 +305,10 @@ const AcademicSubjectsStep = ({ subjects, setSubjects, onSubjectsChange }: Acade
               </TableHeader>
               <TableBody>
                 {subjects.map(subject => (
-                  <TableRow key={subject.id}>
+                  <TableRow key={subject._id}>
                     <TableCell className="font-medium">{subject.subject}</TableCell>
                     <TableCell>{subject.curriculum}</TableCell>
-                    <TableCell>{subject.grade}</TableCell>
+                    <TableCell>{subject.gradeLevel}</TableCell>
                     <TableCell>{subject.proficiencyLevel}</TableCell>
                     <TableCell>{subject.isCertified ? "Yes" : "No"}</TableCell>
                     <TableCell className="text-right">
@@ -273,7 +323,7 @@ const AcademicSubjectsStep = ({ subjects, setSubjects, onSubjectsChange }: Acade
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => handleDelete(subject.id)}
+                          onClick={() => handleDelete(subject._id)}
                         >
                           <Trash2 className="h-4 w-4 text-red-500" />
                         </Button>

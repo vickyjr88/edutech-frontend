@@ -88,7 +88,7 @@ const StrategiesStep = ({ strategies, setStrategies }: StrategiesStepProps) => {
     setIsSaving(true);
     try {
       if (isEditing) {
-        const success = await updateStrategyRecord(user.teacherId,currentItem);
+        const success = await updateStrategyRecord(user.teacherId, currentItem);
         if (success) {
           setStrategies(prev => 
             prev.map(s => 
@@ -111,6 +111,10 @@ const StrategiesStep = ({ strategies, setStrategies }: StrategiesStepProps) => {
             description: "New teaching strategy added successfully",
           });
         } else {
+          // Even if we failed to get the new record, refresh the list from the server
+          // as the strategy might have been added successfully
+          console.log("Failed to get new strategy, refreshing list from server");
+          await fetchStrategies();
           throw new Error("Failed to save strategy");
         }
       }
@@ -130,6 +134,10 @@ const StrategiesStep = ({ strategies, setStrategies }: StrategiesStepProps) => {
         description: "Failed to save teaching strategy",
         variant: "destructive"
       });
+      
+      // If there was an error, refresh the strategies list anyway
+      // to make sure the UI is in sync with the backend
+      await fetchStrategies();
     } finally {
       setIsSaving(false);
     }

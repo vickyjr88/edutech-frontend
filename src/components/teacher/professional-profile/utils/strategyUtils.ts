@@ -66,12 +66,31 @@ export const saveStrategyRecord = async (
       throw error;
     }
     
-    const newRecord = data[0] as any;
+    console.log("API Response for addTeachingStrategy:", data);
+    
+    // Handle different response formats that might come from the API
+    let newRecord;
+    if (Array.isArray(data) && data.length > 0) {
+      newRecord = data[0];
+    } else if (data && typeof data === 'object') {
+      newRecord = data;
+    } else {
+      console.error("Unexpected API response format:", data);
+      // If we can't get the new record from the API response,
+      // fetch all strategies to get the updated list
+      const allStrategies = await fetchStrategyRecords(teacherId);
+      if (allStrategies.length > 0) {
+        // Return first strategy as a fallback
+        return allStrategies[0];
+      }
+      throw new Error("Could not parse API response");
+    }
+    
     return {
-      _id: newRecord._id,
-      strategy: newRecord.strategy,
+      _id: newRecord._id || newRecord.id,
+      strategy: newRecord.strategy || newRecord.name || item.strategy,
       description: newRecord.description || "",
-      isCertified: newRecord.isCertified
+      isCertified: newRecord.isCertified || false
     };
   } catch (error) {
     console.error("Error saving strategy record:", error);

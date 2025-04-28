@@ -141,10 +141,10 @@ export default function TeacherHeader({ teacher }: TeacherHeaderProps) {
               <div className="flex flex-wrap gap-2">
                 {teacher.methodologies.map(methodology => (
                   <Badge 
-                    key={methodology.id} 
+                    key={methodology._id}
                     className="bg-blue-100 text-blue-800 hover:bg-blue-200"
                   >
-                    {methodology.methodology}
+                    {methodology.name}
                   </Badge>
                 ))}
                 {teacher.strategies.map(strategy => (

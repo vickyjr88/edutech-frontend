@@ -15,10 +15,10 @@ export const TEACHING_METHODOLOGIES = [
 ];
 
 export type MethodologyItem = {
-  id: string;
-  methodology: string;
+  _id?: string;
+  name: string;
   description?: string;
-  is_certified: boolean;
+  isCertified: boolean;
   isSaving?: boolean;
   isError?: boolean;
   isSuccess?: boolean;
@@ -32,11 +32,13 @@ export const fetchMethodologyRecords = async (teacherId: string): Promise<Method
       throw error;
     }
     
+    console.log("Methodology API response:", data);
+    
     return data.map((record: any) => ({
-      id: record.id,
-      methodology: record.methodology,
+      _id: record._id || record.id,
+      name: record.name || record.methodology,
       description: record.description || "",
-      is_certified: record.is_certified || false
+      isCertified: record.isCertified || record.is_certified || false
     }));
   } catch (error) {
     console.error("Error fetching methodology records:", error);
@@ -49,18 +51,31 @@ export const saveMethodologyRecord = async (
   item: Omit<MethodologyItem, 'isSaving' | 'isError' | 'isSuccess'>
 ): Promise<MethodologyItem | null> => {
   try {
+    delete item._id
     const {data, error} =  await teacherService.addTeachingMethodology(teacherId,item)
 
     if (error) {
       throw error;
     }
     
-    const newRecord = data[0] as any;
+    console.log("Add methodology API response:", data);
+    
+    // Handle different response formats
+    let newRecord;
+    if (Array.isArray(data) && data.length > 0) {
+      newRecord = data[0];
+    } else if (data && typeof data === 'object') {
+      newRecord = data;
+    } else {
+      console.error("Unexpected API response format:", data);
+      throw new Error("Invalid API response format");
+    }
+    
     return {
-      id: newRecord.id,
-      methodology: newRecord.methodology,
+      _id: newRecord._id || newRecord.id,
+      name: newRecord.name || newRecord.methodology,
       description: newRecord.description || "",
-      is_certified: newRecord.is_certified
+      isCertified: newRecord.isCertified || newRecord.is_certified || false
     };
   } catch (error) {
     console.error("Error saving methodology record:", error);

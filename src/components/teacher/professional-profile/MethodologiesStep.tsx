@@ -15,10 +15,10 @@ const MethodologiesStep = ({ methodologies, setMethodologies }: MethodologiesSte
   const { user } = useAuth();
   const { toast } = useToast();
   const [currentItem, setCurrentItem] = useState<MethodologyItem>({
-    id: "",
-    methodology: "",
+    _id: "",
+    name: "",
     description: "",
-    is_certified: false
+    isCertified: false
   });
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -52,7 +52,7 @@ const MethodologiesStep = ({ methodologies, setMethodologies }: MethodologiesSte
   };
 
   const handleMethodologyChange = (value: string) => {
-    setCurrentItem(prev => ({ ...prev, methodology: value }));
+    setCurrentItem(prev => ({ ...prev, name: value }));
   };
 
   const handleDescriptionChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -60,7 +60,7 @@ const MethodologiesStep = ({ methodologies, setMethodologies }: MethodologiesSte
   };
 
   const handleCertifiedChange = (checked: boolean) => {
-    setCurrentItem(prev => ({ ...prev, is_certified: checked }));
+    setCurrentItem(prev => ({ ...prev, isCertified: checked }));
   };
 
   const handleAddOrUpdateMethodology = async () => {
@@ -73,7 +73,7 @@ const MethodologiesStep = ({ methodologies, setMethodologies }: MethodologiesSte
       return;
     }
 
-    if (!currentItem.methodology) {
+    if (!currentItem.name) {
       toast({
         title: "Error",
         description: "Please select a teaching methodology",
@@ -85,11 +85,12 @@ const MethodologiesStep = ({ methodologies, setMethodologies }: MethodologiesSte
     setIsSaving(true);
     try {
       if (isEditing) {
-        const success = await updateMethodologyRecord(user.teacherId,currentItem);
+        console.log("Updating methodology with item:", currentItem);
+        const success = await updateMethodologyRecord(user.teacherId, currentItem);
         if (success) {
           setMethodologies(prev => 
             prev.map(m => 
-              m.id === currentItem.id ? currentItem : m
+              m._id === currentItem._id ? currentItem : m
             )
           );
           toast({
@@ -108,16 +109,18 @@ const MethodologiesStep = ({ methodologies, setMethodologies }: MethodologiesSte
             description: "New teaching methodology added successfully",
           });
         } else {
+          // Even if we failed to get the new record, refresh the list from the server
+          await fetchMethodologies();
           throw new Error("Failed to save methodology");
         }
       }
       
       // Reset form
       setCurrentItem({
-        id: "",
-        methodology: "",
+        _id: "",
+        name: "",
         description: "",
-        is_certified: false
+        isCertified: false
       });
       setIsEditing(false);
     } catch (error) {
@@ -127,12 +130,17 @@ const MethodologiesStep = ({ methodologies, setMethodologies }: MethodologiesSte
         description: "Failed to save teaching methodology",
         variant: "destructive"
       });
+      
+      // If there was an error, refresh the methodologies list anyway
+      // to ensure the UI is in sync with the backend
+      await fetchMethodologies();
     } finally {
       setIsSaving(false);
     }
   };
 
   const handleEdit = (item: MethodologyItem) => {
+    console.log("Edit methodology item:", item);
     setCurrentItem(item);
     setIsEditing(true);
   };
@@ -145,7 +153,7 @@ const MethodologiesStep = ({ methodologies, setMethodologies }: MethodologiesSte
     try {
       const success = await deleteMethodologyRecord(user.teacherId,id);
       if (success) {
-        setMethodologies(prev => prev.filter(m => m.id !== id));
+        setMethodologies(prev => prev.filter(m => m._id !== id));
         toast({
           title: "Success",
           description: "Teaching methodology deleted successfully",
@@ -165,10 +173,10 @@ const MethodologiesStep = ({ methodologies, setMethodologies }: MethodologiesSte
 
   const handleCancel = () => {
     setCurrentItem({
-      id: "",
-      methodology: "",
+      _id: "",
+      name: "",
       description: "",
-      is_certified: false
+      isCertified: false
     });
     setIsEditing(false);
   };

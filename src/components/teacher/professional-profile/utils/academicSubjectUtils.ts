@@ -3,10 +3,10 @@ import { useToast } from "@/hooks/use-toast";
 import {teacherService} from "@/integrations/api/services/teacher.service.ts";
 
 export type AcademicSubjectItem = {
-  id: string;
+  _id: string;
   curriculum: string;
   subject: string;
-  grade: string;
+  gradeLevel: string;
   proficiencyLevel: string;
   description?: string;
   isCertified: boolean;
@@ -24,10 +24,10 @@ export const useAcademicSubjects = (teacherId: string) => {
       if (error) throw error;
       // Transform the data to match your expected format
       return data.map(item => ({
-        id: item.id,
+        _id: item._id || item.id,
         curriculum: item.curriculum,
         subject: item.subject,
-        grade: item.grade,
+        gradeLevel: item.grade,
         proficiencyLevel: item.proficiencyLevel || item.proficiency_level,
         description: item.description || '',
         isCertified: item.isCertified || item.is_certified || false
@@ -69,7 +69,12 @@ export const useAcademicSubjects = (teacherId: string) => {
 
   const updateAcademicSubject = async (subject: AcademicSubjectItem): Promise<boolean> => {
     try {
-      const { error } = await teacherService.updateAcademicSubject(teacherId,subject);
+      // Make a copy of the subject with id from _id for API compatibility
+      const apiSubject = {
+        ...subject,
+        id: subject._id
+      };
+      const { error } = await teacherService.updateAcademicSubject(teacherId, apiSubject);
       if (error) throw error;
 
       toast({
@@ -89,10 +94,10 @@ export const useAcademicSubjects = (teacherId: string) => {
     }
   };
 
-  const deleteAcademicSubject = async (id: string): Promise<boolean> => {
+  const deleteAcademicSubject = async (_id: string): Promise<boolean> => {
     if (!teacherId) return false;
     try {
-      const { error } = await teacherService.deleteAcademicSubject(teacherId,id);
+      const { error } = await teacherService.deleteAcademicSubject(teacherId, _id);
       if (error) throw error;
 
       toast({

@@ -147,48 +147,90 @@ const AfterSchoolSubjectsStep = ({ subjects, setSubjects, onSubjectsChange }: Af
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="subject">Subject</Label>
-                <Input
+                <select
                   id="subject"
                   name="subject"
                   value={currentSubject.subject}
-                  onChange={handleInputChange}
-                  placeholder="e.g., Art, Music, Coding"
+                  onChange={handleInputChange as any}
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                   required
-                />
+                >
+                  <option value="">Select After-School Subject</option>
+                  <option value="Art">Art & Crafts</option>
+                  <option value="Music">Music</option>
+                  <option value="Dance">Dance</option>
+                  <option value="Drama">Drama & Theatre</option>
+                  <option value="Coding">Coding & Programming</option>
+                  <option value="Robotics">Robotics</option>
+                  <option value="Chess">Chess</option>
+                  <option value="Sports">Sports & Athletics</option>
+                  <option value="Cooking">Cooking & Baking</option>
+                  <option value="Photography">Photography</option>
+                  <option value="Creative Writing">Creative Writing</option>
+                  <option value="Debate">Debate & Public Speaking</option>
+                  <option value="Foreign Language">Foreign Language</option>
+                  <option value="Science Experiments">Science Experiments</option>
+                  <option value="Gardening">Gardening & Environment</option>
+                  <option value="Yoga">Yoga & Mindfulness</option>
+                  <option value="Animation">Animation & Video Production</option>
+                  <option value="Game Design">Game Design</option>
+                  <option value="Other">Other</option>
+                </select>
               </div>
               
               <div className="space-y-2">
                 <Label htmlFor="ageRange">Age Range</Label>
-                <Input
+                <select
                   id="ageRange"
                   name="ageRange"
                   value={currentSubject.ageRange}
-                  onChange={handleInputChange}
-                  placeholder="e.g., 5-7, 8-12, 13-18"
+                  onChange={handleInputChange as any}
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                   required
-                />
+                >
+                  <option value="">Select Age Range</option>
+                  <option value="3-5">Preschool (3-5)</option>
+                  <option value="5-7">Early Elementary (5-7)</option>
+                  <option value="8-10">Late Elementary (8-10)</option>
+                  <option value="11-13">Middle School (11-13)</option>
+                  <option value="14-18">High School (14-18)</option>
+                  <option value="All Ages">All Ages</option>
+                </select>
               </div>
               
               <div className="space-y-2">
                 <Label htmlFor="gender">Gender (optional)</Label>
-                <Input
+                <select
                   id="gender"
                   name="gender"
-                  value={currentSubject.gender}
-                  onChange={handleInputChange}
-                  placeholder="e.g., All, Boys, Girls"
-                />
+                  value={currentSubject.gender || ""}
+                  onChange={handleInputChange as any}
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <option value="">All Genders</option>
+                  <option value="Boys">Boys Only</option>
+                  <option value="Girls">Girls Only</option>
+                </select>
               </div>
               
               <div className="space-y-2">
                 <Label htmlFor="religion">Religion (optional)</Label>
-                <Input
+                <select
                   id="religion"
                   name="religion"
-                  value={currentSubject.religion}
-                  onChange={handleInputChange}
-                  placeholder="e.g., All, Specific religion"
-                />
+                  value={currentSubject.religion || ""}
+                  onChange={handleInputChange as any}
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <option value="">All Religions</option>
+                  <option value="Christian">Christian</option>
+                  <option value="Muslim">Muslim</option>
+                  <option value="Hindu">Hindu</option>
+                  <option value="Buddhist">Buddhist</option>
+                  <option value="Jewish">Jewish</option>
+                  <option value="Sikh">Sikh</option>
+                  <option value="Other">Other</option>
+                </select>
               </div>
             </div>
             

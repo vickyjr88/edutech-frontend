@@ -282,26 +282,26 @@ export const teacherService = {
         return api.get<any[]>(`/teachers/${teacherId}/subjects?academic=false`);
     },
     addAcademicSubject: (teacherProfileId: string,data: Partial<AcademicSubjectItem>): Promise<ApiResponse<any>> => {
-        return api.post<any[]>(`/teachers/${teacherProfileId}/subject`,
+        return api.post<any[]>(`/teachers/${teacherProfileId}/subjects`,
             {teacherProfile:teacherProfileId,...data});
     },
     updateAcademicSubject: (teacherProfileId: string,data: Partial<AcademicSubjectItem>): Promise<ApiResponse<any>> => {
-        return api.patch<any[]>(`/teachers/${teacherProfileId}/subject/${data.id}`,
+        return api.patch<any[]>(`/teachers/${teacherProfileId}/subjects/${data._id}`,
             {teacherProfile:teacherProfileId,...data});
     },
     deleteAcademicSubject: (teacherId,id: string): Promise<ApiResponse<any>> => {
-        return api.delete<any[]>(`/teachers/${teacherId}/subject/${id}`);
+        return api.delete<any[]>(`/teachers/${teacherId}/subjects/${id}`);
     },
     addOutOfSchoolSubject: (teacherProfileId: string,data: Partial<AfterSchoolSubjectItem>): Promise<ApiResponse<any>> => {
-        return api.post<any[]>(`/teachers/${teacherProfileId}/subject`,
+        return api.post<any[]>(`/teachers/${teacherProfileId}/subjects`,
             {teacherProfile:teacherProfileId,...data,academic:false});
     },
     updateOutOfSchoolSubject: (teacherProfileId: string,data: Partial<AfterSchoolSubjectItem>): Promise<ApiResponse<any>> => {
-        return api.patch<any[]>(`/teachers/${teacherProfileId}/subject/${data.id}/?academic=false`,
+        return api.patch<any[]>(`/teachers/${teacherProfileId}/subjects/${data.id}/?academic=false`,
             {teacherProfile:teacherProfileId,...data,academic:false});
     },
     deleteOutOfSchoolSubject: (teacherId:string,id: string): Promise<ApiResponse<any>> => {
-        return api.delete<any[]>(`/teachers/${teacherId}/subject/${id}/?academic=false`);
+        return api.delete<any[]>(`/teachers/${teacherId}/subjects/${id}/?academic=false`);
     },
     //teacher teaching strategies
     getTeachingStrategies: (teacherId: string): Promise<ApiResponse<any[]>> => {
@@ -380,7 +380,12 @@ export const teacherService = {
         });
     },
     updateTeachingMethodology: (teacherId: string, methodology: MethodologyItem): Promise<ApiResponse<any>> => {
-        return api.patch<string[]>(`/teachers/${teacherId}/methodologies/${methodology.id}`, methodology);
+        const _id = methodology._id;
+        const updatedMethodology = {
+            ...methodology
+        }
+        delete updatedMethodology._id;
+        return api.patch<string[]>(`/teachers/${teacherId}/methodologies/${methodology._id}`, updatedMethodology);
     },
     deleteTeachingMethodology: (teacherId: string, methodologyId: string): Promise<ApiResponse<any>> => {
         return api.delete<string[]>(`/teachers/${teacherId}/methodologies/${methodologyId}`);
