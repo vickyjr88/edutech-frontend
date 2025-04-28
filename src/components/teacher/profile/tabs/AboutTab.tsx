@@ -220,7 +220,7 @@ export default function AboutTab({ teacher }: AboutTabProps) {
             {teacher.languages.length > 0 ? (
               <ul className="space-y-5">
                 {teacher.languages.map((item) => (
-                  <li key={item.id} className="flex items-start bg-gray-50 p-4 rounded-lg">
+                  <li key={item._id} className="flex items-start bg-gray-50 p-4 rounded-lg">
                     <div className="mt-1">
                       <span className="bg-kidato-blue/10 text-kidato-blue p-1.5 rounded-full flex items-center justify-center">
                         <Globe className="w-4 h-4" />
@@ -228,7 +228,7 @@ export default function AboutTab({ teacher }: AboutTabProps) {
                     </div>
                     <div className="ml-4">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-medium text-gray-900">{item.language}</span>
+                        <span className="font-medium text-gray-900">{item.name}</span>
                         {item.isCertified && (
                           <span className="inline-flex items-center bg-green-50 text-green-700 text-xs px-2 py-0.5 rounded-full">
                             Certified

@@ -1,7 +1,7 @@
 import {teacherService} from "@/integrations/api/services/teacher.service.ts";
 export type TechnicalSkillItem = {
-  id: string;
-  skill: string;
+  _id: string;
+  name: string;
   description?: string;
   isCertified: boolean;
 };
@@ -34,11 +34,16 @@ export const fetchTechnicalSkills = async (teacherId: string): Promise<Technical
       return [];
     }
 
+    if (!data || !Array.isArray(data)) {
+      console.error('Invalid technical skills data from API:', data);
+      return [];
+    }
+    
     return data.map(item => ({
-      id: item.id,
-      skill: item.skill,
+      _id: item._id || item.id || '',
+      name: item.skill || item.name || '',
       description: item.description || undefined,
-      isCertified: item.is_certified || false
+      isCertified:  item.isCertified || false
     }));
   } catch (error) {
     console.error('Error in fetchTechnicalSkills:', error);
@@ -49,19 +54,37 @@ export const fetchTechnicalSkills = async (teacherId: string): Promise<Technical
 export const saveTechnicalSkill = async (
   teacherId: string,
   skill: TechnicalSkillItem
-): Promise<{ success: boolean; id?: string; error?: string }> => {
+): Promise<{ success: boolean; _id?: string; error?: string }> => {
   try {
-    const { data, error } = await teacherService.addTechnicalSkills(teacherId,
-        skill)
+    if (!teacherId) {
+      throw new Error('Teacher ID is required');
+    }
+    
+    // Format skill data for the API
+    const skillData = {
+      _id: skill._id,
+      name: skill.name,        // API expects 'skill' not 'name'
+      description: skill.description || '',
+      isCertified: skill.isCertified  // API might expect is_certified
+    };
+    
+    console.log("Saving technical skill:", skillData);
+    const { data, error } = await teacherService.addTechnicalSkills(teacherId, skillData as any);
 
     if (error) {
+      console.error("API error when saving skill:", error);
       throw error;
     }
 
-    return { success: true, id: data['_id'] };
+    if (!data) {
+      throw new Error('No data returned from API');
+    }
+
+    console.log("API response for save skill:", data);
+    return { success: true, _id: data._id || data.id };
   } catch (error: any) {
     console.error('Error saving technical skill:', error);
-    return { success: false, error: error.message };
+    return { success: false, error: error.message || 'Unknown error saving skill' };
   }
 };
 
@@ -70,16 +93,31 @@ export const updateTechnicalSkill = async (
     skill: TechnicalSkillItem
 ): Promise<{ success: boolean; error?: string }> => {
   try {
-    const {error} = await teacherService.updateTechnicalSkill(teacherId,skill)
+    if (!teacherId || !skill._id) {
+      throw new Error('Teacher ID and Skill ID are required');
+    }
+    
+    // Format skill data for the API
+    const skillData = {
+      _id: skill._id,
+      name: skill.name,
+      description: skill.description || '',
+      isCertified: skill.isCertified
+    };
+    
+    console.log("Updating technical skill:", skillData);
+    const {data, error} = await teacherService.updateTechnicalSkill(teacherId, skillData as any);
 
     if (error) {
+      console.error("API error when updating skill:", error);
       throw error;
     }
 
+    console.log("API response for update skill:", data);
     return { success: true };
   } catch (error: any) {
     console.error('Error updating technical skill:', error);
-    return { success: false, error: error.message };
+    return { success: false, error: error.message || 'Unknown error updating skill' };
   }
 };
 
@@ -88,15 +126,22 @@ export const deleteTechnicalSkill = async (
     skillId: string
 ): Promise<{ success: boolean; error?: string }> => {
   try {
-   const {error} = await teacherService.deleteTechnicalSkill(teacherId,skillId)
+    if (!teacherId || !skillId) {
+      throw new Error('Teacher ID and Skill ID are required');
+    }
+    
+    console.log(`Deleting technical skill with ID ${skillId} for teacher ${teacherId}`);
+    const {data, error} = await teacherService.deleteTechnicalSkill(teacherId, skillId);
 
     if (error) {
+      console.error("API error when deleting skill:", error);
       throw error;
     }
 
+    console.log("API response for delete skill:", data);
     return { success: true };
   } catch (error: any) {
     console.error('Error deleting technical skill:', error);
-    return { success: false, error: error.message };
+    return { success: false, error: error.message || 'Unknown error deleting skill' };
   }
 };

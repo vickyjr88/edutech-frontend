@@ -33,8 +33,8 @@ const SkillsTable = ({ skills, onEdit, onDelete }: SkillsTableProps) => {
         </TableHeader>
         <TableBody>
           {skills.map(skill => (
-            <TableRow key={skill.id}>
-              <TableCell className="font-medium">{skill.skill}</TableCell>
+            <TableRow key={skill._id}>
+              <TableCell className="font-medium">{skill.name}</TableCell>
               <TableCell>{skill.description || "-"}</TableCell>
               <TableCell>{skill.isCertified ? "Yes" : "No"}</TableCell>
               <TableCell className="flex space-x-2">
@@ -48,7 +48,7 @@ const SkillsTable = ({ skills, onEdit, onDelete }: SkillsTableProps) => {
                 <Button 
                   variant="outline" 
                   size="icon" 
-                  onClick={() => onDelete(skill.id, skill.skill)}
+                  onClick={() => onDelete(skill._id, skill.name)}
                 >
                   <Trash className="h-4 w-4" />
                 </Button>

@@ -15,7 +15,7 @@ import { Edit, Trash2, Check, X } from "lucide-react";
 import { LanguageItem, ALL_LANGUAGES, AFRICAN_LANGUAGES, INTERNATIONAL_LANGUAGES, saveLanguage, updateLanguage, deleteLanguage, fetchLanguages } from "./utils/languageUtils";
 
 const languageSchema = z.object({
-  language: z.string().min(1, "Please select a language"),
+  name: z.string().min(1, "Please select a language"),
   description: z.string().optional(),
   isCertified: z.boolean().default(false)
 });
@@ -44,7 +44,7 @@ const LanguagesStep = ({ languages, setLanguages }: LanguagesStepProps) => {
     
     setIsLoading(true);
     try {
-      const languageItems = await fetchLanguages(user.id);
+      const languageItems = await fetchLanguages(user.teacherId);
       setLanguages(languageItems);
     } catch (error) {
       console.error("Error loading languages:", error);
@@ -61,7 +61,7 @@ const LanguagesStep = ({ languages, setLanguages }: LanguagesStepProps) => {
   const form = useForm<LanguageFormValues>({
     resolver: zodResolver(languageSchema),
     defaultValues: {
-      language: "",
+      name: "",
       description: "",
       isCertified: false
     }
@@ -83,8 +83,8 @@ const LanguagesStep = ({ languages, setLanguages }: LanguagesStepProps) => {
       if (editingId) {
         // Update existing language
         const updatedLanguage: LanguageItem = {
-          id: editingId,
-          language: values.language, // Ensure language is provided
+          _id: editingId,
+          name: values.name, // Ensure name is provided
           description: values.description,
           isCertified: values.isCertified
         };
@@ -93,12 +93,12 @@ const LanguagesStep = ({ languages, setLanguages }: LanguagesStepProps) => {
 
         if (success) {
           setLanguages(prev => prev.map(item => 
-            item.id === editingId ? updatedLanguage : item
+            item._id === editingId ? updatedLanguage : item
           ));
           
           toast({
             title: "Language updated",
-            description: `${values.language} has been updated successfully.`
+            description: `${values.name} has been updated successfully.`
           });
           
           resetForm();
@@ -108,21 +108,21 @@ const LanguagesStep = ({ languages, setLanguages }: LanguagesStepProps) => {
       } else {
         // Add new language
         const newLanguage: LanguageItem = {
-          id: "", // Will be set by the database
-          language: values.language, // Ensure language is provided
+          _id: "", // Will be set by the database
+          name: values.name, // Using name instead of language
           description: values.description,
           isCertified: values.isCertified
         };
 
-        const { success, id, error } = await saveLanguage(user.id, newLanguage);
+        const { success, _id, error } = await saveLanguage(user.teacherId, newLanguage);
 
-        if (success && id) {
-          newLanguage.id = id;
+        if (success && _id) {
+          newLanguage._id = _id;
           setLanguages(prev => [...prev, newLanguage]);
           
           toast({
             title: "Language added",
-            description: `${values.language} has been added successfully.`
+            description: `${values.name} has been added successfully.`
           });
           
           resetForm();
@@ -143,9 +143,9 @@ const LanguagesStep = ({ languages, setLanguages }: LanguagesStepProps) => {
   };
 
   const handleEdit = (language: LanguageItem) => {
-    setEditingId(language.id);
+    setEditingId(language._id);
     form.reset({
-      language: language.language,
+      name: language.name,
       description: language.description || "",
       isCertified: language.isCertified
     });
@@ -161,7 +161,7 @@ const LanguagesStep = ({ languages, setLanguages }: LanguagesStepProps) => {
       const { success, error } = await deleteLanguage(user.teacherId,id);
 
       if (success) {
-        setLanguages(prev => prev.filter(item => item.id !== id));
+        setLanguages(prev => prev.filter(item => item._id !== id));
         toast({
           title: "Language deleted",
           description: "The language has been removed successfully."
@@ -183,7 +183,7 @@ const LanguagesStep = ({ languages, setLanguages }: LanguagesStepProps) => {
 
   const resetForm = () => {
     form.reset({
-      language: "",
+      name: "",
       description: "",
       isCertified: false
     });
@@ -206,8 +206,8 @@ const LanguagesStep = ({ languages, setLanguages }: LanguagesStepProps) => {
             </TableHeader>
             <TableBody>
               {languages.map((language) => (
-                <TableRow key={language.id}>
-                  <TableCell className="font-medium">{language.language}</TableCell>
+                <TableRow key={language._id}>
+                  <TableCell className="font-medium">{language.name}</TableCell>
                   <TableCell className="max-w-xs truncate">{language.description || "—"}</TableCell>
                   <TableCell>{language.isCertified ? <Check className="h-4 w-4 text-green-600" /> : <X className="h-4 w-4 text-gray-400" />}</TableCell>
                   <TableCell className="text-right">
@@ -216,7 +216,7 @@ const LanguagesStep = ({ languages, setLanguages }: LanguagesStepProps) => {
                         <Edit className="h-4 w-4" />
                         <span className="sr-only">Edit</span>
                       </Button>
-                      <Button variant="ghost" size="sm" onClick={() => handleDelete(language.id)}>
+                      <Button variant="ghost" size="sm" onClick={() => handleDelete(language._id)}>
                         <Trash2 className="h-4 w-4 text-red-500" />
                         <span className="sr-only">Delete</span>
                       </Button>
@@ -233,7 +233,7 @@ const LanguagesStep = ({ languages, setLanguages }: LanguagesStepProps) => {
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           <FormField
             control={form.control}
-            name="language"
+            name="name"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Language</FormLabel>

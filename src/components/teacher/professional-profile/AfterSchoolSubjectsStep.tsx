@@ -35,6 +35,7 @@ type AfterSchoolSubjectsStepProps = {
 
 const AfterSchoolSubjectsStep = ({ subjects, setSubjects, onSubjectsChange }: AfterSchoolSubjectsStepProps) => {
   const { user } = useAuth();
+  const {toast} = useToast();
   const { 
     fetchAfterSchoolSubjects, 
     addAfterSchoolSubject, 

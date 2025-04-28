@@ -28,8 +28,8 @@ const TechnicalSkillsStep = ({ skills, setSkills }: TechnicalSkillsStepProps) =>
   
   const form = useForm<TechnicalSkillItem>({
     defaultValues: {
-      id: "",
-      skill: "",
+      _id: "",
+      name: "",
       description: "",
       isCertified: false
     }
@@ -37,7 +37,7 @@ const TechnicalSkillsStep = ({ skills, setSkills }: TechnicalSkillsStepProps) =>
 
   // Filter out skills that are already added
   const availableSkills = TECHNICAL_SKILLS.filter(
-    skill => !skills.some(s => s.skill.toLowerCase() === skill.toLowerCase())
+    skill => !skills.some(s => s.name && s.name.toLowerCase() === skill.toLowerCase())
   );
 
   useEffect(() => {
@@ -49,15 +49,15 @@ const TechnicalSkillsStep = ({ skills, setSkills }: TechnicalSkillsStepProps) =>
   useEffect(() => {
     if (currentSkill) {
       form.reset({
-        id: currentSkill.id,
-        skill: currentSkill.skill,
+        _id: currentSkill._id,
+        name: currentSkill.name,
         description: currentSkill.description || "",
         isCertified: currentSkill.isCertified
       });
     } else {
       form.reset({
-        id: "",
-        skill: "",
+        _id: "",
+        name: "",
         description: "",
         isCertified: false
       });
@@ -101,37 +101,37 @@ const TechnicalSkillsStep = ({ skills, setSkills }: TechnicalSkillsStepProps) =>
         // Update existing skill
         result = await updateTechnicalSkill(user.teacherId ,{
           ...data,
-          id: currentSkill.id
+          _id: currentSkill._id
         });
         
         if (result.success) {
           setSkills(prev => 
-            prev.map(s => s.id === currentSkill.id ? {
+            prev.map(s => s._id === currentSkill._id ? {
               ...data,
-              id: currentSkill.id
+              _id: currentSkill._id
             } : s)
           );
           
           toast({
             title: "Skill updated",
-            description: `${data.skill} has been updated`
+            description: `${data.name} has been updated`
           });
         }
       } else {
         // Create new skill
         result = await saveTechnicalSkill(user.teacherId, data);
         
-        if (result.success && result.id) {
+        if (result.success && result._id) {
           const newSkill = {
             ...data,
-            id: result.id
+            _id: result._id
           };
           
           setSkills(prev => [...prev, newSkill]);
           
           toast({
             title: "Skill added",
-            description: `${data.skill} has been added to your profile`
+            description: `${data.name} has been added to your profile`
           });
         }
       }
@@ -163,7 +163,7 @@ const TechnicalSkillsStep = ({ skills, setSkills }: TechnicalSkillsStepProps) =>
       const result = await deleteTechnicalSkill(user.teacherId,skillId);
       
       if (result.success) {
-        setSkills(prev => prev.filter(s => s.id !== skillId));
+        setSkills(prev => prev.filter(s => s._id !== skillId));
         
         toast({
           title: "Skill deleted",
@@ -191,8 +191,8 @@ const TechnicalSkillsStep = ({ skills, setSkills }: TechnicalSkillsStepProps) =>
 
   const resetForm = () => {
     form.reset({
-      id: "",
-      skill: "",
+      _id: "",
+      name: "",
       description: "",
       isCertified: false
     });

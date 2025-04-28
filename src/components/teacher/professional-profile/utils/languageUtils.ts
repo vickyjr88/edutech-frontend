@@ -1,8 +1,8 @@
 
 import {teacherService} from "@/integrations/api/services/teacher.service.ts";
 export type LanguageItem = {
-  id: string;
-  language: string;
+  _id: string;
+  name: string;
   description?: string;
   isCertified: boolean;
 };
@@ -58,8 +58,8 @@ export const fetchLanguages = async (teacherId): Promise<LanguageItem[]> => {
       return [];
     }
     return data.map(item => ({
-      id: item['_id'],
-      language: item.language,
+      _id: item['_id'],
+      name: item.name,
       description: item.description || undefined,
       isCertified: item.isCertified || false
     }));
@@ -72,7 +72,7 @@ export const fetchLanguages = async (teacherId): Promise<LanguageItem[]> => {
 export const saveLanguage = async (
   teacherId: string,
   language: LanguageItem
-): Promise<{ success: boolean; id?: string; error?: string }> => {
+): Promise<{ success: boolean; _id?: string; error?: string }> => {
   try {
     //add language expertise
     const {data, error } = await teacherService.addLanguageExpertise(teacherId,language)
@@ -80,7 +80,7 @@ export const saveLanguage = async (
       throw error;
     }
 
-    return { success: true, id: data._id };
+    return { success: true, _id: data._id || data.id };
   } catch (error: any) {
     console.error('Error saving language:', error);
     return { success: false, error: error.message };

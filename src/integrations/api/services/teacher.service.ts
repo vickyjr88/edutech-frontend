@@ -345,6 +345,7 @@ export const teacherService = {
         return api.get<any[]>(`/teachers/${teacherId}/languages`);
     },
     addLanguageExpertise: (teacherId: string, language: LanguageItem)=> {
+        delete language._id;
         return api.post<any>(`/teachers/${teacherId}/languages`,
             {
                 ...language,
@@ -352,11 +353,12 @@ export const teacherService = {
             });
     },
     updateLanguageExpertise: (teacherId: string, language: LanguageItem): Promise<ApiResponse<LanguageItem>> => {
-        return api.patch<LanguageItem>(`/teachers/${teacherId}/languages`,
-            {
-                ...language,
-                teacherProfile: teacherId,
-            });
+        const updatedLanguage = {
+            ...language
+        }
+        delete updatedLanguage._id;
+        return api.patch<LanguageItem>(`/teachers/${teacherId}/languages/${language._id}`,
+            updatedLanguage);
     },
     deleteLanguageExpertise: (teacherId: string, id: string): Promise<ApiResponse<LanguageItem>> => {
         return api.delete<LanguageItem>(`/teachers/${teacherId}/languages/${id}`);
@@ -365,12 +367,20 @@ export const teacherService = {
         return api.get<string[]>(`/teachers/${teacherId}/skills`);
     },
     addTechnicalSkills: (teacherId: string, skill: TechnicalSkillItem): Promise<ApiResponse<any>> => {
+        delete skill._id;
         return api.post<string[]>(`/teachers/${teacherId}/skills`,
-            skill);
+            {
+                teacherProfile: teacherId,
+                ...skill,
+            });
     },
     updateTechnicalSkill: (teacherId: string, skill: TechnicalSkillItem): Promise<ApiResponse<any>> => {
-        return api.patch<string[]>(`/teachers/${teacherId}/skills/${skill.id}`,
-            skill);
+        const updatedSkill = {
+            ...skill
+        }
+        delete updatedSkill._id;
+        return api.patch<string[]>(`/teachers/${teacherId}/skills/${skill._id}`,
+            updatedSkill);
     },
     deleteTechnicalSkill: (teacherId: string, skillId: string): Promise<ApiResponse<any>> => {
         return api.delete<string[]>(`/teachers/${teacherId}/skills/${skillId}`);

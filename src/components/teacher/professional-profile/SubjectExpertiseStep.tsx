@@ -42,10 +42,10 @@ const SubjectExpertiseStep = ({
           <Palette className="mr-2 h-4 w-4" />
           After-School Subjects
         </TabsTrigger>
-        <TabsTrigger value="resources" className="flex items-center">
-          <FileText className="mr-2 h-4 w-4" />
-          Resources
-        </TabsTrigger>
+        {/*<TabsTrigger value="resources" className="flex items-center">*/}
+        {/*  <FileText className="mr-2 h-4 w-4" />*/}
+        {/*  Resources*/}
+        {/*</TabsTrigger>*/}
       </TabsList>
       <TabsContent value="academic" className="mt-4">
         <AcademicSubjectsStep 
