@@ -297,11 +297,18 @@ export const teacherService = {
             {teacherProfile:teacherProfileId,...data,isAcademic:false});
     },
     updateOutOfSchoolSubject: (teacherProfileId: string,data: Partial<AfterSchoolSubjectItem>): Promise<ApiResponse<any>> => {
-        return api.patch<any[]>(`/teachers/${teacherProfileId}/subjects/${data.id}/?isAcademic=false`,
-            {teacherProfile:teacherProfileId,...data,isAcademic:false});
+        // Create a copy of data without the _id field
+        const dataToSend = {...data, isAcademic: false};
+        delete dataToSend._id;
+        
+        console.log(`API call to update subject ${data._id} for teacher ${teacherProfileId}`);
+        console.log("Data being sent to API:", dataToSend);
+        
+        return api.patch<any[]>(`/teachers/${teacherProfileId}/subjects/${data._id}/`,
+            dataToSend);
     },
-    deleteOutOfSchoolSubject: (teacherId:string,id: string): Promise<ApiResponse<any>> => {
-        return api.delete<any[]>(`/teachers/${teacherId}/subjects/${id}/?isAcademic=false`);
+    deleteOutOfSchoolSubject: (teacherId:string,_id: string): Promise<ApiResponse<any>> => {
+        return api.delete<any[]>(`/teachers/${teacherId}/subjects/${_id}/?isAcademic=false`);
     },
     //teacher teaching strategies
     getTeachingStrategies: (teacherId: string): Promise<ApiResponse<any[]>> => {

@@ -3,13 +3,14 @@ import { useToast } from "@/hooks/use-toast";
 import {teacherService} from "@/integrations/api/services/teacher.service.ts";
 
 export type AfterSchoolSubjectItem = {
-  id: string;
+  _id: string;
   subject: string;
   ageRange: string;
   gender?: string;
   religion?: string;
   description?: string;
   isCertified: boolean;
+  resources?: string[]; // URLs to resources related to this subject
 };
 
 export const useAfterSchoolSubjects = (userId: string | undefined, teacherId: string) => {
@@ -41,13 +42,14 @@ export const useAfterSchoolSubjects = (userId: string | undefined, teacherId: st
         
         return afterSchoolSubjects.map(item => {
           const mappedItem = {
-            id: item._id || item.id,
+            _id: item._id || item.id,
             subject: item.subject,
             ageRange: item.ageRange || item.age_range || "",
             gender: item.gender || "",
             religion: item.religion || "",
             description: item.description || "",
-            isCertified: item.isCertified || item.is_certified || false
+            isCertified: item.isCertified || item.is_certified || false,
+            resources: item.resources || item.resourceUrls || []
           };
           console.log("Mapped item:", mappedItem);
           return mappedItem;
@@ -67,7 +69,7 @@ export const useAfterSchoolSubjects = (userId: string | undefined, teacherId: st
     }
   };
 
-  const addAfterSchoolSubject = async (subject: Omit<AfterSchoolSubjectItem, 'id'>): Promise<string | null> => {
+  const addAfterSchoolSubject = async (subject: Omit<AfterSchoolSubjectItem, '_id'>): Promise<string | null> => {
     if (!userId || !teacherId) return null;
 
     try {
@@ -114,10 +116,18 @@ export const useAfterSchoolSubjects = (userId: string | undefined, teacherId: st
         isAcademic: false
       };
       
-      const { error } = await teacherService.updateOutOfSchoolSubject(teacherId, subjectWithFlag);
+      console.log("Calling API with teacherId:", teacherId);
+      console.log("Subject data being sent:", subjectWithFlag);
+      
+      const { data, error } = await teacherService.updateOutOfSchoolSubject(teacherId, subjectWithFlag);
+      console.log("API response data:", data);
+      
+      if (error) {
+        console.error("API returned error:", error);
+        throw error;
+      }
 
-      if (error) throw error;
-
+      console.log("Subject successfully updated");
       toast({
         title: "Subject Updated",
         description: "After-school subject has been updated successfully"
@@ -135,13 +145,13 @@ export const useAfterSchoolSubjects = (userId: string | undefined, teacherId: st
     }
   };
 
-  const deleteAfterSchoolSubject = async (id: string): Promise<boolean> => {
+  const deleteAfterSchoolSubject = async (_id: string): Promise<boolean> => {
     if (!userId || !teacherId) return false;
 
     try {
-      console.log("Deleting after-school subject with ID:", id);
+      console.log("Deleting after-school subject with ID:", _id);
       
-      const { error } = await teacherService.deleteOutOfSchoolSubject(teacherId, id);
+      const { error } = await teacherService.deleteOutOfSchoolSubject(teacherId, _id);
 
       if (error) throw error;
 

@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
+import { useToast } from "@/hooks/use-toast";
 import { 
   Table, 
   TableBody, 
@@ -34,6 +35,7 @@ type AcademicSubjectsStepProps = {
 
 const AcademicSubjectsStep = ({ subjects, setSubjects, onSubjectsChange }: AcademicSubjectsStepProps) => {
   const { user } = useAuth();
+  const { toast } = useToast();
   const { 
     fetchAcademicSubjects, 
     addAcademicSubject, 
@@ -50,8 +52,12 @@ const AcademicSubjectsStep = ({ subjects, setSubjects, onSubjectsChange }: Acade
     gradeLevel: "",
     proficiencyLevel: "",
     description: "",
-    isCertified: false
+    isCertified: false,
+    resources: []
   });
+  
+  // State for managing the resources URL input
+  const [resourceUrl, setResourceUrl] = useState<string>("");
 
   useEffect(() => {
     loadSubjects();
@@ -95,6 +101,39 @@ const AcademicSubjectsStep = ({ subjects, setSubjects, onSubjectsChange }: Acade
   const handleSwitchChange = (checked: boolean) => {
     setCurrentSubject(prev => ({ ...prev, isCertified: checked }));
   };
+  
+  // Function to handle adding resources to the subject
+  const handleAddResource = () => {
+    if (!resourceUrl.trim()) return;
+    
+    // Validate if it's a valid URL
+    try {
+      new URL(resourceUrl);
+      
+      // Add the URL to resources array
+      setCurrentSubject(prev => ({
+        ...prev,
+        resources: [...(prev.resources || []), resourceUrl.trim()]
+      }));
+      
+      // Clear the input
+      setResourceUrl("");
+    } catch (e) {
+      toast({
+        title: "Invalid URL",
+        description: "Please enter a valid URL for the resource",
+        variant: "destructive"
+      });
+    }
+  };
+  
+  // Function to handle removing a resource
+  const handleRemoveResource = (urlToRemove: string) => {
+    setCurrentSubject(prev => ({
+      ...prev,
+      resources: (prev.resources || []).filter(url => url !== urlToRemove)
+    }));
+  };
 
   const resetForm = () => {
     setCurrentSubject({
@@ -104,8 +143,10 @@ const AcademicSubjectsStep = ({ subjects, setSubjects, onSubjectsChange }: Acade
       gradeLevel: "",
       proficiencyLevel: "",
       description: "",
-      isCertified: false
+      isCertified: false,
+      resources: []
     });
+    setResourceUrl(""); // Clear resource URL input
     setIsEditing(false);
   };
 
@@ -206,6 +247,7 @@ const AcademicSubjectsStep = ({ subjects, setSubjects, onSubjectsChange }: Acade
                   <TableHead>Curriculum</TableHead>
                   <TableHead>Grade</TableHead>
                   <TableHead>Proficiency</TableHead>
+                  <TableHead>Resources</TableHead>
                   <TableHead>Certified</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
@@ -217,6 +259,30 @@ const AcademicSubjectsStep = ({ subjects, setSubjects, onSubjectsChange }: Acade
                     <TableCell>{subject.curriculum}</TableCell>
                     <TableCell>{subject.gradeLevel}</TableCell>
                     <TableCell>{subject.proficiencyLevel}</TableCell>
+                    <TableCell>
+                      {subject.resources && subject.resources.length > 0 ? (
+                        <div className="flex flex-col gap-1">
+                          {subject.resources.slice(0, 2).map((url, index) => (
+                            <a 
+                              key={index}
+                              href={url} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="text-blue-600 hover:underline text-xs truncate max-w-[120px]"
+                            >
+                              Resource {index + 1}
+                            </a>
+                          ))}
+                          {subject.resources.length > 2 && (
+                            <span className="text-xs text-gray-500">
+                              +{subject.resources.length - 2} more
+                            </span>
+                          )}
+                        </div>
+                      ) : (
+                        <span className="text-gray-400 text-xs">None</span>
+                      )}
+                    </TableCell>
                     <TableCell>{subject.isCertified ? "Yes" : "No"}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end space-x-2">
@@ -360,6 +426,57 @@ const AcademicSubjectsStep = ({ subjects, setSubjects, onSubjectsChange }: Acade
                 placeholder="Describe why you enjoy teaching this subject and your approach"
                 rows={3}
               />
+            </div>
+            
+            {/* Resources Section */}
+            <div className="space-y-4">
+              <Label>Resources</Label>
+              <div className="flex gap-2">
+                <Input
+                  type="url"
+                  placeholder="Enter resource URL (e.g., https://example.com/resource)"
+                  value={resourceUrl}
+                  onChange={(e) => setResourceUrl(e.target.value)}
+                  className="flex-1"
+                />
+                <Button 
+                  type="button" 
+                  onClick={handleAddResource}
+                  variant="outline"
+                >
+                  Add Resource
+                </Button>
+              </div>
+              
+              {/* Resources List */}
+              {currentSubject.resources && currentSubject.resources.length > 0 && (
+                <div className="space-y-2 border rounded-md p-3">
+                  <Label>Added Resources:</Label>
+                  <ul className="space-y-2">
+                    {currentSubject.resources.map((url, index) => (
+                      <li key={index} className="flex items-center justify-between group border-b pb-1">
+                        <a 
+                          href={url} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:underline truncate max-w-[80%]"
+                        >
+                          {url}
+                        </a>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleRemoveResource(url)}
+                          className="opacity-0 group-hover:opacity-100"
+                        >
+                          <Trash2 className="h-4 w-4 text-red-500" />
+                        </Button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
             
             <div className="flex items-center space-x-2">

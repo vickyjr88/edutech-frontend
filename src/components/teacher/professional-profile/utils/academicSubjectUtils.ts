@@ -10,6 +10,7 @@ export type AcademicSubjectItem = {
   proficiencyLevel: string;
   description?: string;
   isCertified: boolean;
+  resources?: string[]; // URLs to resources related to this subject
 };
 
 export const useAcademicSubjects = (teacherId: string) => {
@@ -30,7 +31,8 @@ export const useAcademicSubjects = (teacherId: string) => {
         gradeLevel: item.grade,
         proficiencyLevel: item.proficiencyLevel || item.proficiency_level,
         description: item.description || '',
-        isCertified: item.isCertified || item.is_certified || false
+        isCertified: item.isCertified || item.is_certified || false,
+        resources: item.resources || item.resourceUrls || []
       }));
     } catch (error) {
       console.error("Error fetching academic subjects:", error);

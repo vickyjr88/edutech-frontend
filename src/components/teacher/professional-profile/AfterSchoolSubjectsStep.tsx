@@ -23,8 +23,9 @@ import {
   TableHeader, 
   TableRow 
 } from "@/components/ui/table";
-import { Edit, Trash2, Plus } from "lucide-react";
+import { Edit, Trash2, Plus, ExternalLink, X } from "lucide-react";
 import { useAfterSchoolSubjects, AfterSchoolSubjectItem } from "./utils/afterSchoolSubjectUtils";
+import { useToast } from "@/hooks/use-toast";
 
 type AfterSchoolSubjectsStepProps = {
   subjects: AfterSchoolSubjectItem[];
@@ -44,20 +45,24 @@ const AfterSchoolSubjectsStep = ({ subjects, setSubjects, onSubjectsChange }: Af
   const [isLoading, setIsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [currentSubject, setCurrentSubject] = useState<AfterSchoolSubjectItem>({
-    id: "",
+    _id: "",
     subject: "",
     ageRange: "",
     gender: "",
     religion: "",
     description: "",
     isCertified: false,
+    resources: [],
   });
+  
+  const [resourceUrl, setResourceUrl] = useState("");
 
   useEffect(() => {
     loadSubjects();
   }, [user]);
 
   const loadSubjects = async () => {
+    console.log("Starting to load after-school subjects");
     setIsLoading(true);
     try {
       if (user?.teacherId) {
@@ -66,7 +71,12 @@ const AfterSchoolSubjectsStep = ({ subjects, setSubjects, onSubjectsChange }: Af
         console.log("Received after-school subjects:", data);
         
         if (Array.isArray(data)) {
-          setSubjects(data);
+          // Force UI update with fresh data
+          setSubjects([]);
+          setTimeout(() => {
+            console.log("Setting subjects with fresh data:", data);
+            setSubjects(data);
+          }, 50);
         } else {
           console.error("Failed to fetch after-school subjects: invalid data format", data);
           setSubjects([]);
@@ -99,15 +109,48 @@ const AfterSchoolSubjectsStep = ({ subjects, setSubjects, onSubjectsChange }: Af
   const resetForm = () => {
     console.log("Resetting after-school subject form");
     setCurrentSubject({
-      id: "",
+      _id: "",
       subject: "",
       ageRange: "",
       gender: "",
       religion: "",
       description: "",
-      isCertified: false
+      isCertified: false,
+      resources: []
     });
+    setResourceUrl("");
     setIsEditing(false);
+  };
+  
+  const handleAddResource = () => {
+    if (!resourceUrl.trim()) return;
+    
+    // Validate the URL
+    try {
+      new URL(resourceUrl);
+      
+      // Add resource to the subject
+      setCurrentSubject(prev => ({
+        ...prev,
+        resources: [...(prev.resources || []), resourceUrl.trim()]
+      }));
+      
+      // Clear the input
+      setResourceUrl("");
+    } catch (e) {
+      toast({
+        title: "Invalid URL",
+        description: "Please enter a valid URL for the resource",
+        variant: "destructive"
+      });
+    }
+  };
+  
+  const handleRemoveResource = (index: number) => {
+    setCurrentSubject(prev => ({
+      ...prev,
+      resources: prev.resources?.filter((_, i) => i !== index) || []
+    }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -127,25 +170,38 @@ const AfterSchoolSubjectsStep = ({ subjects, setSubjects, onSubjectsChange }: Af
     try {
       if (isEditing) {
         console.log("Updating after-school subject:", currentSubject);
-        const success = await updateAfterSchoolSubject(currentSubject);
-        if (success) {
-          toast({
-            title: "Success",
-            description: "Subject updated successfully"
-          });
+        try {
+          const success = await updateAfterSchoolSubject(currentSubject);
+          console.log("Update result:", success);
           
-          // Immediately reset form
-          resetForm();
-          
-          // Then reload subjects with small delay
-          setTimeout(async () => {
+          if (success) {
+            // Immediately reset form to close it
+            resetForm();
+            
+            toast({
+              title: "Success",
+              description: "Subject updated successfully"
+            });
+            
+            // Then reload subjects immediately
+            console.log("Reloading subjects after update...");
             await loadSubjects();
-            if (onSubjectsChange) onSubjectsChange();
-          }, 300);
+            console.log("Subjects reloaded after update!");
+            if (onSubjectsChange) {
+              console.log("Calling onSubjectsChange callback");
+              onSubjectsChange();
+            } else {
+              console.log("No onSubjectsChange callback provided");
+            }
+          } else {
+            console.error("Failed to update subject - API returned false");
+          }
+        } catch (updateError) {
+          console.error("Error in update operation:", updateError);
         }
       } else {
         console.log("Adding new after-school subject:", currentSubject);
-        const { id, ...newSubject } = currentSubject;
+        const { _id, ...newSubject } = currentSubject;
         
         // Explicitly set isAcademic to false
         const afterSchoolSubject = {
@@ -157,21 +213,25 @@ const AfterSchoolSubjectsStep = ({ subjects, setSubjects, onSubjectsChange }: Af
         if (newId) {
           console.log("New after-school subject added with ID:", newId);
           
+          // Immediately reset form first
+          resetForm();
+          
           toast({
             title: "Success",
             description: "New after-school subject added successfully"
           });
           
-          // Immediately reset form first
-          resetForm();
+          // Reload subjects immediately
+          console.log("Reloading subjects after add...");
+          await loadSubjects();
+          console.log("Subjects reloaded!");
           
-          // Force reload subjects with a longer delay to ensure API consistency
-          setTimeout(async () => {
-            console.log("Reloading subjects after add...");
-            await loadSubjects();
-            if (onSubjectsChange) onSubjectsChange();
-            console.log("Subjects reloaded!");
-          }, 1000);
+          if (onSubjectsChange) {
+            console.log("Calling onSubjectsChange callback");
+            onSubjectsChange();
+          } else {
+            console.log("No onSubjectsChange callback provided");
+          }
         }
       }
     } catch (error) {
@@ -191,11 +251,11 @@ const AfterSchoolSubjectsStep = ({ subjects, setSubjects, onSubjectsChange }: Af
     setIsEditing(true);
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (_id: string) => {
     if (window.confirm("Are you sure you want to delete this subject?")) {
-      const success = await deleteAfterSchoolSubject(id);
+      const success = await deleteAfterSchoolSubject(_id);
       if (success) {
-        loadSubjects();
+        await loadSubjects();
         if (onSubjectsChange) onSubjectsChange();
       }
     }
@@ -227,17 +287,40 @@ const AfterSchoolSubjectsStep = ({ subjects, setSubjects, onSubjectsChange }: Af
                   <TableHead>Gender</TableHead>
                   <TableHead>Religion</TableHead>
                   <TableHead>Certified</TableHead>
+                  <TableHead>Resources</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {subjects.map(subject => (
-                  <TableRow key={subject.id}>
+                  <TableRow key={subject._id}>
                     <TableCell className="font-medium">{subject.subject}</TableCell>
                     <TableCell>{subject.ageRange}</TableCell>
                     <TableCell>{subject.gender || "All"}</TableCell>
                     <TableCell>{subject.religion || "All"}</TableCell>
                     <TableCell>{subject.isCertified ? "Yes" : "No"}</TableCell>
+                    <TableCell>
+                      {subject.resources && subject.resources.length > 0 ? (
+                        <div className="flex space-x-1">
+                          <span className="text-sm">{subject.resources.length}</span>
+                          {subject.resources.slice(0, 2).map((url, index) => (
+                            <a 
+                              key={index}
+                              href={url} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center text-primary"
+                              title={url}
+                            >
+                              <ExternalLink className="h-3 w-3" />
+                            </a>
+                          ))}
+                          {subject.resources.length > 2 && <span className="text-xs text-muted-foreground">+{subject.resources.length - 2} more</span>}
+                        </div>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">None</span>
+                      )}
+                    </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end space-x-2">
                         <Button
@@ -250,7 +333,7 @@ const AfterSchoolSubjectsStep = ({ subjects, setSubjects, onSubjectsChange }: Af
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => handleDelete(subject.id)}
+                          onClick={() => handleDelete(subject._id)}
                         >
                           <Trash2 className="h-4 w-4 text-red-500" />
                         </Button>
@@ -372,6 +455,58 @@ const AfterSchoolSubjectsStep = ({ subjects, setSubjects, onSubjectsChange }: Af
               />
             </div>
             
+            <div className="space-y-4">
+              <Label>Resources</Label>
+              <div className="flex gap-2">
+                <Input
+                  value={resourceUrl}
+                  onChange={(e) => setResourceUrl(e.target.value)}
+                  placeholder="Enter resource URL (e.g. https://example.com)"
+                  className="flex-1"
+                />
+                <Button 
+                  type="button" 
+                  onClick={handleAddResource}
+                  variant="secondary"
+                  size="sm"
+                >
+                  <Plus className="h-4 w-4 mr-1" /> Add
+                </Button>
+              </div>
+              
+              {currentSubject.resources && currentSubject.resources.length > 0 && (
+                <div className="bg-muted p-3 rounded-md">
+                  <h4 className="text-sm font-medium mb-2">Added Resources:</h4>
+                  <ul className="space-y-2">
+                    {currentSubject.resources.map((url, index) => (
+                      <li key={index} className="flex items-center justify-between text-sm bg-background p-2 rounded">
+                        <div className="flex items-center">
+                          <ExternalLink className="h-3 w-3 mr-2 opacity-70" />
+                          <a 
+                            href={url} 
+                            target="_blank" 
+                            rel="noopener noreferrer" 
+                            className="text-primary truncate max-w-[300px]"
+                          >
+                            {url}
+                          </a>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleRemoveResource(index)}
+                          className="h-6 w-6 p-0"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+
             <div className="flex items-center space-x-2">
               <Switch
                 id="isCertified"
