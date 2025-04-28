@@ -3,10 +3,24 @@ import { api, ApiResponse } from '../client';
 import {
     AcademicSubjectItem,
     AfterSchoolSubjectItem,
+    CertificationItem,
     EducationItem,
     ExperienceItem, LanguageItem, MethodologyItem, StrategyItem, TechnicalSkillItem
 } from "@/components/teacher/professional-profile";
 import {formatDateForDatabase} from "@/components/teacher/professional-profile/utils/educationUtils.ts";
+
+// Certification interface for API calls
+export interface TeacherCertification {
+    _id?: string;
+    teacherProfile?: string;
+    name: string;
+    issuer: string;
+    issueDate: Date | string;
+    expiryDate?: Date | string;
+    credentialId?: string;
+    credentialUrl?: string;
+    description?: string;
+}
 
 export interface TeacherProfile {
     id: string;
@@ -69,6 +83,7 @@ export interface TeachingStrategy{
     isCertified: boolean;
 }
 
+//Define certification endpoints
 export const teacherService = {
     // Teacher Profile CRUD
     createProfile: (data: Partial<TeacherProfile>): Promise<ApiResponse<TeacherProfile>> => {
@@ -408,4 +423,77 @@ export const teacherService = {
         return api.delete<string[]>(`/teachers/${teacherId}/methodologies/${methodologyId}`);
     },
     
+    // Certification Management
+    getCertifications: (teacherId: string): Promise<ApiResponse<CertificationItem[]>> => {
+        return api.get<CertificationItem[]>(`/teachers/${teacherId}/certifications`, {
+            params: {
+                sort: '-issueDate'
+            }
+        });
+    },
+
+    getCertification: (teacherId: string, id: string): Promise<ApiResponse<CertificationItem>> => {
+        return api.get<CertificationItem>(`/teachers/${teacherId}/certifications/${id}`);
+    },
+
+    addCertification: (teacherId: string, certification: Partial<CertificationItem>): Promise<ApiResponse<CertificationItem>> => {
+        // Manually normalize the date format to ensure we don't get duplicate -01 days
+        const normalizeDate = (dateStr: string): string => {
+            if (!dateStr) return "";
+            // Remove any existing -01 day that might have been added incorrectly
+            const cleaned = dateStr.replace(/-01-01$/, "-01");
+            
+            // Ensure we have a YYYY-MM format
+            const dateMatch = cleaned.match(/^(\d{4}-\d{2})(?:-\d{2})?$/);
+            if (dateMatch) {
+                return `${dateMatch[1]}-01`;
+            }
+            
+            // If it's in another format, use formatDateForDatabase
+            return formatDateForDatabase(dateStr);
+        };
+        
+        const normalizedData = {
+            ...certification,
+            teacherProfile: teacherId,
+            issueDate: certification.issueDate ? normalizeDate(certification.issueDate as string) : "",
+            expiryDate: certification.expiryDate ? normalizeDate(certification.expiryDate as string) : null
+        };
+        
+        delete normalizedData._id;
+        
+        return api.post<CertificationItem>(`/teachers/${teacherId}/certifications`, normalizedData);
+    },
+
+    updateCertification: (teacherId: string, certification: CertificationItem): Promise<ApiResponse<CertificationItem>> => {
+        // Manually normalize the date format to ensure we don't get duplicate -01 days
+        const normalizeDate = (dateStr: string): string => {
+            if (!dateStr) return "";
+            // Remove any existing -01 day that might have been added incorrectly
+            const cleaned = dateStr.replace(/-01-01$/, "-01");
+            
+            // Ensure we have a YYYY-MM format
+            const dateMatch = cleaned.match(/^(\d{4}-\d{2})(?:-\d{2})?$/);
+            if (dateMatch) {
+                return `${dateMatch[1]}-01`;
+            }
+            
+            // If it's in another format, use formatDateForDatabase
+            return formatDateForDatabase(dateStr);
+        };
+        
+        const updateData = {
+            ...certification,
+            issueDate: certification.issueDate ? normalizeDate(certification.issueDate as string) : "",
+            expiryDate: certification.expiryDate ? normalizeDate(certification.expiryDate as string) : null
+        };
+        
+        delete updateData._id;
+        
+        return api.patch<CertificationItem>(`/teachers/${teacherId}/certifications/${certification._id}`, updateData);
+    },
+
+    deleteCertification: (teacherId: string, certificationId: string): Promise<ApiResponse<{ success: boolean }>> => {
+        return api.delete<{ success: boolean }>(`/teachers/${teacherId}/certifications/${certificationId}`);
+    },
 };

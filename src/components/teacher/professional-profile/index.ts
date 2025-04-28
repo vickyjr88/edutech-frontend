@@ -23,16 +23,16 @@ import type { LanguageItem } from "./utils/languageUtils";
 
 // Define CertificationItem type
 export type CertificationItem = {
-  id: string;
-  value: string;
+  _id: string;
+  name: string;
   details?: string;
-  issuer?: string;
-  issueDate?: string;
+  issuer: string;
+  issueDate: string;
   expiryDate?: string;
   certificateType?: string;
   description?: string;
   isVerifiable?: boolean;
-  verificationUrl?: string;
+  credentialUrl?: string;
 };
 
 // Export all components and types
