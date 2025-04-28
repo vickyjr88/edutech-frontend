@@ -28,8 +28,7 @@ const AuthCallback = () => {
             navigate("/teacher-dashboard");
           }else if (userRole === "student") {
             navigate("/student-dashboard");
-          }
-          if (userRole === "parent") {
+          }else if (userRole === "parent") {
             navigate("/parent-dashboard");
           }else {
             navigate("/dashboard");

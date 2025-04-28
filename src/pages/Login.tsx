@@ -66,7 +66,7 @@ const Login = () => {
       const userRole = data.user?.role;
       if (userRole === "teacher") {
         navigate("/teacher-dashboard");
-      }if (userRole === "student") {
+      } else if (userRole === "student") {
         navigate("/student-dashboard");
       } else {
         navigate(from);
