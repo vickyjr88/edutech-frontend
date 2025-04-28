@@ -202,7 +202,7 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
     return dateString;
   };
 
-  const handleSave = async () => {
+  const saveAllCertifications = async () => {
     if (!user?.teacherId) {
       toast({
         title: "Authentication Required",
@@ -264,6 +264,70 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
       setIsSaving(false);
     }
   };
+  
+  // Save an individual certification
+  const saveCertificationItem = async (cert: CertificationItem) => {
+    if (!user?.teacherId) {
+      toast({
+        title: "Authentication Required",
+        description: "You must be logged in to save this certification",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    if (!cert.name) {
+      toast({
+        title: "Validation Error",
+        description: "Please provide a name for this certification",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setIsSaving(true);
+    
+    try {
+      const isNew = cert._id.startsWith('temp-');
+      let result;
+      
+      if (isNew) {
+        // Create new certification
+        const { _id, ...newCert } = cert;
+        result = await saveCertification(user.teacherId, newCert);
+      } else {
+        // Update existing certification
+        result = await updateCertification(user.teacherId, cert);
+      }
+      
+      if (!result.success) {
+        throw new Error(result.error || `Failed to save certification: ${cert.name}`);
+      }
+      
+      // Reload certifications to get latest data
+      await loadCertifications();
+      
+      // Notify parent component if needed
+      if (onCertificationsChange) {
+        onCertificationsChange();
+      }
+      
+      toast({
+        title: "Success",
+        description: `${cert.name} has been saved successfully`,
+        variant: "default"
+      });
+    } catch (error: any) {
+      console.error("Error saving certification:", error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to save certification",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -303,11 +367,23 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
               >
                 {expandedItems[cert._id] ? "Collapse" : "Edit"}
               </Button>
+              {expandedItems[cert._id] && (
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => saveCertificationItem(cert)}
+                  disabled={isSaving}
+                  className="border-blue-500 text-blue-600 hover:bg-blue-50 hover:text-blue-700"
+                >
+                  {isSaving ? "Saving..." : "Save"}
+                </Button>
+              )}
               <Button 
-                variant="ghost" 
+                variant="outline" 
                 size="sm"
                 onClick={() => removeItem(cert._id)}
                 disabled={certifications.length === 1}
+                className="border-red-400 hover:bg-red-50"
               >
                 <Trash2 className="h-4 w-4 text-red-500" />
               </Button>
@@ -493,23 +569,14 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
         </div>
       ))}
       
-      <div className="flex gap-4">
+      <div className="flex justify-center">
         <Button
           variant="outline"
-          className="flex-1"
+          className="w-full md:w-auto border-green-500 text-green-600 hover:bg-green-50 hover:text-green-700"
           onClick={addItem}
         >
           <PlusCircle className="mr-2 h-4 w-4" />
           Add Another Certification or Award
-        </Button>
-        
-        <Button 
-          variant="default"
-          className="px-8"
-          onClick={handleSave}
-          disabled={isSaving}
-        >
-          {isSaving ? "Saving..." : "Save"}
         </Button>
       </div>
     </div>
