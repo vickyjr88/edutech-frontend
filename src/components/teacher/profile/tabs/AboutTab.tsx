@@ -188,7 +188,7 @@ export default function AboutTab({ teacher }: AboutTabProps) {
             {teacher.strategies.length > 0 ? (
               <ul className="space-y-5">
                 {teacher.strategies.map((item) => (
-                  <CardWithCheckIcon key={item.id}>
+                  <CardWithCheckIcon key={item._id}>
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="font-medium text-gray-900">{item.strategy}</span>
                       {item.is_certified && (

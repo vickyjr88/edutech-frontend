@@ -15,7 +15,7 @@ const StrategiesStep = ({ strategies, setStrategies }: StrategiesStepProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [currentItem, setCurrentItem] = useState<StrategyItem>({
-    id: "",
+    _id: "",
     strategy: "",
     description: "",
     isCertified: false
@@ -89,7 +89,7 @@ const StrategiesStep = ({ strategies, setStrategies }: StrategiesStepProps) => {
         if (success) {
           setStrategies(prev => 
             prev.map(s => 
-              s.id === currentItem.id ? currentItem : s
+              s._id === currentItem._id ? currentItem : s
             )
           );
           toast({
@@ -114,7 +114,7 @@ const StrategiesStep = ({ strategies, setStrategies }: StrategiesStepProps) => {
       
       // Reset form
       setCurrentItem({
-        id: "",
+        _id: "",
         strategy: "",
         description: "",
         isCertified: false
@@ -145,7 +145,7 @@ const StrategiesStep = ({ strategies, setStrategies }: StrategiesStepProps) => {
     try {
       const success = await deleteStrategyRecord(user.teacherId,id);
       if (success) {
-        setStrategies(prev => prev.filter(s => s.id !== id));
+        setStrategies(prev => prev.filter(s => s._id !== id));
         toast({
           title: "Success",
           description: "Teaching strategy deleted successfully",
@@ -165,7 +165,7 @@ const StrategiesStep = ({ strategies, setStrategies }: StrategiesStepProps) => {
 
   const handleCancel = () => {
     setCurrentItem({
-      id: "",
+      _id: "",
       strategy: "",
       description: "",
       isCertified: false

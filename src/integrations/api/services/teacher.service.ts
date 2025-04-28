@@ -305,21 +305,24 @@ export const teacherService = {
     },
     //teacher teaching strategies
     getTeachingStrategies: (teacherId: string): Promise<ApiResponse<any[]>> => {
-        return api.get<any[]>(`/teachers/${teacherId}/strategies`);
+        return api.get<any[]>(`/teachers/${teacherId}/strategy`);
     },
     getTeachingStrategy: (teacherId: string, id:string): Promise<ApiResponse<any[]>> => {
-        return api.get<any[]>(`/teachers/${teacherId}/strategies/${id}`);
+        return api.get<any[]>(`/teachers/${teacherId}/strategy/${id}`);
     },
     addTeachingStrategy: (teacherId: string, teachingStrategy: Partial<StrategyItem>): Promise<ApiResponse<any[]>> => {
-        return api.post<any[]>(`/teachers/${teacherId}/strategies`,
-            teachingStrategy);
+        return api.post<any[]>(`/teachers/${teacherId}/strategy`,
+            {
+                ...teachingStrategy,
+                teacherProfile: teacherId,
+            });
     },
     updateTeachingStrategy: (teacherId: string, teachingStrategy: StrategyItem): Promise<ApiResponse<any[]>> => {
-        return api.patch<any[]>(`/teachers/${teacherId}/strategies/${teachingStrategy.id}`,
+        return api.patch<any[]>(`/teachers/${teacherId}/strategy/${teachingStrategy._id}`,
             teachingStrategy);
     },
     deleteTeachingStrategy: (teacherId: string, id: string): Promise<ApiResponse<any[]>> => {
-        return api.delete<any[]>(`/teachers/${teacherId}/strategies/${id}`);
+        return api.delete<any[]>(`/teachers/${teacherId}/strategy/${id}`);
     },
     //teacher language expertise
     getLanguageExpertise: (teacherId: string): Promise<ApiResponse<LanguageItem[]>> => {

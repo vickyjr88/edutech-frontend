@@ -149,7 +149,7 @@ export default function TeacherHeader({ teacher }: TeacherHeaderProps) {
                 ))}
                 {teacher.strategies.map(strategy => (
                   <Badge 
-                    key={strategy.id} 
+                    key={strategy._id}
                     className="bg-green-100 text-green-800 hover:bg-green-200"
                   >
                     {strategy.strategy}

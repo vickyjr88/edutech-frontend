@@ -16,7 +16,7 @@ export const TEACHING_STRATEGIES = [
 ];
 
 export type StrategyItem = {
-  id?: string;
+  _id?: string;
   strategy: string;
   description?: string;
   isCertified: boolean;
@@ -34,7 +34,7 @@ export const fetchStrategyRecords = async (teacherId: string): Promise<StrategyI
     }
     
     return data.map((record: any) => ({
-      id: record.id,
+      _id: record.id,
       strategy: record.strategy,
       description: record.description || "",
       isCertified: record.isCertified || false
@@ -64,7 +64,7 @@ export const saveStrategyRecord = async (
     
     const newRecord = data[0] as any;
     return {
-      id: newRecord._id,
+      _id: newRecord._id,
       strategy: newRecord.strategy,
       description: newRecord.description || "",
       isCertified: newRecord.isCertified
@@ -80,7 +80,7 @@ export const updateStrategyRecord = async (
 ): Promise<boolean> => {
   try {
     const { error } = await teacherService.updateTeachingStrategy(teacherId, {
-      id:item.id,
+      _id:item._id,
       description:item.description,
       strategy:item.strategy,
       isCertified: item.isCertified
