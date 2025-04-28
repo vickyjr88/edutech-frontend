@@ -59,11 +59,32 @@ const AcademicSubjectsStep = ({ subjects, setSubjects, onSubjectsChange }: Acade
 
   const loadSubjects = async () => {
     setIsLoading(true);
-    if (user) {
-      const data = await fetchAcademicSubjects();
-      setSubjects(data);
+    try {
+      if (user?.teacherId) {
+        console.log("Fetching academic subjects for teacher:", user.teacherId);
+        const data = await fetchAcademicSubjects();
+        console.log("Received subjects:", data);
+        
+        if (Array.isArray(data)) {
+          setSubjects(data);
+        } else {
+          console.error("Failed to fetch subjects: invalid data format", data);
+          setSubjects([]);
+        }
+      } else {
+        console.error("Cannot load subjects - missing teacher ID");
+      }
+    } catch (error) {
+      console.error("Error loading subjects:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load academic subjects",
+        variant: "destructive"
+      });
+      setSubjects([]);
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -92,29 +113,56 @@ const AcademicSubjectsStep = ({ subjects, setSubjects, onSubjectsChange }: Acade
     e.preventDefault();
     
     if (!currentSubject.curriculum || !currentSubject.subject || !currentSubject.gradeLevel || !currentSubject.proficiencyLevel) {
+      toast({
+        title: "Validation Error",
+        description: "Please fill out all required fields",
+        variant: "destructive"
+      });
       return;
     }
 
+    setIsLoading(true);
+    
     try {
       if (isEditing) {
+        console.log("Updating subject:", currentSubject);
         const success = await updateAcademicSubject(currentSubject);
         if (success) {
-          loadSubjects();
+          await loadSubjects();
           resetForm();
           if (onSubjectsChange) onSubjectsChange();
+          toast({
+            title: "Success",
+            description: "Subject updated successfully"
+          });
         }
       } else {
-         
+        console.log("Adding new subject:", currentSubject);
         const { _id, ...newSubject } = currentSubject;
         const newId = await addAcademicSubject(newSubject);
         if (newId) {
-          loadSubjects();
-          resetForm();
-          if (onSubjectsChange) onSubjectsChange();
+          toast({
+            title: "Success",
+            description: "New subject added successfully"
+          });
+          
+          // Force reload subjects with a slight delay to ensure API consistency
+          setTimeout(async () => {
+            await loadSubjects();
+            resetForm();
+            if (onSubjectsChange) onSubjectsChange();
+          }, 500);
         }
       }
     } catch (error) {
       console.error("Error saving academic subject:", error);
+      toast({
+        title: "Error",
+        description: "Failed to save subject. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -137,10 +185,68 @@ const AcademicSubjectsStep = ({ subjects, setSubjects, onSubjectsChange }: Acade
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Add Academic Subject</CardTitle>
+          <CardTitle className="text-lg">My Academic Subjects</CardTitle>
           <CardDescription>
-            Add subjects you are qualified to teach in academic settings
+            Subjects you are qualified to teach in academic settings
           </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <p className="text-center py-4">Loading subjects...</p>
+          ) : subjects.length === 0 ? (
+            <p className="text-center py-4 text-muted-foreground">
+              You haven't added any academic subjects yet.
+            </p>
+          ) : (
+            <Table>
+              <TableCaption>Your academic teaching subjects</TableCaption>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Subject</TableHead>
+                  <TableHead>Curriculum</TableHead>
+                  <TableHead>Grade</TableHead>
+                  <TableHead>Proficiency</TableHead>
+                  <TableHead>Certified</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {subjects.map(subject => (
+                  <TableRow key={subject._id}>
+                    <TableCell className="font-medium">{subject.subject}</TableCell>
+                    <TableCell>{subject.curriculum}</TableCell>
+                    <TableCell>{subject.gradeLevel}</TableCell>
+                    <TableCell>{subject.proficiencyLevel}</TableCell>
+                    <TableCell>{subject.isCertified ? "Yes" : "No"}</TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end space-x-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleEdit(subject)}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDelete(subject._id)}
+                        >
+                          <Trash2 className="h-4 w-4 text-red-500" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+      
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">{isEditing ? "Edit Academic Subject" : "Add Academic Subject"}</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -277,76 +383,6 @@ const AcademicSubjectsStep = ({ subjects, setSubjects, onSubjectsChange }: Acade
             </div>
           </form>
         </CardContent>
-      </Card>
-      
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">My Academic Subjects</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <p className="text-center py-4">Loading subjects...</p>
-          ) : subjects.length === 0 ? (
-            <p className="text-center py-4 text-muted-foreground">
-              You haven't added any academic subjects yet.
-            </p>
-          ) : (
-            <Table>
-              <TableCaption>Your academic teaching subjects</TableCaption>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Subject</TableHead>
-                  <TableHead>Curriculum</TableHead>
-                  <TableHead>Grade</TableHead>
-                  <TableHead>Proficiency</TableHead>
-                  <TableHead>Certified</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {subjects.map(subject => (
-                  <TableRow key={subject._id}>
-                    <TableCell className="font-medium">{subject.subject}</TableCell>
-                    <TableCell>{subject.curriculum}</TableCell>
-                    <TableCell>{subject.gradeLevel}</TableCell>
-                    <TableCell>{subject.proficiencyLevel}</TableCell>
-                    <TableCell>{subject.isCertified ? "Yes" : "No"}</TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end space-x-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleEdit(subject)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDelete(subject._id)}
-                        >
-                          <Trash2 className="h-4 w-4 text-red-500" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-        {subjects.length > 0 && (
-          <CardFooter>
-            <Button
-              variant="outline"
-              className="w-full"
-              onClick={resetForm}
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              Add Another Subject
-            </Button>
-          </CardFooter>
-        )}
       </Card>
     </div>
   );

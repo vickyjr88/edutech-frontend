@@ -43,19 +43,22 @@ export const useAcademicSubjects = (teacherId: string) => {
     }
   };
 
-  const addAcademicSubject = async (subject: Omit<AcademicSubjectItem, 'id'>): Promise<string | null> => {
+  const addAcademicSubject = async (subject: Omit<AcademicSubjectItem, '_id'>): Promise<string | null> => {
     if (!teacherId) return null;
     try {
-
-      const { data, error } = await teacherService.addAcademicSubject(teacherId,subject);
+      console.log("Adding academic subject:", subject);
+      const { data, error } = await teacherService.addAcademicSubject(teacherId, subject);
       if (error) throw error;
 
+      console.log("API Response:", data);
+      
       toast({
         title: "Subject Added",
         description: "Academic subject has been added successfully"
       });
 
-      return data.id;
+      // Return the ID from the response
+      return data._id || data.id;
     } catch (error) {
       console.error("Error adding academic subject:", error);
       toast({

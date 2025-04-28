@@ -59,11 +59,32 @@ const AfterSchoolSubjectsStep = ({ subjects, setSubjects, onSubjectsChange }: Af
 
   const loadSubjects = async () => {
     setIsLoading(true);
-    if (user) {
-      const data = await fetchAfterSchoolSubjects();
-      setSubjects(data);
+    try {
+      if (user?.teacherId) {
+        console.log("Fetching after-school subjects for teacher:", user.teacherId);
+        const data = await fetchAfterSchoolSubjects();
+        console.log("Received after-school subjects:", data);
+        
+        if (Array.isArray(data)) {
+          setSubjects(data);
+        } else {
+          console.error("Failed to fetch after-school subjects: invalid data format", data);
+          setSubjects([]);
+        }
+      } else {
+        console.error("Cannot load after-school subjects - missing teacher ID");
+      }
+    } catch (error) {
+      console.error("Error loading after-school subjects:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load after-school subjects",
+        variant: "destructive"
+      });
+      setSubjects([]);
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -76,6 +97,7 @@ const AfterSchoolSubjectsStep = ({ subjects, setSubjects, onSubjectsChange }: Af
   };
 
   const resetForm = () => {
+    console.log("Resetting after-school subject form");
     setCurrentSubject({
       id: "",
       subject: "",
@@ -92,29 +114,75 @@ const AfterSchoolSubjectsStep = ({ subjects, setSubjects, onSubjectsChange }: Af
     e.preventDefault();
     
     if (!currentSubject.subject || !currentSubject.ageRange) {
+      toast({
+        title: "Validation Error",
+        description: "Please fill out all required fields",
+        variant: "destructive"
+      });
       return;
     }
 
+    setIsLoading(true);
+    
     try {
       if (isEditing) {
+        console.log("Updating after-school subject:", currentSubject);
         const success = await updateAfterSchoolSubject(currentSubject);
         if (success) {
-          loadSubjects();
+          toast({
+            title: "Success",
+            description: "Subject updated successfully"
+          });
+          
+          // Immediately reset form
           resetForm();
-          if (onSubjectsChange) onSubjectsChange();
+          
+          // Then reload subjects with small delay
+          setTimeout(async () => {
+            await loadSubjects();
+            if (onSubjectsChange) onSubjectsChange();
+          }, 300);
         }
       } else {
-         
+        console.log("Adding new after-school subject:", currentSubject);
         const { id, ...newSubject } = currentSubject;
-        const newId = await addAfterSchoolSubject(newSubject);
+        
+        // Explicitly set isAcademic to false
+        const afterSchoolSubject = {
+          ...newSubject,
+          isAcademic: false
+        };
+        
+        const newId = await addAfterSchoolSubject(afterSchoolSubject);
         if (newId) {
-          loadSubjects();
+          console.log("New after-school subject added with ID:", newId);
+          
+          toast({
+            title: "Success",
+            description: "New after-school subject added successfully"
+          });
+          
+          // Immediately reset form first
           resetForm();
-          if (onSubjectsChange) onSubjectsChange();
+          
+          // Force reload subjects with a longer delay to ensure API consistency
+          setTimeout(async () => {
+            console.log("Reloading subjects after add...");
+            await loadSubjects();
+            if (onSubjectsChange) onSubjectsChange();
+            console.log("Subjects reloaded!");
+          }, 1000);
         }
       }
     } catch (error) {
       console.error("Error saving after-school subject:", error);
+      toast({
+        title: "Error",
+        description: "Failed to save subject. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -137,10 +205,68 @@ const AfterSchoolSubjectsStep = ({ subjects, setSubjects, onSubjectsChange }: Af
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Add After-School Subject</CardTitle>
+          <CardTitle className="text-lg">My After-School Subjects</CardTitle>
           <CardDescription>
-            Add subjects you are qualified to teach in after-school programs
+            Subjects you are qualified to teach in after-school programs
           </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <p className="text-center py-4">Loading subjects...</p>
+          ) : subjects.length === 0 ? (
+            <p className="text-center py-4 text-muted-foreground">
+              You haven't added any after-school subjects yet.
+            </p>
+          ) : (
+            <Table>
+              <TableCaption>Your after-school teaching subjects</TableCaption>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Subject</TableHead>
+                  <TableHead>Age Range</TableHead>
+                  <TableHead>Gender</TableHead>
+                  <TableHead>Religion</TableHead>
+                  <TableHead>Certified</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {subjects.map(subject => (
+                  <TableRow key={subject.id}>
+                    <TableCell className="font-medium">{subject.subject}</TableCell>
+                    <TableCell>{subject.ageRange}</TableCell>
+                    <TableCell>{subject.gender || "All"}</TableCell>
+                    <TableCell>{subject.religion || "All"}</TableCell>
+                    <TableCell>{subject.isCertified ? "Yes" : "No"}</TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end space-x-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleEdit(subject)}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDelete(subject.id)}
+                        >
+                          <Trash2 className="h-4 w-4 text-red-500" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+      
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">{isEditing ? "Edit After-School Subject" : "Add After-School Subject"}</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -267,76 +393,6 @@ const AfterSchoolSubjectsStep = ({ subjects, setSubjects, onSubjectsChange }: Af
             </div>
           </form>
         </CardContent>
-      </Card>
-      
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">My After-School Subjects</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <p className="text-center py-4">Loading subjects...</p>
-          ) : subjects.length === 0 ? (
-            <p className="text-center py-4 text-muted-foreground">
-              You haven't added any after-school subjects yet.
-            </p>
-          ) : (
-            <Table>
-              <TableCaption>Your after-school teaching subjects</TableCaption>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Subject</TableHead>
-                  <TableHead>Age Range</TableHead>
-                  <TableHead>Gender</TableHead>
-                  <TableHead>Religion</TableHead>
-                  <TableHead>Certified</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {subjects.map(subject => (
-                  <TableRow key={subject.id}>
-                    <TableCell className="font-medium">{subject.subject}</TableCell>
-                    <TableCell>{subject.ageRange}</TableCell>
-                    <TableCell>{subject.gender || "All"}</TableCell>
-                    <TableCell>{subject.religion || "All"}</TableCell>
-                    <TableCell>{subject.isCertified ? "Yes" : "No"}</TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end space-x-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleEdit(subject)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDelete(subject.id)}
-                        >
-                          <Trash2 className="h-4 w-4 text-red-500" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-        {subjects.length > 0 && (
-          <CardFooter>
-            <Button
-              variant="outline"
-              className="w-full"
-              onClick={resetForm}
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              Add Another Subject
-            </Button>
-          </CardFooter>
-        )}
       </Card>
     </div>
   );

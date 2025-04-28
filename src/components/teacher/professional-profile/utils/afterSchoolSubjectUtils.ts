@@ -16,15 +16,46 @@ export const useAfterSchoolSubjects = (userId: string | undefined, teacherId: st
   const { toast } = useToast();
 
   const fetchAfterSchoolSubjects = async (): Promise<AfterSchoolSubjectItem[]> => {
-    if (!userId) return [];
+    if (!userId || !teacherId) return [];
 
     try {
-      // Get all academic subjects for this teacher
-      const { data, error } = await teacherService.getTeacherAcademicSubjects(teacherId);
+      console.log("Fetching after-school subjects for teacher:", teacherId);
+      // Get after-school subjects (with isAcademic=false) for this teacher
+      const { data, error } = await teacherService.getTeacherAfterSchoolSubjects(teacherId);
 
-      if (error) throw error;
-      // Transform the data to match your expected format
-      return data
+      if (error) {
+        console.error("API error:", error);
+        throw error;
+      }
+      
+      console.log("After school subjects response:", data);
+      
+      // Transform the data to match the expected format
+      if (Array.isArray(data)) {
+        // Filter to make sure we only get non-academic subjects
+        const afterSchoolSubjects = data.filter(item => 
+          item.isAcademic === false || item.is_academic === false
+        );
+        
+        console.log("Filtered after-school subjects:", afterSchoolSubjects);
+        
+        return afterSchoolSubjects.map(item => {
+          const mappedItem = {
+            id: item._id || item.id,
+            subject: item.subject,
+            ageRange: item.ageRange || item.age_range || "",
+            gender: item.gender || "",
+            religion: item.religion || "",
+            description: item.description || "",
+            isCertified: item.isCertified || item.is_certified || false
+          };
+          console.log("Mapped item:", mappedItem);
+          return mappedItem;
+        });
+      } else {
+        console.error("Invalid data format from API:", data);
+        return [];
+      }
     } catch (error) {
       console.error("Error fetching after-school subjects:", error);
       toast({
@@ -37,18 +68,29 @@ export const useAfterSchoolSubjects = (userId: string | undefined, teacherId: st
   };
 
   const addAfterSchoolSubject = async (subject: Omit<AfterSchoolSubjectItem, 'id'>): Promise<string | null> => {
-    if (!userId) return null;
+    if (!userId || !teacherId) return null;
 
     try {
-      const { data, error } = await teacherService.addOutOfSchoolSubject(teacherId,subject);
+      console.log("Adding after-school subject:", subject);
+      
+      // Explicitly set isAcademic=false
+      const subjectWithFlag = {
+        ...subject,
+        isAcademic: false
+      };
+      
+      const { data, error } = await teacherService.addOutOfSchoolSubject(teacherId, subjectWithFlag);
       if (error) throw error;
 
+      console.log("Add after-school subject response:", data);
+      
       toast({
         title: "Subject Added",
         description: "After-school subject has been added successfully"
       });
 
-      return data.id;
+      // Return id from response
+      return data.id || data._id;
     } catch (error) {
       console.error("Error adding after-school subject:", error);
       toast({
@@ -61,10 +103,18 @@ export const useAfterSchoolSubjects = (userId: string | undefined, teacherId: st
   };
 
   const updateAfterSchoolSubject = async (subject: AfterSchoolSubjectItem): Promise<boolean> => {
-    if (!userId) return false;
+    if (!userId || !teacherId) return false;
 
     try {
-      const { error } = await teacherService.updateOutOfSchoolSubject(teacherId,subject)
+      console.log("Updating after-school subject:", subject);
+      
+      // Explicitly set isAcademic=false
+      const subjectWithFlag = {
+        ...subject,
+        isAcademic: false
+      };
+      
+      const { error } = await teacherService.updateOutOfSchoolSubject(teacherId, subjectWithFlag);
 
       if (error) throw error;
 
@@ -86,10 +136,12 @@ export const useAfterSchoolSubjects = (userId: string | undefined, teacherId: st
   };
 
   const deleteAfterSchoolSubject = async (id: string): Promise<boolean> => {
-    if (!userId) return false;
+    if (!userId || !teacherId) return false;
 
     try {
-      const { error } = await teacherService.deleteOutOfSchoolSubject(id)
+      console.log("Deleting after-school subject with ID:", id);
+      
+      const { error } = await teacherService.deleteOutOfSchoolSubject(teacherId, id);
 
       if (error) throw error;
 

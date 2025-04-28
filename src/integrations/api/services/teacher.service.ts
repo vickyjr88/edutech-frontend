@@ -276,10 +276,10 @@ export const teacherService = {
         return api.get<any>(`/teachers/${teacherId}/stats`);
     },
     getTeacherAcademicSubjects: (teacherId: string): Promise<ApiResponse<any[]>> => {
-        return api.get<any[]>(`/teachers/${teacherId}/subjects?academic=true`);
+        return api.get<any[]>(`/teachers/${teacherId}/subjects?isAcademic=true`);
     },
     getTeacherAfterSchoolSubjects: (teacherId: string): Promise<ApiResponse<any[]>> => {
-        return api.get<any[]>(`/teachers/${teacherId}/subjects?academic=false`);
+        return api.get<any[]>(`/teachers/${teacherId}/subjects?isAcademic=false`);
     },
     addAcademicSubject: (teacherProfileId: string,data: Partial<AcademicSubjectItem>): Promise<ApiResponse<any>> => {
         return api.post<any[]>(`/teachers/${teacherProfileId}/subjects`,
@@ -294,14 +294,14 @@ export const teacherService = {
     },
     addOutOfSchoolSubject: (teacherProfileId: string,data: Partial<AfterSchoolSubjectItem>): Promise<ApiResponse<any>> => {
         return api.post<any[]>(`/teachers/${teacherProfileId}/subjects`,
-            {teacherProfile:teacherProfileId,...data,academic:false});
+            {teacherProfile:teacherProfileId,...data,isAcademic:false});
     },
     updateOutOfSchoolSubject: (teacherProfileId: string,data: Partial<AfterSchoolSubjectItem>): Promise<ApiResponse<any>> => {
-        return api.patch<any[]>(`/teachers/${teacherProfileId}/subjects/${data.id}/?academic=false`,
-            {teacherProfile:teacherProfileId,...data,academic:false});
+        return api.patch<any[]>(`/teachers/${teacherProfileId}/subjects/${data.id}/?isAcademic=false`,
+            {teacherProfile:teacherProfileId,...data,isAcademic:false});
     },
     deleteOutOfSchoolSubject: (teacherId:string,id: string): Promise<ApiResponse<any>> => {
-        return api.delete<any[]>(`/teachers/${teacherId}/subjects/${id}/?academic=false`);
+        return api.delete<any[]>(`/teachers/${teacherId}/subjects/${id}/?isAcademic=false`);
     },
     //teacher teaching strategies
     getTeachingStrategies: (teacherId: string): Promise<ApiResponse<any[]>> => {
