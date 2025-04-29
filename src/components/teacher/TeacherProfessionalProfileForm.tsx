@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChevronRight, ChevronLeft } from "lucide-react";
@@ -48,6 +48,8 @@ const TeacherProfessionalProfileForm = ({
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [stepsCompletion, setStepsCompletion] = useState<boolean[]>(Array(9).fill(false));
+  const formRef = React.useRef<HTMLDivElement>(null);
   
   const [education, setEducation] = useState<EducationItem[]>([{ 
     _id: "1", 
@@ -87,10 +89,180 @@ const TeacherProfessionalProfileForm = ({
     if (user) {
       fetchEducationRecords();
       fetchTeacherExperience();
+      fetchAllStepsData();
     } else {
       setIsLoading(false);
     }
   }, [user]);
+  
+  // Log changes to currentStep and completion status for debugging
+  useEffect(() => {
+    console.log("Current step:", currentStep);
+    console.log("Steps completion status:", stepsCompletion);
+  }, [currentStep, stepsCompletion]);
+  
+  // Function to check completion status for each step
+  const checkStepsCompletion = () => {
+    // Initialize with default values for each step
+    let completionStatus = Array(totalSteps).fill(false);
+    
+    // Mark each step as complete based on data presence
+    if (education.length > 0 && education[0].institutionName) {
+      completionStatus[0] = true; // Education
+    }
+    
+    if (experience.length > 0 && experience[0].position) {
+      completionStatus[1] = true; // Experience
+    }
+    
+    if (strategies.length > 0) {
+      completionStatus[2] = true; // Strategies
+    }
+    
+    if (methodologies.length > 0) {
+      completionStatus[3] = true; // Methodologies
+    }
+    
+    if (academicSubjects.length > 0 || afterSchoolSubjects.length > 0) {
+      completionStatus[4] = true; // Subjects
+    }
+    
+    if (technicalSkills.length > 0) {
+      completionStatus[5] = true; // Skills
+    }
+    
+    if (languages.length > 0) {
+      completionStatus[6] = true; // Languages
+    }
+    
+    if (certifications.length > 0 && certifications[0].value) {
+      completionStatus[7] = true; // Certifications
+    }
+    
+    if (videoUrls.length > 0) {
+      completionStatus[8] = true; // Video
+    }
+    
+    setStepsCompletion(completionStatus);
+    return completionStatus;
+  };
+  
+  // Navigate to the first incomplete step
+  const navigateToFirstIncompleteStep = (completionStatus: boolean[]) => {
+    const firstIncompleteIndex = completionStatus.findIndex(isComplete => !isComplete);
+    
+    // If all steps are complete, show the last step
+    if (firstIncompleteIndex === -1) {
+      setCurrentStep(totalSteps);
+      return;
+    }
+    
+    // Set to the first incomplete step (steps are 1-indexed)
+    setCurrentStep(firstIncompleteIndex + 1);
+    
+    // Schedule a scroll after the component updates
+    setTimeout(() => {
+      if (formRef.current) {
+        formRef.current.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'start'
+        });
+      }
+    }, 100);
+  };
+  
+  // Fetch all step data
+  const fetchAllStepsData = async () => {
+    try {
+      if (!user?.teacherId) return;
+      
+      setIsLoading(true);
+      
+      // Fetch strategies
+      const { data: strategiesData } = await teacherService.getTeachingStrategies(user.teacherId);
+      if (strategiesData && strategiesData.length > 0) {
+        setStrategies(strategiesData);
+      }
+      
+      // Fetch methodologies
+      const { data: methodologiesData } = await teacherService.getTeachingMethology(user.teacherId);
+      if (methodologiesData && methodologiesData.length > 0) {
+        setMethodologies(methodologiesData);
+      }
+      
+      // Fetch academic subjects
+      const { data: academicSubjectsData } = await teacherService.getTeacherAcademicSubjects(user.teacherId);
+      if (academicSubjectsData && academicSubjectsData.length > 0) {
+        setAcademicSubjects(academicSubjectsData);
+      }
+      
+      // Fetch after-school subjects
+      const { data: afterSchoolSubjectsData } = await teacherService.getTeacherAfterSchoolSubjects(user.teacherId);
+      if (afterSchoolSubjectsData && afterSchoolSubjectsData.length > 0) {
+        setAfterSchoolSubjects(afterSchoolSubjectsData);
+      }
+      
+      // Fetch technical skills
+      const { data: skillsData } = await teacherService.getTechnicalSkills(user.teacherId);
+      if (skillsData && skillsData.length > 0) {
+        setTechnicalSkills(skillsData);
+      }
+      
+      // Fetch languages
+      const { data: languagesData } = await teacherService.getLanguageExpertise(user.teacherId);
+      if (languagesData && languagesData.length > 0) {
+        setLanguages(languagesData);
+      }
+      
+      // Fetch certifications
+      const { data: certificationsData } = await teacherService.getCertifications(user.teacherId);
+      if (certificationsData && certificationsData.length > 0) {
+        setCertifications(certificationsData.map(cert => ({ 
+          id: cert._id, 
+          value: cert.name, 
+          details: cert.description || ''
+        })));
+      }
+      
+      // After all data is loaded, check completion status and navigate
+      setTimeout(() => {
+        const completionStatus = checkStepsCompletion();
+        console.log("Steps completion status:", completionStatus);
+        
+        // Find the first incomplete step
+        const firstIncompleteIndex = completionStatus.findIndex(isComplete => !isComplete);
+        console.log("First incomplete step index:", firstIncompleteIndex);
+        
+        if (firstIncompleteIndex !== -1) {
+          // +1 because steps are 1-indexed
+          setCurrentStep(firstIncompleteIndex + 1);
+          console.log("Navigating to step:", firstIncompleteIndex + 1);
+        } else {
+          // If all steps are complete, go to the last step
+          setCurrentStep(totalSteps);
+          console.log("All steps complete, navigating to last step");
+        }
+        
+        setIsLoading(false);
+        
+        // Scroll to form after a brief delay to ensure rendering is complete
+        setTimeout(() => {
+          if (formRef.current) {
+            formRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        }, 300);
+      }, 1000);
+      
+    } catch (error) {
+      console.error("Error fetching profile data:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load your profile data",
+        variant: "destructive"
+      });
+      setIsLoading(false);
+    }
+  };
 
   const fetchEducationRecords = async () => {
     try {
@@ -199,8 +371,23 @@ const TeacherProfessionalProfileForm = ({
   };
 
   const handleNext = () => {
+    // Update completion status for the current step based on actual data presence
+    const newCompletionStatus = [...stepsCompletion];
+    
+    // Mark current step as complete if it has data
+    newCompletionStatus[currentStep - 1] = true;
+    
+    setStepsCompletion(newCompletionStatus);
+    
     if (currentStep < totalSteps) {
       setCurrentStep(currentStep + 1);
+      
+      // Scroll to the form after step change
+      setTimeout(() => {
+        if (formRef.current) {
+          formRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 100);
     } else {
       handleSubmit();
     }
@@ -209,6 +396,31 @@ const TeacherProfessionalProfileForm = ({
   const handleBack = () => {
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
+      
+      // Scroll to the form after step change
+      setTimeout(() => {
+        if (formRef.current) {
+          formRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 100);
+    }
+  };
+  
+  // Function to jump to a specific step (for navigation from timeline)
+  const jumpToStep = (stepIndex: number) => {
+    // Only allow jumping to completed steps or the current incomplete step
+    if (stepIndex >= 1 && stepIndex <= totalSteps) {
+      // Always allow clicking on any step in the timeline
+      console.log(`Jumping to step ${stepIndex}`);
+      
+      setCurrentStep(stepIndex);
+      
+      // Scroll to the form after step change
+      setTimeout(() => {
+        if (formRef.current) {
+          formRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 100);
     }
   };
 
@@ -285,7 +497,7 @@ const TeacherProfessionalProfileForm = ({
   };
 
   return (
-    <Card className="w-full max-w-4xl mx-auto">
+    <Card ref={formRef} className="w-full max-w-4xl mx-auto">
       <CardHeader>
         <CardTitle>{getStepTitle()}</CardTitle>
         <CardDescription>{getStepDescription()}</CardDescription>
@@ -294,7 +506,9 @@ const TeacherProfessionalProfileForm = ({
         <ProgressIndicator 
           currentStep={currentStep} 
           totalSteps={totalSteps} 
-          stepLabels={stepLabels} 
+          stepLabels={stepLabels}
+          completionStatus={stepsCompletion}
+          onStepClick={jumpToStep}
         />
         {renderCurrentStep()}
       </CardContent>
