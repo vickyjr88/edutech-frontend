@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Home, BookOpen, Users, Calendar, User, Settings, LogOut, Edit, Phone, MapPin, Award, CheckCircle2, CircleDashed, Video, PlusCircle, Star, UserPlus, BookText, School, UsersRound, UserRound, ChevronLeft } from "lucide-react";
+import { Home, BookOpen, Users, Calendar, User, Settings, LogOut, Edit, Phone, MapPin, Award, CheckCircle2, CircleDashed, Video, PlusCircle, Star, UserPlus, BookText, School, UsersRound, UserRound, ChevronLeft, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import TeacherProfileForm from "@/components/teacher/TeacherProfileForm";
@@ -239,9 +239,18 @@ const TeacherDashboard = () => {
     navigate("/");
   };
 
+  const [isProfessionalProfileLoading, setIsProfessionalProfileLoading] = useState(false);
+  
   const handleCompleteProfessionalProfile = () => {
-    setShowProfessionalForm(true);
-    setActiveTab("settings");
+    // Start loading animation
+    setIsProfessionalProfileLoading(true);
+    
+    // Simulate loading for a short period to show the animation
+    setTimeout(() => {
+      setShowProfessionalForm(true);
+      setActiveTab("settings");
+      setIsProfessionalProfileLoading(false);
+    }, 800); // Animation duration
   };
 
   const handleProfessionalProfileComplete = () => {
@@ -692,11 +701,19 @@ const TeacherDashboard = () => {
                               </p>
                               {!hasProfessionalProfile && (
                                 <Button 
-                                  className="mt-2 bg-amber-600 hover:bg-amber-700 text-white"
+                                  className="mt-2 bg-amber-600 hover:bg-amber-700 text-white relative"
                                   size="sm"
                                   onClick={handleCompleteProfessionalProfile}
+                                  disabled={isProfessionalProfileLoading}
                                 >
-                                  Complete Now
+                                  {isProfessionalProfileLoading ? (
+                                    <>
+                                      <Loader2 className="h-4 w-4 mr-2 inline-block animate-spin" />
+                                      Loading...
+                                    </>
+                                  ) : (
+                                    "Complete Now"
+                                  )}
                                 </Button>
                               )}
                             </div>

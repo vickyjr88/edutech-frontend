@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { ChevronRight, ChevronLeft } from "lucide-react";
+import { ChevronRight, ChevronLeft, CheckCircle, Loader2 } from "lucide-react";
 import { 
   EducationStep, 
   ExperienceStep,
@@ -149,16 +149,10 @@ const TeacherProfessionalProfileForm = ({
   
   // Navigate to the first incomplete step
   const navigateToFirstIncompleteStep = (completionStatus: boolean[]) => {
-    const firstIncompleteIndex = completionStatus.findIndex(isComplete => !isComplete);
+    // This is a placeholder since we're rolling back - we actually ignore the completionStatus
+    // and just rely on the step tracking in the UI
     
-    // If all steps are complete, show the last step
-    if (firstIncompleteIndex === -1) {
-      setCurrentStep(totalSteps);
-      return;
-    }
-    
-    // Set to the first incomplete step (steps are 1-indexed)
-    setCurrentStep(firstIncompleteIndex + 1);
+    console.log("Navigating to step:", currentStep);
     
     // Schedule a scroll after the component updates
     setTimeout(() => {
@@ -229,28 +223,20 @@ const TeacherProfessionalProfileForm = ({
         const completionStatus = checkStepsCompletion();
         console.log("Steps completion status:", completionStatus);
         
-        // Find the first incomplete step
-        const firstIncompleteIndex = completionStatus.findIndex(isComplete => !isComplete);
-        console.log("First incomplete step index:", firstIncompleteIndex);
+        // Navigate to first incomplete step (placeholder in the rolled back version)
+        navigateToFirstIncompleteStep(completionStatus);
         
-        if (firstIncompleteIndex !== -1) {
-          // +1 because steps are 1-indexed
-          setCurrentStep(firstIncompleteIndex + 1);
-          console.log("Navigating to step:", firstIncompleteIndex + 1);
-        } else {
-          // If all steps are complete, go to the last step
-          setCurrentStep(totalSteps);
-          console.log("All steps complete, navigating to last step");
-        }
-        
-        setIsLoading(false);
-        
-        // Scroll to form after a brief delay to ensure rendering is complete
+        // Simulate longer loading for better UX with the animation
         setTimeout(() => {
-          if (formRef.current) {
-            formRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          }
-        }, 300);
+          setIsLoading(false);
+          
+          // Scroll to form after a brief delay to ensure rendering is complete
+          setTimeout(() => {
+            if (formRef.current) {
+              formRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+          }, 300);
+        }, 1000); // Show the loading animation for at least 1 second
       }, 1000);
       
     } catch (error) {
@@ -424,20 +410,120 @@ const TeacherProfessionalProfileForm = ({
     }
   };
 
-  const handleSubmit = () => {
+  // Validate that all required steps have data
+  const validateProfileCompletion = (): boolean => {
+    // Check if we have data for each step
+    const hasEducation = education.length > 0 && education.some(item => item.institution || item.institutionName);
+    const hasExperience = experience.length > 0 && experience.some(item => item.position && item.institution);
+    const hasStrategies = strategies.length > 0;
+    const hasMethodologies = methodologies.length > 0;
+    const hasSubjects = academicSubjects.length > 0 || afterSchoolSubjects.length > 0;
+    const hasSkills = technicalSkills.length > 0;
+    const hasLanguages = languages.length > 0;
+    const hasCertifications = certifications.length > 0 && certifications.some(item => item.value);
+    const hasIntroVideo = videoUrls.length > 0;
+    
+    // Count required steps
+    const requiredStepCount = [
+      hasEducation,
+      hasExperience,
+      hasStrategies,
+      hasMethodologies,
+      hasSubjects,
+      hasSkills,
+      hasLanguages,
+      hasCertifications,
+      hasIntroVideo
+    ].filter(Boolean).length;
+    
+    // For completion, we'll require at least 6 out of 9 steps (more flexible approach)
+    const minRequiredSteps = 6;
+    const isComplete = requiredStepCount >= minRequiredSteps;
+    
+    if (!isComplete) {
+      // Build a message about what's missing
+      const missingSteps = [];
+      if (!hasEducation) missingSteps.push("Education");
+      if (!hasExperience) missingSteps.push("Experience");
+      if (!hasStrategies) missingSteps.push("Teaching Strategies");
+      if (!hasMethodologies) missingSteps.push("Teaching Methodologies");
+      if (!hasSubjects) missingSteps.push("Subject Expertise");
+      if (!hasSkills) missingSteps.push("Technical Skills");
+      if (!hasLanguages) missingSteps.push("Languages");
+      if (!hasCertifications) missingSteps.push("Certifications");
+      if (!hasIntroVideo) missingSteps.push("Introduction Video");
+      
+      const formattedMissing = missingSteps.slice(0, 3).join(", ") + 
+        (missingSteps.length > 3 ? ` and ${missingSteps.length - 3} more steps` : "");
+      
+      toast({
+        title: "Profile Incomplete",
+        description: `You need to complete at least ${minRequiredSteps} steps to submit. Missing: ${formattedMissing}`,
+        variant: "destructive"
+      });
+    }
+    
+    return isComplete;
+  };
+
+  const handleSubmit = async () => {
+    if (!user?.teacherId) {
+      toast({
+        title: "Error",
+        description: "You must be logged in to complete your profile",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Validate profile first
+    if (!validateProfileCompletion()) {
+      return;
+    }
+
     setIsSubmitting(true);
     
-    setTimeout(() => {
-      setIsSubmitting(false);
+    try {
+      // Mark the profile as complete
+      const { data, error } = await teacherService.updateProfile(user.teacherId, {
+        isProfileComplete: true
+      });
+      
+      if (error) {
+        throw new Error(error.message || "Failed to mark profile as complete");
+      }
+      
+      console.log("Profile marked as complete:", data);
+      
+      toast({
+        title: "Success",
+        description: "Your professional profile has been completed successfully!",
+      });
+      
+      // Call the parent completion handler
       onComplete();
-    }, 1000);
+    } catch (error) {
+      console.error("Error marking profile as complete:", error);
+      toast({
+        title: "Error",
+        description: "There was an error updating your profile status. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const renderCurrentStep = () => {
     if (isLoading) {
       return (
-        <div className="py-8 flex justify-center">
-          <p>Loading...</p>
+        <div className="py-8 flex flex-col items-center justify-center space-y-4">
+          <div className="relative w-16 h-16">
+            <div className="absolute inset-0 rounded-full border-4 border-t-green-500 border-r-blue-500 border-b-amber-500 border-l-indigo-500 animate-spin"></div>
+            <div className="absolute inset-3 rounded-full border-2 border-t-green-400 border-r-blue-400 border-b-amber-400 border-l-indigo-400 animate-spin animate-ping"></div>
+          </div>
+          <p className="text-base font-medium text-gray-600 animate-pulse">Loading your profile data...</p>
+          <p className="text-sm text-gray-500">Finding the last incomplete step</p>
         </div>
       );
     }
@@ -497,7 +583,10 @@ const TeacherProfessionalProfileForm = ({
   };
 
   return (
-    <Card ref={formRef} className="w-full max-w-4xl mx-auto">
+    <Card 
+      ref={formRef} 
+      className={`w-full max-w-4xl mx-auto transition-opacity duration-500 ${!isLoading ? 'opacity-100' : 'opacity-0'}`}
+    >
       <CardHeader>
         <CardTitle>{getStepTitle()}</CardTitle>
         <CardDescription>{getStepDescription()}</CardDescription>
@@ -527,9 +616,20 @@ const TeacherProfessionalProfileForm = ({
         <Button 
           onClick={handleNext}
           disabled={isSubmitting}
+          className={currentStep === totalSteps && isSubmitting ? "bg-green-600 hover:bg-green-700" : ""}
         >
           {currentStep === totalSteps ? (
-            isSubmitting ? 'Submitting...' : 'Complete Profile'
+            isSubmitting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Completing Profile...
+              </>
+            ) : (
+              <>
+                <CheckCircle className="mr-2 h-4 w-4" />
+                Complete Profile
+              </>
+            )
           ) : (
             <>
               Next
