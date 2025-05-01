@@ -14,6 +14,7 @@ import TeacherDashboard from "./pages/TeacherDashboard";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import AuthCallback from "./pages/AuthCallback";
+import ZoomAuthCallback from "./pages/ZoomAuthCallback";
 import ForTeachers from "./pages/ForTeachers";
 import ForParents from "./pages/ForParents";
 import ForStudents from "./pages/ForStudents";
@@ -40,6 +41,8 @@ import ParentsProgress from "./pages/parents/ParentsProgress";
 import ParentsBilling from "./pages/parents/ParentsBilling";
 import ChildDashboard from "./pages/parents/ChildDashboard";
 import TeachersPricing from "./pages/TeachersPricing";
+import TeacherZoomPage from "./pages/TeacherZoomPage";
+import TeacherProfileJourney from "./pages/TeacherProfileJourney";
 
 // Create a client
 const queryClient = new QueryClient();
@@ -56,6 +59,7 @@ const App = () => {
                 <Route path="/login" element={<Login />} />
                 <Route path="/signup" element={<Signup />} />
                 <Route path="/auth/callback" element={<AuthCallback />} />
+                <Route path="/zoom/callback" element={<ZoomAuthCallback />} />
                 <Route path="/for-teachers" element={<ForTeachers />} />
                 <Route path="/for-parents" element={<ForParents />} />
                 <Route path="/for-students" element={<ForStudents />} />
@@ -78,6 +82,16 @@ const App = () => {
                 <Route path="/teacher-dashboard" element={
                   <ProtectedRoute>
                     <TeacherDashboard />
+                  </ProtectedRoute>
+                } />
+                <Route path="/teacher-dashboard/zoom" element={
+                  <ProtectedRoute>
+                    <TeacherZoomPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="/teacher-profile-setup" element={
+                  <ProtectedRoute>
+                    <TeacherProfileJourney />
                   </ProtectedRoute>
                 } />
                 <Route path="/parents-dashboard" element={
