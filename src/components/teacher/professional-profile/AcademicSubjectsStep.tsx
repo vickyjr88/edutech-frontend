@@ -225,11 +225,31 @@ const AcademicSubjectsStep = ({ subjects, setSubjects, onSubjectsChange }: Acade
   return (
     <div className="space-y-6">
       <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">My Academic Subjects</CardTitle>
-          <CardDescription>
-            Subjects you are qualified to teach in academic settings
-          </CardDescription>
+        <CardHeader className="pb-3">
+          <div className="flex justify-between items-center">
+            <div>
+              <CardTitle className="text-lg">My Academic Subjects</CardTitle>
+              <CardDescription>
+                Subjects you are qualified to teach in academic settings
+              </CardDescription>
+            </div>
+            <Button 
+              onClick={() => {
+                const formCard = document.getElementById('add-subject-form');
+                if (formCard) {
+                  formCard.scrollIntoView({ behavior: 'smooth' });
+                  // Focus on the first select element
+                  const firstSelect = formCard.querySelector('select');
+                  if (firstSelect) {
+                    firstSelect.focus();
+                  }
+                }
+              }}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              <Plus className="h-4 w-4 mr-2" /> Add New Subject
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           {isLoading ? (
@@ -239,80 +259,141 @@ const AcademicSubjectsStep = ({ subjects, setSubjects, onSubjectsChange }: Acade
               You haven't added any academic subjects yet.
             </p>
           ) : (
-            <Table>
-              <TableCaption>Your academic teaching subjects</TableCaption>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Subject</TableHead>
-                  <TableHead>Curriculum</TableHead>
-                  <TableHead>Grade</TableHead>
-                  <TableHead>Proficiency</TableHead>
-                  <TableHead>Resources</TableHead>
-                  <TableHead>Certified</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {subjects.map(subject => (
-                  <TableRow key={subject._id}>
-                    <TableCell className="font-medium">{subject.subject}</TableCell>
-                    <TableCell>{subject.curriculum}</TableCell>
-                    <TableCell>{subject.gradeLevel}</TableCell>
-                    <TableCell>{subject.proficiencyLevel}</TableCell>
-                    <TableCell>
-                      {subject.resources && subject.resources.length > 0 ? (
-                        <div className="flex flex-col gap-1">
-                          {subject.resources.slice(0, 2).map((url, index) => (
-                            <a 
-                              key={index}
-                              href={url} 
-                              target="_blank" 
-                              rel="noopener noreferrer"
-                              className="text-blue-600 hover:underline text-xs truncate max-w-[120px]"
-                            >
-                              Resource {index + 1}
-                            </a>
-                          ))}
-                          {subject.resources.length > 2 && (
-                            <span className="text-xs text-gray-500">
-                              +{subject.resources.length - 2} more
-                            </span>
-                          )}
-                        </div>
-                      ) : (
-                        <span className="text-gray-400 text-xs">None</span>
-                      )}
-                    </TableCell>
-                    <TableCell>{subject.isCertified ? "Yes" : "No"}</TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end space-x-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleEdit(subject)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDelete(subject._id)}
-                        >
-                          <Trash2 className="h-4 w-4 text-red-500" />
-                        </Button>
+            <div className="grid gap-4">
+              {subjects.map(subject => (
+                <div 
+                  key={subject._id} 
+                  className="border rounded-lg bg-white shadow-sm overflow-hidden hover:shadow-md hover:border-blue-300 transition-all cursor-pointer relative"
+                  onClick={() => {
+                    handleEdit(subject);
+                    // Scroll form into view
+                    const formCard = document.getElementById('add-subject-form');
+                    if (formCard) {
+                      setTimeout(() => {
+                        formCard.scrollIntoView({ behavior: 'smooth' });
+                      }, 100);
+                    }
+                  }}
+                >
+                  <div className="relative">
+                    {/* Action buttons positioned absolutely in the top-right of each card */}
+                    <div className="absolute top-2 right-2 flex space-x-1">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-8 w-8 p-0 bg-white hover:bg-gray-50"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEdit(subject);
+                          // Scroll form into view
+                          const formCard = document.getElementById('add-subject-form');
+                          if (formCard) {
+                            setTimeout(() => {
+                              formCard.scrollIntoView({ behavior: 'smooth' });
+                            }, 100);
+                          }
+                        }}
+                      >
+                        <Edit className="h-4 w-4 text-blue-600" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-8 w-8 p-0 bg-white hover:bg-red-50"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDelete(subject._id);
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4 text-red-500" />
+                      </Button>
+                    </div>
+                    
+                    {/* Subject header with background color */}
+                    <div className="bg-blue-50 p-3 border-b">
+                      <h3 className="font-medium text-blue-800 text-lg">{subject.subject}</h3>
+                      <div className="flex justify-between items-center mt-1">
+                        <span className="text-sm text-blue-700">{subject.curriculum}</span>
+                        <span className="px-2 py-0.5 bg-blue-100 rounded-full text-xs font-medium text-blue-700">
+                          {subject.gradeLevel}
+                        </span>
                       </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                    </div>
+                    
+                    {/* Content section */}
+                    <div className="p-3">
+                      <div className="grid grid-cols-2 gap-3 mb-3">
+                        <div>
+                          <h4 className="text-xs font-medium text-gray-500 mb-1">Proficiency</h4>
+                          <p className="text-sm">{subject.proficiencyLevel}</p>
+                        </div>
+                        <div>
+                          <h4 className="text-xs font-medium text-gray-500 mb-1">Certification</h4>
+                          <p className="text-sm">{subject.isCertified ? 
+                            <span className="text-green-600 font-medium">Certified</span> : 
+                            <span className="text-gray-500">Not certified</span>}
+                          </p>
+                        </div>
+                      </div>
+                      
+                      {/* Description if available */}
+                      {subject.description && (
+                        <div className="mb-3">
+                          <h4 className="text-xs font-medium text-gray-500 mb-1">Description</h4>
+                          <p className="text-sm text-gray-700">{subject.description}</p>
+                        </div>
+                      )}
+                      
+                      {/* Resources */}
+                      {subject.resources && subject.resources.length > 0 && (
+                        <div>
+                          <h4 className="text-xs font-medium text-gray-500 mb-1">Resources</h4>
+                          <div className="flex flex-wrap gap-2">
+                            {subject.resources.map((url, index) => (
+                              <a 
+                                key={index}
+                                href={url} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="text-blue-600 hover:underline text-xs px-2 py-1 bg-blue-50 rounded-md flex items-center"
+                              >
+                                <span className="mr-1">Resource {index + 1}</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                </svg>
+                              </a>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           )}
         </CardContent>
       </Card>
       
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">{isEditing ? "Edit Academic Subject" : "Add Academic Subject"}</CardTitle>
+      <Card id="add-subject-form">
+        <CardHeader className={isEditing ? "bg-blue-50 border-b" : ""}>
+          <CardTitle className="text-lg flex items-center">
+            {isEditing ? (
+              <>
+                <span className="text-blue-800">Edit Subject: {currentSubject.subject}</span>
+                <span className="ml-2 px-2 py-0.5 bg-blue-100 rounded text-xs font-medium text-blue-700">
+                  {currentSubject.gradeLevel}
+                </span>
+              </>
+            ) : (
+              "Add Academic Subject"
+            )}
+          </CardTitle>
+          {isEditing && (
+            <CardDescription className="mt-1">
+              Update the details of this academic subject
+            </CardDescription>
+          )}
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -490,7 +571,15 @@ const AcademicSubjectsStep = ({ subjects, setSubjects, onSubjectsChange }: Acade
             
             <div className="flex justify-end space-x-2">
               {isEditing && (
-                <Button type="button" variant="outline" onClick={resetForm}>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={resetForm}
+                  className="flex items-center gap-1"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                  </svg>
                   Cancel
                 </Button>
               )}

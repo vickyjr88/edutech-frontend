@@ -175,8 +175,8 @@ interface ProfileJourneyContextType {
     languages: LanguageItem[];
     technicalSkills: TechnicalSkillItem[];
   };
+  certifications: any[]; // Directly expose certifications
   verification: {
-    certifications: { id: string; value: string; details?: string }[];
     backgroundCheck: boolean;
     idVerification: boolean;
   };
@@ -198,7 +198,7 @@ interface ProfileJourneyContextType {
   setMethodologies: (items: MethodologyItem[]) => void;
   setLanguages: (items: LanguageItem[]) => void;
   setTechnicalSkills: (items: TechnicalSkillItem[]) => void;
-  setCertifications: (items: { id: string; value: string; details?: string }[]) => void;
+  setCertifications: (items: any[]) => void;
   updateVerification: (data: Partial<ProfileJourneyContextType['verification']>) => void;
   updatePlatformSettings: (data: Partial<ProfileJourneyContextType['platformSettings']>) => void;
   
@@ -286,8 +286,8 @@ const defaultContext: ProfileJourneyContextType = {
     languages: [],
     technicalSkills: [],
   },
+  certifications: [],
   verification: {
-    certifications: [],
     backgroundCheck: false,
     idVerification: false,
   },
@@ -363,7 +363,7 @@ export const ProfileJourneyProvider = ({ children }: { children: ReactNode }) =>
   const [methodologies, setMethodologies] = useState<MethodologyItem[]>([]);
   const [languages, setLanguages] = useState<LanguageItem[]>([]);
   const [technicalSkills, setTechnicalSkills] = useState<TechnicalSkillItem[]>([]);
-  const [certifications, setCertifications] = useState<{ id: string; value: string; details?: string }[]>([]);
+  const [certifications, setCertifications] = useState<any[]>([]);
   const [verification, setVerification] = useState(defaultContext.verification);
   const [platformSettings, setPlatformSettings] = useState(defaultContext.platformSettings);
   
@@ -1091,11 +1091,8 @@ export const ProfileJourneyProvider = ({ children }: { children: ReactNode }) =>
             try {
               const { data: certificationsData } = await teacherService.getCertifications(teacherId);
               if (certificationsData && certificationsData.length > 0) {
-                setCertifications(certificationsData.map(cert => ({ 
-                  id: cert._id, 
-                  value: cert.name, 
-                  details: cert.description || '' 
-                })));
+                console.log("Setting certifications:", certificationsData);
+                setCertifications(certificationsData);
               }
             } catch (error) {
               console.error("Error loading certifications:", error);
@@ -1153,10 +1150,10 @@ export const ProfileJourneyProvider = ({ children }: { children: ReactNode }) =>
             console.log("Teaching style step should be complete");
           }
           
-          if (certifications.length > 0) {
+          if (certifications && certifications.length > 0) {
             newCompletedSteps.verification = true;
             newStepProgress.verification = 100;
-            console.log("Verification step should be complete");
+            console.log("Verification step should be complete based on certifications, length:", certifications.length);
           }
           
           if (profileData.introVideoUrl) {
@@ -1280,6 +1277,7 @@ export const ProfileJourneyProvider = ({ children }: { children: ReactNode }) =>
       languages,
       technicalSkills
     },
+    certifications,
     verification,
     platformSettings,
     

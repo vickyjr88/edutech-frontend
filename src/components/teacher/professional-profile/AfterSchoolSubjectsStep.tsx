@@ -265,7 +265,7 @@ const AfterSchoolSubjectsStep = ({ subjects, setSubjects, onSubjectsChange }: Af
   return (
     <div className="space-y-6">
       <Card>
-        <CardHeader>
+        <CardHeader className="pb-3">
           <CardTitle className="text-lg">My After-School Subjects</CardTitle>
           <CardDescription>
             Subjects you are qualified to teach in after-school programs
@@ -279,78 +279,147 @@ const AfterSchoolSubjectsStep = ({ subjects, setSubjects, onSubjectsChange }: Af
               You haven't added any after-school subjects yet.
             </p>
           ) : (
-            <Table>
-              <TableCaption>Your after-school teaching subjects</TableCaption>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Subject</TableHead>
-                  <TableHead>Age Range</TableHead>
-                  <TableHead>Gender</TableHead>
-                  <TableHead>Religion</TableHead>
-                  <TableHead>Certified</TableHead>
-                  <TableHead>Resources</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {subjects.map(subject => (
-                  <TableRow key={subject._id}>
-                    <TableCell className="font-medium">{subject.subject}</TableCell>
-                    <TableCell>{subject.ageRange}</TableCell>
-                    <TableCell>{subject.gender || "All"}</TableCell>
-                    <TableCell>{subject.religion || "All"}</TableCell>
-                    <TableCell>{subject.isCertified ? "Yes" : "No"}</TableCell>
-                    <TableCell>
-                      {subject.resources && subject.resources.length > 0 ? (
-                        <div className="flex space-x-1">
-                          <span className="text-sm">{subject.resources.length}</span>
-                          {subject.resources.slice(0, 2).map((url, index) => (
-                            <a 
-                              key={index}
-                              href={url} 
-                              target="_blank" 
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center text-primary"
-                              title={url}
-                            >
-                              <ExternalLink className="h-3 w-3" />
-                            </a>
-                          ))}
-                          {subject.resources.length > 2 && <span className="text-xs text-muted-foreground">+{subject.resources.length - 2} more</span>}
-                        </div>
-                      ) : (
-                        <span className="text-xs text-muted-foreground">None</span>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end space-x-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleEdit(subject)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDelete(subject._id)}
-                        >
-                          <Trash2 className="h-4 w-4 text-red-500" />
-                        </Button>
+            <div className="grid gap-4">
+              {subjects.map(subject => (
+                <div 
+                  key={subject._id} 
+                  className="border rounded-lg bg-white shadow-sm overflow-hidden hover:shadow-md hover:border-purple-300 transition-all cursor-pointer relative"
+                  onClick={() => {
+                    handleEdit(subject);
+                    // Scroll form into view
+                    const formCard = document.getElementById('add-afterschool-subject-form');
+                    if (formCard) {
+                      setTimeout(() => {
+                        formCard.scrollIntoView({ behavior: 'smooth' });
+                      }, 100);
+                    }
+                  }}
+                >
+                  <div className="relative">
+                    {/* Action buttons positioned absolutely in the top-right of each card */}
+                    <div className="absolute top-2 right-2 flex space-x-1">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-8 w-8 p-0 bg-white hover:bg-gray-50"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEdit(subject);
+                          // Scroll form into view
+                          const formCard = document.getElementById('add-afterschool-subject-form');
+                          if (formCard) {
+                            setTimeout(() => {
+                              formCard.scrollIntoView({ behavior: 'smooth' });
+                            }, 100);
+                          }
+                        }}
+                      >
+                        <Edit className="h-4 w-4 text-purple-600" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-8 w-8 p-0 bg-white hover:bg-red-50"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDelete(subject._id);
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4 text-red-500" />
+                      </Button>
+                    </div>
+                    
+                    {/* Subject header with background color */}
+                    <div className="bg-purple-50 p-3 border-b">
+                      <h3 className="font-medium text-purple-800 text-lg">{subject.subject}</h3>
+                      <div className="flex justify-between items-center mt-1">
+                        <span className="px-2 py-0.5 bg-purple-100 rounded-full text-xs font-medium text-purple-700">
+                          Age: {subject.ageRange}
+                        </span>
+                        {subject.isCertified && (
+                          <span className="px-2 py-0.5 bg-green-100 rounded-full text-xs font-medium text-green-700">
+                            Certified
+                          </span>
+                        )}
                       </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                    </div>
+                    
+                    {/* Content section */}
+                    <div className="p-3">
+                      <div className="grid grid-cols-2 gap-3 mb-3">
+                        {subject.gender && subject.gender !== "All" && (
+                          <div>
+                            <h4 className="text-xs font-medium text-gray-500 mb-1">Gender Focus</h4>
+                            <p className="text-sm">{subject.gender}</p>
+                          </div>
+                        )}
+                        
+                        {subject.religion && subject.religion !== "All" && (
+                          <div>
+                            <h4 className="text-xs font-medium text-gray-500 mb-1">Religious Context</h4>
+                            <p className="text-sm">{subject.religion}</p>
+                          </div>
+                        )}
+                      </div>
+                      
+                      {/* Description if available */}
+                      {subject.description && (
+                        <div className="mb-3">
+                          <h4 className="text-xs font-medium text-gray-500 mb-1">Description</h4>
+                          <p className="text-sm text-gray-700">{subject.description}</p>
+                        </div>
+                      )}
+                      
+                      {/* Resources */}
+                      {subject.resources && subject.resources.length > 0 && (
+                        <div>
+                          <h4 className="text-xs font-medium text-gray-500 mb-1">Resources</h4>
+                          <div className="flex flex-wrap gap-2">
+                            {subject.resources.map((url, index) => (
+                              <a 
+                                key={index}
+                                href={url} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="text-purple-600 hover:underline text-xs px-2 py-1 bg-purple-50 rounded-md flex items-center"
+                              >
+                                <span className="mr-1">Resource {index + 1}</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                </svg>
+                              </a>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           )}
         </CardContent>
       </Card>
       
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">{isEditing ? "Edit After-School Subject" : "Add After-School Subject"}</CardTitle>
+      <Card id="add-afterschool-subject-form">
+        <CardHeader className={isEditing ? "bg-purple-50 border-b" : ""}>
+          <CardTitle className="text-lg flex items-center">
+            {isEditing ? (
+              <>
+                <span className="text-purple-800">Edit Subject: {currentSubject.subject}</span>
+                <span className="ml-2 px-2 py-0.5 bg-purple-100 rounded text-xs font-medium text-purple-700">
+                  {currentSubject.ageRange}
+                </span>
+              </>
+            ) : (
+              "Add After-School Subject"
+            )}
+          </CardTitle>
+          {isEditing && (
+            <CardDescription className="mt-1">
+              Update the details of this after-school subject
+            </CardDescription>
+          )}
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -519,7 +588,15 @@ const AfterSchoolSubjectsStep = ({ subjects, setSubjects, onSubjectsChange }: Af
             
             <div className="flex justify-end space-x-2">
               {isEditing && (
-                <Button type="button" variant="outline" onClick={resetForm}>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={resetForm}
+                  className="flex items-center gap-1"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                  </svg>
                   Cancel
                 </Button>
               )}

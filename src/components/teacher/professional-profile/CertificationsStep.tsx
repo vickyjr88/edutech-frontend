@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { PlusCircle, Trash2, Award, Medal, Calendar, FileText, Link, ExternalLink, GraduationCap } from "lucide-react";
+import { PlusCircle, Trash2, Award, Medal, Calendar, FileText, Link, ExternalLink, GraduationCap, Edit, Shield, BadgeCheck } from "lucide-react";
 import { 
   DropdownMenu,
   DropdownMenuContent,
@@ -16,6 +16,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger
+} from "@/components/ui/tabs";
 import { 
   CertificationItem, 
   CERTIFICATE_CATEGORIES, 
@@ -65,6 +71,11 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
       loadCertifications();
     }
   }, [user]);
+
+  // Debug received certifications
+  useEffect(() => {
+    console.log("CertificationsStep - received certifications:", certifications);
+  }, [certifications]);
 
   // Initialize with first item expanded
   useEffect(() => {
@@ -341,256 +352,795 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
     }
   };
 
+  const filteredCertifications = (type: string) => {
+    if (!certifications) return [];
+    if (type === 'certifications') {
+      return certifications.filter(cert => !cert.certificateType?.includes("Award") && !cert.certificateType?.includes("Honor"));
+    } else if (type === 'awards') {
+      return certifications.filter(cert => cert.certificateType?.includes("Award") || cert.certificateType?.includes("Honor"));
+    }
+    return certifications;
+  };
+
+  // State for background check and ID verification
+  const [verificationControls, setVerificationControls] = useState({
+    backgroundCheck: false,
+    idVerification: false
+  });
+
+  const updateVerification = (field: keyof typeof verificationControls, value: boolean) => {
+    setVerificationControls(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h3 className="text-lg font-medium">Certifications & Awards</h3>
+          <h3 className="text-lg font-medium">Qualifications & Verification</h3>
           <p className="text-sm text-muted-foreground">
-            Add your teaching certifications, professional qualifications, and awards
+            Add your teaching certifications, awards, and verification documents
           </p>
         </div>
+        <Button
+          variant="outline"
+          className="border-green-500 text-green-600 hover:bg-green-50 hover:text-green-700"
+          onClick={addItem}
+        >
+          <PlusCircle className="mr-2 h-4 w-4" />
+          Add New
+        </Button>
       </div>
       
       {isLoading && (
-        <div className="flex justify-center py-6">
-          <div className="animate-pulse text-center">
-            <p>Loading certifications...</p>
+        <div className="flex justify-center py-6 bg-gray-50 border rounded-md">
+          <div className="animate-pulse flex items-center space-x-2 py-4">
+            <div className="h-4 w-4 bg-blue-200 rounded-full animate-bounce"></div>
+            <div className="h-4 w-4 bg-blue-400 rounded-full animate-bounce delay-75"></div>
+            <div className="h-4 w-4 bg-blue-600 rounded-full animate-bounce delay-150"></div>
+            <p className="text-gray-500 font-medium">Loading...</p>
           </div>
         </div>
       )}
 
-      {certifications && certifications.length > 0 && certifications.map((cert, index) => (
-        <div key={cert._id} className="p-5 border rounded-md bg-white shadow-sm transition-all">
-          <div className="flex justify-between items-start mb-4">
-            <div 
-              className="flex items-center cursor-pointer" 
-              onClick={() => toggleExpanded(cert._id)}
-            >
-              {renderCertificateIcon(cert, index)}
-              {cert.name && <span className="ml-2 text-muted-foreground">- {cert.name}</span>}
-              {cert.issueDate && <span className="ml-2 text-xs text-muted-foreground">({formatDateForDisplay(cert.issueDate)})</span>}
-            </div>
-            <div className="flex items-center gap-2">
-              <Button 
-                variant="ghost" 
-                size="sm"
-                onClick={() => toggleExpanded(cert._id)}
-              >
-                {expandedItems[cert._id] ? "Collapse" : "Edit"}
-              </Button>
-              {expandedItems[cert._id] && (
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => saveCertificationItem(cert)}
-                  disabled={isSaving}
-                  className="border-blue-500 text-blue-600 hover:bg-blue-50 hover:text-blue-700"
+      <Tabs defaultValue="certifications" className="w-full">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="certifications" className="flex items-center gap-2">
+            <Medal className="h-4 w-4" />
+            <span>Certifications</span>
+          </TabsTrigger>
+          <TabsTrigger value="awards" className="flex items-center gap-2">
+            <Award className="h-4 w-4" />
+            <span>Awards</span>
+          </TabsTrigger>
+          <TabsTrigger value="verification" className="flex items-center gap-2">
+            <Shield className="h-4 w-4" />
+            <span>Verification</span>
+          </TabsTrigger>
+        </TabsList>
+        
+        {/* Certifications Tab */}
+        <TabsContent value="certifications" className="mt-6">
+          {filteredCertifications('certifications').length > 0 ? (
+            <div className="space-y-6">
+              {filteredCertifications('certifications').map((cert, index) => (
+                <div 
+                  key={cert._id} 
+                  className="border rounded-lg bg-white shadow-sm transition-all hover:shadow-md overflow-hidden border-blue-200 w-full"
                 >
-                  {isSaving ? "Saving..." : "Save"}
-                </Button>
-              )}
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => removeItem(cert._id)}
-                disabled={!certifications || certifications.length === 1}
-                className="border-red-400 hover:bg-red-50"
-              >
-                <Trash2 className="h-4 w-4 text-red-500" />
-              </Button>
-            </div>
-          </div>
-          
-          {expandedItems[cert._id] && (
-            <div className="space-y-4 mt-4 pt-4 border-t border-gray-100">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor={`cert-type-${cert._id}`} className="mb-1 block">Certificate/Award Type</Label>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="outline" className="w-full justify-between">
-                        {cert.certificateType || "Select type"}
-                        <span>▼</span>
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent className="w-64 max-h-80 overflow-y-auto">
-                      {Object.entries(CERTIFICATE_CATEGORIES).map(([category, types]) => (
-                        <div key={category}>
-                          <DropdownMenuLabel>{category}</DropdownMenuLabel>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuGroup>
-                            {types.map(type => (
-                              <DropdownMenuItem 
-                                key={type}
-                                onClick={() => updateItem(cert._id, 'certificateType', type)}
-                                className="cursor-pointer"
-                              >
-                                <div className="flex items-center">
-                                  {getCertificateIcon(type)}
-                                  <span className="ml-2">{type}</span>
-                                </div>
-                              </DropdownMenuItem>
-                            ))}
-                          </DropdownMenuGroup>
-                          {category !== Object.keys(CERTIFICATE_CATEGORIES).pop() && (
-                            <DropdownMenuSeparator />
-                          )}
-                        </div>
-                      ))}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-
-                <div>
-                  <Label htmlFor={`cert-name-${cert._id}`} className="mb-1 block">Certificate/Award Name</Label>
-                  <Input 
-                    id={`cert-name-${cert._id}`}
-                    value={cert.name}
-                    onChange={(e) => updateItem(cert._id, 'name', e.target.value)}
-                    placeholder={cert.certificateType?.includes("Award") 
-                      ? "e.g., Teacher of the Year, Excellence in Education" 
-                      : "e.g., Certified Teacher, First Aid Training"}
-                    className="w-full"
-                  />
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor={`cert-issuer-${cert._id}`} className="mb-1 block">Issuing Organization</Label>
-                  <Input
-                    id={`cert-issuer-${cert._id}`}
-                    value={cert.issuer || ""}
-                    onChange={(e) => updateItem(cert._id, 'issuer', e.target.value)}
-                    placeholder="e.g., Kenya Education Board, Ministry of Education"
-                    className="w-full"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <Label htmlFor={`cert-date-${cert._id}`} className="mb-1 block">
-                      <div className="flex items-center">
-                        <Calendar className="h-4 w-4 mr-1" />
-                        <span>Issue Date</span>
+                  <div className="px-4 py-3 flex justify-between items-center border-b bg-blue-50">
+                    <div 
+                      className="flex items-center cursor-pointer flex-grow" 
+                      onClick={() => toggleExpanded(cert._id)}
+                    >
+                      {getCertificateIcon(cert.certificateType || "")}
+                      <div className="ml-2 flex-grow truncate">
+                        <h4 className="font-medium text-blue-800">
+                          {cert.name || `${cert.certificateType || "Certification"}`}
+                        </h4>
+                        {cert.issuer && (
+                          <p className="text-xs text-gray-600 truncate">{cert.issuer}</p>
+                        )}
                       </div>
-                    </Label>
-                    <Input
-                      id={`cert-date-${cert._id}`}
-                      type="month"
-                      value={cert.issueDate || ""}
-                      onChange={(e) => updateItem(cert._id, 'issueDate', e.target.value)}
-                      className="w-full"
-                    />
-                    {cert.issueDate && (
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {formatDateForDisplay(cert.issueDate)}
-                      </p>
-                    )}
-                  </div>
-                  <div>
-                    <Label htmlFor={`cert-expiry-date-${cert._id}`} className="mb-1 block">
-                      <div className="flex items-center">
-                        <Calendar className="h-4 w-4 mr-1" />
-                        <span>Expiry Date</span>
-                      </div>
-                    </Label>
-                    <Input
-                      id={`cert-expiry-date-${cert._id}`}
-                      type="month"
-                      value={cert.expiryDate || ""}
-                      onChange={(e) => updateItem(cert._id, 'expiryDate', e.target.value)}
-                      className="w-full"
-                    />
-                    {cert.expiryDate && (
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {formatDateForDisplay(cert.expiryDate)}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <Label htmlFor={`cert-description-${cert._id}`} className="mb-1 block">
-                  <div className="flex items-center">
-                    <FileText className="h-4 w-4 mr-1" />
-                    <span>Description & Achievement Details</span>
-                  </div>
-                </Label>
-                <Textarea
-                  id={`cert-description-${cert._id}`}
-                  value={cert.description || ""}
-                  onChange={(e) => updateItem(cert._id, 'description', e.target.value)}
-                  placeholder={cert.certificateType?.includes("Award") 
-                    ? "Describe the significance of this award and your achievement"
-                    : "Describe what this certification qualifies you for and its significance"}
-                  rows={3}
-                  className="w-full"
-                />
-              </div>
-
-              <div className="flex items-center space-x-2 bg-gray-50 p-3 rounded-md">
-                <Switch
-                  id={`cert-verifiable-${cert._id}`}
-                  checked={cert.isVerifiable || false}
-                  onCheckedChange={(checked) => updateItem(cert._id, 'isVerifiable', checked)}
-                />
-                <Label htmlFor={`cert-verifiable-${cert._id}`}>This credential is verifiable online</Label>
-              </div>
-
-              {cert.isVerifiable && (
-                <div>
-                  <Label htmlFor={`cert-url-${cert._id}`} className="mb-1 block">
-                    <div className="flex items-center">
-                      <Link className="h-4 w-4 mr-1" />
-                      <span>Verification URL or Reference Number</span>
                     </div>
-                  </Label>
-                  <div className="flex items-center">
-                    <Input
-                      id={`cert-url-${cert._id}`}
-                      value={cert.credentialUrl || ""}
-                      onChange={(e) => updateItem(cert._id, 'credentialUrl', e.target.value)}
-                      placeholder="https://verify.example.org/cert/123456 or REF: ABC123456"
-                      className="flex-1"
-                    />
-                    {cert.credentialUrl && (
-                      cert.credentialUrl.startsWith('http') ? (
+                    <div className="flex items-center gap-1 ml-2">
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        className="h-7 w-7 p-0 rounded-full"
+                        onClick={() => toggleExpanded(cert._id)}
+                      >
+                        {expandedItems[cert._id] ? (
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                          </svg>
+                        ) : (
+                          <Edit className="h-4 w-4 text-gray-500" />
+                        )}
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        className="h-7 w-7 p-0 rounded-full"
+                        onClick={() => removeItem(cert._id)}
+                        disabled={!certifications || certifications.length === 1}
+                      >
+                        <Trash2 className="h-4 w-4 text-red-500" />
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  <div className="p-4">
+                    <div className="flex justify-between items-center mb-2">
+                      {cert.issueDate ? (
+                        <span className="flex items-center text-sm text-gray-600">
+                          <Calendar className="h-4 w-4 mr-1 text-gray-400" />
+                          <span>Issued: {formatDateForDisplay(cert.issueDate)}</span>
+                          {cert.expiryDate && (
+                            <span className="ml-2">• Expires: {formatDateForDisplay(cert.expiryDate)}</span>
+                          )}
+                        </span>
+                      ) : (
+                        <span></span>
+                      )}
+                      {cert.isCertified && (
+                        <span className="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded-full flex items-center">
+                          <BadgeCheck className="h-3 w-3 mr-1" />
+                          Verified
+                        </span>
+                      )}
+                    </div>
+                    
+                    {cert.description && !expandedItems[cert._id] && (
+                      <p className="text-sm text-gray-600 mt-2">{cert.description}</p>
+                    )}
+                    
+                    {cert.credentialUrl && !expandedItems[cert._id] && (
+                      <span className="mt-3 block">
+                        <a 
+                          href={cert.credentialUrl} 
+                          target="_blank" 
+                          rel="noopener noreferrer" 
+                          className="text-sm text-blue-600 hover:underline flex items-center"
+                        >
+                          <ExternalLink className="h-4 w-4 mr-1" />
+                          View credential
+                        </a>
+                      </span>
+                    )}
+                  </div>
+              
+                  {expandedItems[cert._id] && (
+                    <div className="mt-3 pt-3 space-y-6 border-t px-4 pb-4 bg-gray-50">
+                      <div className="flex justify-end">
                         <Button 
                           variant="outline" 
                           size="sm"
-                          className="ml-2"
-                          onClick={() => window.open(cert.credentialUrl, '_blank')}
-                          title="Open credential verification URL"
+                          onClick={() => saveCertificationItem(cert)}
+                          disabled={isSaving}
+                          className="border-blue-500 text-blue-600 hover:bg-blue-50 hover:text-blue-700"
                         >
-                          <ExternalLink className="h-4 w-4" />
+                          {isSaving ? (
+                            <span className="flex items-center">
+                              <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                              </svg>
+                              Saving...
+                            </span>
+                          ) : (
+                            "Save Changes"
+                          )}
                         </Button>
-                      ) : (
-                        <span className="ml-2 text-xs text-muted-foreground">
-                          {cert.credentialUrl}
-                        </span>
-                      )
-                    )}
-                  </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                          <Label htmlFor={`cert-type-${cert._id}`} className="mb-2 block text-sm font-medium">Type</Label>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="outline" className="w-full justify-between bg-white">
+                                <div className="flex items-center">
+                                  {getCertificateIcon(cert.certificateType || "")}
+                                  <span className="ml-2 truncate">{cert.certificateType || "Select type"}</span>
+                                </div>
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                </svg>
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent className="w-64 max-h-80 overflow-y-auto">
+                              {Object.entries(CERTIFICATE_CATEGORIES).map(([category, types]) => (
+                                <div key={category}>
+                                  <DropdownMenuLabel>{category}</DropdownMenuLabel>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuGroup>
+                                    {types.map(type => (
+                                      <DropdownMenuItem 
+                                        key={type}
+                                        onClick={() => updateItem(cert._id, 'certificateType', type)}
+                                        className="cursor-pointer"
+                                      >
+                                        <div className="flex items-center">
+                                          {getCertificateIcon(type)}
+                                          <span className="ml-2">{type}</span>
+                                        </div>
+                                      </DropdownMenuItem>
+                                    ))}
+                                  </DropdownMenuGroup>
+                                  {category !== Object.keys(CERTIFICATE_CATEGORIES).pop() && (
+                                    <DropdownMenuSeparator />
+                                  )}
+                                </div>
+                              ))}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+
+                        <div>
+                          <Label htmlFor={`cert-name-${cert._id}`} className="mb-2 block text-sm font-medium">Name/Title</Label>
+                          <Input 
+                            id={`cert-name-${cert._id}`}
+                            value={cert.name}
+                            onChange={(e) => updateItem(cert._id, 'name', e.target.value)}
+                            placeholder="e.g., First Aid Training, Teaching License"
+                            className="w-full"
+                          />
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                          <Label htmlFor={`cert-issuer-${cert._id}`} className="mb-2 block text-sm font-medium">Issuing Organization</Label>
+                          <Input
+                            id={`cert-issuer-${cert._id}`}
+                            value={cert.issuer || ""}
+                            onChange={(e) => updateItem(cert._id, 'issuer', e.target.value)}
+                            placeholder="e.g., Ministry of Education"
+                            className="w-full"
+                          />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <Label htmlFor={`cert-date-${cert._id}`} className="mb-2 block text-sm font-medium">
+                              Issue Date
+                            </Label>
+                            <Input
+                              id={`cert-date-${cert._id}`}
+                              type="month"
+                              value={cert.issueDate ? cert.issueDate.substring(0, 7) : ""}
+                              onChange={(e) => updateItem(cert._id, 'issueDate', e.target.value)}
+                              className="w-full"
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor={`cert-expiry-date-${cert._id}`} className="mb-2 block text-sm font-medium">
+                              Expiry Date
+                            </Label>
+                            <Input
+                              id={`cert-expiry-date-${cert._id}`}
+                              type="month"
+                              value={cert.expiryDate ? cert.expiryDate.substring(0, 7) : ""}
+                              onChange={(e) => updateItem(cert._id, 'expiryDate', e.target.value)}
+                              className="w-full"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      <div>
+                        <Label htmlFor={`cert-description-${cert._id}`} className="mb-2 block text-sm font-medium">
+                          Description & Details
+                        </Label>
+                        <Textarea
+                          id={`cert-description-${cert._id}`}
+                          value={cert.description || ""}
+                          onChange={(e) => updateItem(cert._id, 'description', e.target.value)}
+                          placeholder="Describe what this certification qualifies you for"
+                          rows={3}
+                          className="w-full"
+                        />
+                      </div>
+
+                      <div className="flex items-center space-x-2 bg-white p-4 rounded-md border">
+                        <Switch
+                          id={`cert-verifiable-${cert._id}`}
+                          checked={cert.isVerifiable || false}
+                          onCheckedChange={(checked) => updateItem(cert._id, 'isVerifiable', checked)}
+                        />
+                        <Label htmlFor={`cert-verifiable-${cert._id}`} className="text-sm">This credential is verifiable online</Label>
+                      </div>
+
+                      {cert.isVerifiable && (
+                        <div className="block">
+                          <Label htmlFor={`cert-url-${cert._id}`} className="mb-2 block text-sm font-medium">
+                            Verification URL
+                          </Label>
+                          <div className="flex items-center">
+                            <Input
+                              id={`cert-url-${cert._id}`}
+                              value={cert.credentialUrl || ""}
+                              onChange={(e) => updateItem(cert._id, 'credentialUrl', e.target.value)}
+                              placeholder="https://verify.example.org/cert/123456"
+                              className="flex-1"
+                            />
+                            {cert.credentialUrl && cert.credentialUrl.startsWith('http') && (
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                className="ml-2"
+                                onClick={() => window.open(cert.credentialUrl, '_blank')}
+                                title="Open credential verification URL"
+                              >
+                                <ExternalLink className="h-4 w-4" />
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
-              )}
+              ))}
+              
+              <div className="flex justify-center mt-6">
+                <Button
+                  variant="outline"
+                  className="border-blue-500 text-blue-600 hover:bg-blue-50 hover:text-blue-700"
+                  onClick={() => {
+                    const newItem: CertificationItem = {
+                      _id: `temp-${Date.now().toString()}`,
+                      name: "",
+                      issuer: "",
+                      issueDate: "",
+                      certificateType: "Teaching License",
+                      description: "",
+                      isVerifiable: false,
+                      credentialUrl: ""
+                    };
+                    setCertifications([...certifications, newItem]);
+                    
+                    // Expand the newly added item
+                    setExpandedItems(prev => ({
+                      ...prev,
+                      [newItem._id]: true
+                    }));
+                  }}
+                >
+                  <PlusCircle className="mr-2 h-4 w-4" />
+                  Add Another Certification
+                </Button>
+              </div>
+            </div>
+          ) : !isLoading && (
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 text-center">
+              <div className="mx-auto w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mb-4">
+                <Medal className="h-8 w-8 text-blue-500" />
+              </div>
+              <h3 className="text-lg font-medium text-gray-800 mb-2">No Teaching Certifications Yet</h3>
+              <p className="text-gray-600 mb-4 max-w-md mx-auto">
+                Add your teaching certifications and professional qualifications to enhance your credibility.
+              </p>
+              <Button
+                onClick={() => {
+                  const newItem: CertificationItem = {
+                    _id: `temp-${Date.now().toString()}`,
+                    name: "",
+                    issuer: "",
+                    issueDate: "",
+                    certificateType: "Teaching License",
+                    description: "",
+                    isVerifiable: false,
+                    credentialUrl: ""
+                  };
+                  setCertifications([...certifications, newItem]);
+                  
+                  // Expand the newly added item
+                  setExpandedItems(prev => ({
+                    ...prev,
+                    [newItem._id]: true
+                  }));
+                }}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Add Your First Certification
+              </Button>
             </div>
           )}
-        </div>
-      ))}
-      
-      <div className="flex justify-center">
-        <Button
-          variant="outline"
-          className="w-full md:w-auto border-green-500 text-green-600 hover:bg-green-50 hover:text-green-700"
-          onClick={addItem}
-        >
-          <PlusCircle className="mr-2 h-4 w-4" />
-          Add Another Certification or Award
-        </Button>
-      </div>
+        </TabsContent>
+        
+        {/* Awards Tab */}
+        <TabsContent value="awards" className="mt-6">
+          {filteredCertifications('awards').length > 0 ? (
+            <div className="space-y-6">
+              {filteredCertifications('awards').map((cert, index) => (
+                <div 
+                  key={cert._id} 
+                  className="border rounded-lg bg-white shadow-sm transition-all hover:shadow-md overflow-hidden border-amber-200 w-full"
+                >
+                  <div className="px-4 py-3 flex justify-between items-center border-b bg-amber-50">
+                    <div 
+                      className="flex items-center cursor-pointer flex-grow" 
+                      onClick={() => toggleExpanded(cert._id)}
+                    >
+                      <Award className="h-5 w-5 text-amber-500" />
+                      <div className="ml-2 flex-grow truncate">
+                        <h4 className="font-medium text-amber-800">
+                          {cert.name || "Award/Honor"}
+                        </h4>
+                        {cert.issuer && (
+                          <p className="text-xs text-gray-600 truncate">{cert.issuer}</p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1 ml-2">
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        className="h-7 w-7 p-0 rounded-full"
+                        onClick={() => toggleExpanded(cert._id)}
+                      >
+                        {expandedItems[cert._id] ? (
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                          </svg>
+                        ) : (
+                          <Edit className="h-4 w-4 text-gray-500" />
+                        )}
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        className="h-7 w-7 p-0 rounded-full"
+                        onClick={() => removeItem(cert._id)}
+                        disabled={!certifications || certifications.length === 1}
+                      >
+                        <Trash2 className="h-4 w-4 text-red-500" />
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  <div className="p-4">
+                    <div className="flex justify-between items-center mb-2">
+                      {cert.issueDate ? (
+                        <span className="flex items-center text-sm text-gray-600">
+                          <Calendar className="h-4 w-4 mr-1 text-gray-400" />
+                          <span>Awarded: {formatDateForDisplay(cert.issueDate)}</span>
+                        </span>
+                      ) : (
+                        <span></span>
+                      )}
+                      {cert.isCertified && (
+                        <span className="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded-full flex items-center">
+                          <BadgeCheck className="h-3 w-3 mr-1" />
+                          Verified
+                        </span>
+                      )}
+                    </div>
+                    
+                    {cert.description && !expandedItems[cert._id] && (
+                      <p className="text-sm text-gray-600 mt-2">{cert.description}</p>
+                    )}
+                    
+                    {cert.credentialUrl && !expandedItems[cert._id] && (
+                      <span className="mt-3 block">
+                        <a 
+                          href={cert.credentialUrl} 
+                          target="_blank" 
+                          rel="noopener noreferrer" 
+                          className="text-sm text-blue-600 hover:underline flex items-center"
+                        >
+                          <ExternalLink className="h-4 w-4 mr-1" />
+                          View award details
+                        </a>
+                      </span>
+                    )}
+                  </div>
+              
+                  {expandedItems[cert._id] && (
+                    <div className="mt-3 pt-3 space-y-6 border-t px-4 pb-4 bg-gray-50">
+                      <div className="flex justify-end">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => saveCertificationItem(cert)}
+                          disabled={isSaving}
+                          className="border-amber-500 text-amber-600 hover:bg-amber-50 hover:text-amber-700"
+                        >
+                          {isSaving ? (
+                            <span className="flex items-center">
+                              <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-amber-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                              </svg>
+                              Saving...
+                            </span>
+                          ) : (
+                            "Save Changes"
+                          )}
+                        </Button>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                          <Label htmlFor={`cert-type-${cert._id}`} className="mb-2 block text-sm font-medium">Type</Label>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="outline" className="w-full justify-between bg-white">
+                                <div className="flex items-center">
+                                  <Award className="h-5 w-5 text-amber-500" />
+                                  <span className="ml-2 truncate">{cert.certificateType || "Select type"}</span>
+                                </div>
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                </svg>
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent className="w-64">
+                              <DropdownMenuLabel>Select Award Type</DropdownMenuLabel>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuGroup>
+                                {["Teaching Award", "Honor & Recognition", "Excellence Award", "Community Service Award"].map(type => (
+                                  <DropdownMenuItem 
+                                    key={type}
+                                    onClick={() => updateItem(cert._id, 'certificateType', type)}
+                                    className="cursor-pointer"
+                                  >
+                                    <div className="flex items-center">
+                                      <Award className="h-4 w-4 text-amber-500 mr-2" />
+                                      <span>{type}</span>
+                                    </div>
+                                  </DropdownMenuItem>
+                                ))}
+                              </DropdownMenuGroup>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+
+                        <div>
+                          <Label htmlFor={`cert-name-${cert._id}`} className="mb-2 block text-sm font-medium">Award Title</Label>
+                          <Input 
+                            id={`cert-name-${cert._id}`}
+                            value={cert.name}
+                            onChange={(e) => updateItem(cert._id, 'name', e.target.value)}
+                            placeholder="e.g., Teacher of the Year, Excellence in Education"
+                            className="w-full"
+                          />
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                          <Label htmlFor={`cert-issuer-${cert._id}`} className="mb-2 block text-sm font-medium">Awarded By</Label>
+                          <Input
+                            id={`cert-issuer-${cert._id}`}
+                            value={cert.issuer || ""}
+                            onChange={(e) => updateItem(cert._id, 'issuer', e.target.value)}
+                            placeholder="e.g., Ministry of Education, School District"
+                            className="w-full"
+                          />
+                        </div>
+
+                        <div>
+                          <Label htmlFor={`cert-date-${cert._id}`} className="mb-2 block text-sm font-medium">
+                            Date Awarded
+                          </Label>
+                          <Input
+                            id={`cert-date-${cert._id}`}
+                            type="month"
+                            value={cert.issueDate ? cert.issueDate.substring(0, 7) : ""}
+                            onChange={(e) => updateItem(cert._id, 'issueDate', e.target.value)}
+                            className="w-full"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <Label htmlFor={`cert-description-${cert._id}`} className="mb-2 block text-sm font-medium">
+                          Award Description
+                        </Label>
+                        <Textarea
+                          id={`cert-description-${cert._id}`}
+                          value={cert.description || ""}
+                          onChange={(e) => updateItem(cert._id, 'description', e.target.value)}
+                          placeholder="Describe the significance of this award and your achievement"
+                          rows={3}
+                          className="w-full"
+                        />
+                      </div>
+
+                      <div className="flex items-center space-x-2 bg-white p-4 rounded-md border">
+                        <Switch
+                          id={`cert-verifiable-${cert._id}`}
+                          checked={cert.isVerifiable || false}
+                          onCheckedChange={(checked) => updateItem(cert._id, 'isVerifiable', checked)}
+                        />
+                        <Label htmlFor={`cert-verifiable-${cert._id}`} className="text-sm">This award is verifiable online</Label>
+                      </div>
+
+                      {cert.isVerifiable && (
+                        <div className="block">
+                          <Label htmlFor={`cert-url-${cert._id}`} className="mb-2 block text-sm font-medium">
+                            Award Verification URL
+                          </Label>
+                          <div className="flex items-center">
+                            <Input
+                              id={`cert-url-${cert._id}`}
+                              value={cert.credentialUrl || ""}
+                              onChange={(e) => updateItem(cert._id, 'credentialUrl', e.target.value)}
+                              placeholder="https://example.org/awards/123456"
+                              className="flex-1"
+                            />
+                            {cert.credentialUrl && cert.credentialUrl.startsWith('http') && (
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                className="ml-2"
+                                onClick={() => window.open(cert.credentialUrl, '_blank')}
+                                title="Open award verification URL"
+                              >
+                                <ExternalLink className="h-4 w-4" />
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ))}
+              
+              <div className="flex justify-center mt-6">
+                <Button
+                  variant="outline"
+                  className="border-amber-500 text-amber-600 hover:bg-amber-50 hover:text-amber-700"
+                  onClick={() => {
+                    const newItem: CertificationItem = {
+                      _id: `temp-${Date.now().toString()}`,
+                      name: "",
+                      issuer: "",
+                      issueDate: "",
+                      certificateType: "Teaching Award",
+                      description: "",
+                      isVerifiable: false,
+                      credentialUrl: ""
+                    };
+                    setCertifications([...certifications, newItem]);
+                    
+                    // Expand the newly added item
+                    setExpandedItems(prev => ({
+                      ...prev,
+                      [newItem._id]: true
+                    }));
+                  }}
+                >
+                  <PlusCircle className="mr-2 h-4 w-4" />
+                  Add Another Award
+                </Button>
+              </div>
+            </div>
+          ) : !isLoading && (
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 text-center">
+              <div className="mx-auto w-16 h-16 bg-amber-50 rounded-full flex items-center justify-center mb-4">
+                <Award className="h-8 w-8 text-amber-500" />
+              </div>
+              <h3 className="text-lg font-medium text-gray-800 mb-2">No Awards or Honors Yet</h3>
+              <p className="text-gray-600 mb-4 max-w-md mx-auto">
+                Add any teaching awards or honors you've received to showcase your achievements.
+              </p>
+              <Button
+                onClick={() => {
+                  const newItem: CertificationItem = {
+                    _id: `temp-${Date.now().toString()}`,
+                    name: "",
+                    issuer: "",
+                    issueDate: "",
+                    certificateType: "Teaching Award",
+                    description: "",
+                    isVerifiable: false,
+                    credentialUrl: ""
+                  };
+                  setCertifications([...certifications, newItem]);
+                  
+                  // Expand the newly added item
+                  setExpandedItems(prev => ({
+                    ...prev,
+                    [newItem._id]: true
+                  }));
+                }}
+                className="bg-amber-600 hover:bg-amber-700"
+              >
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Add Your First Award
+              </Button>
+            </div>
+          )}
+        </TabsContent>
+        
+        {/* Verification Tab */}
+        <TabsContent value="verification" className="mt-6">
+          <div className="bg-white border border-gray-200 rounded-lg p-6">
+            <div className="flex items-center mb-6">
+              <div className="w-12 h-12 bg-indigo-50 rounded-full flex items-center justify-center mr-4">
+                <Shield className="h-6 w-6 text-indigo-500" />
+              </div>
+              <div>
+                <h3 className="text-lg font-medium text-gray-800">Background Verification</h3>
+                <p className="text-sm text-gray-600">
+                  Complete verification to build trust with parents and students
+                </p>
+              </div>
+            </div>
+            
+            <div className="space-y-6">
+              <div className="flex items-center p-4 border rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
+                <div className="mr-4">
+                  <Switch
+                    id="background-check"
+                    checked={verificationControls.backgroundCheck}
+                    onCheckedChange={(checked) => updateVerification('backgroundCheck', checked)}
+                  />
+                </div>
+                <div className="flex-1">
+                  <Label htmlFor="background-check" className="font-medium">Background Check</Label>
+                  <p className="text-sm text-gray-600">
+                    I have completed a background check with an approved provider
+                  </p>
+                </div>
+                <Button variant="ghost" size="sm" className="ml-4">
+                  <FileText className="h-4 w-4 mr-2" />
+                  Upload Document
+                </Button>
+              </div>
+              
+              <div className="flex items-center p-4 border rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
+                <div className="mr-4">
+                  <Switch
+                    id="id-verification"
+                    checked={verificationControls.idVerification}
+                    onCheckedChange={(checked) => updateVerification('idVerification', checked)}
+                  />
+                </div>
+                <div className="flex-1">
+                  <Label htmlFor="id-verification" className="font-medium">ID Verification</Label>
+                  <p className="text-sm text-gray-600">
+                    I have verified my identity with an official government ID
+                  </p>
+                </div>
+                <Button variant="ghost" size="sm" className="ml-4">
+                  <FileText className="h-4 w-4 mr-2" />
+                  Upload Document
+                </Button>
+              </div>
+              
+              <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                <div className="flex">
+                  <div className="mr-3 mt-0.5">
+                    <BadgeCheck className="h-5 w-5 text-blue-600" />
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-blue-800 mb-1">Why Verification Matters</h4>
+                    <p className="text-sm text-blue-700">
+                      Complete verification to increase your credibility and trustworthiness. 
+                      Verified teachers typically receive more student enrollments and higher ratings.
+                    </p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="flex justify-end">
+                <Button className="bg-indigo-600 hover:bg-indigo-700">
+                  Save Verification Information
+                </Button>
+              </div>
+            </div>
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
