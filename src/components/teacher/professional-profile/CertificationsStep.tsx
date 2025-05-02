@@ -377,23 +377,6 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between mb-4">
-        <div>
-          <h3 className="text-lg font-medium">Qualifications & Verification</h3>
-          <p className="text-sm text-muted-foreground">
-            Add your teaching certifications, awards, and verification documents
-          </p>
-        </div>
-        <Button
-          variant="outline"
-          className="border-green-500 text-green-600 hover:bg-green-50 hover:text-green-700"
-          onClick={addItem}
-        >
-          <PlusCircle className="mr-2 h-4 w-4" />
-          Add New
-        </Button>
-      </div>
-      
       {isLoading && (
         <div className="flex justify-center py-6 bg-gray-50 border rounded-md">
           <div className="animate-pulse flex items-center space-x-2 py-4">

@@ -38,16 +38,6 @@ const VerificationStep = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center">
-        <CheckSquare className="mr-2 h-5 w-5 text-muted-foreground" />
-        <h3 className="text-lg font-medium">Verification & Credentials</h3>
-      </div>
-      
-      <p className="text-sm text-gray-500">
-        Add teaching certifications, awards, and complete verification steps to build trust with students and parents.
-        Verified teachers appear higher in search results and receive more class requests.
-      </p>
-      
       {/* Certifications Component with Tabs */}
       <CertificationsStep 
         certifications={certifications}
