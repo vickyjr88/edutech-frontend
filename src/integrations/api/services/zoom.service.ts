@@ -52,8 +52,11 @@ class ZoomService {
     return api.post<{ success: boolean }>('/zoom/oauth-callback', { code, state });
   }
 
-  public async getConnectionStatus() {
-    return api.get<ZoomConnectionStatus>('/zoom/connection-status');
+  public async getConnectionStatus(teacherId?: string) {
+    const endpoint = teacherId 
+      ? `/zoom/connection-status/${teacherId}` 
+      : '/zoom/connection-status';
+    return api.get<ZoomConnectionStatus>(endpoint);
   }
 
   public async disconnectAccount() {

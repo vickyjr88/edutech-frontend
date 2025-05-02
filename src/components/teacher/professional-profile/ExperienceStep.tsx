@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -273,6 +273,62 @@ const ExperienceStep = ({ experience, setExperience }: ExperienceStepProps) => {
     }
   };
   
+  // Add event listeners for external edit and delete requests
+  useEffect(() => {
+    const handleExternalEdit = (event: any) => {
+      const { id, position, institution } = event.detail;
+      
+      // First try by ID
+      if (id) {
+        const itemToEdit = experience.find(item => item._id === id);
+        if (itemToEdit) {
+          setEditingId(id);
+          setCurrentItem(itemToEdit);
+          return;
+        }
+      }
+      
+      // Fallback to position/institution
+      if (position && institution) {
+        const itemToEdit = experience.find(
+          item => item.position === position && item.institution === institution
+        );
+        if (itemToEdit) {
+          setEditingId(itemToEdit._id);
+          setCurrentItem(itemToEdit);
+        }
+      }
+    };
+    
+    const handleExternalDelete = (event: any) => {
+      const { id, position, institution } = event.detail;
+      
+      // First try by ID
+      if (id) {
+        removeItem(id);
+        return;
+      }
+      
+      // Fallback to position/institution
+      if (position && institution) {
+        const itemToDelete = experience.find(
+          item => item.position === position && item.institution === institution
+        );
+        if (itemToDelete) {
+          removeItem(itemToDelete._id);
+        }
+      }
+    };
+    
+    document.addEventListener('edit-experience', handleExternalEdit);
+    document.addEventListener('delete-experience', handleExternalDelete);
+    
+    return () => {
+      document.removeEventListener('edit-experience', handleExternalEdit);
+      document.removeEventListener('delete-experience', handleExternalDelete);
+    };
+  }, [experience]);
+  
   const savedExperiences = experience.filter(item => item.saved);
 
   const formatDateRange = (startDate: string, endDate: string, currentlyWorking: boolean) => {
@@ -287,87 +343,9 @@ const ExperienceStep = ({ experience, setExperience }: ExperienceStepProps) => {
   };
   
   return (
-    <div className="space-y-6">
-      {savedExperiences.length > 0 && (
-        <div className="rounded-md border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Position</TableHead>
-                <TableHead>Institution</TableHead>
-                <TableHead>Duration</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {savedExperiences.map((exp) => (
-                <TableRow key={exp._id}>
-                  <TableCell className="font-medium">
-                    <div>{exp.position}</div>
-                    {exp.subjects && exp.subjects.length > 0 && (
-                      <div className="flex flex-wrap gap-1 mt-1">
-                        {exp.subjects.map((subject, idx) => (
-                          <Badge key={idx} variant="outline" className="text-xs">
-                            {subject}
-                          </Badge>
-                        ))}
-                      </div>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <div className="font-medium">{exp.institution}</div>
-                    <div className="text-xs text-gray-500">
-                      {exp.institutionType.charAt(0).toUpperCase() + exp.institutionType.slice(1)}
-                    </div>
-                    {exp.curriculums && exp.curriculums.length > 0 && (
-                      <div className="flex flex-wrap gap-1 mt-1">
-                        {exp.curriculums.map((curriculum, idx) => (
-                          <Badge key={idx} variant="outline" className="text-xs">
-                            {curriculum}
-                          </Badge>
-                        ))}
-                      </div>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {formatDateRange(exp.startDate, exp.endDate, exp.isCurrentlyWorking)}
-                  </TableCell>
-                  <TableCell>
-                    {exp.isCurrentlyWorking ? (
-                      <Badge className="bg-green-100 text-green-800 hover:bg-green-100">Current</Badge>
-                    ) : (
-                      <Badge variant="outline" className="text-gray-500">Past</Badge>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={() => editItem(exp._id)}
-                      >
-                        <Pencil className="h-4 w-4 text-blue-500" />
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={() => removeItem(exp._id)}
-                        disabled={isDeleting[exp._id]}
-                      >
-                        {isDeleting[exp._id] ? 
-                          <Loader2 className="h-4 w-4 text-red-500 animate-spin" /> : 
-                          <Trash2 className="h-4 w-4 text-red-500" />
-                        }
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      )}
+    <div className="space-y-6 professional-experience-form">
+      {/* Table of experiences has been removed to avoid duplication - 
+          the parent component will handle displaying the experiences */}
       
       {!editingId && savedExperiences.length > 0 ? (
         <Button

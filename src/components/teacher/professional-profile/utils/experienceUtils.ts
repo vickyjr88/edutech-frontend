@@ -55,9 +55,12 @@ export const saveExperienceRecord = async (
   // Check if this is a new entry (with a temporary ID) or an existing one
   const isNewRecord = !experienceData._id || experienceData._id.startsWith("temp_");
 
-// Remove the temporary ID before sending to the API
+// Remove properties that shouldn't be sent to the API
+  const { _id, createdAt, updatedAt, __v, ...cleanData } = formattedData as any;
+  
+  // Prepare data to send to API
   const dataToSend = {
-    ...formattedData,
+    ...cleanData,
     id: isNewRecord ? undefined : experienceData._id
   };
 
@@ -72,7 +75,11 @@ export const saveExperienceRecord = async (
 
     result = data;
   } else {
-    // Update existing experience record
+    // Update existing experience record - remove properties that shouldn't exist
+    // Add debug logging
+    console.log("Updating experience with ID:", experienceData._id);
+    console.log("Data to send:", dataToSend);
+    
     const { data, error } = await teacherService.updateExperience(
         experienceData._id,
         dataToSend

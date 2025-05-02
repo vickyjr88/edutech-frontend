@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { PlusCircle, Pencil, Trash2 } from "lucide-react";
 import { EducationItem } from "./types";
@@ -58,6 +58,60 @@ const EducationStep = ({ education, setEducation }: EducationStepProps) => {
   const handleEdit = (id: string) => {
     setEditingId(id);
   };
+  
+  // Add event listeners for external edit and delete requests
+  useEffect(() => {
+    const handleExternalEdit = (event: any) => {
+      const { id, institutionName, institution } = event.detail;
+      
+      // First try by ID
+      if (id) {
+        const itemToEdit = education.find(item => item._id === id);
+        if (itemToEdit) {
+          setEditingId(id);
+          return;
+        }
+      }
+      
+      // Fallback to institution name
+      if (institutionName || institution) {
+        const itemToEdit = education.find(
+          item => (item.institutionName === institutionName || item.institution === institution)
+        );
+        if (itemToEdit) {
+          setEditingId(itemToEdit._id);
+        }
+      }
+    };
+    
+    const handleExternalDelete = (event: any) => {
+      const { id, institutionName, institution } = event.detail;
+      
+      // First try by ID
+      if (id) {
+        removeItem(id);
+        return;
+      }
+      
+      // Fallback to institution name
+      if (institutionName || institution) {
+        const itemToDelete = education.find(
+          item => (item.institutionName === institutionName || item.institution === institution)
+        );
+        if (itemToDelete) {
+          removeItem(itemToDelete._id);
+        }
+      }
+    };
+    
+    document.addEventListener('edit-education', handleExternalEdit);
+    document.addEventListener('delete-education', handleExternalDelete);
+    
+    return () => {
+      document.removeEventListener('edit-education', handleExternalEdit);
+      document.removeEventListener('delete-education', handleExternalDelete);
+    };
+  }, [education]);
 
   // Filter out items that have been saved and should be displayed in the table
   const completedEducation = education.filter(edu => edu.saved || 
@@ -68,56 +122,9 @@ const EducationStep = ({ education, setEducation }: EducationStepProps) => {
   const itemsToShow = education.filter(edu => editingId === edu._id);
 
   return (
-    <div className="space-y-6">
-      {completedEducation.length > 0 && (
-        <div className="rounded-md border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Institution</TableHead>
-                <TableHead>Degree</TableHead>
-                <TableHead>Duration</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {completedEducation.map((edu) => (
-                <TableRow key={edu._id}>
-                  <TableCell className="font-medium">{edu.institution || edu.institutionName}</TableCell>
-                  <TableCell>{edu.degree || "—"}</TableCell>
-                  <TableCell>
-                    {edu.startDate ? 
-                      edu.isCurrentlyStudying ?
-                        `${edu.startDate} - Present` : 
-                        `${edu.startDate}${edu.endDate ? ` - ${edu.endDate}` : ''}` 
-                      : "—"}
-                  </TableCell>
-                  <TableCell>{getStatus(edu)}</TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleEdit(edu._id)}
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => removeItem(edu._id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      )}
+    <div className="space-y-6 professional-education-form">
+      {/* Table of education entries has been removed to avoid duplication - 
+          the parent component will handle displaying the education items */}
       
       <div className="space-y-4">
         {itemsToShow.map((edu, index) => (

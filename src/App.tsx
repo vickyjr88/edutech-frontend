@@ -13,6 +13,7 @@ import Dashboard from "./pages/Dashboard";
 import TeacherDashboard from "./pages/TeacherDashboard";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
+import TeacherRoute from "./components/auth/TeacherRoute";
 import AuthCallback from "./pages/AuthCallback";
 import ZoomAuthCallback from "./pages/ZoomAuthCallback";
 import ForTeachers from "./pages/ForTeachers";
@@ -80,19 +81,19 @@ const App = () => {
                   <Navigate to="/student-dashboard" replace />
                 } />
                 <Route path="/teacher-dashboard" element={
-                  <ProtectedRoute>
+                  <TeacherRoute requireProfileComplete={true}>
                     <TeacherDashboard />
-                  </ProtectedRoute>
+                  </TeacherRoute>
                 } />
                 <Route path="/teacher-dashboard/zoom" element={
-                  <ProtectedRoute>
+                  <TeacherRoute requireProfileComplete={true}>
                     <TeacherZoomPage />
-                  </ProtectedRoute>
+                  </TeacherRoute>
                 } />
                 <Route path="/teacher-profile-setup" element={
-                  <ProtectedRoute>
+                  <TeacherRoute requireProfileComplete={false}>
                     <TeacherProfileJourney />
-                  </ProtectedRoute>
+                  </TeacherRoute>
                 } />
                 <Route path="/parents-dashboard" element={
                   <ProtectedRoute>

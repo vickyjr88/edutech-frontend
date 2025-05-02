@@ -29,10 +29,10 @@ export interface TeacherProfile {
     experience: Experience[];
     strategies: string[];
     methodologies: string[];
-    subjects: string[];
-    skills: string[];
-    languages: string[];
-    certifications: string[];
+    subjects: object[];
+    skills: object[];
+    languages: object[];
+    certifications: object[];
     introVideoUrl?: string;
     isProfileComplete: boolean;
     rating: number;
@@ -212,8 +212,12 @@ export const teacherService = {
             teacherProfile: data.teacherProfile,
             additionalDetails: data.additionalDetails
         };
+        // Delete properties that shouldn't be sent to the API
         delete normalizedData['_id'];
         delete normalizedData['details'];
+        delete normalizedData['createdAt'];
+        delete normalizedData['updatedAt'];
+        delete normalizedData['__v'];
         // Use the pattern consistent with other endpoints: /teachers/:teacherId/experience
         return api.post<Experience>(`/teachers/${data.teacherProfile}/experience`, normalizedData);
     },
@@ -255,8 +259,13 @@ export const teacherService = {
             // Use isCurrentlyWorking which is consistent with our frontend
             isCurrentlyWorking: data.isCurrentlyWorking !== undefined ? data.isCurrentlyWorking : undefined
         };
+        // Delete properties that shouldn't be sent to the API
         delete normalizedData.teacherProfile;
         delete normalizedData.id;
+        delete normalizedData._id;
+        delete normalizedData.createdAt;
+        delete normalizedData.updatedAt;
+        delete normalizedData.__v;
 
         // Use the pattern consistent with other endpoints: /teachers/:teacherId/experience/:id
         return api.patch<Experience>(`/teachers/${data.teacherProfile}/experience/${id}`, normalizedData);

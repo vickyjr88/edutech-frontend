@@ -147,6 +147,47 @@ class AuthService {
             };
         }
     }
+    
+    async updateUserProfile(userId: string, userData: Partial<User>): Promise<ApiResponse<User>> {
+        if (!this.getSession()) {
+            return {
+                data: null,
+                error: { message: 'Not authenticated', status: 401 }
+            };
+        }
+
+        try {
+            // Use the PATCH /user/:id endpoint for updating basic user information
+            const response = await api.patch<User>(`/users/${userId}`, userData);
+            
+            // If successful and the current user's session exists, update the user in the session
+            if (response.data && this.session && this.session.user.id === userId) {
+                this.setSession({
+                    ...this.session,
+                    user: { ...this.session.user, ...response.data }
+                });
+            }
+            
+            return response;
+        } catch (error) {
+            if (error.response?.status === 401) {
+                // Token expired, try to refresh
+                const refreshed = await this.refreshSession();
+                if (refreshed) {
+                    // Retry with new token
+                    return await api.patch<User>(`/user/${userId}`, userData);
+                }
+            }
+
+            return {
+                data: null,
+                error: {
+                    message: error.response?.data?.message || 'Failed to update user profile',
+                    status: error.response?.status || 500
+                }
+            };
+        }
+    }
 
     getSession(): Session | null {
         // Check if token is expired

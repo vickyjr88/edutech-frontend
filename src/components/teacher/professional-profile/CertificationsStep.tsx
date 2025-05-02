@@ -68,7 +68,7 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
 
   // Initialize with first item expanded
   useEffect(() => {
-    if (certifications.length > 0 && Object.keys(expandedItems).length === 0) {
+    if (certifications && certifications.length > 0 && Object.keys(expandedItems).length === 0) {
       setExpandedItems({ [certifications[0]._id]: true });
     }
   }, [certifications]);
@@ -169,6 +169,8 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
   };
 
   const updateItem = (id: string, field: keyof CertificationItem, value: string | boolean) => {
+    if (!certifications) return;
+    
     setCertifications(certifications.map(item => 
       item._id === id ? { ...item, [field]: value } : item
     ));
@@ -207,6 +209,16 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
       toast({
         title: "Authentication Required",
         description: "You must be logged in to save certifications",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Check if certifications are defined
+    if (!certifications || certifications.length === 0) {
+      toast({
+        title: "No Certifications",
+        description: "There are no certifications to save",
         variant: "destructive"
       });
       return;
@@ -348,7 +360,7 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
         </div>
       )}
 
-      {certifications.map((cert, index) => (
+      {certifications && certifications.length > 0 && certifications.map((cert, index) => (
         <div key={cert._id} className="p-5 border rounded-md bg-white shadow-sm transition-all">
           <div className="flex justify-between items-start mb-4">
             <div 
@@ -382,7 +394,7 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
                 variant="outline" 
                 size="sm"
                 onClick={() => removeItem(cert._id)}
-                disabled={certifications.length === 1}
+                disabled={!certifications || certifications.length === 1}
                 className="border-red-400 hover:bg-red-50"
               >
                 <Trash2 className="h-4 w-4 text-red-500" />

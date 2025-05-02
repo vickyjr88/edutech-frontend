@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import AuthLayout from "@/components/auth/AuthLayout";
 import { toast } from "@/components/ui/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
-import { api, authService, studentService } from "@/integrations/api";
+import { api, authService, studentService, teacherService } from "@/integrations/api";
 
 interface LocationState {
   from?: {
@@ -29,20 +29,37 @@ const Login = () => {
   const state = location.state as LocationState;
   const from = state?.from?.pathname || "/dashboard";
 
-  // If user is already logged in, redirect them
-  if (user) {
-    const userRole = user?.role;
-    if (userRole === "teacher") {
-      navigate("/teacher-dashboard");
-    }else if (userRole === "student") {
-      navigate("/student-dashboard");
-    }else if (userRole === "parent") {
-      navigate("/parent-dashboard");
-    }
-    else {
-      navigate(from);
-    }
-  }
+  // If user is already logged in, check if we need to redirect
+  // We'll use an effect to handle this so we can use async functions
+  useEffect(() => {
+    const checkUserRedirect = async () => {
+      if (user) {
+        const userRole = user?.role;
+        if (userRole === "teacher" && user.id) {
+          try {
+            // Check if the teacher profile is complete
+            const isProfileComplete = await teacherService.isProfileComplete(user.id);
+            if (!isProfileComplete) {
+              navigate("/teacher-profile-setup");
+            } else {
+              navigate("/teacher-dashboard");
+            }
+          } catch (error) {
+            console.error("Error checking teacher profile:", error);
+            navigate("/teacher-dashboard");
+          }
+        } else if (userRole === "student") {
+          navigate("/student-dashboard");
+        } else if (userRole === "parent") {
+          navigate("/parent-dashboard");
+        } else {
+          navigate(from);
+        }
+      }
+    };
+
+    checkUserRedirect();
+  }, [user, navigate, from]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,10 +79,27 @@ const Login = () => {
         description: "You have successfully logged in.",
       });
 
-      // Check if user is a tutor to redirect to correct dashboard
+      // Check user role to redirect to the correct dashboard
       const userRole = data.user?.role;
       if (userRole === "teacher") {
-        navigate("/teacher-dashboard");
+        try {
+          // Check if the teacher profile is complete
+          if (data.user && data.user.id) {
+            const isProfileComplete = await teacherService.isProfileComplete(data.user.id);
+            if (!isProfileComplete) {
+              // Redirect to profile setup if profile is incomplete
+              navigate("/teacher-profile-setup");
+            } else {
+              // Redirect to dashboard if profile is complete
+              navigate("/teacher-dashboard");
+            }
+          } else {
+            navigate("/teacher-dashboard");
+          }
+        } catch (error) {
+          console.error("Error checking teacher profile:", error);
+          navigate("/teacher-dashboard");
+        }
       } else if (userRole === "student") {
         navigate("/student-dashboard");
       } else {

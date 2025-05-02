@@ -81,7 +81,14 @@ const TeacherProfessionalProfileForm = ({
   const [afterSchoolSubjects, setAfterSchoolSubjects] = useState<AfterSchoolSubjectItem[]>([]);
   const [technicalSkills, setTechnicalSkills] = useState<TechnicalSkillItem[]>([]);
   const [languages, setLanguages] = useState<LanguageItem[]>([]);
-  const [certifications, setCertifications] = useState<FormItem[]>([{ id: "1", value: "", details: "" }]);
+  // Initialize with the proper structure expected by CertificationsStep
+  const [certifications, setCertifications] = useState<any[]>([{ 
+    _id: "1", 
+    name: "", 
+    issuer: "",
+    issueDate: "",
+    description: ""
+  }]);
   const [videoUrls, setVideoUrls] = useState<string[]>([]);
   const [photoUrls, setPhotoUrls] = useState<string[]>([]);
 
@@ -135,7 +142,7 @@ const TeacherProfessionalProfileForm = ({
       completionStatus[6] = true; // Languages
     }
     
-    if (certifications.length > 0 && certifications[0].value) {
+    if (certifications.length > 0 && certifications[0].name) {
       completionStatus[7] = true; // Certifications
     }
     
