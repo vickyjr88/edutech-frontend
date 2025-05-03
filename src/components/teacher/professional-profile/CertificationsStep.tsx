@@ -93,6 +93,11 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
       try {
         const { data } = await teacherService.getProfileById(user.teacherId);
         if (data) {
+          console.log("Profile data for verification documents:", { 
+            backgroundCheck: data.backgroundCheckFile, 
+            idVerification: data.governmentIdFile 
+          });
+          
           // Check if background check document exists
           if (data.backgroundCheckFile) {
             setBackgroundCheckUrl(data.backgroundCheckFile);
@@ -100,6 +105,11 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
               ...prev,
               backgroundCheck: true
             }));
+            
+            if (onCertificationsChange) {
+              // Notify parent that verification status has changed
+              onCertificationsChange();
+            }
           }
           
           // Check if government ID document exists
@@ -109,6 +119,11 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
               ...prev,
               idVerification: true
             }));
+            
+            if (onCertificationsChange) {
+              // Notify parent that verification status has changed
+              onCertificationsChange();
+            }
           }
         }
       } catch (error) {
@@ -117,7 +132,7 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
     };
     
     fetchProfile();
-  }, [user?.teacherId]);
+  }, [user?.teacherId, onCertificationsChange]);
   
   const loadCertifications = async () => {
     if (!user?.teacherId) return;
@@ -493,6 +508,11 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
           backgroundCheck: true
         }));
         
+        // Notify parent component about verification status change
+        if (onCertificationsChange) {
+          onCertificationsChange();
+        }
+        
         toast({
           title: "Success",
           description: "Background check document uploaded successfully"
@@ -563,6 +583,11 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
           ...prev,
           idVerification: true
         }));
+        
+        // Notify parent component about verification status change
+        if (onCertificationsChange) {
+          onCertificationsChange();
+        }
         
         toast({
           title: "Success",
@@ -1441,6 +1466,11 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
                       };
                       
                       await teacherService.updateVerificationStatus(user.teacherId, updates);
+                      
+                      // Update verification state in parent component
+                      if (onCertificationsChange) {
+                        onCertificationsChange();
+                      }
                       
                       toast({
                         title: "Success",
