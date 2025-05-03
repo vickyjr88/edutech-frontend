@@ -2,6 +2,7 @@ import { teacherService } from "@/integrations/api/services/teacher.service";
 import { formatDateForDatabase } from "./educationUtils";
 
 export type CertificationItem = {
+  isCertified: string;
   _id: string;
   name: string;
   issuer: string;
@@ -74,6 +75,7 @@ export const fetchCertifications = async (teacherId: string): Promise<Certificat
       credentialUrl: item.credentialUrl || undefined,
       description: item.description || undefined,
       certificateType: item.certificateType || 'Other',
+      isCertified: true,
       isVerifiable: item.isVerifiable || false
     }));
   } catch (error) {

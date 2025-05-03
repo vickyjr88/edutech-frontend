@@ -1,12 +1,13 @@
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { PlusCircle, Trash2, Award, Medal, Calendar, FileText, Link, ExternalLink, GraduationCap, Edit, Shield, BadgeCheck } from "lucide-react";
+import { PlusCircle, Trash2, Award, Medal, Calendar, FileText, Link, ExternalLink, GraduationCap, Edit, Shield, BadgeCheck, Upload, CheckCircle, Loader2 } from "lucide-react";
+import { teacherService } from "@/integrations/api/services/teacher.service";
 import { 
   DropdownMenu,
   DropdownMenuContent,
@@ -84,6 +85,40 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
     }
   }, [certifications]);
   
+  // Fetch existing verification document URLs
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (!user?.teacherId) return;
+      
+      try {
+        const { data } = await teacherService.getProfileById(user.teacherId);
+        if (data) {
+          // Check if background check document exists
+          if (data.backgroundCheckFile) {
+            setBackgroundCheckUrl(data.backgroundCheckFile);
+            setVerificationControls(prev => ({
+              ...prev,
+              backgroundCheck: true
+            }));
+          }
+          
+          // Check if government ID document exists
+          if (data.governmentIdFile) {
+            setGovernmentIdUrl(data.governmentIdFile);
+            setVerificationControls(prev => ({
+              ...prev,
+              idVerification: true
+            }));
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching teacher profile:", error);
+      }
+    };
+    
+    fetchProfile();
+  }, [user?.teacherId]);
+  
   const loadCertifications = async () => {
     if (!user?.teacherId) return;
     
@@ -111,6 +146,7 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
       issuer: "",
       issueDate: "",
       certificateType: "Teaching License",
+      isCertified:false,
       description: "",
       isVerifiable: false,
       credentialUrl: ""
@@ -368,11 +404,181 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
     idVerification: false
   });
 
+  // File upload states
+  const [uploadingBackgroundCheck, setUploadingBackgroundCheck] = useState(false);
+  const [uploadingGovId, setUploadingGovId] = useState(false);
+  const [backgroundCheckUrl, setBackgroundCheckUrl] = useState<string | null>(null);
+  const [governmentIdUrl, setGovernmentIdUrl] = useState<string | null>(null);
+  
+  // References to file inputs
+  const backgroundCheckInputRef = useRef<HTMLInputElement>(null);
+  const governmentIdInputRef = useRef<HTMLInputElement>(null);
+
   const updateVerification = (field: keyof typeof verificationControls, value: boolean) => {
     setVerificationControls(prev => ({
       ...prev,
       [field]: value
     }));
+  };
+  
+  // Handle file selection and conversion to base64
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => {
+        if (typeof reader.result === 'string') {
+          // Extract the base64 part from data URL
+          const base64String = reader.result.split(',')[1];
+          resolve(base64String);
+        } else {
+          reject(new Error('Failed to convert file to base64'));
+        }
+      };
+      reader.onerror = error => reject(error);
+    });
+  };
+  
+  // Handle background check file upload
+  const handleBackgroundCheckUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files || files.length === 0 || !user?.teacherId) return;
+    
+    const file = files[0];
+    // Check file type - only accept PDFs and images
+    const validTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg'];
+    if (!validTypes.includes(file.type)) {
+      toast({
+        title: "Invalid file type",
+        description: "Please upload a PDF or image file (JPEG, PNG)",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Check file size (max 5MB)
+    const maxSize = 5 * 1024 * 1024; // 5MB in bytes
+    if (file.size > maxSize) {
+      toast({
+        title: "File too large",
+        description: "Please upload a file smaller than 5MB",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    try {
+      setUploadingBackgroundCheck(true);
+      // Convert file to base64
+      const base64Data = await fileToBase64(file);
+      
+      // Upload to API
+      const response = await teacherService.uploadVerificationFile(
+        user.teacherId,
+        base64Data,
+        file.type,
+        'backgroundCheck'
+      );
+      
+      if (response.data?.fileUrl) {
+        setBackgroundCheckUrl(response.data.fileUrl);
+        // Update teacher profile with the file URL
+        await teacherService.updateVerificationStatus(user.teacherId, {
+          backgroundCheckFile: response.data.fileUrl
+        });
+        
+        // Update the verification control state
+        setVerificationControls(prev => ({
+          ...prev,
+          backgroundCheck: true
+        }));
+        
+        toast({
+          title: "Success",
+          description: "Background check document uploaded successfully"
+        });
+      }
+    } catch (error) {
+      console.error("Error uploading background check:", error);
+      toast({
+        title: "Error",
+        description: "Failed to upload background check document",
+        variant: "destructive"
+      });
+    } finally {
+      setUploadingBackgroundCheck(false);
+    }
+  };
+  
+  // Handle government ID file upload
+  const handleGovernmentIdUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files || files.length === 0 || !user?.teacherId) return;
+    
+    const file = files[0];
+    // Check file type - only accept PDFs and images
+    const validTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg'];
+    if (!validTypes.includes(file.type)) {
+      toast({
+        title: "Invalid file type",
+        description: "Please upload a PDF or image file (JPEG, PNG)",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Check file size (max 5MB)
+    const maxSize = 5 * 1024 * 1024; // 5MB in bytes
+    if (file.size > maxSize) {
+      toast({
+        title: "File too large",
+        description: "Please upload a file smaller than 5MB",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    try {
+      setUploadingGovId(true);
+      // Convert file to base64
+      const base64Data = await fileToBase64(file);
+      
+      // Upload to API
+      const response = await teacherService.uploadVerificationFile(
+        user.teacherId,
+        base64Data,
+        file.type,
+        'governmentId'
+      );
+      
+      if (response.data?.fileUrl) {
+        setGovernmentIdUrl(response.data.fileUrl);
+        // Update teacher profile with the file URL
+        await teacherService.updateVerificationStatus(user.teacherId, {
+          governmentIdFile: response.data.fileUrl
+        });
+        
+        // Update the verification control state
+        setVerificationControls(prev => ({
+          ...prev,
+          idVerification: true
+        }));
+        
+        toast({
+          title: "Success",
+          description: "Government ID document uploaded successfully"
+        });
+      }
+    } catch (error) {
+      console.error("Error uploading government ID:", error);
+      toast({
+        title: "Error",
+        description: "Failed to upload government ID document",
+        variant: "destructive"
+      });
+    } finally {
+      setUploadingGovId(false);
+    }
   };
 
   return (
@@ -679,6 +885,7 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
                       name: "",
                       issuer: "",
                       issueDate: "",
+                      isCertified:false,
                       certificateType: "Teaching License",
                       description: "",
                       isVerifiable: false,
@@ -1022,6 +1229,7 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
                     name: "",
                     issuer: "",
                     issueDate: "",
+                    isCertified:false,
                     certificateType: "Teaching Award",
                     description: "",
                     isVerifiable: false,
@@ -1074,10 +1282,59 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
                     I have completed a background check with an approved provider
                   </p>
                 </div>
-                <Button variant="ghost" size="sm" className="ml-4">
-                  <FileText className="h-4 w-4 mr-2" />
-                  Upload Document
-                </Button>
+                <div>
+                  {/* Hidden file input */}
+                  <input 
+                    type="file" 
+                    ref={backgroundCheckInputRef}
+                    onChange={handleBackgroundCheckUpload}
+                    accept="application/pdf,image/jpeg,image/png,image/jpg"
+                    className="hidden"
+                  />
+                  
+                  {backgroundCheckUrl ? (
+                    <div className="flex items-center">
+                      <a 
+                        href={backgroundCheckUrl} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-xs text-blue-600 hover:underline flex items-center mr-2"
+                      >
+                        <FileText className="h-4 w-4 mr-1" />
+                        View Document
+                      </a>
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => backgroundCheckInputRef.current?.click()}
+                        disabled={uploadingBackgroundCheck}
+                        className="ml-1"
+                      >
+                        <Upload className="h-4 w-4 text-gray-500" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => backgroundCheckInputRef.current?.click()}
+                      disabled={uploadingBackgroundCheck}
+                      className="ml-1"
+                    >
+                      {uploadingBackgroundCheck ? (
+                        <span className="flex items-center">
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin text-blue-500" />
+                          Uploading...
+                        </span>
+                      ) : (
+                        <span className="flex items-center">
+                          <FileText className="h-4 w-4 mr-2" />
+                          Upload Document
+                        </span>
+                      )}
+                    </Button>
+                  )}
+                </div>
               </div>
               
               <div className="flex items-center p-4 border rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
@@ -1094,10 +1351,59 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
                     I have verified my identity with an official government ID
                   </p>
                 </div>
-                <Button variant="ghost" size="sm" className="ml-4">
-                  <FileText className="h-4 w-4 mr-2" />
-                  Upload Document
-                </Button>
+                <div>
+                  {/* Hidden file input */}
+                  <input 
+                    type="file" 
+                    ref={governmentIdInputRef}
+                    onChange={handleGovernmentIdUpload}
+                    accept="application/pdf,image/jpeg,image/png,image/jpg"
+                    className="hidden"
+                  />
+                  
+                  {governmentIdUrl ? (
+                    <div className="flex items-center">
+                      <a 
+                        href={governmentIdUrl} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-xs text-blue-600 hover:underline flex items-center mr-2"
+                      >
+                        <FileText className="h-4 w-4 mr-1" />
+                        View Document
+                      </a>
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => governmentIdInputRef.current?.click()}
+                        disabled={uploadingGovId}
+                        className="ml-1"
+                      >
+                        <Upload className="h-4 w-4 text-gray-500" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => governmentIdInputRef.current?.click()}
+                      disabled={uploadingGovId}
+                      className="ml-1"
+                    >
+                      {uploadingGovId ? (
+                        <span className="flex items-center">
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin text-blue-500" />
+                          Uploading...
+                        </span>
+                      ) : (
+                        <span className="flex items-center">
+                          <FileText className="h-4 w-4 mr-2" />
+                          Upload Document
+                        </span>
+                      )}
+                    </Button>
+                  )}
+                </div>
               </div>
               
               <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
@@ -1116,7 +1422,41 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
               </div>
               
               <div className="flex justify-end">
-                <Button className="bg-indigo-600 hover:bg-indigo-700">
+                <Button 
+                  className="bg-indigo-600 hover:bg-indigo-700"
+                  onClick={async () => {
+                    if (!user?.teacherId) {
+                      toast({
+                        title: "Authentication Required",
+                        description: "You must be logged in to save verification information",
+                        variant: "destructive"
+                      });
+                      return;
+                    }
+                    
+                    try {
+                      const updates = {
+                        backgroundCheckFile: backgroundCheckUrl || undefined,
+                        governmentIdFile: governmentIdUrl || undefined
+                      };
+                      
+                      await teacherService.updateVerificationStatus(user.teacherId, updates);
+                      
+                      toast({
+                        title: "Success",
+                        description: "Verification information saved successfully",
+                        variant: "default"
+                      });
+                    } catch (error) {
+                      console.error("Error saving verification information:", error);
+                      toast({
+                        title: "Error",
+                        description: "Failed to save verification information",
+                        variant: "destructive"
+                      });
+                    }
+                  }}
+                >
                   Save Verification Information
                 </Button>
               </div>

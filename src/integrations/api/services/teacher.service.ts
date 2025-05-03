@@ -34,6 +34,8 @@ export interface TeacherProfile {
     languages: object[];
     certifications: object[];
     introVideoUrl?: string;
+    backgroundCheckFile?: string;
+    governmentIdFile?: string;
     isProfileComplete: boolean;
     rating: number;
     totalReviews: number;
@@ -504,5 +506,19 @@ export const teacherService = {
 
     deleteCertification: (teacherId: string, certificationId: string): Promise<ApiResponse<{ success: boolean }>> => {
         return api.delete<{ success: boolean }>(`/teachers/${teacherId}/certifications/${certificationId}`);
+    },
+    
+    // File uploads for verification documents
+    uploadVerificationFile: (teacherId: string, fileData: string, fileType: string, documentType: 'backgroundCheck' | 'governmentId'): Promise<ApiResponse<{ fileUrl: string }>> => {
+        // The API requires a base64 encoded string of the file
+        return api.post<{ fileUrl: string }>(`/teachers/${teacherId}/verification-documents`, {
+            fileData,
+            fileType,
+            documentType
+        });
+    },
+    
+    updateVerificationStatus: (teacherId: string, updates: { backgroundCheckFile?: string, governmentIdFile?: string }): Promise<ApiResponse<TeacherProfile>> => {
+        return api.patch<TeacherProfile>(`/teachers/${teacherId}`, updates);
     },
 };
