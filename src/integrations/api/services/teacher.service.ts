@@ -509,12 +509,11 @@ export const teacherService = {
     },
     
     // File uploads for verification documents
-    uploadVerificationFile: (teacherId: string, fileData: string, fileType: string, documentType: 'backgroundCheck' | 'governmentId'): Promise<ApiResponse<{ fileUrl: string }>> => {
+    uploadVerificationFile: (teacherId: string, documentType: 'background_check' | 'government_id', base64File: string): Promise<ApiResponse<{ fileUrl: string }>> => {
         // The API requires a base64 encoded string of the file
-        return api.post<{ fileUrl: string }>(`/teachers/${teacherId}/verification-documents`, {
-            fileData,
-            fileType,
-            documentType
+        return api.post<{ fileUrl: string }>(`/teachers/${teacherId}/documents`, {
+            documentType,
+            base64File
         });
     },
     

@@ -98,32 +98,22 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
             idVerification: data.governmentIdFile 
           });
           
-          // Check if background check document exists
+          // Check if background check document exists and update state without triggering callback
           if (data.backgroundCheckFile) {
             setBackgroundCheckUrl(data.backgroundCheckFile);
             setVerificationControls(prev => ({
               ...prev,
               backgroundCheck: true
             }));
-            
-            if (onCertificationsChange) {
-              // Notify parent that verification status has changed
-              onCertificationsChange();
-            }
           }
           
-          // Check if government ID document exists
+          // Check if government ID document exists and update state without triggering callback
           if (data.governmentIdFile) {
             setGovernmentIdUrl(data.governmentIdFile);
             setVerificationControls(prev => ({
               ...prev,
               idVerification: true
             }));
-            
-            if (onCertificationsChange) {
-              // Notify parent that verification status has changed
-              onCertificationsChange();
-            }
           }
         }
       } catch (error) {
@@ -132,7 +122,7 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
     };
     
     fetchProfile();
-  }, [user?.teacherId, onCertificationsChange]);
+  }, [user?.teacherId]); // Remove onCertificationsChange from the dependency array to prevent loop
   
   const loadCertifications = async () => {
     if (!user?.teacherId) return;
@@ -490,9 +480,8 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
       // Upload to API
       const response = await teacherService.uploadVerificationFile(
         user.teacherId,
-        base64Data,
-        file.type,
-        'backgroundCheck'
+        'background_check',
+        base64Data
       );
       
       if (response.data?.fileUrl) {
@@ -508,10 +497,8 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
           backgroundCheck: true
         }));
         
-        // Notify parent component about verification status change
-        if (onCertificationsChange) {
-          onCertificationsChange();
-        }
+        // Note: We removed the onCertificationsChange call here to prevent infinite loops
+        // The "Save Verification Information" button should be used to trigger parent updates
         
         toast({
           title: "Success",
@@ -566,9 +553,8 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
       // Upload to API
       const response = await teacherService.uploadVerificationFile(
         user.teacherId,
-        base64Data,
-        file.type,
-        'governmentId'
+        'government_id',
+        base64Data
       );
       
       if (response.data?.fileUrl) {
@@ -584,10 +570,8 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
           idVerification: true
         }));
         
-        // Notify parent component about verification status change
-        if (onCertificationsChange) {
-          onCertificationsChange();
-        }
+        // Note: We removed the onCertificationsChange call here to prevent infinite loops
+        // The "Save Verification Information" button should be used to trigger parent updates
         
         toast({
           title: "Success",

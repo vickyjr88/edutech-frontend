@@ -674,48 +674,33 @@ const TeacherDashboard = () => {
                       <div className="p-4 bg-blue-50 text-blue-800 rounded-md border border-blue-200">
                         <h3 className="font-medium text-lg mb-3">Your Teacher Journey</h3>
                         <div className="space-y-4">
+                          {/* Note: The following steps are now handled by ProfileJourney component:
+                            1. Personal Information (Basic Profile)
+                            2. Location & Availability
+                            3. Education Background
+                            4. Teaching Experience
+                            5. Subject Expertise
+                            6. Teaching Style
+                            7. Verification & Credentials
+                            8. Teaching Platform
+                          */}
+                          
                           <div className="flex items-start gap-3">
                             <div className="flex-shrink-0 h-7 w-7 rounded-full bg-green-100 flex items-center justify-center">
                               <CheckCircle2 className="h-4 w-4 text-green-600" />
                             </div>
                             <div>
-                              <p className="font-medium">Step 1: Basic Profile</p>
-                              <p className="text-sm text-blue-700">Complete! You've set up your basic teacher profile.</p>
-                            </div>
-                          </div>
-                          
-                          <div className="flex items-start gap-3">
-                            <div className="flex-shrink-0 h-7 w-7 rounded-full bg-amber-100 flex items-center justify-center">
-                              {hasProfessionalProfile ? 
-                                <CheckCircle2 className="h-4 w-4 text-green-600" /> :
-                                <CircleDashed className="h-4 w-4 text-amber-600" />
-                              }
-                            </div>
-                            <div>
-                              <p className="font-medium">Step 2: Professional Profile</p>
+                              <p className="font-medium">Profile Journey</p>
                               <p className="text-sm text-blue-700">
-                                {hasProfessionalProfile ? 
-                                  "Complete! You've added your professional qualifications." :
-                                  "Add your teaching experience, education, and specialties."
-                                }
+                                Complete! Your teacher profile journey has been initiated. Visit the Profile Journey page to continue or edit your profile.
                               </p>
-                              {!hasProfessionalProfile && (
-                                <Button 
-                                  className="mt-2 bg-amber-600 hover:bg-amber-700 text-white relative"
-                                  size="sm"
-                                  onClick={handleCompleteProfessionalProfile}
-                                  disabled={isProfessionalProfileLoading}
-                                >
-                                  {isProfessionalProfileLoading ? (
-                                    <>
-                                      <Loader2 className="h-4 w-4 mr-2 inline-block animate-spin" />
-                                      Loading...
-                                    </>
-                                  ) : (
-                                    "Complete Now"
-                                  )}
-                                </Button>
-                              )}
+                              <Button 
+                                className="mt-2 bg-blue-600 hover:bg-blue-700 text-white"
+                                size="sm"
+                                onClick={() => navigate("/teacher-profile")}
+                              >
+                                View Complete Profile
+                              </Button>
                             </div>
                           </div>
                           
@@ -727,7 +712,7 @@ const TeacherDashboard = () => {
                               }
                             </div>
                             <div>
-                              <p className="font-medium">Step 3: Classroom Setup</p>
+                              <p className="font-medium">Step 1: Classroom Setup</p>
                               <p className="text-sm text-blue-700">
                                 {hasClassesSetup ? 
                                   "Complete! You've set up your classroom settings." :
@@ -737,7 +722,7 @@ const TeacherDashboard = () => {
                               <Button 
                                 className="mt-2 bg-amber-600 hover:bg-amber-700 text-white"
                                 size="sm"
-                                onClick={handleSetupClassSettings}
+                                onClick={() => navigate("/teacher-profile-setup")}
                               >
                                 {hasClassesSetup ? "Edit Setup" : "Set Up Now"}
                               </Button>
@@ -752,7 +737,7 @@ const TeacherDashboard = () => {
                               }
                             </div>
                             <div>
-                              <p className="font-medium">Step 4: Create Your First Class</p>
+                              <p className="font-medium">Step 2: Create Your First Class</p>
                               <p className="text-sm text-blue-700">
                                 {classes.length > 0 ? 
                                   "Complete! You've created your first class." : 
@@ -775,7 +760,7 @@ const TeacherDashboard = () => {
                               <CircleDashed className="h-4 w-4 text-gray-600" />
                             </div>
                             <div>
-                              <p className="font-medium">Step 5: Enroll Your Students</p>
+                              <p className="font-medium">Step 3: Enroll Your Students</p>
                               <p className="text-sm text-gray-600">
                                 Invite and enroll students to join your classes.
                               </p>
@@ -795,7 +780,7 @@ const TeacherDashboard = () => {
                               <CircleDashed className="h-4 w-4 text-gray-600" />
                             </div>
                             <div>
-                              <p className="font-medium">Step 6: Get Reviews</p>
+                              <p className="font-medium">Step 4: Get Reviews</p>
                               <p className="text-sm text-gray-600">
                                 Collect feedback and reviews from your students, parents and supervisors to improve your profile.
                               </p>

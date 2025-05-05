@@ -44,6 +44,7 @@ import ChildDashboard from "./pages/parents/ChildDashboard";
 import TeachersPricing from "./pages/TeachersPricing";
 import TeacherZoomPage from "./pages/TeacherZoomPage";
 import TeacherProfileJourney from "./pages/TeacherProfileJourney";
+import TeacherProfileResume from "./pages/TeacherProfileResume";
 
 // Create a client
 const queryClient = new QueryClient();
@@ -93,6 +94,11 @@ const App = () => {
                 <Route path="/teacher-profile-setup" element={
                   <TeacherRoute requireProfileComplete={false}>
                     <TeacherProfileJourney />
+                  </TeacherRoute>
+                } />
+                <Route path="/teacher-profile" element={
+                  <TeacherRoute requireProfileComplete={true}>
+                    <TeacherProfileResume />
                   </TeacherRoute>
                 } />
                 <Route path="/parents-dashboard" element={
