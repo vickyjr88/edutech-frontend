@@ -1,7 +1,9 @@
 
 import { Link } from "react-router-dom";
-import { Bell, Sparkles, Star } from "lucide-react";
+import { Bell, Sparkles, Star, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,6 +18,11 @@ interface StudentDashboardHeaderProps {
 }
 
 export default function StudentDashboardHeader({ userName }: StudentDashboardHeaderProps) {
+  const { user } = useAuth();
+  
+  // Get the signed profile image if available
+  const profileImage = user?.signedProfileImage || user?.profileImage || user?.profilePicture;
+  
   return (
     <header className="bg-white shadow-sm rounded-b-xl">
       <div className="px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
@@ -58,9 +65,15 @@ export default function StudentDashboardHeader({ userName }: StudentDashboardHea
           </DropdownMenu>
           <div className="flex items-center">
             <span className="mr-2 text-sm font-medium text-gray-700 hidden md:inline">Hi, {userName}! 👋</span>
-            <div className="h-9 w-9 rounded-full bg-gradient-to-br from-kidato-blue to-purple-500 flex items-center justify-center text-white font-bold shadow-md">
-              {userName.charAt(0)}
-            </div>
+            <Avatar className="h-9 w-9 shadow-md">
+              {profileImage ? (
+                <AvatarImage src={profileImage} alt={userName} />
+              ) : (
+                <AvatarFallback className="bg-gradient-to-br from-kidato-blue to-purple-500 text-white font-bold">
+                  {userName.charAt(0)}
+                </AvatarFallback>
+              )}
+            </Avatar>
           </div>
         </div>
       </div>

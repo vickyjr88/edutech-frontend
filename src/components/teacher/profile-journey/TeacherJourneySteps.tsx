@@ -229,10 +229,36 @@ const TeacherJourneySteps = () => {
         </div>
         
         {overallProgress < 100 ? (
-          <p className="text-sm text-blue-700 mt-2 flex items-center">
-            <Star className="w-4 h-4 mr-2" />
-            Complete all steps to maximize your visibility to students!
-          </p>
+          <div>
+            <p className="text-sm text-blue-700 mt-2 flex items-center">
+              <Star className="w-4 h-4 mr-2 flex-shrink-0" />
+              Complete all steps to maximize your visibility to students.
+            </p>
+            
+            {/* Show which steps are pending */}
+            <div className="mt-3 flex flex-wrap gap-2">
+              {steps.map((step) => !completedSteps[step] && (
+                <span 
+                  key={step} 
+                  className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 cursor-pointer"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setCurrentStep(step);
+                  }}
+                >
+                  {mapStepToIconType(step) === 'profile' && <User className="h-3 w-3 mr-1" />}
+                  {mapStepToIconType(step) === 'location' && <MapPin className="h-3 w-3 mr-1" />}
+                  {mapStepToIconType(step) === 'education' && <GraduationCap className="h-3 w-3 mr-1" />}
+                  {mapStepToIconType(step) === 'experience' && <Briefcase className="h-3 w-3 mr-1" />}
+                  {mapStepToIconType(step) === 'expertise' && <BookOpen className="h-3 w-3 mr-1" />}
+                  {mapStepToIconType(step) === 'teaching-style' && <PaintBucket className="h-3 w-3 mr-1" />}
+                  {mapStepToIconType(step) === 'verification' && <CheckSquare className="h-3 w-3 mr-1" />}
+                  {mapStepToIconType(step) === 'platform' && <Video className="h-3 w-3 mr-1" />}
+                  {stepsInfo[step].title}
+                </span>
+              ))}
+            </div>
+          </div>
         ) : (
           <p className="text-sm text-blue-700 mt-2 flex items-center">
             <CheckCircle className="w-4 h-4 mr-2" />

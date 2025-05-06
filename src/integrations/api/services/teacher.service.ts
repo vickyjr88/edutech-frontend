@@ -25,6 +25,17 @@ export interface TeacherCertification {
 export interface TeacherProfile {
     id: string;
     userId: string;
+    user?: {
+        _id: string;
+        fullName: string;
+        email: string;
+        phoneNumber?: string;
+        alternativePhoneNumber?: string;
+        bio?: string;
+        profileImage?: string;
+        _signedProfileImage?: string;
+        [key: string]: any;
+    };
     education: Education[];
     experience: Experience[];
     strategies: string[];
@@ -42,6 +53,8 @@ export interface TeacherProfile {
     totalStudents: number;
     totalClasses: number;
     totalHours: number;
+    profileImage?: string;
+    _signedProfileImage?: string;
     [key: string]: any; // For any additional properties
 }
 
@@ -517,7 +530,43 @@ export const teacherService = {
         });
     },
     
+    // Get signed URL for temporary document access
+    getDocumentSignedUrl: (teacherId: string, documentType: 'background_check' | 'government_id'): Promise<ApiResponse<{ signedUrl: string }>> => {
+        return api.get<{ signedUrl: string }>(`/teachers/${teacherId}/documents/${documentType}/signed-url`);
+    },
+    
+    // Get signed URL for document viewing
+    getDocumentViewUrl: (teacherId: string, documentType: 'background_check' | 'government_id'): Promise<string> => {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const response = await api.get<{ signedUrl: string }>(`/teachers/${teacherId}/documents/${documentType}/signed-url`);
+                if (response.data && response.data.signedUrl) {
+                    resolve(response.data.signedUrl);
+                } else {
+                    reject(new Error('No signed URL returned'));
+                }
+            } catch (error) {
+                console.error('Error getting document signed URL:', error);
+                reject(error);
+            }
+        });
+    },
+    
     updateVerificationStatus: (teacherId: string, updates: { backgroundCheckFile?: string, governmentIdFile?: string }): Promise<ApiResponse<TeacherProfile>> => {
         return api.patch<TeacherProfile>(`/teachers/${teacherId}`, updates);
+    },
+    
+    // Upload profile photo
+    uploadProfilePhoto: (teacherId: string, base64File: string, mimeType: string): Promise<ApiResponse<{ 
+        profileImage: string;
+        _signedProfileImage?: string;
+    }>> => {
+        return api.post<{ 
+            profileImage: string;
+            _signedProfileImage?: string;
+        }>(`/teachers/${teacherId}/profile-photo`, {
+            base64File,
+            mimeType
+        });
     },
 };

@@ -145,15 +145,43 @@ const ProfileProgressIndicator = () => {
                   
                   {/* Progress indicator for the step */}
                   {!isCompleted && (
-                    <div className="mt-2 h-1.5 w-full bg-gray-100 rounded-full">
-                      <div 
-                        className={cn(
-                          "h-full rounded-full transition-all duration-300 ease-out",
-                          isActive ? "bg-blue-500" : "bg-amber-500"
+                    <>
+                      <div className="mt-2 h-1.5 w-full bg-gray-100 rounded-full">
+                        <div 
+                          className={cn(
+                            "h-full rounded-full transition-all duration-300 ease-out",
+                            isActive ? "bg-blue-500" : "bg-amber-500"
+                          )}
+                          style={{ width: `${progress}%` }}
+                        ></div>
+                      </div>
+                      <div className="mt-1 text-xs text-gray-500">
+                        {step === 'personal' && (
+                          <span>{progress < 100 ? 'Pending: Profile photo and info' : ''}</span>
                         )}
-                        style={{ width: `${progress}%` }}
-                      ></div>
-                    </div>
+                        {step === 'location' && (
+                          <span>{progress < 100 ? 'Pending: Location & availability details' : ''}</span>
+                        )}
+                        {step === 'education' && (
+                          <span>{progress < 100 ? 'Pending: Add education credentials' : ''}</span>
+                        )}
+                        {step === 'experience' && (
+                          <span>{progress < 100 ? 'Pending: Add teaching experience' : ''}</span>
+                        )}
+                        {step === 'expertise' && (
+                          <span>{progress < 100 ? 'Pending: Add subject expertise' : ''}</span>
+                        )}
+                        {step === 'teaching-style' && (
+                          <span>{progress < 100 ? 'Pending: Define teaching methodology' : ''}</span>
+                        )}
+                        {step === 'verification' && (
+                          <span>{progress < 100 ? 'Pending: Upload verification documents' : ''}</span>
+                        )}
+                        {step === 'platform' && (
+                          <span>{progress < 100 ? 'Pending: Connect teaching platform' : ''}</span>
+                        )}
+                      </div>
+                    </>
                   )}
                 </div>
                 
@@ -176,12 +204,26 @@ const ProfileProgressIndicator = () => {
                 </button>
               </div>
               
-              {/* Completed status indicator */}
-              {isCompleted && (
+              {/* Status indicator - either completed or pending details */}
+              {isCompleted ? (
                 <div className="px-5 py-2 bg-emerald-50 rounded-b-lg border-t border-emerald-100">
                   <p className="text-sm text-emerald-700 flex items-center">
                     <CheckCircle className="w-4 h-4 mr-2" />
                     Complete! You've set up your {info.title.toLowerCase()}.
+                  </p>
+                </div>
+              ) : progress > 0 && (
+                <div className="px-5 py-2 bg-amber-50 rounded-b-lg border-t border-amber-100">
+                  <p className="text-sm text-amber-700 flex items-start">
+                    <span className="bg-amber-200 text-amber-800 rounded-full h-4 w-4 inline-flex items-center justify-center mr-2 mt-0.5 text-xs font-bold">!</span>
+                    {step === 'personal' && 'Please add a profile photo and complete your personal details'}
+                    {step === 'location' && 'Add your teaching location and available time slots'}
+                    {step === 'education' && 'Include your degrees, certifications, and academic history'}
+                    {step === 'experience' && 'Add details about your teaching background'}
+                    {step === 'expertise' && 'Specify the subjects and grade levels you teach'}
+                    {step === 'teaching-style' && 'Share your teaching philosophy and methodology'}
+                    {step === 'verification' && 'Upload your government ID and background check'}
+                    {step === 'platform' && 'Connect your Zoom account for online teaching'}
                   </p>
                 </div>
               )}

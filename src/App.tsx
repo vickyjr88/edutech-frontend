@@ -45,6 +45,8 @@ import TeachersPricing from "./pages/TeachersPricing";
 import TeacherZoomPage from "./pages/TeacherZoomPage";
 import TeacherProfileJourney from "./pages/TeacherProfileJourney";
 import TeacherProfileResume from "./pages/TeacherProfileResume";
+import DocumentViewer from "./pages/DocumentViewer";
+import DocumentProxy from "./pages/DocumentProxy";
 
 // Create a client
 const queryClient = new QueryClient();
@@ -188,6 +190,10 @@ const App = () => {
                     <ChildDashboard />
                   </ProtectedRoute>
                 } />
+                
+                {/* Document Viewers - Public (uses signed URL for security) */}
+                <Route path="/document-viewer" element={<DocumentViewer />} />
+                <Route path="/document-proxy" element={<DocumentProxy />} />
                 
                 <Route path="*" element={<NotFound />} />
               </Routes>

@@ -616,6 +616,21 @@ export const ProfileJourneyProvider = ({ children }: { children: ReactNode }) =>
   // Step completion function
   const completeStep = (step: StepType) => {
     console.log(`Marking step ${step} as complete`);
+    
+    // Add detailed logging for personal step
+    if (step === 'personal') {
+      console.log("Personal info when marking as complete:", {
+        personalInfo,
+        hasFirstName: !!personalInfo.firstName,
+        hasLastName: !!personalInfo.lastName,
+        hasEmail: !!personalInfo.email,
+        hasPhone: !!personalInfo.phone, 
+        hasBio: !!personalInfo.bio,
+        hasProfileImage: !!personalInfo.profileImage,
+        profileImageUrl: personalInfo.profileImage
+      });
+    }
+    
     setCompletedSteps(prevState => {
       const updated = { ...prevState, [step]: true };
       console.log("Updated completedSteps:", updated);
@@ -640,17 +655,17 @@ export const ProfileJourneyProvider = ({ children }: { children: ReactNode }) =>
           const nameComplete = personalInfo.firstName && personalInfo.lastName ? 1 : 0;
           const emailComplete = personalInfo.email ? 1 : 0;
           const phoneComplete = personalInfo.phone ? 1 : 0;
+          const profileImageComplete = personalInfo.profileImage ? 1 : 0; // Make profile image required
           
           // Optional fields (contribute to progress but not required for completion)
           const bioComplete = personalInfo.bio && personalInfo.bio.length >= 20 ? 1 : 0;
-          const profileImageComplete = personalInfo.profileImage ? 1 : 0;
           
           // Required fields have higher weight (75% of total)
-          const requiredWeight = 0.75;
-          const optionalWeight = 0.25;
+          const requiredWeight = 0.8;
+          const optionalWeight = 0.2;
           
-          const requiredProgress = ((nameComplete + emailComplete + phoneComplete) / 3) * requiredWeight * 100;
-          const optionalProgress = ((bioComplete + profileImageComplete) / 2) * optionalWeight * 100;
+          const requiredProgress = ((nameComplete + emailComplete + phoneComplete + profileImageComplete) / 4) * requiredWeight * 100;
+          const optionalProgress = (bioComplete) * optionalWeight * 100;
           
           return Math.min(100, requiredProgress + optionalProgress);
           
@@ -973,7 +988,8 @@ export const ProfileJourneyProvider = ({ children }: { children: ReactNode }) =>
             alternativeCountryCode,
             alternativePhone: alternativePhoneDigits,
             bio: userInfo.bio || "",
-            profileImage: profileData.profileImage || "",
+            // Use _signedProfileImage if available, otherwise fall back to profileImage
+            profileImage: userInfo._signedProfileImage || userInfo.profileImage || profileData.profileImage || "",
           });
           
           // Update location info
@@ -1197,15 +1213,37 @@ export const ProfileJourneyProvider = ({ children }: { children: ReactNode }) =>
               const hasEmail = !!user.email;
               const hasPhone = !!user.phoneNumber;
               const hasBio = !!user.bio && user.bio.length >= 20; // Ensure bio has some meaningful content
+              // Check for profile image with more debugging
+              const profileImageSources = [
+                profile.profileImage,
+                user.profileImage,
+                user._signedProfileImage,
+                user.signedProfileImage
+              ];
+              const profileImageUrl = profileImageSources.find(src => !!src);
+              const hasProfileImage = !!profileImageUrl;
               
-              console.log("Personal step validation:", { 
+              console.log("Personal step validation - Raw profile data:", { 
+                profileUserObject: user,
+                profileObject: profile,
+                allProfileImageOptions: profileImageSources,
+                chosenProfileImage: profileImageUrl
+              });
+              
+              console.log("Personal step validation - Requirements check:", { 
                 hasFullName, 
                 hasEmail, 
                 hasPhone, 
-                hasBio 
+                hasBio,
+                hasProfileImage
               });
               
-              return hasFullName && hasEmail && hasPhone;
+              console.log("Will the personal step be marked complete?", 
+                hasFullName && hasEmail && hasPhone && hasProfileImage
+              );
+              
+              // If we have full name, email, phone and ANY profile image option
+              return hasFullName && hasEmail && hasPhone && hasProfileImage;
             },
             
             location: (profile: any) => {

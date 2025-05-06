@@ -127,14 +127,45 @@ class AuthService {
         }
 
         try {
-            return await api.get<User>('/auth/me');
+            const response = await api.get<{user: User, accessToken?: string, refreshToken?: string}>('/auth/me');
+            
+            if (response.data) {
+                // Check if we got a full response with user property
+                if (response.data.user) {
+                    const userData = response.data.user;
+                    
+                    // Update our session with the latest user info
+                    if (this.session) {
+                        this.setSession({
+                            ...this.session,
+                            user: userData,
+                            // If new tokens were provided, update those too
+                            ...(response.data.accessToken && { token: response.data.accessToken }),
+                            ...(response.data.refreshToken && { refreshToken: response.data.refreshToken })
+                        });
+                    }
+                    
+                    return { 
+                        data: userData,
+                        error: null
+                    };
+                }
+                
+                // If we got a direct user object without wrapping
+                return response;
+            }
+            
+            return {
+                data: null,
+                error: { message: 'Invalid response format', status: 500 }
+            };
         } catch (error) {
             if (error.response?.status === 401) {
                 // Token expired, try to refresh
                 const refreshed = await this.refreshSession();
                 if (refreshed) {
                     // Retry with new token
-                    return await api.get<User>('/auth/me');
+                    return await this.getCurrentUser();
                 }
             }
 

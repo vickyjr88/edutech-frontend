@@ -1303,15 +1303,48 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
                   
                   {backgroundCheckUrl ? (
                     <div className="flex items-center">
-                      <a 
-                        href={backgroundCheckUrl} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="text-xs text-blue-600 hover:underline flex items-center mr-2"
+                      <Button 
+                        variant="link"
+                        size="sm"
+                        className="text-xs text-blue-600 hover:underline flex items-center mr-2 h-auto p-0"
+                        onClick={async () => {
+                          if (!user?.teacherId) return;
+                          try {
+                            // Show loading indicator
+                            toast({
+                              title: "Loading document",
+                              description: "Preparing document for viewing..."
+                            });
+                            
+                            // Get signed URL for document viewing
+                            const signedUrl = await teacherService.getDocumentViewUrl(
+                              user.teacherId,
+                              'background_check'
+                            );
+                            
+                            // Open the signed URL in a new tab
+                            window.open(signedUrl, '_blank');
+                            
+                            // Show success toast
+                            toast({
+                              title: "Success",
+                              description: "Document link generated successfully",
+                              variant: "default"
+                            });
+                          
+                          } catch (error) {
+                            console.error("Error getting document URL:", error);
+                            toast({
+                              title: "Error",
+                              description: "Failed to generate document link. Please try again.",
+                              variant: "destructive"
+                            });
+                          }
+                        }}
                       >
                         <FileText className="h-4 w-4 mr-1" />
                         View Document
-                      </a>
+                      </Button>
                       <Button 
                         variant="ghost" 
                         size="sm"
@@ -1372,15 +1405,48 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
                   
                   {governmentIdUrl ? (
                     <div className="flex items-center">
-                      <a 
-                        href={governmentIdUrl} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="text-xs text-blue-600 hover:underline flex items-center mr-2"
+                      <Button 
+                        variant="link"
+                        size="sm"
+                        className="text-xs text-blue-600 hover:underline flex items-center mr-2 h-auto p-0"
+                        onClick={async () => {
+                          if (!user?.teacherId) return;
+                          try {
+                            // Show loading indicator
+                            toast({
+                              title: "Loading document",
+                              description: "Preparing document for viewing..."
+                            });
+                            
+                            // Get signed URL for document viewing
+                            const signedUrl = await teacherService.getDocumentViewUrl(
+                              user.teacherId,
+                              'government_id'
+                            );
+                            
+                            // Open the signed URL in a new tab
+                            window.open(signedUrl, '_blank');
+                            
+                            // Show success toast
+                            toast({
+                              title: "Success",
+                              description: "Document link generated successfully",
+                              variant: "default"
+                            });
+                          
+                          } catch (error) {
+                            console.error("Error getting document URL:", error);
+                            toast({
+                              title: "Error",
+                              description: "Failed to generate document link. Please try again.",
+                              variant: "destructive"
+                            });
+                          }
+                        }}
                       >
                         <FileText className="h-4 w-4 mr-1" />
                         View Document
-                      </a>
+                      </Button>
                       <Button 
                         variant="ghost" 
                         size="sm"

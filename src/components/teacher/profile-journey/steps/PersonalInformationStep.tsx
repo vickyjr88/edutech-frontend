@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { useProfileJourney } from "../ProfileJourneyContext";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,13 +8,18 @@ import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/use-toast";
-import { ImagePlus, User, Mail, Phone, Save } from "lucide-react";
+import { ImagePlus, User, Mail, Phone, Save, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/AuthContext";
+import { teacherService } from "@/integrations/api/services/teacher.service";
 
 const PersonalInformationStep = () => {
   const { personalInfo, updatePersonalInfo, completeStep } = useProfileJourney();
+  const { user } = useAuth();
   const { toast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Create local state to track form changes
   const [formData, setFormData] = useState({
@@ -44,19 +49,98 @@ const PersonalInformationStep = () => {
     });
   };
   
-  // Mock function to handle image upload
+  // Function to convert file to base64
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => {
+        // The result will be like "data:image/jpeg;base64,/9j/4AAQSkZJRgABA..."
+        // We need only the base64 part after the comma
+        const base64String = reader.result as string;
+        const base64 = base64String.split(',')[1];
+        resolve(base64);
+      };
+      reader.onerror = (error) => reject(error);
+    });
+  };
+  
+  // Handle profile image upload
   const handleImageUpload = () => {
-    // In a real implementation, this would open a file dialog
-    const mockProfileImage = "https://kidato-images.s3.eu-west-1.amazonaws.com/placeholder.svg";
-    setFormData({
-      ...formData,
-      profileImage: mockProfileImage
-    });
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+  
+  // Handle file selection
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
     
-    toast({
-      title: "Image Uploaded",
-      description: "Your profile image has been updated",
-    });
+    const file = files[0];
+    // Check file type
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Invalid File",
+        description: "Please select an image file (JPEG, PNG, etc.)",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Check file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "File Too Large",
+        description: "Please select an image smaller than 5MB",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    try {
+      setIsUploading(true);
+      const base64File = await fileToBase64(file);
+      const mimeType = file.type; // e.g. "image/jpeg", "image/png", etc.
+      
+      if (!user?.teacherId) {
+        throw new Error("Teacher ID not found");
+      }
+      
+      const { data, error } = await teacherService.uploadProfilePhoto(user.teacherId, base64File, mimeType);
+      
+      if (error) {
+        throw new Error(error.message || "Failed to upload profile image");
+      }
+      
+      // Check for _signedProfileImage in the response first, then fall back to profileImage
+      const imageUrl = data?._signedProfileImage || data?.profileImage;
+      
+      if (imageUrl) {
+        setFormData({
+          ...formData,
+          profileImage: imageUrl
+        });
+        
+        toast({
+          title: "Image Uploaded",
+          description: "Your profile image has been updated",
+        });
+      }
+    } catch (error) {
+      console.error("Error uploading profile image:", error);
+      toast({
+        title: "Upload Failed",
+        description: "There was a problem uploading your profile image",
+        variant: "destructive"
+      });
+    } finally {
+      setIsUploading(false);
+      // Clear the file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
   };
   
   // Save changes
@@ -86,10 +170,46 @@ const PersonalInformationStep = () => {
       console.log("Calling updatePersonalInfo with formData");
       await updatePersonalInfo(formData);
       
-      // Check if we should mark this step as complete
-      if (formData.firstName && formData.lastName && formData.email && formData.phone && formData.bio) {
+      // Debug the profile image URL
+      console.log("Profile image value:", {
+        profileImage: formData.profileImage,
+        imageLength: formData.profileImage ? formData.profileImage.length : 0
+      });
+      
+      // Add additional debugging
+      const hasAllRequiredFields = formData.firstName && 
+                                   formData.lastName && 
+                                   formData.email && 
+                                   formData.phone && 
+                                   formData.bio && 
+                                   formData.profileImage;
+      
+      console.log("Has all required fields?", hasAllRequiredFields);
+      
+      // Check if we should mark this step as complete with truthy checks
+      // Force completion if all major fields seem to be present
+      if (hasAllRequiredFields) {
         console.log("All required fields present, marking step as complete");
         completeStep("personal");
+      } else {
+        console.log("Attempting to force complete step despite missing some fields");
+        // If we have a profile image URL (even partial) and other required fields, force complete
+        if (formData.firstName && formData.lastName && formData.email && formData.phone && 
+            formData.bio && typeof formData.profileImage === 'string' && formData.profileImage.includes('https')) {
+          console.log("Force completing step as we have a partial profile image URL");
+          completeStep("personal");
+        } else {
+          console.log("Missing required fields for completion:", {
+            firstName: !!formData.firstName,
+            lastName: !!formData.lastName,
+            email: !!formData.email,
+            phone: !!formData.phone,
+            bio: !!formData.bio,
+            profileImage: !!formData.profileImage,
+            profileImageType: typeof formData.profileImage,
+            profileImageStartsWithHttps: typeof formData.profileImage === 'string' && formData.profileImage.startsWith('https')
+          });
+        }
       }
       
       toast({
@@ -122,15 +242,38 @@ const PersonalInformationStep = () => {
               </AvatarFallback>
             )}
           </Avatar>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="mt-3"
-            onClick={handleImageUpload}
-          >
-            <ImagePlus className="h-4 w-4 mr-2" />
-            Upload Photo
-          </Button>
+          <div className="flex flex-col items-center">
+            {/* Hidden file input */}
+            <input
+              type="file"
+              ref={fileInputRef}
+              className="hidden"
+              accept="image/*"
+              onChange={handleFileChange}
+            />
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="mt-3"
+              onClick={handleImageUpload}
+              disabled={isUploading}
+            >
+              {isUploading ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Uploading...
+                </>
+              ) : (
+                <>
+                  <ImagePlus className="h-4 w-4 mr-2" />
+                  Upload Photo
+                </>
+              )}
+            </Button>
+            {!formData.profileImage && 
+              <Badge variant="outline" className="mt-2 bg-red-50 text-red-700 text-xs">Required</Badge>
+            }
+          </div>
         </div>
         
         <div className="flex-1">
