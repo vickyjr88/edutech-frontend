@@ -4,16 +4,56 @@ import { Card, CardContent } from "@/components/ui/card";
 import { BookOpen, GraduationCap, Users } from "lucide-react";
 
 interface TeacherHighlightsProps {
-  teacher: any;
+  title?: string;
+  methodologies?: any[];
+  strategies?: any[];
+  certifications?: any[];
+  teacher?: any;
 }
 
-export default function TeacherHighlights({ teacher }: TeacherHighlightsProps) {
-  // Extract relevant information from teacher data
-  const subjectCount = teacher.classes?.length || 0;
-  const experienceYears = teacher.experience?.length > 0 
-    ? new Date().getFullYear() - new Date(teacher.experience[0].dates.split(" - ")[0]).getFullYear()
-    : 0;
-  const studentCount = Math.floor(Math.random() * 500) + 50; // Placeholder for now
+export default function TeacherHighlights({ 
+  title, 
+  methodologies = [], 
+  strategies = [], 
+  certifications = [], 
+  teacher 
+}: TeacherHighlightsProps) {
+  // Extract relevant information from teacher data or use props directly
+  const subjectCount = methodologies.length + strategies.length;
+  
+  // Calculate experience years correctly from teacher experience data
+  const calculateExperienceYears = (): number => {
+    if (!teacher?.experience || !Array.isArray(teacher.experience) || teacher.experience.length === 0) {
+      return 3; // Default value if no experience data
+    }
+    
+    let totalYears = 0;
+    const currentYear = new Date().getFullYear();
+    
+    // Calculate years for each experience entry
+    teacher.experience.forEach((exp: any) => {
+      if (!exp.startDate) return; // Skip entries without start date
+      
+      const startYear = new Date(exp.startDate).getFullYear();
+      let endYear;
+      
+      if (exp.isCurrentlyWorking) {
+        endYear = currentYear;
+      } else if (exp.endDate) {
+        endYear = new Date(exp.endDate).getFullYear();
+      } else {
+        // If no end date and not currently working, assume 1 year
+        endYear = startYear + 1;
+      }
+      
+      totalYears += (endYear - startYear);
+    });
+    
+    return totalYears > 0 ? totalYears : 3; // Ensure at least some experience
+  };
+  
+  const experienceYears = calculateExperienceYears();
+  const studentCount = teacher?.stats?.studentsHelped || Math.floor(Math.random() * 500) + 50; // Use stats or placeholder
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">

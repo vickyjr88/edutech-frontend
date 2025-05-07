@@ -13,10 +13,36 @@ import {
 interface VideoProfileDialogProps {
   teacherName: string;
   videoUrl: string;
+  isOpen?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  onClose?: () => void;
 }
 
-export default function VideoProfileDialog({ teacherName, videoUrl }: VideoProfileDialogProps) {
-  const [isOpen, setIsOpen] = useState(false);
+export default function VideoProfileDialog({ 
+  teacherName, 
+  videoUrl,
+  isOpen: externalIsOpen,
+  onOpenChange: externalOnOpenChange,
+  onClose
+}: VideoProfileDialogProps) {
+  const [internalIsOpen, setInternalIsOpen] = useState(false);
+
+  // Use external state if provided, otherwise use internal state
+  const isControlled = externalIsOpen !== undefined && (externalOnOpenChange !== undefined || onClose !== undefined);
+  const isOpen = isControlled ? externalIsOpen : internalIsOpen;
+  
+  // Handle both onOpenChange and onClose patterns
+  const setIsOpen = (value: boolean) => {
+    if (isControlled) {
+      if (externalOnOpenChange) {
+        externalOnOpenChange(value);
+      } else if (!value && onClose) {
+        onClose();
+      }
+    } else {
+      setInternalIsOpen(value);
+    }
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
