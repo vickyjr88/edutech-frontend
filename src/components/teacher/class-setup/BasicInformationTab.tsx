@@ -516,64 +516,198 @@ const BasicInformationTab = ({ form, onNextTab }: BasicInformationTabProps) => {
           <FormField
             control={form.control}
             name="gradeLevel"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Grade Level</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value || "grade1"}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select grade level" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem key="grade1" value="grade1">1st Grade</SelectItem>
-                    <SelectItem key="grade2" value="grade2">2nd Grade</SelectItem>
-                    <SelectItem key="grade3" value="grade3">3rd Grade</SelectItem>
-                    <SelectItem key="grade4" value="grade4">4th Grade</SelectItem>
-                    <SelectItem key="grade5" value="grade5">5th Grade</SelectItem>
-                    <SelectItem key="grade6" value="grade6">6th Grade</SelectItem>
-                    <SelectItem key="grade7" value="grade7">7th Grade</SelectItem>
-                    <SelectItem key="grade8" value="grade8">8th Grade</SelectItem>
-                    <SelectItem key="grade9" value="grade9">9th Grade</SelectItem>
-                    <SelectItem key="grade10" value="grade10">10th Grade</SelectItem>
-                    <SelectItem key="grade11" value="grade11">11th Grade</SelectItem>
-                    <SelectItem key="grade12" value="grade12">12th Grade</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormDescription>
-                  Select the grade level for this class.
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
+            render={({ field }) => {
+              // Parse grade range from selected curriculum level
+              const selectedLevel = curriculumLevelMap[selectedCurriculum ? form.watch("curriculumLevel") : ""];
+              const gradeRange = selectedLevel?.gradeRange || "";
+              
+              // Parse grade range into an array of grades
+              const getGradesFromRange = (range: string): string[] => {
+                // Check for common patterns like "Grades 1-3", "Years 3-6", "Grade 6", etc.
+                const rangeMatch = range.match(/(?:Grades?|Years?)\s+(\d+)(?:\s*-\s*(\d+))?/i);
+                
+                if (rangeMatch) {
+                  const start = parseInt(rangeMatch[1]);
+                  const end = rangeMatch[2] ? parseInt(rangeMatch[2]) : start;
+                  
+                  if (!isNaN(start) && !isNaN(end)) {
+                    const grades = [];
+                    for (let i = start; i <= end; i++) {
+                      grades.push(`grade${i}`);
+                    }
+                    return grades;
+                  }
+                }
+                
+                // Fallback for other formats or when parsing fails
+                return ["grade1", "grade2", "grade3", "grade4", "grade5", "grade6", 
+                        "grade7", "grade8", "grade9", "grade10", "grade11", "grade12"];
+              };
+              
+              const relevantGrades = getGradesFromRange(gradeRange);
+              
+              // Set a default value if current value is not in the relevant grades
+              useEffect(() => {
+                if (field.value && !relevantGrades.includes(field.value)) {
+                  form.setValue("gradeLevel", relevantGrades[0] || "grade1");
+                }
+              }, [relevantGrades, field.value]);
+              
+              return (
+                <FormItem>
+                  <FormLabel>Grade Level</FormLabel>
+                  <Select 
+                    onValueChange={field.onChange} 
+                    value={field.value || relevantGrades[0] || "grade1"}
+                    disabled={!selectedLevel}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder={selectedLevel ? "Select grade level" : "Select curriculum level first"} />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {selectedLevel ? (
+                        relevantGrades.length > 0 ? (
+                          relevantGrades.map((grade) => {
+                            const gradeNum = grade.replace('grade', '');
+                            const ordinal = 
+                              gradeNum === '1' ? '1st' : 
+                              gradeNum === '2' ? '2nd' : 
+                              gradeNum === '3' ? '3rd' : 
+                              `${gradeNum}th`;
+                            
+                            return (
+                              <SelectItem key={grade} value={grade}>
+                                {ordinal} Grade
+                              </SelectItem>
+                            );
+                          })
+                        ) : (
+                          <div className="p-2 text-sm text-gray-500">
+                            No grades available for this level
+                          </div>
+                        )
+                      ) : (
+                        <div className="p-2 text-sm text-gray-500">
+                          Select a curriculum level first
+                        </div>
+                      )}
+                    </SelectContent>
+                  </Select>
+                  <FormDescription>
+                    Select the grade level for this class.
+                    {selectedLevel && (
+                      <span className="text-xs text-gray-500 block mt-1">
+                        Range: {selectedLevel.gradeRange || "Not specified"}
+                      </span>
+                    )}
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              );
+            }}
           />
         ) : (
           <FormField
             control={form.control}
             name="ageRange"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Age Range</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value || "age3-5"}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select age range" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem key="age3-5" value="age3-5">3-5 years</SelectItem>
-                    <SelectItem key="age6-8" value="age6-8">6-8 years</SelectItem>
-                    <SelectItem key="age9-11" value="age9-11">9-11 years</SelectItem>
-                    <SelectItem key="age12-14" value="age12-14">12-14 years</SelectItem>
-                    <SelectItem key="age15-18" value="age15-18">15-18 years</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormDescription>
-                  Select the age range for this after-school class.
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
+            render={({ field }) => {
+              // Parse age range from selected curriculum level
+              const selectedLevel = curriculumLevelMap[selectedCurriculum ? form.watch("curriculumLevel") : ""];
+              const ageRangeStr = selectedLevel?.ageRange || "";
+              
+              // Parse age range into an array of standard age ranges
+              const getAgeRangesFromRange = (range: string): string[] => {
+                // Check for common patterns like "4-5", "6-8", "9-11", etc.
+                const rangeMatch = range.match(/(\d+)(?:\s*-\s*(\d+))?/);
+                
+                if (rangeMatch) {
+                  const start = parseInt(rangeMatch[1]);
+                  const end = rangeMatch[2] ? parseInt(rangeMatch[2]) : start;
+                  
+                  if (!isNaN(start) && !isNaN(end)) {
+                    // Map the custom range to predefined age ranges
+                    const standardRanges = [];
+                    if (start <= 5 && end >= 3) standardRanges.push("age3-5");
+                    if (start <= 8 && end >= 6) standardRanges.push("age6-8");
+                    if (start <= 11 && end >= 9) standardRanges.push("age9-11");
+                    if (start <= 14 && end >= 12) standardRanges.push("age12-14");
+                    if (start <= 18 && end >= 15) standardRanges.push("age15-18");
+                    
+                    if (standardRanges.length > 0) {
+                      return standardRanges;
+                    }
+                  }
+                }
+                
+                // Fallback for when parsing fails
+                return ["age3-5", "age6-8", "age9-11", "age12-14", "age15-18"];
+              };
+              
+              const relevantAgeRanges = getAgeRangesFromRange(ageRangeStr);
+              
+              // Set a default value if current value is not in the relevant age ranges
+              useEffect(() => {
+                if (field.value && !relevantAgeRanges.includes(field.value)) {
+                  form.setValue("ageRange", relevantAgeRanges[0] || "age3-5");
+                }
+              }, [relevantAgeRanges, field.value]);
+              
+              // Map for display values
+              const ageRangeDisplay = {
+                "age3-5": "3-5 years",
+                "age6-8": "6-8 years",
+                "age9-11": "9-11 years",
+                "age12-14": "12-14 years",
+                "age15-18": "15-18 years"
+              };
+              
+              return (
+                <FormItem>
+                  <FormLabel>Age Range</FormLabel>
+                  <Select 
+                    onValueChange={field.onChange} 
+                    value={field.value || relevantAgeRanges[0] || "age3-5"}
+                    disabled={!selectedLevel}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder={selectedLevel ? "Select age range" : "Select curriculum level first"} />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {selectedLevel ? (
+                        relevantAgeRanges.length > 0 ? (
+                          relevantAgeRanges.map((ageRange) => (
+                            <SelectItem key={ageRange} value={ageRange}>
+                              {ageRangeDisplay[ageRange as keyof typeof ageRangeDisplay]}
+                            </SelectItem>
+                          ))
+                        ) : (
+                          <div className="p-2 text-sm text-gray-500">
+                            No age ranges available for this level
+                          </div>
+                        )
+                      ) : (
+                        <div className="p-2 text-sm text-gray-500">
+                          Select a curriculum level first
+                        </div>
+                      )}
+                    </SelectContent>
+                  </Select>
+                  <FormDescription>
+                    Select the age range for this after-school class.
+                    {selectedLevel && (
+                      <span className="text-xs text-gray-500 block mt-1">
+                        Range: {selectedLevel.ageRange || "Not specified"}
+                      </span>
+                    )}
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              );
+            }}
           />
         )}
       </div>
