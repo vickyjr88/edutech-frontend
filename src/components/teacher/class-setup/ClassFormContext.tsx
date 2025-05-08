@@ -51,6 +51,9 @@ interface ClassFormContextType {
     hasMinCohorts: boolean;
     missingItems: string[];
   };
+  
+  // Form submission
+  onSubmit: (data: ClassFormValues) => void;
 };
 
 export const ClassFormContext = createContext<ClassFormContextType | undefined>(undefined);
@@ -82,6 +85,7 @@ export const ClassFormProvider = ({ children, onSubmit }: ClassFormProviderProps
       title: "",
       subject: "",
       curriculum: "",
+      curriculumLevel: "",
       gradeLevel: "",
       ageRange: "",
       summary: "",
@@ -457,7 +461,9 @@ export const ClassFormProvider = ({ children, onSubmit }: ClassFormProviderProps
     handleNavigateTab,
     calculateNumberOfLessons,
     calculateEndDate,
-    checkClassCompleteness
+    checkClassCompleteness,
+    
+    onSubmit
   };
 
   return (

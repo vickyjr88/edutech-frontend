@@ -1,11 +1,40 @@
 
 import { z } from "zod";
 
+// Curriculum data structures
+export interface CurriculumLevel {
+  id: string;
+  name: string;
+  gradeRange: string;
+  ageRange: string;
+}
+
+export interface Subject {
+  id: string;
+  name: string;
+  description?: string;
+  curriculumId: string;
+  levelId: string;
+}
+
+export interface Curriculum {
+  id: string;
+  name: string;
+  description: string;
+  levels: CurriculumLevel[];
+}
+
+// Maps to store curriculum data for easy lookup
+export const curriculaMap: { [key: string]: Curriculum } = {};
+export const curriculumLevelMap: { [key: string]: CurriculumLevel } = {};
+export const subjectsMap: { [key: string]: Subject } = {};
+
 export const classSchema = z.object({
   type: z.enum(["academic", "afterschool"]),
   title: z.string().min(3, { message: "Class title must be at least 3 characters" }),
   subject: z.string().min(1, { message: "Subject is required" }),
   curriculum: z.string().optional(),
+  curriculumLevel: z.string().optional(),
   gradeLevel: z.string().optional(),
   ageRange: z.string().optional(),
   summary: z.string().min(10, { message: "Class summary must be at least 10 characters" }).max(200, { message: "Class summary must be at most 200 characters" }),

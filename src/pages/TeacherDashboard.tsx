@@ -8,7 +8,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import TeacherProfileForm from "@/components/teacher/TeacherProfileForm";
 import TeacherProfessionalProfileForm from "@/components/teacher/TeacherProfessionalProfileForm";
 import ClassSetupForm from "@/components/teacher/ClassSetupForm";
-import CreateClassForm from "@/components/teacher/CreateClassForm";
+import EnhancedClassSetup from "@/components/teacher/class-setup/EnhancedClassSetup";
+import CreateClassForm from "@/components/teacher/CreateClassForm"; // Kept for backwards compatibility
 import EnrollStudentsPage from "@/components/teacher/enrollment/EnrollStudentsPage";
 import { useAuth } from "@/contexts/AuthContext";
 import {teacherService} from "@/integrations/api/services/teacher.service.ts";
@@ -289,8 +290,12 @@ const TeacherDashboard = () => {
   };
 
   const handleCreateClass = () => {
-    setShowCreateClassForm(true);
-    setActiveTab("classes");
+    // Navigate to the dedicated class setup page instead of showing the form inline
+    navigate("/teacher-class-setup");
+    
+    // Keeping the old behavior as a fallback option
+    // setShowCreateClassForm(true);
+    // setActiveTab("classes");
   };
 
   const handleClassCreated = (classData: any) => {
@@ -580,11 +585,15 @@ const TeacherDashboard = () => {
           )}
 
           {!isLoading && activeTab === "classes" && showCreateClassForm && (
-            <div className="max-w-4xl mx-auto">
-              <CreateClassForm
+            <div className="max-w-7xl mx-auto">
+              <EnhancedClassSetup
                 onSubmit={handleClassCreated}
-                onCancel={handleCancelClassCreation}
               />
+              <div className="mt-4 flex justify-end">
+                <Button variant="outline" onClick={handleCancelClassCreation}>
+                  Cancel
+                </Button>
+              </div>
             </div>
           )}
 

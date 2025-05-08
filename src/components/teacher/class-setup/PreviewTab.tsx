@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { UseFormReturn } from "react-hook-form";
 import { Button } from "@/components/ui/button";
-import { CohortData, TeamMember } from "./types";
+import { CohortData, TeamMember, curriculaMap, curriculumLevelMap, subjectsMap } from "./types";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { CheckCircle2, AlertTriangle, ChevronLeft, ChevronRight, Clock, Calendar, Users, Book, BookOpen, User } from "lucide-react";
@@ -122,7 +122,7 @@ const PreviewTab = ({
             <div>
               <CardTitle className="text-2xl">{formValues.title || "Class Title"}</CardTitle>
               <CardDescription>
-                {formValues.type === "academic" ? "Academic" : "After School"} - {formValues.subject || "Subject"}
+                {formValues.type === "academic" ? "Academic" : "After School"} - {subjectsMap[formValues.subject]?.name || formValues.subject || "Subject"}
               </CardDescription>
             </div>
             <Badge variant={isPublic ? "default" : "outline"}>
@@ -143,8 +143,45 @@ const PreviewTab = ({
               </div>
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Subject</p>
-                <p>{formValues.subject || "Not specified"}</p>
+                <p>
+                  {subjectsMap[formValues.subject] 
+                    ? subjectsMap[formValues.subject].name 
+                    : (formValues.subject || "Not specified")}
+                </p>
               </div>
+              
+              {formValues.curriculum && (
+                <>
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Curriculum</p>
+                    <p>
+                      {curriculaMap[formValues.curriculum] 
+                        ? curriculaMap[formValues.curriculum].name 
+                        : (formValues.curriculum || "Not specified")}
+                    </p>
+                  </div>
+                  {formValues.curriculumLevel && (
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">Curriculum Level</p>
+                      <p>
+                        {curriculumLevelMap[formValues.curriculumLevel] 
+                          ? (
+                              <>
+                                {curriculumLevelMap[formValues.curriculumLevel].name}
+                                {curriculumLevelMap[formValues.curriculumLevel].gradeRange && 
+                                  <span className="text-xs text-gray-500 ml-1">
+                                    ({curriculumLevelMap[formValues.curriculumLevel].gradeRange})
+                                  </span>
+                                }
+                              </>
+                            )
+                          : (formValues.curriculumLevel || "Not specified")}
+                      </p>
+                    </div>
+                  )}
+                </>
+              )}
+              
               {formValues.type === "academic" ? (
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Grade Level</p>
