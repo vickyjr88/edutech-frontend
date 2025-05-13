@@ -9,12 +9,15 @@ import { ClassFormValues } from "@/components/teacher/class-setup/types";
 import { classService } from "@/integrations/api/services/class.service";
 import DraftRecoveryBanner from "@/components/teacher/class-setup/DraftRecoveryBanner";
 import WelcomeScreen from "@/components/teacher/class-setup/WelcomeScreen";
-import { hasDraft, getFormMetadata } from "@/components/teacher/class-setup/utils/storageUtils";
+import DraftClassesList from "@/components/teacher/class-setup/DraftClassesList";
+import { hasDraft, getFormMetadata, clearStoredForm } from "@/components/teacher/class-setup/utils/storageUtils";
+import { useAuth } from "@/contexts/AuthContext";
 
 const TeacherClassSetupPage = () => {
   const navigate = useNavigate();
   const { classId } = useParams<{ classId?: string }>();
   const { toast } = useToast();
+  const { user } = useAuth();
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [submittedClass, setSubmittedClass] = useState<ClassFormValues | null>(null);
   const [initialValues, setInitialValues] = useState<Partial<ClassFormValues> | undefined>(undefined);
@@ -24,6 +27,9 @@ const TeacherClassSetupPage = () => {
   const [showWelcomeScreen, setShowWelcomeScreen] = useState(!classId);
   const [draftExists, setDraftExists] = useState(false);
   const [lastSaved, setLastSaved] = useState(0);
+  const [isDraftClass, setIsDraftClass] = useState(false);
+  const [teacherClasses, setTeacherClasses] = useState<any[]>([]);
+  const [isLoadingClasses, setIsLoadingClasses] = useState(false);
   const [classFormState, setClassFormState] = useState<{
     lastSaved: number;
     hasUnsavedChanges: boolean;
@@ -37,15 +43,74 @@ const TeacherClassSetupPage = () => {
   // Log the classId from useParams for debugging
   console.log("TeacherClassSetupPage received classId from URL params:", classId);
 
-  // Check for draft on mount
+  // Check for draft on mount and sync with backend
   useEffect(() => {
-    if (!classId) {
-      const draftExists = hasDraft();
-      const metadata = getFormMetadata();
-      setDraftExists(draftExists);
-      setLastSaved(metadata.lastSaved);
-    }
-  }, [classId]);
+    const fetchTeacherClasses = async () => {
+      try {
+        setIsLoadingClasses(true);
+        // Get all classes for the current teacher
+        const teacherId = user?.teacherId;
+
+        if (!teacherId) {
+          console.error("No teacher ID available");
+          setIsLoadingClasses(false);
+          return;
+        }
+
+        const { data: classes, error } = await classService.getTeacherClasses(teacherId);
+
+        if (error) {
+          console.error("Error fetching teacher classes:", error);
+          setIsLoadingClasses(false);
+          return;
+        }
+
+        console.log("Teacher classes loaded:", classes?.length || 0);
+
+        // Store all teacher classes for display in the UI
+        if (classes) {
+          setTeacherClasses(classes);
+        }
+
+        // If we're not loading a specific class by ID
+        if (!classId) {
+          // Get metadata from storage
+          const metadata = getFormMetadata();
+          const draftExists = hasDraft();
+
+          // If we have a draft with a class ID
+          if (draftExists && metadata.classId) {
+            // Check if that class still exists in the backend
+            const classExists = classes &&
+              classes.some(cls => cls._id === metadata.classId);
+
+            if (!classExists) {
+              // If class doesn't exist in backend, clear the local draft
+              console.log("Class no longer exists in backend, clearing draft");
+              clearStoredForm();
+              setDraftExists(false);
+              setLastSaved(0);
+            } else {
+              // Class exists, keep the draft
+              setDraftExists(true);
+              setLastSaved(metadata.lastSaved);
+            }
+          } else {
+            // No class ID in draft, or no draft
+            setDraftExists(draftExists);
+            setLastSaved(metadata.lastSaved);
+          }
+        }
+
+        setIsLoadingClasses(false);
+      } catch (err) {
+        console.error("Failed to fetch teacher classes:", err);
+        setIsLoadingClasses(false);
+      }
+    };
+
+    fetchTeacherClasses();
+  }, [classId, user?.teacherId]);
 
   // Callbacks for draft management
   const handleStartNew = () => {
@@ -53,12 +118,78 @@ const TeacherClassSetupPage = () => {
   };
 
   const handleContinueDraft = () => {
+    const metadata = getFormMetadata();
+    if (metadata.classId) {
+      // Navigate to the class setup page with the class ID
+      navigate(`/teacher-class-setup/${metadata.classId}`);
+    } else {
+      // If no class ID, just continue with the current form
+      setShowWelcomeScreen(false);
+    }
+  };
+
+  const handleDiscardDraft = async () => {
+    const metadata = getFormMetadata();
+    if (metadata.classId) {
+      try {
+        // Delete the class from the backend
+        await classService.delete(metadata.classId);
+        console.log(`Class ${metadata.classId} deleted from backend`);
+
+        // Clear the stored form data
+        clearStoredForm();
+
+        // Remove the deleted class from the teacherClasses list
+        setTeacherClasses(prev => prev.filter(cls => cls._id !== metadata.classId));
+
+        toast({
+          title: "Draft discarded",
+          description: "Your draft has been discarded and the class was deleted.",
+        });
+      } catch (error) {
+        console.error("Error deleting class:", error);
+        toast({
+          variant: "destructive",
+          title: "Error discarding draft",
+          description: "There was an error deleting the class. Please try again.",
+        });
+      }
+    }
+
+    // The actual local storage cleaning happens in the ClassFormProvider
     setShowWelcomeScreen(false);
   };
 
-  const handleDiscardDraft = () => {
-    // The actual discarding happens in the ClassFormProvider
-    setShowWelcomeScreen(false);
+  // Handler for deleting a class from the draft list
+  const handleDeleteClass = async (classId: string) => {
+    try {
+      // Delete the class from the backend
+      await classService.delete(classId);
+      console.log(`Class ${classId} deleted from backend`);
+
+      // Remove the deleted class from the teacherClasses list
+      setTeacherClasses(prev => prev.filter(cls => cls._id !== classId));
+
+      // If this is the current draft in local storage, clear it
+      const metadata = getFormMetadata();
+      if (metadata.classId === classId) {
+        clearStoredForm();
+        setDraftExists(false);
+        setLastSaved(0);
+      }
+
+      toast({
+        title: "Class deleted",
+        description: "The draft class has been deleted.",
+      });
+    } catch (error) {
+      console.error("Error deleting class:", error);
+      toast({
+        variant: "destructive",
+        title: "Error deleting class",
+        description: "There was an error deleting the class. Please try again.",
+      });
+    }
   };
 
   // Form state updater from the form context
@@ -92,6 +223,11 @@ const TeacherClassSetupPage = () => {
             description: "There was an error loading the class data. Please try again.",
           });
         } else if (data) {
+          // Check if class is a draft
+          const isClassDraft = data.isPublished === false || data.status === 'draft';
+          setIsDraftClass(isClassDraft);
+          console.log("Class is a draft:", isClassDraft);
+
           // Transform API data to match form values structure
           const formData: Partial<ClassFormValues> = {
             title: data.title,
@@ -260,9 +396,16 @@ const TeacherClassSetupPage = () => {
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back to Dashboard
         </Button>
-        <h1 className="text-2xl font-bold">
-          {isSubmitted ? "Class Created Successfully" : classId ? "Edit Class" : "Create a New Class"}
-        </h1>
+        <div className="flex flex-col">
+          <h1 className="text-2xl font-bold">
+            {isSubmitted ? "Class Created Successfully" : classId ? "Edit Class" : "Create a New Class"}
+          </h1>
+          {isDraftClass && classId && (
+            <span className="text-sm px-2 py-0.5 bg-amber-100 text-amber-800 rounded-md inline-flex items-center mt-1 w-fit">
+              Draft
+            </span>
+          )}
+        </div>
       </div>
 
       {isLoading && (
@@ -341,13 +484,23 @@ const TeacherClassSetupPage = () => {
       )}
 
       {!isLoading && !isSubmitted && showWelcomeScreen && !classId ? (
-        <WelcomeScreen
-          draftExists={draftExists}
-          lastSaved={lastSaved}
-          onStartNew={handleStartNew}
-          onContinueDraft={handleContinueDraft}
-          onDiscardDraft={handleDiscardDraft}
-        />
+        <>
+          {/* Display draft classes if there are any */}
+          {teacherClasses.length > 0 && (
+            <DraftClassesList
+              classes={teacherClasses}
+              onDeleteClass={handleDeleteClass}
+            />
+          )}
+
+          <WelcomeScreen
+            draftExists={draftExists}
+            lastSaved={lastSaved}
+            onStartNew={handleStartNew}
+            onContinueDraft={handleContinueDraft}
+            onDiscardDraft={handleDiscardDraft}
+          />
+        </>
       ) : !isLoading && !isSubmitted && (
         <>
           {/* Recovery banner only shows for forms in progress, not for new forms */}
