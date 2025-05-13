@@ -121,13 +121,7 @@ const EnhancedClassSetup = ({
   loadFromStorage = true,
   onFormStateUpdate
 }: EnhancedClassSetupProps) => {
-  console.log("EnhancedClassSetup received initialValues:", initialValues);
-  console.log("EnhancedClassSetup received initialCohorts:", initialCohorts);
-  console.log("EnhancedClassSetup received classId:", classId);
-  console.log("EnhancedClassSetup loadFromStorage:", loadFromStorage);
-
-  // Debug the initialValues
-  console.log("Form defaultValues will be set to:", initialValues);
+  // Removed excessive logging to make initialization cleaner
 
   // Create a ref for event handling
   const formRef = useRef<HTMLDivElement>(null);
@@ -172,7 +166,7 @@ const EnhancedClassSetupContent = ({
   formRef?: React.RefObject<HTMLDivElement>;
   onFormStateUpdate?: (state: { lastSaved: number; hasUnsavedChanges: boolean; draftExists: boolean; }) => void;
 }) => {
-  console.log("EnhancedClassSetupContent received initialClassId:", initialClassId);
+  // Removed console log for cleaner initialization
 
   const {
     form,
@@ -440,7 +434,7 @@ const EnhancedClassSetupContent = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab]);
 
-  // Initialize the form errors hook
+  // Initialize the form errors hook with a lower debounce value for more responsive validation
   const {
     errors: formErrors,
     addError,
@@ -448,8 +442,8 @@ const EnhancedClassSetupContent = ({
     scrollToField,
     validateFields
   } = useFormErrors(form, {
-    // Auto-validate important fields
-    debounceMs: 800
+    // More responsive validation with lower debounce
+    debounceMs: 300
   });
 
   // Set the class ID in context if it was provided - using a ref to prevent infinite loops
@@ -537,11 +531,7 @@ const EnhancedClassSetupContent = ({
     };
   }, [formRef, loadDraft, discardDraft, saveCurrentFormState]);
 
-  // Just log form values once for debugging
-  useEffect(() => {
-    // Log once on mount
-    console.log("Current form values from EnhancedClassSetupContent:", form.getValues());
-  }, [form]);
+  // Removed debugging log to make initialization seamless
 
   // Calculate overall completion percentage - using interval-based approach to prevent infinite loops
   const calculateCompletion = useCallback(() => {

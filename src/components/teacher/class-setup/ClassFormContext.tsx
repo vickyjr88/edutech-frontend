@@ -137,14 +137,9 @@ export const ClassFormProvider = ({
   const [isLoadingFromStorage, setIsLoadingFromStorage] = useState(false);
   const [draftExists, setDraftExists] = useState(false);
 
-  // Log the initial classId from URL
-  console.log("ClassFormProvider initial classId from URL:", urlClassId);
+  // Removed log for cleaner initialization
 
-  // We'll move this useEffect to after form initialization
-
-  console.log("ClassFormProvider initialValues:", initialValues);
-
-  // Create a comprehensive log of the initial values for debugging
+  // Removed excessive logging to make initialization seamless
   const effectiveDefaultValues = initialValues ? {
     ...initialValues
   } : {
@@ -168,7 +163,7 @@ export const ClassFormProvider = ({
     lessonPlans: [],
   };
 
-  console.log("Form will be initialized with these default values:", effectiveDefaultValues);
+  // Removed log for cleaner initialization
 
   const form = useForm<ClassFormValues>({
     resolver: zodResolver(classSchema),
@@ -193,7 +188,7 @@ export const ClassFormProvider = ({
     setLastSaved(Date.now());
     setHasUnsavedChanges(false);
     setDraftExists(true);
-    console.log("Form state saved to local storage");
+    // Form state saved successfully
   };
 
   // Load saved form state from local storage
@@ -218,13 +213,7 @@ export const ClassFormProvider = ({
         setLastSaved(metadata.lastSaved);
         setClassId(metadata.classId);
 
-        console.log('Form loaded from local storage', {
-          formValues,
-          cohorts: storedCohorts,
-          teamMembers: storedTeamMembers,
-          activeTab: storedTab,
-          metadata
-        });
+        // Removed verbose logging for cleaner form loading
       }
     } catch (error) {
       console.error('Error loading form from storage:', error);
@@ -365,7 +354,8 @@ export const ClassFormProvider = ({
 
       // Format data according to the backend DTO requirements
       const formattedData = {
-        teacher: userAuth.user?.teacherId || "default_teacher_id", // Get teacherId from auth context
+        // Only include teacher field for new classes, not for updates
+        ...(classId ? {} : { teacher: userAuth.user?.teacherId || "default_teacher_id" }),
         title: formValues.title,
         type: formValues.type,
         subject: formValues.subject,
@@ -832,7 +822,8 @@ export const ClassFormProvider = ({
     onSubmit: (data: ClassFormValues) => {
       // Format data to match backend DTO requirements
       const formattedData = {
-        teacher: userAuth.user?.teacherId || "default_teacher_id", // Get teacherId from auth context
+        // Only include teacher field for new classes, not for updates
+        ...(classId ? {} : { teacher: userAuth.user?.teacherId || "default_teacher_id" }),
         title: data.title,
         type: data.type,
         subject: data.subject,

@@ -290,7 +290,6 @@ const TeacherClassSetupPage = () => {
               const daysOfWeek = Array.isArray(cohort.daysOfWeek)
                 ? cohort.daysOfWeek.map(day => day.toLowerCase())
                 : ["monday"];
-
               return {
                 id: cohort._id || String(Math.random()),
                 name: cohort.name || "",
@@ -332,10 +331,8 @@ const TeacherClassSetupPage = () => {
           }
 
           console.log("Setting initialValues:", formData);
-          // Force a delay to make sure all logs are visible
-          setTimeout(() => {
-            setInitialValues(formData);
-          }, 500);
+          // Set initial values immediately
+          setInitialValues(formData);
         }
       } catch (err) {
         console.error("Failed to load class data:", err);
@@ -417,30 +414,7 @@ const TeacherClassSetupPage = () => {
         </div>
       )}
 
-      {!isLoading && initialValues && !isSubmitted && (
-        <div className="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-md">
-          <div className="flex items-center justify-between">
-            <p className="text-sm text-amber-800">
-              <strong>Debug:</strong> Form data loaded but not showing? Try re-initializing.
-            </p>
-            <Button
-              variant="outline"
-              onClick={() => {
-                // Create a fresh copy of the values
-                const reloadedValues = {...initialValues};
-                console.log("Forcing re-initialization with:", reloadedValues);
-                setInitialValues(undefined);
-                setTimeout(() => {
-                  setInitialValues(reloadedValues);
-                }, 200);
-              }}
-              size="sm"
-            >
-              Re-initialize Form
-            </Button>
-          </div>
-        </div>
-      )}
+      {/* Debug block removed to make form initialization seamless */}
 
       {!isLoading && isSubmitted && (
         <Card className="bg-gradient-to-br from-green-50 to-teal-50 border-green-100">

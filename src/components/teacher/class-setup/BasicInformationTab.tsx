@@ -464,12 +464,18 @@ const BasicInformationTab = ({ form, onNextTab }: BasicInformationTabProps) => {
         setLevels([]);
       }
 
-      // Reset curriculum level and subject when curriculum changes
-      form.setValue("curriculumLevel", "");
-      form.setValue("subject", "");
+      // Only reset curriculum level and subject if this is a change and not initial page load
+      const initialSubject = form.getValues("subject");
+      const initialLevel = form.getValues("curriculumLevel");
 
-      // Clear subjects when curriculum changes
-      setSubjects([]);
+      // Only clear if the user is changing the curriculum and we don't have initial values
+      if (!initialSubject || !initialLevel) {
+        form.setValue("curriculumLevel", "");
+        form.setValue("subject", "");
+
+        // Clear subjects when curriculum changes
+        setSubjects([]);
+      }
     } else {
       setLevels([]);
       setSubjects([]);
@@ -483,6 +489,10 @@ const BasicInformationTab = ({ form, onNextTab }: BasicInformationTabProps) => {
         setSubjects([]);
         return;
       }
+
+      // Get current subject value
+      const currentSubjectValue = form.getValues("subject");
+      const isInitialLoad = !!currentSubjectValue && subjects.length === 0;
 
       setLoadingSubjects(true);
 
@@ -597,8 +607,10 @@ const BasicInformationTab = ({ form, onNextTab }: BasicInformationTabProps) => {
           }
         }
 
-        // Reset subject when level changes
-        form.setValue("subject", "");
+        // Only reset subject if this is a user change and not an initial load
+        if (!isInitialLoad && !currentSubjectValue) {
+          form.setValue("subject", "");
+        }
       } catch (err) {
         console.error("Error processing subjects:", err);
         setSubjects([]);
@@ -608,7 +620,7 @@ const BasicInformationTab = ({ form, onNextTab }: BasicInformationTabProps) => {
     };
 
     getSubjects();
-  }, [selectedCurriculum, selectedLevel, form]);
+  }, [selectedCurriculum, selectedLevel, form, subjects.length]);
 
   return (
     <div className="space-y-6">
