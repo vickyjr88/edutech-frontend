@@ -109,6 +109,11 @@ const App = () => {
                     <TeacherClassSetupPage />
                   </TeacherRoute>
                 } />
+                <Route path="/teacher-class-setup/:classId" element={
+                  <TeacherRoute requireProfileComplete={true}>
+                    <TeacherClassSetupPage />
+                  </TeacherRoute>
+                } />
                 <Route path="/parents-dashboard" element={
                   <ProtectedRoute>
                     <ParentsDashboard />

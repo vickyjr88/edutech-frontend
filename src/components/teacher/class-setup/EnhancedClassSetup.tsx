@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion, AnimatePresence } from "framer-motion";
@@ -6,18 +6,18 @@ import { ClassFormProvider, useClassForm } from "./ClassFormContext";
 import { ClassFormValues, classSchema } from "./types";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  BookOpen, 
-  FileText, 
-  Users, 
-  ScrollText, 
-  Eye, 
-  Sparkles, 
-  Check, 
+  BookOpen,
+  FileText,
+  Users,
+  ScrollText,
+  Eye,
+  Sparkles,
+  Check,
   ArrowRight,
   ChevronLeft,
-  Clock, 
-  Calendar, 
-  BookCopy, 
+  Clock,
+  Calendar,
+  BookCopy,
   LucideIcon
 } from "lucide-react";
 import { Form } from "@/components/ui/form";
@@ -28,6 +28,8 @@ import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import AIClassHelper from "./AIClassHelper";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import FormErrorNotification from "./FormErrorNotification";
+import useFormErrors from "./hooks/useFormErrors";
 
 // Import tab components
 import BasicInformationTab from "./BasicInformationTab";
@@ -50,6 +52,15 @@ interface Step {
 interface EnhancedClassSetupProps {
   onSubmit: (values: ClassFormValues) => void;
   initialValues?: Partial<ClassFormValues>;
+  initialCohorts?: any[];
+  initialTeamMembers?: any[];
+  classId?: string;
+  loadFromStorage?: boolean;
+  onFormStateUpdate?: (state: {
+    lastSaved: number;
+    hasUnsavedChanges: boolean;
+    draftExists: boolean;
+  }) => void;
 }
 
 // Helper to calculate completion percentage
@@ -58,7 +69,7 @@ const calculateStepCompletion = (form: any, stepId: string, checkClassCompletene
   
   switch (stepId) {
     case "basic":
-      const requiredBasicFields = ['title', 'subject', 'summary', 'description'];
+      const requiredBasicFields = ['title', 'subject', 'description'];
       const optionalBasicFields = ['curriculum', 'objectives', 'assessmentMethods', 'technicalRequirements', 'materialsRequired'];
       
       let completedRequired = requiredBasicFields.filter(field => 
@@ -93,7 +104,7 @@ const calculateStepCompletion = (form: any, stepId: string, checkClassCompletene
       if (!values.hasTeamTeaching) return 100;
       
       // Otherwise check if there are team members with emails
-      const team = form.getValues().teamMembers || [];
+      const team = values.teamMembers || [];
       return team.length > 0 && team.every((member: any) => member.email) ? 100 : 50;
       
     default:
@@ -101,40 +112,68 @@ const calculateStepCompletion = (form: any, stepId: string, checkClassCompletene
   }
 };
 
-const EnhancedClassSetup = ({ onSubmit, initialValues }: EnhancedClassSetupProps) => {
-  const form = useForm<ClassFormValues>({
-    resolver: zodResolver(classSchema),
-    defaultValues: initialValues || {
-      type: "academic",
-      title: "",
-      subject: "",
-      curriculum: "",
-      gradeLevel: "",
-      ageRange: "",
-      summary: "",
-      description: "",
-      objectives: "",
-      assessmentMethods: "",
-      technicalRequirements: "",
-      materialsRequired: "",
-      commitmentRequired: "",
-      numberOfLessons: 1,
-      isPublic: true,
-      hasCohorts: false,
-      hasTeamTeaching: false,
-      lessonPlans: [],
-    },
-  });
+const EnhancedClassSetup = ({
+  onSubmit,
+  initialValues,
+  initialCohorts = [],
+  initialTeamMembers = [],
+  classId,
+  loadFromStorage = true,
+  onFormStateUpdate
+}: EnhancedClassSetupProps) => {
+  console.log("EnhancedClassSetup received initialValues:", initialValues);
+  console.log("EnhancedClassSetup received initialCohorts:", initialCohorts);
+  console.log("EnhancedClassSetup received classId:", classId);
+  console.log("EnhancedClassSetup loadFromStorage:", loadFromStorage);
+
+  // Debug the initialValues
+  console.log("Form defaultValues will be set to:", initialValues);
+
+  // Create a ref for event handling
+  const formRef = useRef<HTMLDivElement>(null);
+
+  // Handle form state updates up to parent
+  const handleFormStateUpdate = (state: {
+    lastSaved: number;
+    hasUnsavedChanges: boolean;
+    draftExists: boolean;
+  }) => {
+    if (onFormStateUpdate) {
+      onFormStateUpdate(state);
+    }
+  };
 
   return (
-    <ClassFormProvider onSubmit={onSubmit}>
-      <EnhancedClassSetupContent />
-    </ClassFormProvider>
+    <div ref={formRef}>
+      <ClassFormProvider
+        onSubmit={onSubmit}
+        initialValues={initialValues}
+        initialCohorts={initialCohorts}
+        initialTeamMembers={initialTeamMembers}
+        enableStorageLoading={loadFromStorage}
+      >
+        <EnhancedClassSetupContent
+          initialClassId={classId}
+          formRef={formRef}
+          onFormStateUpdate={handleFormStateUpdate}
+        />
+      </ClassFormProvider>
+    </div>
   );
 };
 
 // The main content component that uses the form context
-const EnhancedClassSetupContent = () => {
+const EnhancedClassSetupContent = ({
+  initialClassId,
+  formRef,
+  onFormStateUpdate
+}: {
+  initialClassId?: string;
+  formRef?: React.RefObject<HTMLDivElement>;
+  onFormStateUpdate?: (state: { lastSaved: number; hasUnsavedChanges: boolean; draftExists: boolean; }) => void;
+}) => {
+  console.log("EnhancedClassSetupContent received initialClassId:", initialClassId);
+
   const {
     form,
     activeTab,
@@ -144,6 +183,7 @@ const EnhancedClassSetupContent = () => {
     teamMembers,
     lessonFileUploads,
     handleNavigateTab,
+    setClassId,
     handleLessonFileChange,
     removeLessonFile,
     appendLessonPlan,
@@ -164,15 +204,47 @@ const EnhancedClassSetupContent = () => {
     calculateEndDate,
     checkClassCompleteness,
     onSubmit,
+    // Storage-related features
+    lastSaved,
+    hasUnsavedChanges,
+    draftExists,
+    saveCurrentFormState,
+    loadFromStorage,
+    clearStoredData,
+    loadDraft,
+    discardDraft,
   } = useClassForm();
 
   const [usingAI, setUsingAI] = useState(false);
   const [completionPercentage, setCompletionPercentage] = useState(0);
-  // Removed the viewMode state - we'll only use the wizard view
   const [activeAIHelper, setActiveAIHelper] = useState(false);
   
-  // Define our steps with all required info
-  const steps: Step[] = [
+  // Store hasTeamTeaching value in a ref to avoid dependency issues
+  const hasTeamTeachingRef = useRef(form.getValues("hasTeamTeaching"));
+  
+  // Update the ref when the value changes
+  useEffect(() => {
+    const subscription = form.watch((value, { name }) => {
+      if (name === "hasTeamTeaching") {
+        hasTeamTeachingRef.current = form.getValues("hasTeamTeaching");
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [form]);
+
+  // Define enhancedNavigateTab first with useCallback to avoid circular references
+  const enhancedNavigateTab = useCallback((tab: string) => {
+    handleNavigateTab(tab);
+
+    // Auto-save state when changing tabs
+    saveCurrentFormState();
+    // Using empty dependency array since these functions shouldn't change during component lifecycle
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Define our steps with all required info - using activeTab as the only dependency
+  // This prevents the need to re-render the entire step structure on each form change
+  const steps: Step[] = React.useMemo(() => [
     {
       id: "basic",
       title: "Class Details",
@@ -182,7 +254,7 @@ const EnhancedClassSetupContent = () => {
       component: (
         <BasicInformationTab
           form={form}
-          onNextTab={() => handleNavigateTab("lessons")}
+          onNextTab={() => enhancedNavigateTab("lessons")}
         />
       ),
       isRequired: true,
@@ -196,8 +268,8 @@ const EnhancedClassSetupContent = () => {
       component: (
         <LessonPlansTab
           form={form}
-          onPreviousTab={() => handleNavigateTab("basic")}
-          onNextTab={() => handleNavigateTab("cohorts")}
+          onPreviousTab={() => enhancedNavigateTab("basic")}
+          onNextTab={() => enhancedNavigateTab("cohorts")}
           lessonFileUploads={lessonFileUploads}
           handleLessonFileChange={handleLessonFileChange}
           removeLessonFile={removeLessonFile}
@@ -217,8 +289,8 @@ const EnhancedClassSetupContent = () => {
       component: (
         <CohortsTab
           form={form}
-          onPreviousTab={() => handleNavigateTab("lessons")}
-          onNextTab={() => handleNavigateTab("teaching")}
+          onPreviousTab={() => enhancedNavigateTab("lessons")}
+          onNextTab={() => enhancedNavigateTab("teaching")}
           cohorts={cohorts}
           addCohort={addCohort}
           removeCohort={removeCohort}
@@ -243,10 +315,10 @@ const EnhancedClassSetupContent = () => {
       component: (
         <TeachingTeamTab
           form={form}
-          onPreviousTab={() => handleNavigateTab("cohorts")}
-          onNextTab={() => handleNavigateTab("preview")}
+          onPreviousTab={() => enhancedNavigateTab("cohorts")}
+          onNextTab={() => enhancedNavigateTab("preview")}
           isSubmitting={isSubmitting}
-          hasTeamTeaching={form.watch("hasTeamTeaching")}
+          hasTeamTeaching={hasTeamTeachingRef.current}
           teamMembers={teamMembers}
           addTeamMember={addTeamMember}
           removeTeamMember={removeTeamMember}
@@ -264,7 +336,7 @@ const EnhancedClassSetupContent = () => {
       component: (
         <PreviewTab
           form={form}
-          onPreviousTab={() => handleNavigateTab("teaching")}
+          onPreviousTab={() => enhancedNavigateTab("teaching")}
           isSubmitting={isSubmitting}
           cohorts={cohorts}
           teamMembers={teamMembers}
@@ -273,7 +345,9 @@ const EnhancedClassSetupContent = () => {
       ),
       isRequired: true,
     },
-  ];
+  // Use only activeTab as dependency to prevent unnecessary recalculations
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  ], [activeTab]);
 
   // Find current step
   const currentStepIndex = steps.findIndex(step => step.id === activeTab);
@@ -281,30 +355,232 @@ const EnhancedClassSetupContent = () => {
   const nextStep = steps[currentStepIndex + 1];
   const prevStep = steps[currentStepIndex - 1];
 
-  // Calculate overall completion percentage
+  // Define the navigation tab handler with validation
+  const validateAndNavigate = useCallback(async (tab: string) => {
+    const currentTabIndex = steps.findIndex(step => step.id === activeTab);
+    const targetTabIndex = steps.findIndex(step => step.id === tab);
+
+    // Moving forward - validate current tab first
+    if (targetTabIndex > currentTabIndex) {
+      // Determine fields to validate based on current tab
+      let fieldsToValidate: string[] = [];
+
+      switch (activeTab) {
+        case "basic":
+          fieldsToValidate = ["title", "subject", "type"];
+          if (form.getValues("type") === "academic") {
+            fieldsToValidate.push("gradeLevel");
+          } else {
+            fieldsToValidate.push("ageRange");
+          }
+          if (form.getValues("curriculum")) {
+            fieldsToValidate.push("curriculum", "curriculumLevel");
+          }
+          break;
+
+        case "lessons":
+          // Validate at least one lesson plan
+          if (form.getValues("lessonPlans")?.length === 0) {
+            addError({
+              field: "lessonPlans",
+              message: "Please add at least one lesson plan before proceeding",
+              type: "warning"
+            });
+            return; // Prevent navigation
+          }
+          break;
+
+        case "cohorts":
+          // Check if cohorts exist
+          if (cohorts.length === 0) {
+            addError({
+              field: "",
+              message: "Please add at least one cohort before proceeding",
+              type: "warning"
+            });
+            return; // Prevent navigation
+          }
+          break;
+
+        case "teaching":
+          // If team teaching is enabled, validate team members
+          if (form.getValues("hasTeamTeaching") && teamMembers.length === 0) {
+            addError({
+              field: "",
+              message: "Please add at least one team member or disable team teaching",
+              type: "warning"
+            });
+            return; // Prevent navigation
+          }
+          break;
+      }
+
+      // Validate fields if any
+      if (fieldsToValidate.length > 0) {
+        const isValid = await form.trigger(fieldsToValidate as any);
+
+        if (!isValid) {
+          // Add a general error message
+          addError({
+            field: "",
+            message: "Please fix the validation errors before proceeding",
+            type: "error"
+          });
+
+          // Let the useFormErrors hook handle showing field errors
+          return; // Prevent navigation
+        }
+      }
+    }
+
+    // If we reach here, validation passed or we're moving backward
+    enhancedNavigateTab(tab);
+
+    // Create stable references to prevent infinite loops
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab]);
+
+  // Initialize the form errors hook
+  const {
+    errors: formErrors,
+    addError,
+    dismissError,
+    scrollToField,
+    validateFields
+  } = useFormErrors(form, {
+    // Auto-validate important fields
+    debounceMs: 800
+  });
+
+  // Set the class ID in context if it was provided - using a ref to prevent infinite loops
+  const initializedClassIdRef = useRef(false);
   useEffect(() => {
+    if (initialClassId && !initializedClassIdRef.current) {
+      console.log("Setting classId in context (once only):", initialClassId);
+      setClassId(initialClassId);
+      initializedClassIdRef.current = true;
+    }
+  }, [initialClassId, setClassId]);
+
+  // Update parent with form state - use refs and previous value comparison to prevent unnecessary updates
+  const formStateRef = useRef({
+    lastSaved,
+    hasUnsavedChanges,
+    draftExists
+  });
+
+  const prevFormStateRef = useRef({
+    lastSaved,
+    hasUnsavedChanges,
+    draftExists
+  });
+
+  // Update the ref when state changes, but only notify parent if there's an actual change
+  useEffect(() => {
+    const currentState = {
+      lastSaved,
+      hasUnsavedChanges,
+      draftExists
+    };
+
+    // Check if any values have changed before updating
+    const hasChanged =
+      prevFormStateRef.current.lastSaved !== currentState.lastSaved ||
+      prevFormStateRef.current.hasUnsavedChanges !== currentState.hasUnsavedChanges ||
+      prevFormStateRef.current.draftExists !== currentState.draftExists;
+
+    if (hasChanged) {
+      // Update refs
+      formStateRef.current = currentState;
+      prevFormStateRef.current = currentState;
+
+      // Notify parent only when there's a change
+      if (onFormStateUpdate) {
+        onFormStateUpdate(currentState);
+      }
+    }
+  // Using a custom comparison instead of object dependencies to prevent unnecessary effect runs
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    // Convert timestamps to strings for stable comparison
+    String(lastSaved),
+    // These are booleans, so they're already stable for comparison
+    hasUnsavedChanges,
+    draftExists
+  ]);
+
+  // Set up event listeners for form actions from parent
+  useEffect(() => {
+    const element = formRef?.current;
+    if (!element) return;
+
+    const handleLoadDraft = () => {
+      loadDraft();
+    };
+
+    const handleDiscardDraft = () => {
+      discardDraft();
+    };
+
+    const handleSaveNow = () => {
+      saveCurrentFormState();
+    };
+
+    element.addEventListener('load-draft', handleLoadDraft);
+    element.addEventListener('discard-draft', handleDiscardDraft);
+    element.addEventListener('save-now', handleSaveNow);
+
+    return () => {
+      element.removeEventListener('load-draft', handleLoadDraft);
+      element.removeEventListener('discard-draft', handleDiscardDraft);
+      element.removeEventListener('save-now', handleSaveNow);
+    };
+  }, [formRef, loadDraft, discardDraft, saveCurrentFormState]);
+
+  // Just log form values once for debugging
+  useEffect(() => {
+    // Log once on mount
+    console.log("Current form values from EnhancedClassSetupContent:", form.getValues());
+  }, [form]);
+
+  // Calculate overall completion percentage - using interval-based approach to prevent infinite loops
+  const calculateCompletion = useCallback(() => {
     // Calculate completion for each step
-    const stepCompletions = steps.map(step => 
+    const stepCompletions = steps.map(step =>
       calculateStepCompletion(form, step.id, checkClassCompleteness) * (step.isRequired ? 1 : 0.5)
     );
-    
+
     // Weight required steps more heavily
     const totalPossible = steps.reduce((acc, step) => acc + (step.isRequired ? 100 : 50), 0);
-    const totalCompleted = stepCompletions.reduce((acc, percent, i) => 
+    const totalCompleted = stepCompletions.reduce((acc, percent, i) =>
       acc + percent * (steps[i].isRequired ? 1 : 0.5), 0);
-    
-    setCompletionPercentage(Math.round((totalCompleted / totalPossible) * 100));
-  }, [form.watch(), activeTab, cohorts, teamMembers]);
+
+    return Math.round((totalCompleted / totalPossible) * 100);
+  }, [form, steps, checkClassCompleteness]);
+
+  // Use interval for calculation instead of watching form changes
+  useEffect(() => {
+    // Calculate initially
+    setCompletionPercentage(calculateCompletion());
+
+    // Set up interval to periodically recalculate
+    const interval = setInterval(() => {
+      setCompletionPercentage(calculateCompletion());
+    }, 1000);
+
+    // Cleanup interval
+    return () => clearInterval(interval);
+  }, [calculateCompletion]);
 
   // Check if we should auto-add a cohort
   useEffect(() => {
     if (cohorts.length === 0 && activeTab === "cohorts") {
       addCohort();
     }
-  }, [activeTab, cohorts.length]);
+  }, [activeTab, cohorts.length, addCohort]);
 
   // Auto-generate lesson plans with AI
-  const handleGenerateLessonPlans = () => {
+  const handleGenerateLessonPlans = useCallback(() => {
     setUsingAI(true);
     
     // In a real implementation, this would call an API to generate lesson plans
@@ -336,10 +612,10 @@ const EnhancedClassSetupContent = () => {
       form.setValue("lessonPlans", defaultLessons);
       setUsingAI(false);
     }, 2000); // Simulate API call
-  };
+  }, [form]);
 
   // Handle AI helper suggestions
-  const handleAIHelperChanges = (changes: any) => {
+  const handleAIHelperChanges = useCallback((changes: any) => {
     if (changes.title) {
       form.setValue("title", changes.title);
     }
@@ -352,19 +628,26 @@ const EnhancedClassSetupContent = () => {
     if (changes.lessonPlans) {
       form.setValue("lessonPlans", changes.lessonPlans);
     }
-  };
+  }, [form]);
 
   return (
     <div className="max-w-7xl mx-auto">
+      {/* Error Notifications */}
+      <FormErrorNotification
+        errors={formErrors}
+        onDismiss={dismissError}
+        onScrollToField={scrollToField}
+      />
+
       {/* AI Helper Dialog */}
       <Dialog open={activeAIHelper} onOpenChange={setActiveAIHelper}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>AI Class Creator</DialogTitle>
           </DialogHeader>
-          <AIClassHelper 
-            onApplyChanges={handleAIHelperChanges} 
-            initialPrompt={form.watch("title") || form.watch("subject") || ""}
+          <AIClassHelper
+            onApplyChanges={handleAIHelperChanges}
+            initialPrompt={form.getValues("title") || form.getValues("subject") || ""}
           />
         </DialogContent>
       </Dialog>
@@ -374,7 +657,7 @@ const EnhancedClassSetupContent = () => {
         <div className="w-full">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-2">
             <h2 className="text-lg font-medium mb-1 sm:mb-0">
-              {form.watch("title") ? `Creating: ${form.watch("title")}` : "Create a New Class"}
+              {form.getValues("title") ? `Creating: ${form.getValues("title")}` : "Create a New Class"}
             </h2>
             <span className="text-sm font-medium text-gray-600">
               {completionPercentage}% complete
@@ -408,7 +691,7 @@ const EnhancedClassSetupContent = () => {
                 <div key={step.id} className="flex-1 px-0.5">
                   <button 
                     type="button"
-                    onClick={() => handleNavigateTab(step.id)}
+                    onClick={() => validateAndNavigate(step.id)}
                     className="w-full focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-blue-300 rounded-full"
                   >
                     <div 
@@ -453,7 +736,7 @@ const EnhancedClassSetupContent = () => {
                     <li key={step.id}>
                       <button
                         type="button"
-                        onClick={() => handleNavigateTab(step.id)}
+                        onClick={() => validateAndNavigate(step.id)}
                         className={cn(
                           "w-full flex items-start p-3 gap-3 hover:bg-gray-50 transition-colors",
                           activeTab === step.id && "bg-blue-50"
@@ -701,7 +984,7 @@ const EnhancedClassSetupContent = () => {
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => prevStep && handleNavigateTab(prevStep.id)}
+                  onClick={() => prevStep && validateAndNavigate(prevStep.id)}
                   disabled={!prevStep}
                   className="order-2 sm:order-1"
                 >
@@ -715,7 +998,7 @@ const EnhancedClassSetupContent = () => {
                     <Button
                       type="button"
                       variant="ghost"
-                      onClick={() => handleNavigateTab(nextStep.id)}
+                      onClick={() => validateAndNavigate(nextStep.id)}
                     >
                       Skip
                     </Button>
@@ -725,7 +1008,7 @@ const EnhancedClassSetupContent = () => {
                   {nextStep ? (
                     <Button
                       type="button"
-                      onClick={() => handleNavigateTab(nextStep.id)}
+                      onClick={() => validateAndNavigate(nextStep.id)}
                       className="gap-1.5 w-full sm:w-auto"
                     >
                       <span>{currentStepIndex === 0 ? 'Next: Lesson Plans' : 'Next'}</span>

@@ -31,6 +31,8 @@ export interface Class {
 export interface ClassDetail extends Class {
     description: string;
     curriculum: string;
+    curriculumLevel: string;
+    numberOfLessons: number;
     summary: string;
     technicalRequirements: never[];
     materials: never[];
@@ -41,7 +43,19 @@ export interface ClassDetail extends Class {
     }[];
     cohorts?: never[];
     isPublished: boolean;
+    enableMultipleCohorts: boolean;
+    enableTeamTeaching: boolean;
     isPublic: boolean;
+    ageRange: string;
+    subject: string;
+    type: string;
+    gradeLevel: string;
+    tags: string[];
+    media: {
+        thumbnailUrl?: string;
+        introVideoUrl?: string;
+    };
+    reviews: Review[];
 }
 
 export interface Review {

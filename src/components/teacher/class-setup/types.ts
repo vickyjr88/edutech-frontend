@@ -2,11 +2,21 @@
 import { z } from "zod";
 
 // Curriculum data structures
+export interface CurriculumSubject {
+  name: string;
+  code?: string;
+}
+
+export interface CurriculumSubjectGroups {
+  [key: string]: string[] | CurriculumSubjectGroups;
+}
+
 export interface CurriculumLevel {
-  id: string;
+  code: string;
   name: string;
   gradeRange: string;
   ageRange: string;
+  subjects?: string[] | CurriculumSubjectGroups;
 }
 
 export interface Subject {
@@ -18,7 +28,8 @@ export interface Subject {
 }
 
 export interface Curriculum {
-  id: string;
+  _id: string;
+  code: string;
   name: string;
   description: string;
   levels: CurriculumLevel[];
@@ -37,7 +48,6 @@ export const classSchema = z.object({
   curriculumLevel: z.string().optional(),
   gradeLevel: z.string().optional(),
   ageRange: z.string().optional(),
-  summary: z.string().min(10, { message: "Class summary must be at least 10 characters" }).max(200, { message: "Class summary must be at most 200 characters" }),
   description: z.string().min(10, { message: "Detailed description must be at least 10 characters" }),
   objectives: z.string().optional(),
   assessmentMethods: z.string().optional(),

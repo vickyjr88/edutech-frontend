@@ -1,17 +1,215 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import EnhancedClassSetup from "@/components/teacher/class-setup/EnhancedClassSetup";
 import { ClassFormValues } from "@/components/teacher/class-setup/types";
+import { classService } from "@/integrations/api/services/class.service";
+import DraftRecoveryBanner from "@/components/teacher/class-setup/DraftRecoveryBanner";
+import WelcomeScreen from "@/components/teacher/class-setup/WelcomeScreen";
+import { hasDraft, getFormMetadata } from "@/components/teacher/class-setup/utils/storageUtils";
 
 const TeacherClassSetupPage = () => {
   const navigate = useNavigate();
+  const { classId } = useParams<{ classId?: string }>();
   const { toast } = useToast();
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [submittedClass, setSubmittedClass] = useState<ClassFormValues | null>(null);
+  const [initialValues, setInitialValues] = useState<Partial<ClassFormValues> | undefined>(undefined);
+  const [initialCohorts, setInitialCohorts] = useState<any[]>([]);
+  const [initialTeamMembers, setInitialTeamMembers] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(!!classId);
+  const [showWelcomeScreen, setShowWelcomeScreen] = useState(!classId);
+  const [draftExists, setDraftExists] = useState(false);
+  const [lastSaved, setLastSaved] = useState(0);
+  const [classFormState, setClassFormState] = useState<{
+    lastSaved: number;
+    hasUnsavedChanges: boolean;
+    draftExists: boolean;
+  }>({
+    lastSaved: 0,
+    hasUnsavedChanges: false,
+    draftExists: false,
+  });
+
+  // Log the classId from useParams for debugging
+  console.log("TeacherClassSetupPage received classId from URL params:", classId);
+
+  // Check for draft on mount
+  useEffect(() => {
+    if (!classId) {
+      const draftExists = hasDraft();
+      const metadata = getFormMetadata();
+      setDraftExists(draftExists);
+      setLastSaved(metadata.lastSaved);
+    }
+  }, [classId]);
+
+  // Callbacks for draft management
+  const handleStartNew = () => {
+    setShowWelcomeScreen(false);
+  };
+
+  const handleContinueDraft = () => {
+    setShowWelcomeScreen(false);
+  };
+
+  const handleDiscardDraft = () => {
+    // The actual discarding happens in the ClassFormProvider
+    setShowWelcomeScreen(false);
+  };
+
+  // Form state updater from the form context
+  const handleFormStateUpdate = (state: {
+    lastSaved: number;
+    hasUnsavedChanges: boolean;
+    draftExists: boolean;
+  }) => {
+    setClassFormState(state);
+  };
+
+  // Load class data if we have an ID
+  useEffect(() => {
+    const loadClassData = async () => {
+      if (!classId) {
+        console.log("No classId available, skipping data load");
+        return;
+      }
+
+      try {
+        setIsLoading(true);
+        console.log("Loading class data for ID:", classId);
+        const { data, error } = await classService.getById(classId);
+        console.log("API response:", data);
+
+        if (error) {
+          console.error("Error loading class:", error);
+          toast({
+            variant: "destructive",
+            title: "Failed to load class",
+            description: "There was an error loading the class data. Please try again.",
+          });
+        } else if (data) {
+          // Transform API data to match form values structure
+          const formData: Partial<ClassFormValues> = {
+            title: data.title,
+            type: data.type,
+            subject: data.subject,
+            curriculum: data.curriculum,
+            description: data.description,
+            isPublic: data.isPublic,
+
+            // Map DTO fields to form fields
+            hasCohorts: data.enableMultipleCohorts,
+            hasTeamTeaching: data.enableTeamTeaching,
+
+            // Ensure grade level and age range are populated
+            gradeLevel: data.gradeLevel || "",
+            ageRange: data.ageRange || "",
+            curriculumLevel: data.curriculumLevel || "",
+            numberOfLessons: data.numberOfLessons || 1,
+
+            // Format technical requirements and materials back to text fields
+            technicalRequirements: data.technicalRequirements?.length > 0 ?
+              data.technicalRequirements.map(item => item.requirement || "").join("\n") :
+              "",
+
+            materialsRequired: data.materials?.length > 0 ?
+              data.materials.map(item => item.name || "").join("\n") :
+              "",
+
+            // Convert lesson plans to match form structure
+            lessonPlans: data.lessonPlans ?
+              data.lessonPlans.map(lesson => ({
+                id: lesson._id || String(Math.random()),
+                title: lesson.title || "",
+                description: lesson.description || "",
+                duration: String(lesson.duration) || "60",
+                resources: Array.isArray(lesson.resourceFiles) ? lesson.resourceFiles.join(",") : ""
+              })) :
+              [],
+
+            // Include other optional fields
+            ...(data.commitment && { commitmentRequired: data.commitment }),
+            ...(data.methodology && { methodology: data.methodology }),
+            ...(data.strategy && { strategy: data.strategy }),
+            ...(data.objectives && { objectives: data.objectives }),
+            ...(data.assessmentMethods && { assessmentMethods: data.assessmentMethods }),
+          };
+
+          // Process cohorts if available
+          if (data.cohorts && data.cohorts.length > 0) {
+            const formattedCohorts = data.cohorts.map(cohort => {
+              // Determine repeat pattern based on days of week
+              let repeatPattern = "weekly";
+              if (Array.isArray(cohort.daysOfWeek) && cohort.daysOfWeek.length > 1) {
+                repeatPattern = "custom";
+              } else if (Array.isArray(cohort.daysOfWeek) && cohort.daysOfWeek.length === 2) {
+                repeatPattern = "twice-weekly";
+              }
+
+              // Format days of week to lowercase
+              const daysOfWeek = Array.isArray(cohort.daysOfWeek)
+                ? cohort.daysOfWeek.map(day => day.toLowerCase())
+                : ["monday"];
+
+              return {
+                id: cohort._id || String(Math.random()),
+                name: cohort.name || "",
+                startDate: cohort.startDate ? new Date(cohort.startDate) : null,
+                endDate: cohort.endDate ? new Date(cohort.endDate) : null,
+                startTime: cohort.startTime || "",
+                endTime: cohort.endTime || "",
+                numberOfLessons: data.numberOfLessons || 1,
+                price: cohort.price?.toString() || "0",
+                discount: cohort.discount?.toString() || "0",
+                isActive: cohort.isActive !== false,
+                lessonSchedules: [],
+                hasFlexibleSchedule: cohort.customLessonTimes || false,
+                repeatSchedule: {
+                  pattern: repeatPattern,
+                  daysOfWeek,
+                  repeatEvery: 1
+                },
+                minStudents: cohort.minimumStudents || 1,
+                maxStudents: cohort.maximumStudents || 20,
+                enrollmentDeadline: cohort.enrollmentDeadline ? new Date(cohort.enrollmentDeadline) : null
+              };
+            });
+
+            setInitialCohorts(formattedCohorts);
+          }
+
+          // Process teaching team if available
+          if (data.teachingTeam && data.teachingTeam.length > 0) {
+            const formattedTeamMembers = data.teachingTeam.map((member, index) => {
+              return {
+                id: member._id || String(Math.random()),
+                email: member.email || `teacher${index + 1}@example.com`,
+                role: member.role || "co-teacher"
+              };
+            });
+
+            setInitialTeamMembers(formattedTeamMembers);
+          }
+
+          console.log("Setting initialValues:", formData);
+          // Force a delay to make sure all logs are visible
+          setTimeout(() => {
+            setInitialValues(formData);
+          }, 500);
+        }
+      } catch (err) {
+        console.error("Failed to load class data:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadClassData();
+  }, [classId, toast]);
 
   const handleSubmit = (data: ClassFormValues) => {
     // Here you would normally make an API call to save the class data
@@ -40,12 +238,12 @@ const TeacherClassSetupPage = () => {
   const handleEnrollStudents = () => {
     // Navigate to enrollment page with the newly created class
     if (submittedClass) {
-      navigate("/teacher-dashboard", { 
-        state: { 
+      navigate("/teacher-dashboard", {
+        state: {
           activeTab: "enrollment",
-          classId: Date.now(), // This would be the actual class ID from the server
+          classId: classId || `temp_${Date.now()}`, // Use real class ID or generate a temporary one
           className: submittedClass.title
-        } 
+        }
       });
     }
   };
@@ -63,21 +261,55 @@ const TeacherClassSetupPage = () => {
           Back to Dashboard
         </Button>
         <h1 className="text-2xl font-bold">
-          {isSubmitted ? "Class Created Successfully" : "Create a New Class"}
+          {isSubmitted ? "Class Created Successfully" : classId ? "Edit Class" : "Create a New Class"}
         </h1>
       </div>
-      
-      {isSubmitted ? (
+
+      {isLoading && (
+        <div className="flex justify-center items-center min-h-[300px]">
+          <div className="flex flex-col items-center">
+            <div className="h-8 w-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-3"></div>
+            <p className="text-gray-600">Loading class data...</p>
+          </div>
+        </div>
+      )}
+
+      {!isLoading && initialValues && !isSubmitted && (
+        <div className="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-md">
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-amber-800">
+              <strong>Debug:</strong> Form data loaded but not showing? Try re-initializing.
+            </p>
+            <Button
+              variant="outline"
+              onClick={() => {
+                // Create a fresh copy of the values
+                const reloadedValues = {...initialValues};
+                console.log("Forcing re-initialization with:", reloadedValues);
+                setInitialValues(undefined);
+                setTimeout(() => {
+                  setInitialValues(reloadedValues);
+                }, 200);
+              }}
+              size="sm"
+            >
+              Re-initialize Form
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {!isLoading && isSubmitted && (
         <Card className="bg-gradient-to-br from-green-50 to-teal-50 border-green-100">
           <CardHeader>
             <div className="flex items-center mb-2">
               <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center mr-3">
                 <CheckCircle className="h-6 w-6 text-green-600" />
               </div>
-              <CardTitle>"{submittedClass?.title}" has been created!</CardTitle>
+              <CardTitle>"{submittedClass?.title}" has been {classId ? "updated" : "created"}!</CardTitle>
             </div>
             <CardDescription>
-              Your class has been successfully created and is now available for enrollment.
+              Your class has been successfully {classId ? "updated" : "created"} and is now available for enrollment.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -95,19 +327,68 @@ const TeacherClassSetupPage = () => {
                 <strong>Lessons:</strong> {submittedClass?.lessonPlans?.length || 0} lesson plans created
               </p>
             </div>
-            
+
             <div className="flex flex-col sm:flex-row gap-3 mt-6">
               <Button className="flex-1" onClick={handleEnrollStudents}>
                 Enroll Students Now
               </Button>
               <Button variant="outline" className="flex-1" onClick={handleCreateAnother}>
-                Create Another Class
+                {classId ? "Create New Class" : "Create Another Class"}
               </Button>
             </div>
           </CardContent>
         </Card>
-      ) : (
-        <EnhancedClassSetup onSubmit={handleSubmit} />
+      )}
+
+      {!isLoading && !isSubmitted && showWelcomeScreen && !classId ? (
+        <WelcomeScreen
+          draftExists={draftExists}
+          lastSaved={lastSaved}
+          onStartNew={handleStartNew}
+          onContinueDraft={handleContinueDraft}
+          onDiscardDraft={handleDiscardDraft}
+        />
+      ) : !isLoading && !isSubmitted && (
+        <>
+          {/* Recovery banner only shows for forms in progress, not for new forms */}
+          {classFormState.draftExists || classFormState.hasUnsavedChanges ? (
+            <DraftRecoveryBanner
+              lastSaved={classFormState.lastSaved}
+              hasUnsavedChanges={classFormState.hasUnsavedChanges}
+              draftExists={classFormState.draftExists}
+              onLoadDraft={() => {
+                const formRef = document.getElementById('class-form-ref');
+                if (formRef) {
+                  formRef.dispatchEvent(new CustomEvent('load-draft'));
+                }
+              }}
+              onDiscardDraft={() => {
+                const formRef = document.getElementById('class-form-ref');
+                if (formRef) {
+                  formRef.dispatchEvent(new CustomEvent('discard-draft'));
+                }
+              }}
+              onSaveNow={() => {
+                const formRef = document.getElementById('class-form-ref');
+                if (formRef) {
+                  formRef.dispatchEvent(new CustomEvent('save-now'));
+                }
+              }}
+            />
+          ) : null}
+
+          <div id="class-form-ref">
+            <EnhancedClassSetup
+              onSubmit={handleSubmit}
+              initialValues={initialValues}
+              initialCohorts={initialCohorts}
+              initialTeamMembers={initialTeamMembers}
+              classId={classId}
+              loadFromStorage={!initialValues && draftExists && !classId}
+              onFormStateUpdate={handleFormStateUpdate}
+            />
+          </div>
+        </>
       )}
     </div>
   );

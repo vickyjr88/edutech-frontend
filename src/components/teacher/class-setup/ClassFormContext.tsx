@@ -1,8 +1,17 @@
-import React, { createContext, useContext, useState, ReactNode } from "react";
+import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { useForm, UseFormReturn } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ClassFormValues, CohortData, TeamMember, classSchema, LessonSchedule, RepeatSchedule } from "./types";
 import { addDays, addWeeks, parseISO, isAfter } from "date-fns";
+import { classService } from "@/integrations/api/services/class.service";
+import { useNavigate, useParams } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import {
+  saveFormToStorage,
+  getFormFromStorage,
+  clearStoredForm,
+  getFormMetadata
+} from "./utils/storageUtils";
 
 interface ClassFormContextType {
   form: UseFormReturn<ClassFormValues>;
@@ -16,42 +25,58 @@ interface ClassFormContextType {
   setTeamMembers: React.Dispatch<React.SetStateAction<TeamMember[]>>;
   lessonFileUploads: Record<string, File[]>;
   setLessonFileUploads: React.Dispatch<React.SetStateAction<Record<string, File[]>>>;
-  
+  classId: string | null;
+  setClassId: React.Dispatch<React.SetStateAction<string | null>>;
+  lastSaved: number;
+  hasUnsavedChanges: boolean;
+  isLoadingFromStorage: boolean;
+  draftExists: boolean;
+
   // Helper methods
   addCohort: () => void;
   removeCohort: (id: string) => void;
   updateCohort: (id: string, field: keyof CohortData, value: any) => void;
   updateRepeatSchedule: (cohortId: string, field: keyof RepeatSchedule, value: any) => void;
   toggleDayOfWeek: (cohortId: string, day: string) => void;
-  
+
   // Lesson schedule methods
   addLessonSchedule: (cohortId: string) => void;
   removeLessonSchedule: (cohortId: string, scheduleId: string) => void;
   updateLessonSchedule: (cohortId: string, scheduleId: string, field: keyof LessonSchedule, value: any) => void;
-  
+
   addTeamMember: () => void;
   removeTeamMember: (id: string) => void;
   updateTeamMember: (id: string, field: "email" | "role", value: string) => void;
-  
+
   handleLessonFileChange: (lessonId: string, e: React.ChangeEvent<HTMLInputElement>) => void;
   removeLessonFile: (lessonId: string, fileIndex: number) => void;
   appendLessonPlan: () => void;
   removeLessonPlan: (id: string) => void;
   updateLessonPlan: (id: string, field: string, value: string) => void;
-  
+
   handleNavigateTab: (tab: string) => void;
   calculateNumberOfLessons: (startDate: Date | null, endDate: Date | null, repeatSchedule: RepeatSchedule) => number;
   calculateEndDate: (startDate: Date | null, numberOfLessons: number, repeatSchedule: RepeatSchedule) => Date | null;
-  
+
   // Class completeness check
-  checkClassCompleteness: () => { 
-    isComplete: boolean; 
-    basicInfoComplete: boolean; 
-    hasMinLessonPlans: boolean; 
+  checkClassCompleteness: () => {
+    isComplete: boolean;
+    basicInfoComplete: boolean;
+    hasMinLessonPlans: boolean;
     hasMinCohorts: boolean;
     missingItems: string[];
   };
-  
+
+  // Storage and persistence methods
+  saveCurrentFormState: () => void;
+  loadFromStorage: () => void;
+  clearStoredData: () => void;
+  loadDraft: () => void;
+  discardDraft: () => void;
+
+  // Save basic info and continue
+  saveBasicInfoAndContinue: () => Promise<void>;
+
   // Form submission
   onSubmit: (data: ClassFormValues) => void;
 };
@@ -69,18 +94,161 @@ export const useClassForm = () => {
 interface ClassFormProviderProps {
   children: ReactNode;
   onSubmit: (data: ClassFormValues) => void;
+  initialValues?: Partial<ClassFormValues>;
+  initialCohorts?: any[];
+  initialTeamMembers?: any[];
+  enableStorageLoading?: boolean;
 }
 
-export const ClassFormProvider = ({ children, onSubmit }: ClassFormProviderProps) => {
+export const ClassFormProvider = ({
+  children,
+  onSubmit,
+  initialValues,
+  initialCohorts = [],
+  initialTeamMembers = [],
+  enableStorageLoading = true
+}: ClassFormProviderProps) => {
+  console.log("ClassFormProvider received initialCohorts:", initialCohorts);
+  console.log("ClassFormProvider received initialTeamMembers:", initialTeamMembers);
+
+  const navigate = useNavigate();
+  // Don't use useAuth directly here, as it might be called outside the AuthProvider
+  let userAuth = { user: null }; // Default empty user
+  try {
+    // Try to get auth context, but don't fail if not available
+    const authContext = useAuth();
+    userAuth = { ...userAuth, ...authContext };
+  } catch (error) {
+    console.warn("Auth context not available, using default values");
+  }
+
+  // Initialize state
+  const { classId: urlClassId } = useParams<{ classId?: string }>();
   const [activeTab, setActiveTab] = useState("basic");
-  const [cohorts, setCohorts] = useState<CohortData[]>([]);
-  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
+  const [cohorts, setCohorts] = useState<CohortData[]>(initialCohorts as CohortData[]);
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>(initialTeamMembers as TeamMember[]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [lessonFileUploads, setLessonFileUploads] = useState<Record<string, File[]>>({});
+  const [classId, setClassId] = useState<string | null>(urlClassId || null);
+
+  // New state for storage-related features
+  const [lastSaved, setLastSaved] = useState<number>(0);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [isLoadingFromStorage, setIsLoadingFromStorage] = useState(false);
+  const [draftExists, setDraftExists] = useState(false);
+
+  // Log the initial classId from URL
+  console.log("ClassFormProvider initial classId from URL:", urlClassId);
+
+  // We'll move this useEffect to after form initialization
+
+  console.log("ClassFormProvider initialValues:", initialValues);
+
+  // Create a comprehensive log of the initial values for debugging
+  const effectiveDefaultValues = initialValues ? {
+    ...initialValues
+  } : {
+    type: "academic",
+    title: "",
+    subject: "",
+    curriculum: "",
+    curriculumLevel: "",
+    gradeLevel: "",
+    ageRange: "",
+    description: "",
+    objectives: "",
+    assessmentMethods: "",
+    technicalRequirements: "",
+    materialsRequired: "",
+    commitmentRequired: "",
+    numberOfLessons: 1,
+    isPublic: true,
+    hasCohorts: false,
+    hasTeamTeaching: false,
+    lessonPlans: [],
+  };
+
+  console.log("Form will be initialized with these default values:", effectiveDefaultValues);
 
   const form = useForm<ClassFormValues>({
     resolver: zodResolver(classSchema),
-    defaultValues: {
+    defaultValues: effectiveDefaultValues,
+    mode: "onChange" // Enable onChange validation mode for better UX
+  });
+
+  // Save the current form state to local storage
+  const saveCurrentFormState = () => {
+    const formValues = form.getValues();
+    const teacherId = userAuth.user?.teacherId || null;
+
+    saveFormToStorage(
+      formValues,
+      cohorts,
+      teamMembers,
+      activeTab,
+      classId,
+      teacherId
+    );
+
+    setLastSaved(Date.now());
+    setHasUnsavedChanges(false);
+    setDraftExists(true);
+    console.log("Form state saved to local storage");
+  };
+
+  // Load saved form state from local storage
+  const loadFromStorage = () => {
+    setIsLoadingFromStorage(true);
+
+    try {
+      const {
+        formValues,
+        cohorts: storedCohorts,
+        teamMembers: storedTeamMembers,
+        activeTab: storedTab
+      } = getFormFromStorage();
+
+      const metadata = getFormMetadata();
+
+      if (formValues) {
+        form.reset(formValues);
+        setCohorts(storedCohorts);
+        setTeamMembers(storedTeamMembers);
+        setActiveTab(storedTab);
+        setLastSaved(metadata.lastSaved);
+        setClassId(metadata.classId);
+
+        console.log('Form loaded from local storage', {
+          formValues,
+          cohorts: storedCohorts,
+          teamMembers: storedTeamMembers,
+          activeTab: storedTab,
+          metadata
+        });
+      }
+    } catch (error) {
+      console.error('Error loading form from storage:', error);
+    } finally {
+      setIsLoadingFromStorage(false);
+    }
+  };
+
+  // Clear all stored form data
+  const clearStoredData = () => {
+    clearStoredForm();
+    setDraftExists(false);
+    setLastSaved(0);
+  };
+
+  // Load draft from storage
+  const loadDraft = () => {
+    loadFromStorage();
+  };
+
+  // Discard draft
+  const discardDraft = () => {
+    clearStoredData();
+    form.reset({
       type: "academic",
       title: "",
       subject: "",
@@ -88,7 +256,6 @@ export const ClassFormProvider = ({ children, onSubmit }: ClassFormProviderProps
       curriculumLevel: "",
       gradeLevel: "",
       ageRange: "",
-      summary: "",
       description: "",
       objectives: "",
       assessmentMethods: "",
@@ -100,11 +267,194 @@ export const ClassFormProvider = ({ children, onSubmit }: ClassFormProviderProps
       hasCohorts: false,
       hasTeamTeaching: false,
       lessonPlans: [],
-    },
-  });
+    });
+    setCohorts([]);
+    setTeamMembers([]);
+    setActiveTab("basic");
+  };
+
+  // Check if a draft exists on component mount
+  useEffect(() => {
+    const metadata = getFormMetadata();
+    const hasDraft = metadata.lastSaved > 0;
+    setDraftExists(hasDraft);
+
+    if (hasDraft) {
+      setLastSaved(metadata.lastSaved);
+    }
+  }, []);
+
+  // Handle initialization from props or storage
+  useEffect(() => {
+    // If we have initialValues from props, use those
+    if (initialValues) {
+      console.log("Initializing form with provided values:", initialValues);
+      form.reset(initialValues);
+      return;
+    }
+
+    // If we have a URL classId, prioritize API loading (handled elsewhere)
+    if (urlClassId) {
+      return;
+    }
+
+    // If enableStorageLoading is enabled and no initialValues, try to load from storage
+    if (enableStorageLoading && !initialValues && !urlClassId) {
+      const metadata = getFormMetadata();
+      const hasDraft = metadata.lastSaved > 0;
+
+      if (hasDraft) {
+        console.log("Loading form from local storage");
+        loadFromStorage();
+      }
+    }
+  }, [initialValues, urlClassId]);
+
+  // Track form changes and auto-save
+  useEffect(() => {
+    const subscription = form.watch(() => {
+      setHasUnsavedChanges(true);
+    });
+
+    return () => subscription.unsubscribe();
+  }, [form]);
+
+  // Auto-save when values change
+  useEffect(() => {
+    if (hasUnsavedChanges) {
+      const timeoutId = setTimeout(() => {
+        saveCurrentFormState();
+      }, 2000); // Auto-save after 2 seconds of inactivity
+
+      return () => clearTimeout(timeoutId);
+    }
+  }, [form.formState.isDirty, cohorts, teamMembers, hasUnsavedChanges]);
 
   const handleNavigateTab = (tab: string) => {
     setActiveTab(tab);
+  };
+
+  const saveBasicInfoAndContinue = async () => {
+    try {
+      // Validate basic info fields
+      await form.trigger(['title', 'subject', 'type', 'description', 'numberOfLessons']);
+
+      // Check if required fields are valid
+      const requiredFields = ['title', 'subject', 'type', 'numberOfLessons'];
+      const isValid = requiredFields.every(field => {
+        const fieldValue = form.getValues(field as keyof ClassFormValues);
+        return fieldValue && String(fieldValue).trim() !== "";
+      });
+
+      if (!isValid) {
+        // Show error or validation message
+        console.error("Please fill in all required fields");
+        return;
+      }
+
+      setIsSubmitting(true);
+
+      // Get the current form values
+      const formValues = form.getValues();
+
+      // Save current state to local storage before API call
+      saveCurrentFormState();
+
+      // Optimistically proceed to next tab before waiting for API
+      setActiveTab("lessons");
+
+      // Format data according to the backend DTO requirements
+      const formattedData = {
+        teacher: userAuth.user?.teacherId || "default_teacher_id", // Get teacherId from auth context
+        title: formValues.title,
+        type: formValues.type,
+        subject: formValues.subject,
+        curriculum: formValues.curriculum || undefined,
+        curriculumLevel: formValues.curriculumLevel || undefined,
+        gradeLevel: formValues.type === "academic" ? formValues.gradeLevel : undefined,
+        ageRange: formValues.type === "afterschool" ? formValues.ageRange : undefined,
+        description: formValues.description || undefined,
+        numberOfLessons: Number(formValues.numberOfLessons) || 1,
+        isPublic: formValues.isPublic,
+        enableMultipleCohorts: formValues.hasCohorts,
+        enableTeamTeaching: formValues.hasTeamTeaching,
+
+        // Format optional fields according to DTO
+        technicalRequirements: formValues.technicalRequirements ?
+          formValues.technicalRequirements.split('\n')
+            .filter(req => req.trim() !== '')
+            .map(req => ({ requirement: req.trim() })) :
+          undefined,
+
+        materials: formValues.materialsRequired ?
+          formValues.materialsRequired.split('\n')
+            .filter(mat => mat.trim() !== '')
+            .map(mat => ({ name: mat.trim() })) :
+          undefined,
+
+        commitment: formValues.commitmentRequired || undefined,
+
+        // Initialize arrays for data to be added in next steps
+        lessonPlans: [],
+        cohorts: [],
+        teachingTeam: []
+      };
+
+      // Generate a temporary client-side ID if creating a new class
+      if (!classId) {
+        const tempClassId = `temp_${Date.now()}`;
+        setClassId(tempClassId);
+
+        // Optimistically update URL - this will be corrected when actual ID returns
+        navigate(`/teacher-class-setup/${tempClassId}`, { replace: true });
+      }
+
+      try {
+        if (classId) {
+          // Update existing class
+          const { data, error } = await classService.update(classId, formattedData as any);
+
+          if (error) {
+            throw new Error(error.message || "Error updating class");
+          } else {
+            // Update localStorage with newest state including any server-generated data
+            saveCurrentFormState();
+          }
+        } else {
+          // Create new class - at this point we should have a tempClassId set in the state
+          const { data, error } = await classService.create(formattedData as any);
+
+          if (error) {
+            throw new Error(error.message || "Error creating class");
+          } else if (data) {
+            // Replace temp ID with real ID from server
+            const newClassId = data._id || data.id;
+            setClassId(newClassId);
+
+            // Update URL to include real class ID
+            navigate(`/teacher-class-setup/${newClassId}`, { replace: true });
+
+            // Update localStorage with the server-generated class ID
+            setTimeout(() => {
+              saveCurrentFormState();
+            }, 100);
+          }
+        }
+      } catch (apiError) {
+        console.error("API error:", apiError);
+
+        // Show error toast (using the contextual component methods if available)
+        // But don't navigate back - let the user continue editing in the next tab
+        // with the local changes they've made
+
+        // If really needed, you could implement a retry mechanism here
+      }
+    } catch (err) {
+      console.error("Failed to save class:", err);
+      // Even if there's a client-side error, don't block the user if possible
+    } finally {
+      setIsSubmitting(false);
+    }
   };
   
   const checkClassCompleteness = () => {
@@ -437,33 +787,130 @@ export const ClassFormProvider = ({ children, onSubmit }: ClassFormProviderProps
     setTeamMembers,
     lessonFileUploads,
     setLessonFileUploads,
-    
+    classId,
+    setClassId,
+    lastSaved,
+    hasUnsavedChanges,
+    isLoadingFromStorage,
+    draftExists,
+
     addCohort,
     removeCohort,
     updateCohort,
     updateRepeatSchedule,
     toggleDayOfWeek,
-    
+
     addLessonSchedule,
     removeLessonSchedule,
     updateLessonSchedule,
-    
+
     addTeamMember,
     removeTeamMember,
     updateTeamMember,
-    
+
     handleLessonFileChange,
     removeLessonFile,
     appendLessonPlan,
     removeLessonPlan,
     updateLessonPlan,
-    
+
     handleNavigateTab,
     calculateNumberOfLessons,
     calculateEndDate,
     checkClassCompleteness,
-    
-    onSubmit
+
+    // Storage methods
+    saveCurrentFormState,
+    loadFromStorage,
+    clearStoredData,
+    loadDraft,
+    discardDraft,
+
+    saveBasicInfoAndContinue,
+
+    // Wrap onSubmit to format data properly for backend
+    onSubmit: (data: ClassFormValues) => {
+      // Format data to match backend DTO requirements
+      const formattedData = {
+        teacher: userAuth.user?.teacherId || "default_teacher_id", // Get teacherId from auth context
+        title: data.title,
+        type: data.type,
+        subject: data.subject,
+        curriculum: data.curriculum || undefined,
+        curriculumLevel: data.curriculumLevel || undefined,
+        gradeLevel: data.type === "academic" ? data.gradeLevel : undefined,
+        ageRange: data.type === "afterschool" ? data.ageRange : undefined,
+        description: data.description || undefined,
+        numberOfLessons: Number(data.numberOfLessons) || 1,
+        isPublic: data.isPublic,
+        enableMultipleCohorts: data.hasCohorts,
+        enableTeamTeaching: data.hasTeamTeaching,
+
+        // Format optional fields
+        technicalRequirements: data.technicalRequirements ?
+          data.technicalRequirements.split('\n')
+            .filter(req => req.trim() !== '')
+            .map(req => ({ requirement: req.trim() })) :
+          undefined,
+
+        materials: data.materialsRequired ?
+          data.materialsRequired.split('\n')
+            .filter(mat => mat.trim() !== '')
+            .map(mat => ({ name: mat.trim() })) :
+          undefined,
+
+        commitment: data.commitmentRequired || undefined,
+
+        // Format lesson plans according to the LessonPlanDto
+        lessonPlans: data.lessonPlans
+          .filter(lesson => lesson.title && lesson.description)
+          .map(lesson => ({
+            title: lesson.title || "",
+            description: lesson.description || "",
+            duration: Number(lesson.duration) || 60,
+            resourceFiles: lesson.resources ?
+              lesson.resources.split(',').map(r => r.trim()) :
+              undefined
+          })),
+
+        // Format cohorts according to the CohortDto
+        cohorts: cohorts.map(cohort => {
+          const { id, hasFlexibleSchedule, lessonSchedules, ...cohortData } = cohort;
+
+          // Convert days of week format if needed
+          const daysOfWeek = cohort.repeatSchedule.daysOfWeek.map(day =>
+            day.toUpperCase()
+          );
+
+          return {
+            name: cohortData.name,
+            isActive: cohortData.isActive,
+            startDate: cohortData.startDate,
+            endDate: cohortData.endDate,
+            startTime: cohortData.startTime,
+            endTime: cohortData.endTime,
+            repeatPattern: cohort.repeatSchedule.pattern.toUpperCase(),
+            daysOfWeek,
+            customLessonTimes: hasFlexibleSchedule,
+            minimumStudents: cohortData.minStudents,
+            maximumStudents: cohortData.maxStudents,
+            enrollmentDeadline: cohortData.enrollmentDeadline,
+            price: Number(cohortData.price) || 0,
+            discount: Number(cohortData.discount) || 0
+          };
+        }),
+
+        // Format teaching team if enabled
+        teachingTeam: data.hasTeamTeaching ?
+          teamMembers
+            .filter(member => member.email)
+            .map(member => member.id) :
+          undefined,
+      };
+
+      // Call the original onSubmit with formatted data
+      onSubmit(formattedData as any);
+    }
   };
 
   return (
