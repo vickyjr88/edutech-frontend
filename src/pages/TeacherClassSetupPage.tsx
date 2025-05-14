@@ -347,16 +347,25 @@ const TeacherClassSetupPage = () => {
   const handleSubmit = (data: ClassFormValues) => {
     // Here you would normally make an API call to save the class data
     // This is simulated with a timeout
-    
-    setTimeout(() => {
-      setSubmittedClass(data);
-      setIsSubmitted(true);
-      
-      toast({
-        title: "Class created successfully",
-        description: "Your new class has been created and is ready for students.",
-      });
-    }, 1000);
+    //log saveclass
+    console.log("Saving class data:", data);
+    // const { title, type, subject, curriculum, description, isPublic, hasCohorts, hasTeamTeaching, gradeLevel, ageRange, curriculumLevel, numberOfLessons, technicalRequirements, materialsRequired, lessonPlans, commitmentRequired, methodology, strategy, objectives, assessmentMethods, cohorts, teachingTeam } = data;
+    // const classData = {
+    //   title,
+    //   type,
+    //   subject,
+    //   curriculum,
+    //   description,
+    //   isPublic,
+    // setTimeout(() => {
+    //   setSubmittedClass(data);
+    //   setIsSubmitted(true);
+    //
+    //   toast({
+    //     title: "Class created successfully",
+    //     description: "Your new class has been created and is ready for students.",
+    //   });
+    // }, 1000);
   };
 
   const handleBackToDashboard = () => {

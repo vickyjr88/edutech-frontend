@@ -183,6 +183,7 @@ const EnhancedClassSetupContent = ({
     appendLessonPlan,
     removeLessonPlan,
     updateLessonPlan,
+    saveLessonPlans,
     addCohort,
     removeCohort,
     updateCohort,
@@ -270,6 +271,7 @@ const EnhancedClassSetupContent = ({
           appendLessonPlan={appendLessonPlan}
           removeLessonPlan={removeLessonPlan}
           updateLessonPlan={updateLessonPlan}
+          saveLessonPlans={saveLessonPlans}
         />
       ),
       isRequired: true,

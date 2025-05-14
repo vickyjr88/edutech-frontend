@@ -53,6 +53,7 @@ interface ClassFormContextType {
   appendLessonPlan: () => void;
   removeLessonPlan: (id: string) => void;
   updateLessonPlan: (id: string, field: string, value: string) => void;
+  saveLessonPlans: () => Promise<boolean>;
 
   handleNavigateTab: (tab: string) => void;
   calculateNumberOfLessons: (startDate: Date | null, endDate: Date | null, repeatSchedule: RepeatSchedule) => number;
@@ -765,6 +766,63 @@ export const ClassFormProvider = ({
     }));
   };
 
+  // Save lesson plans to the API
+  const saveLessonPlans = async () => {
+    try {
+      // Only proceed if we have a class ID and there are lesson plans
+      if (!classId) {
+        console.error("Cannot save lesson plans without a class ID");
+        return false;
+      }
+
+      const formValues = form.getValues();
+      if (!formValues.lessonPlans || formValues.lessonPlans.length === 0) {
+        return false;
+      }
+
+      setIsSubmitting(true);
+
+      // Format lesson plans according to the backend DTO requirements
+      const formattedData = {
+        lessonPlans: formValues.lessonPlans
+          .filter(lesson => lesson.title && lesson.description)
+          .map(lesson => ({
+            title: lesson.title || "",
+            description: lesson.description || "",
+            duration: Number(lesson.duration) || 60,
+            resourceFiles: lesson.resources ?
+              lesson.resources.split(',').map(r => r.trim()) :
+              undefined
+          }))
+      };
+
+      // Update the class with the lesson plans
+      const { data, error } = await classService.update(classId, formattedData as any);
+
+      if (error) {
+        console.error("Error saving lesson plans:", error);
+        return false;
+      } else {
+        // Update localStorage after successful save
+        saveCurrentFormState();
+
+        // Return true but also schedule a page reload after a brief delay
+        // This allows the UI to update and show success feedback first
+        setTimeout(() => {
+          // Reload the entire page to get fresh data from the API
+          window.location.reload();
+        }, 500);
+
+        return true;
+      }
+    } catch (err) {
+      console.error("Failed to save lesson plans:", err);
+      return false;
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const contextValue: ClassFormContextType = {
     form,
     activeTab,
@@ -803,6 +861,7 @@ export const ClassFormProvider = ({
     appendLessonPlan,
     removeLessonPlan,
     updateLessonPlan,
+    saveLessonPlans,
 
     handleNavigateTab,
     calculateNumberOfLessons,
