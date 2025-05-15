@@ -57,7 +57,7 @@ const SignUp = () => {
       }else if (userRole === "parent") {
         navigate("/parents-dashboard");
       }else if (userRole === "student") {
-        navigate("/students-dashboard");
+        navigate("/student-dashboard");
       } else {
         navigate("/dashboard");
       }
