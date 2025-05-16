@@ -101,9 +101,18 @@ const CohortsTab = ({
   
   // Handle cohort creation
   const handleCreateCohort = async (newCohort: CohortData) => {
-    // Add the cohort directly
-    const newId = Date.now().toString();
-    const cohortNumber = cohorts.length + 1;
+    console.log("Creating new cohort with data:", newCohort);
+    
+    // First check if the cohort already exists in the array (to avoid duplicates)
+    if (!cohorts.some(c => c.id === newCohort.id)) {
+      // Add the new cohort to the cohorts array first
+      // This ensures the cohort exists when subsequent update operations run
+      addCohort();
+      console.log("Added new cohort to state, current cohorts:", cohorts);
+    }
+    
+    // Now perform all the individual updates
+    const cohortNumber = cohorts.length;
     const classTitle = form.getValues().title || "Class";
     
     updateCohort(newCohort.id, "name", newCohort.name || (hasCohorts ? `${classTitle} Cohort ${cohortNumber}` : classTitle));
@@ -130,14 +139,27 @@ const CohortsTab = ({
       }
     });
     
-    // Save class details to API
-    await saveClassDetailsToAPI();
+    console.log("Cohort data updated, current cohorts:", cohorts);
+    
+    // Save class details to API after a short delay to ensure state updates are complete
+    setTimeout(async () => {
+      await saveClassDetailsToAPI();
+    }, 500);
   };
   
   // Handle cohort update
   const handleUpdateCohort = async (updatedCohort: CohortData) => {
     if (!updatedCohort.id) return;
     
+    console.log("Updating cohort with data:", updatedCohort);
+    
+    // Check if the cohort exists in the array
+    if (!cohorts.some(c => c.id === updatedCohort.id)) {
+      console.error("Cannot update cohort that doesn't exist in state:", updatedCohort.id);
+      return;
+    }
+    
+    // Update all fields
     updateCohort(updatedCohort.id, "name", updatedCohort.name);
     updateCohort(updatedCohort.id, "startDate", updatedCohort.startDate);
     updateCohort(updatedCohort.id, "endDate", updatedCohort.endDate);
@@ -176,8 +198,12 @@ const CohortsTab = ({
     // Clean up by clearing the edit ID
     setEditCohortId(null);
     
-    // Save class details to API
-    await saveClassDetailsToAPI();
+    console.log("Cohort data updated, current cohorts after update:", cohorts);
+    
+    // Save class details to API after a short delay to ensure state updates are complete
+    setTimeout(async () => {
+      await saveClassDetailsToAPI();
+    }, 500);
   };
   
   // Save class details to API
@@ -203,39 +229,60 @@ const CohortsTab = ({
         return; // Exit gracefully without error - the data will be saved when class is created
       }
       
+      // DEBUG: Check if cohorts array is available
+      console.log("Current cohorts before saving:", cohorts);
+      
+      if (!cohorts || cohorts.length === 0) {
+        console.error("No cohorts available to save");
+        setSavingError("No cohorts to save. Please create at least one cohort.");
+        return;
+      }
+      
       setIsSaving(true);
       setSavingError(null);
       
       // Format the cohort data for the API
-      const formattedCohorts = cohorts.map(cohort => {
-        // Convert days of week format if needed
-        const daysOfWeek = cohort.repeatSchedule.daysOfWeek.map(day => day.toUpperCase());
+      // Use the component state directly instead of any potentially stale values
+      const formattedCohorts = [...cohorts].map(cohort => {
+        // Ensure we have valid values for all required fields
+        if (!cohort || !cohort.repeatSchedule) {
+          console.error("Invalid cohort data:", cohort);
+          return null;
+        }
         
+        // Convert days of week format if needed
+        const daysOfWeek = (cohort.repeatSchedule.daysOfWeek || []).map(day => day.toUpperCase());
+        
+        // Create a formatted cohort object with all necessary fields
         return {
           id: cohort.id,
-          name: cohort.name,
-          isActive: cohort.isActive,
+          name: cohort.name || `Cohort ${cohort.id}`,
+          isActive: typeof cohort.isActive === 'boolean' ? cohort.isActive : true,
           startDate: cohort.startDate,
           endDate: cohort.endDate,
-          startTime: cohort.startTime,
-          endTime: cohort.endTime,
-          repeatPattern: cohort.repeatSchedule.pattern.toUpperCase(),
-          repeatEvery: cohort.repeatSchedule.repeatEvery,
+          startTime: cohort.startTime || "",
+          endTime: cohort.endTime || "",
+          repeatPattern: (cohort.repeatSchedule.pattern || "weekly").toUpperCase(),
+          repeatEvery: cohort.repeatSchedule.repeatEvery || 1,
           daysOfWeek,
-          customLessonTimes: cohort.hasFlexibleSchedule,
-          minimumStudents: cohort.minStudents,
-          maximumStudents: cohort.maxStudents,
+          customLessonTimes: !!cohort.hasFlexibleSchedule,
+          minimumStudents: cohort.minStudents || 1,
+          maximumStudents: cohort.maxStudents || 20,
           enrollmentDeadline: cohort.enrollmentDeadline,
           price: parseFloat(cohort.price) || 0,
           discount: parseFloat(cohort.discount) || 0
         };
-      });
+      }).filter(cohort => cohort !== null); // Remove any null entries
+      
+      console.log("Formatted cohorts for API:", formattedCohorts);
       
       // Prepare the data payload
       const classData = {
         cohorts: formattedCohorts,
         enableMultipleCohorts: hasCohorts
       };
+      
+      console.log("Sending data to API:", JSON.stringify(classData));
       
       // Make the API call using the class service
       const { data, error } = await classService.update(classId, classData as any);
