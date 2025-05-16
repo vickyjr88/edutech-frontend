@@ -90,7 +90,7 @@ const calculateStepCompletion = (form: any, stepId: string, checkClassCompletene
         lesson.title && lesson.description
       ).length;
       
-      return Math.min(100, completeLessons >= 3 ? 100 : (completeLessons / 3) * 100);
+      return Math.min(100, completeLessons >= 1 ? 100 : 0);
       
     case "cohorts":
       if (checkClassCompleteness) {

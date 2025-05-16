@@ -470,9 +470,9 @@ export const ClassFormProvider = ({
       lesson.title && lesson.description
     );
     
-    const hasMinLessonPlans = futureLessonPlans.length >= 3;
+    const hasMinLessonPlans = futureLessonPlans.length >= 1;
     if (!hasMinLessonPlans) {
-      missingItems.push(`At least 3 lesson plans (currently has ${futureLessonPlans.length})`);
+      missingItems.push(`At least 1 lesson plan (currently has ${futureLessonPlans.length})`);
     }
     
     const hasMinCohorts = cohorts.length >= (formValues.hasCohorts ? 1 : 1);

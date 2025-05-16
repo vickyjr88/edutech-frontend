@@ -1,13 +1,29 @@
-import { Bell, MessageSquare, Search, Calendar, Video, HelpCircle } from "lucide-react";
+import { Bell, MessageSquare, Search, Calendar, Video, HelpCircle, User, LogOut, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { useState } from "react";
+import { toast } from "@/components/ui/use-toast";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface ParentDashboardHeaderProps {
   parentName: string;
 }
 
 const ParentDashboardHeader = ({ parentName }: ParentDashboardHeaderProps) => {
+  const navigate = useNavigate();
+  const { signOut } = useAuth();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  
   const initials = parentName
     .split(" ")
     .map((n) => n[0])
@@ -15,6 +31,27 @@ const ParentDashboardHeader = ({ parentName }: ParentDashboardHeaderProps) => {
 
   // Check if there are any live classes happening now
   const liveClassesCount = 1; // Mock data - in a real app this would be calculated
+
+  const handleLogout = async () => {
+    try {
+      setIsLoggingOut(true);
+      await signOut();
+      navigate("/login");
+      toast({
+        title: "Logged out successfully",
+        description: "You have been logged out of your account.",
+      });
+    } catch (error) {
+      console.error("Logout error:", error);
+      toast({
+        title: "Logout failed",
+        description: "There was an issue logging you out. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoggingOut(false);
+    }
+  };
 
   return (
     <header className="bg-white border-b border-gray-200 py-3 px-4 sm:px-6 flex items-center justify-between sticky top-0 z-10 shadow-sm">
@@ -70,14 +107,39 @@ const ParentDashboardHeader = ({ parentName }: ParentDashboardHeaderProps) => {
         <Button variant="ghost" size="icon" className="text-blue-600">
           <HelpCircle className="h-5 w-5" />
         </Button>
-        <div className="flex items-center gap-3 ml-2">
-          <span className="hidden sm:inline text-sm font-medium">{parentName}</span>
-          <Avatar className="h-9 w-9 border-2 border-blue-100">
-            <AvatarFallback className="bg-kidato-blue text-white">
-              {initials}
-            </AvatarFallback>
-          </Avatar>
-        </div>
+        
+        {/* User Profile Dropdown */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <div className="flex items-center gap-3 ml-2 cursor-pointer">
+              <span className="hidden sm:inline text-sm font-medium">{parentName}</span>
+              <Avatar className="h-9 w-9 border-2 border-blue-100">
+                <AvatarFallback className="bg-kidato-blue text-white">
+                  {initials}
+                </AvatarFallback>
+              </Avatar>
+            </div>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuLabel>My Account</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem className="cursor-pointer">
+              <User className="mr-2 h-4 w-4" /> Profile
+            </DropdownMenuItem>
+            <DropdownMenuItem className="cursor-pointer">
+              <Settings className="mr-2 h-4 w-4" /> Settings
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem 
+              className="cursor-pointer text-red-600 hover:text-red-700 hover:bg-red-50" 
+              onClick={handleLogout}
+              disabled={isLoggingOut}
+            >
+              <LogOut className="mr-2 h-4 w-4" />
+              {isLoggingOut ? "Logging out..." : "Log out"}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </header>
   );

@@ -48,9 +48,9 @@ const LessonPlansTab = ({
 
         <Alert>
           <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Minimum lesson plans required</AlertTitle>
+          <AlertTitle>Lesson plans required</AlertTitle>
           <AlertDescription>
-            You need to create at least 3 lesson plans before you can publish your class.
+            You need to create at least 1 lesson plan before you can publish your class.
           </AlertDescription>
         </Alert>
 
