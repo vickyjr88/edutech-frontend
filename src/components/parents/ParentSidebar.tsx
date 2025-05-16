@@ -1,15 +1,21 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { 
   Home, BookOpen, Users, MessageSquare, FileText, 
   CreditCard, GraduationCap, LogOut,
   Calendar
 } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { useState } from "react";
+import { toast } from "@/components/ui/use-toast";
 
 const ParentSidebar = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { signOut } = useAuth();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  
   const currentPath = location.pathname;
-
   const isActive = (path: string) => currentPath === path;
 
   const navItems = [
@@ -22,6 +28,28 @@ const ParentSidebar = () => {
     { name: "Progress", icon: <GraduationCap className="h-5 w-5" />, href: "/parents-progress" },
     { name: "Billing", icon: <CreditCard className="h-5 w-5" />, href: "/parents-billing" },
   ];
+
+  const handleLogout = async () => {
+    try {
+      setIsLoggingOut(true);
+      await signOut();
+      // Navigate to login page
+      navigate("/login");
+      toast({
+        title: "Logged out successfully",
+        description: "You have been logged out of your account.",
+      });
+    } catch (error) {
+      console.error("Logout error:", error);
+      toast({
+        title: "Logout failed",
+        description: "There was an issue logging you out. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoggingOut(false);
+    }
+  };
 
   return (
     <div className="h-screen min-h-full flex flex-col bg-white border-r border-blue-100 shadow-md">
@@ -56,9 +84,14 @@ const ParentSidebar = () => {
 
       {/* Sign Out Button */}
       <div className="p-4 border-t border-blue-100 mt-auto">
-        <Button variant="ghost" className="w-full justify-start px-3 py-2 text-gray-700 hover:bg-red-50 hover:text-red-500 transition-colors">
+        <Button 
+          variant="ghost" 
+          className="w-full justify-start px-3 py-2 text-gray-700 hover:bg-red-50 hover:text-red-500 transition-colors"
+          onClick={handleLogout}
+          disabled={isLoggingOut}
+        >
           <LogOut className="mr-2 h-4 w-4" />
-          Sign Out
+          {isLoggingOut ? "Logging out..." : "Sign Out"}
         </Button>
       </div>
     </div>

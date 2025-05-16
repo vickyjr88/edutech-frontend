@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
@@ -51,7 +50,7 @@ const Login = () => {
         } else if (userRole === "student") {
           navigate("/student-dashboard");
         } else if (userRole === "parent") {
-          navigate("/parent-dashboard");
+          navigate("/parents-dashboard");
         } else {
           navigate(from);
         }
@@ -102,6 +101,9 @@ const Login = () => {
         }
       } else if (userRole === "student") {
         navigate("/student-dashboard");
+      } else if (userRole === "parent") {
+        // Redirect parents to the parents dashboard
+        navigate("/parents-dashboard");
       } else {
         navigate(from);
       }
