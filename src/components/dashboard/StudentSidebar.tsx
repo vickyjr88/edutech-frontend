@@ -1,13 +1,16 @@
 
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { 
   Home, Book, MessageSquare, User, LogOut, 
   Sparkles, Award, Users, Calendar, BellDot
 } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 const StudentSidebar = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { signOut } = useAuth();
   const currentPath = location.pathname;
 
   // Helper function to determine if a link is active
@@ -142,12 +145,17 @@ const StudentSidebar = () => {
       </nav>
       
       <div className="p-4 border-t border-blue-100">
-        <Link to="/">
-          <Button variant="ghost" className="w-full flex items-center justify-center rounded-xl hover:bg-red-50 hover:text-red-500 transition-colors">
-            <LogOut className="mr-2 h-4 w-4" />
-            Sign Out
-          </Button>
-        </Link>
+        <Button 
+          variant="ghost" 
+          className="w-full flex items-center justify-center rounded-xl hover:bg-red-50 hover:text-red-500 transition-colors"
+          onClick={async () => {
+            await signOut();
+            navigate("/");
+          }}
+        >
+          <LogOut className="mr-2 h-4 w-4" />
+          Sign Out
+        </Button>
       </div>
     </aside>
   );

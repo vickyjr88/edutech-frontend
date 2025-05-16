@@ -1,6 +1,6 @@
 
-import { Link } from "react-router-dom";
-import { Bell, Sparkles, Star, User } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { Bell, Sparkles, Star, User, LogOut, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/AuthContext";
@@ -18,7 +18,8 @@ interface StudentDashboardHeaderProps {
 }
 
 export default function StudentDashboardHeader({ userName }: StudentDashboardHeaderProps) {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
   
   // Get the signed profile image if available
   const profileImage = user?.signedProfileImage || user?.profileImage || user?.profilePicture;
@@ -63,18 +64,49 @@ export default function StudentDashboardHeader({ userName }: StudentDashboardHea
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          <div className="flex items-center">
-            <span className="mr-2 text-sm font-medium text-gray-700 hidden md:inline">Hi, {userName}! 👋</span>
-            <Avatar className="h-9 w-9 shadow-md">
-              {profileImage ? (
-                <AvatarImage src={profileImage} alt={userName} />
-              ) : (
-                <AvatarFallback className="bg-gradient-to-br from-kidato-blue to-purple-500 text-white font-bold">
-                  {userName.charAt(0)}
-                </AvatarFallback>
-              )}
-            </Avatar>
-          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <div className="flex items-center cursor-pointer">
+                <span className="mr-2 text-sm font-medium text-gray-700 hidden md:inline">Hi, {userName}! 👋</span>
+                <Avatar className="h-9 w-9 shadow-md">
+                  {profileImage ? (
+                    <AvatarImage src={profileImage} alt={userName} />
+                  ) : (
+                    <AvatarFallback className="bg-gradient-to-br from-kidato-blue to-purple-500 text-white font-bold">
+                      {userName.charAt(0)}
+                    </AvatarFallback>
+                  )}
+                </Avatar>
+              </div>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56 rounded-xl overflow-hidden border-2 border-blue-100">
+              <DropdownMenuLabel className="bg-blue-50 font-bold">My Account</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem asChild>
+                <Link to="/profile" className="cursor-pointer hover:bg-blue-50 focus:bg-blue-50 flex items-center">
+                  <User className="mr-2 h-4 w-4" />
+                  <span>Profile</span>
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link to="/settings" className="cursor-pointer hover:bg-blue-50 focus:bg-blue-50 flex items-center">
+                  <Settings className="mr-2 h-4 w-4" />
+                  <span>Settings</span>
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem 
+                className="cursor-pointer hover:bg-red-50 hover:text-red-500 focus:bg-red-50 focus:text-red-500 flex items-center"
+                onClick={async () => {
+                  await signOut();
+                  navigate("/");
+                }}
+              >
+                <LogOut className="mr-2 h-4 w-4" />
+                <span>Sign Out</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
     </header>
