@@ -2,7 +2,7 @@ import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { 
   Home, BookOpen, Users, MessageSquare, FileText, 
-  Settings, CreditCard, GraduationCap, Bell, LogOut,
+  CreditCard, GraduationCap, LogOut,
   Calendar
 } from "lucide-react";
 
@@ -24,7 +24,8 @@ const ParentSidebar = () => {
   ];
 
   return (
-    <aside className="hidden md:flex flex-col w-64 bg-white border-r border-blue-100 shadow-md rounded-tr-xl rounded-br-xl mr-2 overflow-hidden fixed top-0 bottom-0 left-0 h-screen">
+    <div className="h-screen min-h-full flex flex-col bg-white border-r border-blue-100 shadow-md">
+      {/* Logo */}
       <div className="p-6">
         <Link to="/" className="flex items-center">
           <img 
@@ -35,6 +36,7 @@ const ParentSidebar = () => {
         </Link>
       </div>
       
+      {/* Navigation Items */}
       <nav className="flex-1 px-4 py-2 space-y-1 overflow-y-auto">
         {navItems.map((item) => (
           <Link
@@ -52,13 +54,14 @@ const ParentSidebar = () => {
         ))}
       </nav>
 
-      <div className="p-4 border-t border-blue-100">
+      {/* Sign Out Button */}
+      <div className="p-4 border-t border-blue-100 mt-auto">
         <Button variant="ghost" className="w-full justify-start px-3 py-2 text-gray-700 hover:bg-red-50 hover:text-red-500 transition-colors">
           <LogOut className="mr-2 h-4 w-4" />
           Sign Out
         </Button>
       </div>
-    </aside>
+    </div>
   );
 };
 
