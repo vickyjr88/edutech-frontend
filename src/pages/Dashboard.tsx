@@ -43,10 +43,10 @@ const Dashboard = () => {
     <div className="flex min-h-screen bg-gradient-to-b from-blue-50 to-white">
       <StudentSidebar />
 
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col overflow-y-auto">
         <StudentDashboardHeader userName={userName} />
 
-        <main className="p-4 sm:p-6 flex-1 overflow-y-auto">
+        <main className="p-4 sm:p-6 flex-1">
           <div className="max-w-7xl mx-auto">
             <StudentStatCards />
             

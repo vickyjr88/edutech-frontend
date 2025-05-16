@@ -25,7 +25,7 @@ export default function StudentDashboardHeader({ userName }: StudentDashboardHea
   const profileImage = user?.signedProfileImage || user?.profileImage || user?.profilePicture;
   
   return (
-    <header className="bg-white shadow-sm rounded-b-xl">
+    <header className="bg-white shadow-sm rounded-b-xl sticky top-0 z-10">
       <div className="px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
         <div className="flex items-center">
           <Star className="h-6 w-6 text-yellow-400 mr-2" />
