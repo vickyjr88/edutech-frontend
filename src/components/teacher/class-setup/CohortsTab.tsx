@@ -99,114 +99,431 @@ const CohortsTab = ({
   const [isSaving, setIsSaving] = useState(false);
   const [savingError, setSavingError] = useState<string | null>(null);
   
-  // Handle cohort creation
+  // Handle cohort creation - new approach: send to API first, then update local state
   const handleCreateCohort = async (newCohort: CohortData) => {
     console.log("Creating new cohort with data:", newCohort);
     
-    // First check if the cohort already exists in the array (to avoid duplicates)
-    if (!cohorts.some(c => c.id === newCohort.id)) {
-      // Add the new cohort to the cohorts array first
-      // This ensures the cohort exists when subsequent update operations run
-      addCohort();
-      console.log("Added new cohort to state, current cohorts:", cohorts);
+    try {
+      // Get class ID
+      let classId = form.getValues("id");
+      
+      // If no class ID in form, try to extract it from URL
+      if (!classId && window.location.pathname.includes('/teacher-class-setup/')) {
+        const pathSegments = window.location.pathname.split('/');
+        const potentialClassId = pathSegments[pathSegments.length - 1];
+        if (potentialClassId && potentialClassId !== 'teacher-class-setup') {
+          classId = potentialClassId;
+          console.log("Using class ID from URL:", classId);
+        }
+      }
+      
+      // If still no class ID, we can't save cohort data yet
+      if (!classId) {
+        console.error("Cannot create cohort: No class ID available");
+        setSavingError("Cannot create cohort: No class ID available. Please create the class first.");
+        return;
+      }
+      
+      // Set loading state
+      setIsSaving(true);
+      setSavingError(null);
+      
+      // 1. Format the new cohort for API according to CohortDto format
+      // Map our pattern values to backend RepeatPattern enum values
+      const getRepeatPatternValue = (pattern: string) => {
+        switch (pattern) {
+          case "weekly":
+            return "Weekly";
+          case "twice-weekly":
+            return "Twice Weekly";
+          case "custom":
+            return "Custom Schedule";
+          default:
+            return "Weekly";
+        }
+      };
+      
+      const formattedNewCohort = {
+        id: newCohort.id,
+        name: newCohort.name || `Cohort ${Date.now()}`,
+        isActive: typeof newCohort.isActive === 'boolean' ? newCohort.isActive : true,
+        startDate: newCohort.startDate,
+        endDate: newCohort.endDate,
+        startTime: newCohort.startTime || "",
+        endTime: newCohort.endTime || "",
+        repeatEvery: newCohort.repeatSchedule.repeatEvery || 1,
+        repeatPattern: getRepeatPatternValue(newCohort.repeatSchedule.pattern || "weekly"),
+        daysOfWeek: (newCohort.repeatSchedule.daysOfWeek || []).map(day => day.toUpperCase()),
+        customLessonTimes: !!newCohort.hasFlexibleSchedule,
+        minimumStudents: newCohort.minStudents || 1,
+        maximumStudents: newCohort.maxStudents || 20,
+        enrollmentDeadline: newCohort.enrollmentDeadline,
+        price: parseFloat(newCohort.price) || 0,
+        discount: parseFloat(newCohort.discount) || 0
+      };
+      
+      // 2. Combine with existing cohorts
+      const formattedCurrentCohorts = cohorts.map(cohort => {
+        if (!cohort || !cohort.repeatSchedule) {
+          console.error("Invalid cohort data:", cohort);
+          return null;
+        }
+        
+        return {
+          id: cohort.id,
+          name: cohort.name || `Cohort ${cohort.id}`,
+          isActive: typeof cohort.isActive === 'boolean' ? cohort.isActive : true,
+          startDate: cohort.startDate,
+          endDate: cohort.endDate,
+          startTime: cohort.startTime || "",
+          endTime: cohort.endTime || "",
+          repeatEvery: cohort.repeatSchedule.repeatEvery || 1,
+          repeatPattern: getRepeatPatternValue(cohort.repeatSchedule.pattern || "weekly"),
+          daysOfWeek: (cohort.repeatSchedule.daysOfWeek || []).map(day => day.toUpperCase()),
+          customLessonTimes: !!cohort.hasFlexibleSchedule,
+          minimumStudents: cohort.minStudents || 1,
+          maximumStudents: cohort.maxStudents || 20,
+          enrollmentDeadline: cohort.enrollmentDeadline,
+          price: parseFloat(cohort.price) || 0,
+          discount: parseFloat(cohort.discount) || 0
+        };
+      }).filter(cohort => cohort !== null);
+      
+      // 3. Create combined cohorts array with the new cohort
+      const allCohorts = [...formattedCurrentCohorts, formattedNewCohort];
+      
+      console.log("Sending cohorts to API:", allCohorts);
+      
+      // 4. Send the complete cohorts array to the API
+      const classData = {
+        cohorts: allCohorts,
+        enableMultipleCohorts: hasCohorts
+      };
+      
+      // 5. Update the class via API
+      const { data, error } = await classService.update(classId, classData as any);
+      
+      if (error) {
+        console.error("Error creating cohort:", error);
+        setSavingError(`Failed to create cohort: ${error.message || "Unknown error"}`);
+        setIsSaving(false);
+        return;
+      }
+      
+      console.log("Cohort created successfully:", data);
+      
+      // 6. Fetch the updated class data to refresh local state
+      const { data: refreshedClassData, error: refreshError } = await classService.getById(classId);
+      
+      if (refreshError) {
+        console.error("Error refreshing class data:", refreshError);
+        setSavingError("Cohort created, but failed to refresh class data. Please reload the page.");
+        setIsSaving(false);
+        return;
+      }
+      
+      // 7. Update local state with the refreshed data
+      if (refreshedClassData && refreshedClassData.cohorts) {
+        // Convert the API cohort format back to our internal format
+        const refreshedCohorts = refreshedClassData.cohorts.map((apiCohort: any) => {
+          return {
+            id: apiCohort.id,
+            name: apiCohort.name,
+            isActive: apiCohort.isActive,
+            startDate: apiCohort.startDate ? new Date(apiCohort.startDate) : null,
+            endDate: apiCohort.endDate ? new Date(apiCohort.endDate) : null,
+            startTime: apiCohort.startTime,
+            endTime: apiCohort.endTime,
+            numberOfLessons: refreshedClassData.numberOfLessons || 1,
+            price: apiCohort.price?.toString() || "",
+            discount: apiCohort.discount?.toString() || "0",
+            minStudents: apiCohort.minimumStudents,
+            maxStudents: apiCohort.maximumStudents,
+            enrollmentDeadline: apiCohort.enrollmentDeadline ? new Date(apiCohort.enrollmentDeadline) : null,
+            hasFlexibleSchedule: apiCohort.customLessonTimes,
+            repeatSchedule: {
+              pattern: getLocalPatternValue(apiCohort.repeatPattern) || "weekly",
+              repeatEvery: apiCohort.repeatEvery || 1,
+              daysOfWeek: apiCohort.daysOfWeek?.map((day: string) => day.toLowerCase()) || []
+            },
+            lessonSchedules: []
+          };
+        });
+        
+        // Update form values with any other refreshed data as needed
+        form.setValue("enableMultipleCohorts", refreshedClassData.enableMultipleCohorts);
+        form.setValue("hasCohorts", refreshedClassData.enableMultipleCohorts);
+        
+        // Replace all cohorts with the refreshed data
+        // Since we don't have a setCohorts function, we need to handle this differently
+        // First remove all existing cohorts
+        [...cohorts].forEach(cohort => {
+          removeCohort(cohort.id);
+        });
+        
+        // Then add each refreshed cohort one by one
+        refreshedCohorts.forEach((cohort: CohortData) => {
+          addCohort();
+          
+          // Get the ID of the newly added cohort
+          const newCohortId = cohorts[cohorts.length - 1]?.id;
+          if (newCohortId) {
+            updateBasicCohortProperties(newCohortId, cohort);
+          }
+        });
+      }
+      
+      // Reset loading state
+      setIsSaving(false);
+    } catch (error) {
+      console.error("Error creating cohort:", error);
+      setSavingError(`An error occurred while creating the cohort: ${error.message || "Unknown error"}`);
+      setIsSaving(false);
     }
-    
-    // Now perform all the individual updates
+  };
+  
+  // Helper function to update all cohort properties using the available props
+  const updateBasicCohortProperties = (cohortId: string, sourceCohort: CohortData) => {
     const cohortNumber = cohorts.length;
     const classTitle = form.getValues().title || "Class";
     
-    updateCohort(newCohort.id, "name", newCohort.name || (hasCohorts ? `${classTitle} Cohort ${cohortNumber}` : classTitle));
-    updateCohort(newCohort.id, "startDate", newCohort.startDate);
-    updateCohort(newCohort.id, "endDate", newCohort.endDate);
-    updateCohort(newCohort.id, "startTime", newCohort.startTime);
-    updateCohort(newCohort.id, "endTime", newCohort.endTime);
-    updateCohort(newCohort.id, "price", newCohort.price);
-    updateCohort(newCohort.id, "discount", newCohort.discount);
-    updateCohort(newCohort.id, "isActive", newCohort.isActive);
-    updateCohort(newCohort.id, "minStudents", newCohort.minStudents);
-    updateCohort(newCohort.id, "maxStudents", newCohort.maxStudents);
-    updateCohort(newCohort.id, "enrollmentDeadline", newCohort.enrollmentDeadline);
-    updateCohort(newCohort.id, "hasFlexibleSchedule", newCohort.hasFlexibleSchedule);
+    // Update all the individual fields
+    updateCohort(cohortId, "name", sourceCohort.name || (hasCohorts ? `${classTitle} Cohort ${cohortNumber}` : classTitle));
+    updateCohort(cohortId, "startDate", sourceCohort.startDate);
+    updateCohort(cohortId, "endDate", sourceCohort.endDate);
+    updateCohort(cohortId, "startTime", sourceCohort.startTime);
+    updateCohort(cohortId, "endTime", sourceCohort.endTime);
+    updateCohort(cohortId, "price", sourceCohort.price);
+    updateCohort(cohortId, "discount", sourceCohort.discount);
+    updateCohort(cohortId, "isActive", sourceCohort.isActive);
+    updateCohort(cohortId, "minStudents", sourceCohort.minStudents);
+    updateCohort(cohortId, "maxStudents", sourceCohort.maxStudents);
+    updateCohort(cohortId, "enrollmentDeadline", sourceCohort.enrollmentDeadline);
+    updateCohort(cohortId, "hasFlexibleSchedule", sourceCohort.hasFlexibleSchedule);
     
     // Update repeat schedule
-    updateRepeatSchedule(newCohort.id, "pattern", newCohort.repeatSchedule.pattern);
-    updateRepeatSchedule(newCohort.id, "repeatEvery", newCohort.repeatSchedule.repeatEvery);
+    updateRepeatSchedule(cohortId, "pattern", sourceCohort.repeatSchedule.pattern);
+    updateRepeatSchedule(cohortId, "repeatEvery", sourceCohort.repeatSchedule.repeatEvery);
     
-    // Set days of week one by one to trigger the right updates
-    newCohort.repeatSchedule.daysOfWeek.forEach(day => {
-      if (!cohorts.find(c => c.id === newCohort.id)?.repeatSchedule.daysOfWeek.includes(day)) {
-        toggleDayOfWeek(newCohort.id, day);
-      }
+    // Set days of week one by one
+    sourceCohort.repeatSchedule.daysOfWeek.forEach(day => {
+      toggleDayOfWeek(cohortId, day);
     });
-    
-    console.log("Cohort data updated, current cohorts:", cohorts);
-    
-    // Save class details to API after a short delay to ensure state updates are complete
-    setTimeout(async () => {
-      await saveClassDetailsToAPI();
-    }, 500);
   };
   
-  // Handle cohort update
+  // Handle cohort update - new approach: send to API first, then update local state
   const handleUpdateCohort = async (updatedCohort: CohortData) => {
     if (!updatedCohort.id) return;
     
     console.log("Updating cohort with data:", updatedCohort);
     
-    // Check if the cohort exists in the array
-    if (!cohorts.some(c => c.id === updatedCohort.id)) {
-      console.error("Cannot update cohort that doesn't exist in state:", updatedCohort.id);
-      return;
-    }
-    
-    // Update all fields
-    updateCohort(updatedCohort.id, "name", updatedCohort.name);
-    updateCohort(updatedCohort.id, "startDate", updatedCohort.startDate);
-    updateCohort(updatedCohort.id, "endDate", updatedCohort.endDate);
-    updateCohort(updatedCohort.id, "startTime", updatedCohort.startTime);
-    updateCohort(updatedCohort.id, "endTime", updatedCohort.endTime);
-    updateCohort(updatedCohort.id, "price", updatedCohort.price);
-    updateCohort(updatedCohort.id, "discount", updatedCohort.discount);
-    updateCohort(updatedCohort.id, "isActive", updatedCohort.isActive);
-    updateCohort(updatedCohort.id, "minStudents", updatedCohort.minStudents);
-    updateCohort(updatedCohort.id, "maxStudents", updatedCohort.maxStudents);
-    updateCohort(updatedCohort.id, "enrollmentDeadline", updatedCohort.enrollmentDeadline);
-    updateCohort(updatedCohort.id, "hasFlexibleSchedule", updatedCohort.hasFlexibleSchedule);
-    
-    // Update repeat schedule
-    updateRepeatSchedule(updatedCohort.id, "pattern", updatedCohort.repeatSchedule.pattern);
-    updateRepeatSchedule(updatedCohort.id, "repeatEvery", updatedCohort.repeatSchedule.repeatEvery);
-    
-    // Reset days of week and set them from scratch to ensure correct state
-    const existingCohort = cohorts.find(c => c.id === updatedCohort.id);
-    if (existingCohort) {
-      // First remove any days not in the updated cohort
-      existingCohort.repeatSchedule.daysOfWeek.forEach(day => {
-        if (!updatedCohort.repeatSchedule.daysOfWeek.includes(day)) {
-          toggleDayOfWeek(updatedCohort.id, day);
-        }
-      });
+    try {
+      // Get class ID
+      let classId = form.getValues("id");
       
-      // Then add any new days
-      updatedCohort.repeatSchedule.daysOfWeek.forEach(day => {
-        if (!existingCohort.repeatSchedule.daysOfWeek.includes(day)) {
-          toggleDayOfWeek(updatedCohort.id, day);
+      // If no class ID in form, try to extract it from URL
+      if (!classId && window.location.pathname.includes('/teacher-class-setup/')) {
+        const pathSegments = window.location.pathname.split('/');
+        const potentialClassId = pathSegments[pathSegments.length - 1];
+        if (potentialClassId && potentialClassId !== 'teacher-class-setup') {
+          classId = potentialClassId;
+          console.log("Using class ID from URL:", classId);
         }
-      });
+      }
+      
+      // If still no class ID, we can't save cohort data yet
+      if (!classId) {
+        console.error("Cannot update cohort: No class ID available");
+        setSavingError("Cannot update cohort: No class ID available.");
+        return;
+      }
+      
+      // Check if the cohort exists in the array
+      if (!cohorts.some(c => c.id === updatedCohort.id)) {
+        console.error("Cannot update cohort that doesn't exist in state:", updatedCohort.id);
+        setSavingError("Cannot update cohort - not found in state");
+        return;
+      }
+      
+      // Set loading state
+      setIsSaving(true);
+      setSavingError(null);
+      
+      // 1. Format the updated cohort for API
+      // Map our pattern values to backend RepeatPattern enum values
+      const getRepeatPatternValue = (pattern: string) => {
+        switch (pattern) {
+          case "weekly":
+            return "Weekly";
+          case "twice-weekly":
+            return "Twice Weekly";
+          case "custom":
+            return "Custom Schedule";
+          default:
+            return "Weekly";
+        }
+      };
+      
+      const formattedUpdatedCohort = {
+        id: updatedCohort.id,
+        name: updatedCohort.name || `Cohort ${updatedCohort.id}`,
+        isActive: typeof updatedCohort.isActive === 'boolean' ? updatedCohort.isActive : true,
+        startDate: updatedCohort.startDate,
+        endDate: updatedCohort.endDate,
+        startTime: updatedCohort.startTime || "",
+        endTime: updatedCohort.endTime || "",
+        repeatEvery: updatedCohort.repeatSchedule.repeatEvery || 1,
+        repeatPattern: getRepeatPatternValue(updatedCohort.repeatSchedule.pattern || "weekly"),
+        daysOfWeek: (updatedCohort.repeatSchedule.daysOfWeek || []).map(day => day.toUpperCase()),
+        customLessonTimes: !!updatedCohort.hasFlexibleSchedule,
+        minimumStudents: updatedCohort.minStudents || 1,
+        maximumStudents: updatedCohort.maxStudents || 20,
+        enrollmentDeadline: updatedCohort.enrollmentDeadline,
+        price: parseFloat(updatedCohort.price) || 0,
+        discount: parseFloat(updatedCohort.discount) || 0
+      };
+      
+      // 2. Format and combine with other cohorts
+      const formattedCohorts = cohorts.map(cohort => {
+        if (!cohort || !cohort.repeatSchedule) {
+          console.error("Invalid cohort data:", cohort);
+          return null;
+        }
+        
+        // If this is the cohort we're updating, use the updated data
+        if (cohort.id === updatedCohort.id) {
+          return formattedUpdatedCohort;
+        }
+        
+        // Otherwise, use the existing cohort data
+        return {
+          id: cohort.id,
+          name: cohort.name || `Cohort ${cohort.id}`,
+          isActive: typeof cohort.isActive === 'boolean' ? cohort.isActive : true,
+          startDate: cohort.startDate,
+          endDate: cohort.endDate,
+          startTime: cohort.startTime || "",
+          endTime: cohort.endTime || "",
+          repeatEvery: cohort.repeatSchedule.repeatEvery || 1,
+          repeatPattern: getRepeatPatternValue(cohort.repeatSchedule.pattern || "weekly"),
+          daysOfWeek: (cohort.repeatSchedule.daysOfWeek || []).map(day => day.toUpperCase()),
+          customLessonTimes: !!cohort.hasFlexibleSchedule,
+          minimumStudents: cohort.minStudents || 1,
+          maximumStudents: cohort.maxStudents || 20,
+          enrollmentDeadline: cohort.enrollmentDeadline,
+          price: parseFloat(cohort.price) || 0,
+          discount: parseFloat(cohort.discount) || 0
+        };
+      }).filter(cohort => cohort !== null);
+      
+      console.log("Sending updated cohorts to API:", formattedCohorts);
+      
+      // 3. Prepare class data for API
+      const classData = {
+        cohorts: formattedCohorts,
+        enableMultipleCohorts: hasCohorts
+      };
+      
+      // 4. Update the class via API
+      const { data, error } = await classService.update(classId, classData as any);
+      
+      if (error) {
+        console.error("Error updating cohort:", error);
+        setSavingError(`Failed to update cohort: ${error.message || "Unknown error"}`);
+        setIsSaving(false);
+        return;
+      }
+      
+      console.log("Cohort updated successfully:", data);
+      
+      // Clean up by clearing the edit ID
+      setEditCohortId(null);
+      
+      // 5. Fetch the updated class data to refresh local state
+      const { data: refreshedClassData, error: refreshError } = await classService.getById(classId);
+      
+      if (refreshError) {
+        console.error("Error refreshing class data:", refreshError);
+        setSavingError("Cohort updated, but failed to refresh class data. Please reload the page.");
+        setIsSaving(false);
+        return;
+      }
+      
+      // 6. Update local state with the refreshed data
+      if (refreshedClassData && refreshedClassData.cohorts) {
+        // Map API RepeatPattern enum values to our local pattern values
+        const getLocalPatternValue = (apiPattern: string) => {
+          switch (apiPattern) {
+            case "Weekly":
+              return "weekly";
+            case "Twice Weekly":
+              return "twice-weekly";
+            case "Custom Schedule":
+              return "custom";
+            default:
+              return "weekly";
+          }
+        };
+        
+        // Convert the API cohort format back to our internal format
+        const refreshedCohorts = refreshedClassData.cohorts.map((apiCohort: any) => {
+          return {
+            id: apiCohort.id,
+            name: apiCohort.name,
+            isActive: apiCohort.isActive,
+            startDate: apiCohort.startDate ? new Date(apiCohort.startDate) : null,
+            endDate: apiCohort.endDate ? new Date(apiCohort.endDate) : null,
+            startTime: apiCohort.startTime,
+            endTime: apiCohort.endTime,
+            numberOfLessons: refreshedClassData.numberOfLessons || 1,
+            price: apiCohort.price?.toString() || "",
+            discount: apiCohort.discount?.toString() || "0",
+            minStudents: apiCohort.minimumStudents,
+            maxStudents: apiCohort.maximumStudents,
+            enrollmentDeadline: apiCohort.enrollmentDeadline ? new Date(apiCohort.enrollmentDeadline) : null,
+            hasFlexibleSchedule: apiCohort.customLessonTimes,
+            repeatSchedule: {
+              pattern: getLocalPatternValue(apiCohort.repeatPattern) || "weekly",
+              repeatEvery: apiCohort.repeatEvery || 1,
+              daysOfWeek: apiCohort.daysOfWeek?.map((day: string) => day.toLowerCase()) || []
+            },
+            lessonSchedules: []
+          };
+        });
+        
+        // Update form values
+        form.setValue("enableMultipleCohorts", refreshedClassData.enableMultipleCohorts);
+        form.setValue("hasCohorts", refreshedClassData.enableMultipleCohorts);
+        
+        // Replace all cohorts with the refreshed data
+        // Since we don't have a setCohorts function, we need to handle this differently
+        // First remove all existing cohorts
+        [...cohorts].forEach(cohort => {
+          removeCohort(cohort.id);
+        });
+        
+        // Then add each refreshed cohort one by one
+        refreshedCohorts.forEach((cohort: CohortData) => {
+          addCohort();
+          
+          // Get the ID of the newly added cohort
+          const newCohortId = cohorts[cohorts.length - 1]?.id;
+          if (newCohortId) {
+            updateBasicCohortProperties(newCohortId, cohort);
+          }
+        });
+      }
+      
+      // Reset loading state
+      setIsSaving(false);
+    } catch (error) {
+      console.error("Error updating cohort:", error);
+      setSavingError(`An error occurred while updating the cohort: ${error.message || "Unknown error"}`);
+      setIsSaving(false);
     }
-    
-    // Clean up by clearing the edit ID
-    setEditCohortId(null);
-    
-    console.log("Cohort data updated, current cohorts after update:", cohorts);
-    
-    // Save class details to API after a short delay to ensure state updates are complete
-    setTimeout(async () => {
-      await saveClassDetailsToAPI();
-    }, 500);
   };
   
-  // Save class details to API
+  // Save class details to API - updated to follow the new pattern (API first, then refresh local state)
   const saveClassDetailsToAPI = async () => {
     try {
       // Check for class ID in multiple places
@@ -229,10 +546,11 @@ const CohortsTab = ({
         return; // Exit gracefully without error - the data will be saved when class is created
       }
       
-      // DEBUG: Check if cohorts array is available
-      console.log("Current cohorts before saving:", cohorts);
+      // Check if cohorts array is available
+      const currentCohorts = [...cohorts]; // Make a fresh copy to ensure we have the latest
+      console.log("Current cohorts before saving:", currentCohorts);
       
-      if (!cohorts || cohorts.length === 0) {
+      if (!currentCohorts || currentCohorts.length === 0) {
         console.error("No cohorts available to save");
         setSavingError("No cohorts to save. Please create at least one cohort.");
         return;
@@ -241,17 +559,27 @@ const CohortsTab = ({
       setIsSaving(true);
       setSavingError(null);
       
-      // Format the cohort data for the API
-      // Use the component state directly instead of any potentially stale values
-      const formattedCohorts = [...cohorts].map(cohort => {
+      // 1. Format the cohort data for the API using a fresh copy
+      // Map our pattern values to backend RepeatPattern enum values
+      const getRepeatPatternValue = (pattern: string) => {
+        switch (pattern) {
+          case "weekly":
+            return "Weekly";
+          case "twice-weekly":
+            return "Twice Weekly";
+          case "custom":
+            return "Custom Schedule";
+          default:
+            return "Weekly";
+        }
+      };
+      
+      const formattedCohorts = currentCohorts.map(cohort => {
         // Ensure we have valid values for all required fields
         if (!cohort || !cohort.repeatSchedule) {
           console.error("Invalid cohort data:", cohort);
           return null;
         }
-        
-        // Convert days of week format if needed
-        const daysOfWeek = (cohort.repeatSchedule.daysOfWeek || []).map(day => day.toUpperCase());
         
         // Create a formatted cohort object with all necessary fields
         return {
@@ -262,9 +590,9 @@ const CohortsTab = ({
           endDate: cohort.endDate,
           startTime: cohort.startTime || "",
           endTime: cohort.endTime || "",
-          repeatPattern: (cohort.repeatSchedule.pattern || "weekly").toUpperCase(),
           repeatEvery: cohort.repeatSchedule.repeatEvery || 1,
-          daysOfWeek,
+          repeatPattern: getRepeatPatternValue(cohort.repeatSchedule.pattern || "weekly"),
+          daysOfWeek: (cohort.repeatSchedule.daysOfWeek || []).map(day => day.toUpperCase()),
           customLessonTimes: !!cohort.hasFlexibleSchedule,
           minimumStudents: cohort.minStudents || 1,
           maximumStudents: cohort.maxStudents || 20,
@@ -276,7 +604,14 @@ const CohortsTab = ({
       
       console.log("Formatted cohorts for API:", formattedCohorts);
       
-      // Prepare the data payload
+      if (formattedCohorts.length === 0) {
+        console.error("No valid cohorts to save after formatting");
+        setSavingError("Unable to save cohort data. Please try again or check console for details.");
+        setIsSaving(false);
+        return;
+      }
+      
+      // 2. Prepare the data payload
       const classData = {
         cohorts: formattedCohorts,
         enableMultipleCohorts: hasCohorts
@@ -284,15 +619,90 @@ const CohortsTab = ({
       
       console.log("Sending data to API:", JSON.stringify(classData));
       
-      // Make the API call using the class service
+      // 3. Make the API call using the class service
       const { data, error } = await classService.update(classId, classData as any);
       
       if (error) {
         console.error("Error saving class details:", error);
         setSavingError(`Failed to save class data: ${error.message || "Unknown error"}`);
-      } else {
-        console.log("Class details saved successfully:", data);
-        // Could show a success message or toast here
+        setIsSaving(false);
+        return;
+      }
+      
+      console.log("Class details saved successfully:", data);
+      
+      // 4. Fetch the updated class data to refresh local state
+      const { data: refreshedClassData, error: refreshError } = await classService.getById(classId);
+      
+      if (refreshError) {
+        console.error("Error refreshing class data:", refreshError);
+        setSavingError("Changes saved, but failed to refresh class data. Please reload the page.");
+        setIsSaving(false);
+        return;
+      }
+      
+      // 5. Update local state with the refreshed data
+      if (refreshedClassData && refreshedClassData.cohorts) {
+        // Map API RepeatPattern enum values to our local pattern values
+        const getLocalPatternValue = (apiPattern: string) => {
+          switch (apiPattern) {
+            case "Weekly":
+              return "weekly";
+            case "Twice Weekly":
+              return "twice-weekly";
+            case "Custom Schedule":
+              return "custom";
+            default:
+              return "weekly";
+          }
+        };
+        
+        // Convert the API cohort format back to our internal format
+        const refreshedCohorts = refreshedClassData.cohorts.map((apiCohort: any) => {
+          return {
+            id: apiCohort.id,
+            name: apiCohort.name,
+            isActive: apiCohort.isActive,
+            startDate: apiCohort.startDate ? new Date(apiCohort.startDate) : null,
+            endDate: apiCohort.endDate ? new Date(apiCohort.endDate) : null,
+            startTime: apiCohort.startTime,
+            endTime: apiCohort.endTime,
+            numberOfLessons: refreshedClassData.numberOfLessons || 1,
+            price: apiCohort.price?.toString() || "",
+            discount: apiCohort.discount?.toString() || "0",
+            minStudents: apiCohort.minimumStudents,
+            maxStudents: apiCohort.maximumStudents,
+            enrollmentDeadline: apiCohort.enrollmentDeadline ? new Date(apiCohort.enrollmentDeadline) : null,
+            hasFlexibleSchedule: apiCohort.customLessonTimes,
+            repeatSchedule: {
+              pattern: getLocalPatternValue(apiCohort.repeatPattern) || "weekly",
+              repeatEvery: apiCohort.repeatEvery || 1,
+              daysOfWeek: apiCohort.daysOfWeek?.map((day: string) => day.toLowerCase()) || []
+            },
+            lessonSchedules: []
+          };
+        });
+        
+        // Update form values with any other refreshed data
+        form.setValue("enableMultipleCohorts", refreshedClassData.enableMultipleCohorts);
+        form.setValue("hasCohorts", refreshedClassData.enableMultipleCohorts);
+        
+        // Replace all cohorts with the refreshed data
+        // First remove all existing cohorts
+        [...cohorts].forEach(cohort => {
+          removeCohort(cohort.id);
+        });
+        
+        // Then add each refreshed cohort one by one
+        refreshedCohorts.forEach((cohort: CohortData) => {
+          addCohort();
+          
+          // Get the ID of the newly added cohort
+          const newCohortId = cohorts[cohorts.length - 1]?.id;
+          if (newCohortId) {
+            updateBasicCohortProperties(newCohortId, cohort);
+          }
+        });
       }
     } catch (err) {
       console.error("Error saving class details:", err);
