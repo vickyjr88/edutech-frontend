@@ -12,6 +12,7 @@ import {
   clearStoredForm,
   getFormMetadata
 } from "./utils/storageUtils";
+import { getApiRepeatPatternValue, getLocalRepeatPatternValue } from "./utils/repeatPatternUtils";
 
 interface ClassFormContextType {
   form: UseFormReturn<ClassFormValues>;
@@ -354,6 +355,7 @@ export const ClassFormProvider = ({
       setActiveTab("lessons");
 
       // Format data according to the backend DTO requirements
+
       const formattedData = {
         // Only include teacher field for new classes, not for updates
         ...(classId ? {} : { teacher: userAuth.user?.teacherId || "default_teacher_id" }),
@@ -387,7 +389,40 @@ export const ClassFormProvider = ({
 
         // Initialize arrays for data to be added in next steps
         lessonPlans: [],
-        cohorts: [],
+        cohorts: cohorts.map(cohort => {
+          // Extract _id if it exists, and other fields we don't want to send directly
+          const { hasFlexibleSchedule, lessonSchedules, ...cohortData } = cohort;
+          
+          // Remove id field (but keep _id if it exists)
+          if (cohortData.id) {
+            delete cohortData.id;
+          }
+          
+          // Convert days of week format to uppercase for API
+          const daysOfWeek = cohort.repeatSchedule.daysOfWeek.map(day => 
+            day.toUpperCase()
+          );
+          
+          return {
+            // Include _id field only if it exists (for existing cohorts)
+            ...(cohort._id ? { _id: cohort._id } : {}),
+            name: cohortData.name,
+            isActive: cohortData.isActive,
+            startDate: cohortData.startDate,
+            endDate: cohortData.endDate,
+            startTime: cohortData.startTime,
+            endTime: cohortData.endTime,
+            repeatPattern: getApiRepeatPatternValue(cohort.repeatSchedule.pattern),
+            daysOfWeek,
+            repeatEvery: Number(cohort.repeatSchedule.repeatEvery) || 1, // Ensure repeatEvery is included as a number
+            customLessonTimes: hasFlexibleSchedule,
+            minimumStudents: cohortData.minStudents,
+            maximumStudents: cohortData.maxStudents,
+            enrollmentDeadline: cohortData.enrollmentDeadline,
+            price: Number(cohortData.price) || 0,
+            discount: Number(cohortData.discount) || 0
+          };
+        }),
         teachingTeam: []
       };
 
@@ -539,7 +574,7 @@ export const ClassFormProvider = ({
 
   const addCohort = () => {
     const hasCohorts = form.getValues().hasCohorts;
-    const newId = Date.now().toString();
+    const tempId = Date.now().toString();
     const cohortNumber = cohorts.length + 1;
     const classTitle = form.getValues().title || "Class";
     
@@ -548,7 +583,7 @@ export const ClassFormProvider = ({
     }
     
     setCohorts([...cohorts, { 
-      id: newId, 
+      id: tempId,  // Keep id for backward compatibility 
       name: hasCohorts ? `${classTitle} Cohort ${cohortNumber}` : classTitle, 
       startDate: null,
       endDate: null,
@@ -578,12 +613,31 @@ export const ClassFormProvider = ({
       return;
     }
     
-    setCohorts(cohorts.filter(cohort => cohort.id !== id));
+    setCohorts(cohorts.filter(cohort => {
+      // Check if this is the cohort to remove
+      // First check _id (for existing cohorts from backend)
+      if (cohort._id && cohort._id === id) {
+        return false;
+      }
+      // Then check id (for newly created cohorts)
+      if (cohort.id && cohort.id === id) {
+        return false;
+      }
+      // Keep this cohort (not the one to remove)
+      return true;
+    }));
   };
 
   const updateCohort = (id: string, field: keyof CohortData, value: any) => {
     setCohorts(cohorts.map(cohort => {
-      if (cohort.id === id) {
+      // Check if we need to update this cohort
+      const isCohortMatch = 
+        // Check _id for existing cohorts from backend
+        (cohort._id && cohort._id === id) || 
+        // Check id for newly created cohorts
+        (cohort.id && cohort.id === id);
+      
+      if (isCohortMatch) {
         const updatedCohort = { ...cohort, [field]: value };
         
         if (field === 'startDate') {
@@ -602,7 +656,14 @@ export const ClassFormProvider = ({
   
   const updateRepeatSchedule = (cohortId: string, field: keyof RepeatSchedule, value: any) => {
     setCohorts(cohorts.map(cohort => {
-      if (cohort.id === cohortId) {
+      // Check if we need to update this cohort
+      const isCohortMatch = 
+        // Check _id for existing cohorts from backend
+        (cohort._id && cohort._id === cohortId) || 
+        // Check id for newly created cohorts
+        (cohort.id && cohort.id === cohortId);
+      
+      if (isCohortMatch) {
         const updatedRepeatSchedule = { ...cohort.repeatSchedule, [field]: value };
         
         const updatedEndDate = calculateEndDate(
@@ -623,7 +684,14 @@ export const ClassFormProvider = ({
   
   const toggleDayOfWeek = (cohortId: string, day: string) => {
     setCohorts(cohorts.map(cohort => {
-      if (cohort.id === cohortId) {
+      // Check if we need to update this cohort
+      const isCohortMatch = 
+        // Check _id for existing cohorts from backend
+        (cohort._id && cohort._id === cohortId) || 
+        // Check id for newly created cohorts
+        (cohort.id && cohort.id === cohortId);
+      
+      if (isCohortMatch) {
         const daysOfWeek = [...cohort.repeatSchedule.daysOfWeek];
         
         if (daysOfWeek.includes(day)) {
@@ -670,7 +738,19 @@ export const ClassFormProvider = ({
   };
 
   const addLessonSchedule = (cohortId: string) => {
-    const cohort = cohorts.find(c => c.id === cohortId);
+    // Find cohort by either _id or id
+    const cohort = cohorts.find(c => {
+      // Check _id for existing cohorts from backend
+      if (c._id && c._id === cohortId) {
+        return true;
+      }
+      // Check id for newly created cohorts
+      if (c.id && c.id === cohortId) {
+        return true;
+      }
+      return false;
+    });
+    
     if (!cohort) return;
     
     const existingLessonNumbers = cohort.lessonSchedules.map(ls => ls.lessonNumber);
@@ -690,11 +770,29 @@ export const ClassFormProvider = ({
       lessonSchedules: [...cohort.lessonSchedules, newSchedule]
     };
     
-    setCohorts(cohorts.map(c => c.id === cohortId ? updatedCohort : c));
+    setCohorts(cohorts.map(c => {
+      const isCohortMatch = 
+        (c._id && c._id === cohortId) || 
+        (c.id && c.id === cohortId);
+      
+      return isCohortMatch ? updatedCohort : c;
+    }));
   };
   
   const removeLessonSchedule = (cohortId: string, scheduleId: string) => {
-    const cohort = cohorts.find(c => c.id === cohortId);
+    // Find cohort by either _id or id
+    const cohort = cohorts.find(c => {
+      // Check _id for existing cohorts from backend
+      if (c._id && c._id === cohortId) {
+        return true;
+      }
+      // Check id for newly created cohorts
+      if (c.id && c.id === cohortId) {
+        return true;
+      }
+      return false;
+    });
+    
     if (!cohort) return;
     
     const updatedCohort = {
@@ -702,11 +800,30 @@ export const ClassFormProvider = ({
       lessonSchedules: cohort.lessonSchedules.filter(schedule => schedule.id !== scheduleId)
     };
     
-    setCohorts(cohorts.map(c => c.id === cohortId ? updatedCohort : c));
+    // Update cohort by either _id or id
+    setCohorts(cohorts.map(c => {
+      const isCohortMatch = 
+        (c._id && c._id === cohortId) || 
+        (c.id && c.id === cohortId);
+      
+      return isCohortMatch ? updatedCohort : c;
+    }));
   };
   
   const updateLessonSchedule = (cohortId: string, scheduleId: string, field: keyof LessonSchedule, value: any) => {
-    const cohort = cohorts.find(c => c.id === cohortId);
+    // Find cohort by either _id or id
+    const cohort = cohorts.find(c => {
+      // Check _id for existing cohorts from backend
+      if (c._id && c._id === cohortId) {
+        return true;
+      }
+      // Check id for newly created cohorts
+      if (c.id && c.id === cohortId) {
+        return true;
+      }
+      return false;
+    });
+    
     if (!cohort) return;
     
     const updatedSchedules = cohort.lessonSchedules.map(schedule => 
@@ -718,7 +835,14 @@ export const ClassFormProvider = ({
       lessonSchedules: updatedSchedules
     };
     
-    setCohorts(cohorts.map(c => c.id === cohortId ? updatedCohort : c));
+    // Update cohort by either _id or id
+    setCohorts(cohorts.map(c => {
+      const isCohortMatch = 
+        (c._id && c._id === cohortId) || 
+        (c.id && c.id === cohortId);
+      
+      return isCohortMatch ? updatedCohort : c;
+    }));
   };
 
   const addTeamMember = () => {
@@ -893,6 +1017,8 @@ export const ClassFormProvider = ({
         description: data.description || undefined,
         numberOfLessons: Number(data.numberOfLessons) || 1,
         isPublic: data.isPublic,
+        isPublished: data.isPublished || false,
+        status: data.status || "draft",
         enableMultipleCohorts: data.hasCohorts,
         enableTeamTeaching: data.hasTeamTeaching,
 
@@ -925,7 +1051,13 @@ export const ClassFormProvider = ({
 
         // Format cohorts according to the CohortDto
         cohorts: cohorts.map(cohort => {
-          const { id, hasFlexibleSchedule, lessonSchedules, ...cohortData } = cohort;
+          // Extract _id if it exists, and other fields we don't want to send directly
+          const { hasFlexibleSchedule, lessonSchedules, ...cohortData } = cohort;
+          
+          // Remove id field (but keep _id if it exists)
+          if (cohortData.id) {
+            delete cohortData.id;
+          }
 
           // Convert days of week format if needed
           const daysOfWeek = cohort.repeatSchedule.daysOfWeek.map(day =>
@@ -933,14 +1065,17 @@ export const ClassFormProvider = ({
           );
 
           return {
+            // Include _id field only if it exists (for existing cohorts)
+            ...(cohort._id ? { _id: cohort._id } : {}),
             name: cohortData.name,
             isActive: cohortData.isActive,
             startDate: cohortData.startDate,
             endDate: cohortData.endDate,
             startTime: cohortData.startTime,
             endTime: cohortData.endTime,
-            repeatPattern: cohort.repeatSchedule.pattern.toUpperCase(),
+            repeatPattern: getApiRepeatPatternValue(cohort.repeatSchedule.pattern),
             daysOfWeek,
+            repeatEvery: Number(cohort.repeatSchedule.repeatEvery) || 1, // Ensure repeatEvery is included as a number
             customLessonTimes: hasFlexibleSchedule,
             minimumStudents: cohortData.minStudents,
             maximumStudents: cohortData.maxStudents,

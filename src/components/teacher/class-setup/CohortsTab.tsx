@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import { UseFormReturn } from "react-hook-form";
 import { ClassFormValues, CohortData, LessonSchedule, RepeatSchedule } from "./types";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { getApiRepeatPatternValue, getLocalRepeatPatternValue } from "./utils/repeatPatternUtils";
 import { 
   Accordion,
   AccordionContent,
@@ -129,19 +130,7 @@ const CohortsTab = ({
       setSavingError(null);
       
       // 1. Format the new cohort for API according to CohortDto format
-      // Map our pattern values to backend RepeatPattern enum values
-      const getRepeatPatternValue = (pattern: string) => {
-        switch (pattern) {
-          case "weekly":
-            return "Weekly";
-          case "twice-weekly":
-            return "Twice Weekly";
-          case "custom":
-            return "Custom Schedule";
-          default:
-            return "Weekly";
-        }
-      };
+      // Using the utility function for pattern value conversion
       
       const formattedNewCohort = {
         id: newCohort.id,
@@ -152,7 +141,7 @@ const CohortsTab = ({
         startTime: newCohort.startTime || "",
         endTime: newCohort.endTime || "",
         repeatEvery: newCohort.repeatSchedule.repeatEvery || 1,
-        repeatPattern: getRepeatPatternValue(newCohort.repeatSchedule.pattern || "weekly"),
+        repeatPattern: getApiRepeatPatternValue(newCohort.repeatSchedule.pattern || "weekly"),
         daysOfWeek: (newCohort.repeatSchedule.daysOfWeek || []).map(day => day.toUpperCase()),
         customLessonTimes: !!newCohort.hasFlexibleSchedule,
         minimumStudents: newCohort.minStudents || 1,
@@ -178,7 +167,7 @@ const CohortsTab = ({
           startTime: cohort.startTime || "",
           endTime: cohort.endTime || "",
           repeatEvery: cohort.repeatSchedule.repeatEvery || 1,
-          repeatPattern: getRepeatPatternValue(cohort.repeatSchedule.pattern || "weekly"),
+          repeatPattern: getApiRepeatPatternValue(cohort.repeatSchedule.pattern || "weekly"),
           daysOfWeek: (cohort.repeatSchedule.daysOfWeek || []).map(day => day.toUpperCase()),
           customLessonTimes: !!cohort.hasFlexibleSchedule,
           minimumStudents: cohort.minStudents || 1,
@@ -224,6 +213,8 @@ const CohortsTab = ({
       
       // 7. Update local state with the refreshed data
       if (refreshedClassData && refreshedClassData.cohorts) {
+        // Using the imported utility function for local pattern value conversion
+        
         // Convert the API cohort format back to our internal format
         const refreshedCohorts = refreshedClassData.cohorts.map((apiCohort: any) => {
           return {
@@ -242,7 +233,7 @@ const CohortsTab = ({
             enrollmentDeadline: apiCohort.enrollmentDeadline ? new Date(apiCohort.enrollmentDeadline) : null,
             hasFlexibleSchedule: apiCohort.customLessonTimes,
             repeatSchedule: {
-              pattern: getLocalPatternValue(apiCohort.repeatPattern) || "weekly",
+              pattern: getLocalRepeatPatternValue(apiCohort.repeatPattern) || "weekly",
               repeatEvery: apiCohort.repeatEvery || 1,
               daysOfWeek: apiCohort.daysOfWeek?.map((day: string) => day.toLowerCase()) || []
             },
@@ -350,19 +341,7 @@ const CohortsTab = ({
       setSavingError(null);
       
       // 1. Format the updated cohort for API
-      // Map our pattern values to backend RepeatPattern enum values
-      const getRepeatPatternValue = (pattern: string) => {
-        switch (pattern) {
-          case "weekly":
-            return "Weekly";
-          case "twice-weekly":
-            return "Twice Weekly";
-          case "custom":
-            return "Custom Schedule";
-          default:
-            return "Weekly";
-        }
-      };
+      // Using the imported utility function for API pattern value conversion
       
       const formattedUpdatedCohort = {
         id: updatedCohort.id,
@@ -373,7 +352,7 @@ const CohortsTab = ({
         startTime: updatedCohort.startTime || "",
         endTime: updatedCohort.endTime || "",
         repeatEvery: updatedCohort.repeatSchedule.repeatEvery || 1,
-        repeatPattern: getRepeatPatternValue(updatedCohort.repeatSchedule.pattern || "weekly"),
+        repeatPattern: getApiRepeatPatternValue(updatedCohort.repeatSchedule.pattern || "weekly"),
         daysOfWeek: (updatedCohort.repeatSchedule.daysOfWeek || []).map(day => day.toUpperCase()),
         customLessonTimes: !!updatedCohort.hasFlexibleSchedule,
         minimumStudents: updatedCohort.minStudents || 1,
@@ -405,7 +384,7 @@ const CohortsTab = ({
           startTime: cohort.startTime || "",
           endTime: cohort.endTime || "",
           repeatEvery: cohort.repeatSchedule.repeatEvery || 1,
-          repeatPattern: getRepeatPatternValue(cohort.repeatSchedule.pattern || "weekly"),
+          repeatPattern: getApiRepeatPatternValue(cohort.repeatSchedule.pattern || "weekly"),
           daysOfWeek: (cohort.repeatSchedule.daysOfWeek || []).map(day => day.toUpperCase()),
           customLessonTimes: !!cohort.hasFlexibleSchedule,
           minimumStudents: cohort.minStudents || 1,
@@ -451,19 +430,7 @@ const CohortsTab = ({
       
       // 6. Update local state with the refreshed data
       if (refreshedClassData && refreshedClassData.cohorts) {
-        // Map API RepeatPattern enum values to our local pattern values
-        const getLocalPatternValue = (apiPattern: string) => {
-          switch (apiPattern) {
-            case "Weekly":
-              return "weekly";
-            case "Twice Weekly":
-              return "twice-weekly";
-            case "Custom Schedule":
-              return "custom";
-            default:
-              return "weekly";
-          }
-        };
+        // Using the imported utility function for local pattern value conversion
         
         // Convert the API cohort format back to our internal format
         const refreshedCohorts = refreshedClassData.cohorts.map((apiCohort: any) => {
@@ -483,7 +450,7 @@ const CohortsTab = ({
             enrollmentDeadline: apiCohort.enrollmentDeadline ? new Date(apiCohort.enrollmentDeadline) : null,
             hasFlexibleSchedule: apiCohort.customLessonTimes,
             repeatSchedule: {
-              pattern: getLocalPatternValue(apiCohort.repeatPattern) || "weekly",
+              pattern: getLocalRepeatPatternValue(apiCohort.repeatPattern) || "weekly",
               repeatEvery: apiCohort.repeatEvery || 1,
               daysOfWeek: apiCohort.daysOfWeek?.map((day: string) => day.toLowerCase()) || []
             },
@@ -560,19 +527,7 @@ const CohortsTab = ({
       setSavingError(null);
       
       // 1. Format the cohort data for the API using a fresh copy
-      // Map our pattern values to backend RepeatPattern enum values
-      const getRepeatPatternValue = (pattern: string) => {
-        switch (pattern) {
-          case "weekly":
-            return "Weekly";
-          case "twice-weekly":
-            return "Twice Weekly";
-          case "custom":
-            return "Custom Schedule";
-          default:
-            return "Weekly";
-        }
-      };
+      // Using the imported utility function for API pattern value conversion
       
       const formattedCohorts = currentCohorts.map(cohort => {
         // Ensure we have valid values for all required fields
@@ -591,7 +546,7 @@ const CohortsTab = ({
           startTime: cohort.startTime || "",
           endTime: cohort.endTime || "",
           repeatEvery: cohort.repeatSchedule.repeatEvery || 1,
-          repeatPattern: getRepeatPatternValue(cohort.repeatSchedule.pattern || "weekly"),
+          repeatPattern: getApiRepeatPatternValue(cohort.repeatSchedule.pattern || "weekly"),
           daysOfWeek: (cohort.repeatSchedule.daysOfWeek || []).map(day => day.toUpperCase()),
           customLessonTimes: !!cohort.hasFlexibleSchedule,
           minimumStudents: cohort.minStudents || 1,
@@ -643,19 +598,7 @@ const CohortsTab = ({
       
       // 5. Update local state with the refreshed data
       if (refreshedClassData && refreshedClassData.cohorts) {
-        // Map API RepeatPattern enum values to our local pattern values
-        const getLocalPatternValue = (apiPattern: string) => {
-          switch (apiPattern) {
-            case "Weekly":
-              return "weekly";
-            case "Twice Weekly":
-              return "twice-weekly";
-            case "Custom Schedule":
-              return "custom";
-            default:
-              return "weekly";
-          }
-        };
+        // Using the imported utility function for local pattern value conversion
         
         // Convert the API cohort format back to our internal format
         const refreshedCohorts = refreshedClassData.cohorts.map((apiCohort: any) => {
@@ -675,7 +618,7 @@ const CohortsTab = ({
             enrollmentDeadline: apiCohort.enrollmentDeadline ? new Date(apiCohort.enrollmentDeadline) : null,
             hasFlexibleSchedule: apiCohort.customLessonTimes,
             repeatSchedule: {
-              pattern: getLocalPatternValue(apiCohort.repeatPattern) || "weekly",
+              pattern: getLocalRepeatPatternValue(apiCohort.repeatPattern) || "weekly",
               repeatEvery: apiCohort.repeatEvery || 1,
               daysOfWeek: apiCohort.daysOfWeek?.map((day: string) => day.toLowerCase()) || []
             },

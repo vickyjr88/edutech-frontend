@@ -12,6 +12,7 @@ import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
 
 interface PreviewTabProps {
   form: UseFormReturn<any>;
@@ -38,8 +39,8 @@ const PreviewTab = ({
 }: PreviewTabProps) => {
   const { toast } = useToast();
   const { user } = useAuth();
-  const [publishRequiresApproval, setPublishRequiresApproval] = useState(true);
   const [isPublic, setIsPublic] = useState(form.getValues().isPublic);
+  const [isPublished, setIsPublished] = useState(form.getValues().isPublished);
   
   const formValues = form.getValues();
   const completenessCheck = checkClassCompleteness();
@@ -56,19 +57,33 @@ const PreviewTab = ({
     
     // Update the form with final values
     form.setValue("isPublic", isPublic);
+    form.setValue("isPublished", true);
+    form.setValue("status", "ready");
     
-    // If form submission happens in parent component via form.handleSubmit
-    if (publishRequiresApproval) {
-      toast({
-        title: "Approval requested",
-        description: "Your class has been submitted for approval and will be published once reviewed.",
-      });
-    } else {
-      toast({
-        title: "Class published",
-        description: "Your class has been published successfully and is now available for enrollment.",
-      });
-    }
+    setIsPublished(true);
+    
+    // Show toast notification for successful publish
+    toast({
+      title: "Class published",
+      description: "Your class has been published successfully and is now available for enrollment.",
+    });
+    
+    // Let the parent know to handle the form submission
+    form.handleSubmit(() => {})();
+  };
+  
+  const handleUnpublish = () => {
+    // Update the form with final values
+    form.setValue("isPublished", false);
+    form.setValue("status", "draft");
+    
+    setIsPublished(false);
+    
+    // Show toast notification for successful unpublish
+    toast({
+      title: "Class unpublished",
+      description: "Your class has been unpublished and is now in draft mode.",
+    });
     
     // Let the parent know to handle the form submission
     form.handleSubmit(() => {})();
@@ -80,13 +95,32 @@ const PreviewTab = ({
         <h2 className="text-lg font-semibold">Class Preview and Publish</h2>
         
         <div className="flex items-center gap-4">
-          <div className="flex items-center space-x-2">
-            <Switch 
-              id="isPublic" 
-              checked={isPublic}
-              onCheckedChange={setIsPublic}
-            />
-            <Label htmlFor="isPublic">Publish class</Label>
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2">
+              <Switch 
+                id="isPublic" 
+                checked={isPublic}
+                onCheckedChange={setIsPublic}
+              />
+              <Label htmlFor="isPublic">Public listing</Label>
+            </div>
+            
+            <div className="flex items-center space-x-2">
+              <Switch 
+                id="isPublished" 
+                checked={isPublished}
+                onCheckedChange={(checked) => {
+                  if (checked) {
+                    handlePublish();
+                  } else {
+                    handleUnpublish();
+                  }
+                }}
+              />
+              <Label htmlFor="isPublished">
+                {isPublished ? "Published" : "Draft"}
+              </Label>
+            </div>
           </div>
         </div>
       </div>
@@ -125,8 +159,17 @@ const PreviewTab = ({
                 {formValues.type === "academic" ? "Academic" : "After School"} - {subjectsMap[formValues.subject]?.name || formValues.subject || "Subject"}
               </CardDescription>
             </div>
-            <Badge variant={isPublic ? "default" : "outline"}>
-              {isPublic ? "Published" : "Draft"}
+            <Badge 
+              variant={formValues.isPublished ? "default" : isPublic ? "secondary" : "outline"}
+              className={cn(
+                formValues.isPublished ? "bg-green-100 text-green-800 hover:bg-green-100" : 
+                isPublic ? "bg-blue-100 text-blue-800 hover:bg-blue-100" : 
+                "bg-gray-100 text-gray-800"
+              )}
+            >
+              {formValues.isPublished ? "Published" : 
+               formValues.status === "ready" ? "Ready to Publish" : 
+               isPublic ? "Ready to Publish" : "Draft"}
             </Badge>
           </div>
         </CardHeader>
@@ -257,7 +300,7 @@ const PreviewTab = ({
               ) : (
                 <div className="space-y-3">
                   {cohorts.slice(0, 2).map((cohort) => (
-                    <div key={cohort.id} className="border rounded-md p-3">
+                    <div key={cohort._id || cohort.id} className="border rounded-md p-3">
                       <p className="font-medium">{cohort.name}</p>
                       <div className="grid grid-cols-2 gap-x-8 gap-y-2 mt-2">
                         {cohort.startDate && (
@@ -270,7 +313,7 @@ const PreviewTab = ({
                           <p className="text-sm">
                             Schedule: {cohort.repeatSchedule.pattern === 'custom' 
                               ? cohort.repeatSchedule.daysOfWeek.map(d => d.charAt(0).toUpperCase() + d.slice(1)).join(', ')
-                              : cohort.repeatSchedule.pattern.replace('-', ' ')}
+                              : cohort.repeatSchedule.pattern === 'twice-weekly' ? 'Twice Weekly' : 'Weekly'}
                           </p>
                         )}
                         
@@ -322,26 +365,17 @@ const PreviewTab = ({
       </Card>
       
       {/* Navigation footer */}
-      <div className="flex justify-between pt-4">
-        <Button 
-          variant="outline" 
-          onClick={onPreviousTab}
-          type="button"
-          className="flex items-center gap-2"
-        >
-          <ChevronLeft className="h-4 w-4" /> Back
-        </Button>
-        
-        <Button
-          onClick={handlePublish}
-          disabled={isSubmitting || !completenessCheck.isComplete}
-          type="button"
-          className="flex items-center gap-2"
-        >
-          {isSubmitting ? 'Publishing...' : (publishRequiresApproval ? 'Request Review' : 'Publish Now')}
-          <ChevronRight className="h-4 w-4" />
-        </Button>
-      </div>
+      {/*<div className="flex justify-end pt-4">*/}
+      {/*  <Button*/}
+      {/*    onClick={handlePublish}*/}
+      {/*    disabled={isSubmitting || !completenessCheck.isComplete}*/}
+      {/*    type="button"*/}
+      {/*    className="flex items-center gap-2"*/}
+      {/*  >*/}
+      {/*    {isSubmitting ? 'Publishing...' : 'Publish Now'}*/}
+      {/*    <ChevronRight className="h-4 w-4" />*/}
+      {/*  </Button>*/}
+      {/*</div>*/}
     </div>
   );
 };

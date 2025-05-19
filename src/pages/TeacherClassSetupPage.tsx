@@ -19,6 +19,7 @@ const TeacherClassSetupPage = () => {
   const { toast } = useToast();
   const { user } = useAuth();
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [submittedClass, setSubmittedClass] = useState<ClassFormValues | null>(null);
   const [initialValues, setInitialValues] = useState<Partial<ClassFormValues> | undefined>(undefined);
   const [initialCohorts, setInitialCohorts] = useState<any[]>([]);
@@ -291,7 +292,7 @@ const TeacherClassSetupPage = () => {
                 ? cohort.daysOfWeek.map(day => day.toLowerCase())
                 : ["monday"];
               return {
-                id: cohort._id || String(Math.random()),
+                _id: cohort._id,
                 name: cohort.name || "",
                 startDate: cohort.startDate ? new Date(cohort.startDate) : null,
                 endDate: cohort.endDate ? new Date(cohort.endDate) : null,
@@ -344,28 +345,119 @@ const TeacherClassSetupPage = () => {
     loadClassData();
   }, [classId, toast]);
 
-  const handleSubmit = (data: ClassFormValues) => {
-    // Here you would normally make an API call to save the class data
-    // This is simulated with a timeout
-    //log saveclass
+  const handleSubmit = async (data: ClassFormValues) => {
     console.log("Saving class data:", data);
-    // const { title, type, subject, curriculum, description, isPublic, hasCohorts, hasTeamTeaching, gradeLevel, ageRange, curriculumLevel, numberOfLessons, technicalRequirements, materialsRequired, lessonPlans, commitmentRequired, methodology, strategy, objectives, assessmentMethods, cohorts, teachingTeam } = data;
-    // const classData = {
-    //   title,
-    //   type,
-    //   subject,
-    //   curriculum,
-    //   description,
-    //   isPublic,
-    // setTimeout(() => {
-    //   setSubmittedClass(data);
-    //   setIsSubmitted(true);
-    //
-    //   toast({
-    //     title: "Class created successfully",
-    //     description: "Your new class has been created and is ready for students.",
-    //   });
-    // }, 1000);
+    
+    try {
+      setIsSubmitting(true);
+      
+      if (data.status === 'ready') {
+        // If status is ready, publish the class
+        const currentClassId = classId || data._id;
+        
+        if (!currentClassId) {
+          throw new Error("Cannot publish class: No class ID available");
+        }
+        
+        // First make sure class data is saved with latest changes
+        const updateResponse = await classService.update(currentClassId, {
+          ...data,
+          isPublished: true
+        } as any);
+        
+        if (updateResponse.error) {
+          throw new Error(updateResponse.error.message || "Failed to update class");
+        }
+        
+        // Then call the publish endpoint
+        const publishResponse = await classService.publish(currentClassId);
+        
+        if (publishResponse.error) {
+          throw new Error(publishResponse.error.message || "Failed to publish class");
+        }
+        
+        console.log("Class published successfully:", publishResponse.data);
+        setSubmittedClass(data);
+        setIsSubmitted(true);
+        
+        toast({
+          title: "Class published successfully",
+          description: "Your class has been published and is now available for students to enroll.",
+        });
+      } else if (data.isPublished === false && classId) {
+        // If we're explicitly unpublishing an existing class
+        // First update the class data
+        const updateResponse = await classService.update(classId, {
+          ...data,
+          isPublished: false,
+          status: "draft"
+        } as any);
+        
+        if (updateResponse.error) {
+          throw new Error(updateResponse.error.message || "Failed to update class");
+        }
+        
+        // Then call the unpublish endpoint
+        const unpublishResponse = await classService.unpublish(classId);
+        
+        if (unpublishResponse.error) {
+          throw new Error(unpublishResponse.error.message || "Failed to unpublish class");
+        }
+        
+        console.log("Class unpublished successfully:", unpublishResponse.data);
+        setSubmittedClass(data);
+        setIsSubmitted(true);
+        
+        toast({
+          title: "Class unpublished",
+          description: "Your class has been unpublished and is now in draft mode.",
+        });
+      } else {
+        // Just save the class normally if not ready to publish
+        if (classId) {
+          // Update existing class
+          const updateResponse = await classService.update(classId, data as any);
+          
+          if (updateResponse.error) {
+            throw new Error(updateResponse.error.message || "Failed to update class");
+          }
+          
+          console.log("Class updated successfully:", updateResponse.data);
+          setSubmittedClass(data);
+          setIsSubmitted(true);
+          
+          toast({
+            title: "Class updated successfully",
+            description: "Your class has been saved as a draft.",
+          });
+        } else {
+          // Create new class
+          const createResponse = await classService.create(data as any);
+          
+          if (createResponse.error) {
+            throw new Error(createResponse.error.message || "Failed to create class");
+          }
+          
+          console.log("Class created successfully:", createResponse.data);
+          setSubmittedClass(data);
+          setIsSubmitted(true);
+          
+          toast({
+            title: "Class created successfully",
+            description: "Your class has been saved as a draft.",
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Error saving class:", error);
+      toast({
+        variant: "destructive",
+        title: "Error saving class",
+        description: error.message || "An error occurred while saving your class. Please try again.",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleBackToDashboard = () => {

@@ -58,6 +58,8 @@ export const classSchema = z.object({
   strategy: z.string().optional(),
   numberOfLessons: z.number().min(1, { message: "Number of lessons must be at least 1" }).default(1),
   isPublic: z.boolean().default(true),
+  isPublished: z.boolean().default(false),
+  status: z.string().optional().default("draft"),
   hasCohorts: z.boolean().default(false),
   hasTeamTeaching: z.boolean().default(false),
   lessonPlans: z.array(z.object({
@@ -73,7 +75,8 @@ export type ClassFormValues = z.infer<typeof classSchema>;
 
 // Updated cohort type with new fields
 export type CohortData = {
-  id: string;
+  _id?: string; // Make it optional for new cohorts
+  id?: string;  // Keep for backward compatibility
   name: string; 
   startDate: Date | null;
   endDate: Date | null;

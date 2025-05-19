@@ -1007,15 +1007,32 @@ const EnhancedClassSetupContent = ({
                       <ArrowRight className="h-4 w-4" />
                     </Button>
                   ) : (
-                    <Button
-                      type="button"
-                      onClick={() => form.handleSubmit(onSubmit)()}
-                      disabled={isSubmitting}
-                      className="gap-1.5 w-full sm:w-auto"
-                    >
-                      {isSubmitting ? 'Submitting...' : 'Publish Class'}
-                      <ArrowRight className="h-4 w-4" />
-                    </Button>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          console.log("Publish button clicked!");
+                          // Set required fields for publishing
+                          form.setValue("isPublic", true);
+                          form.setValue("isPublished", true);
+                          form.setValue("status", "ready");
+                          
+                          // Submit the form with custom values for API
+                          onSubmit({
+                            ...form.getValues(),
+                            isPublic: true,
+                            isPublished: true,
+                            status: "ready"
+                          });
+                        }}
+                        className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md flex items-center justify-center gap-1.5"
+                      >
+                        {isSubmitting ? 'Publishing...' : 'Publish Class'}
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M5 12h14M12 5l7 7-7 7"/>
+                        </svg>
+                      </button>
+                    </div>
                   )}
                 </div>
               </div>
