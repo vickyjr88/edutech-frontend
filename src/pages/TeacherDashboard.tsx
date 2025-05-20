@@ -16,6 +16,7 @@ import EnhancedClassSetup from "@/components/teacher/class-setup/EnhancedClassSe
 import TeacherClassView from "@/components/teacher/class-view/TeacherClassView";
 import CreateClassForm from "@/components/teacher/CreateClassForm"; // Kept for backwards compatibility
 import EnrollStudentsPage from "@/components/teacher/enrollment/EnrollStudentsPage";
+import { StudentView } from "@/components/teacher/students";
 import { useAuth } from "@/contexts/AuthContext";
 import {teacherService} from "@/integrations/api/services/teacher.service.ts";
 import {classService} from "@/integrations/api/services/class.service.ts";
@@ -1509,27 +1510,10 @@ const TeacherDashboard = () => {
           )}
 
           {!isLoading && activeTab === "students" && !showEnrollStudents && (
-            <div className="space-y-6">
-              <div className="flex justify-between items-center">
-                <h2 className="text-xl font-bold">My Students</h2>
-                <Button onClick={() => handleEnrollStudents()} className="flex items-center gap-2">
-                  <UserPlus className="h-4 w-4" />
-                  Enroll Students
-                </Button>
-              </div>
-              
-              <div className="flex flex-col items-center justify-center bg-white rounded-lg border border-dashed p-12">
-                <Users className="h-16 w-16 text-gray-300 mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-1">No Students Yet</h3>
-                <p className="text-sm text-gray-500 mb-6 text-center max-w-md">
-                  You haven't enrolled any students yet. Start enrolling students to your classes.
-                </p>
-                <Button onClick={() => handleEnrollStudents()} className="flex items-center gap-2">
-                  <UserPlus className="h-4 w-4" />
-                  Enroll Your First Student
-                </Button>
-              </div>
-            </div>
+            <StudentView
+              onViewProfile={(studentId) => console.log("View student profile:", studentId)}
+              onEnrollStudents={handleEnrollStudents}
+            />
           )}
 
           {!isLoading && activeTab === "enrollment" && (
