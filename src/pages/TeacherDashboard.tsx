@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Home, BookOpen, Users, Calendar, User, Settings, LogOut, Edit, Phone, MapPin, Award, CheckCircle2, CircleDashed, Video, PlusCircle, Star, UserPlus, BookText, School, UsersRound, UserRound, ChevronLeft, Loader2 } from "lucide-react";
@@ -48,23 +48,79 @@ interface TeacherProfileData {
 
 const TeacherDashboard = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
   const { user, signOut } = useAuth();
-  const [activeTab, setActiveTab] = useState("dashboard");
+  
+  // Parse the active tab from the URL
+  const getTabFromPath = () => {
+    const path = location.pathname;
+    if (path.includes('/teacher-dashboard/classes')) {
+      if (location.search.includes('create=true')) {
+        return "classes";
+      }
+      return location.search.includes('id=') ? "viewClass" : "classes";
+    } else if (path.includes('/teacher-dashboard/students')) {
+      return location.search.includes('enroll=true') ? "enrollment" : "students";
+    } else if (path.includes('/teacher-dashboard/schedule')) {
+      return "schedule";
+    } else if (path.includes('/teacher-dashboard/settings')) {
+      return "settings";
+    }
+    return "dashboard"; // Default tab
+  };
+
+  const [activeTab, setActiveTab] = useState(getTabFromPath());
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasProfile, setHasProfile] = useState(false);
   const [profileData, setProfileData] = useState<TeacherProfileData | null>(null);
-  const [isEditing, setIsEditing] = useState(false);
+  const [isEditing, setIsEditing] = useState(location.pathname.includes('/teacher-dashboard/settings') && location.search.includes('edit=true'));
   const [isLoading, setIsLoading] = useState(true);
-  const [showProfessionalForm, setShowProfessionalForm] = useState(false);
+  const [showProfessionalForm, setShowProfessionalForm] = useState(location.pathname.includes('/teacher-dashboard/settings') && location.search.includes('professional=true'));
   const [hasProfessionalProfile, setHasProfessionalProfile] = useState(false);
-  const [showClassSetupForm, setShowClassSetupForm] = useState(false);
+  const [showClassSetupForm, setShowClassSetupForm] = useState(location.pathname.includes('/teacher-dashboard/settings') && location.search.includes('class-setup=true'));
   const [hasClassesSetup, setHasClassesSetup] = useState(true);
-  const [showCreateClassForm, setShowCreateClassForm] = useState(false);
+  const [showCreateClassForm, setShowCreateClassForm] = useState(location.pathname.includes('/teacher-dashboard/classes') && location.search.includes('create=true'));
   const [classes, setClasses] = useState([]);
+  
+  // Parse class ID from URL query parameters
+  const getClassIdFromUrl = () => {
+    const searchParams = new URLSearchParams(location.search);
+    return searchParams.get('id');
+  };
+  
   const [selectedClass, setSelectedClass] = useState<any>(null);
   const [activeClassTab, setActiveClassTab] = useState("basic");
-  const [showEnrollStudents, setShowEnrollStudents] = useState(false);
+  const [showEnrollStudents, setShowEnrollStudents] = useState(location.pathname.includes('/teacher-dashboard/students') && location.search.includes('enroll=true'));
+
+  // Update the active tab when URL changes
+  useEffect(() => {
+    setActiveTab(getTabFromPath());
+    
+    // Load class details from URL if viewing a class
+    if (getTabFromPath() === "viewClass") {
+      const classId = getClassIdFromUrl();
+      if (classId && classes.length > 0) {
+        const classItem = classes.find((c: any) => (c._id || c.id) === classId);
+        if (classItem) {
+          setSelectedClass(classItem);
+        }
+      }
+    }
+  }, [location.pathname, location.search, classes]);
+
+  // Load class details on initial render or when URL changes
+  useEffect(() => {
+    if (getTabFromPath() === "viewClass" && classes.length > 0) {
+      const classId = getClassIdFromUrl();
+      if (classId) {
+        const classItem = classes.find((c: any) => (c._id || c.id) === classId);
+        if (classItem) {
+          setSelectedClass(classItem);
+        }
+      }
+    }
+  }, [classes]);
 
   useEffect(() => {
     if (user) {
@@ -188,7 +244,9 @@ const TeacherDashboard = () => {
       setHasProfile(true);
       setProfileData(profileData);
       setIsEditing(false);
-      setActiveTab("dashboard");
+      
+      // Navigate to dashboard instead of setting state
+      navigate("/teacher-dashboard");
       
       fetchTeacherProfile();
     } catch (err: any) {
@@ -233,8 +291,7 @@ const TeacherDashboard = () => {
   };
 
   const handleEditProfile = () => {
-    setIsEditing(true);
-    setActiveTab("settings");
+    navigate("/teacher-dashboard/settings?edit=true");
   };
 
   const handleSignOut = async () => {
@@ -250,8 +307,7 @@ const TeacherDashboard = () => {
     
     // Simulate loading for a short period to show the animation
     setTimeout(() => {
-      setShowProfessionalForm(true);
-      setActiveTab("settings");
+      navigate("/teacher-dashboard/settings?professional=true");
       setIsProfessionalProfileLoading(false);
     }, 800); // Animation duration
   };
@@ -263,12 +319,11 @@ const TeacherDashboard = () => {
       title: "Professional profile completed",
       description: "Your professional teacher profile has been successfully created.",
     });
-    setActiveTab("dashboard");
+    navigate("/teacher-dashboard");
   };
 
   const handleCancelProfessionalProfile = () => {
-    setShowProfessionalForm(false);
-    setActiveTab("dashboard");
+    navigate("/teacher-dashboard");
   };
 
   const handleCompleteClassSetup = () => {
@@ -278,17 +333,15 @@ const TeacherDashboard = () => {
       title: "Class setup completed",
       description: "Your class settings have been successfully saved.",
     });
-    setActiveTab("dashboard");
+    navigate("/teacher-dashboard");
   };
 
   const handleCancelClassSetup = () => {
-    setShowClassSetupForm(false);
-    setActiveTab("dashboard");
+    navigate("/teacher-dashboard");
   };
 
   const handleSetupClassSettings = () => {
-    setShowClassSetupForm(true);
-    setActiveTab("settings");
+    navigate("/teacher-dashboard/settings?class-setup=true");
   };
 
   const handleCreateClass = () => {
@@ -296,13 +349,10 @@ const TeacherDashboard = () => {
     navigate("/teacher-class-setup");
     
     // Keeping the old behavior as a fallback option
-    // setShowCreateClassForm(true);
-    // setActiveTab("classes");
+    // navigate("/teacher-dashboard/classes?create=true");
   };
 
   const handleClassCreated = (classData: any) => {
-    setShowCreateClassForm(false);
-    
     // Refresh classes from API instead of manually adding to the array
     fetchTeacherClasses();
     
@@ -310,7 +360,7 @@ const TeacherDashboard = () => {
       title: "Class created successfully",
       description: "Your new class is now ready for students to enroll.",
     });
-    setActiveTab("dashboard");
+    navigate("/teacher-dashboard");
   };
 
   const fetchTeacherClasses = async () => {
@@ -346,30 +396,30 @@ const TeacherDashboard = () => {
   };
 
   const handleCancelClassCreation = () => {
-    setShowCreateClassForm(false);
-    setActiveTab("dashboard");
+    navigate("/teacher-dashboard");
   };
 
   const handleViewClass = (classItem: any) => {
-    setSelectedClass(classItem);
-    setActiveTab("viewClass");
+    const classId = classItem._id || classItem.id;
+    navigate(`/teacher-dashboard/classes?id=${classId}`);
     setActiveClassTab("basic");
   };
 
   const handleBackToClasses = () => {
-    setSelectedClass(null);
-    setActiveTab("classes");
+    navigate("/teacher-dashboard/classes");
   };
 
   const handleEnrollStudents = (classData?: any) => {
-    setSelectedClass(classData || null);
-    setShowEnrollStudents(true);
-    setActiveTab("enrollment");
+    if (classData) {
+      const classId = classData._id || classData.id;
+      navigate(`/teacher-dashboard/students?enroll=true&classId=${classId}`);
+    } else {
+      navigate(`/teacher-dashboard/students?enroll=true`);
+    }
   };
 
   const handleRequestReviews = () => {
-    setActiveTab("enrollment");
-    setShowEnrollStudents(true);
+    navigate(`/teacher-dashboard/students?enroll=true&tab=reviews`);
     setTimeout(() => {
       const reviewsTab = document.querySelector('[value="reviews"]') as HTMLElement;
       if (reviewsTab) {
@@ -482,15 +532,17 @@ const TeacherDashboard = () => {
     <div className="flex min-h-screen bg-gray-50">
       <aside className="hidden md:flex flex-col w-64 bg-white border-r border-gray-200">
         <div className="p-6">
-          <img 
-            src="/lovable-uploads/15671e94-4ac9-490c-95b6-aa4fe6bbc23c.png" 
-            alt="Kidato Logo" 
-            className="h-8"
-          />
+          <Link to="/">
+            <img 
+              src="/lovable-uploads/15671e94-4ac9-490c-95b6-aa4fe6bbc23c.png" 
+              alt="Kidato Logo" 
+              className="h-8"
+            />
+          </Link>
         </div>
         <nav className="flex-1 px-4 py-6 space-y-1">
-          <button 
-            onClick={() => setActiveTab("dashboard")}
+          <Link 
+            to="/teacher-dashboard"
             className={`flex items-center px-4 py-3 text-sm font-medium rounded-md w-full text-left ${
               activeTab === "dashboard" 
                 ? "bg-kidato-light-blue text-kidato-blue" 
@@ -499,9 +551,9 @@ const TeacherDashboard = () => {
           >
             <Home className="mr-3 h-5 w-5" />
             Dashboard
-          </button>
-          <button 
-            onClick={() => setActiveTab("classes")}
+          </Link>
+          <Link 
+            to="/teacher-dashboard/classes"
             className={`flex items-center px-4 py-3 text-sm font-medium rounded-md w-full text-left ${
               activeTab === "classes" || activeTab === "viewClass"
                 ? "bg-kidato-light-blue text-kidato-blue" 
@@ -510,9 +562,9 @@ const TeacherDashboard = () => {
           >
             <BookOpen className="mr-3 h-5 w-5" />
             My Classes
-          </button>
-          <button 
-            onClick={() => setActiveTab("students")}
+          </Link>
+          <Link 
+            to="/teacher-dashboard/students"
             className={`flex items-center px-4 py-3 text-sm font-medium rounded-md w-full text-left ${
               activeTab === "students" || activeTab === "enrollment"
                 ? "bg-kidato-light-blue text-kidato-blue" 
@@ -521,9 +573,9 @@ const TeacherDashboard = () => {
           >
             <Users className="mr-3 h-5 w-5" />
             Students
-          </button>
-          <button 
-            onClick={() => setActiveTab("schedule")}
+          </Link>
+          <Link 
+            to="/teacher-dashboard/schedule"
             className={`flex items-center px-4 py-3 text-sm font-medium rounded-md w-full text-left ${
               activeTab === "schedule" 
                 ? "bg-kidato-light-blue text-kidato-blue" 
@@ -532,9 +584,9 @@ const TeacherDashboard = () => {
           >
             <Calendar className="mr-3 h-5 w-5" />
             Schedule
-          </button>
-          <button 
-            onClick={() => setActiveTab("settings")}
+          </Link>
+          <Link 
+            to="/teacher-dashboard/settings"
             className={`flex items-center px-4 py-3 text-sm font-medium rounded-md w-full text-left ${
               activeTab === "settings" 
                 ? "bg-kidato-light-blue text-kidato-blue" 
@@ -543,7 +595,7 @@ const TeacherDashboard = () => {
           >
             <Settings className="mr-3 h-5 w-5" />
             Settings
-          </button>
+          </Link>
         </nav>
         <div className="p-4 border-t border-gray-200">
           <Button 
@@ -707,8 +759,7 @@ const TeacherDashboard = () => {
                       <Button 
                         className="mt-3 bg-amber-600 hover:bg-amber-700"
                         onClick={() => {
-                          setActiveTab("settings");
-                          setIsEditing(true);
+                          navigate("/teacher-dashboard/settings?edit=true");
                         }}
                       >
                         Complete Now
@@ -1011,8 +1062,7 @@ const TeacherDashboard = () => {
                 <>
                   <div className="flex items-center gap-2 mb-4">
                     <Button variant="outline" size="sm" onClick={() => {
-                      setShowEnrollStudents(false);
-                      setActiveTab("students");
+                      navigate("/teacher-dashboard/students");
                     }}>
                       <ChevronLeft className="h-4 w-4 mr-1" />
                       Back to Students

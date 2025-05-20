@@ -84,11 +84,34 @@ const App = () => {
                 <Route path="/dashboard" element={
                   <Navigate to="/student-dashboard" replace />
                 } />
+                
+                {/* Teacher Dashboard Routes */}
                 <Route path="/teacher-dashboard" element={
                   <TeacherRoute requireProfileComplete={true}>
                     <TeacherDashboard />
                   </TeacherRoute>
                 } />
+                <Route path="/teacher-dashboard/classes" element={
+                  <TeacherRoute requireProfileComplete={true}>
+                    <TeacherDashboard />
+                  </TeacherRoute>
+                } />
+                <Route path="/teacher-dashboard/students" element={
+                  <TeacherRoute requireProfileComplete={true}>
+                    <TeacherDashboard />
+                  </TeacherRoute>
+                } />
+                <Route path="/teacher-dashboard/schedule" element={
+                  <TeacherRoute requireProfileComplete={true}>
+                    <TeacherDashboard />
+                  </TeacherRoute>
+                } />
+                <Route path="/teacher-dashboard/settings" element={
+                  <TeacherRoute requireProfileComplete={true}>
+                    <TeacherDashboard />
+                  </TeacherRoute>
+                } />
+                
                 <Route path="/teacher-dashboard/zoom" element={
                   <TeacherRoute requireProfileComplete={true}>
                     <TeacherZoomPage />
