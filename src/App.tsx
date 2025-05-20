@@ -47,6 +47,7 @@ import TeacherProfileJourney from "./pages/TeacherProfileJourney";
 import TeacherProfileResume from "./pages/TeacherProfileResume";
 import TeacherClassSetupPage from "./pages/TeacherClassSetupPage";
 import TeacherClassViewPage from "./pages/TeacherClassViewPage";
+import TeacherEarningsPage from "./pages/TeacherEarningsPage";
 import DocumentViewer from "./pages/DocumentViewer";
 import DocumentProxy from "./pages/DocumentProxy";
 
@@ -141,6 +142,11 @@ const App = () => {
                 <Route path="/teacher-class/:classId" element={
                   <TeacherRoute requireProfileComplete={true}>
                     <TeacherClassViewPage />
+                  </TeacherRoute>
+                } />
+                <Route path="/teacher-earnings" element={
+                  <TeacherRoute requireProfileComplete={true}>
+                    <TeacherEarningsPage />
                   </TeacherRoute>
                 } />
                 <Route path="/parents-dashboard" element={
