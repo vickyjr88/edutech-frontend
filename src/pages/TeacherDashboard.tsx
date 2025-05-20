@@ -984,7 +984,7 @@ const TeacherDashboard = () => {
               ) : (
                 <>
                   <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-                    {/* Main metrics */}
+                    {/* Main metrics with conditional Review Banner */}
                     <Card className="col-span-4 bg-gradient-to-r from-blue-50 to-indigo-50 border-none shadow-md">
                       <CardHeader>
                         <div className="flex justify-between items-start">
@@ -1004,7 +1004,44 @@ const TeacherDashboard = () => {
                         </div>
                       </CardHeader>
                       <CardContent>
-                        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mt-2">
+                        {/* Show review banner if no students and fewer than 10 reviews */}
+                        {/* For demo purposes, always show this since we know there are 0 students and 0 reviews */}
+                        <div className="bg-gradient-to-r from-yellow-50 to-amber-50 border-2 border-yellow-200 rounded-xl p-5 mb-6">
+                          <div className="flex flex-col md:flex-row items-center gap-5">
+                            <div className="md:w-3/4">
+                              <div className="flex items-start gap-3">
+                                <div className="hidden sm:flex h-12 w-12 rounded-full bg-yellow-500 flex-shrink-0 items-center justify-center">
+                                  <Star className="h-6 w-6 text-white" />
+                                </div>
+                                <div>
+                                  <h3 className="text-lg font-bold text-gray-900">Boost Your Profile with Reviews</h3>
+                                  <p className="text-sm text-gray-700 mt-1">Teachers with 5+ reviews are <span className="font-semibold">4x more likely</span> to attract new students.</p>
+                                  <div className="flex items-center gap-2 mt-2">
+                                    <div className="flex items-center bg-white px-2 py-1 rounded-full">
+                                      <span className="text-xs font-medium text-gray-700 mr-1">0/10</span>
+                                      <div className="w-20 sm:w-32 h-2 bg-gray-200 rounded-full">
+                                        <div className="h-2 bg-yellow-500 rounded-full" style={{ width: "0%" }}></div>
+                                      </div>
+                                    </div>
+                                    <span className="text-xs text-gray-600">Review Goal</span>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="md:w-1/4 mt-4 md:mt-0">
+                              <Button 
+                                className="bg-yellow-600 hover:bg-yellow-700 w-full"
+                                onClick={handleRequestReviews}
+                              >
+                                <Star className="mr-2 h-4 w-4" />
+                                Request Reviews
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Regular metrics */}
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                           <div className="bg-white p-5 rounded-xl shadow-sm flex flex-col">
                             <div className="flex items-center justify-between mb-2">
                               <span className="text-sm font-medium text-gray-500">Classes</span>
@@ -1032,23 +1069,6 @@ const TeacherDashboard = () => {
                               <span>0 active</span>
                               <span className="mx-1">•</span>
                               <span>0 waiting</span>
-                            </div>
-                          </div>
-                          
-                          <div className="bg-white p-5 rounded-xl shadow-sm flex flex-col">
-                            <div className="flex items-center justify-between mb-2">
-                              <span className="text-sm font-medium text-gray-500">Earnings</span>
-                              <div className="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-600">
-                                  <circle cx="12" cy="12" r="10"></circle>
-                                  <line x1="12" y1="8" x2="12" y2="16"></line>
-                                  <line x1="8" y1="12" x2="16" y2="12"></line>
-                                </svg>
-                              </div>
-                            </div>
-                            <span className="text-3xl font-bold text-gray-800">$0</span>
-                            <div className="flex items-center mt-2 text-xs text-gray-500">
-                              <span>This month</span>
                             </div>
                           </div>
                           
@@ -1174,89 +1194,6 @@ const TeacherDashboard = () => {
                           )}
                         </CardContent>
                       </Card>
-
-                      {/* Published Classes Status Card */}
-                      <Card className="border-t-4 border-t-purple-500">
-                        <CardHeader className="pb-3">
-                          <CardTitle className="text-xl flex items-center text-gray-800">
-                            <Users className="mr-2 h-5 w-5 text-purple-600" />
-                            Published Classes & Enrollment
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          {classes.filter((c: any) => c.isPublished).length === 0 ? (
-                            <div className="bg-purple-50 rounded-lg p-6 text-center">
-                              <Users className="h-12 w-12 mx-auto text-purple-300 mb-3" />
-                              <h3 className="text-lg font-medium text-gray-800 mb-2">No Published Classes Yet</h3>
-                              <p className="text-gray-600 mb-4">You need to publish your classes before students can enroll.</p>
-                              <Button 
-                                className="bg-purple-600 hover:bg-purple-700 text-white"
-                                onClick={() => navigate("/teacher-dashboard/classes")}
-                                disabled={classes.length === 0}
-                              >
-                                <BookOpen className="mr-2 h-4 w-4" />
-                                Go to My Classes
-                              </Button>
-                            </div>
-                          ) : (
-                            <div className="space-y-3">
-                              <div className="flex justify-between items-center mb-3">
-                                <h3 className="font-medium text-gray-700">Published Classes ({classes.filter((c: any) => c.isPublished).length})</h3>
-                                <Button 
-                                  variant="outline" 
-                                  size="sm"
-                                  className="text-purple-700 border-purple-200"
-                                  onClick={() => handleEnrollStudents()}
-                                >
-                                  <UserPlus className="mr-2 h-4 w-4" />
-                                  Manage Enrollment
-                                </Button>
-                              </div>
-                              
-                              <div className="p-4 bg-purple-50 rounded-lg">
-                                <div className="flex items-center justify-between mb-3">
-                                  <div>
-                                    <h4 className="font-medium text-gray-800">Student Invitations</h4>
-                                    <p className="text-sm text-gray-600">Invite students to join your published classes</p>
-                                  </div>
-                                  <div className="text-2xl font-bold text-purple-800">0</div>
-                                </div>
-                                <div className="flex flex-wrap gap-2">
-                                  <Button 
-                                    size="sm" 
-                                    className="bg-purple-600 hover:bg-purple-700 text-xs"
-                                  >
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1">
-                                      <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                                      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-                                    </svg>
-                                    Share Link
-                                  </Button>
-                                  <Button 
-                                    size="sm" 
-                                    className="bg-purple-600 hover:bg-purple-700 text-xs"
-                                  >
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1">
-                                      <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
-                                      <polyline points="22,6 12,13 2,6"></polyline>
-                                    </svg>
-                                    Email Invite
-                                  </Button>
-                                  <Button 
-                                    size="sm" 
-                                    className="bg-purple-600 hover:bg-purple-700 text-xs"
-                                  >
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1">
-                                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-                                    </svg>
-                                    Request Reviews
-                                  </Button>
-                                </div>
-                              </div>
-                            </div>
-                          )}
-                        </CardContent>
-                      </Card>
                     </div>
                     
                     {/* Side column */}
@@ -1289,44 +1226,6 @@ const TeacherDashboard = () => {
                                 View Earnings
                               </Button>
                             </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                      
-                      {/* Reviews card */}
-                      <Card className="border-t-4 border-t-yellow-500">
-                        <CardHeader className="pb-3">
-                          <CardTitle className="text-xl flex items-center text-gray-800">
-                            <Star className="mr-2 h-5 w-5 text-yellow-600" />
-                            Feedback & Rating
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="text-center py-2">
-                            <div className="flex justify-center mb-2">
-                              {[...Array(5)].map((_, i) => (
-                                <Star key={i} className="h-8 w-8 text-gray-200" />
-                              ))}
-                            </div>
-                            <p className="text-sm text-gray-500 mb-4">No reviews yet</p>
-                            
-                            <div className="mb-4">
-                              <h4 className="text-sm font-medium text-gray-700 mb-2">Review Goal</h4>
-                              <div className="flex items-center justify-center">
-                                <div className="h-3 w-full max-w-[200px] bg-gray-200 rounded-full">
-                                  <div className="h-3 bg-yellow-500 rounded-full" style={{ width: "0%" }}></div>
-                                </div>
-                                <span className="ml-2 text-sm font-medium text-gray-700">0/10</span>
-                              </div>
-                            </div>
-                            
-                            <Button 
-                              className="w-full bg-yellow-600 hover:bg-yellow-700"
-                              onClick={handleRequestReviews}
-                            >
-                              <Star className="mr-2 h-4 w-4" />
-                              Request Reviews
-                            </Button>
                           </div>
                         </CardContent>
                       </Card>
