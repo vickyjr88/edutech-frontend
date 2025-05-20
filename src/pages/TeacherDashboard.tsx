@@ -432,11 +432,15 @@ const TeacherDashboard = () => {
   };
 
   const handleRequestReviews = () => {
-    navigate(`/teacher-dashboard/students?enroll=true&tab=reviews`);
+    // Navigate to the students page
+    navigate(`/teacher-dashboard/students`);
+    
+    // Set a short timeout to allow the page to render
     setTimeout(() => {
-      const reviewsTab = document.querySelector('[value="reviews"]') as HTMLElement;
-      if (reviewsTab) {
-        reviewsTab.click();
+      // Find and click the "Invite & Enroll" tab (which has value="invite")
+      const inviteTab = document.querySelector('button[value="invite"]') as HTMLElement;
+      if (inviteTab) {
+        inviteTab.click();
       }
     }, 100);
   };

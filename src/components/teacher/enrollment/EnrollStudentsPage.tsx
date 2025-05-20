@@ -1,9 +1,9 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import InviteStudentsTab from "./InviteStudentsTab";
 import WaitingListTab from "./WaitingListTab";
-import ReviewsTab from "./ReviewsTab";
+import { useLocation } from "react-router-dom";
 
 interface EnrollStudentsPageProps {
   classId?: string;
@@ -11,7 +11,26 @@ interface EnrollStudentsPageProps {
 }
 
 const EnrollStudentsPage = ({ classId, className }: EnrollStudentsPageProps) => {
-  const [activeTab, setActiveTab] = useState("invite");
+  const location = useLocation();
+  
+  // Check if there's a tab parameter in the URL
+  const getInitialTab = () => {
+    const searchParams = new URLSearchParams(location.search);
+    const tabParam = searchParams.get('tab');
+    
+    // Only accept "waiting" as a valid tab parameter
+    return tabParam === 'waiting' ? tabParam : "invite";
+  };
+  
+  const [activeTab, setActiveTab] = useState(getInitialTab());
+  
+  // Update activeTab when the URL changes
+  useEffect(() => {
+    const newTab = getInitialTab();
+    if (newTab !== activeTab) {
+      setActiveTab(newTab);
+    }
+  }, [location.search]);
 
   return (
     <div className="space-y-6">
@@ -20,15 +39,14 @@ const EnrollStudentsPage = ({ classId, className }: EnrollStudentsPageProps) => 
           {className ? `Manage Students for ${className}` : "Student Management"}
         </h2>
         <p className="text-gray-500">
-          Invite students to join your classes, manage enrollments, and collect feedback.
+          Invite students to join your classes and manage enrollments. For feedback and reviews, visit the Feedback Hub.
         </p>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid grid-cols-3 mb-6">
+        <TabsList className="grid grid-cols-2 mb-6">
           <TabsTrigger value="invite">Invite Students</TabsTrigger>
           <TabsTrigger value="waiting">Waiting List</TabsTrigger>
-          <TabsTrigger value="reviews">Reviews</TabsTrigger>
         </TabsList>
         
         <TabsContent value="invite">
@@ -37,10 +55,6 @@ const EnrollStudentsPage = ({ classId, className }: EnrollStudentsPageProps) => 
         
         <TabsContent value="waiting">
           <WaitingListTab classId={classId} />
-        </TabsContent>
-        
-        <TabsContent value="reviews">
-          <ReviewsTab classId={classId} />
         </TabsContent>
       </Tabs>
     </div>
