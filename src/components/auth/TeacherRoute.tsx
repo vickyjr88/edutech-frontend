@@ -75,10 +75,11 @@ const TeacherRoute = ({ children, requireProfileComplete = true }: TeacherRouteP
     }
   }
 
-  // Redirect to teacher dashboard if on profile setup but profile is already complete
-  if (!requireProfileComplete && isProfileComplete === true && location.pathname === '/teacher-profile-setup') {
-    return <Navigate to="/teacher-dashboard" replace />;
-  }
+  // Do not redirect from profile setup page even if profile is complete
+  // This allows users to edit their profile regardless of completion status
+  // Previously: if (!requireProfileComplete && isProfileComplete === true && location.pathname === '/teacher-profile-setup') {
+  //   return <Navigate to="/teacher-dashboard" replace />;
+  // }
 
   // User is a teacher with the right profile status for this route
   return <>{children}</>;

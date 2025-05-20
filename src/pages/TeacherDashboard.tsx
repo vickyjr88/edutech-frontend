@@ -296,7 +296,8 @@ const TeacherDashboard = () => {
   };
 
   const handleEditProfile = () => {
-    navigate("/teacher-dashboard/settings?edit=true");
+    // Navigate directly to profile setup, ignoring whether profile is complete
+    navigate("/teacher-profile-setup");
   };
 
   const handleSignOut = async () => {
@@ -972,7 +973,7 @@ const TeacherDashboard = () => {
                     </div>
                     <Button 
                       className="w-full py-3 text-lg bg-blue-600 hover:bg-blue-700"
-                      onClick={() => navigate("/teacher-dashboard/settings?edit=true")}
+                      onClick={() => navigate("/teacher-profile-setup")}
                     >
                       <User className="mr-2 h-5 w-5" />
                       Complete Your Profile
