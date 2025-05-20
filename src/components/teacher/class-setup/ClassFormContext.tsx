@@ -177,6 +177,16 @@ export const ClassFormProvider = ({
   const saveCurrentFormState = () => {
     const formValues = form.getValues();
     const teacherId = userAuth.user?.teacherId || null;
+    
+    // Check if this is a new, mostly empty form that we shouldn't save
+    const isEmptyNewForm = !classId && 
+      (!formValues.title || formValues.title.trim() === "") && 
+      (!formValues.subject || formValues.subject.trim() === "");
+    
+    // Don't save empty new forms to prevent auto-completion issues
+    if (isEmptyNewForm) {
+      return;
+    }
 
     saveFormToStorage(
       formValues,
@@ -289,7 +299,10 @@ export const ClassFormProvider = ({
       return;
     }
 
-    // If enableStorageLoading is enabled and no initialValues, try to load from storage
+    // Only load from storage if explicitly requested by user.
+    // We're disabling automatic draft loading to fix the issue with forms 
+    // getting auto-completed when they're supposed to be blank
+    /*
     if (enableStorageLoading && !initialValues && !urlClassId) {
       const metadata = getFormMetadata();
       const hasDraft = metadata.lastSaved > 0;
@@ -299,6 +312,7 @@ export const ClassFormProvider = ({
         loadFromStorage();
       }
     }
+    */
   }, [initialValues, urlClassId]);
 
   // Track form changes and auto-save
@@ -310,16 +324,19 @@ export const ClassFormProvider = ({
     return () => subscription.unsubscribe();
   }, [form]);
 
-  // Auto-save when values change
+  // Auto-save when values change, but only if not a new form or if explicitly enabled
   useEffect(() => {
-    if (hasUnsavedChanges) {
+    // Only auto-save if we have either an existing class ID or explicit user interaction has occurred
+    const shouldAutoSave = hasUnsavedChanges && (classId || form.formState.dirtyFields.title);
+    
+    if (shouldAutoSave) {
       const timeoutId = setTimeout(() => {
         saveCurrentFormState();
       }, 2000); // Auto-save after 2 seconds of inactivity
 
       return () => clearTimeout(timeoutId);
     }
-  }, [form.formState.isDirty, cohorts, teamMembers, hasUnsavedChanges]);
+  }, [form.formState.isDirty, cohorts, teamMembers, hasUnsavedChanges, classId, form.formState.dirtyFields]);
 
   const handleNavigateTab = (tab: string) => {
     setActiveTab(tab);
