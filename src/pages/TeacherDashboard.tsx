@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Home, BookOpen, Users, Calendar, User, Settings, LogOut, Edit, Phone, MapPin, Award, CheckCircle2, CircleDashed, Video, PlusCircle, Star, UserPlus, BookText, School, UsersRound, UserRound, ChevronLeft, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -9,6 +11,7 @@ import TeacherProfileForm from "@/components/teacher/TeacherProfileForm";
 import TeacherProfessionalProfileForm from "@/components/teacher/TeacherProfessionalProfileForm";
 import ClassSetupForm from "@/components/teacher/ClassSetupForm";
 import EnhancedClassSetup from "@/components/teacher/class-setup/EnhancedClassSetup";
+import TeacherClassView from "@/components/teacher/class-view/TeacherClassView";
 import CreateClassForm from "@/components/teacher/CreateClassForm"; // Kept for backwards compatibility
 import EnrollStudentsPage from "@/components/teacher/enrollment/EnrollStudentsPage";
 import { useAuth } from "@/contexts/AuthContext";
@@ -401,8 +404,14 @@ const TeacherDashboard = () => {
 
   const handleViewClass = (classItem: any) => {
     const classId = classItem._id || classItem.id;
+    
+    // Option 1: Continue using the query parameter approach
     navigate(`/teacher-dashboard/classes?id=${classId}`);
     setActiveClassTab("basic");
+    
+    // Option 2 (alternative): Use the dedicated route for the enhanced view
+    // This would completely bypass the TeacherDashboard component's viewClass tab
+    // navigate(`/teacher-class/${classId}`);
   };
 
   const handleBackToClasses = () => {
@@ -742,203 +751,461 @@ const TeacherDashboard = () => {
 
           {!isLoading && activeTab === "dashboard" && (
             <div className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Welcome, {user?.full_name || "Teacher"}!</CardTitle>
-                  <CardDescription>
-                    {hasProfile 
-                      ? "Your profile is partially complete. Continue with the next steps to start accepting students."
-                      : "Complete your profile to start accepting students."}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {!hasProfile && (
-                    <div className="p-4 bg-amber-50 text-amber-800 rounded-md border border-amber-200">
-                      <p className="font-medium">Your profile is incomplete</p>
-                      <p className="text-sm mt-1">Complete your teacher profile to be visible to students.</p>
-                      <Button 
-                        className="mt-3 bg-amber-600 hover:bg-amber-700"
-                        onClick={() => {
-                          navigate("/teacher-dashboard/settings?edit=true");
-                        }}
-                      >
-                        Complete Now
-                      </Button>
+              {!hasProfile ? (
+                <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+                  <div className="bg-gradient-to-r from-blue-600 to-indigo-700 p-8 text-white">
+                    <h2 className="text-3xl font-bold mb-4">Welcome to Kidato!</h2>
+                    <p className="text-xl opacity-90">Complete your profile to start your teaching journey</p>
+                  </div>
+                  <div className="p-8">
+                    <div className="mb-6">
+                      <h3 className="text-xl font-semibold mb-3 text-gray-800">First Step: Complete Your Teacher Profile</h3>
+                      <p className="text-gray-600 mb-4">Set up your professional profile to connect with students who match your teaching style and expertise.</p>
                     </div>
-                  )}
-                  {hasProfile && (
-                    <div className="space-y-6">
-                      <div className="p-4 bg-blue-50 text-blue-800 rounded-md border border-blue-200">
-                        <h3 className="font-medium text-lg mb-3">Your Teacher Journey</h3>
-                        <div className="space-y-4">
-                          {/* Note: The following steps are now handled by ProfileJourney component:
-                            1. Personal Information (Basic Profile)
-                            2. Location & Availability
-                            3. Education Background
-                            4. Teaching Experience
-                            5. Subject Expertise
-                            6. Teaching Style
-                            7. Verification & Credentials
-                            8. Teaching Platform
-                          */}
-                          
-                          <div className="flex items-start gap-3">
-                            <div className="flex-shrink-0 h-7 w-7 rounded-full bg-green-100 flex items-center justify-center">
-                              <CheckCircle2 className="h-4 w-4 text-green-600" />
+                    <Button 
+                      className="w-full py-3 text-lg bg-blue-600 hover:bg-blue-700"
+                      onClick={() => navigate("/teacher-dashboard/settings?edit=true")}
+                    >
+                      <User className="mr-2 h-5 w-5" />
+                      Complete Your Profile
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                    {/* Main metrics */}
+                    <Card className="col-span-4 bg-gradient-to-r from-blue-50 to-indigo-50 border-none shadow-md">
+                      <CardHeader>
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <CardTitle className="text-2xl text-blue-900">Welcome back, {user?.full_name || "Teacher"}!</CardTitle>
+                            <CardDescription className="text-blue-700 mt-1 text-base">
+                              Here's an overview of your teaching business
+                            </CardDescription>
+                          </div>
+                          <Button 
+                            onClick={handleCreateClass}
+                            className="bg-blue-600 hover:bg-blue-700 text-white shadow-md"
+                          >
+                            <PlusCircle className="mr-2 h-4 w-4" />
+                            Create New Class
+                          </Button>
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mt-2">
+                          <div className="bg-white p-5 rounded-xl shadow-sm flex flex-col">
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="text-sm font-medium text-gray-500">Classes</span>
+                              <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center">
+                                <BookOpen className="h-4 w-4 text-blue-600" />
+                              </div>
                             </div>
-                            <div>
-                              <p className="font-medium">Profile Journey</p>
-                              <p className="text-sm text-blue-700">
-                                Complete! Your teacher profile journey has been initiated. Visit the Profile Journey page to continue or edit your profile.
-                              </p>
-                              <Button 
-                                className="mt-2 bg-blue-600 hover:bg-blue-700 text-white"
-                                size="sm"
-                                onClick={() => navigate("/teacher-profile")}
-                              >
-                                View Complete Profile
-                              </Button>
+                            <span className="text-3xl font-bold text-gray-800">{classes.length}</span>
+                            <div className="flex items-center mt-2 text-xs text-gray-500">
+                              <span>{classes.filter((c: any) => c.isPublished).length} published</span>
+                              <span className="mx-1">•</span>
+                              <span>{classes.filter((c: any) => !c.isPublished).length} drafts</span>
                             </div>
                           </div>
                           
-                          <div className="flex items-start gap-3">
-                            <div className="flex-shrink-0 h-7 w-7 rounded-full bg-amber-100 flex items-center justify-center">
-                              {hasClassesSetup ? 
-                                <CheckCircle2 className="h-4 w-4 text-green-600" /> :
-                                <CircleDashed className="h-4 w-4 text-amber-600" />
-                              }
+                          <div className="bg-white p-5 rounded-xl shadow-sm flex flex-col">
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="text-sm font-medium text-gray-500">Students</span>
+                              <div className="h-8 w-8 rounded-full bg-purple-100 flex items-center justify-center">
+                                <Users className="h-4 w-4 text-purple-600" />
+                              </div>
                             </div>
-                            <div>
-                              <p className="font-medium">Step 1: Classroom Setup</p>
-                              <p className="text-sm text-blue-700">
-                                {hasClassesSetup ? 
-                                  "Complete! You've set up your classroom settings." :
-                                  "Set up your classroom settings for online teaching."
-                                }
-                              </p>
-                              <Button 
-                                className="mt-2 bg-amber-600 hover:bg-amber-700 text-white"
-                                size="sm"
-                                onClick={() => navigate("/teacher-profile-setup")}
-                              >
-                                {hasClassesSetup ? "Edit Setup" : "Set Up Now"}
-                              </Button>
+                            <span className="text-3xl font-bold text-gray-800">0</span>
+                            <div className="flex items-center mt-2 text-xs text-gray-500">
+                              <span>0 active</span>
+                              <span className="mx-1">•</span>
+                              <span>0 waiting</span>
                             </div>
                           </div>
                           
-                          <div className="flex items-start gap-3">
-                            <div className="flex-shrink-0 h-7 w-7 rounded-full bg-amber-100 flex items-center justify-center">
-                              {classes.length > 0 ? 
-                                <CheckCircle2 className="h-4 w-4 text-green-600" /> : 
-                                <CircleDashed className="h-4 w-4 text-amber-600" />
-                              }
+                          <div className="bg-white p-5 rounded-xl shadow-sm flex flex-col">
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="text-sm font-medium text-gray-500">Earnings</span>
+                              <div className="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-600">
+                                  <circle cx="12" cy="12" r="10"></circle>
+                                  <line x1="12" y1="8" x2="12" y2="16"></line>
+                                  <line x1="8" y1="12" x2="16" y2="12"></line>
+                                </svg>
+                              </div>
                             </div>
-                            <div>
-                              <p className="font-medium">Step 2: Create Your First Class</p>
-                              <p className="text-sm text-blue-700">
-                                {classes.length > 0 ? 
-                                  "Complete! You've created your first class." : 
-                                  "Create your first class to start teaching."
-                                }
-                              </p>
-                              <Button 
-                                className="mt-2 bg-blue-600 hover:bg-blue-700 text-white"
-                                size="sm"
-                                onClick={handleCreateClass}
-                              >
-                                <PlusCircle className="mr-2 h-4 w-4" />
-                                {classes.length > 0 ? "Create Another Class" : "Create First Class"}
-                              </Button>
+                            <span className="text-3xl font-bold text-gray-800">$0</span>
+                            <div className="flex items-center mt-2 text-xs text-gray-500">
+                              <span>This month</span>
                             </div>
                           </div>
                           
-                          <div className="flex items-start gap-3">
-                            <div className="flex-shrink-0 h-7 w-7 rounded-full bg-gray-100 flex items-center justify-center">
-                              <CircleDashed className="h-4 w-4 text-gray-600" />
+                          <div className="bg-white p-5 rounded-xl shadow-sm flex flex-col">
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="text-sm font-medium text-gray-500">Rating</span>
+                              <div className="h-8 w-8 rounded-full bg-yellow-100 flex items-center justify-center">
+                                <Star className="h-4 w-4 text-yellow-600" />
+                              </div>
                             </div>
-                            <div>
-                              <p className="font-medium">Step 3: Enroll Your Students</p>
-                              <p className="text-sm text-gray-600">
-                                Invite and enroll students to join your classes.
-                              </p>
-                              <Button 
-                                className="mt-2 bg-purple-600 hover:bg-purple-700 text-white"
-                                size="sm"
-                                onClick={() => handleEnrollStudents()}
-                              >
-                                <UserPlus className="mr-2 h-4 w-4" />
-                                Enroll Students
-                              </Button>
+                            <div className="flex items-center">
+                              <span className="text-3xl font-bold text-gray-800">0</span>
+                              <div className="flex ml-2">
+                                {[...Array(5)].map((_, i) => (
+                                  <Star key={i} className="h-4 w-4 text-gray-300" />
+                                ))}
+                              </div>
                             </div>
-                          </div>
-                          
-                          <div className="flex items-start gap-3">
-                            <div className="flex-shrink-0 h-7 w-7 rounded-full bg-gray-100 flex items-center justify-center">
-                              <CircleDashed className="h-4 w-4 text-gray-600" />
-                            </div>
-                            <div>
-                              <p className="font-medium">Step 4: Get Reviews</p>
-                              <p className="text-sm text-gray-600">
-                                Collect feedback and reviews from your students, parents and supervisors to improve your profile.
-                              </p>
-                              <Button 
-                                className="mt-2 bg-yellow-600 hover:bg-yellow-700 text-white"
-                                size="sm"
-                                onClick={handleRequestReviews}
-                              >
-                                <Star className="mr-2 h-4 w-4" />
-                                Request Reviews
-                              </Button>
+                            <div className="flex items-center mt-2 text-xs text-gray-500">
+                              <span>0 reviews</span>
                             </div>
                           </div>
                         </div>
-                      </div>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+                      </CardContent>
+                    </Card>
+                    
+                    {/* Action cards section */}
+                    <div className="lg:col-span-3 grid grid-cols-1 gap-6">
+                      {/* Class management card */}
+                      <Card className="border-t-4 border-t-blue-500">
+                        <CardHeader className="pb-3">
+                          <CardTitle className="text-xl flex items-center text-gray-800">
+                            <BookOpen className="mr-2 h-5 w-5 text-blue-600" />
+                            Class Management
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          {classes.length === 0 ? (
+                            <div className="bg-blue-50 rounded-lg p-6 text-center">
+                              <BookOpen className="h-12 w-12 mx-auto text-blue-300 mb-3" />
+                              <h3 className="text-lg font-medium text-gray-800 mb-2">No Classes Created Yet</h3>
+                              <p className="text-gray-600 mb-4">Start your teaching journey by creating your first class.</p>
+                              <Button 
+                                className="bg-blue-600 hover:bg-blue-700 text-white"
+                                onClick={handleCreateClass}
+                              >
+                                <PlusCircle className="mr-2 h-4 w-4" />
+                                Create Your First Class
+                              </Button>
+                            </div>
+                          ) : (
+                            <>
+                              <div className="flex justify-between items-center mb-4">
+                                <h3 className="font-medium text-gray-700">Recent Classes</h3>
+                                <Button 
+                                  variant="outline" 
+                                  size="sm"
+                                  onClick={() => navigate("/teacher-dashboard/classes")}
+                                >
+                                  View All
+                                </Button>
+                              </div>
+                              <div className="space-y-3">
+                                {classes.slice(0, 3).map((classItem: any) => {
+                                  const classId = classItem._id || classItem.id;
+                                  const isPublished = classItem.isPublished;
+                                  
+                                  return (
+                                    <div 
+                                      key={classId}
+                                      className="border rounded-lg overflow-hidden"
+                                    >
+                                      <div 
+                                        className="p-3 flex justify-between items-center hover:bg-gray-50 cursor-pointer"
+                                        onClick={() => handleViewClass(classItem)}
+                                      >
+                                        <div>
+                                          <h4 className="font-medium">{classItem.title}</h4>
+                                          <p className="text-sm text-gray-500">
+                                            {classItem.type === "academic" ? classItem.gradeLevel : classItem.ageRange} - {classItem.subject}
+                                          </p>
+                                        </div>
+                                        <div className={`px-2 py-1 text-xs rounded-full ${
+                                          isPublished ? 
+                                            "bg-green-100 text-green-800" : 
+                                            "bg-amber-100 text-amber-800"
+                                        }`}>
+                                          {isPublished ? "Published" : "Draft"}
+                                        </div>
+                                      </div>
+                                      
+                                      {isPublished && (
+                                        <div className="bg-purple-50 px-3 py-2 border-t flex justify-between items-center">
+                                          <span className="text-xs text-purple-700">Student enrollments: {classItem.enrollment?.current || 0}</span>
+                                          <Button 
+                                            size="sm" 
+                                            variant="ghost" 
+                                            className="text-purple-700 hover:bg-purple-100 hover:text-purple-800 p-1 h-7"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              handleEnrollStudents(classItem);
+                                            }}
+                                          >
+                                            <UserPlus className="h-4 w-4 mr-1" />
+                                            <span className="text-xs">Invite Students</span>
+                                          </Button>
+                                        </div>
+                                      )}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                              <div className="mt-5 flex justify-end">
+                                <Button 
+                                  className="bg-blue-600 hover:bg-blue-700"
+                                  onClick={handleCreateClass}
+                                >
+                                  <PlusCircle className="mr-2 h-4 w-4" />
+                                  Create New Class
+                                </Button>
+                              </div>
+                            </>
+                          )}
+                        </CardContent>
+                      </Card>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-lg">Classes</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-3xl font-bold">{classes.length}</p>
-                    <p className="text-sm text-gray-500">
-                      {classes.filter((c: any) => c.isPublished).length} published, {classes.filter((c: any) => !c.isPublished).length} drafts
-                    </p>
-                    {hasClassesSetup && (
-                      <Button 
-                        className="mt-4 w-full" 
-                        variant="outline"
-                        onClick={handleCreateClass}
-                      >
-                        <PlusCircle className="mr-2 h-4 w-4" />
-                        Create New Class
-                      </Button>
-                    )}
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-lg">Students</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-3xl font-bold">0</p>
-                    <p className="text-sm text-gray-500">Enrolled students</p>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-lg">Hours</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-3xl font-bold">0</p>
-                    <p className="text-sm text-gray-500">Teaching hours</p>
-                  </CardContent>
-                </Card>
-              </div>
+                      {/* Published Classes Status Card */}
+                      <Card className="border-t-4 border-t-purple-500">
+                        <CardHeader className="pb-3">
+                          <CardTitle className="text-xl flex items-center text-gray-800">
+                            <Users className="mr-2 h-5 w-5 text-purple-600" />
+                            Published Classes & Enrollment
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          {classes.filter((c: any) => c.isPublished).length === 0 ? (
+                            <div className="bg-purple-50 rounded-lg p-6 text-center">
+                              <Users className="h-12 w-12 mx-auto text-purple-300 mb-3" />
+                              <h3 className="text-lg font-medium text-gray-800 mb-2">No Published Classes Yet</h3>
+                              <p className="text-gray-600 mb-4">You need to publish your classes before students can enroll.</p>
+                              <Button 
+                                className="bg-purple-600 hover:bg-purple-700 text-white"
+                                onClick={() => navigate("/teacher-dashboard/classes")}
+                                disabled={classes.length === 0}
+                              >
+                                <BookOpen className="mr-2 h-4 w-4" />
+                                Go to My Classes
+                              </Button>
+                            </div>
+                          ) : (
+                            <div className="space-y-3">
+                              <div className="flex justify-between items-center mb-3">
+                                <h3 className="font-medium text-gray-700">Published Classes ({classes.filter((c: any) => c.isPublished).length})</h3>
+                                <Button 
+                                  variant="outline" 
+                                  size="sm"
+                                  className="text-purple-700 border-purple-200"
+                                  onClick={() => handleEnrollStudents()}
+                                >
+                                  <UserPlus className="mr-2 h-4 w-4" />
+                                  Manage Enrollment
+                                </Button>
+                              </div>
+                              
+                              <div className="p-4 bg-purple-50 rounded-lg">
+                                <div className="flex items-center justify-between mb-3">
+                                  <div>
+                                    <h4 className="font-medium text-gray-800">Student Invitations</h4>
+                                    <p className="text-sm text-gray-600">Invite students to join your published classes</p>
+                                  </div>
+                                  <div className="text-2xl font-bold text-purple-800">0</div>
+                                </div>
+                                <div className="flex flex-wrap gap-2">
+                                  <Button 
+                                    size="sm" 
+                                    className="bg-purple-600 hover:bg-purple-700 text-xs"
+                                  >
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1">
+                                      <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                                    </svg>
+                                    Share Link
+                                  </Button>
+                                  <Button 
+                                    size="sm" 
+                                    className="bg-purple-600 hover:bg-purple-700 text-xs"
+                                  >
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1">
+                                      <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                                      <polyline points="22,6 12,13 2,6"></polyline>
+                                    </svg>
+                                    Email Invite
+                                  </Button>
+                                  <Button 
+                                    size="sm" 
+                                    className="bg-purple-600 hover:bg-purple-700 text-xs"
+                                  >
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1">
+                                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                                    </svg>
+                                    Request Reviews
+                                  </Button>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    </div>
+                    
+                    {/* Side column */}
+                    <div className="lg:col-span-1 space-y-6">
+                      {/* Earnings card */}
+                      <Card className="border-t-4 border-t-green-500">
+                        <CardHeader className="pb-3">
+                          <CardTitle className="text-xl flex items-center text-gray-800">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 text-green-600">
+                              <line x1="12" y1="1" x2="12" y2="23"></line>
+                              <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                            </svg>
+                            Earnings
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="text-center py-4">
+                            <p className="text-4xl font-bold text-gray-800 mb-1">$0.00</p>
+                            <p className="text-sm text-gray-500">Total earnings</p>
+                            <div className="mt-6">
+                              <Button 
+                                variant="outline" 
+                                className="w-full border-green-200 hover:bg-green-50 text-green-700"
+                                onClick={() => navigate("/teacher-earnings")}
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
+                                  <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+                                  <line x1="1" y1="10" x2="23" y2="10"></line>
+                                </svg>
+                                View Earnings
+                              </Button>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                      
+                      {/* Reviews card */}
+                      <Card className="border-t-4 border-t-yellow-500">
+                        <CardHeader className="pb-3">
+                          <CardTitle className="text-xl flex items-center text-gray-800">
+                            <Star className="mr-2 h-5 w-5 text-yellow-600" />
+                            Feedback & Rating
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="text-center py-2">
+                            <div className="flex justify-center mb-2">
+                              {[...Array(5)].map((_, i) => (
+                                <Star key={i} className="h-8 w-8 text-gray-200" />
+                              ))}
+                            </div>
+                            <p className="text-sm text-gray-500 mb-4">No reviews yet</p>
+                            
+                            <div className="mb-4">
+                              <h4 className="text-sm font-medium text-gray-700 mb-2">Review Goal</h4>
+                              <div className="flex items-center justify-center">
+                                <div className="h-3 w-full max-w-[200px] bg-gray-200 rounded-full">
+                                  <div className="h-3 bg-yellow-500 rounded-full" style={{ width: "0%" }}></div>
+                                </div>
+                                <span className="ml-2 text-sm font-medium text-gray-700">0/10</span>
+                              </div>
+                            </div>
+                            
+                            <Button 
+                              className="w-full bg-yellow-600 hover:bg-yellow-700"
+                              onClick={handleRequestReviews}
+                            >
+                              <Star className="mr-2 h-4 w-4" />
+                              Request Reviews
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </div>
+                  </div>
+                  
+                  {/* Quick actions & information section */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-none hover:shadow-md transition-shadow">
+                      <CardContent className="pt-6">
+                        <div className="flex items-start gap-4">
+                          <div className="h-12 w-12 rounded-full bg-blue-600 flex items-center justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white">
+                              <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"></path>
+                            </svg>
+                          </div>
+                          <div>
+                            <h3 className="font-medium text-gray-900">Teaching Resources</h3>
+                            <p className="text-sm text-gray-600 mt-1">Access teaching materials and tools</p>
+                            <Button variant="link" className="text-blue-600 p-0 mt-2">
+                              Browse Resources
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                    
+                    <Card className="bg-gradient-to-br from-purple-50 to-pink-50 border-none hover:shadow-md transition-shadow">
+                      <CardContent className="pt-6">
+                        <div className="flex items-start gap-4">
+                          <div className="h-12 w-12 rounded-full bg-purple-600 flex items-center justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white">
+                              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                            </svg>
+                          </div>
+                          <div>
+                            <h3 className="font-medium text-gray-900">Grow Your Business</h3>
+                            <p className="text-sm text-gray-600 mt-1">Tips to attract more students</p>
+                            <Button variant="link" className="text-purple-600 p-0 mt-2">
+                              View Guide
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                    
+                    <Card className="bg-gradient-to-br from-green-50 to-teal-50 border-none hover:shadow-md transition-shadow">
+                      <CardContent className="pt-6">
+                        <div className="flex items-start gap-4">
+                          <div className="h-12 w-12 rounded-full bg-green-600 flex items-center justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white">
+                              <circle cx="12" cy="8" r="7"></circle>
+                              <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline>
+                            </svg>
+                          </div>
+                          <div>
+                            <h3 className="font-medium text-gray-900">Certification</h3>
+                            <p className="text-sm text-gray-600 mt-1">Enhance your teacher profile</p>
+                            <Button variant="link" className="text-green-600 p-0 mt-2">
+                              Get Certified
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                    
+                    <Card className="bg-gradient-to-br from-yellow-50 to-amber-50 border-none hover:shadow-md transition-shadow">
+                      <CardContent className="pt-6">
+                        <div className="flex items-start gap-4">
+                          <div className="h-12 w-12 rounded-full bg-yellow-600 flex items-center justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white">
+                              <circle cx="12" cy="12" r="10"></circle>
+                              <path d="M12 16v-4"></path>
+                              <path d="M12 8h.01"></path>
+                            </svg>
+                          </div>
+                          <div>
+                            <h3 className="font-medium text-gray-900">Help & Support</h3>
+                            <p className="text-sm text-gray-600 mt-1">Get assistance with your account</p>
+                            <Button variant="link" className="text-yellow-600 p-0 mt-2">
+                              Contact Support
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </>
+              )}
             </div>
           )}
 
@@ -1077,200 +1344,512 @@ const TeacherDashboard = () => {
           )}
 
           {!isLoading && activeTab === "schedule" && (
-            <div className="flex flex-col items-center justify-center bg-white rounded-lg border border-dashed p-12">
-              <Calendar className="h-16 w-16 text-gray-300 mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-1">No Schedule Yet</h3>
-              <p className="text-sm text-gray-500 mb-6 text-center max-w-md">
-                You haven't set up your teaching schedule yet. Create a class first, then schedule lessons.
-              </p>
-              <Button onClick={handleCreateClass}>
-                <PlusCircle className="mr-2 h-4 w-4" />
-                Create Your First Class
-              </Button>
+            <div className="space-y-6">
+              <div className="flex flex-col lg:flex-row gap-6">
+                {/* Main calendar section */}
+                <div className="lg:w-2/3">
+                  <Card className="border-t-4 border-t-sky-500">
+                    <CardHeader className="flex flex-row items-center justify-between pb-2">
+                      <div>
+                        <CardTitle className="text-xl flex items-center text-gray-800">
+                          <Calendar className="mr-2 h-5 w-5 text-sky-600" />
+                          Teaching Schedule
+                        </CardTitle>
+                        <CardDescription>
+                          Manage your classes and availability
+                        </CardDescription>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button size="sm" variant="outline" className="text-xs">
+                          Day
+                        </Button>
+                        <Button size="sm" variant="default" className="bg-sky-600 text-xs">
+                          Week
+                        </Button>
+                        <Button size="sm" variant="outline" className="text-xs">
+                          Month
+                        </Button>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      {classes.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center bg-sky-50 rounded-lg p-12 text-center">
+                          <Calendar className="h-16 w-16 text-sky-300 mb-4" />
+                          <h3 className="text-lg font-medium text-gray-900 mb-1">No Classes to Schedule</h3>
+                          <p className="text-sm text-gray-500 mb-6 max-w-md">
+                            You need to create and publish classes before you can schedule teaching sessions.
+                          </p>
+                          <Button 
+                            className="bg-sky-600 hover:bg-sky-700"
+                            onClick={handleCreateClass}
+                          >
+                            <PlusCircle className="mr-2 h-4 w-4" />
+                            Create Your First Class
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="mt-2">
+                          {/* Calendar week view */}
+                          <div className="border rounded-md overflow-hidden">
+                            {/* Week navigation */}
+                            <div className="flex items-center justify-between px-4 py-2 bg-gray-50 border-b">
+                              <div className="flex items-center space-x-2">
+                                <Button variant="ghost" size="icon" className="h-8 w-8">
+                                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-600">
+                                    <path d="m15 18-6-6 6-6"/>
+                                  </svg>
+                                </Button>
+                                <Button variant="ghost" size="sm" className="h-8 text-xs">
+                                  Today
+                                </Button>
+                                <Button variant="ghost" size="icon" className="h-8 w-8">
+                                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-600">
+                                    <path d="m9 18 6-6-6-6"/>
+                                  </svg>
+                                </Button>
+                              </div>
+                              <h3 className="text-sm font-medium">May 19 - May 25, 2024</h3>
+                              <div></div>
+                            </div>
+                            
+                            {/* Days of the week */}
+                            <div className="grid grid-cols-7 text-center border-b bg-gray-50">
+                              {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, i) => (
+                                <div key={i} className="py-2 text-xs font-medium">
+                                  <div>{day}</div>
+                                  <div className={`text-sm mt-1 ${i === 2 ? "h-6 w-6 rounded-full bg-sky-600 text-white flex items-center justify-center mx-auto" : ""}`}>
+                                    {i + 19}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                            
+                            {/* Time slots */}
+                            <div className="relative" style={{ height: "500px" }}>
+                              {/* Time markers */}
+                              <div className="absolute top-0 left-0 w-full h-full grid grid-cols-1 gap-0">
+                                {[9, 10, 11, 12, 13, 14, 15, 16, 17].map((hour, i) => (
+                                  <div key={i} className="relative border-b border-gray-100">
+                                    <div className="absolute -top-2.5 left-1 text-xs text-gray-400 bg-white px-1">
+                                      {hour % 12 === 0 ? '12' : hour % 12}{hour >= 12 ? 'pm' : 'am'}
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                              
+                              {/* Week grid */}
+                              <div className="absolute top-0 left-8 right-0 h-full grid grid-cols-7 gap-0">
+                                {/* Sample day columns */}
+                                {Array(7).fill(0).map((_, dayIndex) => (
+                                  <div key={dayIndex} className="relative border-l first:border-l-0 h-full">
+                                    {/* Sample events */}
+                                    {dayIndex === 2 && (
+                                      <div className="absolute top-0 left-1 right-1 h-[120px] mt-2 rounded-md bg-blue-100 border border-blue-200 p-2 overflow-hidden">
+                                        <div className="text-xs font-medium text-blue-800">Math Class</div>
+                                        <div className="text-xs text-blue-700">9:00am - 10:00am</div>
+                                        <div className="text-xs text-blue-600 mt-1">Grade 7</div>
+                                      </div>
+                                    )}
+                                    {dayIndex === 2 && (
+                                      <div className="absolute top-[240px] left-1 right-1 h-[120px] rounded-md bg-purple-100 border border-purple-200 p-2 overflow-hidden">
+                                        <div className="text-xs font-medium text-purple-800">Science Lab</div>
+                                        <div className="text-xs text-purple-700">1:00pm - 2:00pm</div>
+                                        <div className="text-xs text-purple-600 mt-1">Grade 5</div>
+                                      </div>
+                                    )}
+                                    {dayIndex === 4 && (
+                                      <div className="absolute top-[120px] left-1 right-1 h-[120px] rounded-md bg-green-100 border border-green-200 p-2 overflow-hidden">
+                                        <div className="text-xs font-medium text-green-800">English Literature</div>
+                                        <div className="text-xs text-green-700">11:00am - 12:00pm</div>
+                                        <div className="text-xs text-green-600 mt-1">Grade 8</div>
+                                      </div>
+                                    )}
+                                    {dayIndex === 5 && (
+                                      <div className="absolute top-[360px] left-1 right-1 h-[120px] rounded-md bg-amber-100 border border-amber-200 p-2 overflow-hidden">
+                                        <div className="text-xs font-medium text-amber-800">Art Class</div>
+                                        <div className="text-xs text-amber-700">3:00pm - 4:00pm</div>
+                                        <div className="text-xs text-amber-600 mt-1">Grade 6</div>
+                                      </div>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </div>
+                
+                {/* Side panel */}
+                <div className="lg:w-1/3 space-y-6">
+                  {/* Quick add event */}
+                  <Card className="border-t-4 border-t-indigo-500">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-lg flex items-center text-gray-800">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 text-indigo-600">
+                          <path d="M8 2v4"></path>
+                          <path d="M16 2v4"></path>
+                          <rect width="18" height="18" x="3" y="4" rx="2"></rect>
+                          <path d="M3 10h18"></path>
+                          <path d="M12 16h6"></path>
+                          <path d="M12 14v4"></path>
+                        </svg>
+                        Quick Schedule
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <Label htmlFor="class">Class</Label>
+                            <select className="w-full mt-1 rounded-md border border-gray-300 px-3 py-2 text-sm">
+                              <option>Math Grade 7</option>
+                              <option>Science Grade 5</option>
+                              <option>English Grade 8</option>
+                              <option>Art Grade 6</option>
+                            </select>
+                          </div>
+                          <div>
+                            <Label htmlFor="type">Type</Label>
+                            <select className="w-full mt-1 rounded-md border border-gray-300 px-3 py-2 text-sm">
+                              <option>Regular class</option>
+                              <option>Lab session</option>
+                              <option>Review session</option>
+                              <option>Test/Quiz</option>
+                            </select>
+                          </div>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <Label htmlFor="date">Date</Label>
+                            <Input type="date" id="date" className="mt-1" />
+                          </div>
+                          <div>
+                            <Label htmlFor="time">Time</Label>
+                            <Input type="time" id="time" className="mt-1" />
+                          </div>
+                        </div>
+                        
+                        <div>
+                          <Label htmlFor="duration">Duration</Label>
+                          <div className="flex items-center gap-2 mt-1">
+                            <Input type="number" id="duration" defaultValue="1" className="w-20" />
+                            <span className="text-sm text-gray-500">hours</span>
+                          </div>
+                        </div>
+                        
+                        <div>
+                          <Label htmlFor="location">Location</Label>
+                          <Input type="text" id="location" placeholder="Room, building, or online link" className="mt-1" />
+                        </div>
+                        
+                        <div>
+                          <Label className="flex items-center gap-2">
+                            <input type="checkbox" className="rounded text-indigo-600" />
+                            <span className="text-sm text-gray-700">Repeat weekly</span>
+                          </Label>
+                        </div>
+                        
+                        <div className="pt-2">
+                          <Button className="w-full bg-indigo-600 hover:bg-indigo-700">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
+                              <circle cx="12" cy="12" r="10"></circle>
+                              <path d="M12 8v8"></path>
+                              <path d="M8 12h8"></path>
+                            </svg>
+                            Add to Schedule
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  
+                  {/* Upcoming classes */}
+                  <Card className="border-t-4 border-t-emerald-500">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-lg flex items-center text-gray-800">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 text-emerald-600">
+                          <circle cx="12" cy="12" r="10"></circle>
+                          <path d="M12 6v6l4 2"></path>
+                        </svg>
+                        Upcoming Classes
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        <div className="bg-blue-50 rounded-lg overflow-hidden border border-blue-100">
+                          <div className="p-3">
+                            <div className="flex items-center justify-between">
+                              <h4 className="font-medium text-blue-800">Math Class</h4>
+                              <div className="text-xs px-2 py-1 bg-blue-100 rounded-full text-blue-700">Today</div>
+                            </div>
+                            <div className="flex items-start mt-1">
+                              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1 text-blue-700 mt-0.5">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <path d="M12 6v6l4 2"></path>
+                              </svg>
+                              <div className="text-sm text-blue-700">9:00am - 10:00am</div>
+                            </div>
+                            <div className="flex items-start mt-1">
+                              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1 text-blue-700 mt-0.5">
+                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                                <circle cx="12" cy="10" r="3"></circle>
+                              </svg>
+                              <div className="text-sm text-blue-700">Room 203, Main Building</div>
+                            </div>
+                            <div className="flex items-start mt-1">
+                              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1 text-blue-700 mt-0.5">
+                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="9" cy="7" r="4"></circle>
+                                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                              </svg>
+                              <div className="text-sm text-blue-700">12 students</div>
+                            </div>
+                          </div>
+                          <div className="flex items-center justify-end bg-blue-100 px-3 py-2 text-xs">
+                            <Button size="sm" variant="ghost" className="h-7 text-xs">Edit</Button>
+                            <Button size="sm" variant="ghost" className="h-7 text-xs">Cancel</Button>
+                            <Button size="sm" className="h-7 bg-blue-600 hover:bg-blue-700 text-xs">Start Class</Button>
+                          </div>
+                        </div>
+                        
+                        <div className="bg-purple-50 rounded-lg overflow-hidden border border-purple-100">
+                          <div className="p-3">
+                            <div className="flex items-center justify-between">
+                              <h4 className="font-medium text-purple-800">Science Lab</h4>
+                              <div className="text-xs px-2 py-1 bg-purple-100 rounded-full text-purple-700">Today</div>
+                            </div>
+                            <div className="flex items-start mt-1">
+                              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1 text-purple-700 mt-0.5">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <path d="M12 6v6l4 2"></path>
+                              </svg>
+                              <div className="text-sm text-purple-700">1:00pm - 2:00pm</div>
+                            </div>
+                            <div className="flex items-start mt-1">
+                              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1 text-purple-700 mt-0.5">
+                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                                <circle cx="12" cy="10" r="3"></circle>
+                              </svg>
+                              <div className="text-sm text-purple-700">Science Lab 4</div>
+                            </div>
+                            <div className="flex items-start mt-1">
+                              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1 text-purple-700 mt-0.5">
+                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="9" cy="7" r="4"></circle>
+                                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                              </svg>
+                              <div className="text-sm text-purple-700">8 students</div>
+                            </div>
+                          </div>
+                          <div className="flex items-center justify-end bg-purple-100 px-3 py-2 text-xs">
+                            <Button size="sm" variant="ghost" className="h-7 text-xs">Edit</Button>
+                            <Button size="sm" variant="ghost" className="h-7 text-xs">Cancel</Button>
+                            <Button size="sm" className="h-7 bg-purple-600 hover:bg-purple-700 text-xs">Prepare Lab</Button>
+                          </div>
+                        </div>
+                        
+                        <div className="pt-2 flex justify-center">
+                          <Button variant="link" className="text-emerald-600">
+                            View all upcoming classes
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
+              
+              {/* Recurring schedules */}
+              <Card className="border-t-4 border-t-amber-500">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-xl flex items-center text-gray-800">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 text-amber-600">
+                      <path d="M21 7v6h-6"></path>
+                      <path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3l3 2.7"></path>
+                    </svg>
+                    Recurring Schedules
+                  </CardTitle>
+                  <CardDescription>
+                    Manage your weekly teaching patterns
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="border rounded-lg p-4 hover:shadow-md transition-shadow bg-blue-50 border-blue-200">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h3 className="font-medium text-gray-900">Math Class - Grade 7</h3>
+                          <p className="text-sm text-gray-500 mt-1">Every Monday, Wednesday</p>
+                          <p className="text-sm text-gray-500">9:00 AM - 10:00 AM</p>
+                          <p className="text-sm text-gray-500">Room 203</p>
+                        </div>
+                        <div className="px-2 py-1 bg-blue-100 rounded-full text-xs text-blue-700">
+                          Weekly
+                        </div>
+                      </div>
+                      <div className="flex mt-4 justify-end gap-2">
+                        <Button size="sm" variant="outline" className="text-xs h-8">Edit</Button>
+                        <Button size="sm" variant="outline" className="text-xs h-8">Pause</Button>
+                      </div>
+                    </div>
+                    
+                    <div className="border rounded-lg p-4 hover:shadow-md transition-shadow bg-purple-50 border-purple-200">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h3 className="font-medium text-gray-900">Science Lab - Grade 5</h3>
+                          <p className="text-sm text-gray-500 mt-1">Every Tuesday, Thursday</p>
+                          <p className="text-sm text-gray-500">1:00 PM - 2:00 PM</p>
+                          <p className="text-sm text-gray-500">Science Lab 4</p>
+                        </div>
+                        <div className="px-2 py-1 bg-purple-100 rounded-full text-xs text-purple-700">
+                          Weekly
+                        </div>
+                      </div>
+                      <div className="flex mt-4 justify-end gap-2">
+                        <Button size="sm" variant="outline" className="text-xs h-8">Edit</Button>
+                        <Button size="sm" variant="outline" className="text-xs h-8">Pause</Button>
+                      </div>
+                    </div>
+                    
+                    <div className="border rounded-lg p-4 border-dashed flex flex-col items-center justify-center text-center h-[152px]">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400 mb-2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <path d="M12 8v8"></path>
+                        <path d="M8 12h8"></path>
+                      </svg>
+                      <p className="text-sm text-gray-500 mb-2">Create a new recurring schedule</p>
+                      <Button size="sm" variant="outline" className="text-xs">
+                        Add Recurring Schedule
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              {/* Schedule analysis */}
+              <Card className="border-t-4 border-t-emerald-500">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-xl flex items-center text-gray-800">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 text-emerald-600">
+                      <path d="M3 3v18h18"></path>
+                      <path d="m19 9-5 5-4-4-3 3"></path>
+                    </svg>
+                    Schedule Analytics
+                  </CardTitle>
+                  <CardDescription>
+                    Insights to optimize your teaching schedule
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="bg-gray-50 rounded-lg p-4 text-center">
+                      <h3 className="text-sm font-medium text-gray-500 mb-1">Weekly Teaching Hours</h3>
+                      <p className="text-3xl font-bold text-gray-900">8.5</p>
+                      <div className="flex justify-center items-center mt-2 text-green-600 text-sm">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1">
+                          <path d="m6 9 6 6 6-6"></path>
+                        </svg>
+                        <span>+2.5 from last week</span>
+                      </div>
+                      <div className="h-2 bg-gray-200 rounded-full mt-3">
+                        <div className="h-2 bg-emerald-500 rounded-full" style={{ width: "85%" }}></div>
+                      </div>
+                      <p className="text-xs text-gray-500 mt-1">85% of availability filled</p>
+                    </div>
+                    
+                    <div className="bg-gray-50 rounded-lg p-4 text-center">
+                      <h3 className="text-sm font-medium text-gray-500 mb-1">Busiest Day</h3>
+                      <p className="text-3xl font-bold text-gray-900">Wednesday</p>
+                      <p className="text-sm text-gray-500 mt-2">3 classes scheduled</p>
+                      <div className="grid grid-cols-7 gap-1 mt-3">
+                        {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => (
+                          <div 
+                            key={i} 
+                            className={`text-xs font-medium rounded-full h-6 flex items-center justify-center ${
+                              i === 3 ? 'bg-emerald-200 text-emerald-800' : 'bg-gray-200 text-gray-600'
+                            }`}
+                          >
+                            {day}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    
+                    <div className="bg-gray-50 rounded-lg p-4 text-center">
+                      <h3 className="text-sm font-medium text-gray-500 mb-1">Class Distribution</h3>
+                      <div className="flex justify-center mt-3">
+                        {/* Simple pie chart visualization */}
+                        <div className="relative w-24 h-24">
+                          <svg viewBox="0 0 36 36" className="w-full h-full">
+                            <path
+                              d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                              fill="none"
+                              stroke="#E5E7EB"
+                              strokeWidth="4"
+                            />
+                            <path
+                              d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                              fill="none"
+                              stroke="#3B82F6"
+                              strokeWidth="4"
+                              strokeDasharray="25, 100"
+                              strokeDashoffset="25"
+                            />
+                            <path
+                              d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                              fill="none"
+                              stroke="#8B5CF6"
+                              strokeWidth="4"
+                              strokeDasharray="20, 100"
+                              strokeDashoffset="0"
+                            />
+                            <path
+                              d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                              fill="none"
+                              stroke="#10B981"
+                              strokeWidth="4"
+                              strokeDasharray="30, 100"
+                              strokeDashoffset="50"
+                            />
+                          </svg>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-3 gap-1 mt-3 text-xs">
+                        <div className="flex items-center">
+                          <span className="w-3 h-3 rounded-full bg-blue-500 mr-1"></span>
+                          <span className="text-gray-600">Math</span>
+                        </div>
+                        <div className="flex items-center">
+                          <span className="w-3 h-3 rounded-full bg-purple-500 mr-1"></span>
+                          <span className="text-gray-600">Science</span>
+                        </div>
+                        <div className="flex items-center">
+                          <span className="w-3 h-3 rounded-full bg-emerald-500 mr-1"></span>
+                          <span className="text-gray-600">English</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           )}
 
           {!isLoading && activeTab === "viewClass" && selectedClass && (
-            <div className="space-y-6">
-              <div className="flex items-center gap-2 mb-4">
+            <div className="space-y-4">
+              <div className="flex items-center">
                 <Button variant="outline" size="sm" onClick={handleBackToClasses}>
                   <ChevronLeft className="h-4 w-4 mr-1" />
                   Back to Classes
                 </Button>
               </div>
-              
-              <Card>
-                <CardHeader>
-                  <CardTitle>{selectedClass.title}</CardTitle>
-                  <CardDescription>
-                    {selectedClass.type === "academic" ? "Academic" : "After School"} - {selectedClass.subject}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Tabs value={activeClassTab} onValueChange={setActiveClassTab}>
-                    <TabsList className="w-full">
-                      <TabsTrigger value="basic" className="flex items-center">
-                        <BookText className="h-4 w-4 mr-2" />
-                        Basic Info
-                      </TabsTrigger>
-                      <TabsTrigger value="lessons" className="flex items-center">
-                        <BookOpen className="h-4 w-4 mr-2" />
-                        Lesson Plans
-                      </TabsTrigger>
-                      <TabsTrigger value="cohorts" className="flex items-center">
-                        <School className="h-4 w-4 mr-2" />
-                        Cohorts
-                      </TabsTrigger>
-                      <TabsTrigger value="team" className="flex items-center">
-                        <UsersRound className="h-4 w-4 mr-2" />
-                        Teaching Team
-                      </TabsTrigger>
-                      <TabsTrigger value="students" className="flex items-center">
-                        <UserRound className="h-4 w-4 mr-2" />
-                        Parents & Students
-                      </TabsTrigger>
-                    </TabsList>
-                    
-                    <TabsContent value="basic" className="mt-6">
-                      <div className="space-y-6">
-                        <div>
-                          <h3 className="text-lg font-medium">Class Details</h3>
-                          <div className="mt-2 space-y-2">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              <div>
-                                <p className="text-sm text-gray-500">Class Type</p>
-                                <p className="font-medium">{selectedClass.type === "academic" ? "Academic" : "After School"}</p>
-                              </div>
-                              <div>
-                                <p className="text-sm text-gray-500">Subject</p>
-                                <p className="font-medium">{selectedClass.subject}</p>
-                              </div>
-                              <div>
-                                <p className="text-sm text-gray-500">{selectedClass.type === "academic" ? "Grade Level" : "Age Range"}</p>
-                                <p className="font-medium">{selectedClass.gradeLevel || selectedClass.ageRange || "Not specified"}</p>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                        
-                        <div>
-                          <h3 className="text-lg font-medium">Class Summary</h3>
-                          <p className="mt-2 text-gray-700">{selectedClass.description || "No summary provided"}</p>
-                        </div>
-                        
-                        <div>
-                          <h3 className="text-lg font-medium">Learning Objectives</h3>
-                          <ul className="mt-2 list-disc pl-5 space-y-1">
-                            {selectedClass.objectives ? (
-                              selectedClass.objectives.map((objective: string, index: number) => (
-                                <li key={index} className="text-gray-700">{objective}</li>
-                              ))
-                            ) : (
-                              <li className="text-gray-500">No learning objectives specified</li>
-                            )}
-                          </ul>
-                        </div>
-                      </div>
-                    </TabsContent>
-                    
-                    <TabsContent value="lessons" className="mt-6">
-                      <div className="space-y-4">
-                        <div className="flex justify-between items-center">
-                          <h3 className="text-lg font-medium">Lesson Plans</h3>
-                          <Button size="sm">
-                            <PlusCircle className="h-4 w-4 mr-2" />
-                            Add Lesson
-                          </Button>
-                        </div>
-                        
-                        <div className="bg-gray-50 border rounded-md p-8 text-center">
-                          <BookOpen className="h-12 w-12 mx-auto text-gray-400" />
-                          <h3 className="mt-4 text-lg font-medium">No Lesson Plans Yet</h3>
-                          <p className="mt-2 text-gray-500 max-w-md mx-auto">
-                            Create lesson plans to organize your teaching curriculum and share with students.
-                          </p>
-                          <Button className="mt-4">
-                            <PlusCircle className="h-4 w-4 mr-2" />
-                            Create First Lesson
-                          </Button>
-                        </div>
-                      </div>
-                    </TabsContent>
-                    
-                    <TabsContent value="cohorts" className="mt-6">
-                      <div className="space-y-4">
-                        <div className="flex justify-between items-center">
-                          <h3 className="text-lg font-medium">Class Cohorts</h3>
-                          <Button size="sm">
-                            <PlusCircle className="h-4 w-4 mr-2" />
-                            Create Cohort
-                          </Button>
-                        </div>
-                        
-                        <div className="bg-gray-50 border rounded-md p-8 text-center">
-                          <School className="h-12 w-12 mx-auto text-gray-400" />
-                          <h3 className="mt-4 text-lg font-medium">No Cohorts Created</h3>
-                          <p className="mt-2 text-gray-500 max-w-md mx-auto">
-                            Organize your students into cohorts for better class management and scheduling.
-                          </p>
-                          <Button className="mt-4">
-                            <PlusCircle className="h-4 w-4 mr-2" />
-                            Create First Cohort
-                          </Button>
-                        </div>
-                      </div>
-                    </TabsContent>
-                    
-                    <TabsContent value="team" className="mt-6">
-                      <div className="space-y-4">
-                        <div className="flex justify-between items-center">
-                          <h3 className="text-lg font-medium">Teaching Team</h3>
-                          <Button size="sm">
-                            <PlusCircle className="h-4 w-4 mr-2" />
-                            Add Team Member
-                          </Button>
-                        </div>
-                        
-                        <div className="bg-gray-50 border rounded-md p-8 text-center">
-                          <UsersRound className="h-12 w-12 mx-auto text-gray-400" />
-                          <h3 className="mt-4 text-lg font-medium">No Team Members Yet</h3>
-                          <p className="mt-2 text-gray-500 max-w-md mx-auto">
-                            Add teaching assistants or co-teachers to help you manage this class.
-                          </p>
-                          <Button className="mt-4">
-                            <PlusCircle className="h-4 w-4 mr-2" />
-                            Add First Team Member
-                          </Button>
-                        </div>
-                      </div>
-                    </TabsContent>
-                    
-                    <TabsContent value="students" className="mt-6">
-                      <div className="space-y-4">
-                        <div className="flex justify-between items-center">
-                          <h3 className="text-lg font-medium">Parents & Students</h3>
-                          <Button size="sm">
-                            <PlusCircle className="h-4 w-4 mr-2" />
-                            Invite Students
-                          </Button>
-                        </div>
-                        
-                        <div className="bg-gray-50 border rounded-md p-8 text-center">
-                          <UserRound className="h-12 w-12 mx-auto text-gray-400" />
-                          <h3 className="mt-4 text-lg font-medium">No Students Enrolled</h3>
-                          <p className="mt-2 text-gray-500 max-w-md mx-auto">
-                            Invite parents and students to enroll in this class.
-                          </p>
-                          <Button className="mt-4">
-                            <UserPlus className="h-4 w-4 mr-2" />
-                            Invite First Student
-                          </Button>
-                        </div>
-                      </div>
-                    </TabsContent>
-                  </Tabs>
-                </CardContent>
-              </Card>
+              <TeacherClassView classId={selectedClass._id || selectedClass.id} />
             </div>
           )}
         </main>
