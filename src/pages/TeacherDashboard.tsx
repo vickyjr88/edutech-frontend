@@ -4,7 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Home, BookOpen, Users, Calendar, User, Settings, LogOut, Edit, Phone, MapPin, Award, CheckCircle2, CircleDashed, Video, PlusCircle, Star, UserPlus, BookText, School, UsersRound, UserRound, ChevronLeft, Loader2, DollarSign } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Home, BookOpen, Users, Calendar, User, Settings, LogOut, Edit, Phone, MapPin, Award, CheckCircle2, CircleDashed, Video, PlusCircle, Star, UserPlus, BookText, School, UsersRound, UserRound, ChevronLeft, Loader2, DollarSign, FileText, Badge } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import TeacherProfileForm from "@/components/teacher/TeacherProfileForm";
@@ -438,100 +440,211 @@ const TeacherDashboard = () => {
   };
 
   const renderProfileView = () => {
-    if (!profileData) return null;
-    
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Teacher Profile</CardTitle>
+          <CardDescription>
+            Your professional teaching profile information
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-6">
+            {profileData && (
+              <>
+                {/* Contact Information */}
+                <div className="border rounded-lg p-4">
+                  <div className="flex items-center mb-4">
+                    <Phone className="h-5 w-5 text-blue-500 mr-2" />
+                    <h3 className="text-lg font-medium">Contact Information</h3>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <Label>Phone</Label>
+                      <p className="mt-1">{profileData.contact.phone || "Not provided"}</p>
+                    </div>
+                    <div>
+                      <Label>Email</Label>
+                      <p className="mt-1">{profileData.contact.email || "Not provided"}</p>
+                    </div>
+                    <div>
+                      <Label>Alternative Phone</Label>
+                      <p className="mt-1">{profileData.contact.alternativePhone || "Not provided"}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Location Information */}
+                <div className="border rounded-lg p-4">
+                  <div className="flex items-center mb-4">
+                    <MapPin className="h-5 w-5 text-red-500 mr-2" />
+                    <h3 className="text-lg font-medium">Location</h3>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <Label>Address</Label>
+                      <p className="mt-1">{profileData.location.address || "Not provided"}</p>
+                    </div>
+                    <div>
+                      <Label>City</Label>
+                      <p className="mt-1">{profileData.location.city || "Not provided"}</p>
+                    </div>
+                    <div>
+                      <Label>County</Label>
+                      <p className="mt-1">{profileData.location.county || "Not provided"}</p>
+                    </div>
+                    <div>
+                      <Label>Postal Code</Label>
+                      <p className="mt-1">{profileData.location.postalCode || "Not provided"}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Next of Kin */}
+                <div className="border rounded-lg p-4">
+                  <div className="flex items-center mb-4">
+                    <UserRound className="h-5 w-5 text-purple-500 mr-2" />
+                    <h3 className="text-lg font-medium">Emergency Contact</h3>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <Label>Name</Label>
+                      <p className="mt-1">{profileData.nextOfKin.name || "Not provided"}</p>
+                    </div>
+                    <div>
+                      <Label>Relationship</Label>
+                      <p className="mt-1">{profileData.nextOfKin.relationship || "Not provided"}</p>
+                    </div>
+                    <div>
+                      <Label>Phone</Label>
+                      <p className="mt-1">{profileData.nextOfKin.phone || "Not provided"}</p>
+                    </div>
+                  </div>
+                </div>
+
+              </>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    );
+  };
+
+  const renderIntegrationsView = () => {
     return (
       <Card>
         <CardHeader className="flex flex-row items-start justify-between">
           <div>
-            <CardTitle>Your Teacher Profile</CardTitle>
+            <CardTitle>Integrations</CardTitle>
             <CardDescription>
-              This information is visible to potential students
+              Connect your teaching tools and services
             </CardDescription>
           </div>
           <Button 
             variant="outline" 
             size="sm" 
-            className="flex items-center" 
-            onClick={handleEditProfile}
+            className="flex items-center"
+            onClick={() => navigate("/teacher-dashboard/zoom")}
           >
-            <Edit className="mr-2 h-4 w-4" />
-            Edit Profile
+            <Video className="mr-2 h-4 w-4" />
+            Manage Zoom
           </Button>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div>
-            <h3 className="font-medium flex items-center">
-              <Phone className="mr-2 h-4 w-4 text-muted-foreground" />
-              Contact Information
-            </h3>
-            <div className="mt-2 space-y-1 text-sm">
-              <p><span className="text-muted-foreground">Phone:</span> {profileData.contact.phone}</p>
-              <p><span className="text-muted-foreground">Email:</span> {profileData.contact.email}</p>
-              {profileData.contact.alternativePhone && (
-                <p><span className="text-muted-foreground">Alternative Phone:</span> {profileData.contact.alternativePhone}</p>
-              )}
+          {/* Zoom Integration */}
+          <div className="border rounded-lg p-4 bg-white">
+            <div className="flex items-start">
+              <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center mr-4">
+                <Video className="h-5 w-5 text-blue-600" />
+              </div>
+              <div className="flex-1">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h3 className="font-medium">Zoom</h3>
+                    <p className="text-sm text-gray-500 mt-1">
+                      Host virtual classes and meetings
+                    </p>
+                  </div>
+                  <Badge className="bg-green-100 text-green-800 border-0">Connected</Badge>
+                </div>
+                <div className="mt-3 text-sm">
+                  <p className="text-gray-600">
+                    Your Zoom account is connected and ready to use for scheduling online classes.
+                  </p>
+                </div>
+                <div className="mt-3 flex gap-2">
+                  <Button size="sm" variant="outline" onClick={() => navigate("/teacher-dashboard/zoom")}>
+                    Configure
+                  </Button>
+                  <Button size="sm" variant="outline" className="text-blue-600">
+                    Create Meeting
+                  </Button>
+                </div>
+              </div>
             </div>
           </div>
           
-          <div>
-            <h3 className="font-medium flex items-center">
-              <MapPin className="mr-2 h-4 w-4 text-muted-foreground" />
-              Location
-            </h3>
-            <div className="mt-2 space-y-1 text-sm">
-              <p>
-                {profileData.location.address}
-                {profileData.location.apartment && `, ${profileData.location.apartment}`}
-                {profileData.location.houseNumber && `, House ${profileData.location.houseNumber}`}
-              </p>
-              <p>
-                {profileData.location.city}{profileData.location.county && `, ${profileData.location.county}`}
-                {profileData.location.postalCode && ` - ${profileData.location.postalCode}`}
-              </p>
+          {/* Google Calendar Integration */}
+          <div className="border rounded-lg p-4 bg-white">
+            <div className="flex items-start">
+              <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center mr-4">
+                <Calendar className="h-5 w-5 text-green-600" />
+              </div>
+              <div className="flex-1">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h3 className="font-medium">Google Calendar</h3>
+                    <p className="text-sm text-gray-500 mt-1">
+                      Sync your class schedule
+                    </p>
+                  </div>
+                  <Badge className="bg-gray-100 text-gray-800 border-0">Not Connected</Badge>
+                </div>
+                <div className="mt-3 text-sm">
+                  <p className="text-gray-600">
+                    Connect your Google Calendar to automatically sync class schedules and receive reminders.
+                  </p>
+                </div>
+                <div className="mt-3">
+                  <Button size="sm">
+                    Connect Calendar
+                  </Button>
+                </div>
+              </div>
             </div>
           </div>
           
-          <div>
-            <h3 className="font-medium flex items-center">
-              <Users className="mr-2 h-4 w-4 text-muted-foreground" />
-              Next of Kin
-            </h3>
-            <div className="mt-2 space-y-1 text-sm">
-              <p><span className="text-muted-foreground">Name:</span> {profileData.nextOfKin.name}</p>
-              <p><span className="text-muted-foreground">Relationship:</span> {profileData.nextOfKin.relationship}</p>
-              <p><span className="text-muted-foreground">Phone:</span> {profileData.nextOfKin.phone}</p>
+          
+          {/* Google Drive Integration */}
+          <div className="border rounded-lg p-4 bg-white">
+            <div className="flex items-start">
+              <div className="h-10 w-10 rounded-full bg-yellow-100 flex items-center justify-center mr-4">
+                <FileText className="h-5 w-5 text-yellow-600" />
+              </div>
+              <div className="flex-1">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h3 className="font-medium">Google Drive</h3>
+                    <p className="text-sm text-gray-500 mt-1">
+                      Manage and share class materials
+                    </p>
+                  </div>
+                  <Badge className="bg-gray-100 text-gray-800 border-0">Not Connected</Badge>
+                </div>
+                <div className="mt-3 text-sm">
+                  <p className="text-gray-600">
+                    Connect your Google Drive to easily upload, store, and share teaching materials with your students.
+                  </p>
+                </div>
+                <div className="mt-3">
+                  <Button size="sm">
+                    Connect Drive
+                  </Button>
+                </div>
+              </div>
             </div>
           </div>
           
-          <div>
-            <h3 className="font-medium flex items-center">
-              <Award className="mr-2 h-4 w-4 text-muted-foreground" />
-              Teaching Certification
-            </h3>
-            <div className="mt-2 space-y-1 text-sm">
-              {profileData.certification.isCertified ? (
-                <>
-                  <p><span className="text-muted-foreground">Status:</span> Certified Teacher</p>
-                  <p><span className="text-muted-foreground">Details:</span> {profileData.certification.details}</p>
-                  <p><span className="text-muted-foreground">Institution:</span> {profileData.certification.institution}</p>
-                  <p><span className="text-muted-foreground">Year:</span> {profileData.certification.year}</p>
-                </>
-              ) : (
-                <p>Not certified as a teacher</p>
-              )}
-            </div>
-          </div>
-          
-          <div className="pt-4 border-t">
-            <Button 
-              variant="destructive" 
-              onClick={handleProfileDelete}
-              className="mt-2"
-            >
-              Delete Profile
-            </Button>
-          </div>
         </CardContent>
       </Card>
     );
@@ -713,50 +826,134 @@ const TeacherDashboard = () => {
                   <CardTitle>Account Settings</CardTitle>
                   <CardDescription>Manage your account settings and preferences</CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="border rounded-md p-4">
-                    <h3 className="text-lg font-medium mb-2">Teacher Profile</h3>
-                    <p className="text-sm text-gray-500 mb-4">
-                      {hasProfile 
-                        ? "Your teacher profile information is used to match you with potential students." 
-                        : "Complete your teacher profile to be visible to students looking for tutors."}
-                    </p>
-                    {hasProfile ? (
-                      <div className="flex flex-col sm:flex-row gap-2">
-                        <Button 
-                          onClick={() => setIsEditing(false)}
-                          variant="outline"
-                          className="flex items-center gap-2"
-                        >
-                          <User className="h-4 w-4" />
-                          View Profile
-                        </Button>
-                        <Button 
-                          onClick={handleEditProfile}
-                          className="flex items-center gap-2"
-                        >
-                          <Edit className="h-4 w-4" />
-                          Edit Profile
-                        </Button>
-                      </div>
-                    ) : (
-                      <Button 
-                        onClick={handleEditProfile}
-                        className="flex items-center gap-2"
-                      >
-                        <User className="h-4 w-4" />
-                        Complete Profile
-                      </Button>
-                    )}
-                  </div>
+                <CardContent>
+                  <Tabs defaultValue="profile" className="w-full">
+                    <TabsList className="grid w-full grid-cols-3 mb-6">
+                      <TabsTrigger value="profile">Profile</TabsTrigger>
+                      <TabsTrigger value="integrations">Integrations</TabsTrigger>
+                      <TabsTrigger value="notifications">Notifications</TabsTrigger>
+                    </TabsList>
+                    
+                    <TabsContent value="profile" className="space-y-4">
+                      {!hasProfile ? (
+                        <div className="border rounded-md p-4 bg-gray-50">
+                          <div className="text-center py-8">
+                            <User className="h-12 w-12 mx-auto text-gray-400 mb-3" />
+                            <h3 className="text-lg font-medium mb-2">No Profile Yet</h3>
+                            <p className="text-sm text-gray-500 mb-6 max-w-md mx-auto">
+                              Complete your teacher profile to be visible to students looking for tutors.
+                            </p>
+                            <Button 
+                              onClick={handleEditProfile}
+                              className="flex items-center gap-2 mx-auto"
+                            >
+                              <User className="h-4 w-4" />
+                              Complete Profile
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <>
+                          {renderProfileView()}
+                          <div className="flex justify-end gap-3 mt-4">
+                            <Button 
+                              onClick={() => navigate("/teacher-profile")}
+                              variant="outline"
+                              className="flex items-center gap-2"
+                            >
+                              <User className="h-4 w-4" />
+                              View Full Profile
+                            </Button>
+                            <Button 
+                              onClick={handleEditProfile}
+                              className="flex items-center gap-2"
+                            >
+                              <Edit className="h-4 w-4" />
+                              Edit Profile
+                            </Button>
+                          </div>
+                        </>
+                      )}
+                    </TabsContent>
+                    
+                    <TabsContent value="integrations">
+                      {renderIntegrationsView()}
+                    </TabsContent>
+                    
+                    <TabsContent value="notifications">
+                      <Card>
+                        <CardHeader>
+                          <CardTitle>Notification Preferences</CardTitle>
+                          <CardDescription>
+                            Configure how and when you receive notifications
+                          </CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                          <div className="border rounded-md p-4">
+                            <div className="flex items-center justify-between mb-3">
+                              <div>
+                                <h3 className="font-medium">Email Notifications</h3>
+                                <p className="text-sm text-gray-500">Get notified about important updates via email</p>
+                              </div>
+                              <Switch id="email-notifications" />
+                            </div>
+                          </div>
+                          
+                          <div className="border rounded-md p-4">
+                            <div className="flex items-center justify-between mb-3">
+                              <div>
+                                <h3 className="font-medium">SMS Notifications</h3>
+                                <p className="text-sm text-gray-500">Receive text messages for urgent updates</p>
+                              </div>
+                              <Switch id="sms-notifications" />
+                            </div>
+                          </div>
+                          
+                          <div className="border rounded-md p-4">
+                            <div className="flex items-center justify-between mb-3">
+                              <div>
+                                <h3 className="font-medium">In-App Notifications</h3>
+                                <p className="text-sm text-gray-500">Show notifications within the platform</p>
+                              </div>
+                              <Switch id="in-app-notifications" defaultChecked />
+                            </div>
+                          </div>
+                          
+                          <div className="mt-6">
+                            <h3 className="font-medium mb-3">Notification Categories</h3>
+                            <div className="space-y-3">
+                              <div className="flex items-center space-x-2">
+                                <Checkbox id="notify-students" defaultChecked />
+                                <Label htmlFor="notify-students">Student enrollment updates</Label>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <Checkbox id="notify-classes" defaultChecked />
+                                <Label htmlFor="notify-classes">Class schedule changes</Label>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <Checkbox id="notify-payments" defaultChecked />
+                                <Label htmlFor="notify-payments">Payment notifications</Label>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <Checkbox id="notify-messages" defaultChecked />
+                                <Label htmlFor="notify-messages">New messages</Label>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <Checkbox id="notify-reviews" defaultChecked />
+                                <Label htmlFor="notify-reviews">Reviews and feedback</Label>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <Checkbox id="notify-system" defaultChecked />
+                                <Label htmlFor="notify-system">System updates and maintenance</Label>
+                              </div>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </TabsContent>
+                  </Tabs>
                 </CardContent>
               </Card>
-
-              {hasProfile && (
-                <div className="max-w-3xl mx-auto">
-                  {renderProfileView()}
-                </div>
-              )}
             </div>
           )}
 
