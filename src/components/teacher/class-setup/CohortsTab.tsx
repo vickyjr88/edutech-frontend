@@ -133,7 +133,7 @@ const CohortsTab = ({
       // Using the utility function for pattern value conversion
       
       const formattedNewCohort = {
-        id: newCohort.id,
+        // Don't include id for new cohorts - let the backend assign it
         name: newCohort.name || `Cohort ${Date.now()}`,
         isActive: typeof newCohort.isActive === 'boolean' ? newCohort.isActive : true,
         startDate: newCohort.startDate,

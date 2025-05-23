@@ -517,25 +517,8 @@ const TeacherDashboard = () => {
                     <p className="mt-1">{comprehensiveProfile?.user?.alternativePhoneNumber || profileData?.contact?.alternativePhone || "Not provided"}</p>
                   </div>
                   <div>
-                    <Label className="flex items-center">
-                      <MessageCircle className="h-4 w-4 text-green-500 mr-1" />
-                      WhatsApp
-                    </Label>
-                    <p className="mt-1">
-                      {comprehensiveProfile?.user?.whatsappNumber || comprehensiveProfile?.user?.phoneNumber || profileData?.contact?.phone ? (
-                        <a 
-                          href={`https://wa.me/${(comprehensiveProfile?.user?.whatsappNumber || comprehensiveProfile?.user?.phoneNumber || profileData?.contact?.phone)?.replace(/[^0-9]/g, '')}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-green-600 hover:underline flex items-center"
-                        >
-                          <MessageCircle className="h-3 w-3 mr-1" />
-                          Chat on WhatsApp
-                        </a>
-                      ) : (
-                        "Not available"
-                      )}
-                    </p>
+                    <Label>WhatsApp</Label>
+                    <p className="mt-1">{comprehensiveProfile?.user?.whatsappNumber || comprehensiveProfile?.user?.phoneNumber || profileData?.contact?.phone || "Not provided"}</p>
                   </div>
                 </div>
               </div>
