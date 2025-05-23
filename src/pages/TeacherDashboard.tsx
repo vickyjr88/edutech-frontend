@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Home, BookOpen, Users, Calendar, User, Settings, LogOut, Edit, Phone, MapPin, Award, CheckCircle2, CircleDashed, Video, PlusCircle, Star, UserPlus, BookText, School, UsersRound, UserRound, ChevronLeft, Loader2, DollarSign, FileText, Badge } from "lucide-react";
+import { Home, BookOpen, Users, Calendar, User, Settings, LogOut, Edit, Phone, MapPin, Award, CheckCircle2, CircleDashed, Video, PlusCircle, Star, UserPlus, BookText, School, UsersRound, UserRound, ChevronLeft, Loader2, DollarSign, FileText, Badge, MessageCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import TeacherProfileForm from "@/components/teacher/TeacherProfileForm";
@@ -132,6 +132,7 @@ const TeacherDashboard = () => {
     if (user) {
       fetchTeacherProfile();
       fetchTeacherClasses();
+      fetchComprehensiveProfile();
     }
   }, [user]);
 
@@ -445,94 +446,334 @@ const TeacherDashboard = () => {
     }, 100);
   };
 
+  const [comprehensiveProfile, setComprehensiveProfile] = useState<any>(null);
+  const [isLoadingProfile, setIsLoadingProfile] = useState(false);
+
+  // Fetch comprehensive teacher profile data
+  const fetchComprehensiveProfile = async () => {
+    if (!user?.teacherId) return;
+    
+    setIsLoadingProfile(true);
+    try {
+      const { data, error } = await teacherService.getProfileById(user.teacherId);
+      if (!error && data) {
+        setComprehensiveProfile(data);
+      }
+    } catch (error) {
+      console.error("Error fetching comprehensive profile:", error);
+    } finally {
+      setIsLoadingProfile(false);
+    }
+  };
+
   const renderProfileView = () => {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Teacher Profile</CardTitle>
-          <CardDescription>
-            Your professional teaching profile information
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-6">
-            {profileData && (
-              <>
-                {/* Contact Information */}
-                <div className="border rounded-lg p-4">
-                  <div className="flex items-center mb-4">
-                    <Phone className="h-5 w-5 text-blue-500 mr-2" />
-                    <h3 className="text-lg font-medium">Contact Information</h3>
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <Label>Phone</Label>
-                      <p className="mt-1">{profileData.contact.phone || "Not provided"}</p>
-                    </div>
-                    <div>
-                      <Label>Email</Label>
-                      <p className="mt-1">{profileData.contact.email || "Not provided"}</p>
-                    </div>
-                    <div>
-                      <Label>Alternative Phone</Label>
-                      <p className="mt-1">{profileData.contact.alternativePhone || "Not provided"}</p>
-                    </div>
-                  </div>
+      <div className="space-y-6">
+        {/* Personal Information Card */}
+        <Card>
+          <CardHeader className="flex flex-row items-center space-y-0 pb-4">
+            <div className="flex items-center space-x-4 flex-1">
+              {comprehensiveProfile?.user?._signedProfileImage || comprehensiveProfile?._signedProfileImage ? (
+                <img 
+                  src={comprehensiveProfile?.user?._signedProfileImage || comprehensiveProfile?._signedProfileImage} 
+                  alt="Profile" 
+                  className="w-16 h-16 rounded-full object-cover border-2 border-gray-200"
+                />
+              ) : (
+                <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center">
+                  <User className="h-8 w-8 text-gray-400" />
                 </div>
-
-                {/* Location Information */}
-                <div className="border rounded-lg p-4">
-                  <div className="flex items-center mb-4">
-                    <MapPin className="h-5 w-5 text-red-500 mr-2" />
-                    <h3 className="text-lg font-medium">Location</h3>
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <Label>Address</Label>
-                      <p className="mt-1">{profileData.location.address || "Not provided"}</p>
-                    </div>
-                    <div>
-                      <Label>City</Label>
-                      <p className="mt-1">{profileData.location.city || "Not provided"}</p>
-                    </div>
-                    <div>
-                      <Label>County</Label>
-                      <p className="mt-1">{profileData.location.county || "Not provided"}</p>
-                    </div>
-                    <div>
-                      <Label>Postal Code</Label>
-                      <p className="mt-1">{profileData.location.postalCode || "Not provided"}</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Next of Kin */}
-                <div className="border rounded-lg p-4">
-                  <div className="flex items-center mb-4">
-                    <UserRound className="h-5 w-5 text-purple-500 mr-2" />
-                    <h3 className="text-lg font-medium">Emergency Contact</h3>
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <Label>Name</Label>
-                      <p className="mt-1">{profileData.nextOfKin.name || "Not provided"}</p>
-                    </div>
-                    <div>
-                      <Label>Relationship</Label>
-                      <p className="mt-1">{profileData.nextOfKin.relationship || "Not provided"}</p>
-                    </div>
-                    <div>
-                      <Label>Phone</Label>
-                      <p className="mt-1">{profileData.nextOfKin.phone || "Not provided"}</p>
-                    </div>
-                  </div>
-                </div>
-
-              </>
+              )}
+              <div>
+                <CardTitle>{comprehensiveProfile?.user?.fullName || "Teacher Profile"}</CardTitle>
+                <CardDescription>
+                  {comprehensiveProfile?.user?.bio || "Professional teaching profile information"}
+                </CardDescription>
+              </div>
+            </div>
+            {comprehensiveProfile?.isProfileComplete && (
+              <CheckCircle2 className="h-5 w-5 text-green-500" />
             )}
-          </div>
-        </CardContent>
-      </Card>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-6">
+              {/* Contact Information */}
+              <div className="border rounded-lg p-4">
+                <div className="flex items-center mb-4">
+                  <Phone className="h-5 w-5 text-blue-500 mr-2" />
+                  <h3 className="text-lg font-medium">Contact Information</h3>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <Label>Email</Label>
+                    <p className="mt-1">{comprehensiveProfile?.user?.email || profileData?.contact?.email || "Not provided"}</p>
+                  </div>
+                  <div>
+                    <Label>Phone</Label>
+                    <p className="mt-1">{comprehensiveProfile?.user?.phoneNumber || profileData?.contact?.phone || "Not provided"}</p>
+                  </div>
+                  <div>
+                    <Label>Alternative Phone</Label>
+                    <p className="mt-1">{comprehensiveProfile?.user?.alternativePhoneNumber || profileData?.contact?.alternativePhone || "Not provided"}</p>
+                  </div>
+                  <div>
+                    <Label className="flex items-center">
+                      <MessageCircle className="h-4 w-4 text-green-500 mr-1" />
+                      WhatsApp
+                    </Label>
+                    <p className="mt-1">
+                      {comprehensiveProfile?.user?.whatsappNumber || comprehensiveProfile?.user?.phoneNumber || profileData?.contact?.phone ? (
+                        <a 
+                          href={`https://wa.me/${(comprehensiveProfile?.user?.whatsappNumber || comprehensiveProfile?.user?.phoneNumber || profileData?.contact?.phone)?.replace(/[^0-9]/g, '')}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-green-600 hover:underline flex items-center"
+                        >
+                          <MessageCircle className="h-3 w-3 mr-1" />
+                          Chat on WhatsApp
+                        </a>
+                      ) : (
+                        "Not available"
+                      )}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Professional Bio */}
+              {comprehensiveProfile?.user?.bio && (
+                <div className="border rounded-lg p-4">
+                  <div className="flex items-center mb-4">
+                    <User className="h-5 w-5 text-purple-500 mr-2" />
+                    <h3 className="text-lg font-medium">Professional Bio</h3>
+                  </div>
+                  <p className="text-gray-700">{comprehensiveProfile.user.bio}</p>
+                </div>
+              )}
+
+              {/* Introduction Video */}
+              {comprehensiveProfile?.introVideoUrl && (
+                <div className="border rounded-lg p-4">
+                  <div className="flex items-center mb-4">
+                    <Video className="h-5 w-5 text-red-500 mr-2" />
+                    <h3 className="text-lg font-medium">Introduction Video</h3>
+                  </div>
+                  <div className="aspect-video bg-gray-100 rounded-md overflow-hidden">
+                    {comprehensiveProfile.introVideoUrl.includes('youtube.com') || comprehensiveProfile.introVideoUrl.includes('youtu.be') ? (
+                      <iframe
+                        src={comprehensiveProfile.introVideoUrl.includes('embed') ? 
+                          comprehensiveProfile.introVideoUrl : 
+                          `https://www.youtube.com/embed/${comprehensiveProfile.introVideoUrl.split('v=')[1]?.split('&')[0] || comprehensiveProfile.introVideoUrl.split('youtu.be/')[1]?.split('?')[0]}`
+                        }
+                        title="Introduction Video"
+                        frameBorder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                        className="w-full h-full"
+                      ></iframe>
+                    ) : (
+                      <div className="flex items-center justify-center h-full">
+                        <div className="text-center">
+                          <Video className="h-8 w-8 mx-auto text-gray-400 mb-2" />
+                          <a 
+                            href={comprehensiveProfile.introVideoUrl} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:underline"
+                          >
+                            View Introduction Video
+                          </a>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Teaching Statistics */}
+              {(comprehensiveProfile?.totalStudents > 0 || comprehensiveProfile?.totalClasses > 0 || comprehensiveProfile?.rating > 0) && (
+                <div className="border rounded-lg p-4">
+                  <div className="flex items-center mb-4">
+                    <Star className="h-5 w-5 text-yellow-500 mr-2" />
+                    <h3 className="text-lg font-medium">Teaching Statistics</h3>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    {comprehensiveProfile.rating > 0 && (
+                      <div className="text-center">
+                        <p className="text-2xl font-bold text-yellow-600">{Number(comprehensiveProfile.rating).toFixed(1)}</p>
+                        <p className="text-sm text-gray-500">Rating</p>
+                      </div>
+                    )}
+                    {comprehensiveProfile.totalReviews > 0 && (
+                      <div className="text-center">
+                        <p className="text-2xl font-bold text-blue-600">{Number(comprehensiveProfile.totalReviews) || 0}</p>
+                        <p className="text-sm text-gray-500">Reviews</p>
+                      </div>
+                    )}
+                    {comprehensiveProfile.totalStudents > 0 && (
+                      <div className="text-center">
+                        <p className="text-2xl font-bold text-green-600">{Number(comprehensiveProfile.totalStudents) || 0}</p>
+                        <p className="text-sm text-gray-500">Students</p>
+                      </div>
+                    )}
+                    {comprehensiveProfile.totalClasses > 0 && (
+                      <div className="text-center">
+                        <p className="text-2xl font-bold text-purple-600">{Number(comprehensiveProfile.totalClasses) || 0}</p>
+                        <p className="text-sm text-gray-500">Classes</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Legacy Profile Data */}
+              {profileData && (
+                <>
+                  {/* Location Information */}
+                  <div className="border rounded-lg p-4">
+                    <div className="flex items-center mb-4">
+                      <MapPin className="h-5 w-5 text-red-500 mr-2" />
+                      <h3 className="text-lg font-medium">Location</h3>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <Label>Address</Label>
+                        <p className="mt-1">{profileData.location.address || "Not provided"}</p>
+                      </div>
+                      <div>
+                        <Label>City</Label>
+                        <p className="mt-1">{profileData.location.city || "Not provided"}</p>
+                      </div>
+                      <div>
+                        <Label>County</Label>
+                        <p className="mt-1">{profileData.location.county || "Not provided"}</p>
+                      </div>
+                      <div>
+                        <Label>Postal Code</Label>
+                        <p className="mt-1">{profileData.location.postalCode || "Not provided"}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Next of Kin */}
+                  <div className="border rounded-lg p-4">
+                    <div className="flex items-center mb-4">
+                      <UserRound className="h-5 w-5 text-purple-500 mr-2" />
+                      <h3 className="text-lg font-medium">Emergency Contact</h3>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <Label>Name</Label>
+                        <p className="mt-1">{profileData.nextOfKin.name || "Not provided"}</p>
+                      </div>
+                      <div>
+                        <Label>Relationship</Label>
+                        <p className="mt-1">{profileData.nextOfKin.relationship || "Not provided"}</p>
+                      </div>
+                      <div>
+                        <Label>Phone</Label>
+                        <p className="mt-1">{profileData.nextOfKin.phone || "Not provided"}</p>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Professional Qualifications */}
+        {(comprehensiveProfile?.education?.length > 0 || comprehensiveProfile?.experience?.length > 0 || comprehensiveProfile?.certifications?.length > 0) && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <Award className="h-5 w-5 text-gold-500 mr-2" />
+                Professional Qualifications
+              </CardTitle>
+              <CardDescription>Education, experience, and certifications</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {comprehensiveProfile?.education?.length > 0 && (
+                <div>
+                  <h4 className="font-medium mb-2">Education</h4>
+                  <div className="space-y-2">
+                    {comprehensiveProfile.education.slice(0, 3).map((edu: any, index: number) => (
+                      <div key={index} className="border-l-2 border-blue-200 pl-3">
+                        <p className="font-medium">
+                          {edu.degree || 'Degree'} 
+                          {edu.fieldOfStudy && ` in ${edu.fieldOfStudy}`}
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          {edu.institution || 'Institution'} 
+                          {edu.year && ` • ${edu.year}`}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {comprehensiveProfile?.experience?.length > 0 && (
+                <div>
+                  <h4 className="font-medium mb-2">Teaching Experience</h4>
+                  <div className="space-y-2">
+                    {comprehensiveProfile.experience.slice(0, 3).map((exp: any, index: number) => (
+                      <div key={index} className="border-l-2 border-green-200 pl-3">
+                        <p className="font-medium">{exp.position || exp.title || 'Position'}</p>
+                        <p className="text-sm text-gray-600">
+                          {exp.institution || exp.company || 'Institution'} 
+                          {(exp.duration || exp.years) && ` • ${exp.duration || exp.years}`}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Teaching Expertise */}
+        {(comprehensiveProfile?.subjects?.length > 0 || comprehensiveProfile?.skills?.length > 0 || comprehensiveProfile?.languages?.length > 0) && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <BookOpen className="h-5 w-5 text-indigo-500 mr-2" />
+                Teaching Expertise
+              </CardTitle>
+              <CardDescription>Subjects, skills, and languages</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {comprehensiveProfile?.subjects?.length > 0 && (
+                <div>
+                  <h4 className="font-medium mb-2">Subjects</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {comprehensiveProfile.subjects.slice(0, 6).map((subject: any, index: number) => (
+                      <span key={index} className="px-2 py-1 bg-blue-100 text-blue-800 rounded-md text-sm">
+                        {subject.subject || subject.name || (typeof subject === 'string' ? subject : 'Subject')}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {comprehensiveProfile?.languages?.length > 0 && (
+                <div>
+                  <h4 className="font-medium mb-2">Languages</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {comprehensiveProfile.languages.slice(0, 4).map((lang: any, index: number) => (
+                      <span key={index} className="px-2 py-1 bg-green-100 text-green-800 rounded-md text-sm">
+                        {typeof lang === 'string' ? lang : (lang.language || lang.name || 'Language')} 
+                        {lang.proficiency && ` (${lang.proficiency})`}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+      </div>
     );
   };
 
@@ -841,7 +1082,12 @@ const TeacherDashboard = () => {
                     </TabsList>
                     
                     <TabsContent value="profile" className="space-y-4">
-                      {!hasProfile ? (
+                      {isLoadingProfile ? (
+                        <div className="flex items-center justify-center py-8">
+                          <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+                          <span className="ml-2 text-gray-600">Loading profile...</span>
+                        </div>
+                      ) : !hasProfile ? (
                         <div className="border rounded-md p-4 bg-gray-50">
                           <div className="text-center py-8">
                             <User className="h-12 w-12 mx-auto text-gray-400 mb-3" />
