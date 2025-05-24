@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -10,11 +11,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Sparkles, PlusCircle, Clock, FileText, Book, ListChecks, Trash2, Calendar, Star, Edit, Link, Upload } from 'lucide-react';
+import { Sparkles, PlusCircle, Clock, FileText, Book, ListChecks, Trash2, Calendar, Star, Edit, Link, Upload, Check, X, MoreHorizontal, Zap, Search, Filter, ChevronLeft, ChevronRight, Grid, List, SortAsc, Eye, EyeOff } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { UseFormReturn } from 'react-hook-form';
 import { ClassFormValues } from '../types';
-import { FileUploads } from './FileUploads';
+import { FileUploads, UploadedResource } from './FileUploads';
 import { ResourceLinks, ResourceLink } from './ResourceLinks';
 import { EmptyState } from './EmptyState';
 
@@ -378,13 +379,8 @@ const EnhancedLessonPlanCreator: React.FC<EnhancedLessonPlanCreatorProps> = ({
   handleLessonFileChange,
   removeLessonFile
 }) => {
-  // Force UI refresh when lessonPlans change
+  // State declarations first
   const [key, setKey] = useState(Date.now());
-
-  // Update the key when lessonPlans change to force a re-render
-  useEffect(() => {
-    setKey(Date.now());
-  }, [lessonPlans, lessonFileUploads]);
   const [isCreatingLesson, setIsCreatingLesson] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<string>('');
   const [customTitle, setCustomTitle] = useState('');
@@ -395,10 +391,114 @@ const EnhancedLessonPlanCreator: React.FC<EnhancedLessonPlanCreatorProps> = ({
   const [currentLessonId, setCurrentLessonId] = useState<string | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
   const [useAI, setUseAI] = useState(false);
+  const [uploadedResources, setUploadedResources] = useState<Record<string, UploadedResource[]>>({});
+  const [editingLesson, setEditingLesson] = useState<string | null>(null);
+  const [editingField, setEditingField] = useState<string | null>(null);
+  const [tempValues, setTempValues] = useState<Record<string, string>>({});
+  const [autoSaveTimeouts, setAutoSaveTimeouts] = useState<Record<string, NodeJS.Timeout>>({});
+  const [addingLinkFor, setAddingLinkFor] = useState<string | null>(null);
+  const [newLinkTitle, setNewLinkTitle] = useState('');
+  const [newLinkUrl, setNewLinkUrl] = useState('');
+  const [deletingLessonId, setDeletingLessonId] = useState<string | null>(null);
+  
+  // Navigation and filtering state
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterStandard, setFilterStandard] = useState('all');
+  const [sortBy, setSortBy] = useState<'order' | 'title' | 'duration'>('order');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [lessonVisibility, setLessonVisibility] = useState<Record<string, boolean>>({});
+  const LESSONS_PER_PAGE = 12;
+
+  // Update the key when lessonPlans change to force a re-render
+  useEffect(() => {
+    setKey(Date.now());
+  }, [lessonPlans, lessonFileUploads]);
+
+  // Cleanup auto-save timeouts when component unmounts
+  useEffect(() => {
+    return () => {
+      Object.values(autoSaveTimeouts).forEach(timeout => {
+        if (timeout) clearTimeout(timeout);
+      });
+    };
+  }, [autoSaveTimeouts]);
   
   const availableStandards = subject ? 
     learningStandards[subject.split('_')[0]] || learningStandards.default :
     learningStandards.default;
+
+  // Filter and sort lesson plans
+  const filteredAndSortedLessons = useMemo(() => {
+    let filtered = lessonPlans.filter(lesson => {
+      // Search filter
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        const titleMatch = lesson.title?.toLowerCase().includes(query);
+        const descriptionMatch = lesson.description?.toLowerCase().includes(query);
+        if (!titleMatch && !descriptionMatch) return false;
+      }
+
+      // Standards filter
+      if (filterStandard !== 'all') {
+        const lessonStandards = getLessonStandards(lesson.description || '');
+        if (!lessonStandards.some(standard => standard.includes(filterStandard))) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+
+    // Sort lessons
+    filtered.sort((a, b) => {
+      switch (sortBy) {
+        case 'title':
+          return (a.title || '').localeCompare(b.title || '');
+        case 'duration':
+          return parseInt(a.duration || '60') - parseInt(b.duration || '60');
+        case 'order':
+        default:
+          // Keep original order
+          return lessonPlans.indexOf(a) - lessonPlans.indexOf(b);
+      }
+    });
+
+    return filtered;
+  }, [lessonPlans, searchQuery, filterStandard, sortBy]);
+
+  // Pagination
+  const totalPages = Math.ceil(filteredAndSortedLessons.length / LESSONS_PER_PAGE);
+  const startIndex = (currentPage - 1) * LESSONS_PER_PAGE;
+  const paginatedLessons = filteredAndSortedLessons.slice(startIndex, startIndex + LESSONS_PER_PAGE);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, filterStandard, sortBy]);
+
+  // Toggle lesson visibility
+  const toggleLessonVisibility = (lessonId: string) => {
+    setLessonVisibility(prev => ({
+      ...prev,
+      [lessonId]: !prev[lessonId]
+    }));
+  };
+
+  // Handle uploaded resources
+  const handleResourceUploaded = (lessonId: string, resource: UploadedResource) => {
+    setUploadedResources(prev => ({
+      ...prev,
+      [lessonId]: [...(prev[lessonId] || []), resource]
+    }));
+  };
+
+  const handleResourceRemoved = (lessonId: string, resourceId: string) => {
+    setUploadedResources(prev => ({
+      ...prev,
+      [lessonId]: (prev[lessonId] || []).filter(resource => resource.id !== resourceId)
+    }));
+  };
   
   // Reset form when dialog opens
   useEffect(() => {
@@ -535,7 +635,126 @@ const EnhancedLessonPlanCreator: React.FC<EnhancedLessonPlanCreatorProps> = ({
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("content");
 
-  // Edit an existing lesson
+  // Quick inline editing functions
+  const startInlineEdit = (lessonId: string, field: string, currentValue: string) => {
+    setEditingLesson(lessonId);
+    setEditingField(field);
+    setTempValues(prev => ({ ...prev, [`${lessonId}-${field}`]: currentValue }));
+  };
+
+  const cancelInlineEdit = () => {
+    setEditingLesson(null);
+    setEditingField(null);
+    setTempValues({});
+  };
+
+  const saveInlineEdit = async (lessonId: string, field: string) => {
+    const key = `${lessonId}-${field}`;
+    const newValue = tempValues[key];
+    
+    if (newValue !== undefined) {
+      updateLessonPlan(lessonId, field, newValue);
+      
+      // Auto-save after a short delay
+      if (autoSaveTimeouts[lessonId]) {
+        clearTimeout(autoSaveTimeouts[lessonId]);
+      }
+      
+      const timeoutId = setTimeout(async () => {
+        if (saveLessonPlans) {
+          await saveLessonPlans();
+        }
+        // Clear the auto-save indicator after saving
+        setAutoSaveTimeouts(prev => {
+          const newTimeouts = { ...prev };
+          delete newTimeouts[lessonId];
+          return newTimeouts;
+        });
+      }, 1000);
+      
+      setAutoSaveTimeouts(prev => ({ ...prev, [lessonId]: timeoutId }));
+    }
+    
+    cancelInlineEdit();
+  };
+
+  // Link management functions
+  const startAddingLink = (lessonId: string) => {
+    setAddingLinkFor(lessonId);
+    setNewLinkTitle('');
+    setNewLinkUrl('');
+  };
+
+  const cancelAddingLink = () => {
+    setAddingLinkFor(null);
+    setNewLinkTitle('');
+    setNewLinkUrl('');
+  };
+
+  const saveNewLink = (lessonId: string) => {
+    if (newLinkTitle.trim() && newLinkUrl.trim()) {
+      const lesson = lessonPlans.find(l => l.id === lessonId);
+      if (lesson) {
+        const resources = lesson.resources ? JSON.parse(lesson.resources) : [];
+        const newResource = { 
+          id: Date.now().toString(), 
+          title: newLinkTitle.trim(), 
+          url: newLinkUrl.trim() 
+        };
+        updateLessonPlan(lessonId, "resources", JSON.stringify([...resources, newResource]));
+        
+        // Auto-save the new link
+        if (autoSaveTimeouts[lessonId]) {
+          clearTimeout(autoSaveTimeouts[lessonId]);
+        }
+        
+        const timeoutId = setTimeout(async () => {
+          if (saveLessonPlans) {
+            await saveLessonPlans();
+          }
+          setAutoSaveTimeouts(prev => {
+            const newTimeouts = { ...prev };
+            delete newTimeouts[lessonId];
+            return newTimeouts;
+          });
+        }, 1000);
+        
+        setAutoSaveTimeouts(prev => ({ ...prev, [lessonId]: timeoutId }));
+      }
+    }
+    cancelAddingLink();
+  };
+
+  // Delete confirmation functions
+  const handleDeleteClick = (e: React.MouseEvent, lessonId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDeletingLessonId(lessonId);
+  };
+
+  const confirmDelete = async () => {
+    if (deletingLessonId) {
+      // Remove from local state
+      removeLessonPlan(deletingLessonId);
+      
+      // Update via API if available
+      if (saveLessonPlans) {
+        try {
+          await saveLessonPlans();
+        } catch (error) {
+          console.error("Failed to save lesson plans after deletion:", error);
+        }
+      }
+      
+      setDeletingLessonId(null);
+    }
+  };
+
+  const cancelDelete = () => {
+    setDeletingLessonId(null);
+  };
+
+  // Edit an existing lesson (for complex editing)
   const handleEditLesson = (lesson: any) => {
     setIsEditMode(true);
     setCurrentLessonId(lesson.id);
@@ -574,43 +793,138 @@ const EnhancedLessonPlanCreator: React.FC<EnhancedLessonPlanCreatorProps> = ({
   
   return (
     <div className="space-y-4" key={key}>
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-xl font-semibold flex items-center">
-            <FileText className="h-5 w-5 mr-2" />
-            Lesson Plans
-          </h2>
-          <p className="text-sm text-muted-foreground mt-1">
-            Create detailed lesson plans for your class.
-          </p>
-        </div>
-        
-        <Dialog
-          modal={true}
-          open={isCreatingLesson}
-          onOpenChange={(open) => {
-            // Prevent unexpected closures
-            if (!open) {
-              setTimeout(() => {
-                setIsCreatingLesson(false);
-              }, 100);
-            } else {
-              setIsCreatingLesson(true);
-            }
-          }}>
-          <DialogTrigger asChild>
-            <Button type="button">
-              <PlusCircle className="h-4 w-4 mr-2" />
-              Add Lesson Plan
-            </Button>
-          </DialogTrigger>
-
-          <DialogContent
-            className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col"
-            onEscapeKeyDown={(e) => e.preventDefault()}
-            onInteractOutside={(e) => e.preventDefault()}
-            onPointerDownOutside={(e) => e.preventDefault()}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-xl font-semibold flex items-center">
+              <FileText className="h-5 w-5 mr-2" />
+              Lesson Plans
+              {filteredAndSortedLessons.length !== lessonPlans.length && (
+                <Badge variant="secondary" className="ml-2">
+                  {filteredAndSortedLessons.length} of {lessonPlans.length}
+                </Badge>
+              )}
+            </h2>
+            <p className="text-sm text-muted-foreground mt-1">
+              Create detailed lesson plans for your class. ✨ Click any field to edit inline!
+            </p>
+          </div>
+          
+          <Button 
+            type="button"
+            onClick={() => setIsCreatingLesson(true)}
           >
+            <PlusCircle className="h-4 w-4 mr-2" />
+            Add Lesson Plan
+          </Button>
+        </div>
+
+        {/* Search and Filter Controls */}
+        {lessonPlans.length > 5 && (
+          <Card className="bg-gray-50 border-gray-200">
+            <CardContent className="py-3">
+              <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center">
+                <div className="flex-1 min-w-0">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <Input
+                      placeholder="Search lessons by title or content..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-10 bg-white"
+                    />
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-3 flex-wrap">
+                  <div className="flex items-center gap-2">
+                    <Filter className="h-4 w-4 text-gray-500" />
+                    <Select value={filterStandard} onValueChange={setFilterStandard}>
+                      <SelectTrigger className="w-40 bg-white">
+                        <SelectValue placeholder="Filter by standard" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Standards</SelectItem>
+                        {availableStandards.map(standard => (
+                          <SelectItem key={standard} value={standard.split(' - ')[0]}>
+                            {standard.split(' - ')[0]}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <SortAsc className="h-4 w-4 text-gray-500" />
+                    <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
+                      <SelectTrigger className="w-32 bg-white">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="order">Order</SelectItem>
+                        <SelectItem value="title">Title</SelectItem>
+                        <SelectItem value="duration">Duration</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="flex border rounded-lg bg-white">
+                    <Button
+                      variant={viewMode === 'grid' ? 'default' : 'ghost'}
+                      size="sm"
+                      onClick={() => setViewMode('grid')}
+                      className="rounded-r-none"
+                    >
+                      <Grid className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant={viewMode === 'list' ? 'default' : 'ghost'}
+                      size="sm"
+                      onClick={() => setViewMode('list')}
+                      className="rounded-l-none border-l"
+                    >
+                      <List className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Quick Stats */}
+              <div className="flex items-center justify-between mt-3 pt-3 border-t">
+                <div className="text-sm text-gray-600">
+                  Showing {paginatedLessons.length} of {filteredAndSortedLessons.length} lessons
+                </div>
+                {totalPages > 1 && (
+                  <div className="text-sm text-gray-600">
+                    Page {currentPage} of {totalPages}
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+        
+      {/* Lesson Creation Dialog */}
+      <Dialog
+        modal={true}
+        open={isCreatingLesson}
+        onOpenChange={(open) => {
+          // Prevent unexpected closures
+          if (!open) {
+            setTimeout(() => {
+              setIsCreatingLesson(false);
+            }, 100);
+          } else {
+            setIsCreatingLesson(true);
+          }
+        }}>
+        <DialogContent
+          className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col"
+          onEscapeKeyDown={(e) => e.preventDefault()}
+          onInteractOutside={(e) => e.preventDefault()}
+          onPointerDownOutside={(e) => e.preventDefault()}
+        >
             <DialogHeader>
               <DialogTitle>{isEditMode ? 'Edit Lesson Plan' : 'Create New Lesson Plan'}</DialogTitle>
               <DialogDescription>
@@ -794,7 +1108,10 @@ const EnhancedLessonPlanCreator: React.FC<EnhancedLessonPlanCreatorProps> = ({
                               {handleLessonFileChange && removeLessonFile && (
                                 <FileUploads
                                   lessonId={currentLessonId}
+                                  classId={form.getValues('id') || undefined} // Pass class ID for upload API (if available)
+                                  lessonIndex={lessonPlans.findIndex(plan => plan.id === currentLessonId)} // Pass lesson index
                                   files={lessonFileUploads[currentLessonId] || []}
+                                  uploadedResources={uploadedResources[currentLessonId] || []}
                                   onFilesSelected={(lessonId, files) => {
                                     if (handleLessonFileChange) {
                                       const mockEvent = {
@@ -804,6 +1121,8 @@ const EnhancedLessonPlanCreator: React.FC<EnhancedLessonPlanCreatorProps> = ({
                                     }
                                   }}
                                   onFileRemove={removeLessonFile}
+                                  onResourceUploaded={handleResourceUploaded}
+                                  onResourceRemoved={handleResourceRemoved}
                                 />
                               )}
                             </div>
@@ -880,7 +1199,6 @@ const EnhancedLessonPlanCreator: React.FC<EnhancedLessonPlanCreatorProps> = ({
             </DialogFooter>
           </DialogContent>
         </Dialog>
-      </div>
       
       {/* Standards Coverage */}
       <Card className="bg-blue-50 border-blue-200">
@@ -909,7 +1227,7 @@ const EnhancedLessonPlanCreator: React.FC<EnhancedLessonPlanCreatorProps> = ({
       </Card>
       
       {/* Lesson Plans List */}
-      <div className="space-y-3">
+      <div className={viewMode === 'grid' ? 'grid grid-cols-1 lg:grid-cols-2 gap-6' : 'space-y-3'}>
         <AnimatePresence>
           {lessonPlans.length === 0 ? (
             <motion.div 
@@ -929,8 +1247,14 @@ const EnhancedLessonPlanCreator: React.FC<EnhancedLessonPlanCreatorProps> = ({
               />
             </motion.div>
           ) : (
-            lessonPlans.map((lesson, index) => {
+            paginatedLessons.map((lesson, paginatedIndex) => {
+              const originalIndex = filteredAndSortedLessons.indexOf(lesson);
+              const displayIndex = startIndex + paginatedIndex + 1;
               const standards = getLessonStandards(lesson.description || '');
+              const isEditingTitle = editingLesson === lesson.id && editingField === 'title';
+              const isEditingDescription = editingLesson === lesson.id && editingField === 'description';
+              const isCollapsed = lessonVisibility[lesson.id] === true;
+              const hasResources = (uploadedResources[lesson.id]?.length || 0) + (lessonFileUploads[lesson.id]?.length || 0) + (lesson.resources ? JSON.parse(lesson.resources).length : 0) > 0;
               
               return (
                 <motion.div
@@ -939,22 +1263,83 @@ const EnhancedLessonPlanCreator: React.FC<EnhancedLessonPlanCreatorProps> = ({
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.2 }}
+                  className={viewMode === 'list' ? 'w-full' : ''}
                 >
-                  <Card className="hover:border-blue-200 transition-all">
+                  <Card className={`hover:border-blue-200 transition-all group ${viewMode === 'list' ? 'mb-2' : 'h-fit'} ${isCollapsed ? 'bg-gray-50' : ''}`}>
                     <CardHeader className="py-3 flex flex-row items-start justify-between space-y-0">
-                      <div>
-                        <CardTitle className="text-base flex items-center">
-                          <span className="h-6 w-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-medium mr-2">
-                            {index + 1}
-                          </span>
-                          {lesson.title || 'Untitled Lesson'}
-                        </CardTitle>
+                      <div className="flex-1 mr-3">
+                        {/* Inline Title Editing */}
+                        {isEditingTitle ? (
+                          <div className="flex items-start space-x-2">
+                            <span className="h-6 w-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-medium flex-shrink-0 mt-1">
+                              {displayIndex}
+                            </span>
+                            <Input
+                              value={tempValues[`${lesson.id}-title`] || ''}
+                              onChange={(e) => setTempValues(prev => ({ ...prev, [`${lesson.id}-title`]: e.target.value }))}
+                              className="text-base font-semibold min-h-[2rem] flex-1"
+                              placeholder="Enter lesson title..."
+                              autoFocus
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  saveInlineEdit(lesson.id, 'title');
+                                } else if (e.key === 'Escape') {
+                                  cancelInlineEdit();
+                                }
+                              }}
+                              onBlur={() => saveInlineEdit(lesson.id, 'title')}
+                            />
+                            <div className="flex space-x-1 flex-shrink-0 mt-1">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-6 w-6 p-0"
+                                onClick={() => saveInlineEdit(lesson.id, 'title')}
+                              >
+                                <Check className="h-3 w-3 text-green-600" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-6 w-6 p-0"
+                                onClick={cancelInlineEdit}
+                              >
+                                <X className="h-3 w-3 text-red-600" />
+                              </Button>
+                            </div>
+                          </div>
+                        ) : (
+                          <CardTitle 
+                            className="text-base flex items-start cursor-pointer hover:bg-blue-50 p-1 -m-1 rounded group-hover:bg-blue-50/50 transition-colors"
+                            onClick={() => startInlineEdit(lesson.id, 'title', lesson.title || '')}
+                          >
+                            <span className="h-6 w-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-medium mr-2 mt-0.5 flex-shrink-0">
+                              {displayIndex}
+                            </span>
+                            <span className="flex-1 min-w-0 break-words leading-tight">{lesson.title || 'Untitled Lesson'}</span>
+                            <Edit className="h-3 w-3 text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity ml-2 mt-0.5 flex-shrink-0" />
+                          </CardTitle>
+                        )}
+                        
+                        {/* Duration Display */}
                         <CardDescription className="flex items-center mt-1">
                           <Clock className="h-3.5 w-3.5 mr-1.5" />
                           <span>{lesson.duration || 60} minutes</span>
                         </CardDescription>
                       </div>
-                      <div className="flex space-x-1">
+                      
+                      {/* Action Buttons */}
+                      <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0"
+                          onClick={() => toggleLessonVisibility(lesson.id)}
+                          title={isCollapsed ? "Expand lesson" : "Collapse lesson"}
+                        >
+                          {isCollapsed ? <Eye className="h-4 w-4 text-gray-600" /> : <EyeOff className="h-4 w-4 text-gray-600" />}
+                          <span className="sr-only">{isCollapsed ? "Expand" : "Collapse"}</span>
+                        </Button>
                         <Button
                           variant="ghost"
                           size="sm"
@@ -964,39 +1349,99 @@ const EnhancedLessonPlanCreator: React.FC<EnhancedLessonPlanCreatorProps> = ({
                             e.stopPropagation();
                             handleEditLesson(lesson);
                           }}
+                          title="Advanced Edit"
                         >
-                          <Edit className="h-4 w-4 text-blue-600" />
-                          <span className="sr-only">Edit</span>
+                          <MoreHorizontal className="h-4 w-4 text-gray-600" />
+                          <span className="sr-only">Advanced Edit</span>
                         </Button>
                         <Button
                           variant="ghost"
                           size="sm"
                           className="h-8 w-8 p-0"
-                          onClick={() => removeLessonPlan(lesson.id)}
+                          onClick={(e) => handleDeleteClick(e, lesson.id)}
                         >
                           <Trash2 className="h-4 w-4 text-red-600" />
                           <span className="sr-only">Delete</span>
                         </Button>
                       </div>
                     </CardHeader>
-                    <CardContent className="py-2">
-                      <div className="text-sm max-h-24 overflow-hidden relative mb-3">
-                        <div className="prose prose-sm">
-                          {lesson.description ? (
-                            <div dangerouslySetInnerHTML={{ 
-                              __html: lesson.description
-                                .replace(/# (.*)/g, '<h3 class="text-base font-medium mt-1 mb-2">$1</h3>')
-                                .replace(/## (.*)/g, '<h4 class="text-sm font-medium mt-1 mb-1">$1</h4>')
-                                .replace(/\n/g, '<br />')
-                                .replace(/<!-- STANDARDS:.*?-->/g, '')
-                            }}></div>
-                          ) : (
-                            <p className="text-muted-foreground italic">No description provided</p>
-                          )}
+                    {!isCollapsed && <CardContent className="py-2">
+                      {/* Inline Description Editing */}
+                      {isEditingDescription ? (
+                        <div className="space-y-2">
+                          <Textarea
+                            value={tempValues[`${lesson.id}-description`] || ''}
+                            onChange={(e) => setTempValues(prev => ({ ...prev, [`${lesson.id}-description`]: e.target.value }))}
+                            className="min-h-[100px] text-sm font-mono"
+                            placeholder="Enter lesson description..."
+                            autoFocus
+                            onKeyDown={(e) => {
+                              if (e.key === 'Escape') {
+                                cancelInlineEdit();
+                              }
+                            }}
+                          />
+                          <div className="flex justify-between items-center">
+                            <p className="text-xs text-muted-foreground">
+                              Supports Markdown. Press Escape to cancel.
+                            </p>
+                            <div className="flex space-x-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={cancelInlineEdit}
+                              >
+                                <X className="h-3 w-3 mr-1" />
+                                Cancel
+                              </Button>
+                              <Button
+                                size="sm"
+                                onClick={() => saveInlineEdit(lesson.id, 'description')}
+                              >
+                                <Check className="h-3 w-3 mr-1" />
+                                Save
+                              </Button>
+                            </div>
+                          </div>
                         </div>
-                        <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-white to-transparent"></div>
-                      </div>
+                      ) : (
+                        <div 
+                          className="text-sm max-h-24 overflow-hidden relative mb-3 cursor-pointer hover:bg-blue-50/50 p-2 -m-2 rounded transition-colors group/desc"
+                          onClick={() => startInlineEdit(lesson.id, 'description', lesson.description?.replace(/\\n\\n<!-- STANDARDS:.*?-->/, '') || '')}
+                        >
+                          <div className="prose prose-sm">
+                            {lesson.description ? (
+                              <div dangerouslySetInnerHTML={{ 
+                                __html: lesson.description
+                                  .replace(/# (.*)/g, '<h3 class="text-base font-medium mt-1 mb-2">$1</h3>')
+                                  .replace(/## (.*)/g, '<h4 class="text-sm font-medium mt-1 mb-1">$1</h4>')
+                                  .replace(/\\n/g, '<br />')
+                                  .replace(/<!-- STANDARDS:.*?-->/g, '')
+                              }}></div>
+                            ) : (
+                              <p className="text-muted-foreground italic">Click to add description...</p>
+                            )}
+                          </div>
+                          <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-white to-transparent"></div>
+                          <Edit className="absolute top-2 right-2 h-3 w-3 text-blue-400 opacity-0 group-hover/desc:opacity-100 transition-opacity" />
+                        </div>
+                      )}
+                      
+                      {/* Badges and Indicators */}
                       <div className="flex flex-wrap items-center gap-3 mt-3">
+                        {/* Auto-save indicator */}
+                        {autoSaveTimeouts[lesson.id] && (
+                          <motion.div
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.8 }}
+                            className="flex items-center text-xs text-green-600"
+                          >
+                            <Zap className="h-3 w-3 mr-1" />
+                            Auto-saving...
+                          </motion.div>
+                        )}
+                        
                         {standards.length > 0 && (
                           <div className="flex flex-wrap gap-1">
                             {standards.map(standard => (
@@ -1023,7 +1468,218 @@ const EnhancedLessonPlanCreator: React.FC<EnhancedLessonPlanCreatorProps> = ({
                           </Badge>
                         )}
                       </div>
-                    </CardContent>
+
+                      {/* Resources & Links Section */}
+                      <div className="mt-4 border-t pt-4">
+                        <div className="flex items-center justify-between mb-3">
+                          <Label className="text-sm font-medium text-gray-700">Resources & Files</Label>
+                          {((uploadedResources[lesson.id]?.length || 0) + (lessonFileUploads[lesson.id]?.length || 0) + (lesson.resources ? JSON.parse(lesson.resources).length : 0)) > 0 && (
+                            <span className="text-xs text-gray-500">
+                              {(uploadedResources[lesson.id]?.length || 0) + (lessonFileUploads[lesson.id]?.length || 0) + (lesson.resources ? JSON.parse(lesson.resources).length : 0)} items
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Show Resource Links */}
+                        {lesson.resources && JSON.parse(lesson.resources).length > 0 && (
+                          <div className="space-y-2 mb-3">
+                            <h4 className="text-xs font-medium text-gray-600 uppercase tracking-wide">Links</h4>
+                            {JSON.parse(lesson.resources).map((link: any) => (
+                              <div key={link.id} className="flex items-center justify-between p-2 bg-amber-50 border border-amber-200 rounded text-sm">
+                                <div className="flex items-center space-x-2 flex-1 min-w-0">
+                                  <Link className="h-3 w-3 text-amber-600 flex-shrink-0" />
+                                  <div className="min-w-0 flex-1">
+                                    <div className="font-medium text-amber-700 truncate">{link.title}</div>
+                                    <div className="text-xs text-amber-600 truncate">{link.url}</div>
+                                  </div>
+                                  <Badge variant="outline" className="text-xs flex-shrink-0">Link</Badge>
+                                </div>
+                                <div className="flex items-center space-x-1 ml-2">
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => window.open(link.url, '_blank')}
+                                    className="h-6 w-6 p-0 text-amber-600 hover:text-amber-700"
+                                    title="Open link"
+                                  >
+                                    <Link className="h-3 w-3" />
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => {
+                                      const resources = lesson.resources ? JSON.parse(lesson.resources) : [];
+                                      const updatedResources = resources.filter((res: any) => res.id !== link.id);
+                                      updateLessonPlan(lesson.id, "resources", JSON.stringify(updatedResources));
+                                    }}
+                                    className="h-6 w-6 p-0 text-red-500 hover:text-red-700"
+                                  >
+                                    <X className="h-3 w-3" />
+                                  </Button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Show uploaded files */}
+                        {(uploadedResources[lesson.id]?.length > 0 || lessonFileUploads[lesson.id]?.length > 0) && (
+                          <div className="space-y-2 mb-3">
+                            <h4 className="text-xs font-medium text-gray-600 uppercase tracking-wide">Files</h4>
+                            {/* Uploaded Resources */}
+                            {uploadedResources[lesson.id]?.map((resource) => (
+                              <div key={resource.id} className="flex items-center justify-between p-2 bg-green-50 border border-green-200 rounded text-sm">
+                                <div className="flex items-center space-x-2">
+                                  <Upload className="h-3 w-3 text-green-600" />
+                                  <span className="text-green-700 font-medium">{resource.filename}</span>
+                                  <Badge variant="outline" className="text-xs">Uploaded</Badge>
+                                </div>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleResourceRemoved(lesson.id, resource.id)}
+                                  className="h-6 w-6 p-0 text-red-500 hover:text-red-700"
+                                >
+                                  <X className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            ))}
+
+                            {/* Local Files (ready to upload) */}
+                            {lessonFileUploads[lesson.id]?.map((file, fileIndex) => (
+                              <div key={`local-${fileIndex}`} className="flex items-center justify-between p-2 bg-blue-50 border border-blue-200 rounded text-sm">
+                                <div className="flex items-center space-x-2">
+                                  <FileText className="h-3 w-3 text-blue-600" />
+                                  <span className="text-blue-700 font-medium">{file.name}</span>
+                                  <Badge variant="outline" className="text-xs">Ready to upload</Badge>
+                                </div>
+                                <div className="flex items-center space-x-1">
+                                  {handleLessonFileChange && form.getValues('id') && (
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={async () => {
+                                        // Upload file logic here
+                                        const fileId = `${lesson.id}-${file.name}-${Date.now()}`;
+                                        const uploadingResource: UploadedResource = {
+                                          id: fileId,
+                                          filename: file.name,
+                                          originalFile: file,
+                                          uploadStatus: 'uploaded' // Simulate upload success
+                                        };
+                                        handleResourceUploaded(lesson.id, uploadingResource);
+                                        // Remove from local files
+                                        if (removeLessonFile) {
+                                          removeLessonFile(lesson.id, fileIndex);
+                                        }
+                                      }}
+                                      className="h-6 text-xs text-blue-600 border-blue-200"
+                                    >
+                                      <Upload className="h-3 w-3 mr-1" />
+                                      Upload
+                                    </Button>
+                                  )}
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => removeLessonFile && removeLessonFile(lesson.id, fileIndex)}
+                                    className="h-6 w-6 p-0 text-red-500 hover:text-red-700"
+                                  >
+                                    <X className="h-3 w-3" />
+                                  </Button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Add Link Form */}
+                        {addingLinkFor === lesson.id && (
+                          <div className="space-y-3 p-3 bg-gray-50 border border-gray-200 rounded-lg mb-3">
+                            <div className="space-y-2">
+                              <Input
+                                placeholder="Link title (e.g., 'Interactive Quiz')"
+                                value={newLinkTitle}
+                                onChange={(e) => setNewLinkTitle(e.target.value)}
+                                className="text-sm"
+                                autoFocus
+                              />
+                              <Input
+                                placeholder="URL (e.g., 'https://example.com')"
+                                value={newLinkUrl}
+                                onChange={(e) => setNewLinkUrl(e.target.value)}
+                                className="text-sm"
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
+                                    saveNewLink(lesson.id);
+                                  } else if (e.key === 'Escape') {
+                                    cancelAddingLink();
+                                  }
+                                }}
+                              />
+                            </div>
+                            <div className="flex justify-end space-x-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={cancelAddingLink}
+                              >
+                                <X className="h-3 w-3 mr-1" />
+                                Cancel
+                              </Button>
+                              <Button
+                                size="sm"
+                                onClick={() => saveNewLink(lesson.id)}
+                                disabled={!newLinkTitle.trim() || !newLinkUrl.trim()}
+                              >
+                                <Check className="h-3 w-3 mr-1" />
+                                Add Link
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Action Buttons */}
+                        <div className="grid grid-cols-2 gap-2">
+                          {/* Add Files Button */}
+                          {handleLessonFileChange && (
+                            <div className="relative">
+                              <input
+                                type="file"
+                                multiple
+                                accept="*"
+                                onChange={(e) => handleLessonFileChange(lesson.id, e)}
+                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                id={`file-upload-${lesson.id}`}
+                              />
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="w-full border-dashed border-gray-300 text-gray-600 hover:border-blue-400 hover:text-blue-600"
+                                asChild
+                              >
+                                <label htmlFor={`file-upload-${lesson.id}`} className="cursor-pointer">
+                                  <Upload className="h-4 w-4 mr-2" />
+                                  Add Files
+                                </label>
+                              </Button>
+                            </div>
+                          )}
+
+                          {/* Add Link Button */}
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => startAddingLink(lesson.id)}
+                            className="border-dashed border-gray-300 text-gray-600 hover:border-amber-400 hover:text-amber-600"
+                            disabled={addingLinkFor === lesson.id}
+                          >
+                            <Link className="h-4 w-4 mr-2" />
+                            Add Link
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>}
                   </Card>
                 </motion.div>
               );
@@ -1031,6 +1687,86 @@ const EnhancedLessonPlanCreator: React.FC<EnhancedLessonPlanCreatorProps> = ({
           )}
         </AnimatePresence>
       </div>
+
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <Card className="bg-gray-50 border-gray-200 mt-6">
+          <CardContent className="py-3">
+            <div className="flex items-center justify-between">
+              <div className="text-sm text-gray-600">
+                Showing {startIndex + 1}-{Math.min(startIndex + LESSONS_PER_PAGE, filteredAndSortedLessons.length)} of {filteredAndSortedLessons.length} lessons
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                  disabled={currentPage === 1}
+                >
+                  <ChevronLeft className="h-4 w-4 mr-1" />
+                  Previous
+                </Button>
+                
+                <div className="flex items-center space-x-1">
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    let pageNum;
+                    if (totalPages <= 5) {
+                      pageNum = i + 1;
+                    } else if (currentPage <= 3) {
+                      pageNum = i + 1;
+                    } else if (currentPage >= totalPages - 2) {
+                      pageNum = totalPages - 4 + i;
+                    } else {
+                      pageNum = currentPage - 2 + i;
+                    }
+                    
+                    return (
+                      <Button
+                        key={pageNum}
+                        variant={currentPage === pageNum ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setCurrentPage(pageNum)}
+                        className="w-8 h-8 p-0"
+                      >
+                        {pageNum}
+                      </Button>
+                    );
+                  })}
+                  
+                  {totalPages > 5 && currentPage < totalPages - 2 && (
+                    <>
+                      <span className="text-gray-400">...</span>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage(totalPages)}
+                        className="w-8 h-8 p-0"
+                      >
+                        {totalPages}
+                      </Button>
+                    </>
+                  )}
+                </div>
+                
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                  disabled={currentPage === totalPages}
+                >
+                  Next
+                  <ChevronRight className="h-4 w-4 ml-1" />
+                </Button>
+              </div>
+              
+              <div className="text-sm text-gray-600">
+                Page {currentPage} of {totalPages}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Edit Lesson Plan Modal */}
       <Dialog
@@ -1133,7 +1869,10 @@ const EnhancedLessonPlanCreator: React.FC<EnhancedLessonPlanCreatorProps> = ({
                           {handleLessonFileChange && removeLessonFile && (
                             <FileUploads
                               lessonId={currentLessonId}
+                              classId={form.getValues('id') || undefined}
+                              lessonIndex={lessonPlans.findIndex(plan => plan.id === currentLessonId)}
                               files={lessonFileUploads[currentLessonId] || []}
+                              uploadedResources={uploadedResources[currentLessonId] || []}
                               onFilesSelected={(lessonId, files) => {
                                 if (handleLessonFileChange) {
                                   const mockEvent = {
@@ -1143,6 +1882,8 @@ const EnhancedLessonPlanCreator: React.FC<EnhancedLessonPlanCreatorProps> = ({
                                 }
                               }}
                               onFileRemove={removeLessonFile}
+                              onResourceUploaded={handleResourceUploaded}
+                              onResourceRemoved={handleResourceRemoved}
                             />
                           )}
                         </div>
@@ -1283,6 +2024,55 @@ const EnhancedLessonPlanCreator: React.FC<EnhancedLessonPlanCreatorProps> = ({
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Confirmation Floating Dialog */}
+      {deletingLessonId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          {/* Backdrop */}
+          <div 
+            className="absolute inset-0 bg-black/20 backdrop-blur-sm"
+            onClick={cancelDelete}
+          />
+          
+          {/* Floating Dialog */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 10 }}
+            transition={{ duration: 0.15 }}
+            className="relative bg-white rounded-lg shadow-xl border p-6 w-80 mx-4"
+          >
+            <div className="flex items-center mb-4">
+              <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center mr-3">
+                <Trash2 className="h-5 w-5 text-red-600" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-gray-900">Delete lesson plan?</h3>
+                <p className="text-sm text-gray-500">This action cannot be undone.</p>
+              </div>
+            </div>
+            
+            <div className="flex gap-3 justify-end">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={cancelDelete}
+                className="px-4"
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={confirmDelete}
+                className="px-4 bg-red-600 hover:bg-red-700"
+              >
+                Delete
+              </Button>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 };
