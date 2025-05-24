@@ -70,8 +70,13 @@ const calculateStepCompletion = (form: any, stepId: string, checkClassCompletene
   switch (stepId) {
     case "basic":
       const requiredBasicFields = ['title', 'subject', 'description'];
-      const optionalBasicFields = ['curriculum', 'objectives', 'assessmentMethods', 'technicalRequirements', 'materialsRequired'];
-      
+      const optionalBasicFields = ['curriculum', 'technicalRequirements', 'materialsRequired'];
+      const classType = values.type;
+      if (classType !== "afterschool") {
+        optionalBasicFields.push('assessmentMethods');
+      }else{
+        optionalBasicFields.push('ageRange');
+      }
       let completedRequired = requiredBasicFields.filter(field => 
         values[field as keyof ClassFormValues] && String(values[field as keyof ClassFormValues]).trim() !== ""
       ).length;
@@ -79,7 +84,6 @@ const calculateStepCompletion = (form: any, stepId: string, checkClassCompletene
       let completedOptional = optionalBasicFields.filter(field => 
         values[field as keyof ClassFormValues] && String(values[field as keyof ClassFormValues]).trim() !== ""
       ).length;
-      
       // Required fields count 80%, optional fields count 20%
       return Math.min(100, (completedRequired / requiredBasicFields.length) * 80 + 
         (completedOptional / optionalBasicFields.length) * 20);
@@ -539,7 +543,7 @@ const EnhancedClassSetupContent = ({
   const calculateCompletion = useCallback(() => {
     // Calculate completion for each step
     const stepCompletions = steps.map(step =>
-      calculateStepCompletion(form, step.id, checkClassCompleteness) * (step.isRequired ? 1 : 0.5)
+      calculateStepCompletion(form, step.id, checkClassCompleteness)
     );
 
     // Weight required steps more heavily

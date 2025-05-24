@@ -531,7 +531,6 @@ export const ClassFormProvider = ({
     if (!hasMinCohorts) {
       missingItems.push('At least one cohort');
     }
-    
     return {
       isComplete: basicInfoComplete && hasMinLessonPlans && hasMinCohorts,
       basicInfoComplete,

@@ -211,58 +211,12 @@ const CohortsTab = ({
         return;
       }
       
-      // 7. Update local state with the refreshed data
-      if (refreshedClassData && refreshedClassData.cohorts) {
-        // Using the imported utility function for local pattern value conversion
-        
-        // Convert the API cohort format back to our internal format
-        const refreshedCohorts = refreshedClassData.cohorts.map((apiCohort: any) => {
-          return {
-            id: apiCohort.id,
-            name: apiCohort.name,
-            isActive: apiCohort.isActive,
-            startDate: apiCohort.startDate ? new Date(apiCohort.startDate) : null,
-            endDate: apiCohort.endDate ? new Date(apiCohort.endDate) : null,
-            startTime: apiCohort.startTime,
-            endTime: apiCohort.endTime,
-            numberOfLessons: refreshedClassData.numberOfLessons || 1,
-            price: apiCohort.price?.toString() || "",
-            discount: apiCohort.discount?.toString() || "0",
-            minStudents: apiCohort.minimumStudents,
-            maxStudents: apiCohort.maximumStudents,
-            enrollmentDeadline: apiCohort.enrollmentDeadline ? new Date(apiCohort.enrollmentDeadline) : null,
-            hasFlexibleSchedule: apiCohort.customLessonTimes,
-            repeatSchedule: {
-              pattern: getLocalRepeatPatternValue(apiCohort.repeatPattern) || "weekly",
-              repeatEvery: apiCohort.repeatEvery || 1,
-              daysOfWeek: apiCohort.daysOfWeek?.map((day: string) => day.toLowerCase()) || []
-            },
-            lessonSchedules: []
-          };
-        });
-        
-        // Update form values with any other refreshed data as needed
-        form.setValue("enableMultipleCohorts", refreshedClassData.enableMultipleCohorts);
-        form.setValue("hasCohorts", refreshedClassData.enableMultipleCohorts);
-        
-        // Replace all cohorts with the refreshed data
-        // Since we don't have a setCohorts function, we need to handle this differently
-        // First remove all existing cohorts
-        [...cohorts].forEach(cohort => {
-          removeCohort(cohort.id);
-        });
-        
-        // Then add each refreshed cohort one by one
-        refreshedCohorts.forEach((cohort: CohortData) => {
-          addCohort();
-          
-          // Get the ID of the newly added cohort
-          const newCohortId = cohorts[cohorts.length - 1]?.id;
-          if (newCohortId) {
-            updateBasicCohortProperties(newCohortId, cohort);
-          }
-        });
-      }
+      // 7. Close dialog and trigger a page refresh to show the updated cohorts
+      // Note: Rather than manually syncing local state, we'll reload the page 
+      // to ensure all data is fresh and consistent
+      setIsCreateDialogOpen(false);
+      console.log("Cohort created successfully, refreshing page to show updated data");
+      window.location.reload();
       
       // Reset loading state
       setIsSaving(false);
@@ -273,34 +227,6 @@ const CohortsTab = ({
     }
   };
   
-  // Helper function to update all cohort properties using the available props
-  const updateBasicCohortProperties = (cohortId: string, sourceCohort: CohortData) => {
-    const cohortNumber = cohorts.length;
-    const classTitle = form.getValues().title || "Class";
-    
-    // Update all the individual fields
-    updateCohort(cohortId, "name", sourceCohort.name || (hasCohorts ? `${classTitle} Cohort ${cohortNumber}` : classTitle));
-    updateCohort(cohortId, "startDate", sourceCohort.startDate);
-    updateCohort(cohortId, "endDate", sourceCohort.endDate);
-    updateCohort(cohortId, "startTime", sourceCohort.startTime);
-    updateCohort(cohortId, "endTime", sourceCohort.endTime);
-    updateCohort(cohortId, "price", sourceCohort.price);
-    updateCohort(cohortId, "discount", sourceCohort.discount);
-    updateCohort(cohortId, "isActive", sourceCohort.isActive);
-    updateCohort(cohortId, "minStudents", sourceCohort.minStudents);
-    updateCohort(cohortId, "maxStudents", sourceCohort.maxStudents);
-    updateCohort(cohortId, "enrollmentDeadline", sourceCohort.enrollmentDeadline);
-    updateCohort(cohortId, "hasFlexibleSchedule", sourceCohort.hasFlexibleSchedule);
-    
-    // Update repeat schedule
-    updateRepeatSchedule(cohortId, "pattern", sourceCohort.repeatSchedule.pattern);
-    updateRepeatSchedule(cohortId, "repeatEvery", sourceCohort.repeatSchedule.repeatEvery);
-    
-    // Set days of week one by one
-    sourceCohort.repeatSchedule.daysOfWeek.forEach(day => {
-      toggleDayOfWeek(cohortId, day);
-    });
-  };
   
   // Handle cohort update - new approach: send to API first, then update local state
   const handleUpdateCohort = async (updatedCohort: CohortData) => {
@@ -428,58 +354,11 @@ const CohortsTab = ({
         return;
       }
       
-      // 6. Update local state with the refreshed data
-      if (refreshedClassData && refreshedClassData.cohorts) {
-        // Using the imported utility function for local pattern value conversion
-        
-        // Convert the API cohort format back to our internal format
-        const refreshedCohorts = refreshedClassData.cohorts.map((apiCohort: any) => {
-          return {
-            id: apiCohort.id,
-            name: apiCohort.name,
-            isActive: apiCohort.isActive,
-            startDate: apiCohort.startDate ? new Date(apiCohort.startDate) : null,
-            endDate: apiCohort.endDate ? new Date(apiCohort.endDate) : null,
-            startTime: apiCohort.startTime,
-            endTime: apiCohort.endTime,
-            numberOfLessons: refreshedClassData.numberOfLessons || 1,
-            price: apiCohort.price?.toString() || "",
-            discount: apiCohort.discount?.toString() || "0",
-            minStudents: apiCohort.minimumStudents,
-            maxStudents: apiCohort.maximumStudents,
-            enrollmentDeadline: apiCohort.enrollmentDeadline ? new Date(apiCohort.enrollmentDeadline) : null,
-            hasFlexibleSchedule: apiCohort.customLessonTimes,
-            repeatSchedule: {
-              pattern: getLocalRepeatPatternValue(apiCohort.repeatPattern) || "weekly",
-              repeatEvery: apiCohort.repeatEvery || 1,
-              daysOfWeek: apiCohort.daysOfWeek?.map((day: string) => day.toLowerCase()) || []
-            },
-            lessonSchedules: []
-          };
-        });
-        
-        // Update form values
-        form.setValue("enableMultipleCohorts", refreshedClassData.enableMultipleCohorts);
-        form.setValue("hasCohorts", refreshedClassData.enableMultipleCohorts);
-        
-        // Replace all cohorts with the refreshed data
-        // Since we don't have a setCohorts function, we need to handle this differently
-        // First remove all existing cohorts
-        [...cohorts].forEach(cohort => {
-          removeCohort(cohort.id);
-        });
-        
-        // Then add each refreshed cohort one by one
-        refreshedCohorts.forEach((cohort: CohortData) => {
-          addCohort();
-          
-          // Get the ID of the newly added cohort
-          const newCohortId = cohorts[cohorts.length - 1]?.id;
-          if (newCohortId) {
-            updateBasicCohortProperties(newCohortId, cohort);
-          }
-        });
-      }
+      // 6. Trigger a page refresh to show the updated cohorts
+      // Note: Rather than manually syncing local state, we'll reload the page 
+      // to ensure all data is fresh and consistent
+      console.log("Cohort updated successfully, refreshing page to show updated data");
+      window.location.reload();
       
       // Reset loading state
       setIsSaving(false);
@@ -734,7 +613,7 @@ const CohortsTab = ({
           ) : (
             <div className="space-y-4">
               {cohorts.map((cohort, index) => (
-                <div key={cohort.id} className="border rounded-lg overflow-hidden bg-white shadow-sm hover:shadow-md transition-shadow">
+                <div key={cohort._id || cohort.id || `cohort-${index}`} className="border rounded-lg overflow-hidden bg-white shadow-sm hover:shadow-md transition-shadow">
                   {/* Cohort header with status badge and actions */}
                   <div className="flex justify-between items-center p-4 bg-gray-50 border-b">
                     <div className="flex items-center">
@@ -1001,7 +880,7 @@ const CohortsTab = ({
           ) : (
             <div className="space-y-4">
               {cohorts.map((cohort, index) => (
-                <div key={cohort.id} className="border rounded-md p-4 space-y-4">
+                <div key={cohort._id || cohort.id || `cohort-${index}`} className="border rounded-md p-4 space-y-4">
                   <div className="flex justify-between items-center">
                     <h3 className="text-sm font-medium">Class Cohort</h3>
                     <Button 

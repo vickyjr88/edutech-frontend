@@ -867,19 +867,19 @@ const BasicInformationTab = ({ form, onNextTab }: BasicInformationTabProps) => {
               
               const relevantGrades = getGradesFromRange(gradeRange);
               
-              // Set a default value if current value is not in the relevant grades
+              // Set a default value if current value is not in the relevant grades or is empty
               useEffect(() => {
-                if (field.value && !relevantGrades.includes(field.value)) {
+                if (selectedLevel && (!field.value || !relevantGrades.includes(field.value))) {
                   form.setValue("gradeLevel", relevantGrades[0] || "grade1");
                 }
-              }, [relevantGrades, field.value]);
+              }, [relevantGrades, field.value, selectedLevel]);
               
               return (
                 <FormItem>
                   <FormLabel>Grade Level</FormLabel>
                   <Select 
                     onValueChange={field.onChange} 
-                    value={field.value || relevantGrades[0] || "grade1"}
+                    value={field.value || ""}
                     disabled={!selectedLevel}
                   >
                     <FormControl>
@@ -968,12 +968,12 @@ const BasicInformationTab = ({ form, onNextTab }: BasicInformationTabProps) => {
               
               const relevantAgeRanges = getAgeRangesFromRange(ageRangeStr);
               
-              // Set a default value if current value is not in the relevant age ranges
+              // Set a default value if current value is not in the relevant age ranges or is empty
               useEffect(() => {
-                if (field.value && !relevantAgeRanges.includes(field.value)) {
+                if (selectedLevel && (!field.value || !relevantAgeRanges.includes(field.value))) {
                   form.setValue("ageRange", relevantAgeRanges[0] || "age3-5");
                 }
-              }, [relevantAgeRanges, field.value]);
+              }, [relevantAgeRanges, field.value, selectedLevel]);
               
               // Map for display values
               const ageRangeDisplay = {
@@ -989,7 +989,7 @@ const BasicInformationTab = ({ form, onNextTab }: BasicInformationTabProps) => {
                   <FormLabel>Age Range</FormLabel>
                   <Select 
                     onValueChange={field.onChange} 
-                    value={field.value || relevantAgeRanges[0] || "age3-5"}
+                    value={field.value || ""}
                     disabled={!selectedLevel}
                   >
                     <FormControl>
