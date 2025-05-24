@@ -18,6 +18,9 @@ import { ClassFormValues } from '../types';
 import { FileUploads, UploadedResource } from './FileUploads';
 import { ResourceLinks, ResourceLink } from './ResourceLinks';
 import { EmptyState } from './EmptyState';
+import { api } from '@/integrations/api/client';
+import { useToast } from '@/hooks/use-toast';
+import { useParams } from 'react-router-dom';
 
 // Learning standards by subject
 const learningStandards: Record<string, string[]> = {
@@ -408,7 +411,10 @@ const EnhancedLessonPlanCreator: React.FC<EnhancedLessonPlanCreatorProps> = ({
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [currentPage, setCurrentPage] = useState(1);
   const [lessonVisibility, setLessonVisibility] = useState<Record<string, boolean>>({});
+  const [uploadingFiles, setUploadingFiles] = useState<Set<string>>(new Set());
   const LESSONS_PER_PAGE = 12;
+  const { toast } = useToast();
+  const { classId } = useParams<{ classId: string }>();
 
   // Update the key when lessonPlans change to force a re-render
   useEffect(() => {
@@ -427,6 +433,35 @@ const EnhancedLessonPlanCreator: React.FC<EnhancedLessonPlanCreatorProps> = ({
   const availableStandards = subject ? 
     learningStandards[subject.split('_')[0]] || learningStandards.default :
     learningStandards.default;
+
+  // Helper functions to work with the actual API structure
+  const getLessonId = (lesson: any): string => {
+    return lesson.id || lesson._id;
+  };
+
+  const getLessonResourceFiles = (lesson: any): any[] => {
+    return Array.isArray(lesson.resourceFiles) ? lesson.resourceFiles : [];
+  };
+
+  const getLessonResourceLinks = (lesson: any): any[] => {
+    return Array.isArray(lesson.resourceLinks) ? lesson.resourceLinks : [];
+  };
+
+  const updateLessonResourceFiles = (lessonId: string, files: any[]) => {
+    const lesson = lessonPlans.find(l => (l.id || l._id) === lessonId);
+    if (lesson) {
+      // Update the resourceFiles array directly
+      updateLessonPlan(lessonId, "resourceFiles", files);
+    }
+  };
+
+  const updateLessonResourceLinks = (lessonId: string, links: any[]) => {
+    const lesson = lessonPlans.find(l => (l.id || l._id) === lessonId);
+    if (lesson) {
+      // Update the resourceLinks array directly
+      updateLessonPlan(lessonId, "resourceLinks", links);
+    }
+  };
 
   // Filter and sort lesson plans
   const filteredAndSortedLessons = useMemo(() => {
@@ -695,13 +730,13 @@ const EnhancedLessonPlanCreator: React.FC<EnhancedLessonPlanCreatorProps> = ({
     if (newLinkTitle.trim() && newLinkUrl.trim()) {
       const lesson = lessonPlans.find(l => l.id === lessonId);
       if (lesson) {
-        const resources = lesson.resources ? JSON.parse(lesson.resources) : [];
+        const currentLinks = getLessonResourceLinks(lesson);
         const newResource = { 
           id: Date.now().toString(), 
           title: newLinkTitle.trim(), 
           url: newLinkUrl.trim() 
         };
-        updateLessonPlan(lessonId, "resources", JSON.stringify([...resources, newResource]));
+        updateLessonResourceLinks(lessonId, [...currentLinks, newResource]);
         
         // Auto-save the new link
         if (autoSaveTimeouts[lessonId]) {
@@ -752,6 +787,94 @@ const EnhancedLessonPlanCreator: React.FC<EnhancedLessonPlanCreatorProps> = ({
 
   const cancelDelete = () => {
     setDeletingLessonId(null);
+  };
+
+  // File upload function
+  const uploadFileToBackend = async (file: File, lessonId: string, lessonIndex: number, classId ?: string) => {
+    console.log("Uploading file:", form.getValues());
+    if (!classId) {
+      // For new classes, store files locally and show a message
+      toast({
+        title: "Class Not Saved Yet "+currentLessonId,
+        description: "Files will be uploaded when you save the class. For now, files are stored locally.",
+        variant: "default",
+      });
+      
+      // Store file locally and return a temporary uploaded resource
+      return {
+        id: `temp-${lessonId}-${file.name}-${Date.now()}`,
+        filename: file.name,
+        originalFile: file,
+        uploadStatus: 'uploaded' as const // Show as uploaded locally
+      };
+    }
+
+    const fileKey = `${lessonId}-${file.name}`;
+    setUploadingFiles(prev => new Set(prev).add(fileKey));
+
+    try {
+      // Convert file to base64
+      const base64Data = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = error => reject(error);
+      });
+
+      // Upload to backend
+      const response = await api.post(
+        `/classes/${classId}/lesson-plans/${lessonIndex}/upload-resource`,
+        {
+          file: base64Data,
+          filename: file.name
+        }
+      );
+
+      if (response.error) {
+        throw new Error(response.error.message);
+      }
+
+      // Add the uploaded file to the lesson's resourceFiles array
+      const lesson = lessonPlans.find(l => (l.id || l._id) === lessonId);
+      if (lesson && response.data) {
+        const currentFiles = getLessonResourceFiles(lesson);
+        const newFile = {
+          _id: response.data.id || response.data._id,
+          filename: file.name,
+          url: response.data.url || '',
+          size: file.size,
+          uploadedAt: new Date().toISOString()
+        };
+        updateLessonResourceFiles(lessonId, [...currentFiles, newFile]);
+      }
+
+      toast({
+        title: "File Uploaded",
+        description: `${file.name} has been uploaded successfully`,
+      });
+
+      return {
+        id: response.data?.id || `${lessonId}-${file.name}-${Date.now()}`,
+        filename: file.name,
+        originalFile: file,
+        uploadStatus: 'uploaded' as const
+      };
+
+    } catch (error) {
+      console.error('Upload error:', error);
+      toast({
+        title: "Upload Failed",
+        description: `Failed to upload ${file.name}: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        variant: "destructive",
+      });
+      return null;
+    } finally {
+      setUploadingFiles(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(fileKey);
+        return newSet;
+      });
+    }
   };
 
   // Edit an existing lesson (for complex editing)
@@ -1138,22 +1261,22 @@ const EnhancedLessonPlanCreator: React.FC<EnhancedLessonPlanCreatorProps> = ({
                                   lessonId={currentLessonId}
                                   resourceLinks={(() => {
                                     const lesson = lessonPlans.find(l => l.id === currentLessonId);
-                                    return lesson?.resources ? JSON.parse(lesson.resources) : [];
+                                    return getLessonResourceLinks(lesson || {});
                                   })()}
                                   onAddResourceLink={(lessonId, title, url) => {
                                     const lesson = lessonPlans.find(l => l.id === lessonId);
                                     if (lesson) {
-                                      const resources = lesson.resources ? JSON.parse(lesson.resources) : [];
+                                      const currentLinks = getLessonResourceLinks(lesson);
                                       const newResource = { id: Date.now().toString(), title, url };
-                                      updateLessonPlan(lessonId, "resources", JSON.stringify([...resources, newResource]));
+                                      updateLessonResourceLinks(lessonId, [...currentLinks, newResource]);
                                     }
                                   }}
                                   onRemoveResourceLink={(lessonId, linkId) => {
                                     const lesson = lessonPlans.find(l => l.id === lessonId);
                                     if (lesson) {
-                                      const resources = lesson.resources ? JSON.parse(lesson.resources) : [];
-                                      const updatedResources = resources.filter((res: ResourceLink) => res.id !== linkId);
-                                      updateLessonPlan(lessonId, "resources", JSON.stringify(updatedResources));
+                                      const currentLinks = getLessonResourceLinks(lesson);
+                                      const updatedLinks = currentLinks.filter((res: ResourceLink) => res.id !== linkId);
+                                      updateLessonResourceLinks(lessonId, updatedLinks);
                                     }
                                   }}
                                 />
@@ -1250,15 +1373,18 @@ const EnhancedLessonPlanCreator: React.FC<EnhancedLessonPlanCreatorProps> = ({
             paginatedLessons.map((lesson, paginatedIndex) => {
               const originalIndex = filteredAndSortedLessons.indexOf(lesson);
               const displayIndex = startIndex + paginatedIndex + 1;
+              const lessonId = getLessonId(lesson);
               const standards = getLessonStandards(lesson.description || '');
-              const isEditingTitle = editingLesson === lesson.id && editingField === 'title';
-              const isEditingDescription = editingLesson === lesson.id && editingField === 'description';
-              const isCollapsed = lessonVisibility[lesson.id] === true;
-              const hasResources = (uploadedResources[lesson.id]?.length || 0) + (lessonFileUploads[lesson.id]?.length || 0) + (lesson.resources ? JSON.parse(lesson.resources).length : 0) > 0;
+              const isEditingTitle = editingLesson === lessonId && editingField === 'title';
+              const isEditingDescription = editingLesson === lessonId && editingField === 'description';
+              const isCollapsed = lessonVisibility[lessonId] === true;
+              const resourceLinks = getLessonResourceLinks(lesson);
+              const resourceFiles = getLessonResourceFiles(lesson);
+              const hasResources = (uploadedResources[lessonId]?.length || 0) + (lessonFileUploads[lessonId]?.length || 0) + resourceLinks.length + resourceFiles.length > 0;
               
               return (
                 <motion.div
-                  key={lesson.id}
+                  key={lesson.id || lesson._id}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
@@ -1454,12 +1580,26 @@ const EnhancedLessonPlanCreator: React.FC<EnhancedLessonPlanCreatorProps> = ({
                         )}
 
                         {/* Show resource indicators */}
-                        {lesson.resources && JSON.parse(lesson.resources).length > 0 && (
-                          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                            <Link className="h-3 w-3 mr-1" />
-                            {JSON.parse(lesson.resources).length} {JSON.parse(lesson.resources).length === 1 ? 'link' : 'links'}
-                          </Badge>
-                        )}
+                        {(() => {
+                          const resourceLinks = getLessonResourceLinks(lesson);
+                          const resourceFiles = getLessonResourceFiles(lesson);
+                          return (
+                            <>
+                              {resourceLinks.length > 0 && (
+                                <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                                  <Link className="h-3 w-3 mr-1" />
+                                  {resourceLinks.length} {resourceLinks.length === 1 ? 'link' : 'links'}
+                                </Badge>
+                              )}
+                              {resourceFiles.length > 0 && (
+                                <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                                  <Upload className="h-3 w-3 mr-1" />
+                                  {resourceFiles.length} {resourceFiles.length === 1 ? 'file' : 'files'}
+                                </Badge>
+                              )}
+                            </>
+                          );
+                        })()}
 
                         {lessonFileUploads[lesson.id]?.length > 0 && (
                           <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
@@ -1473,18 +1613,25 @@ const EnhancedLessonPlanCreator: React.FC<EnhancedLessonPlanCreatorProps> = ({
                       <div className="mt-4 border-t pt-4">
                         <div className="flex items-center justify-between mb-3">
                           <Label className="text-sm font-medium text-gray-700">Resources & Files</Label>
-                          {((uploadedResources[lesson.id]?.length || 0) + (lessonFileUploads[lesson.id]?.length || 0) + (lesson.resources ? JSON.parse(lesson.resources).length : 0)) > 0 && (
-                            <span className="text-xs text-gray-500">
-                              {(uploadedResources[lesson.id]?.length || 0) + (lessonFileUploads[lesson.id]?.length || 0) + (lesson.resources ? JSON.parse(lesson.resources).length : 0)} items
-                            </span>
-                          )}
+                          {(() => {
+                            const resourceLinks = getLessonResourceLinks(lesson);
+                            const resourceFiles = getLessonResourceFiles(lesson);
+                            const totalItems = (uploadedResources[lesson.id]?.length || 0) + (lessonFileUploads[lesson.id]?.length || 0) + resourceLinks.length + resourceFiles.length;
+                            return totalItems > 0 && (
+                              <span className="text-xs text-gray-500">
+                                {totalItems} items
+                              </span>
+                            );
+                          })()}
                         </div>
 
                         {/* Show Resource Links */}
-                        {lesson.resources && JSON.parse(lesson.resources).length > 0 && (
-                          <div className="space-y-2 mb-3">
-                            <h4 className="text-xs font-medium text-gray-600 uppercase tracking-wide">Links</h4>
-                            {JSON.parse(lesson.resources).map((link: any) => (
+                        {(() => {
+                          const resourceLinks = getLessonResourceLinks(lesson);
+                          return resourceLinks.length > 0 && (
+                            <div className="space-y-2 mb-3">
+                              <h4 className="text-xs font-medium text-gray-600 uppercase tracking-wide">Links</h4>
+                              {resourceLinks.map((link: any) => (
                               <div key={link.id} className="flex items-center justify-between p-2 bg-amber-50 border border-amber-200 rounded text-sm">
                                 <div className="flex items-center space-x-2 flex-1 min-w-0">
                                   <Link className="h-3 w-3 text-amber-600 flex-shrink-0" />
@@ -1508,9 +1655,9 @@ const EnhancedLessonPlanCreator: React.FC<EnhancedLessonPlanCreatorProps> = ({
                                     variant="ghost"
                                     size="sm"
                                     onClick={() => {
-                                      const resources = lesson.resources ? JSON.parse(lesson.resources) : [];
-                                      const updatedResources = resources.filter((res: any) => res.id !== link.id);
-                                      updateLessonPlan(lesson.id, "resources", JSON.stringify(updatedResources));
+                                      const currentLinks = getLessonResourceLinks(lesson);
+                                      const updatedLinks = currentLinks.filter((res: any) => res.id !== link.id);
+                                      updateLessonResourceLinks(lesson.id, updatedLinks);
                                     }}
                                     className="h-6 w-6 p-0 text-red-500 hover:text-red-700"
                                   >
@@ -1520,30 +1667,105 @@ const EnhancedLessonPlanCreator: React.FC<EnhancedLessonPlanCreatorProps> = ({
                               </div>
                             ))}
                           </div>
-                        )}
+                        );
+                        })()}
 
-                        {/* Show uploaded files */}
-                        {(uploadedResources[lesson.id]?.length > 0 || lessonFileUploads[lesson.id]?.length > 0) && (
-                          <div className="space-y-2 mb-3">
-                            <h4 className="text-xs font-medium text-gray-600 uppercase tracking-wide">Files</h4>
-                            {/* Uploaded Resources */}
-                            {uploadedResources[lesson.id]?.map((resource) => (
-                              <div key={resource.id} className="flex items-center justify-between p-2 bg-green-50 border border-green-200 rounded text-sm">
-                                <div className="flex items-center space-x-2">
-                                  <Upload className="h-3 w-3 text-green-600" />
-                                  <span className="text-green-700 font-medium">{resource.filename}</span>
-                                  <Badge variant="outline" className="text-xs">Uploaded</Badge>
+                        {/* Show Resource Files */}
+                        {(() => {
+                          const resourceFiles = getLessonResourceFiles(lesson);
+                          return resourceFiles.length > 0 && (
+                            <div className="space-y-2 mb-3">
+                              <h4 className="text-xs font-medium text-gray-600 uppercase tracking-wide">Server Files</h4>
+                              {resourceFiles.map((file: any) => (
+                              <div key={file._id || file.id} className="flex items-center justify-between p-2 bg-blue-50 border border-blue-200 rounded text-sm">
+                                <div className="flex items-center space-x-2 flex-1 min-w-0">
+                                  <Upload className="h-3 w-3 text-blue-600 flex-shrink-0" />
+                                  <div className="min-w-0 flex-1">
+                                    <div className="font-medium text-blue-700 truncate">{file.filename || file.name}</div>
+                                    <div className="text-xs text-blue-600 truncate">Uploaded to server</div>
+                                  </div>
+                                  <Badge variant="outline" className="text-xs flex-shrink-0">File</Badge>
                                 </div>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => handleResourceRemoved(lesson.id, resource.id)}
-                                  className="h-6 w-6 p-0 text-red-500 hover:text-red-700"
-                                >
-                                  <X className="h-3 w-3" />
-                                </Button>
+                                <div className="flex items-center space-x-1 ml-2">
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => {
+                                      const currentFiles = getLessonResourceFiles(lesson);
+                                      const updatedFiles = currentFiles.filter((res: any) => (res._id || res.id) !== (file._id || file.id));
+                                      updateLessonResourceFiles(lesson.id || lesson._id, updatedFiles);
+                                    }}
+                                    className="h-6 w-6 p-0 text-red-500 hover:text-red-700"
+                                  >
+                                    <X className="h-3 w-3" />
+                                  </Button>
+                                </div>
                               </div>
                             ))}
+                          </div>
+                        );
+                        })()}
+
+                        {/* Show uploading files */}
+                        {Array.from(uploadingFiles).some(key => key.startsWith(lesson.id)) && (
+                          <div className="space-y-2 mb-3">
+                            <h4 className="text-xs font-medium text-blue-600 uppercase tracking-wide">Uploading</h4>
+                            {Array.from(uploadingFiles)
+                              .filter(key => key.startsWith(lesson.id))
+                              .map(fileKey => {
+                                const filename = fileKey.split('-').slice(1, -1).join('-') || fileKey.split('-')[1];
+                                return (
+                                  <div key={fileKey} className="flex items-center justify-between p-2 bg-blue-50 border border-blue-200 rounded text-sm">
+                                    <div className="flex items-center space-x-2">
+                                      <motion.div 
+                                        className="h-3 w-3 border-2 border-blue-600 border-t-transparent rounded-full"
+                                        animate={{ rotate: 360 }}
+                                        transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+                                      />
+                                      <span className="text-blue-700 font-medium">{filename}</span>
+                                      <Badge variant="outline" className="text-xs">Uploading...</Badge>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                          </div>
+                        )}
+
+                        {/* Show temporary uploaded files (only those not yet in resourceFiles) and local files */}
+                        {(uploadedResources[lesson.id]?.length > 0 || lessonFileUploads[lesson.id]?.length > 0) && (
+                          <div className="space-y-2 mb-3">
+                            <h4 className="text-xs font-medium text-gray-600 uppercase tracking-wide">Temporary Files</h4>
+                            {/* Show only temporary uploaded resources that aren't already in resourceFiles */}
+                            {uploadedResources[lesson.id]?.filter(resource => {
+                              // Only show temporary files or files not yet in resourceFiles
+                              const resourceFiles = getLessonResourceFiles(lesson);
+                              return resource.id.startsWith('temp-') || !resourceFiles.some(f => f.id === resource.id);
+                            }).map((resource) => {
+                              const isLocalFile = resource.id.startsWith('temp-');
+                              return (
+                                <div key={resource.id} className={`flex items-center justify-between p-2 rounded text-sm ${
+                                  isLocalFile ? 'bg-yellow-50 border border-yellow-200' : 'bg-green-50 border border-green-200'
+                                }`}>
+                                  <div className="flex items-center space-x-2">
+                                    <Upload className={`h-3 w-3 ${isLocalFile ? 'text-yellow-600' : 'text-green-600'}`} />
+                                    <span className={`font-medium ${isLocalFile ? 'text-yellow-700' : 'text-green-700'}`}>
+                                      {resource.filename}
+                                    </span>
+                                    <Badge variant="outline" className="text-xs">
+                                      {isLocalFile ? 'Local' : 'Temporary'}
+                                    </Badge>
+                                  </div>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleResourceRemoved(lesson.id, resource.id)}
+                                    className="h-6 w-6 p-0 text-red-500 hover:text-red-700"
+                                  >
+                                    <X className="h-3 w-3" />
+                                  </Button>
+                                </div>
+                              );
+                            })}
 
                             {/* Local Files (ready to upload) */}
                             {lessonFileUploads[lesson.id]?.map((file, fileIndex) => (
@@ -1559,24 +1781,40 @@ const EnhancedLessonPlanCreator: React.FC<EnhancedLessonPlanCreatorProps> = ({
                                       variant="outline"
                                       size="sm"
                                       onClick={async () => {
-                                        // Upload file logic here
-                                        const fileId = `${lesson.id}-${file.name}-${Date.now()}`;
-                                        const uploadingResource: UploadedResource = {
-                                          id: fileId,
-                                          filename: file.name,
-                                          originalFile: file,
-                                          uploadStatus: 'uploaded' // Simulate upload success
-                                        };
-                                        handleResourceUploaded(lesson.id, uploadingResource);
-                                        // Remove from local files
-                                        if (removeLessonFile) {
-                                          removeLessonFile(lesson.id, fileIndex);
+                                        const lessonIndex = lessonPlans.findIndex(plan => plan.id === lesson.id);
+                                        const fileKey = `${lesson.id}-${file.name}`;
+                                        const isUploading = uploadingFiles.has(fileKey);
+                                        
+                                        if (isUploading) return; // Prevent double upload
+
+                                        const uploadedResource = await uploadFileToBackend(file, lesson.id, lessonIndex, classId);
+                                        
+                                        if (uploadedResource) {
+                                          handleResourceUploaded(lesson.id, uploadedResource);
+                                          // Remove from local files
+                                          if (removeLessonFile) {
+                                            removeLessonFile(lesson.id, fileIndex);
+                                          }
                                         }
                                       }}
                                       className="h-6 text-xs text-blue-600 border-blue-200"
+                                      disabled={uploadingFiles.has(`${lesson.id}-${file.name}`)}
                                     >
-                                      <Upload className="h-3 w-3 mr-1" />
-                                      Upload
+                                      {uploadingFiles.has(`${lesson.id}-${file.name}`) ? (
+                                        <>
+                                          <motion.div 
+                                            className="h-3 w-3 border border-current border-t-transparent rounded-full mr-1"
+                                            animate={{ rotate: 360 }}
+                                            transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+                                          />
+                                          Uploading...
+                                        </>
+                                      ) : (
+                                        <>
+                                          <Upload className="h-3 w-3 mr-1" />
+                                          Upload
+                                        </>
+                                      )}
                                     </Button>
                                   )}
                                   <Button
@@ -1648,7 +1886,23 @@ const EnhancedLessonPlanCreator: React.FC<EnhancedLessonPlanCreatorProps> = ({
                                 type="file"
                                 multiple
                                 accept="*"
-                                onChange={(e) => handleLessonFileChange(lesson.id, e)}
+                                onChange={async (e) => {
+                                  const files = Array.from(e.target.files || []);
+                                  if (files.length === 0) return;
+
+                                  const lessonIndex = lessonPlans.findIndex(plan => plan.id === lesson.id);
+                                  
+                                  // Upload each file immediately
+                                  for (const file of files) {
+                                    const uploadedResource = await uploadFileToBackend(file, lesson.id, lessonIndex, classId);
+                                    if (uploadedResource) {
+                                      handleResourceUploaded(lesson.id, uploadedResource);
+                                    }
+                                  }
+
+                                  // Clear the input
+                                  e.target.value = '';
+                                }}
                                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                                 id={`file-upload-${lesson.id}`}
                               />
@@ -1898,22 +2152,22 @@ const EnhancedLessonPlanCreator: React.FC<EnhancedLessonPlanCreatorProps> = ({
                             lessonId={currentLessonId}
                             resourceLinks={(() => {
                               const lesson = lessonPlans.find(l => l.id === currentLessonId);
-                              return lesson?.resources ? JSON.parse(lesson.resources) : [];
+                              return getLessonResourceLinks(lesson || {});
                             })()}
                             onAddResourceLink={(lessonId, title, url) => {
                               const lesson = lessonPlans.find(l => l.id === lessonId);
                               if (lesson) {
-                                const resources = lesson.resources ? JSON.parse(lesson.resources) : [];
+                                const currentLinks = getLessonResourceLinks(lesson);
                                 const newResource = { id: Date.now().toString(), title, url };
-                                updateLessonPlan(lessonId, "resources", JSON.stringify([...resources, newResource]));
+                                updateLessonResourceLinks(lessonId, [...currentLinks, newResource]);
                               }
                             }}
                             onRemoveResourceLink={(lessonId, linkId) => {
                               const lesson = lessonPlans.find(l => l.id === lessonId);
                               if (lesson) {
-                                const resources = lesson.resources ? JSON.parse(lesson.resources) : [];
-                                const updatedResources = resources.filter((res: ResourceLink) => res.id !== linkId);
-                                updateLessonPlan(lessonId, "resources", JSON.stringify(updatedResources));
+                                const currentLinks = getLessonResourceLinks(lesson);
+                                const updatedLinks = currentLinks.filter((res: ResourceLink) => res.id !== linkId);
+                                updateLessonResourceLinks(lessonId, updatedLinks);
                               }
                             }}
                           />

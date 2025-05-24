@@ -264,7 +264,8 @@ const TeacherClassSetupPage = () => {
                 title: lesson.title || "",
                 description: lesson.description || "",
                 duration: String(lesson.duration) || "60",
-                resources: Array.isArray(lesson.resourceFiles) ? lesson.resourceFiles.join(",") : ""
+                resources: lesson.resourceFiles,
+                resourceFiles: lesson.resourceFiles
               })) :
               [],
 
