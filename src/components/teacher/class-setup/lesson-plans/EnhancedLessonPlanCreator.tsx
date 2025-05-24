@@ -16,6 +16,7 @@ import { UseFormReturn } from 'react-hook-form';
 import { ClassFormValues } from '../types';
 import { FileUploads } from './FileUploads';
 import { ResourceLinks, ResourceLink } from './ResourceLinks';
+import { EmptyState } from './EmptyState';
 
 // Learning standards by subject
 const learningStandards: Record<string, string[]> = {
@@ -598,10 +599,7 @@ const EnhancedLessonPlanCreator: React.FC<EnhancedLessonPlanCreatorProps> = ({
             }
           }}>
           <DialogTrigger asChild>
-            <Button type="button" onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-            }}>
+            <Button type="button">
               <PlusCircle className="h-4 w-4 mr-2" />
               Add Lesson Plan
             </Button>
@@ -918,19 +916,17 @@ const EnhancedLessonPlanCreator: React.FC<EnhancedLessonPlanCreatorProps> = ({
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="bg-gray-50 border border-dashed border-gray-200 rounded-md p-6 text-center"
             >
-              <div className="flex flex-col items-center justify-center text-gray-500">
-                <FileText className="h-10 w-10 mb-3 text-gray-400" />
-                <h3 className="font-medium mb-1">No Lesson Plans Yet</h3>
-                <p className="text-sm max-w-md mx-auto mb-4">
-                  Create your first lesson plan using templates, or get AI-assisted content generation to save time.
-                </p>
-                <Button onClick={() => setIsCreatingLesson(true)}>
-                  <PlusCircle className="h-4 w-4 mr-2" />
-                  Add First Lesson
-                </Button>
-              </div>
+              <EmptyState 
+                onAddLesson={() => setIsCreatingLesson(true)}
+                onApplyAIContent={(changes) => {
+                  if (changes.lessonPlans) {
+                    const currentPlans = form.getValues('lessonPlans') || [];
+                    const newPlans = [...currentPlans, ...changes.lessonPlans];
+                    form.setValue('lessonPlans', newPlans, { shouldValidate: true });
+                  }
+                }}
+              />
             </motion.div>
           ) : (
             lessonPlans.map((lesson, index) => {
