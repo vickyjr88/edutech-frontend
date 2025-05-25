@@ -202,6 +202,126 @@ const TeacherClassSetupPage = () => {
     setClassFormState(state);
   };
 
+  // Function to refresh entire class data from API
+  const refreshClassData = async () => {
+    if (!classId) {
+      console.log("No classId available, cannot refresh");
+      return;
+    }
+
+    try {
+      console.log("🔄 Refreshing entire class data from API for classId:", classId);
+      const { data, error } = await classService.getById(classId);
+
+      if (error) {
+        console.error("❌ Error refreshing class data:", error);
+        return;
+      }
+
+      if (data) {
+        console.log("✅ Fresh class data loaded:", data);
+        
+        // Transform API data to match form values structure (same logic as in loadClassData)
+        const formData: Partial<ClassFormValues> = {
+          title: data.title,
+          type: data.type,
+          subject: data.subject,
+          curriculum: data.curriculum,
+          description: data.description,
+          isPublic: data.isPublic,
+          hasCohorts: data.enableMultipleCohorts,
+          hasTeamTeaching: data.enableTeamTeaching,
+          gradeLevel: data.gradeLevel || "",
+          ageRange: data.ageRange || "",
+          curriculumLevel: data.curriculumLevel || "",
+          numberOfLessons: data.numberOfLessons || 1,
+          technicalRequirements: data.technicalRequirements?.length > 0 ?
+            data.technicalRequirements.map(item => item.requirement || "").join("\n") : "",
+          materialsRequired: data.materials?.length > 0 ?
+            data.materials.map(item => item.name || "").join("\n") : "",
+          lessonPlans: data.lessonPlans ?
+            data.lessonPlans.map(lesson => ({
+              id: lesson._id || String(Math.random()),
+              title: lesson.title || "",
+              description: lesson.description || "",
+              duration: String(lesson.duration) || "60",
+              resources: lesson.resourceFiles,
+              resourceFiles: lesson.resourceFiles
+            })) : [],
+          ...(data.commitment && { commitmentRequired: data.commitment }),
+          ...(data.methodology && { methodology: data.methodology }),
+          ...(data.strategy && { strategy: data.strategy }),
+          ...(data.objectives && { objectives: data.objectives }),
+          ...(data.assessmentMethods && { assessmentMethods: data.assessmentMethods }),
+        };
+
+        // Process cohorts if available
+        if (data.cohorts && data.cohorts.length > 0) {
+          const formattedCohorts = data.cohorts.map(cohort => {
+            let repeatPattern = "weekly";
+            if (Array.isArray(cohort.daysOfWeek) && cohort.daysOfWeek.length > 1) {
+              repeatPattern = "custom";
+            } else if (Array.isArray(cohort.daysOfWeek) && cohort.daysOfWeek.length === 2) {
+              repeatPattern = "twice-weekly";
+            }
+
+            const daysOfWeek = Array.isArray(cohort.daysOfWeek)
+              ? cohort.daysOfWeek.map(day => day.toLowerCase())
+              : ["monday"];
+              
+            return {
+              _id: cohort._id,
+              name: cohort.name || "",
+              startDate: cohort.startDate ? new Date(cohort.startDate) : null,
+              endDate: cohort.endDate ? new Date(cohort.endDate) : null,
+              startTime: cohort.startTime || "",
+              endTime: cohort.endTime || "",
+              numberOfLessons: data.numberOfLessons || 1,
+              price: cohort.price?.toString() || "0",
+              discount: cohort.discount?.toString() || "0",
+              isActive: cohort.isActive !== false,
+              lessonSchedules: [],
+              hasFlexibleSchedule: cohort.customLessonTimes || false,
+              repeatSchedule: {
+                pattern: repeatPattern,
+                daysOfWeek,
+                repeatEvery: 1
+              },
+              minStudents: cohort.minimumStudents || 1,
+              maxStudents: cohort.maximumStudents || 20,
+              enrollmentDeadline: cohort.enrollmentDeadline ? new Date(cohort.enrollmentDeadline) : null
+            };
+          });
+
+          setInitialCohorts(formattedCohorts);
+        }
+
+        // Process teaching team if available
+        if (data.teachingTeam && data.teachingTeam.length > 0) {
+          const formattedTeamMembers = data.teachingTeam.map((member, index) => {
+            return {
+              id: member._id || String(Math.random()),
+              email: member.email,
+              role: "co-teacher"
+            };
+          });
+
+          setInitialTeamMembers(formattedTeamMembers);
+        } else {
+          // Clear team members if none returned from API
+          setInitialTeamMembers([]);
+        }
+
+        // Update the initial values to trigger form re-render
+        setInitialValues({ ...formData });
+        
+        console.log("✅ Class data refreshed successfully");
+      }
+    } catch (error) {
+      console.error("❌ Exception while refreshing class data:", error);
+    }
+  };
+
   // Load class data if we have an ID
   useEffect(() => {
     const loadClassData = async () => {
@@ -324,8 +444,8 @@ const TeacherClassSetupPage = () => {
             const formattedTeamMembers = data.teachingTeam.map((member, index) => {
               return {
                 id: member._id || String(Math.random()),
-                email: member.email || `teacher${index + 1}@example.com`,
-                role: member.role || "co-teacher"
+                email: member.email,
+                role: "co-teacher"
               };
             });
 
@@ -399,20 +519,16 @@ const TeacherClassSetupPage = () => {
         }
         
         // Then call the unpublish endpoint
-        const unpublishResponse = await classService.unpublish(classId);
+        // const unpublishResponse = await classService.unpublish(classId);
         
-        if (unpublishResponse.error) {
-          throw new Error(unpublishResponse.error.message || "Failed to unpublish class");
-        }
+        // if (unpublishResponse.error) {
+        //   throw new Error(unpublishResponse.error.message || "Failed to unpublish class");
+        // }
         
-        console.log("Class unpublished successfully:", unpublishResponse.data);
+        // console.log("Class unpublished successfully:", unpublishResponse.data);
         setSubmittedClass(data);
         setIsSubmitted(true);
-        
-        toast({
-          title: "Class unpublished",
-          description: "Your class has been unpublished and is now in draft mode.",
-        });
+
       } else {
         // Just save the class normally if not ready to publish
         if (classId) {
@@ -615,6 +731,7 @@ const TeacherClassSetupPage = () => {
               classId={classId}
               loadFromStorage={!initialValues && draftExists && !classId}
               onFormStateUpdate={handleFormStateUpdate}
+              onRefreshClassData={refreshClassData}
             />
           </div>
         </>

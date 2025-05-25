@@ -61,6 +61,7 @@ interface EnhancedClassSetupProps {
     hasUnsavedChanges: boolean;
     draftExists: boolean;
   }) => void;
+  onRefreshClassData?: () => Promise<void>;
 }
 
 // Helper to calculate completion percentage
@@ -123,7 +124,8 @@ const EnhancedClassSetup = ({
   initialTeamMembers = [],
   classId,
   loadFromStorage = true,
-  onFormStateUpdate
+  onFormStateUpdate,
+  onRefreshClassData
 }: EnhancedClassSetupProps) => {
   // Removed excessive logging to make initialization cleaner
 
@@ -154,6 +156,7 @@ const EnhancedClassSetup = ({
           initialClassId={classId}
           formRef={formRef}
           onFormStateUpdate={handleFormStateUpdate}
+          onRefreshClassData={onRefreshClassData}
         />
       </ClassFormProvider>
     </div>
@@ -164,11 +167,13 @@ const EnhancedClassSetup = ({
 const EnhancedClassSetupContent = ({
   initialClassId,
   formRef,
-  onFormStateUpdate
+  onFormStateUpdate,
+  onRefreshClassData
 }: {
   initialClassId?: string;
   formRef?: React.RefObject<HTMLDivElement>;
   onFormStateUpdate?: (state: { lastSaved: number; hasUnsavedChanges: boolean; draftExists: boolean; }) => void;
+  onRefreshClassData?: () => Promise<void>;
 }) => {
   // Removed console log for cleaner initialization
 
@@ -179,6 +184,7 @@ const EnhancedClassSetupContent = ({
     isSubmitting,
     cohorts,
     teamMembers,
+    setTeamMembers,
     lessonFileUploads,
     handleNavigateTab,
     setClassId,
@@ -320,9 +326,12 @@ const EnhancedClassSetupContent = ({
           isSubmitting={isSubmitting}
           hasTeamTeaching={hasTeamTeachingRef.current}
           teamMembers={teamMembers}
+          setTeamMembers={setTeamMembers}
           addTeamMember={addTeamMember}
           removeTeamMember={removeTeamMember}
           updateTeamMember={updateTeamMember}
+          classId={initialClassId}
+          onRefreshClassData={onRefreshClassData}
         />
       ),
       isRequired: false,
