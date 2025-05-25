@@ -182,7 +182,7 @@ const Login = () => {
             <Label htmlFor="password">Password</Label>
             <button
               type="button"
-              className="text-sm font-medium text-kidato-blue hover:text-kidato-dark-blue"
+              className="text-sm font-medium text-kidato-purple hover:text-kidato-dark-blue"
               onClick={handleForgotPassword}
             >
               Forgot your password?
@@ -216,7 +216,7 @@ const Login = () => {
         <div>
           <Button
             type="submit"
-            className="w-full bg-kidato-blue hover:bg-kidato-dark-blue"
+            className="w-full bg-kidato-purple hover:bg-kidato-dark-blue"
             disabled={isLoading}
           >
             {isLoading ? "Logging in..." : "Log in"}

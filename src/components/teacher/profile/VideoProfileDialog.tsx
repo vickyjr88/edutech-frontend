@@ -47,7 +47,7 @@ export default function VideoProfileDialog({
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" className="border-kidato-blue text-kidato-blue hover:bg-kidato-blue/10">
+        <Button variant="outline" className="border-kidato-purple text-kidato-purple hover:bg-kidato-purple/10">
           <Video className="mr-2 h-4 w-4" />
           Watch Video Profile
         </Button>

@@ -77,7 +77,7 @@ export default function ClassesTab({ teacher }: ClassesTabProps) {
                     onClick={() => setSelectedBookingReason(reason)}
                     className={`p-3 border rounded-md cursor-pointer transition-colors ${
                       selectedBookingReason === reason 
-                        ? 'border-kidato-blue bg-blue-50' 
+                        ? 'border-kidato-purple bg-blue-50' 
                         : 'border-gray-200 hover:border-gray-300'
                     }`}
                   >
@@ -118,7 +118,7 @@ export default function ClassesTab({ teacher }: ClassesTabProps) {
       <div className="mb-10">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-medium">Reviews</h2>
-          <Link to="#reviews" className="text-kidato-blue text-sm hover:underline">View All</Link>
+          <Link to="#reviews" className="text-kidato-purple text-sm hover:underline">View All</Link>
         </div>
         
         <div className="bg-white rounded-lg border border-gray-200 p-6">

@@ -83,7 +83,7 @@ const AddTaskForm = ({ members, onAddTask }: AddTaskFormProps) => {
       
       <Button 
         onClick={handleSubmit} 
-        className="w-full bg-kidato-blue hover:bg-kidato-dark-blue"
+        className="w-full bg-kidato-purple hover:bg-kidato-dark-blue"
         disabled={!taskTitle.trim()}
       >
         <Plus className="mr-2 h-4 w-4" />

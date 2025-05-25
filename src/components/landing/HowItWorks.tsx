@@ -56,7 +56,7 @@ const teacherBenefits = [
     description: "Connect with students across Africa without geographical limitations, expanding your teaching reach beyond borders.",
     icon: Globe,
     color: "bg-blue-100",
-    iconColor: "text-kidato-blue"
+    iconColor: "text-kidato-purple"
   },
   {
     title: "Recognition & Rewards",
@@ -99,7 +99,7 @@ const HowItWorks = () => {
               </div>
               <div className="w-full lg:w-1/2">
                 <div className="flex items-center mb-4">
-                  <span className="text-4xl font-bold text-kidato-blue mr-4">{step.number}</span>
+                  <span className="text-4xl font-bold text-kidato-purple mr-4">{step.number}</span>
                   <h3 className="text-2xl font-bold text-gray-900">{step.title}</h3>
                 </div>
                 <p className="text-lg text-gray-600 mb-6">
@@ -164,7 +164,7 @@ const HowItWorks = () => {
 
         <div className="text-center mt-16">
           <Link to="/signup">
-            <Button className="bg-kidato-blue hover:bg-kidato-dark-blue button-hover-effect text-lg px-8 py-6">
+            <Button className="bg-kidato-purple hover:bg-kidato-dark-blue button-hover-effect text-lg px-8 py-6">
               Become a Kidato Teacher
             </Button>
           </Link>
@@ -245,7 +245,7 @@ const CommunityDashboard = () => (
   <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200 transform scale-90">
     <div className="bg-gradient-to-r from-kidato-light-blue to-blue-50 p-2 flex items-center justify-between">
       <div className="flex items-center gap-2">
-        <div className="h-6 w-6 rounded-full bg-kidato-blue flex items-center justify-center text-white">
+        <div className="h-6 w-6 rounded-full bg-kidato-purple flex items-center justify-center text-white">
           <Users className="h-3 w-3" />
         </div>
         <h3 className="text-xs font-bold">Community Hub</h3>
@@ -267,7 +267,7 @@ const CommunityDashboard = () => (
       <div className="bg-gray-50 rounded p-2 text-[10px]">
         <div className="flex justify-between items-center mb-1">
           <h4 className="font-medium">Upcoming Events</h4>
-          <span className="text-[8px] text-kidato-blue">View All</span>
+          <span className="text-[8px] text-kidato-purple">View All</span>
         </div>
         <div className="space-y-1">
           <div className="flex justify-between items-center bg-white p-1 rounded text-[9px]">
@@ -294,7 +294,7 @@ const CommunityDashboard = () => (
         </div>
         <p className="text-[9px] text-gray-600 mb-1">Complete courses to earn credentials</p>
         <Progress value={40} className="h-1.5 mb-1" />
-        <p className="text-right text-[8px] text-kidato-blue">2/5 Modules Complete</p>
+        <p className="text-right text-[8px] text-kidato-purple">2/5 Modules Complete</p>
       </div>
     </div>
   </div>
@@ -316,11 +316,11 @@ const TeachingDashboard = () => (
       <div className="grid grid-cols-3 gap-2">
         <Card className="bg-blue-50 shadow-sm">
           <CardContent className="p-2 flex flex-col items-center">
-            <div className="bg-kidato-blue p-1 rounded-full mb-1">
+            <div className="bg-kidato-purple p-1 rounded-full mb-1">
               <Users className="h-3 w-3 text-white" />
             </div>
             <p className="text-[9px] text-gray-600">Students</p>
-            <p className="text-xs font-bold text-kidato-blue">24</p>
+            <p className="text-xs font-bold text-kidato-purple">24</p>
           </CardContent>
         </Card>
         
@@ -348,7 +348,7 @@ const TeachingDashboard = () => (
       <div className="bg-gray-50 rounded p-2">
         <div className="flex justify-between items-center mb-1">
           <h4 className="text-[10px] font-medium">Earnings Overview</h4>
-          <span className="text-[8px] text-kidato-blue">View Details</span>
+          <span className="text-[8px] text-kidato-purple">View Details</span>
         </div>
         <div className="flex items-end h-10 space-x-1 mb-1">
           {[60, 45, 70, 85, 75, 90, 80].map((height, i) => (
@@ -377,7 +377,7 @@ const TeachingDashboard = () => (
       <div className="bg-gray-50 rounded p-2">
         <div className="flex justify-between items-center mb-1">
           <h4 className="text-[10px] font-medium">Upcoming Sessions</h4>
-          <span className="text-[8px] text-kidato-blue">View All</span>
+          <span className="text-[8px] text-kidato-purple">View All</span>
         </div>
         <div className="space-y-1.5">
           {[

@@ -81,7 +81,7 @@ const Schedule = () => {
                 </Popover>
                 <Button 
                   size="sm" 
-                  className="bg-kidato-blue hover:bg-kidato-dark-blue"
+                  className="bg-kidato-purple hover:bg-kidato-dark-blue"
                   onClick={() => setShowAddEventDialog(true)}
                 >
                   <Plus size={16} className="mr-1" /> Add Event

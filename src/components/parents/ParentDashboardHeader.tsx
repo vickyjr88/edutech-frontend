@@ -114,7 +114,7 @@ const ParentDashboardHeader = ({ parentName }: ParentDashboardHeaderProps) => {
             <div className="flex items-center gap-3 ml-2 cursor-pointer">
               <span className="hidden sm:inline text-sm font-medium">{parentName}</span>
               <Avatar className="h-9 w-9 border-2 border-blue-100">
-                <AvatarFallback className="bg-kidato-blue text-white">
+                <AvatarFallback className="bg-kidato-purple text-white">
                   {initials}
                 </AvatarFallback>
               </Avatar>

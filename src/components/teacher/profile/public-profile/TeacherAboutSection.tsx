@@ -12,7 +12,7 @@ const TeacherAboutSection: React.FC<TeacherAboutSectionProps> = ({ teacher }) =>
       {/* Bio Section */}
       <div>
         <h3 className="text-lg font-semibold flex items-center mb-4">
-          <User className="mr-2 h-5 w-5 text-kidato-blue" />
+          <User className="mr-2 h-5 w-5 text-kidato-purple" />
           About Me
         </h3>
         <div className="prose max-w-none">
@@ -23,7 +23,7 @@ const TeacherAboutSection: React.FC<TeacherAboutSectionProps> = ({ teacher }) =>
       {/* Teaching Approach */}
       <div>
         <h3 className="text-lg font-semibold flex items-center mb-4">
-          <BookOpen className="mr-2 h-5 w-5 text-kidato-blue" />
+          <BookOpen className="mr-2 h-5 w-5 text-kidato-purple" />
           My Teaching Approach
         </h3>
         

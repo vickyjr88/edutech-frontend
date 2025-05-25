@@ -11,14 +11,14 @@ const TeacherExperienceSection: React.FC<TeacherExperienceSectionProps> = ({ tea
       {/* Work Experience */}
       <div>
         <h3 className="text-lg font-semibold flex items-center mb-4">
-          <Briefcase className="mr-2 h-5 w-5 text-kidato-blue" />
+          <Briefcase className="mr-2 h-5 w-5 text-kidato-purple" />
           Work Experience
         </h3>
         
         <div className="space-y-6">
           {teacher.experience.map((exp: any) => (
             <div key={exp.id} className="relative pl-8 border-l-2 border-gray-200 pb-6 last:pb-0">
-              <div className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-kidato-blue"></div>
+              <div className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-kidato-purple"></div>
               <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-4">
                 <div className="flex flex-col sm:flex-row sm:justify-between mb-1">
                   <h4 className="font-semibold">{exp.position}</h4>
@@ -37,14 +37,14 @@ const TeacherExperienceSection: React.FC<TeacherExperienceSectionProps> = ({ tea
       {/* Education */}
       <div>
         <h3 className="text-lg font-semibold flex items-center mb-4">
-          <GraduationCap className="mr-2 h-5 w-5 text-kidato-blue" />
+          <GraduationCap className="mr-2 h-5 w-5 text-kidato-purple" />
           Education
         </h3>
         
         <div className="space-y-6">
           {teacher.education.map((edu: any) => (
             <div key={edu.id} className="relative pl-8 border-l-2 border-gray-200 pb-6 last:pb-0">
-              <div className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-kidato-blue"></div>
+              <div className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-kidato-purple"></div>
               <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-4">
                 <div className="flex flex-col sm:flex-row sm:justify-between mb-1">
                   <h4 className="font-semibold">{edu.degree}</h4>
@@ -61,7 +61,7 @@ const TeacherExperienceSection: React.FC<TeacherExperienceSectionProps> = ({ tea
       {teacher.achievements && teacher.achievements.length > 0 && (
         <div>
           <h3 className="text-lg font-semibold flex items-center mb-4">
-            <Award className="mr-2 h-5 w-5 text-kidato-blue" />
+            <Award className="mr-2 h-5 w-5 text-kidato-purple" />
             Achievements & Awards
           </h3>
           

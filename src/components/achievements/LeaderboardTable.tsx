@@ -72,7 +72,7 @@ const LeaderboardTable = ({ entries, currentUserId }: LeaderboardTableProps) => 
                         {entry.avatar ? (
                           <AvatarImage src={entry.avatar} alt={entry.name} />
                         ) : (
-                          <AvatarFallback className="bg-kidato-blue text-white text-xs">
+                          <AvatarFallback className="bg-kidato-purple text-white text-xs">
                             {entry.name.split(" ").map((n) => n[0]).join("")}
                           </AvatarFallback>
                         )}

@@ -65,15 +65,15 @@ const TeacherBookingDialog: React.FC<TeacherBookingDialogProps> = ({ isOpen, onC
   const renderStepIndicator = () => (
     <div className="flex items-center justify-center mb-6">
       <div className="flex items-center space-x-2">
-        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step === 'session-type' ? 'bg-kidato-blue text-white' : 'bg-kidato-blue text-white'}`}>
+        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step === 'session-type' ? 'bg-kidato-purple text-white' : 'bg-kidato-purple text-white'}`}>
           1
         </div>
-        <div className={`w-16 h-1 ${step === 'session-type' ? 'bg-gray-300' : 'bg-kidato-blue'}`}></div>
-        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step === 'date-time' ? 'bg-kidato-blue text-white' : step === 'confirmation' ? 'bg-kidato-blue text-white' : 'bg-gray-200 text-gray-600'}`}>
+        <div className={`w-16 h-1 ${step === 'session-type' ? 'bg-gray-300' : 'bg-kidato-purple'}`}></div>
+        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step === 'date-time' ? 'bg-kidato-purple text-white' : step === 'confirmation' ? 'bg-kidato-purple text-white' : 'bg-gray-200 text-gray-600'}`}>
           2
         </div>
-        <div className={`w-16 h-1 ${step === 'confirmation' ? 'bg-kidato-blue' : 'bg-gray-300'}`}></div>
-        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step === 'confirmation' ? 'bg-kidato-blue text-white' : 'bg-gray-200 text-gray-600'}`}>
+        <div className={`w-16 h-1 ${step === 'confirmation' ? 'bg-kidato-purple' : 'bg-gray-300'}`}></div>
+        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step === 'confirmation' ? 'bg-kidato-purple text-white' : 'bg-gray-200 text-gray-600'}`}>
           3
         </div>
       </div>
@@ -102,7 +102,7 @@ const TeacherBookingDialog: React.FC<TeacherBookingDialogProps> = ({ isOpen, onC
                 onValueChange={(value) => setSessionType(value as any)}
                 className="space-y-4"
               >
-                <div className="flex items-center space-x-2 border border-gray-200 rounded-lg p-4 hover:border-kidato-blue transition-colors">
+                <div className="flex items-center space-x-2 border border-gray-200 rounded-lg p-4 hover:border-kidato-purple transition-colors">
                   <RadioGroupItem value="one-time" id="one-time" />
                   <Label htmlFor="one-time" className="flex-1 cursor-pointer">
                     <div className="font-medium">One-time Session</div>
@@ -115,7 +115,7 @@ const TeacherBookingDialog: React.FC<TeacherBookingDialogProps> = ({ isOpen, onC
                   </Badge>
                 </div>
                 
-                <div className="flex items-center space-x-2 border border-gray-200 rounded-lg p-4 hover:border-kidato-blue transition-colors">
+                <div className="flex items-center space-x-2 border border-gray-200 rounded-lg p-4 hover:border-kidato-purple transition-colors">
                   <RadioGroupItem value="recurring" id="recurring" />
                   <Label htmlFor="recurring" className="flex-1 cursor-pointer">
                     <div className="font-medium">Recurring Sessions</div>
@@ -128,7 +128,7 @@ const TeacherBookingDialog: React.FC<TeacherBookingDialogProps> = ({ isOpen, onC
                   </Badge>
                 </div>
                 
-                <div className="flex items-center space-x-2 border border-gray-200 rounded-lg p-4 hover:border-kidato-blue transition-colors">
+                <div className="flex items-center space-x-2 border border-gray-200 rounded-lg p-4 hover:border-kidato-purple transition-colors">
                   <RadioGroupItem value="package" id="package" />
                   <Label htmlFor="package" className="flex-1 cursor-pointer">
                     <div className="font-medium">Session Package</div>
@@ -323,14 +323,14 @@ const TeacherBookingDialog: React.FC<TeacherBookingDialogProps> = ({ isOpen, onC
           <div className="flex-1 sm:flex-initial mb-4 sm:mb-0">
             {step === 'confirmation' ? (
               <Button 
-                className="w-full bg-kidato-blue hover:bg-blue-700" 
+                className="w-full bg-kidato-purple hover:bg-blue-700" 
                 onClick={handleComplete}
               >
                 Confirm Booking
               </Button>
             ) : (
               <Button 
-                className="w-full bg-kidato-blue hover:bg-blue-700" 
+                className="w-full bg-kidato-purple hover:bg-blue-700" 
                 onClick={handleContinue}
                 disabled={(step === 'date-time' && (!selectedDate || !selectedTime))}
               >

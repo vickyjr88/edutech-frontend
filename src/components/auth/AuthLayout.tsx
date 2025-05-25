@@ -28,14 +28,14 @@ const AuthLayout = ({ children, title, subtitle, authType }: AuthLayoutProps) =>
           {authType === "login" ? (
             <Link
               to="/signup"
-              className="font-medium text-kidato-blue hover:text-kidato-dark-blue"
+              className="font-medium text-kidato-purple hover:text-kidato-dark-blue"
             >
               Sign up for an account
             </Link>
           ) : (
             <Link
               to="/login"
-              className="font-medium text-kidato-blue hover:text-kidato-dark-blue"
+              className="font-medium text-kidato-purple hover:text-kidato-dark-blue"
             >
               Log in to your account
             </Link>

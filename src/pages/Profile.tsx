@@ -36,7 +36,7 @@ const Profile = () => {
               <CardContent className="p-6">
                 <div className="flex flex-col md:flex-row gap-6">
                   <div className="w-full md:w-1/3 flex flex-col items-center">
-                    <div className="h-32 w-32 rounded-full bg-gradient-to-br from-kidato-blue to-purple-500 flex items-center justify-center text-white text-4xl font-bold shadow-lg mb-4">
+                    <div className="h-32 w-32 rounded-full bg-gradient-to-br from-kidato-purple to-purple-500 flex items-center justify-center text-white text-4xl font-bold shadow-lg mb-4">
                       JD
                     </div>
                     <h2 className="text-xl font-bold">{userName}</h2>

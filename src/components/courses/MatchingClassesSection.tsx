@@ -89,7 +89,7 @@ const MatchingClassesSection = ({ recommendedCourses, matchingTeachers }: Matchi
 
                   <div className="flex justify-end space-x-2">
                     <Button variant="outline">View Profile</Button>
-                    <Button className="bg-kidato-blue hover:bg-kidato-dark-blue">
+                    <Button className="bg-kidato-purple hover:bg-kidato-dark-blue">
                       Message Teacher
                     </Button>
                   </div>
@@ -179,7 +179,7 @@ const MatchingClassesSection = ({ recommendedCourses, matchingTeachers }: Matchi
                 </div>
 
                 <div className="flex justify-end">
-                  <Button className="bg-kidato-blue hover:bg-kidato-dark-blue">
+                  <Button className="bg-kidato-purple hover:bg-kidato-dark-blue">
                     Enroll Now
                   </Button>
                 </div>

@@ -66,7 +66,7 @@ const TeacherClassesSection: React.FC<TeacherClassesSectionProps> = ({ teacher }
               </div>
             </CardContent>
             <CardFooter className="pt-2 pb-4">
-              <Button variant="default" className="w-full bg-kidato-blue hover:bg-blue-700">
+              <Button variant="default" className="w-full bg-kidato-purple hover:bg-blue-700">
                 View Class Details
               </Button>
             </CardFooter>
@@ -85,7 +85,7 @@ const TeacherClassesSection: React.FC<TeacherClassesSectionProps> = ({ teacher }
             }
           </p>
           {teacher.isProfileResume && (
-            <Button variant="default" className="bg-kidato-blue hover:bg-blue-700">
+            <Button variant="default" className="bg-kidato-purple hover:bg-blue-700">
               <PlusCircle className="h-4 w-4 mr-2" />
               Create Your First Class
             </Button>
@@ -95,7 +95,7 @@ const TeacherClassesSection: React.FC<TeacherClassesSectionProps> = ({ teacher }
 
       {teacher.classes && teacher.classes.length > 3 && (
         <div className="flex justify-center mt-8">
-          <Button variant="outline" className="border-kidato-blue text-kidato-blue hover:bg-blue-50">
+          <Button variant="outline" className="border-kidato-purple text-kidato-purple hover:bg-blue-50">
             View All Classes
           </Button>
         </div>

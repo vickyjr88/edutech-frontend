@@ -58,7 +58,7 @@ const AttendanceWidget = () => {
                 <div className="flex items-center justify-between mb-2">
                   <Link 
                     to={`/child-dashboard/${child.id}`}
-                    className="font-medium text-kidato-blue hover:underline flex items-center"
+                    className="font-medium text-kidato-purple hover:underline flex items-center"
                   >
                     {child.name}
                     <ExternalLink className="ml-1 h-3 w-3" />

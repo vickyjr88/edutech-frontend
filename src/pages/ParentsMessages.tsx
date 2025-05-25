@@ -14,7 +14,7 @@ const ParentsMessages = () => {
         <main className="p-6 flex-1">
           <div className="max-w-6xl mx-auto">
             <div className="flex items-center gap-2 mb-6">
-              <MessageSquare className="h-6 w-6 text-kidato-blue" />
+              <MessageSquare className="h-6 w-6 text-kidato-purple" />
               <h1 className="text-2xl font-bold">Messages</h1>
             </div>
             

@@ -78,7 +78,7 @@ const ClassDetails = () => {
   // Student/parent view
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <Link to="/all-classes" className="flex items-center text-kidato-blue mb-6 hover:underline">
+      <Link to="/all-classes" className="flex items-center text-kidato-purple mb-6 hover:underline">
         <ArrowLeft className="mr-2 h-4 w-4" /> Back to Classes
       </Link>
       
@@ -92,7 +92,7 @@ const ClassDetails = () => {
         <div className="flex gap-3">
           <Dialog open={isEnrollmentOpen} onOpenChange={setIsEnrollmentOpen}>
             <DialogTrigger asChild>
-              <Button className="bg-kidato-blue hover:bg-kidato-dark-blue">
+              <Button className="bg-kidato-purple hover:bg-kidato-dark-blue">
                 Enroll Now
               </Button>
             </DialogTrigger>

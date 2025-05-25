@@ -57,7 +57,7 @@ const PackageDetailsDialog = ({ open, onOpenChange, packageDetail }: PackageDeta
               </Badge>
             )}
           </div>
-          <DialogTitle className="text-2xl font-bold text-kidato-blue">
+          <DialogTitle className="text-2xl font-bold text-kidato-purple">
             {packageDetail.name}
           </DialogTitle>
           <DialogDescription className="text-base text-gray-600">
@@ -124,7 +124,7 @@ const PackageDetailsDialog = ({ open, onOpenChange, packageDetail }: PackageDeta
               {packageDetail.developmentTips.map((tip, index) => (
                 <li key={index} className="bg-gray-50 p-3 rounded-md border border-gray-100 text-gray-700">
                   <div className="flex">
-                    <span className="font-medium text-kidato-blue mr-2">{index + 1}.</span> 
+                    <span className="font-medium text-kidato-purple mr-2">{index + 1}.</span> 
                     {tip}
                   </div>
                 </li>

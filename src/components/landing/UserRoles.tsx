@@ -9,7 +9,7 @@ const roles = [
     description: "Share your knowledge, set your own schedule, and earn income while making a difference in students' lives.",
     icon: BookOpen,
     color: "bg-blue-100",
-    iconColor: "text-kidato-blue",
+    iconColor: "text-kidato-purple",
     buttonText: "Become a Tutor",
     buttonLink: "/tutor-signup"
   },
@@ -56,7 +56,7 @@ const UserRoles = () => {
               <h3 className="text-2xl font-semibold text-gray-900 mb-3">{role.title}</h3>
               <p className="text-gray-600 mb-6 flex-grow">{role.description}</p>
               <Link to={role.buttonLink}>
-                <Button className="w-full bg-kidato-blue hover:bg-kidato-dark-blue button-hover-effect">
+                <Button className="w-full bg-kidato-purple hover:bg-kidato-dark-blue button-hover-effect">
                   {role.buttonText}
                 </Button>
               </Link>

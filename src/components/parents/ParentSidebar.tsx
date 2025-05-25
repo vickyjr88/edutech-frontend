@@ -72,7 +72,7 @@ const ParentSidebar = () => {
             to={item.href}
             className={`flex items-center px-4 py-3 text-sm font-medium rounded-xl ${
               isActive(item.href)
-                ? "bg-gradient-to-r from-kidato-light-blue to-blue-100 text-kidato-blue shadow-sm"
+                ? "bg-gradient-to-r from-kidato-light-blue to-blue-100 text-kidato-purple shadow-sm"
                 : "text-gray-700 hover:bg-blue-50"
             } transition-all`}
           >

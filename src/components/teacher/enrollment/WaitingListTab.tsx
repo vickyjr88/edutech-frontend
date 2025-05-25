@@ -205,7 +205,7 @@ const WaitingListTab = ({ classId }: WaitingListTabProps) => {
                       <div className="flex items-center gap-3">
                         <Avatar className="h-9 w-9 border border-slate-200">
                           <AvatarImage src={student.avatar || undefined} alt={student.name} />
-                          <AvatarFallback className="bg-kidato-blue text-white text-xs">
+                          <AvatarFallback className="bg-kidato-purple text-white text-xs">
                             {getInitials(student.name)}
                           </AvatarFallback>
                         </Avatar>
@@ -279,7 +279,7 @@ const WaitingListTab = ({ classId }: WaitingListTabProps) => {
         <Button 
           onClick={handleInvite} 
           disabled={selectedStudents.length === 0 || isLoading}
-          className="flex items-center gap-2 bg-kidato-blue hover:bg-kidato-dark-blue"
+          className="flex items-center gap-2 bg-kidato-purple hover:bg-kidato-dark-blue"
         >
           {isLoading ? 'Sending Invites...' : 'Invite Selected'}
           {isLoading ? (

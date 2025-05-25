@@ -48,7 +48,7 @@ const Courses = () => {
                   <Filter className="h-4 w-4" />
                   Filter
                 </Button>
-                <Button className="bg-kidato-blue hover:bg-kidato-dark-blue">
+                <Button className="bg-kidato-purple hover:bg-kidato-dark-blue">
                   Browse New Classes
                 </Button>
               </div>
@@ -57,10 +57,10 @@ const Courses = () => {
             {/* Course Tabs */}
             <Tabs defaultValue="enrolled" className="mb-8" onValueChange={setSelectedTab}>
               <TabsList className="mb-6 bg-blue-50/50 p-1 border border-blue-100">
-                <TabsTrigger value="enrolled" className="data-[state=active]:bg-white data-[state=active]:text-kidato-blue data-[state=active]:shadow-sm rounded-md">
+                <TabsTrigger value="enrolled" className="data-[state=active]:bg-white data-[state=active]:text-kidato-purple data-[state=active]:shadow-sm rounded-md">
                   Enrolled Classes
                 </TabsTrigger>
-                <TabsTrigger value="matching" className="data-[state=active]:bg-white data-[state=active]:text-kidato-blue data-[state=active]:shadow-sm rounded-md">
+                <TabsTrigger value="matching" className="data-[state=active]:bg-white data-[state=active]:text-kidato-purple data-[state=active]:shadow-sm rounded-md">
                   Matching Classes & Teachers
                 </TabsTrigger>
               </TabsList>

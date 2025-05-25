@@ -367,7 +367,7 @@ const TeacherProfileForm = ({
         <Button 
           onClick={handleSubmit} 
           disabled={isSubmitting}
-          className="bg-kidato-blue hover:bg-kidato-dark-blue"
+          className="bg-kidato-purple hover:bg-kidato-dark-blue"
         >
           {isSubmitting ? "Saving..." : (initialData ? "Update Profile" : "Save Profile")}
         </Button>

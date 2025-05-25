@@ -121,7 +121,7 @@ const ChildrenOverview = () => {
                     {child.avatar ? (
                       <AvatarImage src={child.avatar} alt={child.name} />
                     ) : (
-                      <AvatarFallback className="bg-kidato-blue text-white text-xl">
+                      <AvatarFallback className="bg-kidato-purple text-white text-xl">
                         {child.name.split(' ').map(n => n[0]).join('')}
                       </AvatarFallback>
                     )}
@@ -209,7 +209,7 @@ const ChildrenOverview = () => {
                       
                       <div className="mt-3 pt-3 border-t border-gray-200">
                         <div className="flex items-start">
-                          <BookOpen className="h-4 w-4 text-kidato-blue mt-1 mr-2 flex-shrink-0" />
+                          <BookOpen className="h-4 w-4 text-kidato-purple mt-1 mr-2 flex-shrink-0" />
                           <div>
                             <p className="font-medium text-sm">Next: {child.nextClass}</p>
                             <div className="flex items-center text-xs text-gray-500 mt-1">

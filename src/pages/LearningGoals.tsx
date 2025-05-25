@@ -186,7 +186,7 @@ const LearningGoals = () => {
           </Link>
           <Link 
             to="/learning-progress" 
-            className="flex items-center px-4 py-3 text-sm font-medium rounded-xl bg-gradient-to-r from-kidato-light-blue to-blue-100 text-kidato-blue shadow-sm transition-all hover:shadow-md"
+            className="flex items-center px-4 py-3 text-sm font-medium rounded-xl bg-gradient-to-r from-kidato-light-blue to-blue-100 text-kidato-purple shadow-sm transition-all hover:shadow-md"
           >
             <PieChart className="mr-3 h-5 w-5" />
             Learning Goals
@@ -267,7 +267,7 @@ const LearningGoals = () => {
               <h1 className="text-2xl font-bold text-gray-800">Learning Goals</h1>
               <Button 
                 onClick={() => setIsGoalFormOpen(true)} 
-                className="bg-kidato-blue hover:bg-kidato-dark-blue rounded-xl flex items-center gap-2"
+                className="bg-kidato-purple hover:bg-kidato-dark-blue rounded-xl flex items-center gap-2"
               >
                 <Plus className="h-4 w-4" />
                 Add New Goal

@@ -279,7 +279,7 @@ const Challenges = () => {
               <h1 className="text-2xl font-bold text-gray-800">Quests & Challenges</h1>
               <Button 
                 onClick={() => setIsGoalFormOpen(true)} 
-                className="bg-kidato-blue hover:bg-kidato-dark-blue rounded-xl flex items-center gap-2"
+                className="bg-kidato-purple hover:bg-kidato-dark-blue rounded-xl flex items-center gap-2"
               >
                 <Plus className="h-4 w-4" />
                 Create New Quest

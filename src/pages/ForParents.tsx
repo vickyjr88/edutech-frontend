@@ -1510,7 +1510,7 @@ const ForParents = () => {
                       <div>
                         <h4 className="font-semibold text-gray-900">{testimonial.name}</h4>
                         <p className="text-sm text-gray-600">{testimonial.location}</p>
-                        <p className="text-xs text-kidato-blue">{testimonial.childAge}</p>
+                        <p className="text-xs text-kidato-purple">{testimonial.childAge}</p>
                       </div>
                     </div>
                     <div className="flex text-yellow-400 mb-3">
@@ -1592,11 +1592,11 @@ const ForParents = () => {
                   )}
                   <CardHeader className={`text-center pb-0 ${plan.highlighted ? 'pt-6' : 'pt-8'}`}>
                     <div className={`rounded-full mx-auto w-14 h-14 flex items-center justify-center mb-4 ${plan.highlighted ? 'bg-orange-100' : 'bg-blue-100'}`}>
-                      <plan.icon className={`h-7 w-7 ${plan.highlighted ? 'text-kidato-orange' : 'text-kidato-blue'}`} />
+                      <plan.icon className={`h-7 w-7 ${plan.highlighted ? 'text-kidato-orange' : 'text-kidato-purple'}`} />
                     </div>
                     <h3 className="text-xl font-bold text-gray-900">{plan.title}</h3>
                     <div className="mt-2">
-                      <span className={`text-3xl font-bold ${plan.highlighted ? 'text-kidato-orange' : 'text-kidato-blue'}`}>{plan.price}</span>
+                      <span className={`text-3xl font-bold ${plan.highlighted ? 'text-kidato-orange' : 'text-kidato-purple'}`}>{plan.price}</span>
                       <span className="text-gray-600"> {plan.unit}</span>
                     </div>
                     <p className="mt-2 text-gray-600 text-sm">{plan.description}</p>
@@ -1611,7 +1611,7 @@ const ForParents = () => {
                       ))}
                     </ul>
                     <Button 
-                      className={`w-full ${plan.highlighted ? 'bg-kidato-orange hover:bg-orange-600' : 'bg-kidato-blue hover:bg-kidato-dark-blue'} text-white`}
+                      className={`w-full ${plan.highlighted ? 'bg-kidato-orange hover:bg-orange-600' : 'bg-kidato-purple hover:bg-kidato-dark-blue'} text-white`}
                     >
                       <Link to={plan.link}>{plan.cta}</Link>
                     </Button>

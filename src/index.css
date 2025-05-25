@@ -7,32 +7,81 @@
 
 @layer base {
   :root {
+    /* Kidato Brand Colors */
+    --kidato-orange-primary: #fc9123;
+    --kidato-orange-light: #fda855;
+    --kidato-orange-lighter: #feb977;
+    --kidato-orange-lightest: #fecf99;
+    --kidato-orange-dark: #e07f0f;
+    --kidato-orange-darker: #c46d00;
+    --kidato-orange-darkest: #a85c00;
+    
+    --kidato-purple-primary: #5967d2;
+    --kidato-purple-light: #7a85db;
+    --kidato-purple-lighter: #9ba3e4;
+    --kidato-purple-lightest: #bcc1ed;
+    --kidato-purple-dark: #4654c4;
+    --kidato-purple-darker: #3441b6;
+    --kidato-purple-darkest: #1b2877;
+    
+    /* Neutral Colors */
+    --kidato-white: #ffffff;
+    --kidato-gray-50: #f8f9fa;
+    --kidato-gray-100: #f1f3f4;
+    --kidato-gray-200: #e8eaed;
+    --kidato-gray-300: #dadce0;
+    --kidato-gray-400: #bdc1c6;
+    --kidato-gray-500: #9aa0a6;
+    --kidato-gray-600: #80868b;
+    --kidato-gray-700: #5f6368;
+    --kidato-gray-800: #3c4043;
+    --kidato-gray-900: #202124;
+    --kidato-black: #000000;
+    
+    /* State Colors */
+    --kidato-success: #34a853;
+    --kidato-success-light: #66bb6a;
+    --kidato-success-dark: #2e7d32;
+    
+    --kidato-warning: #fbbc04;
+    --kidato-warning-light: #ffca28;
+    --kidato-warning-dark: #f57f17;
+    
+    --kidato-error: #ea4335;
+    --kidato-error-light: #ef5350;
+    --kidato-error-dark: #c62828;
+    
+    --kidato-info: #4285f4;
+    --kidato-info-light: #42a5f5;
+    --kidato-info-dark: #1565c0;
+
+    /* Shadcn Theme Colors */
     --background: 240 5% 98%;
-    --foreground: 240 10% 3.9%;
+    --foreground: 210 25% 13%;
 
     --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
+    --card-foreground: 210 25% 13%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 3.9%;
+    --popover-foreground: 210 25% 13%;
 
     --primary: 239 59% 58%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 60 4.8% 95.9%;
-    --secondary-foreground: 24 9.8% 10%;
+    --secondary: 240 5% 96%;
+    --secondary-foreground: 210 25% 13%;
 
-    --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 3.8% 46.1%;
+    --muted: 240 5% 96%;
+    --muted-foreground: 210 12% 46%;
 
     --accent: 24 94% 65%;
-    --accent-foreground: 24 9.8% 10%;
+    --accent-foreground: 210 25% 13%;
 
-    --destructive: 0 84.2% 60.2%;
+    --destructive: 0 84% 56%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 240 5.9% 90%;
-    --input: 240 5.9% 90%;
+    --border: 240 5% 91%;
+    --input: 240 5% 91%;
     --ring: 239 59% 58%;
 
     --radius: 0.75rem;

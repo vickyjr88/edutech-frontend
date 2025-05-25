@@ -49,7 +49,7 @@ export default function AboutTab({ teacher }: AboutTabProps) {
         <Card>
           <CardHeader className="pb-3">
             <div className="flex items-center gap-2">
-              <FileText className="h-5 w-5 text-kidato-blue" />
+              <FileText className="h-5 w-5 text-kidato-purple" />
               <CardTitle className="text-xl">Bio</CardTitle>
             </div>
           </CardHeader>
@@ -63,7 +63,7 @@ export default function AboutTab({ teacher }: AboutTabProps) {
         <Card>
           <CardHeader className="pb-3">
             <div className="flex items-center gap-2">
-              <GraduationCap className="h-5 w-5 text-kidato-blue" />
+              <GraduationCap className="h-5 w-5 text-kidato-purple" />
               <CardTitle className="text-xl">Educational Qualifications</CardTitle>
             </div>
           </CardHeader>
@@ -87,7 +87,7 @@ export default function AboutTab({ teacher }: AboutTabProps) {
         <Card>
           <CardHeader className="pb-3">
             <div className="flex items-center gap-2">
-              <Briefcase className="h-5 w-5 text-kidato-blue" />
+              <Briefcase className="h-5 w-5 text-kidato-purple" />
               <CardTitle className="text-xl">Teaching Experience</CardTitle>
             </div>
           </CardHeader>
@@ -114,7 +114,7 @@ export default function AboutTab({ teacher }: AboutTabProps) {
         <Card>
           <CardHeader className="pb-3">
             <div className="flex items-center gap-2">
-              <CertificateIcon className="h-5 w-5 text-kidato-blue" />
+              <CertificateIcon className="h-5 w-5 text-kidato-purple" />
               <CardTitle className="text-xl">Certifications</CardTitle>
             </div>
           </CardHeader>
@@ -148,7 +148,7 @@ export default function AboutTab({ teacher }: AboutTabProps) {
         <Card>
           <CardHeader className="pb-3">
             <div className="flex items-center gap-2">
-              <Book className="h-5 w-5 text-kidato-blue" />
+              <Book className="h-5 w-5 text-kidato-purple" />
               <CardTitle className="text-xl">Teaching Methodologies</CardTitle>
             </div>
           </CardHeader>
@@ -180,7 +180,7 @@ export default function AboutTab({ teacher }: AboutTabProps) {
         <Card>
           <CardHeader className="pb-3">
             <div className="flex items-center gap-2">
-              <Award className="h-5 w-5 text-kidato-blue" />
+              <Award className="h-5 w-5 text-kidato-purple" />
               <CardTitle className="text-xl">Teaching Strategies</CardTitle>
             </div>
           </CardHeader>
@@ -212,7 +212,7 @@ export default function AboutTab({ teacher }: AboutTabProps) {
         <Card>
           <CardHeader className="pb-3">
             <div className="flex items-center gap-2">
-              <Globe className="h-5 w-5 text-kidato-blue" />
+              <Globe className="h-5 w-5 text-kidato-purple" />
               <CardTitle className="text-xl">Languages</CardTitle>
             </div>
           </CardHeader>
@@ -222,7 +222,7 @@ export default function AboutTab({ teacher }: AboutTabProps) {
                 {teacher.languages.map((item) => (
                   <li key={item._id} className="flex items-start bg-gray-50 p-4 rounded-lg">
                     <div className="mt-1">
-                      <span className="bg-kidato-blue/10 text-kidato-blue p-1.5 rounded-full flex items-center justify-center">
+                      <span className="bg-kidato-purple/10 text-kidato-purple p-1.5 rounded-full flex items-center justify-center">
                         <Globe className="w-4 h-4" />
                       </span>
                     </div>
@@ -255,7 +255,7 @@ export default function AboutTab({ teacher }: AboutTabProps) {
           <Card>
             <CardHeader className="pb-3">
               <div className="flex items-center gap-2">
-                <Laptop className="h-5 w-5 text-kidato-blue" />
+                <Laptop className="h-5 w-5 text-kidato-purple" />
                 <CardTitle className="text-xl">Digital & Technical Proficiency</CardTitle>
               </div>
             </CardHeader>

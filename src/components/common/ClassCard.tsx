@@ -40,7 +40,7 @@ const ClassCard = ({ classItem }: { classItem: ClassItemProps }) => {
         <CardContent className="p-4">
           <div className="flex justify-between items-start mb-2">
             <div>
-              <p className="text-sm font-medium text-kidato-blue">{classItem.subject}</p>
+              <p className="text-sm font-medium text-kidato-purple">{classItem.subject}</p>
               <h4 className="text-lg font-semibold text-gray-900 line-clamp-1">{classItem.title}</h4>
             </div>
             <div className="flex items-center gap-1 bg-green-50 px-2 py-1 rounded-full">

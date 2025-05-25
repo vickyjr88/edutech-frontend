@@ -135,8 +135,8 @@ const ClassCard = ({
                   style={{ 
                     width: `${classItem.progress}%`,
                     backgroundColor: isCurrentClass 
-                      ? "#f59e0b" // Amber color for live classes instead of red
-                      : classItem.buttonColor.split(' ')[0].replace('bg-', '#').replace('green-500', '#9b87f5').replace('purple-500', '#a855f7').replace('blue-500', '#3b82f6').replace('yellow-500', '#eab308')
+                      ? "var(--kidato-orange-primary)"
+                      : "var(--kidato-purple-primary)"
                   }}
                 ></div>
               </div>
@@ -172,7 +172,7 @@ const ClassCard = ({
           
           <div className="flex justify-end gap-2 flex-wrap">
             <Button 
-              className={isCurrentClass ? "bg-amber-600 hover:bg-amber-700 text-white" : classItem.buttonColor.replace('bg-green-500', 'bg-purple-500')}
+              className={isCurrentClass ? "bg-kidato-orange hover:bg-kidato-orange-600 text-white" : "bg-kidato-purple hover:bg-kidato-purple-600 text-white"}
               onClick={() => onJoinClass(classItem)}
               size="sm"
             >

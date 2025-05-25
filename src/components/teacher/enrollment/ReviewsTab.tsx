@@ -91,7 +91,7 @@ const ReviewsTab = ({ classId }: ReviewsTabProps) => {
         <TabsContent value="request" className="space-y-6">
           <Card>
             <CardHeader className="bg-gradient-to-r from-kidato-light-blue to-blue-50 pb-2">
-              <CardTitle className="text-xl text-kidato-blue">Request Reviews</CardTitle>
+              <CardTitle className="text-xl text-kidato-purple">Request Reviews</CardTitle>
               <CardDescription>
                 Ask students, parents, and supervisors to provide feedback on your teaching
               </CardDescription>
@@ -221,7 +221,7 @@ const ReviewsTab = ({ classId }: ReviewsTabProps) => {
                       </div>
                       
                       <div className="text-center bg-blue-50 p-4 rounded-lg">
-                        <p className="text-kidato-blue text-sm">
+                        <p className="text-kidato-purple text-sm">
                           <strong>Tip:</strong> The more reviews you collect, the faster your profile will be approved, and the more likely students will be to enroll in your classes.
                         </p>
                       </div>

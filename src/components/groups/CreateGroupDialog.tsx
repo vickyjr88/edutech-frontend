@@ -393,7 +393,7 @@ const CreateGroupDialog = ({ open, onOpenChange, onGroupCreate }: CreateGroupDia
             </Button>
             <Button 
               type="submit"
-              className="bg-kidato-blue hover:bg-kidato-dark-blue"
+              className="bg-kidato-purple hover:bg-kidato-dark-blue"
             >
               Create Group
             </Button>

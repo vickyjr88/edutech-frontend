@@ -76,7 +76,7 @@ export default function ResourcesTab({ teacher }: ResourcesTabProps) {
               <Card key={resource.id}>
                 <CardContent className="p-6 flex items-start">
                   <div className="bg-blue-50 p-3 rounded-full mr-4">
-                    <FileText className="h-6 w-6 text-kidato-blue" />
+                    <FileText className="h-6 w-6 text-kidato-purple" />
                   </div>
                   <div className="flex-1">
                     <h3 className="font-medium">{resource.title}</h3>

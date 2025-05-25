@@ -44,7 +44,7 @@ const TeachingSettings = ({
   return (
     <div className="space-y-4 md:space-y-6">
       <h3 className="text-lg md:text-xl font-semibold text-gray-800 mb-3 flex items-center">
-        <Calculator className="mr-2 h-4 w-4 md:h-5 md:w-5 text-kidato-blue" />
+        <Calculator className="mr-2 h-4 w-4 md:h-5 md:w-5 text-kidato-purple" />
         Customize Your Teaching
       </h3>
 

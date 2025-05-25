@@ -22,7 +22,7 @@ const Hero = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
           <div className="animate-fade-in">
             <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 leading-tight">
-              <span className="text-kidato-blue">Learn</span>, <span className="text-kidato-orange">Connect</span>, and <span className="text-kidato-blue">Grow</span> with Africa's Premier Learning Platform
+              <span className="text-kidato-purple">Learn</span>, <span className="text-kidato-orange">Connect</span>, and <span className="text-kidato-purple">Grow</span> with Africa's Premier Learning Platform
             </h1>
             <p className="mt-3 text-lg text-gray-600">
               Give your child the academic support they deserve with personalized tutoring from Africa's most qualified educators.
@@ -32,14 +32,14 @@ const Hero = () => {
             </div>
             <div className="mt-6 flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4">
               <Link to="/signup">
-                <Button className="w-full sm:w-auto bg-kidato-blue hover:bg-kidato-dark-blue button-hover-effect text-lg px-6 py-5">
+                <Button className="w-full sm:w-auto bg-kidato-purple hover:bg-kidato-dark-blue button-hover-effect text-lg px-6 py-5">
                   Get Started <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
               </Link>
               <Link to="/courses">
                 <Button 
                   variant="outline" 
-                  className="w-full sm:w-auto text-lg px-6 py-5 border-2 border-kidato-blue text-kidato-blue hover:bg-kidato-blue/10 transition-colors duration-300"
+                  className="w-full sm:w-auto text-lg px-6 py-5 border-2 border-kidato-purple text-kidato-purple hover:bg-kidato-purple/10 transition-colors duration-300"
                 >
                   Explore Courses
                 </Button>
@@ -51,7 +51,7 @@ const Hero = () => {
               {/* Dashboard Header with User Profile */}
               <div className="bg-gradient-to-r from-kidato-light-blue to-blue-50 p-3 flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <div className="h-8 w-8 rounded-full bg-kidato-blue flex items-center justify-center text-white">
+                  <div className="h-8 w-8 rounded-full bg-kidato-purple flex items-center justify-center text-white">
                     <User className="h-4 w-4" />
                   </div>
                   <div>
@@ -61,7 +61,7 @@ const Hero = () => {
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="relative">
-                    <Bell className="h-4 w-4 text-gray-600 cursor-pointer hover:text-kidato-blue transition-colors" />
+                    <Bell className="h-4 w-4 text-gray-600 cursor-pointer hover:text-kidato-purple transition-colors" />
                     <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-red-500 text-white text-[8px] flex items-center justify-center">3</span>
                   </div>
                   <div className="flex space-x-1">
@@ -76,11 +76,11 @@ const Hero = () => {
               <div className="grid grid-cols-3 gap-2 p-3">
                 <Card className="bg-kidato-light-blue border-0 shadow-sm hover:shadow-md transition-shadow">
                   <CardContent className="p-2 flex flex-col items-center">
-                    <div className="bg-kidato-blue p-1.5 rounded-full mb-1">
+                    <div className="bg-kidato-purple p-1.5 rounded-full mb-1">
                       <BookOpen className="h-3 w-3 text-white" />
                     </div>
                     <p className="text-[10px] text-gray-600">Active Courses</p>
-                    <p className="text-base font-bold text-kidato-blue">5</p>
+                    <p className="text-base font-bold text-kidato-purple">5</p>
                     <span className="text-[8px] text-green-600 flex items-center">
                       <ArrowRight className="h-2 w-2 rotate-45" /> +2 this month
                     </span>
@@ -116,7 +116,7 @@ const Hero = () => {
               <div className="bg-gray-50 rounded-lg mx-3 p-2 mb-2">
                 <div className="flex items-center justify-between mb-2">
                   <h4 className="text-xs font-medium text-gray-700">Weekly Learning Progress</h4>
-                  <div className="text-[10px] text-kidato-blue hover:underline cursor-pointer">View Details</div>
+                  <div className="text-[10px] text-kidato-purple hover:underline cursor-pointer">View Details</div>
                 </div>
                 <div className="space-y-2">
                   <div>
@@ -145,7 +145,7 @@ const Hero = () => {
                   {[40, 65, 45, 90, 80, 55, 70].map((height, i) => (
                     <div key={i} className="flex-1 flex flex-col items-center">
                       <div 
-                        className="w-full bg-kidato-blue rounded-sm transition-all duration-500 hover:opacity-80 cursor-pointer" 
+                        className="w-full bg-kidato-purple rounded-sm transition-all duration-500 hover:opacity-80 cursor-pointer" 
                         style={{ height: `${height}%` }}
                       ></div>
                       <span className="text-[8px] mt-0.5 text-gray-500">{['M', 'T', 'W', 'T', 'F', 'S', 'S'][i]}</span>
@@ -158,7 +158,7 @@ const Hero = () => {
               <div className="border border-gray-100 bg-white rounded-lg mx-3 p-2 mb-2">
                 <div className="flex items-center justify-between mb-1">
                   <div className="flex items-center gap-1">
-                    <Calendar className="h-3 w-3 text-kidato-blue" />
+                    <Calendar className="h-3 w-3 text-kidato-purple" />
                     <h4 className="text-xs font-medium text-gray-700">Upcoming Classes</h4>
                   </div>
                   <MoreVertical className="h-3 w-3 text-gray-400 cursor-pointer" />
@@ -183,7 +183,7 @@ const Hero = () => {
                   </div>
                 ))}
                 <div className="mt-1 text-center">
-                  <Button variant="ghost" size="sm" className="text-[10px] text-kidato-blue hover:text-kidato-dark-blue w-full py-0.5">
+                  <Button variant="ghost" size="sm" className="text-[10px] text-kidato-purple hover:text-kidato-dark-blue w-full py-0.5">
                     View All Classes
                   </Button>
                 </div>

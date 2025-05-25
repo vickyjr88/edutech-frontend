@@ -40,7 +40,7 @@ const JoinStepsSection = ({ title, subtitle, steps, ctaText, ctaLink }: JoinStep
         </div>
         
         <div className="text-center mt-12">
-          <Button size="lg" className="bg-kidato-blue hover:bg-kidato-dark-blue">
+          <Button size="lg" className="bg-kidato-purple hover:bg-kidato-dark-blue">
             <Link to={ctaLink}>{ctaText}</Link>
           </Button>
         </div>

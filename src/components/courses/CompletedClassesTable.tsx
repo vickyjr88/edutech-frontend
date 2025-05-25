@@ -101,7 +101,7 @@ const CompletedClassesTable = ({ completedCourses }: CompletedClassesTableProps)
                         <Download className="h-3.5 w-3.5 mr-1" />
                         Certificate
                       </Button>
-                      <Button size="sm" className="bg-kidato-blue hover:bg-kidato-dark-blue h-8">
+                      <Button size="sm" className="bg-kidato-purple hover:bg-kidato-dark-blue h-8">
                         <ExternalLink className="h-3.5 w-3.5 mr-1" />
                         Review
                       </Button>

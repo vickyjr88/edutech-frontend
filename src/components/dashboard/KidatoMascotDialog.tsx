@@ -113,7 +113,7 @@ export default function KidatoMascotDialog({ isOpen, setIsOpen }: KidatoMascotDi
           <DialogTitle className="flex items-center gap-2">
             <Avatar className="h-6 w-6">
               <AvatarImage src="/lovable-uploads/15671e94-4ac9-490c-95b6-aa4fe6bbc23c.png" alt="Kidato Mascot" />
-              <AvatarFallback className="bg-kidato-light-blue text-kidato-blue">K</AvatarFallback>
+              <AvatarFallback className="bg-kidato-light-blue text-kidato-purple">K</AvatarFallback>
             </Avatar>
             <span>Kidato AI Assistant</span>
           </DialogTitle>
@@ -137,7 +137,7 @@ export default function KidatoMascotDialog({ isOpen, setIsOpen }: KidatoMascotDi
                   {message.role === "assistant" ? (
                     <Avatar className="h-8 w-8 mt-1">
                       <AvatarImage src="/lovable-uploads/15671e94-4ac9-490c-95b6-aa4fe6bbc23c.png" alt="Kidato Mascot" />
-                      <AvatarFallback className="bg-kidato-light-blue text-kidato-blue">K</AvatarFallback>
+                      <AvatarFallback className="bg-kidato-light-blue text-kidato-purple">K</AvatarFallback>
                     </Avatar>
                   ) : (
                     <Avatar className="h-8 w-8 mt-1 bg-gray-200">
@@ -148,7 +148,7 @@ export default function KidatoMascotDialog({ isOpen, setIsOpen }: KidatoMascotDi
                     className={`rounded-lg p-3 ${
                       message.role === "assistant"
                         ? "bg-gray-100 text-gray-800"
-                        : "bg-kidato-blue text-white"
+                        : "bg-kidato-purple text-white"
                     }`}
                   >
                     <p className="text-sm">{message.content}</p>
@@ -168,7 +168,7 @@ export default function KidatoMascotDialog({ isOpen, setIsOpen }: KidatoMascotDi
                 <div className="flex gap-3 max-w-[80%]">
                   <Avatar className="h-8 w-8 mt-1">
                     <AvatarImage src="/lovable-uploads/15671e94-4ac9-490c-95b6-aa4fe6bbc23c.png" alt="Kidato Mascot" />
-                    <AvatarFallback className="bg-kidato-light-blue text-kidato-blue">K</AvatarFallback>
+                    <AvatarFallback className="bg-kidato-light-blue text-kidato-purple">K</AvatarFallback>
                   </Avatar>
                   <div className="rounded-lg p-3 bg-gray-100">
                     <div className="flex space-x-2">
@@ -217,12 +217,12 @@ export default function KidatoMascotDialog({ isOpen, setIsOpen }: KidatoMascotDi
                     }
                   }}
                   placeholder="Type your question..."
-                  className="w-full border rounded-md py-2 px-4 pr-10 focus:outline-none focus:ring-2 focus:ring-kidato-blue focus:border-transparent"
+                  className="w-full border rounded-md py-2 px-4 pr-10 focus:outline-none focus:ring-2 focus:ring-kidato-purple focus:border-transparent"
                 />
               </div>
               <Button
                 onClick={() => handleSendMessage(input)}
-                className="bg-kidato-blue hover:bg-kidato-blue/90"
+                className="bg-kidato-purple hover:bg-kidato-purple/90"
                 disabled={!input.trim() || isLoading}
               >
                 <Send className="h-4 w-4" />

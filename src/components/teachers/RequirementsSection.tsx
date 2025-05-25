@@ -31,7 +31,7 @@ const RequirementsSection = ({
             <ul className="space-y-4">
               {requirements.map((item, index) => (
                 <li key={index} className="flex items-start">
-                  <BookOpen className="h-6 w-6 text-kidato-blue mr-2 flex-shrink-0 mt-0.5" />
+                  <BookOpen className="h-6 w-6 text-kidato-purple mr-2 flex-shrink-0 mt-0.5" />
                   <span className="text-gray-700">{item}</span>
                 </li>
               ))}
@@ -53,7 +53,7 @@ const RequirementsSection = ({
                   {earningOptions.map((option, index) => (
                     <div key={index}>
                       <h4 className="text-lg font-semibold text-gray-900 mb-2">{option.title}</h4>
-                      <p className="text-2xl font-bold text-kidato-blue">
+                      <p className="text-2xl font-bold text-kidato-purple">
                         {option.rate}
                         <span className="text-base font-normal text-gray-600">/{option.period}</span>
                       </p>

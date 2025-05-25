@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 
 const CallToAction = () => {
   return (
-    <div className="section-padding bg-kidato-blue text-white">
+    <div className="section-padding bg-kidato-purple text-white">
       <div className="max-w-7xl mx-auto text-center">
         <h2 className="text-3xl font-bold md:text-4xl mb-6">
           Ready to Transform Learning in Africa?
@@ -14,7 +14,7 @@ const CallToAction = () => {
         </p>
         <div className="flex flex-col sm:flex-row justify-center gap-4 max-w-lg mx-auto">
           <Link to="/signup" className="w-full">
-            <Button variant="secondary" size="lg" className="w-full text-kidato-blue hover:bg-white">
+            <Button variant="secondary" size="lg" className="w-full text-kidato-purple hover:bg-white">
               Sign Up
             </Button>
           </Link>

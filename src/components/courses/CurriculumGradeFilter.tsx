@@ -86,7 +86,7 @@ const CurriculumGradeFilter = ({ onFilterChange }: CurriculumGradeFilterProps) =
       <div className="flex items-end space-x-2">
         <Button 
           onClick={handleApplyFilter}
-          className="flex-1 bg-kidato-blue hover:bg-kidato-dark-blue"
+          className="flex-1 bg-kidato-purple hover:bg-kidato-dark-blue"
         >
           Apply Filter
         </Button>

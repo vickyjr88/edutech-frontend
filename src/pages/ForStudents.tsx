@@ -94,13 +94,13 @@ const ForStudents = () => {
       <Navbar />
       <main className="flex-grow pt-16">
         {/* Hero Section */}
-        <section className="bg-gradient-to-r from-kidato-blue to-kidato-dark-blue text-white py-20">
+        <section className="bg-gradient-to-r from-kidato-purple to-kidato-dark-blue text-white py-20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="max-w-3xl">
               <h1 className="text-4xl md:text-5xl font-bold mb-6">Learning That's Actually Fun!</h1>
               <p className="text-xl mb-8">Join thousands of students across Africa who are making friends, building confidence, and improving their grades with Kidato.</p>
               <div className="space-x-4">
-                <Button size="lg" className="bg-white text-kidato-blue hover:bg-gray-100">
+                <Button size="lg" className="bg-white text-kidato-purple hover:bg-gray-100">
                   <Link to="/student-signup">Join Now</Link>
                 </Button>
                 <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10">
@@ -125,7 +125,7 @@ const ForStudents = () => {
               {benefits.map((benefit, index) => (
                 <div key={index} className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-300">
                   <div className="bg-kidato-light-blue rounded-full w-12 h-12 flex items-center justify-center mb-4">
-                    <benefit.icon className="h-6 w-6 text-kidato-blue" />
+                    <benefit.icon className="h-6 w-6 text-kidato-purple" />
                   </div>
                   <h3 className="text-xl font-semibold text-gray-900 mb-2">{benefit.title}</h3>
                   <p className="text-gray-600">{benefit.description}</p>
@@ -163,7 +163,7 @@ const ForStudents = () => {
                   <CardContent className="p-4">
                     <div className="flex justify-between items-start mb-2">
                       <div>
-                        <p className="text-sm font-medium text-kidato-blue">{classItem.subject}</p>
+                        <p className="text-sm font-medium text-kidato-purple">{classItem.subject}</p>
                         <h3 className="text-lg font-semibold text-gray-900">{classItem.title}</h3>
                       </div>
                       <div className="flex items-center gap-1">
@@ -177,7 +177,7 @@ const ForStudents = () => {
                         <Users className="h-4 w-4 text-gray-400 mr-1" />
                         <span className="text-xs text-gray-500">{classItem.students} students</span>
                       </div>
-                      <Button variant="outline" className="text-kidato-blue border-kidato-blue hover:bg-kidato-light-blue">
+                      <Button variant="outline" className="text-kidato-purple border-kidato-purple hover:bg-kidato-light-blue">
                         <Link to="/class-details">Learn More</Link>
                       </Button>
                     </div>
@@ -187,7 +187,7 @@ const ForStudents = () => {
             </div>
             
             <div className="text-center mt-10">
-              <Button size="lg" className="bg-kidato-blue hover:bg-kidato-dark-blue text-white">
+              <Button size="lg" className="bg-kidato-purple hover:bg-kidato-dark-blue text-white">
                 <Link to="/all-classes">Browse All Classes</Link>
               </Button>
             </div>
@@ -250,13 +250,13 @@ const ForStudents = () => {
                     "Curiosity and enthusiasm!"
                   ].map((item, index) => (
                     <li key={index} className="flex items-start">
-                      <CheckCircle className="h-6 w-6 text-kidato-blue mr-2 flex-shrink-0 mt-0.5" />
+                      <CheckCircle className="h-6 w-6 text-kidato-purple mr-2 flex-shrink-0 mt-0.5" />
                       <span className="text-gray-700">{item}</span>
                     </li>
                   ))}
                 </ul>
                 <div className="mt-8">
-                  <Button size="lg" className="bg-kidato-blue hover:bg-kidato-dark-blue text-white">
+                  <Button size="lg" className="bg-kidato-purple hover:bg-kidato-dark-blue text-white">
                     <Link to="/student-signup">Join Kidato Today</Link>
                   </Button>
                 </div>
@@ -265,7 +265,7 @@ const ForStudents = () => {
               <div className="md:w-2/5">
                 <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
                   <div className="text-center mb-6">
-                    <Monitor className="h-12 w-12 text-kidato-blue mx-auto mb-2" />
+                    <Monitor className="h-12 w-12 text-kidato-purple mx-auto mb-2" />
                     <h3 className="text-xl font-semibold text-gray-900">Your First Class is Free!</h3>
                   </div>
                   <p className="text-gray-600 mb-6">
@@ -305,7 +305,7 @@ const ForStudents = () => {
                       />
                       <div>
                         <h4 className="font-semibold text-gray-900">{testimonial.name}</h4>
-                        <p className="text-sm text-kidato-blue">{testimonial.location}</p>
+                        <p className="text-sm text-kidato-purple">{testimonial.location}</p>
                       </div>
                     </div>
                     <div className="flex text-yellow-400 mb-3">
@@ -360,13 +360,13 @@ const ForStudents = () => {
         </section>
         
         {/* CTA Section */}
-        <section className="py-20 bg-kidato-blue text-white text-center">
+        <section className="py-20 bg-kidato-purple text-white text-center">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <h2 className="text-3xl font-bold mb-6">Ready to Make Learning Fun?</h2>
             <p className="text-xl mb-8 max-w-3xl mx-auto">
               Join thousands of students who are learning, making friends, and having fun with Kidato!
             </p>
-            <Button size="lg" className="bg-white text-kidato-blue hover:bg-gray-100">
+            <Button size="lg" className="bg-white text-kidato-purple hover:bg-gray-100">
               <Link to="/student-signup">Get Started Today</Link>
             </Button>
           </div>

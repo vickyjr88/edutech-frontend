@@ -55,7 +55,7 @@ export default function MessageTeacherDialog({
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button className="bg-kidato-blue hover:bg-kidato-dark-blue">
+        <Button className="bg-kidato-purple hover:bg-kidato-dark-blue">
           <MessageSquare className="mr-2 h-4 w-4" />
           Message Teacher
         </Button>

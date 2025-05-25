@@ -13,7 +13,7 @@ const features = [
     description: "Your child connects with verified, background-checked tutors in a monitored online environment designed with child safety as the priority.",
     icon: Shield,
     color: "bg-blue-100",
-    iconColor: "text-kidato-blue"
+    iconColor: "text-kidato-purple"
   },
   {
     name: "Personalized Attention",
@@ -189,7 +189,7 @@ const Features = () => {
             <Button 
               variant="outline" 
               onClick={() => setShowAllFeatures(true)}
-              className="px-6 border-kidato-blue text-kidato-blue hover:bg-kidato-light-blue"
+              className="px-6 border-kidato-purple text-kidato-purple hover:bg-kidato-light-blue"
             >
               View More Benefits
             </Button>
@@ -200,7 +200,7 @@ const Features = () => {
           <div className="flex items-center justify-between mb-8">
             <h3 className="text-2xl font-bold text-gray-900">Available Classes</h3>
             <Link to="/all-classes">
-              <Button className="bg-kidato-blue hover:bg-kidato-dark-blue text-white flex items-center gap-2">
+              <Button className="bg-kidato-purple hover:bg-kidato-dark-blue text-white flex items-center gap-2">
                 View All Classes
                 <ArrowRight className="h-4 w-4" />
               </Button>
@@ -220,7 +220,7 @@ const Features = () => {
                 <CardContent className="p-4">
                   <div className="flex justify-between items-start mb-2">
                     <div>
-                      <p className="text-sm font-medium text-kidato-blue">{classItem.subject}</p>
+                      <p className="text-sm font-medium text-kidato-purple">{classItem.subject}</p>
                       <h4 className="text-lg font-semibold text-gray-900 line-clamp-1">{classItem.title}</h4>
                     </div>
                     <div className="flex items-center gap-1 bg-green-50 px-2 py-1 rounded-full">
@@ -290,7 +290,7 @@ const Features = () => {
                         <span className="text-xs font-medium">{teacher.rating}</span>
                       </div>
                     </div>
-                    <p className="text-sm font-medium text-kidato-blue">{teacher.subject}</p>
+                    <p className="text-sm font-medium text-kidato-purple">{teacher.subject}</p>
                   </div>
                   
                   <div className="space-y-3 mb-4">
@@ -312,7 +312,7 @@ const Features = () => {
                     <p className="text-sm text-gray-600 mb-2">Expertise:</p>
                     <div className="flex flex-wrap gap-2">
                       {teacher.expertise.map((skill, i) => (
-                        <span key={i} className="text-xs bg-kidato-light-blue text-kidato-blue px-2 py-1 rounded-full">
+                        <span key={i} className="text-xs bg-kidato-light-blue text-kidato-purple px-2 py-1 rounded-full">
                           {skill}
                         </span>
                       ))}
@@ -327,7 +327,7 @@ const Features = () => {
                     <div className="text-sm font-semibold text-gray-900">{teacher.hourlyRate}</div>
                   </div>
                   
-                  <Button className="w-full bg-kidato-blue hover:bg-kidato-dark-blue text-white">
+                  <Button className="w-full bg-kidato-purple hover:bg-kidato-dark-blue text-white">
                     Book Session
                   </Button>
                 </CardContent>

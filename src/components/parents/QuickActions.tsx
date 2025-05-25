@@ -17,7 +17,7 @@ const QuickActions = () => {
   return (
     <Card className="border border-blue-100 shadow-sm h-full">
       <CardContent className="p-4">
-        <h2 className="text-lg font-bold mb-4 text-kidato-blue">Parent Quick Actions</h2>
+        <h2 className="text-lg font-bold mb-4 text-kidato-purple">Parent Quick Actions</h2>
         
         <div className="space-y-4">
           {/* Priority Actions Group */}

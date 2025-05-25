@@ -36,7 +36,7 @@ const TeacherReviews: React.FC<TeacherReviewsProps> = ({ reviews }) => {
     <div className="bg-white rounded-xl shadow-md overflow-hidden">
       <div className="p-6">
         <h2 className="text-xl font-bold mb-6 flex items-center">
-          <MessageSquare className="mr-2 h-6 w-6 text-kidato-blue" />
+          <MessageSquare className="mr-2 h-6 w-6 text-kidato-purple" />
           Reviews & Feedback
         </h2>
 
@@ -44,7 +44,7 @@ const TeacherReviews: React.FC<TeacherReviewsProps> = ({ reviews }) => {
           {/* Rating Summary */}
           <div className="md:col-span-1 bg-blue-50 rounded-xl p-5">
             <div className="text-center mb-4">
-              <div className="text-4xl font-bold text-kidato-blue">{averageRating.toFixed(1)}</div>
+              <div className="text-4xl font-bold text-kidato-purple">{averageRating.toFixed(1)}</div>
               <div className="flex justify-center my-2">
                 {[1, 2, 3, 4, 5].map((star) => (
                   <Star 
@@ -89,7 +89,7 @@ const TeacherReviews: React.FC<TeacherReviewsProps> = ({ reviews }) => {
                       {review.reviewerImage ? (
                         <AvatarImage src={review.reviewerImage} alt={review.reviewer} />
                       ) : (
-                        <AvatarFallback className="bg-kidato-blue text-white">
+                        <AvatarFallback className="bg-kidato-purple text-white">
                           {review.reviewer[0]}
                         </AvatarFallback>
                       )}
@@ -130,7 +130,7 @@ const TeacherReviews: React.FC<TeacherReviewsProps> = ({ reviews }) => {
                 <Button 
                   variant="outline" 
                   onClick={() => setExpanded(!expanded)}
-                  className="border-kidato-blue text-kidato-blue hover:bg-blue-50"
+                  className="border-kidato-purple text-kidato-purple hover:bg-blue-50"
                 >
                   {expanded ? 'Show Less' : `View All ${reviews.length} Reviews`}
                 </Button>

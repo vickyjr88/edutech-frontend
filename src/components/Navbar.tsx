@@ -26,37 +26,37 @@ const Navbar = () => {
             <div className="flex space-x-8">
               <Link 
                 to="/all-classes" 
-                className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-kidato-blue"
+                className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-kidato-purple-500"
               >
                 All Classes
               </Link>
               <Link 
                 to="/teachers" 
-                className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-kidato-blue"
+                className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-kidato-purple-500"
               >
                 Teachers
               </Link>
               <Link 
                 to="/how-it-works" 
-                className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-kidato-blue"
+                className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-kidato-purple-500"
               >
                 How It Works
               </Link>
               <Link 
                 to="/for-teachers" 
-                className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-kidato-blue"
+                className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-kidato-purple-500"
               >
                 For Teachers
               </Link>
               <Link 
                 to="/for-parents" 
-                className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-kidato-blue"
+                className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-kidato-purple-500"
               >
                 For Parents
               </Link>
               <Link 
                 to="/for-students" 
-                className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-kidato-blue"
+                className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-kidato-purple-500"
               >
                 For Students
               </Link>
@@ -70,7 +70,7 @@ const Navbar = () => {
               </Button>
             </Link>
             <Link to="/signup">
-              <Button className="bg-kidato-blue hover:bg-kidato-dark-blue button-hover-effect">
+              <Button className="bg-kidato-purple hover:bg-kidato-dark-blue button-hover-effect">
                 Sign up
               </Button>
             </Link>
@@ -78,7 +78,7 @@ const Navbar = () => {
           <div className="flex items-center md:hidden">
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="inline-flex items-center justify-center p-2 rounded-md text-gray-700 hover:text-kidato-blue focus:outline-none"
+              className="inline-flex items-center justify-center p-2 rounded-md text-gray-700 hover:text-kidato-purple focus:outline-none"
             >
               {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
@@ -92,42 +92,42 @@ const Navbar = () => {
           <div className="pt-2 pb-3 space-y-1">
             <Link 
               to="/all-classes" 
-              className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-kidato-blue hover:bg-gray-50"
+              className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-kidato-purple hover:bg-gray-50"
               onClick={() => setIsMenuOpen(false)}
             >
               All Classes
             </Link>
             <Link 
               to="/teachers" 
-              className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-kidato-blue hover:bg-gray-50"
+              className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-kidato-purple hover:bg-gray-50"
               onClick={() => setIsMenuOpen(false)}
             >
               Teachers
             </Link>
             <Link 
               to="/how-it-works" 
-              className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-kidato-blue hover:bg-gray-50"
+              className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-kidato-purple hover:bg-gray-50"
               onClick={() => setIsMenuOpen(false)}
             >
               How It Works
             </Link>
             <Link 
               to="/for-teachers" 
-              className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-kidato-blue hover:bg-gray-50"
+              className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-kidato-purple hover:bg-gray-50"
               onClick={() => setIsMenuOpen(false)}
             >
               For Teachers
             </Link>
             <Link 
               to="/for-parents" 
-              className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-kidato-blue hover:bg-gray-50"
+              className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-kidato-purple hover:bg-gray-50"
               onClick={() => setIsMenuOpen(false)}
             >
               For Parents
             </Link>
             <Link 
               to="/for-students" 
-              className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-kidato-blue hover:bg-gray-50"
+              className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-kidato-purple hover:bg-gray-50"
               onClick={() => setIsMenuOpen(false)}
             >
               For Students
@@ -147,7 +147,7 @@ const Navbar = () => {
                 className="w-full"
                 onClick={() => setIsMenuOpen(false)}
               >
-                <Button className="w-full bg-kidato-blue hover:bg-kidato-dark-blue">
+                <Button className="w-full bg-kidato-purple hover:bg-kidato-dark-blue">
                   Sign up
                 </Button>
               </Link>

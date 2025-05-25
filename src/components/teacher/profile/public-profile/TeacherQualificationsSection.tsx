@@ -24,7 +24,7 @@ const TeacherQualificationsSection: React.FC<TeacherQualificationsProps> = ({ te
       {/* Teaching Certifications */}
       <div>
         <h3 className="text-lg font-semibold flex items-center mb-4">
-          <Award className="mr-2 h-5 w-5 text-kidato-blue" />
+          <Award className="mr-2 h-5 w-5 text-kidato-purple" />
           Teaching Certifications
         </h3>
 
@@ -60,7 +60,7 @@ const TeacherQualificationsSection: React.FC<TeacherQualificationsProps> = ({ te
       {/* Other Certifications & Licenses */}
       <div>
         <h3 className="text-lg font-semibold flex items-center mb-4">
-          <File className="mr-2 h-5 w-5 text-kidato-blue" />
+          <File className="mr-2 h-5 w-5 text-kidato-purple" />
           Specialty Certifications & Licenses
         </h3>
 
@@ -98,7 +98,7 @@ const TeacherQualificationsSection: React.FC<TeacherQualificationsProps> = ({ te
       {/* Background Verification */}
       <div>
         <h3 className="text-lg font-semibold flex items-center mb-4">
-          <Shield className="mr-2 h-5 w-5 text-kidato-blue" />
+          <Shield className="mr-2 h-5 w-5 text-kidato-purple" />
           Background Verification
         </h3>
 

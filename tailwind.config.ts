@@ -64,10 +64,35 @@ export default {
 					ring: 'hsl(var(--sidebar-ring))'
 				},
 				kidato: {
-					blue: '#5052D5',
-					orange: '#FF914D',
+					orange: {
+						50: '#fef7ed',
+						100: '#fecf99',
+						200: '#feb977', 
+						300: '#fda855',
+						400: '#fc9123',
+						500: '#fc9123', // Primary
+						600: '#e07f0f',
+						700: '#c46d00',
+						800: '#a85c00',
+						900: '#8a4a00',
+						DEFAULT: '#fc9123'
+					},
+					purple: {
+						50: '#f0f1fe',
+						100: '#bcc1ed',
+						200: '#9ba3e4',
+						300: '#7a85db', 
+						400: '#5967d2',
+						500: '#5967d2', // Primary
+						600: '#4654c4',
+						700: '#3441b6',
+						800: '#1b2877',
+						900: '#151f5c',
+						DEFAULT: '#5967d2'
+					},
+					blue: '#5967d2', // Alias for purple
 					'light-blue': '#E1E5FF',
-					'dark-blue': '#3F3FAF'
+					'dark-blue': '#1b2877'
 				}
 			},
 			borderRadius: {

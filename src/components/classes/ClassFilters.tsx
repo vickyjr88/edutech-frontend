@@ -128,7 +128,7 @@ const ClassFilters = ({
               <ToggleGroupItem 
                 key={`option-${index}`} 
                 value={getValidValue(option, `option-${index}`)}
-                className="text-xs px-3 py-1 data-[state=on]:bg-kidato-blue data-[state=on]:text-white"
+                className="text-xs px-3 py-1 data-[state=on]:bg-kidato-purple data-[state=on]:text-white"
               >
                 {option || "Default Option"}
               </ToggleGroupItem>

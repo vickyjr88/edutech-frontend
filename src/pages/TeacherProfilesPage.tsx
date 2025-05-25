@@ -215,7 +215,7 @@ const TeacherProfilesPage = () => {
               <input
                 type="text"
                 placeholder="Search by name, subject, or location..."
-                className="pl-10 pr-4 py-2 w-full border rounded-lg focus:ring-2 focus:ring-kidato-blue focus:border-transparent"
+                className="pl-10 pr-4 py-2 w-full border rounded-lg focus:ring-2 focus:ring-kidato-purple focus:border-transparent"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -236,7 +236,7 @@ const TeacherProfilesPage = () => {
           {/* Loading state */}
           {loading ? (
             <div className="flex justify-center items-center py-20">
-              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-kidato-blue"></div>
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-kidato-purple"></div>
             </div>
           ) : (
             <>
@@ -270,7 +270,7 @@ const TeacherProfilesPage = () => {
                         <div className="px-4 py-5 sm:p-6">
                           <h3 className="text-lg font-medium text-gray-900 truncate">{teacher.name}</h3>
                           <p className="text-sm text-gray-500 mb-2 flex items-center">
-                            <BookOpen className="h-4 w-4 mr-1 text-kidato-blue" />
+                            <BookOpen className="h-4 w-4 mr-1 text-kidato-purple" />
                             {teacher.position}
                           </p>
                           <p className="text-sm text-gray-600 mb-3 line-clamp-2">{teacher.bio}</p>
@@ -288,25 +288,25 @@ const TeacherProfilesPage = () => {
 
                           {teacher.education && teacher.education.length > 0 && (
                             <div className="flex items-center text-sm text-gray-600 mb-2">
-                              <GraduationCap className="w-4 h-4 mr-1 text-kidato-blue" />
+                              <GraduationCap className="w-4 h-4 mr-1 text-kidato-purple" />
                               <span className="truncate">{teacher.education[0].degree}</span>
                             </div>
                           )}
 
                           {teacher.certifications && teacher.certifications.length > 0 && (
                             <div className="flex items-center text-sm text-gray-600 mb-2">
-                              <Award className="w-4 h-4 mr-1 text-kidato-blue" />
+                              <Award className="w-4 h-4 mr-1 text-kidato-purple" />
                               <span className="truncate">{teacher.certifications[0].name}</span>
                             </div>
                           )}
 
                           <div className="text-sm text-gray-500 flex items-center mt-3">
-                            <MapPin className="w-4 h-4 mr-1 text-kidato-blue" />
+                            <MapPin className="w-4 h-4 mr-1 text-kidato-purple" />
                             {teacher.location}
                           </div>
                         </div>
                         <div className="bg-gray-50 px-4 py-4 sm:px-6">
-                          <Button className="w-full bg-kidato-blue hover:bg-kidato-dark-blue">
+                          <Button className="w-full bg-kidato-purple hover:bg-kidato-dark-blue">
                             View Profile
                           </Button>
                         </div>

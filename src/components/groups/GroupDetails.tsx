@@ -81,7 +81,7 @@ const GroupDetails = ({ open, onOpenChange, group }: GroupDetailsProps) => {
             Close
           </Button>
           <Button 
-            className="bg-kidato-blue hover:bg-kidato-dark-blue"
+            className="bg-kidato-purple hover:bg-kidato-dark-blue"
             onClick={() => onOpenChange(false)}
           >
             Update Group

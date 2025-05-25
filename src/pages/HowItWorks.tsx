@@ -13,14 +13,14 @@ const HowItWorks = () => {
       <Navbar />
       <main className="flex-grow pt-16">
         {/* Hero Section */}
-        <section className="bg-gradient-to-r from-kidato-blue to-blue-700 text-white py-20">
+        <section className="bg-gradient-to-r from-kidato-purple to-blue-700 text-white py-20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <h1 className="text-4xl md:text-5xl font-bold mb-6">How Kidato Works</h1>
             <p className="text-xl mb-8 max-w-3xl mx-auto">
               Discover how our platform connects students with quality educators across Africa in a safe, accessible online environment.
             </p>
             <div className="flex flex-wrap justify-center gap-4">
-              <Button size="lg" className="bg-white text-kidato-blue hover:bg-gray-100">
+              <Button size="lg" className="bg-white text-kidato-purple hover:bg-gray-100">
                 <Link to="/signup">Create Account</Link>
               </Button>
               <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10">
@@ -47,7 +47,7 @@ const HowItWorks = () => {
                   description: "Real-time video sessions with teachers who engage directly with students, allowing for immediate feedback and personalized instruction.",
                   icon: Monitor,
                   color: "bg-blue-100",
-                  iconColor: "text-kidato-blue"
+                  iconColor: "text-kidato-purple"
                 },
                 {
                   title: "Verified Quality Teachers",
@@ -203,7 +203,7 @@ const HowItWorks = () => {
                   ].map((step, index) => (
                     <Card key={index} className="border-gray-200">
                       <CardContent className="pt-6">
-                        <div className="bg-kidato-blue text-white rounded-full w-10 h-10 flex items-center justify-center mb-4 font-bold">
+                        <div className="bg-kidato-purple text-white rounded-full w-10 h-10 flex items-center justify-center mb-4 font-bold">
                           {step.step}
                         </div>
                         <h3 className="text-lg font-semibold text-gray-900 mb-2">{step.title}</h3>
@@ -213,7 +213,7 @@ const HowItWorks = () => {
                   ))}
                 </div>
                 <div className="text-center mt-8">
-                  <Button className="bg-kidato-blue hover:bg-kidato-dark-blue text-white">
+                  <Button className="bg-kidato-purple hover:bg-kidato-dark-blue text-white">
                     <Link to="/teacher-signup">Apply as a Teacher</Link>
                   </Button>
                 </div>
@@ -267,7 +267,7 @@ const HowItWorks = () => {
               ].map((feature, index) => (
                 <div key={index} className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-300">
                   <div className="bg-kidato-light-blue rounded-full w-12 h-12 flex items-center justify-center mb-4">
-                    <feature.icon className="h-6 w-6 text-kidato-blue" />
+                    <feature.icon className="h-6 w-6 text-kidato-purple" />
                   </div>
                   <h3 className="text-xl font-semibold text-gray-900 mb-2">{feature.title}</h3>
                   <p className="text-gray-600">{feature.description}</p>
@@ -364,7 +364,7 @@ const HowItWorks = () => {
             
             <div className="text-center mt-10">
               <p className="text-gray-600 mb-4">Still have questions? Our support team is here to help.</p>
-              <Button className="bg-kidato-blue hover:bg-kidato-dark-blue text-white">
+              <Button className="bg-kidato-purple hover:bg-kidato-dark-blue text-white">
                 <Link to="/contact">Contact Support</Link>
               </Button>
             </div>
@@ -372,14 +372,14 @@ const HowItWorks = () => {
         </section>
         
         {/* CTA Section */}
-        <section className="py-20 bg-gradient-to-r from-kidato-blue to-blue-700 text-white text-center">
+        <section className="py-20 bg-gradient-to-r from-kidato-purple to-blue-700 text-white text-center">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <h2 className="text-3xl font-bold mb-6">Ready to Experience Quality Education?</h2>
             <p className="text-xl mb-8 max-w-3xl mx-auto">
               Join our growing community of students, parents, and teachers who are transforming education across Africa.
             </p>
             <div className="flex flex-wrap justify-center gap-4">
-              <Button size="lg" className="bg-white text-kidato-blue hover:bg-gray-100">
+              <Button size="lg" className="bg-white text-kidato-purple hover:bg-gray-100">
                 <Link to="/signup">Create Free Account</Link>
               </Button>
               <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10">

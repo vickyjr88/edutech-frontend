@@ -84,10 +84,10 @@ const TeacherPublicProfile: React.FC<TeacherPublicProfileProps> = ({
             <div 
               className="absolute inset-0 bg-cover bg-center" 
               style={{ 
-                backgroundColor: '#0063C9',
+                backgroundColor: 'var(--kidato-purple-primary)',
                 backgroundImage: teacher.coverImage && teacher.coverImage !== '/placeholder.svg' 
                   ? `url(${teacher.coverImage})`
-                  : 'linear-gradient(135deg, #0063C9 0%, #3484E5 100%)',
+                  : 'linear-gradient(135deg, var(--kidato-purple-primary) 0%, var(--kidato-purple-light) 100%)',
                 filter: 'blur(4px)',
                 transform: 'scale(1.05)'
               }}
@@ -103,7 +103,7 @@ const TeacherPublicProfile: React.FC<TeacherPublicProfileProps> = ({
                   onClick={() => setShowVideoDialog(true)}
                   className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center cursor-pointer mx-auto mb-4 hover:bg-white/30 transition-all border-2 border-white group"
                 >
-                  <div className="w-14 h-14 md:w-16 md:h-16 rounded-full bg-white flex items-center justify-center text-kidato-blue">
+                  <div className="w-14 h-14 md:w-16 md:h-16 rounded-full bg-white flex items-center justify-center text-kidato-purple">
                     <Play className="h-8 w-8 ml-1 group-hover:scale-110 transition-transform" />
                   </div>
                 </div>
@@ -205,19 +205,19 @@ const TeacherPublicProfile: React.FC<TeacherPublicProfileProps> = ({
             {/* Quick Stats */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4 border-t border-gray-100 pt-4">
               <div className="text-center">
-                <p className="text-xl font-bold text-kidato-blue">{teacher.stats.studentsHelped}+</p>
+                <p className="text-xl font-bold text-kidato-purple">{teacher.stats.studentsHelped}+</p>
                 <p className="text-xs text-gray-500">Students Helped</p>
               </div>
               <div className="text-center">
-                <p className="text-xl font-bold text-kidato-blue">{teacher.stats.lessonsDelivered}+</p>
+                <p className="text-xl font-bold text-kidato-purple">{teacher.stats.lessonsDelivered}+</p>
                 <p className="text-xs text-gray-500">Lessons Delivered</p>
               </div>
               <div className="text-center">
-                <p className="text-xl font-bold text-kidato-blue">{teacher.stats.classesCreated}</p>
+                <p className="text-xl font-bold text-kidato-purple">{teacher.stats.classesCreated}</p>
                 <p className="text-xs text-gray-500">Classes Created</p>
               </div>
               <div className="text-center">
-                <p className="text-xl font-bold text-kidato-blue">{teacher.stats.successRate}%</p>
+                <p className="text-xl font-bold text-kidato-purple">{teacher.stats.successRate}%</p>
                 <p className="text-xs text-gray-500">Success Rate</p>
               </div>
             </div>
@@ -227,7 +227,7 @@ const TeacherPublicProfile: React.FC<TeacherPublicProfileProps> = ({
               <div className="flex flex-wrap gap-3 mt-6">
                 <Button 
                   onClick={() => setShowBookingDialog(true)}
-                  className="bg-kidato-blue hover:bg-blue-700"
+                  className="bg-kidato-purple hover:bg-blue-700"
                 >
                   <Calendar className="w-4 h-4 mr-2" />
                   Book a Session
@@ -235,7 +235,7 @@ const TeacherPublicProfile: React.FC<TeacherPublicProfileProps> = ({
                 <Button 
                   variant="outline" 
                   onClick={() => setShowMessageDialog(true)}
-                  className="border-kidato-blue text-kidato-blue hover:bg-blue-50"
+                  className="border-kidato-purple text-kidato-purple hover:bg-blue-50"
                 >
                   <MessageSquare className="w-4 h-4 mr-2" />
                   Contact Teacher
@@ -352,21 +352,21 @@ const TeacherPublicProfile: React.FC<TeacherPublicProfileProps> = ({
           <h2 className="font-semibold text-lg mb-4">Key Information</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="flex items-start">
-              <Clock className="w-5 h-5 text-kidato-blue mr-3 mt-0.5" />
+              <Clock className="w-5 h-5 text-kidato-purple mr-3 mt-0.5" />
               <div>
                 <h3 className="font-medium">Hourly Rate</h3>
                 <p className="text-gray-600">{teacher.hourlyRate}</p>
               </div>
             </div>
             <div className="flex items-start">
-              <Calendar className="w-5 h-5 text-kidato-blue mr-3 mt-0.5" />
+              <Calendar className="w-5 h-5 text-kidato-purple mr-3 mt-0.5" />
               <div>
                 <h3 className="font-medium">Availability</h3>
                 <p className="text-gray-600">{teacher.availability}</p>
               </div>
             </div>
             <div className="flex items-start">
-              <Globe className="w-5 h-5 text-kidato-blue mr-3 mt-0.5" />
+              <Globe className="w-5 h-5 text-kidato-purple mr-3 mt-0.5" />
               <div>
                 <h3 className="font-medium">Languages</h3>
                 <p className="text-gray-600">
@@ -428,7 +428,7 @@ const TeacherPublicProfile: React.FC<TeacherPublicProfileProps> = ({
 
         {/* CTA Section */}
         {!hideBookingActions && (
-          <div className="bg-gradient-to-r from-kidato-blue/10 to-purple-500/10 rounded-xl p-8 mb-8 text-center">
+          <div className="bg-gradient-to-r from-kidato-purple/10 to-purple-500/10 rounded-xl p-8 mb-8 text-center">
             <h2 className="text-2xl font-bold mb-2">Ready to learn with {teacher.name}?</h2>
             <p className="text-gray-700 max-w-2xl mx-auto mb-6">
               Book a session today and take the first step towards educational success with personalized guidance.
@@ -437,7 +437,7 @@ const TeacherPublicProfile: React.FC<TeacherPublicProfileProps> = ({
               <Button 
                 onClick={() => setShowBookingDialog(true)}
                 size="lg"
-                className="bg-kidato-blue hover:bg-blue-700"
+                className="bg-kidato-purple hover:bg-blue-700"
               >
                 Book a Session Now
               </Button>
@@ -445,7 +445,7 @@ const TeacherPublicProfile: React.FC<TeacherPublicProfileProps> = ({
                 variant="outline" 
                 onClick={() => setShowMessageDialog(true)}
                 size="lg"
-                className="border-kidato-blue text-kidato-blue hover:bg-blue-50"
+                className="border-kidato-purple text-kidato-purple hover:bg-blue-50"
               >
                 Ask a Question
               </Button>

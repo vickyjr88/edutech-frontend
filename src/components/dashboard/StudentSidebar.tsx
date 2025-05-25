@@ -40,7 +40,7 @@ const StudentSidebar = () => {
           to="/student-dashboard" 
           className={`flex items-center px-4 py-3 text-sm font-medium rounded-xl ${
             isActive("/student-dashboard") 
-              ? "bg-gradient-to-r from-kidato-light-blue to-blue-100 text-kidato-blue shadow-sm" 
+              ? "bg-gradient-to-r from-kidato-light-blue to-blue-100 text-kidato-purple shadow-sm" 
               : "text-gray-700 hover:bg-blue-50"
           } transition-all`}
         >
@@ -54,7 +54,7 @@ const StudentSidebar = () => {
           to="/courses" 
           className={`flex items-center px-4 py-3 text-sm font-medium rounded-xl ${
             isActive("/courses") 
-              ? "bg-gradient-to-r from-kidato-light-blue to-blue-100 text-kidato-blue shadow-sm" 
+              ? "bg-gradient-to-r from-kidato-light-blue to-blue-100 text-kidato-purple shadow-sm" 
               : "text-gray-700 hover:bg-blue-50"
           } transition-all relative`}
         >
@@ -72,7 +72,7 @@ const StudentSidebar = () => {
           to="/group-work" 
           className={`flex items-center px-4 py-3 text-sm font-medium rounded-xl ${
             isActive("/group-work") 
-              ? "bg-gradient-to-r from-kidato-light-blue to-blue-100 text-kidato-blue shadow-sm" 
+              ? "bg-gradient-to-r from-kidato-light-blue to-blue-100 text-kidato-purple shadow-sm" 
               : "text-gray-700 hover:bg-blue-50"
           } transition-all relative`}
         >
@@ -89,7 +89,7 @@ const StudentSidebar = () => {
           to="/achievements" 
           className={`flex items-center px-4 py-3 text-sm font-medium rounded-xl ${
             isActive("/achievements") 
-              ? "bg-gradient-to-r from-kidato-light-blue to-blue-100 text-kidato-blue shadow-sm" 
+              ? "bg-gradient-to-r from-kidato-light-blue to-blue-100 text-kidato-purple shadow-sm" 
               : "text-gray-700 hover:bg-blue-50"
           } transition-all`}
         >
@@ -103,7 +103,7 @@ const StudentSidebar = () => {
           to="/messaging" 
           className={`flex items-center px-4 py-3 text-sm font-medium rounded-xl ${
             isActive("/messaging") 
-              ? "bg-gradient-to-r from-kidato-light-blue to-blue-100 text-kidato-blue shadow-sm" 
+              ? "bg-gradient-to-r from-kidato-light-blue to-blue-100 text-kidato-purple shadow-sm" 
               : "text-gray-700 hover:bg-blue-50"
           } transition-all relative`}
         >
@@ -120,7 +120,7 @@ const StudentSidebar = () => {
           to="/schedule" 
           className={`flex items-center px-4 py-3 text-sm font-medium rounded-xl ${
             isActive("/schedule") 
-              ? "bg-gradient-to-r from-kidato-light-blue to-blue-100 text-kidato-blue shadow-sm" 
+              ? "bg-gradient-to-r from-kidato-light-blue to-blue-100 text-kidato-purple shadow-sm" 
               : "text-gray-700 hover:bg-blue-50"
           } transition-all`}
         >
@@ -134,7 +134,7 @@ const StudentSidebar = () => {
           to="/profile" 
           className={`flex items-center px-4 py-3 text-sm font-medium rounded-xl ${
             isActive("/profile") 
-              ? "bg-gradient-to-r from-kidato-light-blue to-blue-100 text-kidato-blue shadow-sm" 
+              ? "bg-gradient-to-r from-kidato-light-blue to-blue-100 text-kidato-purple shadow-sm" 
               : "text-gray-700 hover:bg-blue-50"
           } transition-all`}
         >

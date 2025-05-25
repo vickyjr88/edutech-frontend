@@ -60,7 +60,7 @@ export default function TeacherHighlights({
       <Card>
         <CardContent className="p-4 flex items-center">
           <div className="bg-blue-50 p-3 rounded-full mr-4">
-            <BookOpen className="h-6 w-6 text-kidato-blue" />
+            <BookOpen className="h-6 w-6 text-kidato-purple" />
           </div>
           <div>
             <p className="text-sm text-gray-500">Subjects</p>

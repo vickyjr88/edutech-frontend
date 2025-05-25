@@ -238,8 +238,8 @@ const LocationPicker = ({
             >
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="relative">
-                  <MapPin className="h-8 w-8 text-kidato-blue" />
-                  <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-4 h-4 bg-kidato-blue rounded-full animate-ping opacity-75"></div>
+                  <MapPin className="h-8 w-8 text-kidato-purple" />
+                  <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-4 h-4 bg-kidato-purple rounded-full animate-ping opacity-75"></div>
                 </div>
               </div>
             </div>

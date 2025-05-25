@@ -43,25 +43,25 @@ const CourseProgress = () => {
               <TabsList className="mb-6 bg-blue-50/50 p-1 border border-blue-100">
                 <TabsTrigger 
                   value="lessons" 
-                  className="data-[state=active]:bg-white data-[state=active]:text-kidato-blue data-[state=active]:shadow-sm rounded-md"
+                  className="data-[state=active]:bg-white data-[state=active]:text-kidato-purple data-[state=active]:shadow-sm rounded-md"
                 >
                   Lessons
                 </TabsTrigger>
                 <TabsTrigger 
                   value="assignments" 
-                  className="data-[state=active]:bg-white data-[state=active]:text-kidato-blue data-[state=active]:shadow-sm rounded-md"
+                  className="data-[state=active]:bg-white data-[state=active]:text-kidato-purple data-[state=active]:shadow-sm rounded-md"
                 >
                   Assignments
                 </TabsTrigger>
                 <TabsTrigger 
                   value="quizzes" 
-                  className="data-[state=active]:bg-white data-[state=active]:text-kidato-blue data-[state=active]:shadow-sm rounded-md"
+                  className="data-[state=active]:bg-white data-[state=active]:text-kidato-purple data-[state=active]:shadow-sm rounded-md"
                 >
                   Quizzes
                 </TabsTrigger>
                 <TabsTrigger 
                   value="overview" 
-                  className="data-[state=active]:bg-white data-[state=active]:text-kidato-blue data-[state=active]:shadow-sm rounded-md"
+                  className="data-[state=active]:bg-white data-[state=active]:text-kidato-purple data-[state=active]:shadow-sm rounded-md"
                 >
                   Overview
                 </TabsTrigger>

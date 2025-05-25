@@ -20,20 +20,20 @@ const HeroSection = ({
   secondaryButtonLink
 }: HeroSectionProps) => {
   return (
-    <section className="bg-gradient-to-r from-kidato-blue to-kidato-dark-blue text-white py-20">
+    <section className="bg-gradient-to-r from-kidato-purple to-kidato-dark-blue text-white py-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="max-w-3xl">
           <h1 className="text-4xl md:text-5xl font-bold mb-6">{title}</h1>
           <p className="text-xl mb-8">{description}</p>
           <div className="space-x-4">
-            <Button size="lg" className="bg-white text-kidato-blue hover:bg-gray-100">
+            <Button size="lg" className="bg-white text-kidato-purple hover:bg-gray-100">
               <Link to={primaryButtonLink}>{primaryButtonText}</Link>
             </Button>
             {secondaryButtonText && secondaryButtonLink && (
               <Button 
                 size="lg" 
                 variant="outline" 
-                className="border-2 border-white text-white hover:bg-white hover:text-kidato-blue transition-colors duration-300"
+                className="border-2 border-white text-white hover:bg-white hover:text-kidato-purple transition-colors duration-300"
               >
                 <Link to={secondaryButtonLink}>{secondaryButtonText}</Link>
               </Button>

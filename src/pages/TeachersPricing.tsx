@@ -72,7 +72,7 @@ const TeachersPricing = () => {
       <Navbar />
       <main className="flex-grow">
         {/* Hero Section */}
-        <section className="bg-gradient-to-r from-kidato-blue to-kidato-dark-blue text-white py-20">
+        <section className="bg-gradient-to-r from-kidato-purple to-kidato-dark-blue text-white py-20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <h1 className="text-4xl md:text-5xl font-bold mb-6">
               Choose Your Teaching Plan
@@ -84,7 +84,7 @@ const TeachersPricing = () => {
               <Button size="lg" className="bg-indigo-600 hover:bg-indigo-700">
                 Start for Free
               </Button>
-              <Button size="lg" variant="outline" className="border-2 text-white hover:bg-white hover:text-kidato-blue">
+              <Button size="lg" variant="outline" className="border-2 text-white hover:bg-white hover:text-kidato-purple">
                 Compare Plans
               </Button>
             </div>
@@ -120,7 +120,7 @@ const TeachersPricing = () => {
                   )}
                   <CardHeader>
                     <div className="flex items-center justify-between mb-4">
-                      <plan.icon className="h-8 w-8 text-kidato-blue" />
+                      <plan.icon className="h-8 w-8 text-kidato-purple" />
                     </div>
                     <CardTitle className="text-2xl font-bold">{plan.name}</CardTitle>
                     <p className="text-sm text-gray-500 mt-1">{plan.description}</p>
@@ -154,7 +154,7 @@ const TeachersPricing = () => {
                     <p className="text-sm text-gray-500 mb-6">
                       {plan.revenueShare}
                     </p>
-                    <Button className={`w-full ${plan.popular ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-kidato-blue hover:bg-kidato-dark-blue'}`}>
+                    <Button className={`w-full ${plan.popular ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-kidato-purple hover:bg-kidato-dark-blue'}`}>
                       {plan.cta}
                       <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
@@ -193,11 +193,11 @@ const TeachersPricing = () => {
         <PricingFAQ />
 
         {/* CTA Section */}
-        <section className="bg-kidato-blue text-white py-16">
+        <section className="bg-kidato-purple text-white py-16">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <h2 className="text-3xl font-bold mb-4">Ready to Start Teaching?</h2>
             <p className="text-xl mb-8">Join thousands of educators already using Kidato</p>
-            <Button size="lg" className="bg-white text-kidato-blue hover:bg-gray-100">
+            <Button size="lg" className="bg-white text-kidato-purple hover:bg-gray-100">
               Create Your Account
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>

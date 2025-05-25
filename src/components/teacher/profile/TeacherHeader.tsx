@@ -53,7 +53,7 @@ export default function TeacherHeader({ teacher }: TeacherHeaderProps) {
 
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden mb-10">
-      <div className="bg-kidato-blue/10 p-8">
+      <div className="bg-kidato-purple/10 p-8">
         <div className="flex flex-col md:flex-row gap-8 items-center md:items-start">
           <div className="w-40 h-40 rounded-full border-4 border-white shadow-lg overflow-hidden bg-white relative">
             <img 
@@ -61,7 +61,7 @@ export default function TeacherHeader({ teacher }: TeacherHeaderProps) {
               alt={teacher.name} 
               className="w-full h-full object-cover"
             />
-            <div className="absolute bottom-0 right-0 bg-kidato-blue text-white p-1 rounded-full">
+            <div className="absolute bottom-0 right-0 bg-kidato-purple text-white p-1 rounded-full">
               <Check className="h-4 w-4" />
             </div>
           </div>
@@ -69,7 +69,7 @@ export default function TeacherHeader({ teacher }: TeacherHeaderProps) {
           <div className="flex-1 text-center md:text-left">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">{teacher.name}</h1>
             <div className="flex flex-wrap items-center gap-2 justify-center md:justify-start mb-3">
-              <p className="text-lg text-kidato-blue font-medium">{teacher.position}</p>
+              <p className="text-lg text-kidato-purple font-medium">{teacher.position}</p>
               {teacher.school && (
                 <div className="flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800">
                   <span>{teacher.school}</span>

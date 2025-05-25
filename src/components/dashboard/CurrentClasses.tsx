@@ -31,11 +31,11 @@ export default function CurrentClasses() {
     <Card className="border-2 border-blue-100 rounded-xl overflow-hidden shadow-md transform transition-all hover:shadow-lg">
       <CardHeader className="flex flex-row items-center justify-between pb-2 bg-gradient-to-r from-blue-50 to-purple-50">
         <CardTitle className="text-lg font-bold flex items-center">
-          <BookOpen className="mr-2 h-5 w-5 text-kidato-blue" />
+          <BookOpen className="mr-2 h-5 w-5 text-kidato-purple" />
           Today's Lessons
         </CardTitle>
         <Button variant="ghost" size="sm" asChild className="px-4">
-          <Link to="/courses" className="text-kidato-blue hover:text-kidato-blue/90 text-sm flex items-center">
+          <Link to="/courses" className="text-kidato-purple hover:text-kidato-purple/90 text-sm flex items-center">
             View all
             <ChevronRight className="ml-1 h-4 w-4" />
           </Link>

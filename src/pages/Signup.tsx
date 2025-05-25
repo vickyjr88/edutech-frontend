@@ -178,20 +178,20 @@ const SignUp = () => {
             id="terms"
             checked={agreedToTerms}
             onCheckedChange={(checked) => setAgreedToTerms(checked as boolean)}
-            className="h-4 w-4 text-kidato-blue focus:ring-kidato-blue"
+            className="h-4 w-4 text-kidato-purple focus:ring-kidato-purple"
           />
           <Label htmlFor="terms" className="ml-2 block text-sm text-gray-900">
             I agree to the{" "}
             <a
               href="/terms"
-              className="text-kidato-blue hover:text-kidato-dark-blue"
+              className="text-kidato-purple hover:text-kidato-dark-blue"
             >
               Terms of Service
             </a>{" "}
             and{" "}
             <a
               href="/privacy"
-              className="text-kidato-blue hover:text-kidato-dark-blue"
+              className="text-kidato-purple hover:text-kidato-dark-blue"
             >
               Privacy Policy
             </a>
@@ -201,7 +201,7 @@ const SignUp = () => {
         <div>
           <Button
             type="submit"
-            className="w-full bg-kidato-blue hover:bg-kidato-dark-blue"
+            className="w-full bg-kidato-purple hover:bg-kidato-dark-blue"
             disabled={isLoading}
           >
             {isLoading ? "Creating account..." : "Sign up"}

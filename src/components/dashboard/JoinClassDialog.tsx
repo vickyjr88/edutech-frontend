@@ -224,7 +224,7 @@ export default function JoinClassDialog({
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto animate-fade-in p-6">
         <DialogHeader className="space-y-3">
-          <DialogTitle className="text-2xl font-bold text-kidato-blue">
+          <DialogTitle className="text-2xl font-bold text-kidato-purple">
             Join "{classTitle}"
           </DialogTitle>
           <DialogDescription className="text-base">
@@ -236,9 +236,9 @@ export default function JoinClassDialog({
           {checkingConnection ? (
             <div className="flex flex-col items-center justify-center py-6 animate-pulse">
               <div className="relative">
-                <Loader2 className="h-16 w-16 text-kidato-blue animate-spin mb-4" />
+                <Loader2 className="h-16 w-16 text-kidato-purple animate-spin mb-4" />
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <Globe className="h-6 w-6 text-kidato-blue" />
+                  <Globe className="h-6 w-6 text-kidato-purple" />
                 </div>
               </div>
               <p className="text-center text-xl font-medium text-gray-700 mt-4">Checking your system...</p>
@@ -252,7 +252,7 @@ export default function JoinClassDialog({
                 <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
                   <div className="flex items-center gap-2 mb-3">
                     <div className="bg-kidato-light-blue p-2 rounded-lg">
-                      <Smartphone className="h-5 w-5 text-kidato-blue" />
+                      <Smartphone className="h-5 w-5 text-kidato-purple" />
                     </div>
                     <h3 className="font-semibold text-lg">Browser Check</h3>
                   </div>
@@ -283,7 +283,7 @@ export default function JoinClassDialog({
                 <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
                   <div className="flex items-center gap-2 mb-3">
                     <div className="bg-kidato-light-blue p-2 rounded-lg">
-                      <Wifi className="h-5 w-5 text-kidato-blue" />
+                      <Wifi className="h-5 w-5 text-kidato-purple" />
                     </div>
                     <h3 className="font-semibold text-lg">Connection Check</h3>
                   </div>
@@ -317,7 +317,7 @@ export default function JoinClassDialog({
                 <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
                   <div className="flex items-center gap-2 mb-3">
                     <div className="bg-kidato-light-blue p-2 rounded-lg">
-                      <Signal className="h-5 w-5 text-kidato-blue" />
+                      <Signal className="h-5 w-5 text-kidato-purple" />
                     </div>
                     <h3 className="font-semibold text-lg">Network Details</h3>
                   </div>
@@ -338,7 +338,7 @@ export default function JoinClassDialog({
                 <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 animate-fade-in">
                   <div className="flex items-center gap-2 mb-3">
                     <div className="bg-kidato-light-blue p-2 rounded-lg">
-                      <MapPin className="h-5 w-5 text-kidato-blue" />
+                      <MapPin className="h-5 w-5 text-kidato-purple" />
                     </div>
                     <h3 className="font-semibold text-lg">Your Location</h3>
                   </div>

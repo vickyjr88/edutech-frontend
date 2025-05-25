@@ -51,7 +51,7 @@ const TeacherProfileCard = ({ teacher }: TeacherProfileCardProps) => {
     <div className="bg-white rounded-lg border border-gray-200 p-6 mb-8 hover:shadow-md transition-shadow">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
-          <BookOpen className="h-5 w-5 text-kidato-blue" />
+          <BookOpen className="h-5 w-5 text-kidato-purple" />
           Meet Your Teacher
         </h2>
         {teacher.rating && (
@@ -72,7 +72,7 @@ const TeacherProfileCard = ({ teacher }: TeacherProfileCardProps) => {
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center bg-kidato-light-blue">
-              <User className="h-10 w-10 text-kidato-blue" />
+              <User className="h-10 w-10 text-kidato-purple" />
             </div>
           )}
         </div>
@@ -107,7 +107,7 @@ const TeacherProfileCard = ({ teacher }: TeacherProfileCardProps) => {
           <div className="flex flex-wrap gap-3">
             <Dialog open={isMessageDialogOpen} onOpenChange={setIsMessageDialogOpen}>
               <DialogTrigger asChild>
-                <Button className="bg-kidato-blue hover:bg-kidato-dark-blue">
+                <Button className="bg-kidato-purple hover:bg-kidato-dark-blue">
                   <MessageSquare className="mr-2 h-4 w-4" />
                   Message Teacher
                 </Button>
@@ -157,7 +157,7 @@ const TeacherProfileCard = ({ teacher }: TeacherProfileCardProps) => {
             {teacher.videoProfileUrl && (
               <Dialog open={isVideoDialogOpen} onOpenChange={setIsVideoDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button variant="outline" className="border-kidato-blue text-kidato-blue hover:bg-kidato-blue/10">
+                  <Button variant="outline" className="border-kidato-purple text-kidato-purple hover:bg-kidato-purple/10">
                     <Video className="mr-2 h-4 w-4" />
                     Watch Video Profile
                   </Button>

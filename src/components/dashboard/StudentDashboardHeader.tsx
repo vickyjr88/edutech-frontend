@@ -72,7 +72,7 @@ export default function StudentDashboardHeader({ userName }: StudentDashboardHea
                   {profileImage ? (
                     <AvatarImage src={profileImage} alt={userName} />
                   ) : (
-                    <AvatarFallback className="bg-gradient-to-br from-kidato-blue to-purple-500 text-white font-bold">
+                    <AvatarFallback className="bg-gradient-to-br from-kidato-purple to-purple-500 text-white font-bold">
                       {userName.charAt(0)}
                     </AvatarFallback>
                   )}

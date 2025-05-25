@@ -121,7 +121,7 @@ const GroupWork = () => {
               <div className="flex gap-2 mt-2 sm:mt-0">
                 <Button variant="outline">Find Groups</Button>
                 <Button 
-                  className="bg-kidato-blue hover:bg-kidato-dark-blue"
+                  className="bg-kidato-purple hover:bg-kidato-dark-blue"
                   onClick={() => setCreateDialogOpen(true)}
                 >
                   <UserPlus className="mr-2 h-4 w-4" />
@@ -133,13 +133,13 @@ const GroupWork = () => {
             {/* Group Tabs */}
             <Tabs defaultValue="current" className="mb-8" onValueChange={setActiveTab}>
               <TabsList className="mb-6 bg-blue-50/50 p-1 border border-blue-100">
-                <TabsTrigger value="current" className="data-[state=active]:bg-white data-[state=active]:text-kidato-blue data-[state=active]:shadow-sm rounded-md">
+                <TabsTrigger value="current" className="data-[state=active]:bg-white data-[state=active]:text-kidato-purple data-[state=active]:shadow-sm rounded-md">
                   Current Groups
                 </TabsTrigger>
-                <TabsTrigger value="completed" className="data-[state=active]:bg-white data-[state=active]:text-kidato-blue data-[state=active]:shadow-sm rounded-md">
+                <TabsTrigger value="completed" className="data-[state=active]:bg-white data-[state=active]:text-kidato-purple data-[state=active]:shadow-sm rounded-md">
                   Completed Groups
                 </TabsTrigger>
-                <TabsTrigger value="invited" className="data-[state=active]:bg-white data-[state=active]:text-kidato-blue data-[state=active]:shadow-sm rounded-md">
+                <TabsTrigger value="invited" className="data-[state=active]:bg-white data-[state=active]:text-kidato-purple data-[state=active]:shadow-sm rounded-md">
                   Group Invitations
                 </TabsTrigger>
               </TabsList>
@@ -218,7 +218,7 @@ const GroupWork = () => {
                               Details
                             </Button>
                             <Button 
-                              className="bg-kidato-blue hover:bg-kidato-dark-blue" 
+                              className="bg-kidato-purple hover:bg-kidato-dark-blue" 
                               size="sm"
                               onClick={() => handleUpdateGoal(group.id, group.progress + 10)}
                             >
@@ -354,7 +354,7 @@ const GroupWork = () => {
                             <Button variant="outline" size="sm" className="border-red-200 text-red-500 hover:bg-red-50">
                               Decline
                             </Button>
-                            <Button className="bg-kidato-blue hover:bg-kidato-dark-blue" size="sm">
+                            <Button className="bg-kidato-purple hover:bg-kidato-dark-blue" size="sm">
                               Accept Invitation
                             </Button>
                           </div>

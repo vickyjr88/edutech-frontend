@@ -233,7 +233,7 @@ export default function MessagingPlatform() {
               <Button 
                 onClick={handleSendMessage} 
                 disabled={newMessage.trim() === ""}
-                className="ml-2 bg-kidato-blue hover:bg-blue-700"
+                className="ml-2 bg-kidato-purple hover:bg-blue-700"
               >
                 <Send className="h-4 w-4" />
               </Button>

@@ -4,7 +4,7 @@ import HeroStats from "./HeroStats";
 
 const ClassesHero = () => {
   return (
-    <div className="bg-gradient-to-r from-kidato-blue to-kidato-dark-blue py-20 pt-50 text-white">
+    <div className="bg-gradient-to-r from-kidato-purple to-kidato-dark-blue py-20 pt-50 text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid md:grid-cols-2 gap-8 items-center">
           <div className="text-center md:text-left">
@@ -13,7 +13,7 @@ const ClassesHero = () => {
               Explore live, interactive classes taught by Africa's top educators designed to inspire and challenge your child.
             </p>
             <div className="space-x-4">
-              <Button size="lg" className="bg-white text-kidato-blue hover:bg-gray-100">
+              <Button size="lg" className="bg-white text-kidato-purple hover:bg-gray-100">
                 Start Learning Today
               </Button>
               <Button 

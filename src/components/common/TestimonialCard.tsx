@@ -20,7 +20,7 @@ const TestimonialCard = ({ name, subject, testimonial, avatar }: TestimonialCard
           />
           <div>
             <h4 className="font-semibold text-gray-900">{name}</h4>
-            <p className="text-sm text-kidato-blue">{subject}</p>
+            <p className="text-sm text-kidato-purple">{subject}</p>
           </div>
         </div>
         <p className="text-gray-700 italic">"{testimonial}"</p>

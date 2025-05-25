@@ -78,7 +78,7 @@ const ActivityFeed = () => {
             <div key={activity.id}>
               <div className="flex items-start gap-3">
                 <Avatar className="h-8 w-8">
-                  <AvatarFallback className="bg-kidato-blue text-white text-xs">
+                  <AvatarFallback className="bg-kidato-purple text-white text-xs">
                     {activity.childInitials}
                   </AvatarFallback>
                 </Avatar>

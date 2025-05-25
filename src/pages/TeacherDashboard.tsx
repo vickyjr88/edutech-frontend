@@ -897,7 +897,7 @@ const TeacherDashboard = () => {
             to="/teacher-dashboard"
             className={`flex items-center px-4 py-3 text-sm font-medium rounded-md w-full text-left ${
               activeTab === "dashboard" 
-                ? "bg-kidato-light-blue text-kidato-blue" 
+                ? "bg-kidato-light-blue text-kidato-purple" 
                 : "text-gray-700 hover:bg-gray-100"
             }`}
           >
@@ -908,7 +908,7 @@ const TeacherDashboard = () => {
             to="/teacher-dashboard/classes"
             className={`flex items-center px-4 py-3 text-sm font-medium rounded-md w-full text-left ${
               activeTab === "classes" || activeTab === "viewClass"
-                ? "bg-kidato-light-blue text-kidato-blue" 
+                ? "bg-kidato-light-blue text-kidato-purple" 
                 : "text-gray-700 hover:bg-gray-100"
             }`}
           >
@@ -919,7 +919,7 @@ const TeacherDashboard = () => {
             to="/teacher-dashboard/students"
             className={`flex items-center px-4 py-3 text-sm font-medium rounded-md w-full text-left ${
               activeTab === "students" || activeTab === "enrollment"
-                ? "bg-kidato-light-blue text-kidato-blue" 
+                ? "bg-kidato-light-blue text-kidato-purple" 
                 : "text-gray-700 hover:bg-gray-100"
             }`}
           >
@@ -930,7 +930,7 @@ const TeacherDashboard = () => {
             to="/teacher-dashboard/schedule"
             className={`flex items-center px-4 py-3 text-sm font-medium rounded-md w-full text-left ${
               activeTab === "schedule" 
-                ? "bg-kidato-light-blue text-kidato-blue" 
+                ? "bg-kidato-light-blue text-kidato-purple" 
                 : "text-gray-700 hover:bg-gray-100"
             }`}
           >
@@ -941,7 +941,7 @@ const TeacherDashboard = () => {
             to="/teacher-earnings"
             className={`flex items-center px-4 py-3 text-sm font-medium rounded-md w-full text-left ${
               activeTab === "earnings" 
-                ? "bg-kidato-light-blue text-kidato-blue" 
+                ? "bg-kidato-light-blue text-kidato-purple" 
                 : "text-gray-700 hover:bg-gray-100"
             }`}
           >
@@ -952,7 +952,7 @@ const TeacherDashboard = () => {
             to="/teacher-dashboard/settings"
             className={`flex items-center px-4 py-3 text-sm font-medium rounded-md w-full text-left ${
               activeTab === "settings" 
-                ? "bg-kidato-light-blue text-kidato-blue" 
+                ? "bg-kidato-light-blue text-kidato-purple" 
                 : "text-gray-700 hover:bg-gray-100"
             }`}
           >
@@ -1206,7 +1206,7 @@ const TeacherDashboard = () => {
                       <p className="text-gray-600 mb-4">Set up your professional profile to connect with students who match your teaching style and expertise.</p>
                     </div>
                     <Button 
-                      className="w-full py-3 text-lg bg-blue-600 hover:bg-blue-700"
+                      className="w-full py-3 text-lg bg-kidato-purple hover:bg-kidato-purple-600"
                       onClick={() => navigate("/teacher-profile-setup")}
                     >
                       <User className="mr-2 h-5 w-5" />
@@ -1218,18 +1218,18 @@ const TeacherDashboard = () => {
                 <>
                   <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
                     {/* Main metrics with conditional Review Banner */}
-                    <Card className="col-span-4 bg-gradient-to-r from-blue-50 to-indigo-50 border-none shadow-md">
+                    <Card className="col-span-4 bg-gradient-to-r from-kidato-purple-50 to-kidato-purple-100 border-none shadow-md">
                       <CardHeader>
                         <div className="flex justify-between items-start">
                           <div>
-                            <CardTitle className="text-2xl text-blue-900">Welcome back, {user?.full_name || "Teacher"}!</CardTitle>
-                            <CardDescription className="text-blue-700 mt-1 text-base">
+                            <CardTitle className="text-2xl text-kidato-purple-darkest">Welcome back, {user?.full_name || "Teacher"}!</CardTitle>
+                            <CardDescription className="text-kidato-purple-dark mt-1 text-base">
                               Here's an overview of your teaching business
                             </CardDescription>
                           </div>
                           <Button 
                             onClick={handleCreateClass}
-                            className="bg-blue-600 hover:bg-blue-700 text-white shadow-md"
+                            className="bg-kidato-purple hover:bg-kidato-purple-600 text-white shadow-md"
                           >
                             <PlusCircle className="mr-2 h-4 w-4" />
                             Create New Class
@@ -1239,11 +1239,11 @@ const TeacherDashboard = () => {
                       <CardContent>
                         {/* Show review banner if no students and fewer than 10 reviews */}
                         {/* For demo purposes, always show this since we know there are 0 students and 0 reviews */}
-                        <div className="bg-gradient-to-r from-yellow-50 to-amber-50 border-2 border-yellow-200 rounded-xl p-5 mb-6">
+                        <div className="bg-gradient-to-r from-kidato-orange-100 to-kidato-orange-200 border-2 border-kidato-orange-300 rounded-xl p-5 mb-6">
                           <div className="flex flex-col md:flex-row items-center gap-5">
                             <div className="md:w-3/4">
                               <div className="flex items-start gap-3">
-                                <div className="hidden sm:flex h-12 w-12 rounded-full bg-yellow-500 flex-shrink-0 items-center justify-center">
+                                <div className="hidden sm:flex h-12 w-12 rounded-full bg-kidato-orange flex-shrink-0 items-center justify-center">
                                   <Star className="h-6 w-6 text-white" />
                                 </div>
                                 <div>
@@ -1253,7 +1253,7 @@ const TeacherDashboard = () => {
                                     <div className="flex items-center bg-white px-2 py-1 rounded-full">
                                       <span className="text-xs font-medium text-gray-700 mr-1">0/10</span>
                                       <div className="w-20 sm:w-32 h-2 bg-gray-200 rounded-full">
-                                        <div className="h-2 bg-yellow-500 rounded-full" style={{ width: "0%" }}></div>
+                                        <div className="h-2 bg-kidato-orange rounded-full" style={{ width: "0%" }}></div>
                                       </div>
                                     </div>
                                     <span className="text-xs text-gray-600">Review Goal</span>
@@ -1263,7 +1263,7 @@ const TeacherDashboard = () => {
                             </div>
                             <div className="md:w-1/4 mt-4 md:mt-0">
                               <Button 
-                                className="bg-yellow-600 hover:bg-yellow-700 w-full"
+                                className="bg-kidato-orange hover:bg-kidato-orange-600 w-full"
                                 onClick={handleRequestReviews}
                               >
                                 <Star className="mr-2 h-4 w-4" />
@@ -1278,8 +1278,8 @@ const TeacherDashboard = () => {
                           <div className="bg-white p-5 rounded-xl shadow-sm flex flex-col">
                             <div className="flex items-center justify-between mb-2">
                               <span className="text-sm font-medium text-gray-500">Classes</span>
-                              <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center">
-                                <BookOpen className="h-4 w-4 text-blue-600" />
+                              <div className="h-8 w-8 rounded-full bg-kidato-purple-100 flex items-center justify-center">
+                                <BookOpen className="h-4 w-4 text-kidato-purple" />
                               </div>
                             </div>
                             <span className="text-3xl font-bold text-gray-800">{classes.length}</span>
@@ -1293,8 +1293,8 @@ const TeacherDashboard = () => {
                           <div className="bg-white p-5 rounded-xl shadow-sm flex flex-col">
                             <div className="flex items-center justify-between mb-2">
                               <span className="text-sm font-medium text-gray-500">Students</span>
-                              <div className="h-8 w-8 rounded-full bg-purple-100 flex items-center justify-center">
-                                <Users className="h-4 w-4 text-purple-600" />
+                              <div className="h-8 w-8 rounded-full bg-kidato-purple-100 flex items-center justify-center">
+                                <Users className="h-4 w-4 text-kidato-purple" />
                               </div>
                             </div>
                             <span className="text-3xl font-bold text-gray-800">0</span>
@@ -1308,8 +1308,8 @@ const TeacherDashboard = () => {
                           <div className="bg-white p-5 rounded-xl shadow-sm flex flex-col">
                             <div className="flex items-center justify-between mb-2">
                               <span className="text-sm font-medium text-gray-500">Rating</span>
-                              <div className="h-8 w-8 rounded-full bg-yellow-100 flex items-center justify-center">
-                                <Star className="h-4 w-4 text-yellow-600" />
+                              <div className="h-8 w-8 rounded-full bg-kidato-orange-100 flex items-center justify-center">
+                                <Star className="h-4 w-4 text-kidato-orange" />
                               </div>
                             </div>
                             <div className="flex items-center">
@@ -1331,21 +1331,21 @@ const TeacherDashboard = () => {
                     {/* Action cards section */}
                     <div className="lg:col-span-3 grid grid-cols-1 gap-6">
                       {/* Class management card */}
-                      <Card className="border-t-4 border-t-blue-500">
+                      <Card className="border-t-4 border-t-kidato-purple">
                         <CardHeader className="pb-3">
                           <CardTitle className="text-xl flex items-center text-gray-800">
-                            <BookOpen className="mr-2 h-5 w-5 text-blue-600" />
+                            <BookOpen className="mr-2 h-5 w-5 text-kidato-purple" />
                             Class Management
                           </CardTitle>
                         </CardHeader>
                         <CardContent>
                           {classes.length === 0 ? (
-                            <div className="bg-blue-50 rounded-lg p-6 text-center">
-                              <BookOpen className="h-12 w-12 mx-auto text-blue-300 mb-3" />
+                            <div className="bg-kidato-purple-50 rounded-lg p-6 text-center">
+                              <BookOpen className="h-12 w-12 mx-auto text-kidato-purple-300 mb-3" />
                               <h3 className="text-lg font-medium text-gray-800 mb-2">No Classes Created Yet</h3>
                               <p className="text-gray-600 mb-4">Start your teaching journey by creating your first class.</p>
                               <Button 
-                                className="bg-blue-600 hover:bg-blue-700 text-white"
+                                className="bg-kidato-purple hover:bg-kidato-purple-600 text-white"
                                 onClick={handleCreateClass}
                               >
                                 <PlusCircle className="mr-2 h-4 w-4" />
@@ -1394,12 +1394,12 @@ const TeacherDashboard = () => {
                                       </div>
                                       
                                       {isPublished && (
-                                        <div className="bg-purple-50 px-3 py-2 border-t flex justify-between items-center">
-                                          <span className="text-xs text-purple-700">Student enrollments: {classItem.enrollment?.current || 0}</span>
+                                        <div className="bg-kidato-purple-50 px-3 py-2 border-t flex justify-between items-center">
+                                          <span className="text-xs text-kidato-purple-dark">Student enrollments: {classItem.enrollment?.current || 0}</span>
                                           <Button 
                                             size="sm" 
                                             variant="ghost" 
-                                            className="text-purple-700 hover:bg-purple-100 hover:text-purple-800 p-1 h-7"
+                                            className="text-kidato-purple-dark hover:bg-kidato-purple-100 hover:text-kidato-purple-darkest p-1 h-7"
                                             onClick={(e) => {
                                               e.stopPropagation();
                                               handleEnrollStudents(classItem);
@@ -1416,7 +1416,7 @@ const TeacherDashboard = () => {
                               </div>
                               <div className="mt-5 flex justify-end">
                                 <Button 
-                                  className="bg-blue-600 hover:bg-blue-700"
+                                  className="bg-kidato-purple hover:bg-kidato-purple-600"
                                   onClick={handleCreateClass}
                                 >
                                   <PlusCircle className="mr-2 h-4 w-4" />
@@ -1432,10 +1432,10 @@ const TeacherDashboard = () => {
                     {/* Side column */}
                     <div className="lg:col-span-1 space-y-6">
                       {/* Earnings card */}
-                      <Card className="border-t-4 border-t-green-500">
+                      <Card className="border-t-4 border-t-kidato-orange">
                         <CardHeader className="pb-3">
                           <CardTitle className="text-xl flex items-center text-gray-800">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 text-green-600">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 text-kidato-orange">
                               <line x1="12" y1="1" x2="12" y2="23"></line>
                               <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
                             </svg>
@@ -1449,7 +1449,7 @@ const TeacherDashboard = () => {
                             <div className="mt-6">
                               <Button 
                                 variant="outline" 
-                                className="w-full border-green-200 hover:bg-green-50 text-green-700"
+                                className="w-full border-kidato-orange-200 hover:bg-kidato-orange-50 text-kidato-orange-dark"
                                 onClick={() => navigate("/teacher-earnings")}
                               >
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
@@ -1467,10 +1467,10 @@ const TeacherDashboard = () => {
                   
                   {/* Quick actions & information section */}
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-none hover:shadow-md transition-shadow">
+                    <Card className="bg-gradient-to-br from-kidato-purple-50 to-kidato-purple-100 border-none hover:shadow-md transition-shadow">
                       <CardContent className="pt-6">
                         <div className="flex items-start gap-4">
-                          <div className="h-12 w-12 rounded-full bg-blue-600 flex items-center justify-center">
+                          <div className="h-12 w-12 rounded-full bg-kidato-purple flex items-center justify-center">
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white">
                               <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"></path>
                             </svg>
@@ -1478,7 +1478,7 @@ const TeacherDashboard = () => {
                           <div>
                             <h3 className="font-medium text-gray-900">Teaching Resources</h3>
                             <p className="text-sm text-gray-600 mt-1">Access teaching materials and tools</p>
-                            <Button variant="link" className="text-blue-600 p-0 mt-2">
+                            <Button variant="link" className="text-kidato-purple p-0 mt-2">
                               Browse Resources
                             </Button>
                           </div>
@@ -1486,10 +1486,10 @@ const TeacherDashboard = () => {
                       </CardContent>
                     </Card>
                     
-                    <Card className="bg-gradient-to-br from-purple-50 to-pink-50 border-none hover:shadow-md transition-shadow">
+                    <Card className="bg-gradient-to-br from-kidato-orange-50 to-kidato-orange-100 border-none hover:shadow-md transition-shadow">
                       <CardContent className="pt-6">
                         <div className="flex items-start gap-4">
-                          <div className="h-12 w-12 rounded-full bg-purple-600 flex items-center justify-center">
+                          <div className="h-12 w-12 rounded-full bg-kidato-orange flex items-center justify-center">
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white">
                               <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
                             </svg>
@@ -1497,7 +1497,7 @@ const TeacherDashboard = () => {
                           <div>
                             <h3 className="font-medium text-gray-900">Grow Your Business</h3>
                             <p className="text-sm text-gray-600 mt-1">Tips to attract more students</p>
-                            <Button variant="link" className="text-purple-600 p-0 mt-2">
+                            <Button variant="link" className="text-kidato-orange p-0 mt-2">
                               View Guide
                             </Button>
                           </div>
@@ -1505,10 +1505,10 @@ const TeacherDashboard = () => {
                       </CardContent>
                     </Card>
                     
-                    <Card className="bg-gradient-to-br from-green-50 to-teal-50 border-none hover:shadow-md transition-shadow">
+                    <Card className="bg-gradient-to-br from-kidato-purple-50 to-kidato-purple-100 border-none hover:shadow-md transition-shadow">
                       <CardContent className="pt-6">
                         <div className="flex items-start gap-4">
-                          <div className="h-12 w-12 rounded-full bg-green-600 flex items-center justify-center">
+                          <div className="h-12 w-12 rounded-full bg-kidato-purple flex items-center justify-center">
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white">
                               <circle cx="12" cy="8" r="7"></circle>
                               <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline>
@@ -1517,7 +1517,7 @@ const TeacherDashboard = () => {
                           <div>
                             <h3 className="font-medium text-gray-900">Certification</h3>
                             <p className="text-sm text-gray-600 mt-1">Enhance your teacher profile</p>
-                            <Button variant="link" className="text-green-600 p-0 mt-2">
+                            <Button variant="link" className="text-kidato-purple p-0 mt-2">
                               Get Certified
                             </Button>
                           </div>
@@ -1525,10 +1525,10 @@ const TeacherDashboard = () => {
                       </CardContent>
                     </Card>
                     
-                    <Card className="bg-gradient-to-br from-yellow-50 to-amber-50 border-none hover:shadow-md transition-shadow">
+                    <Card className="bg-gradient-to-br from-kidato-orange-50 to-kidato-orange-100 border-none hover:shadow-md transition-shadow">
                       <CardContent className="pt-6">
                         <div className="flex items-start gap-4">
-                          <div className="h-12 w-12 rounded-full bg-yellow-600 flex items-center justify-center">
+                          <div className="h-12 w-12 rounded-full bg-kidato-orange flex items-center justify-center">
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white">
                               <circle cx="12" cy="12" r="10"></circle>
                               <path d="M12 16v-4"></path>
@@ -1538,7 +1538,7 @@ const TeacherDashboard = () => {
                           <div>
                             <h3 className="font-medium text-gray-900">Help & Support</h3>
                             <p className="text-sm text-gray-600 mt-1">Get assistance with your account</p>
-                            <Button variant="link" className="text-yellow-600 p-0 mt-2">
+                            <Button variant="link" className="text-kidato-orange p-0 mt-2">
                               Contact Support
                             </Button>
                           </div>
