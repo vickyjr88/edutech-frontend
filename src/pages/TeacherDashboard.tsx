@@ -17,6 +17,8 @@ import TeacherClassView from "@/components/teacher/class-view/TeacherClassView";
 import CreateClassForm from "@/components/teacher/CreateClassForm"; // Kept for backwards compatibility
 import EnrollStudentsPage from "@/components/teacher/enrollment/EnrollStudentsPage";
 import { StudentView } from "@/components/teacher/students";
+import RecommendedClasses from "@/components/teacher/RecommendedClasses";
+import TabbedClassesView from "@/components/teacher/TabbedClassesView";
 import { useAuth } from "@/contexts/AuthContext";
 import {teacherService} from "@/integrations/api/services/teacher.service.ts";
 import {classService} from "@/integrations/api/services/class.service.ts";
@@ -1552,93 +1554,20 @@ const TeacherDashboard = () => {
           )}
 
           {activeTab === "classes" && !showCreateClassForm && (
-            <div className="space-y-6">
-              <div className="flex justify-between items-center">
-                <h2 className="text-xl font-bold">My Classes</h2>
-                {hasClassesSetup && (
-                  <Button onClick={handleCreateClass}>
-                    <PlusCircle className="mr-2 h-4 w-4" />
-                    Create New Class
-                  </Button>
-                )}
-              </div>
-              
-              {isLoading && (
-                <div className="flex justify-center py-8">
-                  <div className="flex flex-col items-center">
-                    <Loader2 className="h-12 w-12 animate-spin text-blue-500 mb-3" />
-                    <p className="text-gray-600">Loading your classes...</p>
-                  </div>
-                </div>
-              )}
-              
-              {!isLoading && classes.length === 0 ? (
-                <div className="flex flex-col items-center justify-center bg-white rounded-lg border border-dashed p-12">
-                  <BookOpen className="h-16 w-16 text-gray-300 mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-1">No Classes Yet</h3>
-                  <p className="text-sm text-gray-500 mb-6 text-center max-w-md">
-                    You haven't created any classes yet. Create your first class to start teaching and accepting students.
-                  </p>
-                  {hasClassesSetup ? (
-                    <Button onClick={handleCreateClass}>
-                      <PlusCircle className="mr-2 h-4 w-4" />
-                      Create Your First Class
-                    </Button>
-                  ) : (
-                    <Button onClick={handleSetupClassSettings}>
-                      Set Up Your Classroom First
-                    </Button>
-                  )}
-                </div>
-              ) : !isLoading && (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {classes.map((classItem: any) => {
-                    // Handle both formats - API returns _id while local format might use id
-                    const classId = classItem._id || classItem.id;
-                    // Get enrollment data safely
-                    const currentEnrollment = classItem.enrollment?.current || 0;
-                    const statusBadge = 
-                      classItem.isPublished ? 
-                        <div className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
-                          Published
-                        </div> : 
-                        <div className="px-2 py-1 bg-amber-100 text-amber-800 text-xs rounded-full">
-                          Draft
-                        </div>;
-                    
-                    return (
-                      <Card key={classId} className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => handleViewClass(classItem)}>
-                        <CardHeader>
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <CardTitle>{classItem.title}</CardTitle>
-                              <CardDescription>
-                                {classItem.type === "academic" ? "Academic" : "After School"} - {classItem.subject}
-                              </CardDescription>
-                            </div>
-                            {statusBadge}
-                          </div>
-                        </CardHeader>
-                        <CardContent>
-                          <p className="text-sm text-gray-500 line-clamp-2">
-                            {classItem.description || "No description provided"}
-                          </p>
-                          <div className="mt-4 flex justify-between items-center">
-                            <div className="text-sm">
-                              <span className="text-gray-500">Students: </span>
-                              <span className="font-medium">{currentEnrollment}</span>
-                            </div>
-                            <div className="text-xs px-2 py-1 bg-gray-100 rounded-full">
-                              {classItem.type === "academic" ? classItem.gradeLevel : classItem.ageRange}
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
+            <TabbedClassesView
+              classes={classes}
+              isLoading={isLoading}
+              hasClassesSetup={hasClassesSetup}
+              onCreateClass={handleCreateClass}
+              onViewClass={handleViewClass}
+              onSetupClassSettings={handleSetupClassSettings}
+              onCreateClassFromRecommendation={(recommendation) => {
+                // Navigate to class creation with pre-filled data
+                navigate("/teacher-dashboard/classes?create=true", {
+                  state: { recommendation }
+                });
+              }}
+            />
           )}
 
           {!isLoading && activeTab === "students" && !showEnrollStudents && (

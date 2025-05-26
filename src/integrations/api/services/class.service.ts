@@ -26,6 +26,7 @@ export interface Class {
     discount: number;
     featured: boolean;
     thumbnailUrl?: string;
+    status?: 'draft' | 'pending_review' | 'archived' | 'published';
 }
 
 export interface ClassDetail extends Class {
@@ -56,6 +57,7 @@ export interface ClassDetail extends Class {
         introVideoUrl?: string;
     };
     reviews: Review[];
+    status?: 'draft' | 'pending_review' | 'archived' | 'published';
 }
 
 export interface Review {
@@ -128,6 +130,18 @@ export const classService = {
 
     unpublish: (classId: string): Promise<ApiResponse<ClassDetail>> => {
         return api.post<ClassDetail>(`/classes/${classId}/unpublish`, {});
+    },
+
+    updateStatus: (classId: string, status: 'draft' | 'pending_review' | 'archived' | 'published'): Promise<ApiResponse<ClassDetail>> => {
+        return api.patch<ClassDetail>(`/classes/${classId}/status`, { status });
+    },
+
+    submitForReview: (classId: string): Promise<ApiResponse<ClassDetail>> => {
+        return api.post<ClassDetail>(`/classes/${classId}/submit-review`, {});
+    },
+
+    archive: (classId: string): Promise<ApiResponse<ClassDetail>> => {
+        return api.post<ClassDetail>(`/classes/${classId}/archive`, {});
     },
 
     addTeachingTeamMember: (classId: string, teacherId: string): Promise<ApiResponse<ClassDetail>> => {

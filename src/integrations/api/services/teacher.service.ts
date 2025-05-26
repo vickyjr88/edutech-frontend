@@ -98,6 +98,29 @@ export interface TeachingStrategy{
     isCertified: boolean;
 }
 
+export interface LessonPlan {
+    title: string;
+    duration: number;
+    objectives: string[];
+    activities: string[];
+    materials: string[];
+    assessment: string;
+}
+
+export interface ClassRecommendation {
+    _id: string;
+    title: string;
+    subject: string;
+    gradeLevel: string;
+    summary: string;
+    numberOfLessons: number;
+    suggestedPrice: number;
+    lessonPlans: LessonPlan[];
+    confidence: number;
+    status: 'pending' | 'adopted' | 'dismissed';
+    createdAt: string;
+}
+
 //Define certification endpoints
 export const teacherService = {
     // Teacher Profile CRUD
@@ -567,6 +590,27 @@ export const teacherService = {
         }>(`/teachers/${teacherId}/profile-photo`, {
             base64File,
             mimeType
+        });
+    },
+
+    // AI Class Recommendations
+    generateRecommendations: (): Promise<ApiResponse<ClassRecommendation[]>> => {
+        return api.post<ClassRecommendation[]>('/teacher/recommendations/generate');
+    },
+
+    getPendingRecommendations: (): Promise<ApiResponse<ClassRecommendation[]>> => {
+        return api.get<ClassRecommendation[]>('/teacher/recommendations/pending');
+    },
+
+    adoptRecommendation: (recommendationId: string, classId: string): Promise<ApiResponse<ClassRecommendation>> => {
+        return api.patch<ClassRecommendation>(`/teacher/recommendations/${recommendationId}/adopt`, {
+            classId
+        });
+    },
+
+    dismissRecommendation: (recommendationId: string, reason?: string): Promise<ApiResponse<ClassRecommendation>> => {
+        return api.patch<ClassRecommendation>(`/teacher/recommendations/${recommendationId}/dismiss`, {
+            reason
         });
     },
 };
