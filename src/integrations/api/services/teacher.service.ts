@@ -109,16 +109,33 @@ export interface LessonPlan {
 
 export interface ClassRecommendation {
     _id: string;
+    teacher: string;
     title: string;
     subject: string;
-    gradeLevel: string;
-    summary: string;
+    curriculum?: string;
+    gradeLevel?: string;
+    ageRange?: string;
+    summary?: string;
+    description?: string;
+    commitment?: string;
     numberOfLessons: number;
     suggestedPrice: number;
+    tags?: string[];
     lessonPlans: LessonPlan[];
+    resources?: Array<{
+        title: string;
+        type: string;
+        url?: string;
+        description?: string;
+        cost?: string;
+        _id: string;
+    }>;
+    technicalRequirements?: string[];
+    materials?: string[];
     confidence: number;
     status: 'pending' | 'adopted' | 'dismissed';
     createdAt: string;
+    updatedAt: string;
 }
 
 //Define certification endpoints

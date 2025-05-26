@@ -12,7 +12,8 @@ import {
   CheckCircle2,
   Loader2,
   Star,
-  Users
+  Users,
+  Calendar
 } from 'lucide-react';
 import { teacherService, ClassRecommendation } from '@/integrations/api/services/teacher.service';
 import { useToast } from '@/hooks/use-toast';
@@ -27,20 +28,32 @@ const RecommendedClasses: React.FC<RecommendedClassesProps> = ({ onCreateClass }
   const [isGenerating, setIsGenerating] = useState(false);
   const [expandedCard, setExpandedCard] = useState<string | null>(null);
   const { toast } = useToast();
+  
+  console.log('RecommendedClasses component rendered with recommendations:', recommendations.length);
 
   const fetchRecommendations = async () => {
     setIsLoading(true);
     try {
+      console.log('Fetching recommendations...');
       const { data, error } = await teacherService.getPendingRecommendations();
+      console.log('API Response:', { data, error, success: !error && data });
+      
       if (!error && data) {
-        const recommendationsArray = Array.isArray(data) ? data : [];
+        // Handle the API response structure: { success: true, data: [...] }
+        const actualData = data.data || data; // Extract the actual data array
+        const recommendationsArray = Array.isArray(actualData) ? actualData : [];
+        console.log('API response structure:', data);
+        console.log('Extracted data array:', actualData);
+        console.log('Setting recommendations:', recommendationsArray.length, 'items');
         setRecommendations(recommendationsArray);
         
         // If no recommendations found, try to generate some
         if (recommendationsArray.length === 0) {
+          console.log('No recommendations found, generating...');
           await generateRecommendations();
         }
       } else {
+        console.log('API call failed, trying to generate:', error);
         // If API call fails, try to generate recommendations
         await generateRecommendations();
       }
@@ -58,7 +71,11 @@ const RecommendedClasses: React.FC<RecommendedClassesProps> = ({ onCreateClass }
     try {
       const { data, error } = await teacherService.generateRecommendations();
       if (!error && data) {
-        const recommendationsArray = Array.isArray(data) ? data : [];
+        // Handle the API response structure: { success: true, data: [...] }
+        const actualData = data.data || data; // Extract the actual data array
+        const recommendationsArray = Array.isArray(actualData) ? actualData : [];
+        console.log('Generate API response structure:', data);
+        console.log('Generate extracted data array:', actualData);
         setRecommendations(recommendationsArray);
         
         if (recommendationsArray.length > 0) {
@@ -135,8 +152,11 @@ const RecommendedClasses: React.FC<RecommendedClassesProps> = ({ onCreateClass }
   };
 
   useEffect(() => {
+    console.log('RecommendedClasses useEffect triggered, fetching recommendations...');
     fetchRecommendations();
   }, []);
+
+  console.log('About to render, recommendations:', recommendations, 'length:', recommendations.length);
 
   if (isLoading) {
     return (
@@ -195,7 +215,7 @@ const RecommendedClasses: React.FC<RecommendedClassesProps> = ({ onCreateClass }
           </div>
         ) : (
           <div className="space-y-4">
-            {Array.isArray(recommendations) && recommendations.map((recommendation) => (
+            {recommendations.map((recommendation) => (
               <div
                 key={recommendation._id}
                 className="border rounded-lg overflow-hidden hover:shadow-md transition-shadow"
@@ -206,10 +226,10 @@ const RecommendedClasses: React.FC<RecommendedClassesProps> = ({ onCreateClass }
                       <div className="flex items-center gap-2 mb-2">
                         <h4 className="font-semibold text-gray-900">{recommendation.title}</h4>
                         <Badge variant="secondary" className="bg-kidato-orange-100 text-kidato-orange-dark">
-                          {recommendation.confidence}% match
+                          {recommendation.confidence || 85}% match
                         </Badge>
                       </div>
-                      <p className="text-sm text-gray-600 mb-2">{recommendation.summary}</p>
+                      <p className="text-sm text-gray-600 mb-2">{recommendation.summary || recommendation.description}</p>
                       
                       <div className="flex flex-wrap gap-3 text-xs text-gray-500">
                         <span className="flex items-center">
@@ -218,7 +238,7 @@ const RecommendedClasses: React.FC<RecommendedClassesProps> = ({ onCreateClass }
                         </span>
                         <span className="flex items-center">
                           <Users className="h-3 w-3 mr-1" />
-                          {recommendation.gradeLevel}
+                          {recommendation.gradeLevel || recommendation.ageRange}
                         </span>
                         <span className="flex items-center">
                           <Clock className="h-3 w-3 mr-1" />
@@ -226,8 +246,14 @@ const RecommendedClasses: React.FC<RecommendedClassesProps> = ({ onCreateClass }
                         </span>
                         <span className="flex items-center">
                           <DollarSign className="h-3 w-3 mr-1" />
-                          ${recommendation.suggestedPrice}
+                          ${recommendation.suggestedPrice || 0}
                         </span>
+                        {recommendation.commitment && (
+                          <span className="flex items-center text-kidato-purple-600">
+                            <Calendar className="h-3 w-3 mr-1" />
+                            {recommendation.commitment}
+                          </span>
+                        )}
                       </div>
                     </div>
                     
