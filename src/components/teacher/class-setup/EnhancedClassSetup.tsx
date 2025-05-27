@@ -880,18 +880,6 @@ const EnhancedClassSetupContent = ({
                       <p>• Keep your class title clear and descriptive</p>
                       <p>• Include grade level and curriculum information</p>
                       <p>• Write a compelling description that engages parents and students</p>
-                      <div className="pt-2">
-                        <Button 
-                          type="button"
-                          size="sm"
-                          className="w-full"
-                          variant="outline" 
-                          onClick={() => setActiveAIHelper(true)}
-                        >
-                          <Sparkles className="h-4 w-4 mr-1.5" />
-                          AI Class Helper
-                        </Button>
-                      </div>
                     </>
                   )}
                   {activeTab === "lessons" && (
@@ -963,16 +951,6 @@ const EnhancedClassSetupContent = ({
                   <Sparkles className="h-4 w-4 mr-1.5 text-amber-500" />
                   Quick Tips
                 </h3>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="p-0 h-auto font-normal flex items-center text-blue-600 hover:text-blue-700"
-                  onClick={() => setActiveAIHelper(true)}
-                >
-                  <Sparkles className="h-4 w-4 mr-1.5" />
-                  <span className="text-sm">AI Helper</span>
-                </Button>
               </div>
               
               <div className="mt-2 text-xs text-gray-600 space-y-1">

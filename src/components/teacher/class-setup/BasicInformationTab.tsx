@@ -968,46 +968,8 @@ const BasicInformationTab = ({ form, onNextTab }: BasicInformationTabProps) => {
             control={form.control}
             name="ageRange"
             render={({ field }) => {
-              // Parse age range from selected curriculum level
-              const selectedLevel = curriculumLevelMap[selectedCurriculum ? form.watch("curriculumLevel") : ""];
-              const ageRangeStr = selectedLevel?.ageRange || "";
-              
-              // Parse age range into an array of standard age ranges
-              const getAgeRangesFromRange = (range: string): string[] => {
-                // Check for common patterns like "4-5", "6-8", "9-11", etc.
-                const rangeMatch = range.match(/(\d+)(?:\s*-\s*(\d+))?/);
-                
-                if (rangeMatch) {
-                  const start = parseInt(rangeMatch[1]);
-                  const end = rangeMatch[2] ? parseInt(rangeMatch[2]) : start;
-                  
-                  if (!isNaN(start) && !isNaN(end)) {
-                    // Map the custom range to predefined age ranges
-                    const standardRanges = [];
-                    if (start <= 5 && end >= 3) standardRanges.push("age3-5");
-                    if (start <= 8 && end >= 6) standardRanges.push("age6-8");
-                    if (start <= 11 && end >= 9) standardRanges.push("age9-11");
-                    if (start <= 14 && end >= 12) standardRanges.push("age12-14");
-                    if (start <= 18 && end >= 15) standardRanges.push("age15-18");
-                    
-                    if (standardRanges.length > 0) {
-                      return standardRanges;
-                    }
-                  }
-                }
-                
-                // Fallback for when parsing fails
-                return ["age3-5", "age6-8", "age9-11", "age12-14", "age15-18"];
-              };
-              
-              const relevantAgeRanges = getAgeRangesFromRange(ageRangeStr);
-              
-              // Set a default value if current value is not in the relevant age ranges or is empty
-              useEffect(() => {
-                if (selectedLevel && (!field.value || !relevantAgeRanges.includes(field.value))) {
-                  form.setValue("ageRange", relevantAgeRanges[0] || "age3-5");
-                }
-              }, [relevantAgeRanges, field.value, selectedLevel]);
+              // For afterschool classes, we provide all age ranges without curriculum dependency
+              const allAgeRanges = ["age3-5", "age6-8", "age9-11", "age12-14", "age15-18"];
               
               // Map for display values
               const ageRangeDisplay = {
@@ -1024,40 +986,22 @@ const BasicInformationTab = ({ form, onNextTab }: BasicInformationTabProps) => {
                   <Select 
                     onValueChange={field.onChange} 
                     value={field.value || ""}
-                    disabled={!selectedLevel}
                   >
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder={selectedLevel ? "Select age range" : "Select curriculum level first"} />
+                        <SelectValue placeholder="Select age range" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {selectedLevel ? (
-                        relevantAgeRanges.length > 0 ? (
-                          relevantAgeRanges.map((ageRange) => (
-                            <SelectItem key={ageRange} value={ageRange}>
-                              {ageRangeDisplay[ageRange as keyof typeof ageRangeDisplay]}
-                            </SelectItem>
-                          ))
-                        ) : (
-                          <div className="p-2 text-sm text-gray-500">
-                            No age ranges available for this level
-                          </div>
-                        )
-                      ) : (
-                        <div className="p-2 text-sm text-gray-500">
-                          Select a curriculum level first
-                        </div>
-                      )}
+                      {allAgeRanges.map((ageRange) => (
+                        <SelectItem key={ageRange} value={ageRange}>
+                          {ageRangeDisplay[ageRange as keyof typeof ageRangeDisplay]}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                   <FormDescription>
                     Select the age range for this after-school class.
-                    {selectedLevel && (
-                      <span className="text-xs text-gray-500 block mt-1">
-                        Range: {selectedLevel.ageRange || "Not specified"}
-                      </span>
-                    )}
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
