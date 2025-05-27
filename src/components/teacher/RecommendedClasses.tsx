@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { teacherService, ClassRecommendation } from '@/integrations/api/services/teacher.service';
 import { useToast } from '@/hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
 
 interface RecommendedClassesProps {
   onCreateClass?: (recommendation: ClassRecommendation) => void;
@@ -108,6 +109,8 @@ const RecommendedClasses: React.FC<RecommendedClassesProps> = ({ onCreateClass }
     }
   };
 
+  const navigate = useNavigate();
+
   const handleAdopt = async (recommendation: ClassRecommendation) => {
     try {
       console.log('Adopting recommendation:', recommendation._id);
@@ -131,6 +134,17 @@ const RecommendedClasses: React.FC<RecommendedClassesProps> = ({ onCreateClass }
       }
       
       console.log('Recommendation adopted successfully:', data);
+      console.log('Full API response structure:', JSON.stringify(data, null, 2));
+      
+      // Navigate to class setup with the returned class ID
+      // Try different possible paths for the class ID
+      const classId = data?.data?.createdClass?._id || 
+                     data?.data?._id || 
+                     data?.createdClass?._id || 
+                     data?._id || 
+                     recommendation._id;
+      
+      console.log('Extracted classId for navigation:', classId);
       
       // Call the onCreateClass callback to handle class creation flow
       if (onCreateClass) {
@@ -144,6 +158,21 @@ const RecommendedClasses: React.FC<RecommendedClassesProps> = ({ onCreateClass }
         title: "Class recommendation adopted!",
         description: `"${recommendation.title}" has been created in draft and ready for editing/publishing.`,
       });
+      
+      // Navigate after all other operations are complete
+      console.log('About to navigate to:', `/teacher-class-setup/${classId}`);
+      
+      // Use setTimeout to ensure all React state updates are complete before navigation
+      setTimeout(() => {
+        try {
+          navigate(`/teacher-class-setup/${classId}`);
+          console.log('Navigate function called successfully');
+        } catch (error) {
+          console.error('Error during navigation:', error);
+          // Fallback to window.location.href
+          window.location.href = `/teacher-class-setup/${classId}`;
+        }
+      }, 100);
     } catch (error) {
       console.error('Error adopting recommendation:', error);
       toast({
