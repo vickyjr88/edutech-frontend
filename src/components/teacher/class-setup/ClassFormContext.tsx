@@ -404,8 +404,8 @@ export const ClassFormProvider = ({
 
         commitment: formValues.commitmentRequired || undefined,
 
-        // Initialize arrays for data to be added in next steps
-        lessonPlans: [],
+        // Include existing lesson plans
+        lessonPlans: formValues.lessonPlans || [],
         cohorts: cohorts.map(cohort => {
           // Extract _id if it exists, and other fields we don't want to send directly
           const { hasFlexibleSchedule, lessonSchedules, ...cohortData } = cohort;
