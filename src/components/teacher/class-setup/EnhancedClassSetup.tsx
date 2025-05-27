@@ -75,7 +75,7 @@ const calculateStepCompletion = (form: any, stepId: string, checkClassCompletene
       const optionalBasicFields = ['curriculum', 'technicalRequirements', 'materialsRequired'];
       const classType = values.type;
       if (classType !== "afterschool") {
-        optionalBasicFields.push('assessmentMethods');
+        // optionalBasicFields.push('assessmentMethods');
       }else{
         optionalBasicFields.push('ageRange');
       }
@@ -653,7 +653,7 @@ const EnhancedClassSetupContent = ({
     <div className="max-w-7xl mx-auto">
       {/* Floating AI Helper Nudge */}
       <AnimatePresence>
-        {showFloatingNudge && !activeAIHelper && (
+        {showFloatingNudge && !activeAIHelper && completionPercentage < 40 && (
           <motion.div
             initial={{ y: -100, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
