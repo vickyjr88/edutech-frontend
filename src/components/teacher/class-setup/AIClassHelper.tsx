@@ -1,10 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, Wand2, Bot, BookOpen, Check, Trash } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { teacherService } from '@/integrations/api/services/teacher.service';
+import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
 
 interface AIClassHelperProps {
   onApplyChanges: (changes: {
@@ -113,24 +116,82 @@ const aiResponses = {
 };
 
 const AIClassHelper: React.FC<AIClassHelperProps> = ({ onApplyChanges, initialPrompt = '' }) => {
+  const navigate = useNavigate();
   const [prompt, setPrompt] = useState(initialPrompt);
   const [isGenerating, setIsGenerating] = useState(false);
   const [selectedSuggestion, setSelectedSuggestion] = useState<string | null>(null);
   const [aiResponse, setAiResponse] = useState<any>(null);
   const [appliedChanges, setAppliedChanges] = useState<string[]>([]);
+  const [countdown, setCountdown] = useState(45);
+  const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  const generateClassContent = () => {
-    setIsGenerating(true);
-    
-    // Simulate AI generation with sample data
-    setTimeout(() => {
-      if (prompt.toLowerCase().includes('writing') || selectedSuggestion?.toLowerCase().includes('writing')) {
-        setAiResponse(aiResponses.writing);
-      } else {
-        setAiResponse(aiResponses.robotics);
+  // Cleanup countdown interval on unmount
+  useEffect(() => {
+    return () => {
+      if (countdownIntervalRef.current) {
+        clearInterval(countdownIntervalRef.current);
       }
+    };
+  }, []);
+
+  const generateClassContent = async () => {
+    setIsGenerating(true);
+    setCountdown(45);
+    
+    // Start countdown timer
+    countdownIntervalRef.current = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          if (countdownIntervalRef.current) {
+            clearInterval(countdownIntervalRef.current);
+          }
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    
+    // Show initial toast for long operation
+    toast.info('AI is generating your class... This may take up to 45 seconds.', {
+      duration: 5000
+    });
+    
+    try {
+      const response = await teacherService.generateCustomClass(prompt || selectedSuggestion || '');
+      
+      if (response.data) {
+        // API returns data nested under data.data
+        const actualData = response.data.data || response.data;
+        const { generatedClass, createdClass } = actualData;
+        
+        console.log('API Response:', response.data);
+        console.log('Actual Data:', actualData);
+        console.log('Generated Class:', generatedClass);
+        console.log('Created Class:', createdClass);
+        
+        // Show success message with safe property access
+        const classTitle = generatedClass?.title || 'New Class';
+        toast.success(`Class "${classTitle}" created in draft status.`);
+        
+        // Navigate to the class setup page with the specific class ID
+        if (createdClass?._id) {
+          console.log('Navigating to:', `/teacher-class-setup/${createdClass._id}`);
+          // Use window.location to ensure navigation happens
+          window.location.href = `/teacher-class-setup/${createdClass._id}`;
+        } else {
+          console.error('No class ID found in response');
+        }
+      }
+    } catch (error) {
+      console.error('Error generating class:', error);
+      toast.error('Failed to generate class. Please try again.');
+    } finally {
       setIsGenerating(false);
-    }, 1500);
+      // Clear countdown timer
+      if (countdownIntervalRef.current) {
+        clearInterval(countdownIntervalRef.current);
+      }
+    }
   };
 
   const handleApplyChange = (changeType: string) => {
@@ -372,7 +433,7 @@ const AIClassHelper: React.FC<AIClassHelperProps> = ({ onApplyChanges, initialPr
                   animate={{ rotate: 360 }}
                   transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
                 ></motion.div>
-                Generating...
+                AI Generating Class... ({countdown}s)
               </>
             ) : (
               <>

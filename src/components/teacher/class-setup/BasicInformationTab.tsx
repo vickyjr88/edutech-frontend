@@ -824,7 +824,7 @@ const BasicInformationTab = ({ form, onNextTab }: BasicInformationTabProps) => {
           render={({ field }) => (
             <FormItem className="lg:col-span-3">
               <FormLabel>Class Title</FormLabel>
-              <Input placeholder="Enter a catchy class title" {...field} />
+              <Input placeholder="Physics – Year 10" {...field} />
               <FormDescription>
                 Enter a descriptive title for the class.
               </FormDescription>

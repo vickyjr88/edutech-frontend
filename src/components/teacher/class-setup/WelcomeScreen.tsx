@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { PlusCircle, Clock, RotateCcw, Trash2, CheckCircle, BookOpen } from 'lucide-react';
+import { PlusCircle, Clock, RotateCcw, Trash2, CheckCircle, BookOpen, Sparkles, Wand2, Bot } from 'lucide-react';
 import { formatLastSavedDate, getFormMetadata, clearStoredForm } from './utils/storageUtils';
 import { useNavigate } from 'react-router-dom';
 import { classService } from '@/integrations/api/services/class.service';
@@ -13,6 +13,7 @@ interface WelcomeScreenProps {
   onStartNew: () => void;
   onContinueDraft: () => void;
   onDiscardDraft: () => void;
+  onStartWithAI?: () => void;
 }
 
 const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
@@ -20,7 +21,8 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
   lastSaved: initialLastSaved,
   onStartNew,
   onContinueDraft,
-  onDiscardDraft
+  onDiscardDraft,
+  onStartWithAI
 }) => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -174,46 +176,51 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
             </CardContent>
           </Card>
         ) : (
-          <Card className="shadow-sm">
-            <CardHeader className="bg-gradient-to-r from-gray-50 to-gray-100 border-b">
+          <Card className="shadow-sm hover:shadow-md transition-shadow border-purple-200">
+            <CardHeader className="bg-gradient-to-r from-purple-50 to-indigo-50 border-b border-purple-100">
               <CardTitle className="flex items-center">
-                <BookOpen className="h-5 w-5 mr-2 text-gray-500" />
-                Templates & Examples
+                <Bot className="h-5 w-5 mr-2 text-purple-600" />
+                AI-Assisted Creation
               </CardTitle>
               <CardDescription>
-                Start with a pre-built template
+                Let AI help you create your class
               </CardDescription>
             </CardHeader>
             <CardContent className="pt-6">
               <ul className="space-y-3">
                 <li className="flex items-start">
-                  <div className="h-5 w-5 rounded-full bg-gray-100 flex items-center justify-center mr-2 mt-0.5">
-                    <CheckCircle className="h-3 w-3 text-gray-500" />
+                  <div className="h-5 w-5 rounded-full bg-purple-100 flex items-center justify-center mr-2 mt-0.5">
+                    <Sparkles className="h-3 w-3 text-purple-600" />
                   </div>
-                  <span className="text-sm text-gray-500">Math Class Template (Coming Soon)</span>
+                  <span className="text-sm">Generate class description & objectives</span>
                 </li>
                 <li className="flex items-start">
-                  <div className="h-5 w-5 rounded-full bg-gray-100 flex items-center justify-center mr-2 mt-0.5">
-                    <CheckCircle className="h-3 w-3 text-gray-500" />
+                  <div className="h-5 w-5 rounded-full bg-purple-100 flex items-center justify-center mr-2 mt-0.5">
+                    <Sparkles className="h-3 w-3 text-purple-600" />
                   </div>
-                  <span className="text-sm text-gray-500">Science Class Template (Coming Soon)</span>
+                  <span className="text-sm">Create detailed lesson plans automatically</span>
                 </li>
                 <li className="flex items-start">
-                  <div className="h-5 w-5 rounded-full bg-gray-100 flex items-center justify-center mr-2 mt-0.5">
-                    <CheckCircle className="h-3 w-3 text-gray-500" />
+                  <div className="h-5 w-5 rounded-full bg-purple-100 flex items-center justify-center mr-2 mt-0.5">
+                    <Sparkles className="h-3 w-3 text-purple-600" />
                   </div>
-                  <span className="text-sm text-gray-500">Language Arts Class (Coming Soon)</span>
+                  <span className="text-sm">Get tailored content for your subject</span>
                 </li>
               </ul>
+              <div className="mt-4 p-3 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-lg border border-purple-100">
+                <p className="text-xs text-purple-700 font-medium mb-1">💡 Pro Tip</p>
+                <p className="text-xs text-purple-600">
+                  Just describe your class idea and let AI create the complete structure for you!
+                </p>
+              </div>
             </CardContent>
             <CardFooter className="border-t pt-4 pb-4 px-6">
               <Button 
-                disabled
-                variant="outline"
-                className="w-full opacity-60"
+                onClick={onStartWithAI}
+                className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
               >
-                <BookOpen className="h-4 w-4 mr-2" />
-                Browse Templates
+                <Wand2 className="h-4 w-4 mr-2" />
+                Start with AI Helper
               </Button>
             </CardFooter>
           </Card>

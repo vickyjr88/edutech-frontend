@@ -630,4 +630,23 @@ export const teacherService = {
             reason
         });
     },
+
+    // Custom Class Generation
+    generateCustomClass: (prompt: string): Promise<ApiResponse<{
+        generatedClass: {
+            title: string;
+            confidence: number;
+        };
+        createdClass: {
+            _id: string;
+            status: string;
+        };
+        costs: {
+            generationCostCents: number;
+        };
+    }>> => {
+        return api.post<any>('/teacher/custom-class/generate', {
+            prompt
+        });
+    },
 };
