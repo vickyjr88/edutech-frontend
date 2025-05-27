@@ -930,8 +930,11 @@ export const ClassFormProvider = ({
             title: lesson.title || "",
             description: lesson.description || "",
             duration: Number(lesson.duration) || 60,
-            resourceFiles: lesson.resources ?
-              lesson.resources.split(',').map(r => r.trim()) :
+            resourceFiles: lesson.resources ? 
+              (typeof lesson.resources === 'string' ? 
+                lesson.resources.split(',').map(r => r.trim()) : 
+                Array.isArray(lesson.resources) ? lesson.resources : 
+                [lesson.resources]) :
               undefined
           }))
       };
@@ -1060,8 +1063,11 @@ export const ClassFormProvider = ({
             title: lesson.title || "",
             description: lesson.description || "",
             duration: Number(lesson.duration) || 60,
-            resourceFiles: lesson.resources ?
-              lesson.resources.split(',').map(r => r.trim()) :
+            resourceFiles: lesson.resources ? 
+              (typeof lesson.resources === 'string' ? 
+                lesson.resources.split(',').map(r => r.trim()) : 
+                Array.isArray(lesson.resources) ? lesson.resources : 
+                [lesson.resources]) :
               undefined
           })),
 
