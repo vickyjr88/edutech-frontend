@@ -6,8 +6,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
-import { IntercomProvider } from "@/components/support";
-import { intercomConfig } from "@/components/support/IntercomConfig";
+// import { IntercomProvider } from "@/components/support";
+// import { intercomConfig } from "@/components/support/IntercomConfig";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
@@ -62,10 +62,6 @@ const App = () => {
       <QueryClientProvider client={queryClient}>
         <BrowserRouter>
           <AuthProvider>
-            <IntercomProvider 
-              config={intercomConfig}
-              autoboot={true}
-            >
               <TooltipProvider>
               <Routes>
                 <Route path="/" element={<Index />} />
@@ -252,7 +248,6 @@ const App = () => {
                 <Toaster />
                 <Sonner />
               </TooltipProvider>
-            </IntercomProvider>
           </AuthProvider>
         </BrowserRouter>
       </QueryClientProvider>
