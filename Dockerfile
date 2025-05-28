@@ -1,4 +1,4 @@
-FROM node:20-alpine AS build
+FROM node:20-alpine
 
 WORKDIR /app
 
@@ -9,11 +9,11 @@ ARG PORT
 ARG VITE_INTERCOM_APP_ID
 # Add other environment variables as needed
 
-# Set environment variables for build
+# Set environment variables
 ENV VITE_API_URL=${VITE_API_URL}
 ENV VITE_APP_ENV=${VITE_APP_ENV}
 ENV VITE_INTERCOM_APP_ID=${VITE_INTERCOM_APP_ID}
-ENV PORT=${PORT}
+ENV PORT=${PORT:-8085}
 # Set other environment variables as needed
 
 # Copy package.json and lockfile
@@ -29,24 +29,8 @@ COPY . .
 # Build the app with environment variables
 RUN npm run build
 
-# Production image
-FROM nginx:alpine
-
-# Copy built assets from build stage
-COPY --from=build /app/dist /usr/share/nginx/html
-
-# Copy nginx configuration
-COPY docker/nginx.conf /etc/nginx/conf.d/default.conf.template
-
-# Use the PORT environment variable
-ENV PORT=${PORT:-8085}
-
 # Expose the port
 EXPOSE ${PORT}
 
-# Setup entrypoint script to substitute environment variables
-COPY docker-entrypoint.sh /
-RUN chmod +x /docker-entrypoint.sh
-
-ENTRYPOINT ["/docker-entrypoint.sh"]
-CMD ["nginx", "-g", "daemon off;"]
+# Start the Vite preview server
+CMD ["npm", "run", "preview", "--", "--host", "0.0.0.0"]
