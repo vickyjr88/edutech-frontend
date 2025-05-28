@@ -5,6 +5,7 @@ env:
     VITE_API_URL: "production/frontend:VITE_API_URL"
     VITE_APP_ENV: "production/frontend:VITE_APP_ENV"
     PORT: "production/frontend:PORT"
+    VITE_INTERCOM_APP_ID: "production/frontend:VITE_INTERCOM_APP_ID"
 phases:
   pre_build:
     commands:
@@ -28,6 +29,7 @@ phases:
       - |
         docker build \
           --build-arg VITE_API_URL=$VITE_API_URL \
+          --build-arg VITE_INTERCOM_APP_ID=$VITE_INTERCOM_APP_ID \
           --build-arg VITE_APP_ENV=$VITE_APP_ENV \
           --build-arg PORT=$PORT \
           -t $REPOSITORY_URI:$IMAGE_TAG .

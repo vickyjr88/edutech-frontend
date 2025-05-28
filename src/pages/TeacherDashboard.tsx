@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Home, BookOpen, Users, Calendar, User, Settings, LogOut, Edit, Phone, MapPin, Award, CheckCircle2, CircleDashed, Video, PlusCircle, Star, UserPlus, BookText, School, UsersRound, UserRound, ChevronLeft, Loader2, DollarSign, FileText, Badge, MessageCircle } from "lucide-react";
+import { useIntercom } from "@/components/support";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import TeacherProfileForm from "@/components/teacher/TeacherProfileForm";
@@ -59,6 +60,7 @@ const TeacherDashboard = () => {
   const location = useLocation();
   const { toast } = useToast();
   const { user, signOut } = useAuth();
+  const { show } = useIntercom();
   
   // Parse the active tab from the URL
   const getTabFromPath = () => {
@@ -1571,7 +1573,7 @@ const TeacherDashboard = () => {
                       </CardContent>
                     </Card>
                     
-                    <Card className="bg-gradient-to-br from-kidato-purple-50 to-kidato-purple-100 border-none hover:shadow-md transition-shadow">
+                    <Card className="bg-gradient-to-br from-kidato-purple-50 to-kidato-purple-100 border-none hover:shadow-md transition-shadow hidden">
                       <CardContent className="pt-6">
                         <div className="flex items-start gap-4">
                           <div className="h-12 w-12 rounded-full bg-kidato-purple flex items-center justify-center">
@@ -1604,7 +1606,11 @@ const TeacherDashboard = () => {
                           <div>
                             <h3 className="font-medium text-gray-900">Help & Support</h3>
                             <p className="text-sm text-gray-600 mt-1">Get assistance with your account</p>
-                            <Button variant="link" className="text-kidato-orange p-0 mt-2">
+                            <Button 
+                              variant="link" 
+                              className="text-kidato-orange p-0 mt-2"
+                              onClick={() => show()}
+                            >
                               Contact Support
                             </Button>
                           </div>

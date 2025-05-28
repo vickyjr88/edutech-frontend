@@ -6,11 +6,13 @@ WORKDIR /app
 ARG VITE_API_URL
 ARG VITE_APP_ENV
 ARG PORT
+ARG VITE_INTERCOM_APP_ID
 # Add other environment variables as needed
 
 # Set environment variables for build
 ENV VITE_API_URL=${VITE_API_URL}
 ENV VITE_APP_ENV=${VITE_APP_ENV}
+ENV VITE_INTERCOM_APP_ID=${VITE_INTERCOM_APP_ID}
 ENV PORT=${PORT}
 # Set other environment variables as needed
 
