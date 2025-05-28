@@ -651,18 +651,19 @@ const BasicInformationTab = ({ form, onNextTab }: BasicInformationTabProps) => {
         />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        <FormField
-          control={form.control}
-          name="curriculum"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Curriculum</FormLabel>
-              <Select 
-                onValueChange={field.onChange} 
-                value={field.value || ""}
-                disabled={loadingCurricula}
-              >
+      {classType === "academic" && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <FormField
+            control={form.control}
+            name="curriculum"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Curriculum</FormLabel>
+                <Select 
+                  onValueChange={field.onChange} 
+                  value={field.value || ""}
+                  disabled={loadingCurricula}
+                >
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Select curriculum" />
@@ -748,83 +749,113 @@ const BasicInformationTab = ({ form, onNextTab }: BasicInformationTabProps) => {
           )}
         />
         
-        <FormField
-          control={form.control}
-          name="subject"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Subject</FormLabel>
-              <Select 
-                onValueChange={field.onChange} 
-                value={field.value || ""}
-                disabled={!selectedCurriculum || !selectedLevel || loadingSubjects}
-              >
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder={
-                      !selectedCurriculum 
-                        ? "Select curriculum first" 
-                        : !selectedLevel 
-                          ? "Select level first" 
-                          : loadingSubjects 
-                            ? "Loading subjects..." 
-                            : subjects.length === 0 
-                              ? "No subjects available" 
-                              : "Select subject"
-                    } />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {loadingSubjects ? (
-                    <div key="loading-subjects" className="flex items-center justify-center p-2">
-                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                      <span>Loading subjects...</span>
-                    </div>
-                  ) : subjects.length === 0 ? (
-                    <div key="no-subjects" className="p-2 text-sm text-gray-500">
-                      {!selectedCurriculum 
-                        ? "Select a curriculum first" 
-                        : !selectedLevel 
-                          ? "Select a level first" 
-                          : "No subjects available for this level"}
-                    </div>
-                  ) : (
-                    <>
-                      {selectedCurriculum && selectedLevel && (
-                        <div key="subjects-header" className="px-2 py-1.5 text-xs text-gray-500 border-b">
-                          {curriculaMap[selectedCurriculum]?.name || selectedCurriculum}: {curriculumLevelMap[selectedLevel]?.name || selectedLevel}
-                        </div>
-                      )}
-                      {subjects.map((subject) => (
-                        <SelectItem key={subject.id} value={subject.id}>
-                          {subject.name}
-                        </SelectItem>
-                      ))}
-                      {subjects.length > 0 && subjects.length < 5 && (
-                        <div key="subjects-note" className="p-2 text-xs text-amber-500 flex items-start border-t">
-                          <AlertTriangle className="h-3 w-3 mr-1 mt-0.5 flex-shrink-0" />
-                          <span>Limited subjects available - select the closest match</span>
-                        </div>
-                      )}
-                    </>
-                  )}
-                </SelectContent>
-              </Select>
-              <FormDescription>
-                Select the subject for this class.
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        </div>
+      )}
 
+      {/* Subject field - different for academic vs afterschool */}
+      <div className="grid grid-cols-1 gap-4">
+        {classType === "academic" ? (
+          <FormField
+            control={form.control}
+            name="subject"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Subject</FormLabel>
+                <Select 
+                  onValueChange={field.onChange} 
+                  value={field.value || ""}
+                  disabled={!selectedCurriculum || !selectedLevel || loadingSubjects}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder={
+                        !selectedCurriculum 
+                          ? "Select curriculum first" 
+                          : !selectedLevel 
+                            ? "Select level first" 
+                            : loadingSubjects 
+                              ? "Loading subjects..." 
+                              : subjects.length === 0 
+                                ? "No subjects available" 
+                                : "Select subject"
+                      } />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {loadingSubjects ? (
+                      <div key="loading-subjects" className="flex items-center justify-center p-2">
+                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                        <span>Loading subjects...</span>
+                      </div>
+                    ) : subjects.length === 0 ? (
+                      <div key="no-subjects" className="p-2 text-sm text-gray-500">
+                        {!selectedCurriculum 
+                          ? "Select a curriculum first" 
+                          : !selectedLevel 
+                            ? "Select a level first" 
+                            : "No subjects available for this level"}
+                      </div>
+                    ) : (
+                      <>
+                        {selectedCurriculum && selectedLevel && (
+                          <div key="subjects-header" className="px-2 py-1.5 text-xs text-gray-500 border-b">
+                            {curriculaMap[selectedCurriculum]?.name || selectedCurriculum}: {curriculumLevelMap[selectedLevel]?.name || selectedLevel}
+                          </div>
+                        )}
+                        {subjects.map((subject) => (
+                          <SelectItem key={subject.id} value={subject.id}>
+                            {subject.name}
+                          </SelectItem>
+                        ))}
+                        {subjects.length > 0 && subjects.length < 5 && (
+                          <div key="subjects-note" className="p-2 text-xs text-amber-500 flex items-start border-t">
+                            <AlertTriangle className="h-3 w-3 mr-1 mt-0.5 flex-shrink-0" />
+                            <span>Limited subjects available - select the closest match</span>
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </SelectContent>
+                </Select>
+                <FormDescription>
+                  Select the subject for this class.
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        ) : (
+          <FormField
+            control={form.control}
+            name="subject"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Subject</FormLabel>
+                <FormControl>
+                  <Input 
+                    placeholder="Enter subject name (e.g., Piano, Coding, Art, etc.)"
+                    {...field}
+                  />
+                </FormControl>
+                <FormDescription>
+                  Enter the subject name for this after-school class.
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
+      </div>
+
+      {/* Class Title */}
+      <div className="grid grid-cols-1 gap-4">
         <FormField
           control={form.control}
           name="title"
           render={({ field }) => (
-            <FormItem className="lg:col-span-3">
+            <FormItem>
               <FormLabel>Class Title</FormLabel>
-              <Input placeholder="Enter a catchy class title" {...field} />
+              <Input placeholder="Physics – Year 10" {...field} />
               <FormDescription>
                 Enter a descriptive title for the class.
               </FormDescription>
@@ -832,7 +863,10 @@ const BasicInformationTab = ({ form, onNextTab }: BasicInformationTabProps) => {
             </FormItem>
           )}
         />
+      </div>
 
+      {/* Grade Level / Age Range based on class type */}
+      <div className="grid grid-cols-1 gap-4">
         {classType === "academic" ? (
           <FormField
             control={form.control}
@@ -934,46 +968,8 @@ const BasicInformationTab = ({ form, onNextTab }: BasicInformationTabProps) => {
             control={form.control}
             name="ageRange"
             render={({ field }) => {
-              // Parse age range from selected curriculum level
-              const selectedLevel = curriculumLevelMap[selectedCurriculum ? form.watch("curriculumLevel") : ""];
-              const ageRangeStr = selectedLevel?.ageRange || "";
-              
-              // Parse age range into an array of standard age ranges
-              const getAgeRangesFromRange = (range: string): string[] => {
-                // Check for common patterns like "4-5", "6-8", "9-11", etc.
-                const rangeMatch = range.match(/(\d+)(?:\s*-\s*(\d+))?/);
-                
-                if (rangeMatch) {
-                  const start = parseInt(rangeMatch[1]);
-                  const end = rangeMatch[2] ? parseInt(rangeMatch[2]) : start;
-                  
-                  if (!isNaN(start) && !isNaN(end)) {
-                    // Map the custom range to predefined age ranges
-                    const standardRanges = [];
-                    if (start <= 5 && end >= 3) standardRanges.push("age3-5");
-                    if (start <= 8 && end >= 6) standardRanges.push("age6-8");
-                    if (start <= 11 && end >= 9) standardRanges.push("age9-11");
-                    if (start <= 14 && end >= 12) standardRanges.push("age12-14");
-                    if (start <= 18 && end >= 15) standardRanges.push("age15-18");
-                    
-                    if (standardRanges.length > 0) {
-                      return standardRanges;
-                    }
-                  }
-                }
-                
-                // Fallback for when parsing fails
-                return ["age3-5", "age6-8", "age9-11", "age12-14", "age15-18"];
-              };
-              
-              const relevantAgeRanges = getAgeRangesFromRange(ageRangeStr);
-              
-              // Set a default value if current value is not in the relevant age ranges or is empty
-              useEffect(() => {
-                if (selectedLevel && (!field.value || !relevantAgeRanges.includes(field.value))) {
-                  form.setValue("ageRange", relevantAgeRanges[0] || "age3-5");
-                }
-              }, [relevantAgeRanges, field.value, selectedLevel]);
+              // For afterschool classes, we provide all age ranges without curriculum dependency
+              const allAgeRanges = ["age3-5", "age6-8", "age9-11", "age12-14", "age15-18"];
               
               // Map for display values
               const ageRangeDisplay = {
@@ -990,40 +986,22 @@ const BasicInformationTab = ({ form, onNextTab }: BasicInformationTabProps) => {
                   <Select 
                     onValueChange={field.onChange} 
                     value={field.value || ""}
-                    disabled={!selectedLevel}
                   >
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder={selectedLevel ? "Select age range" : "Select curriculum level first"} />
+                        <SelectValue placeholder="Select age range" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {selectedLevel ? (
-                        relevantAgeRanges.length > 0 ? (
-                          relevantAgeRanges.map((ageRange) => (
-                            <SelectItem key={ageRange} value={ageRange}>
-                              {ageRangeDisplay[ageRange as keyof typeof ageRangeDisplay]}
-                            </SelectItem>
-                          ))
-                        ) : (
-                          <div className="p-2 text-sm text-gray-500">
-                            No age ranges available for this level
-                          </div>
-                        )
-                      ) : (
-                        <div className="p-2 text-sm text-gray-500">
-                          Select a curriculum level first
-                        </div>
-                      )}
+                      {allAgeRanges.map((ageRange) => (
+                        <SelectItem key={ageRange} value={ageRange}>
+                          {ageRangeDisplay[ageRange as keyof typeof ageRangeDisplay]}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                   <FormDescription>
                     Select the age range for this after-school class.
-                    {selectedLevel && (
-                      <span className="text-xs text-gray-500 block mt-1">
-                        Range: {selectedLevel.ageRange || "Not specified"}
-                      </span>
-                    )}
                   </FormDescription>
                   <FormMessage />
                 </FormItem>

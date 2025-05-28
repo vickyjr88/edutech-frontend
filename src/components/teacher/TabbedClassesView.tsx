@@ -15,7 +15,8 @@ import {
   Eye,
   Users,
   DollarSign,
-  Calendar
+  Calendar,
+  Trash2
 } from 'lucide-react';
 import RecommendedClasses from './RecommendedClasses';
 import { ClassRecommendation } from '@/integrations/api/services/teacher.service';
@@ -27,6 +28,7 @@ interface TabbedClassesViewProps {
   onCreateClass: () => void;
   onViewClass: (classItem: any) => void;
   onSetupClassSettings: () => void;
+  onDeleteClass?: (classItem: any) => void;
   onCreateClassFromRecommendation?: (recommendation: ClassRecommendation) => void;
 }
 
@@ -39,6 +41,7 @@ const TabbedClassesView: React.FC<TabbedClassesViewProps> = ({
   onCreateClass,
   onViewClass,
   onSetupClassSettings,
+  onDeleteClass,
   onCreateClassFromRecommendation
 }) => {
   const [activeClassTab, setActiveClassTab] = useState<ClassStatus>('published');
@@ -194,11 +197,28 @@ const TabbedClassesView: React.FC<TabbedClassesViewProps> = ({
                 {classItem.type === "academic" ? classItem.gradeLevel : classItem.ageRange}
               </span>
             </div>
-            {classItem.status === 'published' && (
-              <Badge variant="secondary" className="bg-kidato-purple-100 text-kidato-purple-dark">
-                Live
-              </Badge>
-            )}
+            <div className="flex items-center gap-2">
+              {/* Delete button for draft classes */}
+              {(classItem.status === 'draft' || (!classItem.status && !classItem.isPublished)) && onDeleteClass && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDeleteClass(classItem);
+                  }}
+                  className="text-red-500 hover:text-red-700 hover:bg-red-50 p-1 h-8 w-8"
+                  title="Delete draft class"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              )}
+              {classItem.status === 'published' && (
+                <Badge variant="secondary" className="bg-kidato-purple-100 text-kidato-purple-dark">
+                  Live
+                </Badge>
+              )}
+            </div>
           </div>
         </CardContent>
       </Card>

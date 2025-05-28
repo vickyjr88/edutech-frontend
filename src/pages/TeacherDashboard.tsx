@@ -448,6 +448,44 @@ const TeacherDashboard = () => {
     }, 100);
   };
 
+  const handleDeleteClass = async (classItem: any) => {
+    const classId = classItem._id || classItem.id;
+    const className = classItem.title;
+    
+    // Confirm deletion
+    if (!confirm(`Are you sure you want to delete "${className}"? This action cannot be undone.`)) {
+      return;
+    }
+    
+    try {
+      const { error } = await classService.delete(classId);
+      
+      if (error) {
+        toast({
+          title: "Error deleting class",
+          description: error.message || "Failed to delete class. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Refresh the classes list
+      await fetchTeacherClasses();
+      
+      toast({
+        title: "Class deleted",
+        description: `"${className}" has been deleted successfully.`,
+      });
+    } catch (error) {
+      console.error('Error deleting class:', error);
+      toast({
+        title: "Error deleting class",
+        description: "Failed to delete class. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const [comprehensiveProfile, setComprehensiveProfile] = useState<any>(null);
   const [isLoadingProfile, setIsLoadingProfile] = useState(false);
 
@@ -1367,7 +1405,20 @@ const TeacherDashboard = () => {
                                 </Button>
                               </div>
                               <div className="space-y-3">
-                                {classes.slice(0, 3).map((classItem: any) => {
+                                {classes
+                                  .sort((a: any, b: any) => {
+                                    // Sort by published status first (published classes first)
+                                    const aPublished = a.isPublished || a.status === 'published';
+                                    const bPublished = b.isPublished || b.status === 'published';
+                                    
+                                    if (aPublished && !bPublished) return -1;
+                                    if (!aPublished && bPublished) return 1;
+                                    
+                                    // If both have same published status, maintain original order
+                                    return 0;
+                                  })
+                                  .slice(0, 3)
+                                  .map((classItem: any) => {
                                   const classId = classItem._id || classItem.id;
                                   const isPublished = classItem.isPublished;
                                   
@@ -1429,6 +1480,19 @@ const TeacherDashboard = () => {
                           )}
                         </CardContent>
                       </Card>
+                      
+                      {/* AI Recommendations Section - Show when teacher has less than 3 published classes */}
+                      {classes.filter((c: any) => c.isPublished || c.status === 'published').length < 3 && (
+                        <div className="mt-6">
+                          <RecommendedClasses 
+                            onCreateClass={(recommendation) => {
+                              // Handle class creation from recommendation
+                              console.log('Creating class from recommendation:', recommendation);
+                              handleCreateClass();
+                            }}
+                          />
+                        </div>
+                      )}
                     </div>
                     
                     {/* Side column */}
@@ -1561,6 +1625,7 @@ const TeacherDashboard = () => {
               onCreateClass={handleCreateClass}
               onViewClass={handleViewClass}
               onSetupClassSettings={handleSetupClassSettings}
+              onDeleteClass={handleDeleteClass}
               onCreateClassFromRecommendation={(recommendation) => {
                 // Navigate to class creation with pre-filled data
                 navigate("/teacher-dashboard/classes?create=true", {

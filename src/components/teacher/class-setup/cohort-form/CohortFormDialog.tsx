@@ -380,35 +380,41 @@ const CohortFormDialog: React.FC<CohortFormDialogProps> = ({
   };
   
   const renderScheduleStep = () => (
-    <div className="mt-0 space-y-4">
-      <h3 className="text-lg font-medium mb-4">Schedule Details</h3>
-      <div className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="cohort-name">Cohort Name <span className="text-red-500">*</span></Label>
+    <div className="mt-0 space-y-8">
+      <h3 className="text-xl font-semibold mb-8 text-gray-900">Schedule Details</h3>
+      <div className="space-y-8">
+        <div className="space-y-4">
+          <Label htmlFor="cohort-name" className="text-base font-medium text-gray-700">
+            Cohort Name <span className="text-red-500">*</span>
+          </Label>
           <Input
             id="cohort-name"
             value={formData.name}
             onChange={(e) => updateFormField("name", e.target.value)}
             placeholder="Enter cohort name"
-            className={errors.name ? "border-red-500" : ""}
+            className={cn("h-12 text-base", errors.name ? "border-red-500" : "")}
           />
-          {errors.name && <p className="text-red-500 text-xs">{errors.name}</p>}
+          {errors.name && <p className="text-red-500 text-sm mt-2">{errors.name}</p>}
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label>Start Date <span className="text-red-500">*</span></Label>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+          <div className="space-y-4">
+            <div className="flex items-center space-x-2 h-6">
+              <Label className="text-base font-medium text-gray-700">
+                Start Date <span className="text-red-500">*</span>
+              </Label>
+            </div>
             <Popover>
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
                   className={cn(
-                    "w-full justify-start text-left",
+                    "w-full justify-start text-left h-12 text-base",
                     !formData.startDate && "text-muted-foreground",
                     errors.startDate && "border-red-500"
                   )}
                 >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  <CalendarIcon className="mr-3 h-5 w-5" />
                   {formData.startDate ? (
                     format(formData.startDate, "PPP")
                   ) : (
@@ -426,20 +432,22 @@ const CohortFormDialog: React.FC<CohortFormDialogProps> = ({
                 />
               </PopoverContent>
             </Popover>
-            {errors.startDate && <p className="text-red-500 text-xs">{errors.startDate}</p>}
+            {errors.startDate && <p className="text-red-500 text-sm mt-2">{errors.startDate}</p>}
           </div>
           
-          <div className="space-y-2">
-            <div className="flex items-center space-x-2">
-              <Label>End Date (Auto-calculated)</Label>
+          <div className="space-y-4">
+            <div className="flex items-center space-x-2 h-6">
+              <Label className="text-base font-medium text-gray-700">
+                End Date (Auto-calculated)
+              </Label>
               <InfoIcon className="h-4 w-4 text-blue-500" />
             </div>
             <Button
               variant="outline"
-              className="w-full justify-start text-left"
+              className="w-full justify-start text-left h-12 text-base"
               disabled
             >
-              <CalendarIcon className="mr-2 h-4 w-4" />
+              <CalendarIcon className="mr-3 h-5 w-5" />
               {formData.endDate ? (
                 format(formData.endDate, "PPP")
               ) : (
@@ -449,63 +457,72 @@ const CohortFormDialog: React.FC<CohortFormDialogProps> = ({
           </div>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="start-time">Start Time <span className="text-red-500">*</span></Label>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+          <div className="space-y-4">
+            <Label htmlFor="start-time" className="text-base font-medium text-gray-700">
+              Start Time <span className="text-red-500">*</span>
+            </Label>
             <Input
               id="start-time"
               type="time"
               value={formData.startTime}
               onChange={(e) => updateFormField("startTime", e.target.value)}
-              className={errors.startTime ? "border-red-500" : ""}
+              className={cn("h-12 text-base", errors.startTime ? "border-red-500" : "")}
             />
-            {errors.startTime && <p className="text-red-500 text-xs">{errors.startTime}</p>}
+            {errors.startTime && <p className="text-red-500 text-sm mt-2">{errors.startTime}</p>}
           </div>
           
-          <div className="space-y-2">
-            <Label htmlFor="end-time">End Time <span className="text-red-500">*</span></Label>
+          <div className="space-y-4">
+            <Label htmlFor="end-time" className="text-base font-medium text-gray-700">
+              End Time <span className="text-red-500">*</span>
+            </Label>
             <Input
               id="end-time"
               type="time"
               value={formData.endTime}
               onChange={(e) => updateFormField("endTime", e.target.value)}
-              className={errors.endTime ? "border-red-500" : ""}
+              className={cn("h-12 text-base", errors.endTime ? "border-red-500" : "")}
             />
-            {errors.endTime && <p className="text-red-500 text-xs">{errors.endTime}</p>}
+            {errors.endTime && <p className="text-red-500 text-sm mt-2">{errors.endTime}</p>}
           </div>
         </div>
         
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <Label>Repeat Pattern <span className="text-red-500">*</span></Label>
+        <div className="space-y-6 bg-gray-50 p-6 rounded-lg">
+          <div className="space-y-4">
+            <Label className="text-base font-medium text-gray-700">
+              Repeat Pattern <span className="text-red-500">*</span>
+            </Label>
             <RadioGroup
               value={formData.repeatSchedule.pattern}
               onValueChange={(value) => updateRepeatScheduleField("pattern", value)}
+              className="space-y-3"
             >
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-3 p-3 border rounded-lg bg-white">
                 <RadioGroupItem value="weekly" id="weekly" />
-                <Label htmlFor="weekly">Weekly</Label>
+                <Label htmlFor="weekly" className="text-base cursor-pointer">Weekly</Label>
               </div>
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-3 p-3 border rounded-lg bg-white">
                 <RadioGroupItem value="twice-weekly" id="twice-weekly" />
-                <Label htmlFor="twice-weekly">Twice Weekly</Label>
+                <Label htmlFor="twice-weekly" className="text-base cursor-pointer">Twice Weekly</Label>
               </div>
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-3 p-3 border rounded-lg bg-white">
                 <RadioGroupItem value="custom" id="custom" />
-                <Label htmlFor="custom">Custom</Label>
+                <Label htmlFor="custom" className="text-base cursor-pointer">Custom</Label>
               </div>
             </RadioGroup>
-            {errors.repeatPattern && <p className="text-red-500 text-xs">{errors.repeatPattern}</p>}
+            {errors.repeatPattern && <p className="text-red-500 text-sm mt-2">{errors.repeatPattern}</p>}
           </div>
           
           {formData.repeatSchedule.pattern === "custom" && (
-            <div className="space-y-2">
-              <Label htmlFor="repeat-every">Repeat Every (weeks)</Label>
+            <div className="space-y-4">
+              <Label htmlFor="repeat-every" className="text-base font-medium text-gray-700">
+                Repeat Every (weeks)
+              </Label>
               <Select
                 value={formData.repeatSchedule.repeatEvery.toString()}
                 onValueChange={(value) => updateRepeatScheduleField("repeatEvery", parseInt(value))}
               >
-                <SelectTrigger>
+                <SelectTrigger className="h-12 text-base">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -515,54 +532,103 @@ const CohortFormDialog: React.FC<CohortFormDialogProps> = ({
                   <SelectItem value="4">4 weeks</SelectItem>
                 </SelectContent>
               </Select>
-              {errors.repeatEvery && <p className="text-red-500 text-xs">{errors.repeatEvery}</p>}
+              {errors.repeatEvery && <p className="text-red-500 text-sm mt-2">{errors.repeatEvery}</p>}
             </div>
           )}
           
-          <div className="space-y-2">
-            <Label>Days of Week <span className="text-red-500">*</span></Label>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-              {daysOfWeek.map((day) => (
-                <div key={day.value} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={day.value}
-                    checked={formData.repeatSchedule.daysOfWeek.includes(day.value)}
-                    onCheckedChange={() => toggleDayOfWeek(day.value)}
-                  />
-                  <Label htmlFor={day.value} className="text-sm">{day.label}</Label>
-                </div>
-              ))}
+          <div className="space-y-6">
+            <Label className="text-base font-medium text-gray-700">
+              Days of Week <span className="text-red-500">*</span>
+            </Label>
+            <div className="space-y-3">
+              {daysOfWeek.map((day) => {
+                const isSelected = formData.repeatSchedule.daysOfWeek.includes(day.value);
+                return (
+                  <div 
+                    key={day.value} 
+                    className={cn(
+                      "relative cursor-pointer transition-all duration-200 rounded-lg border-2 p-4 hover:shadow-sm",
+                      isSelected 
+                        ? "border-blue-500 bg-blue-50 shadow-sm" 
+                        : "border-gray-200 bg-white hover:border-gray-300"
+                    )}
+                    onClick={() => toggleDayOfWeek(day.value)}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-4">
+                        <div className={cn(
+                          "w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors",
+                          isSelected 
+                            ? "border-blue-500 bg-blue-500" 
+                            : "border-gray-300"
+                        )}>
+                          {isSelected && (
+                            <Check className="w-4 h-4 text-white" />
+                          )}
+                        </div>
+                        <Label 
+                          htmlFor={day.value} 
+                          className={cn(
+                            "text-base font-medium cursor-pointer transition-colors",
+                            isSelected ? "text-blue-700" : "text-gray-700"
+                          )}
+                        >
+                          {day.label}
+                        </Label>
+                      </div>
+                      {isSelected && (
+                        <div className="text-blue-500 text-sm font-medium">
+                          Selected
+                        </div>
+                      )}
+                    </div>
+                    <input
+                      type="checkbox"
+                      id={day.value}
+                      checked={isSelected}
+                      onChange={() => toggleDayOfWeek(day.value)}
+                      className="sr-only"
+                    />
+                  </div>
+                );
+              })}
             </div>
-            {errors.daysOfWeek && <p className="text-red-500 text-xs">{errors.daysOfWeek}</p>}
+            {errors.daysOfWeek && <p className="text-red-500 text-sm mt-2">{errors.daysOfWeek}</p>}
           </div>
         </div>
         
-        <div className="space-y-2">
-          <Label htmlFor="cohort-active">Cohort Status</Label>
-          <div className="flex items-center space-x-2">
-            <Switch
-              id="cohort-active"
-              checked={formData.isActive}
-              onCheckedChange={(checked) => updateFormField("isActive", checked)}
-            />
-            <span className={`text-sm ${formData.isActive ? 'text-green-600' : 'text-gray-500'}`}>
-              {formData.isActive ? 'Active' : 'Inactive'}
-            </span>
+        <div className="space-y-4 bg-blue-50 p-6 rounded-lg border border-blue-100">
+          <Label htmlFor="cohort-active" className="text-base font-medium text-gray-700">
+            Cohort Status
+          </Label>
+          <div className="flex items-center justify-between">
+            <div className="space-y-1">
+              <div className="flex items-center space-x-3">
+                <Switch
+                  id="cohort-active"
+                  checked={formData.isActive}
+                  onCheckedChange={(checked) => updateFormField("isActive", checked)}
+                />
+                <span className={`text-base font-medium ${formData.isActive ? 'text-green-600' : 'text-gray-500'}`}>
+                  {formData.isActive ? 'Active' : 'Inactive'}
+                </span>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Inactive cohorts won't accept new enrollments
+              </p>
+            </div>
           </div>
-          <p className="text-xs text-muted-foreground">
-            Inactive cohorts won't accept new enrollments
-          </p>
         </div>
       </div>
     </div>
   );
 
   const renderEnrollmentStep = () => (
-    <div className="mt-0 space-y-4">
-      <h3 className="text-lg font-medium mb-4">Enrollment Settings</h3>
-      <div className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
+    <div className="mt-0 space-y-6">
+      <h3 className="text-lg font-medium mb-6">Enrollment Settings</h3>
+      <div className="space-y-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div className="space-y-3">
             <Label htmlFor="min-students">Minimum Students <span className="text-red-500">*</span></Label>
             <Input
               id="min-students"
@@ -578,7 +644,7 @@ const CohortFormDialog: React.FC<CohortFormDialogProps> = ({
             {errors.minStudents && <p className="text-red-500 text-xs">{errors.minStudents}</p>}
           </div>
           
-          <div className="space-y-2">
+          <div className="space-y-3">
             <Label htmlFor="max-students">Maximum Students <span className="text-red-500">*</span></Label>
             <Input
               id="max-students"
@@ -645,11 +711,11 @@ const CohortFormDialog: React.FC<CohortFormDialogProps> = ({
   );
 
   const renderPricingStep = () => (
-    <div className="mt-0 space-y-4">
-      <h3 className="text-lg font-medium mb-4">Pricing Information</h3>
-      <div className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
+    <div className="mt-0 space-y-6">
+      <h3 className="text-lg font-medium mb-6">Pricing Information</h3>
+      <div className="space-y-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div className="space-y-3">
             <Label htmlFor="cohort-price">Price for Entire Class</Label>
             <div className="relative">
               <span className="absolute left-3 top-2.5 text-gray-500">$</span>
@@ -670,7 +736,7 @@ const CohortFormDialog: React.FC<CohortFormDialogProps> = ({
             {errors.price && <p className="text-red-500 text-xs">{errors.price}</p>}
           </div>
           
-          <div className="space-y-2">
+          <div className="space-y-3">
             <Label htmlFor="cohort-discount">Discount (%)</Label>
             <Input
               id="cohort-discount"
@@ -713,7 +779,7 @@ const CohortFormDialog: React.FC<CohortFormDialogProps> = ({
       </DialogTrigger>
       
       <DialogContent
-        className="max-w-3xl max-h-[90vh] overflow-hidden flex flex-col"
+        className="max-w-5xl max-h-[90vh] overflow-hidden flex flex-col"
         onEscapeKeyDown={(e) => {
           // Prevent escape from closing if dirty
           if (isDirty) {
@@ -770,7 +836,8 @@ const CohortFormDialog: React.FC<CohortFormDialogProps> = ({
         </div>
         
         <div className="flex-grow overflow-hidden py-4">
-          <ScrollArea className="h-full px-6">
+          <ScrollArea className="h-full">
+            <div className="px-8 py-2">
             <AnimatePresence mode="wait">
               <motion.div
                 key={currentStep}
@@ -784,6 +851,7 @@ const CohortFormDialog: React.FC<CohortFormDialogProps> = ({
                 {currentStep === 2 && renderPricingStep()}
               </motion.div>
             </AnimatePresence>
+            </div>
           </ScrollArea>
         </div>
         

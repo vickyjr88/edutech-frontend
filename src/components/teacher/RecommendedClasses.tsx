@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { teacherService, ClassRecommendation } from '@/integrations/api/services/teacher.service';
 import { useToast } from '@/hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
 
 interface RecommendedClassesProps {
   onCreateClass?: (recommendation: ClassRecommendation) => void;
@@ -108,9 +109,44 @@ const RecommendedClasses: React.FC<RecommendedClassesProps> = ({ onCreateClass }
     }
   };
 
+  const navigate = useNavigate();
+
   const handleAdopt = async (recommendation: ClassRecommendation) => {
     try {
-      // For now, we'll just dismiss since class creation is handled elsewhere
+      console.log('Adopting recommendation:', recommendation._id);
+      
+      // Call the adoptRecommendation API
+      // Note: The API expects a classId, but since we're adopting to create a new class,
+      // we'll pass a placeholder or the recommendation ID
+      const { data, error } = await teacherService.adoptRecommendation(
+        recommendation._id, 
+        recommendation._id // Using recommendation ID as placeholder classId
+      );
+      
+      if (error) {
+        console.error('API error adopting recommendation:', error);
+        toast({
+          title: "Error adopting recommendation",
+          description: error.message || "Please try again later.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      console.log('Recommendation adopted successfully:', data);
+      console.log('Full API response structure:', JSON.stringify(data, null, 2));
+      
+      // Navigate to class setup with the returned class ID
+      // Try different possible paths for the class ID
+      const classId = data?.data?.createdClass?._id || 
+                     data?.data?._id || 
+                     data?.createdClass?._id || 
+                     data?._id || 
+                     recommendation._id;
+      
+      console.log('Extracted classId for navigation:', classId);
+      
+      // Call the onCreateClass callback to handle class creation flow
       if (onCreateClass) {
         onCreateClass(recommendation);
       }
@@ -120,8 +156,23 @@ const RecommendedClasses: React.FC<RecommendedClassesProps> = ({ onCreateClass }
       
       toast({
         title: "Class recommendation adopted!",
-        description: `"${recommendation.title}" has been added to your class creation flow.`,
+        description: `"${recommendation.title}" has been created in draft and ready for editing/publishing.`,
       });
+      
+      // Navigate after all other operations are complete
+      console.log('About to navigate to:', `/teacher-class-setup/${classId}`);
+      
+      // Use setTimeout to ensure all React state updates are complete before navigation
+      setTimeout(() => {
+        try {
+          navigate(`/teacher-class-setup/${classId}`);
+          console.log('Navigate function called successfully');
+        } catch (error) {
+          console.error('Error during navigation:', error);
+          // Fallback to window.location.href
+          window.location.href = `/teacher-class-setup/${classId}`;
+        }
+      }, 100);
     } catch (error) {
       console.error('Error adopting recommendation:', error);
       toast({
@@ -326,26 +377,29 @@ const RecommendedClasses: React.FC<RecommendedClassesProps> = ({ onCreateClass }
               </div>
             ))}
             
-            <div className="text-center pt-4">
-              <Button 
-                variant="outline"
-                onClick={generateRecommendations}
-                disabled={isGenerating}
-                className="border-kidato-orange-200 hover:bg-kidato-orange-50 text-kidato-orange-dark"
-              >
-                {isGenerating ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Generating...
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="mr-2 h-4 w-4" />
-                    Get More Recommendations
-                  </>
-                )}
-              </Button>
-            </div>
+            {/* Only show 'Get More Recommendations' button if there are 3 or fewer recommendations */}
+            {recommendations.length <= 3 && (
+              <div className="text-center pt-4">
+                <Button 
+                  variant="outline"
+                  onClick={generateRecommendations}
+                  disabled={isGenerating}
+                  className="border-kidato-orange-200 hover:bg-kidato-orange-50 text-kidato-orange-dark"
+                >
+                  {isGenerating ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="mr-2 h-4 w-4" />
+                      Get More Recommendations
+                    </>
+                  )}
+                </Button>
+              </div>
+            )}
           </div>
         )}
       </CardContent>

@@ -27,7 +27,7 @@ const ProfileProgressIndicator = () => {
   
   // Get the right icon for each step
   const getStepIcon = (step: string, isCompleted: boolean) => {
-    const iconClass = isCompleted ? "text-emerald-500" : "text-gray-500";
+    const iconClass = isCompleted ? "text-kidato-purple-500" : "text-gray-500";
     
     switch(step) {
       case 'personal':
@@ -60,23 +60,23 @@ const ProfileProgressIndicator = () => {
       <div className="mb-6 bg-white p-5 rounded-lg border border-gray-200 shadow-sm">
         <div className="flex justify-between items-center mb-3">
           <span className="font-semibold text-gray-800">Profile Completion</span>
-          <span className="font-medium text-emerald-600">{Math.round(overallProgress)}%</span>
+          <span className="font-medium text-kidato-purple-600">{Math.round(overallProgress)}%</span>
         </div>
         <div className="h-2.5 w-full bg-gray-100 rounded-full overflow-hidden">
           <div 
-            className="h-full bg-emerald-500 rounded-full transition-all duration-500 ease-out"
+            className="h-full bg-gradient-to-r from-kidato-orange-500 to-kidato-purple-500 rounded-full transition-all duration-500 ease-out"
             style={{ width: `${overallProgress}%` }}
           ></div>
         </div>
         <p className="text-sm text-gray-600 mt-2 flex items-center">
           {overallProgress >= 70 ? (
             <>
-              <CheckCircle className="h-4 w-4 mr-1 text-emerald-500" />
+              <CheckCircle className="h-4 w-4 mr-1 text-kidato-purple-500" />
               Almost there! Complete the remaining steps to finish your profile.
             </>
           ) : (
             <>
-              <span className="h-4 w-4 mr-1 rounded-full bg-blue-100 border border-blue-300" />
+              <span className="h-4 w-4 mr-1 rounded-full bg-kidato-orange-100 border border-kidato-orange-300" />
               {Math.round(overallProgress)}% complete. Keep going!
             </>
           )}
@@ -99,9 +99,9 @@ const ProfileProgressIndicator = () => {
               onClick={() => setCurrentStep(step)}
               className={cn(
                 "rounded-lg border transition-all cursor-pointer shadow-sm hover:shadow",
-                isActive && "bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200",
-                isCompleted && !isActive && "bg-white border-emerald-200",
-                isPriority && !isActive && "bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200",
+                isActive && "bg-gradient-to-r from-kidato-orange-50 to-kidato-purple-50 border-kidato-orange-200",
+                isCompleted && !isActive && "bg-white border-kidato-purple-200",
+                isPriority && !isActive && "bg-gradient-to-r from-kidato-orange-50 to-kidato-purple-50 border-kidato-orange-200",
                 !isActive && !isCompleted && !isPriority && "bg-white border-gray-200"
               )}
             >
@@ -109,13 +109,13 @@ const ProfileProgressIndicator = () => {
                 {/* Step icon */}
                 <div className={cn(
                   "flex-shrink-0 mr-4 rounded-full p-2",
-                  isActive && "bg-blue-50",
-                  isCompleted && !isActive && "bg-emerald-50",
-                  isPriority && !isActive && "bg-blue-50",
+                  isActive && "bg-kidato-purple-50",
+                  isCompleted && !isActive && "bg-kidato-purple-50",
+                  isPriority && !isActive && "bg-kidato-orange-50",
                   !isActive && !isCompleted && !isPriority && "bg-gray-50"
                 )}>
                   {isCompleted ? 
-                    <CheckCircle className="w-7 h-7 text-emerald-500" /> : 
+                    <CheckCircle className="w-7 h-7 text-kidato-purple-500" /> : 
                     getStepIcon(step, isCompleted)
                   }
                 </div>
@@ -126,9 +126,9 @@ const ProfileProgressIndicator = () => {
                     <div>
                       <h3 className={cn(
                         "font-semibold",
-                        isActive && "text-blue-700",
+                        isActive && "text-kidato-purple-700",
                         isCompleted && !isActive && "text-gray-800",
-                        isPriority && !isActive && "text-blue-700",
+                        isPriority && !isActive && "text-kidato-orange-700",
                         !isActive && !isCompleted && !isPriority && "text-gray-800"
                       )}>
                         Step {index + 1}: {info.title}
@@ -137,7 +137,7 @@ const ProfileProgressIndicator = () => {
                     </div>
                     
                     {isPriority && !isActive && (
-                      <span className="bg-blue-100 text-blue-800 text-xs py-1 px-2 rounded-full font-medium">
+                      <span className="bg-kidato-orange-100 text-kidato-orange-800 text-xs py-1 px-2 rounded-full font-medium">
                         Next Step
                       </span>
                     )}
@@ -150,7 +150,7 @@ const ProfileProgressIndicator = () => {
                         <div 
                           className={cn(
                             "h-full rounded-full transition-all duration-300 ease-out",
-                            isActive ? "bg-blue-500" : "bg-amber-500"
+                            isActive ? "bg-kidato-purple-500" : "bg-kidato-orange-500"
                           )}
                           style={{ width: `${progress}%` }}
                         ></div>
@@ -189,9 +189,9 @@ const ProfileProgressIndicator = () => {
                 <button
                   className={cn(
                     "ml-4 flex-shrink-0 px-4 py-2 rounded-lg text-sm font-medium flex items-center",
-                    isActive && "bg-blue-600 text-white hover:bg-blue-700",
-                    isCompleted && !isActive && "bg-white text-emerald-700 border border-emerald-200 hover:bg-emerald-50",
-                    isPriority && !isActive && "bg-blue-600 text-white hover:bg-blue-700",
+                    isActive && "bg-kidato-purple-600 text-white hover:bg-kidato-purple-700",
+                    isCompleted && !isActive && "bg-white text-kidato-purple-700 border border-kidato-purple-200 hover:bg-kidato-purple-50",
+                    isPriority && !isActive && "bg-kidato-orange-600 text-white hover:bg-kidato-orange-700",
                     !isActive && !isCompleted && !isPriority && "bg-white text-gray-700 border border-gray-200 hover:bg-gray-50"
                   )}
                   onClick={(e) => {
@@ -206,16 +206,16 @@ const ProfileProgressIndicator = () => {
               
               {/* Status indicator - either completed or pending details */}
               {isCompleted ? (
-                <div className="px-5 py-2 bg-emerald-50 rounded-b-lg border-t border-emerald-100">
-                  <p className="text-sm text-emerald-700 flex items-center">
+                <div className="px-5 py-2 bg-kidato-purple-50 rounded-b-lg border-t border-kidato-purple-100">
+                  <p className="text-sm text-kidato-purple-700 flex items-center">
                     <CheckCircle className="w-4 h-4 mr-2" />
                     Complete! You've set up your {info.title.toLowerCase()}.
                   </p>
                 </div>
               ) : progress > 0 && (
-                <div className="px-5 py-2 bg-amber-50 rounded-b-lg border-t border-amber-100">
-                  <p className="text-sm text-amber-700 flex items-start">
-                    <span className="bg-amber-200 text-amber-800 rounded-full h-4 w-4 inline-flex items-center justify-center mr-2 mt-0.5 text-xs font-bold">!</span>
+                <div className="px-5 py-2 bg-kidato-orange-50 rounded-b-lg border-t border-kidato-orange-100">
+                  <p className="text-sm text-kidato-orange-700 flex items-start">
+                    <span className="bg-kidato-orange-200 text-kidato-orange-800 rounded-full h-4 w-4 inline-flex items-center justify-center mr-2 mt-0.5 text-xs font-bold">!</span>
                     {step === 'personal' && 'Please add a profile photo and complete your personal details'}
                     {step === 'location' && 'Add your teaching location and available time slots'}
                     {step === 'education' && 'Include your degrees, certifications, and academic history'}

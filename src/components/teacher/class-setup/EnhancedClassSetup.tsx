@@ -56,6 +56,7 @@ interface EnhancedClassSetupProps {
   initialTeamMembers?: any[];
   classId?: string;
   loadFromStorage?: boolean;
+  autoOpenAIHelper?: boolean;
   onFormStateUpdate?: (state: {
     lastSaved: number;
     hasUnsavedChanges: boolean;
@@ -74,7 +75,7 @@ const calculateStepCompletion = (form: any, stepId: string, checkClassCompletene
       const optionalBasicFields = ['curriculum', 'technicalRequirements', 'materialsRequired'];
       const classType = values.type;
       if (classType !== "afterschool") {
-        optionalBasicFields.push('assessmentMethods');
+        // optionalBasicFields.push('assessmentMethods');
       }else{
         optionalBasicFields.push('ageRange');
       }
@@ -124,6 +125,7 @@ const EnhancedClassSetup = ({
   initialTeamMembers = [],
   classId,
   loadFromStorage = true,
+  autoOpenAIHelper = false,
   onFormStateUpdate,
   onRefreshClassData
 }: EnhancedClassSetupProps) => {
@@ -157,6 +159,7 @@ const EnhancedClassSetup = ({
           formRef={formRef}
           onFormStateUpdate={handleFormStateUpdate}
           onRefreshClassData={onRefreshClassData}
+          autoOpenAIHelper={autoOpenAIHelper}
         />
       </ClassFormProvider>
     </div>
@@ -168,12 +171,14 @@ const EnhancedClassSetupContent = ({
   initialClassId,
   formRef,
   onFormStateUpdate,
-  onRefreshClassData
+  onRefreshClassData,
+  autoOpenAIHelper = false
 }: {
   initialClassId?: string;
   formRef?: React.RefObject<HTMLDivElement>;
   onFormStateUpdate?: (state: { lastSaved: number; hasUnsavedChanges: boolean; draftExists: boolean; }) => void;
   onRefreshClassData?: () => Promise<void>;
+  autoOpenAIHelper?: boolean;
 }) => {
   // Removed console log for cleaner initialization
 
@@ -223,6 +228,15 @@ const EnhancedClassSetupContent = ({
   const [usingAI, setUsingAI] = useState(false);
   const [completionPercentage, setCompletionPercentage] = useState(0);
   const [activeAIHelper, setActiveAIHelper] = useState(false);
+  const [showFloatingNudge, setShowFloatingNudge] = useState(true);
+  
+  // Auto-open AI helper if requested
+  useEffect(() => {
+    if (autoOpenAIHelper) {
+      setActiveAIHelper(true);
+      setShowFloatingNudge(false);
+    }
+  }, [autoOpenAIHelper]);
   
   // Store hasTeamTeaching value in a ref to avoid dependency issues
   const hasTeamTeachingRef = useRef(form.getValues("hasTeamTeaching"));
@@ -637,6 +651,60 @@ const EnhancedClassSetupContent = ({
 
   return (
     <div className="max-w-7xl mx-auto">
+      {/* Floating AI Helper Nudge */}
+      <AnimatePresence>
+        {showFloatingNudge && !activeAIHelper && completionPercentage < 40 && (
+          <motion.div
+            initial={{ y: -100, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: -100, opacity: 0 }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
+            className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50"
+          >
+            <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-6 py-3 rounded-full shadow-lg border-2 border-white/20 backdrop-blur-sm">
+              <div className="flex items-center gap-3">
+                <motion.div
+                  animate={{ 
+                    scale: [1, 1.2, 1],
+                    rotate: [0, 10, -10, 0]
+                  }}
+                  transition={{ 
+                    duration: 2,
+                    repeat: Infinity,
+                    ease: "easeInOut"
+                  }}
+                >
+                  <Sparkles className="h-5 w-5 text-yellow-300" />
+                </motion.div>
+                <span className="font-medium text-sm">Need help creating your class? Try our AI assistant!</span>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    className="h-7 px-3 text-xs bg-white/20 hover:bg-white/30 text-white border-white/30"
+                    onClick={() => {
+                      setActiveAIHelper(true);
+                      setShowFloatingNudge(false);
+                    }}
+                  >
+                    <Sparkles className="h-3 w-3 mr-1" />
+                    Try AI Helper
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-7 w-7 p-0 text-white/70 hover:text-white hover:bg-white/20"
+                    onClick={() => setShowFloatingNudge(false)}
+                  >
+                    ×
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Error Notifications */}
       <FormErrorNotification
         errors={formErrors}
@@ -812,18 +880,6 @@ const EnhancedClassSetupContent = ({
                       <p>• Keep your class title clear and descriptive</p>
                       <p>• Include grade level and curriculum information</p>
                       <p>• Write a compelling description that engages parents and students</p>
-                      <div className="pt-2">
-                        <Button 
-                          type="button"
-                          size="sm"
-                          className="w-full"
-                          variant="outline" 
-                          onClick={() => setActiveAIHelper(true)}
-                        >
-                          <Sparkles className="h-4 w-4 mr-1.5" />
-                          AI Class Helper
-                        </Button>
-                      </div>
                     </>
                   )}
                   {activeTab === "lessons" && (
@@ -895,16 +951,6 @@ const EnhancedClassSetupContent = ({
                   <Sparkles className="h-4 w-4 mr-1.5 text-amber-500" />
                   Quick Tips
                 </h3>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="p-0 h-auto font-normal flex items-center text-blue-600 hover:text-blue-700"
-                  onClick={() => setActiveAIHelper(true)}
-                >
-                  <Sparkles className="h-4 w-4 mr-1.5" />
-                  <span className="text-sm">AI Helper</span>
-                </Button>
               </div>
               
               <div className="mt-2 text-xs text-gray-600 space-y-1">
@@ -1021,30 +1067,31 @@ const EnhancedClassSetupContent = ({
                     </Button>
                   ) : (
                     <div className="flex gap-2">
-                      <button
+                      <Button
                         type="button"
-                        onClick={() => {
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
                           console.log("Publish button clicked!");
                           // Set required fields for publishing
                           form.setValue("isPublic", true);
                           form.setValue("isPublished", true);
-                          form.setValue("status", "ready");
+                          form.setValue("status", "published");
                           
                           // Submit the form with custom values for API
                           onSubmit({
                             ...form.getValues(),
                             isPublic: true,
                             isPublished: true,
-                            status: "ready"
+                            status: "published"
                           });
                         }}
-                        className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md flex items-center justify-center gap-1.5"
+                        disabled={isSubmitting}
+                        className="bg-blue-500 hover:bg-blue-600 text-white gap-1.5"
                       >
                         {isSubmitting ? 'Publishing...' : 'Publish Class'}
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M5 12h14M12 5l7 7-7 7"/>
-                        </svg>
-                      </button>
+                        <ArrowRight className="h-4 w-4" />
+                      </Button>
                     </div>
                   )}
                 </div>

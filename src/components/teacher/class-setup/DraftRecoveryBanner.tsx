@@ -1,15 +1,13 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { RotateCcw, Save, Trash2, Clock } from 'lucide-react';
+import { Save, Clock } from 'lucide-react';
 import { formatLastSavedDate } from './utils/storageUtils';
 
 interface DraftRecoveryBannerProps {
   lastSaved: number;
   hasUnsavedChanges: boolean;
   draftExists: boolean;
-  onLoadDraft: () => void;
-  onDiscardDraft: () => void;
   onSaveNow: () => void;
 }
 
@@ -17,8 +15,6 @@ const DraftRecoveryBanner: React.FC<DraftRecoveryBannerProps> = ({
   lastSaved,
   hasUnsavedChanges,
   draftExists,
-  onLoadDraft,
-  onDiscardDraft,
   onSaveNow
 }) => {
   if (!draftExists && !hasUnsavedChanges) {
@@ -62,30 +58,6 @@ const DraftRecoveryBanner: React.FC<DraftRecoveryBannerProps> = ({
               <Save className="h-3.5 w-3.5 mr-1" />
               Save now
             </Button>
-          )}
-          
-          {draftExists && !hasUnsavedChanges && (
-            <>
-              <Button 
-                size="sm" 
-                variant="outline" 
-                onClick={onLoadDraft}
-                className="bg-white hover:bg-blue-50"
-              >
-                <RotateCcw className="h-3.5 w-3.5 mr-1" />
-                Restore draft
-              </Button>
-              
-              <Button 
-                size="sm" 
-                variant="outline" 
-                onClick={onDiscardDraft}
-                className="bg-white hover:bg-red-50 text-red-600 border-red-200"
-              >
-                <Trash2 className="h-3.5 w-3.5 mr-1" />
-                Discard
-              </Button>
-            </>
           )}
         </div>
       </div>

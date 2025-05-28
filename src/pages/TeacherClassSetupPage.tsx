@@ -29,6 +29,7 @@ const TeacherClassSetupPage = () => {
   const [draftExists, setDraftExists] = useState(false);
   const [lastSaved, setLastSaved] = useState(0);
   const [isDraftClass, setIsDraftClass] = useState(false);
+  const [startWithAIHelper, setStartWithAIHelper] = useState(false);
   const [teacherClasses, setTeacherClasses] = useState<any[]>([]);
   const [isLoadingClasses, setIsLoadingClasses] = useState(false);
   const [classFormState, setClassFormState] = useState<{
@@ -115,6 +116,12 @@ const TeacherClassSetupPage = () => {
 
   // Callbacks for draft management
   const handleStartNew = () => {
+    setShowWelcomeScreen(false);
+  };
+
+  const handleStartWithAI = () => {
+    // Start new class creation and auto-open AI helper
+    setStartWithAIHelper(true);
     setShowWelcomeScreen(false);
   };
 
@@ -691,6 +698,7 @@ const TeacherClassSetupPage = () => {
             onStartNew={handleStartNew}
             onContinueDraft={handleContinueDraft}
             onDiscardDraft={handleDiscardDraft}
+            onStartWithAI={handleStartWithAI}
           />
         </>
       ) : !isLoading && !isSubmitted && (
@@ -732,6 +740,7 @@ const TeacherClassSetupPage = () => {
               loadFromStorage={!initialValues && draftExists && !classId}
               onFormStateUpdate={handleFormStateUpdate}
               onRefreshClassData={refreshClassData}
+              autoOpenAIHelper={startWithAIHelper}
             />
           </div>
         </>

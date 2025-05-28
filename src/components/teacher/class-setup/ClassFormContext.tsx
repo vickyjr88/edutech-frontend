@@ -404,8 +404,8 @@ export const ClassFormProvider = ({
 
         commitment: formValues.commitmentRequired || undefined,
 
-        // Initialize arrays for data to be added in next steps
-        lessonPlans: [],
+        // Include existing lesson plans
+        lessonPlans: formValues.lessonPlans || [],
         cohorts: cohorts.map(cohort => {
           // Extract _id if it exists, and other fields we don't want to send directly
           const { hasFlexibleSchedule, lessonSchedules, ...cohortData } = cohort;
@@ -930,8 +930,11 @@ export const ClassFormProvider = ({
             title: lesson.title || "",
             description: lesson.description || "",
             duration: Number(lesson.duration) || 60,
-            resourceFiles: lesson.resources ?
-              lesson.resources.split(',').map(r => r.trim()) :
+            resourceFiles: lesson.resources ? 
+              (typeof lesson.resources === 'string' ? 
+                lesson.resources.split(',').map(r => r.trim()) : 
+                Array.isArray(lesson.resources) ? lesson.resources : 
+                [lesson.resources]) :
               undefined
           }))
       };
@@ -1060,8 +1063,11 @@ export const ClassFormProvider = ({
             title: lesson.title || "",
             description: lesson.description || "",
             duration: Number(lesson.duration) || 60,
-            resourceFiles: lesson.resources ?
-              lesson.resources.split(',').map(r => r.trim()) :
+            resourceFiles: lesson.resources ? 
+              (typeof lesson.resources === 'string' ? 
+                lesson.resources.split(',').map(r => r.trim()) : 
+                Array.isArray(lesson.resources) ? lesson.resources : 
+                [lesson.resources]) :
               undefined
           })),
 

@@ -144,6 +144,7 @@ interface ProfileJourneyContextType {
     alternativePhone: string;
     bio: string;
     profileImage: string;
+    introVideoUrl: string;
   };
   locationInfo: {
     address: string;
@@ -425,7 +426,9 @@ export const ProfileJourneyProvider = ({ children }: { children: ReactNode }) =>
         const teacherData: any = {
           // Note: We don't include firstName/lastName in teacherProfile
           // Include profile image in teacher profile (could be teacher-specific)
-          ...(data.profileImage && { profileImage: data.profileImage })
+          ...(data.profileImage && { profileImage: data.profileImage }),
+          // Include intro video URL in teacher profile
+          ...(data.introVideoUrl && { introVideoUrl: data.introVideoUrl })
         };
         
         // Call API to update user profile data
@@ -990,6 +993,8 @@ export const ProfileJourneyProvider = ({ children }: { children: ReactNode }) =>
             bio: userInfo.bio || "",
             // Use _signedProfileImage if available, otherwise fall back to profileImage
             profileImage: userInfo._signedProfileImage || userInfo.profileImage || profileData.profileImage || "",
+            // Load intro video URL from teacher profile
+            introVideoUrl: profileData.introVideoUrl || "",
           });
           
           // Update location info
