@@ -1,14 +1,15 @@
-
 import { useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { User } from "lucide-react";
+import { User, Pencil } from "lucide-react";
 import StudentDashboardHeader from "@/components/dashboard/StudentDashboardHeader";
 import StudentSidebar from "@/components/dashboard/StudentSidebar";
+import { Button } from "@/components/ui/button";
 import KidatoMascot from "@/components/dashboard/KidatoMascot";
 import { useAuth } from "@/contexts/AuthContext";
 import { useGetProfileById } from "@/hooks/use-student-service";
 import { getUserInitials } from "@/lib/utils";
 import { formatDate } from "date-fns";
+import { EditProfileForm } from "@/components/dashboard/EditProfileForm";
 
 const Profile = () => {
   const { user } = useAuth();
@@ -19,6 +20,8 @@ const Profile = () => {
   const nameInitials = useMemo(() => {
     return getUserInitials(fullName);
   }, [fullName]);
+
+  const [isEditing, setIsEditing] = useState(false);
 
   return (
     <div className="flex min-h-screen bg-gradient-to-b from-blue-50 to-white">
@@ -52,9 +55,25 @@ const Profile = () => {
                     </div>
                     <h2 className="text-xl font-bold">{user.fullName}</h2>
                     <p className="text-gray-500">{profile?.grade} Student</p>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="mt-2"
+                      onClick={() => setIsEditing(true)}
+                    >
+                      <Pencil className="mr-2 h-4 w-4" />
+                      Edit Profile
+                    </Button>
                   </div>
                   
                   <div className="w-full md:w-2/3">
+                  {isEditing ? (
+                    <EditProfileForm
+                      profile={profile}
+                      onClose={() => setIsEditing(false)}
+                    />
+                  ) : (
+                  <>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="p-4 bg-blue-50 rounded-lg">
                         <h3 className="font-medium text-gray-700 mb-1">Email</h3>
@@ -80,6 +99,8 @@ const Profile = () => {
                         {profile?.aboutMe}
                       </p>
                     </div>
+                    </>)
+                  }
                   </div>
                 </div>
               </CardContent>
