@@ -16,11 +16,16 @@ import {
   mockEnrolledCourses, 
   mockCompletedCourses 
 } from "@/components/courses/CourseData";
+import { useAuth } from "@/contexts/AuthContext";
+import { useGetRecommendedClasses } from "@/hooks/use-class-service";
 
 const Courses = () => {
-  const [userName] = useState("John Doe");
-  const [selectedTab, setSelectedTab] = useState("enrolled");
   const [filterOpen, setFilterOpen] = useState(false);
+  const { user } = useAuth();
+  const { data: response } = useGetRecommendedClasses(user.id);
+  const recommendedClasses = response?.data;
+
+
 
   return (
     <div className="flex min-h-screen bg-gradient-to-b from-blue-50 to-white">
@@ -29,7 +34,7 @@ const Courses = () => {
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
         {/* Top Nav */}
-        <StudentDashboardHeader userName={userName} />
+        <StudentDashboardHeader userName={user.fullName} />
 
         {/* Content */}
         <main className="p-4 sm:p-6 flex-1 overflow-y-auto">
@@ -55,7 +60,7 @@ const Courses = () => {
             </div>
             
             {/* Course Tabs */}
-            <Tabs defaultValue="enrolled" className="mb-8" onValueChange={setSelectedTab}>
+            <Tabs defaultValue="enrolled" className="mb-8">
               <TabsList className="mb-6 bg-blue-50/50 p-1 border border-blue-100">
                 <TabsTrigger value="enrolled" className="data-[state=active]:bg-white data-[state=active]:text-kidato-purple data-[state=active]:shadow-sm rounded-md">
                   Enrolled Classes

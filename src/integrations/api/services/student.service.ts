@@ -2,7 +2,24 @@
 import {api ,ApiResponse } from '../client.ts';
 export interface Student {
     id: string;
-    // Add other student properties based on your NestJS model
+    user: string;
+    grade: string;
+    school: string;
+    interests: string[];
+    aboutMe: string;
+    learningStreak: number;
+    level: string;
+    rank: string;
+    xpPoints: number;
+    nextLevelXp: number;
+    totalLearningHours: number;
+    completionRate: number;
+    achievementsCount: number;
+    earnedAchievements: string[]; // or a more specific type if you know the structure
+    enrollments: string[];        // or a more specific type if you know the structure
+    activeQuests: string[];       // or a more specific type if you know the structure
+    createdAt: string;            // or Date, depending on how it's used in code
+    updatedAt: string; 
 }
 
 export interface DashboardStats {
