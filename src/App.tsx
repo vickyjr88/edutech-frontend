@@ -6,8 +6,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
-// import { IntercomProvider } from "@/components/support";
-// import { intercomConfig } from "@/components/support/IntercomConfig";
+import { IntercomProvider } from "@/components/support";
+import { intercomConfig } from "@/components/support/IntercomConfig";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
@@ -62,7 +62,12 @@ const App = () => {
       <QueryClientProvider client={queryClient}>
         <BrowserRouter>
           <AuthProvider>
-              <TooltipProvider>
+            {intercomConfig ? (
+              <IntercomProvider 
+                config={intercomConfig}
+                autoboot={true}
+              >
+                <TooltipProvider>
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/login" element={<Login />} />
@@ -245,9 +250,194 @@ const App = () => {
                 
                 <Route path="*" element={<NotFound />} />
               </Routes>
+                  <Toaster />
+                  <Sonner />
+                </TooltipProvider>
+              </IntercomProvider>
+            ) : (
+              <TooltipProvider>
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/signup" element={<Signup />} />
+                  <Route path="/auth/callback" element={<AuthCallback />} />
+                  <Route path="/zoom/callback" element={<ZoomAuthCallback />} />
+                  <Route path="/for-teachers" element={<ForTeachers />} />
+                  <Route path="/for-parents" element={<ForParents />} />
+                  <Route path="/for-students" element={<ForStudents />} />
+                  <Route path="/how-it-works" element={<HowItWorks />} />
+                  <Route path="/all-classes" element={<AllClasses />} />
+                  <Route path="/teachers" element={<TeacherProfilesPage />} />
+                  <Route path="/class/:id" element={<ClassDetailsPage />} />
+                  <Route path="/teacher/:teacherId" element={<TeacherProfilePage />} />
+                  <Route path="/teacher-pricing" element={<TeachersPricing />} />
+                  
+                  <Route path="/student-dashboard" element={
+                    <ProtectedRoute>
+                      <Dashboard />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/dashboard" element={
+                    <Navigate to="/student-dashboard" replace />
+                  } />
+                  
+                  <Route path="/teacher-dashboard" element={
+                    <TeacherRoute requireProfileComplete={true}>
+                      <TeacherDashboard />
+                    </TeacherRoute>
+                  } />
+                  <Route path="/teacher-dashboard/classes" element={
+                    <TeacherRoute requireProfileComplete={true}>
+                      <TeacherDashboard />
+                    </TeacherRoute>
+                  } />
+                  <Route path="/teacher-dashboard/students" element={
+                    <TeacherRoute requireProfileComplete={true}>
+                      <TeacherDashboard />
+                    </TeacherRoute>
+                  } />
+                  <Route path="/teacher-dashboard/schedule" element={
+                    <TeacherRoute requireProfileComplete={true}>
+                      <TeacherDashboard />
+                    </TeacherRoute>
+                  } />
+                  <Route path="/teacher-dashboard/settings" element={
+                    <TeacherRoute requireProfileComplete={true}>
+                      <TeacherDashboard />
+                    </TeacherRoute>
+                  } />
+                  
+                  <Route path="/teacher-dashboard/zoom" element={
+                    <TeacherRoute requireProfileComplete={true}>
+                      <TeacherZoomPage />
+                    </TeacherRoute>
+                  } />
+                  <Route path="/teacher-profile-setup" element={
+                    <TeacherRoute requireProfileComplete={false}>
+                      <TeacherProfileJourney />
+                    </TeacherRoute>
+                  } />
+                  <Route path="/teacher-profile" element={
+                    <TeacherRoute requireProfileComplete={true}>
+                      <TeacherProfileResume />
+                    </TeacherRoute>
+                  } />
+                  <Route path="/teacher-class-setup" element={
+                    <TeacherRoute requireProfileComplete={true}>
+                      <TeacherClassSetupPage />
+                    </TeacherRoute>
+                  } />
+                  <Route path="/teacher-class-setup/:classId" element={
+                    <TeacherRoute requireProfileComplete={true}>
+                      <TeacherClassSetupPage />
+                    </TeacherRoute>
+                  } />
+                  <Route path="/teacher-class/:classId" element={
+                    <TeacherRoute requireProfileComplete={true}>
+                      <TeacherClassViewPage />
+                    </TeacherRoute>
+                  } />
+                  <Route path="/teacher-earnings" element={
+                    <TeacherRoute requireProfileComplete={true}>
+                      <TeacherEarningsPage />
+                    </TeacherRoute>
+                  } />
+                  <Route path="/parents-dashboard" element={
+                    <ProtectedRoute>
+                      <ParentsDashboard />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/group-work" element={
+                    <ProtectedRoute>
+                      <GroupWork />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/challenges" element={
+                    <ProtectedRoute>
+                      <Challenges />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/schedule" element={
+                    <ProtectedRoute>
+                      <Schedule />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/achievements" element={
+                    <ProtectedRoute>
+                      <Achievements />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/profile" element={
+                    <ProtectedRoute>
+                      <Profile />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/messaging" element={
+                    <ProtectedRoute>
+                      <Messaging />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/courses" element={
+                    <ProtectedRoute>
+                      <Courses />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/course-progress/:courseId" element={
+                    <ProtectedRoute>
+                      <CourseProgress />
+                    </ProtectedRoute>
+                  } />
+                  
+                  <Route path="/parents-schedule" element={
+                    <ProtectedRoute>
+                      <ParentsSchedule />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/parents-courses" element={
+                    <ProtectedRoute>
+                      <ParentsCourses />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/parents-teachers" element={
+                    <ProtectedRoute>
+                      <ParentsTeachers />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/parents-messages" element={
+                    <ProtectedRoute>
+                      <ParentsMessages />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/parents-reports" element={
+                    <ProtectedRoute>
+                      <ParentsReports />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/parents-progress" element={
+                    <ProtectedRoute>
+                      <ParentsProgress />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/parents-billing" element={
+                    <ProtectedRoute>
+                      <ParentsBilling />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/child-dashboard/:childId" element={
+                    <ProtectedRoute>
+                      <ChildDashboard />
+                    </ProtectedRoute>
+                  } />
+                  
+                  <Route path="/document-viewer" element={<DocumentViewer />} />
+                  <Route path="/document-proxy" element={<DocumentProxy />} />
+                  
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
                 <Toaster />
                 <Sonner />
               </TooltipProvider>
+            )}
           </AuthProvider>
         </BrowserRouter>
       </QueryClientProvider>

@@ -1,23 +1,30 @@
 import { IntercomConfig, UserRole } from './types';
 
 // Environment-based configuration
-const getIntercomAppId = (): string => {
-  // In production, this should come from environment variables
-  const appId = import.meta.env.VITE_INTERCOM_APP_ID || 'your_intercom_app_id';
+const getIntercomAppId = (): string | null => {
+  const appId = import.meta.env.VITE_INTERCOM_APP_ID;
   
-  // Development/demo app ID (replace with your actual Intercom app ID)
+  // In development, allow fallback
   if (import.meta.env.DEV) {
     return appId || 'demo_app_id';
+  }
+  
+  // In production, only return valid app ID
+  if (!appId || appId === 'your_intercom_app_id') {
+    console.warn('Intercom: VITE_INTERCOM_APP_ID not properly configured for production');
+    return null;
   }
   
   return appId;
 };
 
-export const intercomConfig: IntercomConfig = {
-  appId: getIntercomAppId(),
+const appId = getIntercomAppId();
+
+export const intercomConfig: IntercomConfig | null = appId ? {
+  appId,
   enabledForRoles: ['student', 'parent', 'teacher', 'admin', 'institution'],
   autoboot: true
-};
+} : null;
 
 // Role-specific configurations for Learniverse
 export const getRoleSpecificSettings = (role: UserRole) => {
