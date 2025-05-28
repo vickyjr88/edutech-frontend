@@ -43,7 +43,19 @@ const CardPaymentForm: React.FC<CardPaymentFormProps> = ({
   useEffect(() => {
     console.log('BasisTheory instance from provider:', bt);
     console.log('BT available:', !!bt);
+    if (bt) {
+      console.log('BT methods:', Object.keys(bt));
+    }
   }, [bt]);
+
+  // Debug element refs
+  useEffect(() => {
+    console.log('Element refs:', {
+      cardNumber: cardNumberRef.current,
+      cardExpiry: cardExpiryRef.current,
+      cardCvc: cardCvcRef.current
+    });
+  }, [cardNumberRef.current, cardExpiryRef.current, cardCvcRef.current]);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -129,99 +141,114 @@ const CardPaymentForm: React.FC<CardPaymentFormProps> = ({
           {/* Card Number */}
           <div className="space-y-2">
             <Label>Card Number</Label>
-            <div className="border border-gray-300 rounded-md p-3 bg-white min-h-[48px] flex items-center">
-              {bt ? (
-                <CardNumberElement
-                  id="cardNumber"
-                  ref={cardNumberRef}
-                  onChange={({ cardBrand }) => setCardBrand(cardBrand)}
-                  style={{
-                    base: {
-                      fontSize: '16px',
-                      color: '#374151',
-                      fontFamily: 'system-ui, sans-serif',
-                      '::placeholder': {
-                        color: '#9CA3AF',
-                      },
+            {bt ? (
+              <CardNumberElement
+                id="cardNumber"
+                ref={cardNumberRef}
+                onChange={({ cardBrand }) => setCardBrand(cardBrand)}
+                style={{
+                  base: {
+                    fontSize: '16px',
+                    color: '#374151',
+                    fontFamily: 'system-ui, sans-serif',
+                    padding: '12px',
+                    border: '1px solid #d1d5db',
+                    borderRadius: '6px',
+                    '::placeholder': {
+                      color: '#9CA3AF',
                     },
-                    invalid: { 
-                      color: '#EF4444',
-                    },
-                    complete: { 
-                      color: '#059669',
-                    },
-                  }}
-                  placeholder="1234 5678 9012 3456"
-                />
-              ) : (
+                  },
+                  invalid: { 
+                    color: '#EF4444',
+                    borderColor: '#EF4444',
+                  },
+                  complete: { 
+                    color: '#059669',
+                    borderColor: '#059669',
+                  },
+                }}
+                placeholder="1234 5678 9012 3456"
+              />
+            ) : (
+              <div className="border border-gray-300 rounded-md p-3 bg-white min-h-[48px] flex items-center">
                 <span className="text-gray-400">Loading card input...</span>
-              )}
-            </div>
+              </div>
+            )}
           </div>
 
           {/* Expiry and CVC */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Expiry Date</Label>
-              <div className="border border-gray-300 rounded-md p-3 bg-white min-h-[48px] flex items-center">
-                {bt ? (
-                  <CardExpirationDateElement
-                    id="cardExpiry"
-                    ref={cardExpiryRef}
-                    style={{
-                      base: {
-                        fontSize: '16px',
-                        color: '#374151',
-                        fontFamily: 'system-ui, sans-serif',
-                        '::placeholder': {
-                          color: '#9CA3AF',
-                        },
+              {bt ? (
+                <CardExpirationDateElement
+                  id="cardExpiry"
+                  ref={cardExpiryRef}
+                  style={{
+                    base: {
+                      fontSize: '16px',
+                      color: '#374151',
+                      fontFamily: 'system-ui, sans-serif',
+                      padding: '12px',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '6px',
+                      '::placeholder': {
+                        color: '#9CA3AF',
                       },
-                      invalid: { 
-                        color: '#EF4444',
-                      },
-                      complete: { 
-                        color: '#059669',
-                      },
-                    }}
-                    placeholder="MM/YY"
-                  />
-                ) : (
+                    },
+                    invalid: { 
+                      color: '#EF4444',
+                      borderColor: '#EF4444',
+                    },
+                    complete: { 
+                      color: '#059669',
+                      borderColor: '#059669',
+                    },
+                  }}
+                  placeholder="MM/YY"
+                />
+              ) : (
+                <div className="border border-gray-300 rounded-md p-3 bg-white min-h-[48px] flex items-center">
                   <span className="text-gray-400">Loading...</span>
-                )}
-              </div>
+                </div>
+              )}
             </div>
 
             <div className="space-y-2">
               <Label>CVC</Label>
-              <div className="border border-gray-300 rounded-md p-3 bg-white min-h-[48px] flex items-center">
-                {bt ? (
-                  <CardVerificationCodeElement
-                    id="cardCvc"
-                    ref={cardCvcRef}
-                    cardBrand={cardBrand}
-                    style={{
-                      base: {
-                        fontSize: '16px',
-                        color: '#374151',
-                        fontFamily: 'system-ui, sans-serif',
-                        '::placeholder': {
-                          color: '#9CA3AF',
-                        },
+              {bt ? (
+                <CardVerificationCodeElement
+                  id="cardCvc"
+                  ref={cardCvcRef}
+                  cardBrand={cardBrand}
+                  style={{
+                    base: {
+                      fontSize: '16px',
+                      color: '#374151',
+                      fontFamily: 'system-ui, sans-serif',
+                      padding: '12px',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '6px',
+                      '::placeholder': {
+                        color: '#9CA3AF',
                       },
-                      invalid: { 
-                        color: '#EF4444',
-                      },
-                      complete: { 
-                        color: '#059669',
-                      },
-                    }}
-                    placeholder="123"
-                  />
-                ) : (
+                    },
+                    invalid: { 
+                      color: '#EF4444',
+                      borderColor: '#EF4444',
+                    },
+                    complete: { 
+                      color: '#059669',
+                      borderColor: '#059669',
+                    },
+                  }}
+                  placeholder="123"
+                />
+              ) : (
+                <div className="border border-gray-300 rounded-md p-3 bg-white min-h-[48px] flex items-center">
                   <span className="text-gray-400">Loading...</span>
-                )}
-              </div>
+                </div>
+              )}
             </div>
           </div>
 
