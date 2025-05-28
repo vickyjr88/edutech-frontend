@@ -68,8 +68,8 @@ const mockBilling = {
   ] as Invoice[]
 };
 
-// Mock Basis Theory API key - in production, this should come from environment variables
-const MOCK_API_KEY = "key_N88g6TOnupigOITmBhAVBe";
+// Basis Theory API key from environment variables
+const API_KEY = import.meta.env.VITE_BASIS_THEORY_API_KEY || "key_N88g6TOnupigOITmBhAVBe";
 
 const ParentsBilling = () => {
   const handlePaymentSuccess = (result: any) => {
@@ -118,7 +118,7 @@ const ParentsBilling = () => {
               </div>
               
               <AddPaymentMethodDialog
-                apiKey={MOCK_API_KEY}
+                apiKey={API_KEY}
                 onSuccess={handleAddPaymentMethod}
                 onError={handlePaymentError}
                 collectBillingAddress={true}

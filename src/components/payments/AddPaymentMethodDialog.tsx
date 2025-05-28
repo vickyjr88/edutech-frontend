@@ -12,7 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Plus } from 'lucide-react';
-import { CardPaymentForm } from './CardPaymentForm';
+import CardPaymentWrapper from './CardPaymentForm';
 import { BillingAddress } from './types';
 
 interface AddPaymentMethodDialogProps {
@@ -87,7 +87,7 @@ const AddPaymentMethodDialog: React.FC<AddPaymentMethodDialogProps> = ({
         
         <div className="space-y-6">
           {/* Card Payment Form */}
-          <CardPaymentForm
+          <CardPaymentWrapper
             apiKey={apiKey}
             amount={0} // We're just adding a payment method, not charging
             title="Card Information"
