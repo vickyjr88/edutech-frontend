@@ -1,10 +1,12 @@
 
 import ParentSidebar from "@/components/parents/ParentSidebar";
 import ParentDashboardHeader from "@/components/parents/ParentDashboardHeader";
-import { CreditCard, Download, FileText, DollarSign } from "lucide-react";
+import { CreditCard, Download, FileText, DollarSign, Plus, Settings } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { CardPaymentForm, PaymentMethodCard, BillingHistory, AddPaymentMethodDialog } from "@/components/payments";
+import { PaymentMethod, Invoice } from "@/components/payments/types";
 
 const mockBilling = {
   currentPlan: {
@@ -19,32 +21,87 @@ const mockBilling = {
       "Progress tracking"
     ]
   },
+  paymentMethods: [
+    {
+      id: "pm_1",
+      type: "card" as const,
+      last4: "4242",
+      brand: "visa",
+      expiryMonth: 12,
+      expiryYear: 2027,
+      isDefault: true,
+      name: "Kate's Visa"
+    },
+    {
+      id: "pm_2",
+      type: "card" as const,
+      last4: "0005",
+      brand: "mastercard",
+      expiryMonth: 8,
+      expiryYear: 2026,
+      isDefault: false,
+      name: "Backup Card"
+    }
+  ] as PaymentMethod[],
   recentInvoices: [
     {
       id: "INV-2025-001",
       date: "March 15, 2025",
-      amount: "$199.00",
-      status: "Paid",
+      amount: 199.00,
+      status: "paid" as const,
       description: "Family Premium Plan - March 2025"
     },
     {
       id: "INV-2025-002",
       date: "February 15, 2025",
-      amount: "$199.00",
-      status: "Paid",
+      amount: 199.00,
+      status: "paid" as const,
       description: "Family Premium Plan - February 2025"
     },
     {
       id: "INV-2025-003",
       date: "January 15, 2025",
-      amount: "$199.00",
-      status: "Paid",
+      amount: 199.00,
+      status: "paid" as const,
       description: "Family Premium Plan - January 2025"
     }
-  ]
+  ] as Invoice[]
 };
 
+// Mock Basis Theory API key - in production, this should come from environment variables
+const MOCK_API_KEY = "key_N88g6TOnupigOITmBhAVBe";
+
 const ParentsBilling = () => {
+  const handlePaymentSuccess = (result: any) => {
+    console.log('Payment successful:', result);
+    // Handle successful payment
+  };
+
+  const handlePaymentError = (error: string) => {
+    console.error('Payment error:', error);
+    // Handle payment error
+  };
+
+  const handleAddPaymentMethod = (paymentMethod: any) => {
+    console.log('New payment method added:', paymentMethod);
+    // Handle new payment method
+  };
+
+  const handleSetDefaultPaymentMethod = (id: string) => {
+    console.log('Set default payment method:', id);
+    // Handle setting default payment method
+  };
+
+  const handleDeletePaymentMethod = (id: string) => {
+    console.log('Delete payment method:', id);
+    // Handle deleting payment method
+  };
+
+  const handleDownloadInvoice = (invoiceId: string) => {
+    console.log('Download invoice:', invoiceId);
+    // Handle invoice download
+  };
+
   return (
     <div className="flex min-h-screen bg-gradient-to-b from-blue-50 to-white">
       <ParentSidebar />
@@ -54,9 +111,23 @@ const ParentsBilling = () => {
         
         <main className="p-6 flex-1">
           <div className="max-w-6xl mx-auto">
-            <div className="flex items-center gap-2 mb-6">
-              <CreditCard className="h-6 w-6 text-kidato-purple" />
-              <h1 className="text-2xl font-bold">Billing</h1>
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-2">
+                <CreditCard className="h-6 w-6 text-kidato-purple" />
+                <h1 className="text-2xl font-bold">Billing</h1>
+              </div>
+              
+              <AddPaymentMethodDialog
+                apiKey={MOCK_API_KEY}
+                onSuccess={handleAddPaymentMethod}
+                onError={handlePaymentError}
+                collectBillingAddress={true}
+              >
+                <Button>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Payment Method
+                </Button>
+              </AddPaymentMethodDialog>
             </div>
             
             <div className="grid gap-6">
@@ -92,46 +163,39 @@ const ParentsBilling = () => {
                       <p className="text-sm text-gray-600">
                         Next billing: {mockBilling.currentPlan.nextBilling}
                       </p>
-                      <Button className="mt-4">Manage Plan</Button>
+                      <Button className="mt-4">
+                        <Settings className="h-4 w-4 mr-2" />
+                        Manage Plan
+                      </Button>
                     </div>
                   </div>
                 </CardContent>
               </Card>
-              
-              {/* Recent Invoices */}
+
+              {/* Payment Methods */}
               <Card>
                 <CardContent className="p-6">
-                  <h2 className="text-xl font-bold mb-4">Recent Invoices</h2>
-                  <div className="space-y-4">
-                    {mockBilling.recentInvoices.map((invoice) => (
-                      <div 
-                        key={invoice.id}
-                        className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50"
-                      >
-                        <div className="flex items-center gap-4">
-                          <div className="p-2 bg-blue-100 rounded-full">
-                            <FileText className="h-5 w-5 text-blue-600" />
-                          </div>
-                          <div>
-                            <p className="font-medium">{invoice.description}</p>
-                            <p className="text-sm text-gray-600">{invoice.date}</p>
-                          </div>
-                        </div>
-                        
-                        <div className="flex items-center gap-4">
-                          <span className="font-medium">{invoice.amount}</span>
-                          <Badge variant="outline" className="bg-green-50 text-green-700">
-                            {invoice.status}
-                          </Badge>
-                          <Button variant="ghost" size="sm">
-                            <Download className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-xl font-bold">Payment Methods</h2>
+                  </div>
+                  <div className="grid gap-4">
+                    {mockBilling.paymentMethods.map((paymentMethod) => (
+                      <PaymentMethodCard
+                        key={paymentMethod.id}
+                        paymentMethod={paymentMethod}
+                        onSetDefault={handleSetDefaultPaymentMethod}
+                        onDelete={handleDeletePaymentMethod}
+                      />
                     ))}
                   </div>
                 </CardContent>
               </Card>
+              
+              {/* Billing History */}
+              <BillingHistory
+                invoices={mockBilling.recentInvoices}
+                onDownload={handleDownloadInvoice}
+              />
             </div>
           </div>
         </main>
