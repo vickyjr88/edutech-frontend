@@ -123,7 +123,7 @@ const App = () => {
                 
                 <Route path="/teacher-dashboard/zoom" element={
                   <TeacherRoute requireProfileComplete={true}>
-                    <TeacherZoomPage />
+                    <TeacherDashboard />
                   </TeacherRoute>
                 } />
                 <Route path="/teacher-profile-setup" element={

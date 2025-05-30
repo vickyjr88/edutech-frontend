@@ -87,7 +87,7 @@ const CreateZoomMeeting: React.FC<CreateZoomMeetingProps> = ({
       
       const meetingData = {
         topic,
-        start_time: startTime.toISOString(),
+        startTime: startTime.toISOString(),
         duration,
         agenda,
         settings: {

@@ -66,7 +66,7 @@ class ZoomService {
   // Meeting Management
   public async createMeeting(meetingData: {
     topic: string;
-    start_time: string;
+    startTime: string;
     duration: number;
     agenda?: string;
     settings?: any;

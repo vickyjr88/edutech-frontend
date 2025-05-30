@@ -5,7 +5,7 @@ import { CreditCard, Download, FileText, DollarSign, Plus, Settings } from "luci
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CardPaymentForm, PaymentMethodCard, BillingHistory, AddPaymentMethodDialog } from "@/components/payments";
+import { UnifiedPaymentForm, PaymentMethodCard, BillingHistory, AddPaymentMethodDialog } from "@/components/payments";
 import { PaymentMethod, Invoice } from "@/components/payments/types";
 
 const mockBilling = {
@@ -68,8 +68,9 @@ const mockBilling = {
   ] as Invoice[]
 };
 
-// Basis Theory API key from environment variables
-const API_KEY = import.meta.env.VITE_BASIS_THEORY_API_KEY || "key_N88g6TOnupigOITmBhAVBe";
+// Payment provider API keys from environment variables
+const BASIS_THEORY_API_KEY = import.meta.env.VITE_BASIS_THEORY_API_KEY;
+const STRIPE_PUBLISHABLE_KEY = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
 
 const ParentsBilling = () => {
   const handlePaymentSuccess = (result: any) => {
@@ -118,10 +119,10 @@ const ParentsBilling = () => {
               </div>
               
               <AddPaymentMethodDialog
-                apiKey={API_KEY}
+                basisTheoryApiKey={BASIS_THEORY_API_KEY}
+                stripePublishableKey={STRIPE_PUBLISHABLE_KEY}
                 onSuccess={handleAddPaymentMethod}
                 onError={handlePaymentError}
-                collectBillingAddress={true}
               >
                 <Button>
                   <Plus className="h-4 w-4 mr-2" />

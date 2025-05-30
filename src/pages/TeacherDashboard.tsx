@@ -20,6 +20,7 @@ import EnrollStudentsPage from "@/components/teacher/enrollment/EnrollStudentsPa
 import { StudentView } from "@/components/teacher/students";
 import RecommendedClasses from "@/components/teacher/RecommendedClasses";
 import TabbedClassesView from "@/components/teacher/TabbedClassesView";
+import { ZoomDashboard } from "@/components/teacher/zoom";
 import { useAuth } from "@/contexts/AuthContext";
 import {teacherService} from "@/integrations/api/services/teacher.service.ts";
 import {classService} from "@/integrations/api/services/class.service.ts";
@@ -65,6 +66,13 @@ const TeacherDashboard = () => {
   // Parse the active tab from the URL
   const getTabFromPath = () => {
     const path = location.pathname;
+    const searchParams = new URLSearchParams(location.search);
+    
+    // Check for zoom parameter first
+    if (searchParams.get('zoom') === 'connected') {
+      return "zoom";
+    }
+    
     if (path.includes('/teacher-dashboard/classes')) {
       if (location.search.includes('create=true')) {
         return "classes";
@@ -76,6 +84,8 @@ const TeacherDashboard = () => {
       return "schedule";
     } else if (path.includes('/teacher-dashboard/settings')) {
       return "settings";
+    } else if (path.includes('/teacher-dashboard/zoom')) {
+      return "zoom";
     }
     return "dashboard"; // Default tab
   };
@@ -139,6 +149,22 @@ const TeacherDashboard = () => {
       fetchComprehensiveProfile();
     }
   }, [user]);
+
+  // Handle zoom connection success
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    if (searchParams.get('zoom') === 'connected') {
+      toast({
+        title: "Zoom Connected Successfully!",
+        description: "Your Zoom account is now connected and ready to use for virtual classes.",
+      });
+      // Clean up the URL parameter
+      searchParams.delete('zoom');
+      const newSearch = searchParams.toString();
+      const newUrl = newSearch ? `${location.pathname}?${newSearch}` : location.pathname;
+      navigate(newUrl, { replace: true });
+    }
+  }, [location.search, toast, navigate]);
 
   const fetchTeacherProfile = async () => {
     setIsLoading(true);
@@ -989,6 +1015,17 @@ const TeacherDashboard = () => {
           >
             <DollarSign className="mr-3 h-5 w-5" />
             Earnings
+          </Link>
+          <Link 
+            to="/teacher-dashboard/zoom"
+            className={`flex items-center px-4 py-3 text-sm font-medium rounded-md w-full text-left ${
+              activeTab === "zoom" 
+                ? "bg-kidato-light-blue text-kidato-purple" 
+                : "text-gray-700 hover:bg-gray-100"
+            }`}
+          >
+            <Video className="mr-3 h-5 w-5" />
+            Zoom
           </Link>
           <Link 
             to="/teacher-dashboard/settings"
@@ -2175,6 +2212,12 @@ const TeacherDashboard = () => {
                 </Button>
               </div>
               <TeacherClassView classId={selectedClass._id || selectedClass.id} />
+            </div>
+          )}
+
+          {!isLoading && activeTab === "zoom" && (
+            <div className="max-w-7xl mx-auto">
+              <ZoomDashboard />
             </div>
           )}
         </main>

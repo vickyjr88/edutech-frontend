@@ -40,7 +40,7 @@ const ZoomAuthCallback: React.FC = () => {
 
         // Redirect after a delay
         setTimeout(() => {
-          navigate('/teacher-dashboard/settings');
+          navigate('/teacher-dashboard?zoom=connected');
         }, 3000);
       } catch (error) {
         console.error('Error handling Zoom callback:', error);
@@ -82,7 +82,7 @@ const ZoomAuthCallback: React.FC = () => {
                 <p className="text-green-800">You will be redirected in a few seconds...</p>
               </div>
               <Button
-                onClick={() => navigate('/teacher-dashboard/settings')}
+                onClick={() => navigate('/teacher-dashboard?zoom=connected')}
                 className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
               >
                 Return to dashboard
@@ -96,7 +96,7 @@ const ZoomAuthCallback: React.FC = () => {
                 <p className="text-red-800">There was a problem connecting your Zoom account.</p>
               </div>
               <Button
-                onClick={() => navigate('/teacher-dashboard/settings')}
+                onClick={() => navigate('/teacher-dashboard?zoom=connected')}
                 className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
               >
                 Return to dashboard
