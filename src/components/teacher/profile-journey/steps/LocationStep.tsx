@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/use-toast";
 import { MapPin, Save, Calendar, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
-import LocationPicker from "../../LocationPicker";
+import TeacherLocationPicker from "../../TeacherLocationPicker";
 
 const LocationStep = () => {
   const { locationInfo, updateLocationInfo, completeStep } = useProfileJourney();
@@ -150,7 +150,7 @@ const LocationStep = () => {
           Enter the location where you'll be teaching. This helps match you with nearby students.
         </p>
         
-        <LocationPicker 
+        <TeacherLocationPicker 
           onLocationSelect={handleLocationSelect}
           initialAddress={formData.address}
           initialCity={formData.city}

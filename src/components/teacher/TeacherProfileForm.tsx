@@ -9,7 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/components/ui/use-toast";
 import { Separator } from "@/components/ui/separator";
 import { Phone, Mail, MapPin, User, Users, Bookmark, Award } from "lucide-react";
-import LocationPicker from "./LocationPicker";
+import TeacherLocationPicker from "./TeacherLocationPicker";
 
 interface TeacherProfileData {
   contact: {
@@ -235,9 +235,11 @@ const TeacherProfileForm = ({
             </div>
             <Separator />
             
-            <LocationPicker 
+            <TeacherLocationPicker 
               onLocationSelect={handleLocationSelect}
               initialAddress={address}
+              initialApartment={apartment}
+              initialHouseNumber={houseNumber}
               initialCity={city}
               initialCounty={county}
               initialPostalCode={postalCode}

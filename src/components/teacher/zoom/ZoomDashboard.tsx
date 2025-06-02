@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { CheckCircle, AlertCircle, ExternalLink, Video, Calendar, Play, RefreshCw, Link as LinkIcon, Users, Clock } from "lucide-react";
 import CreateZoomMeeting from "./CreateZoomMeeting";
 import ZoomMeetingHistory from "./ZoomMeetingHistory";
+import ZoomDisconnectDialog from "./ZoomDisconnectDialog";
 import { zoomService } from "@/integrations/api/services/zoom.service";
 import { toast } from "@/hooks/use-toast";
 
@@ -16,6 +17,7 @@ const ZoomDashboard: React.FC = () => {
   const [connectionDate, setConnectionDate] = useState<string | undefined>(undefined);
   const [isChecking, setIsChecking] = useState(false);
   const [isDisconnecting, setIsDisconnecting] = useState(false);
+  const [showDisconnectDialog, setShowDisconnectDialog] = useState(false);
 
   useEffect(() => {
     checkZoomConnection();
@@ -70,8 +72,13 @@ const ZoomDashboard: React.FC = () => {
     }
   };
 
+  const handleDisconnectClick = () => {
+    setShowDisconnectDialog(true);
+  };
+
   const disconnectZoom = async () => {
     setIsDisconnecting(true);
+    setShowDisconnectDialog(false);
     
     try {
       const { data, error } = await zoomService.disconnectAccount();
@@ -179,7 +186,7 @@ const ZoomDashboard: React.FC = () => {
                   size="sm"
                   className="text-red-600 border-red-200 hover:bg-red-50"
                   disabled={isDisconnecting}
-                  onClick={disconnectZoom}
+                  onClick={handleDisconnectClick}
                 >
                   {isDisconnecting ? (
                     <>
@@ -353,6 +360,14 @@ const ZoomDashboard: React.FC = () => {
           </>
         )}
       </div>
+
+      <ZoomDisconnectDialog
+        open={showDisconnectDialog}
+        onOpenChange={setShowDisconnectDialog}
+        onConfirm={disconnectZoom}
+        isDisconnecting={isDisconnecting}
+        accountEmail={accountEmail}
+      />
     </div>
   );
 };

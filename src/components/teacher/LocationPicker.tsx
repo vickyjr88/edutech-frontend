@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { MapPin, Search, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import GooglePlacesAutocomplete from "./GooglePlacesAutocomplete";
 
 interface LocationPickerProps {
   onLocationSelect: (location: {
@@ -162,14 +163,39 @@ const LocationPicker = ({
     onLocationSelect(newLocation);
   };
 
+  const handlePlaceSelect = (place: any) => {
+    const location = {
+      address: place.address,
+      apartment: place.apartment || "",
+      houseNumber: place.houseNumber || "",
+      city: place.city,
+      county: place.county,
+      postalCode: place.postalCode,
+      latitude: place.latitude,
+      longitude: place.longitude,
+    };
+    setSelectedLocation(location);
+    onLocationSelect(location);
+  };
+
   return (
     <div className="space-y-4 w-full">
+      <div className="space-y-2">
+        <Label>Location Search</Label>
+        <GooglePlacesAutocomplete
+          onPlaceSelect={handlePlaceSelect}
+          placeholder="Search for your teaching location..."
+          initialValue={selectedLocation.address}
+        />
+      </div>
+
+      {/* Fallback search for areas without Google Places */}
       <div className="flex items-center space-x-2">
         <div className="relative flex-1">
           <Input
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search for an address..."
+            placeholder="Or search manually (fallback)..."
             onKeyDown={handleKeyDown}
             className="pr-10"
           />

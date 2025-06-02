@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { CheckCircle, AlertCircle, Link as LinkIcon, RefreshCw, ExternalLink } from "lucide-react";
 import { zoomService, ZoomConnectionStatus as ZoomConnectionStatusType } from "@/integrations/api/services/zoom.service";
 import { toast } from "@/components/ui/use-toast";
+import ZoomDisconnectDialog from "./ZoomDisconnectDialog";
 
 interface ZoomConnectionProps {
   onConnectionChange?: (connected: boolean) => void;
@@ -15,6 +16,7 @@ const ZoomConnectionStatus: React.FC<ZoomConnectionProps> = ({ onConnectionChang
   const [connectionDate, setConnectionDate] = useState<string | undefined>(undefined);
   const [isChecking, setIsChecking] = useState(false);
   const [isDisconnecting, setIsDisconnecting] = useState(false);
+  const [showDisconnectDialog, setShowDisconnectDialog] = useState(false);
 
   useEffect(() => {
     checkZoomConnection();
@@ -77,8 +79,13 @@ const ZoomConnectionStatus: React.FC<ZoomConnectionProps> = ({ onConnectionChang
     }
   };
 
+  const handleDisconnectClick = () => {
+    setShowDisconnectDialog(true);
+  };
+
   const disconnectZoom = async () => {
     setIsDisconnecting(true);
+    setShowDisconnectDialog(false);
     
     try {
       const { data, error } = await zoomService.disconnectAccount();
@@ -191,7 +198,7 @@ const ZoomConnectionStatus: React.FC<ZoomConnectionProps> = ({ onConnectionChang
             size="sm"
             className="text-red-600 border-red-200 hover:bg-red-50"
             disabled={isDisconnecting}
-            onClick={disconnectZoom}
+            onClick={handleDisconnectClick}
           >
             {isDisconnecting ? (
               <>
@@ -216,6 +223,14 @@ const ZoomConnectionStatus: React.FC<ZoomConnectionProps> = ({ onConnectionChang
           </Button>
         )}
       </CardFooter>
+
+      <ZoomDisconnectDialog
+        open={showDisconnectDialog}
+        onOpenChange={setShowDisconnectDialog}
+        onConfirm={disconnectZoom}
+        isDisconnecting={isDisconnecting}
+        accountEmail={accountEmail}
+      />
     </Card>
   );
 };

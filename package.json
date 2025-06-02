@@ -14,6 +14,7 @@
   "dependencies": {
     "@basis-theory/basis-theory-react": "^1.32.5",
     "@basis-theory/react-elements": "^1.13.1",
+    "@googlemaps/js-api-loader": "^1.16.8",
     "@hookform/resolvers": "^3.9.0",
     "@intercom/messenger-js-sdk": "^0.0.14",
     "@radix-ui/react-accordion": "^1.2.0",
