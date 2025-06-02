@@ -126,7 +126,27 @@ const GooglePlacesAutocomplete: React.FC<GooglePlacesAutocompleteProps> = ({
         setIsLoading(false);
       } catch (err) {
         console.error("Failed to load Google Maps API:", err);
-        setError("Failed to load Google Places. Please check your internet connection and API key.");
+        console.error("API Key (first 10 chars):", apiKey?.substring(0, 10));
+        
+        // More specific error messages
+        let errorMessage = "Failed to load Google Places. ";
+        if (!apiKey) {
+          errorMessage += "API key is missing.";
+        } else if (err instanceof Error) {
+          if (err.message.includes("API key")) {
+            errorMessage += "Invalid API key or Places API not enabled.";
+          } else if (err.message.includes("quota")) {
+            errorMessage += "API quota exceeded.";
+          } else if (err.message.includes("billing")) {
+            errorMessage += "Billing account required.";
+          } else {
+            errorMessage += `Error: ${err.message}`;
+          }
+        } else {
+          errorMessage += "Please check your internet connection and API key.";
+        }
+        
+        setError(errorMessage);
         setIsLoading(false);
       }
     };
