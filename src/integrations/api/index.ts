@@ -6,3 +6,6 @@ export { zoomService } from './services/zoom.service';
 export { teacherService } from './services/teacher.service';
 export { platformService } from './services/platform.service';
 export { googleCalendarService } from './services/google-calendar.service';
+export { cvService } from './services/cv.service';
+export { smsService } from './services/sms.service';
+export { enrollmentService } from './services/enrollment.service';

@@ -33,6 +33,7 @@ export interface TeacherProfile {
         alternativePhoneNumber?: string;
         bio?: string;
         profileImage?: string;
+    legal_id:{id_type:string,id:string,country:string};
         _signedProfileImage?: string;
         [key: string]: any;
     };

@@ -8,10 +8,12 @@ import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/use-toast";
-import { ImagePlus, User, Mail, Phone, Save, Loader2 } from "lucide-react";
+import { ImagePlus, User, Mail, Phone, Save, Loader2, Sparkles, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { teacherService } from "@/integrations/api/services/teacher.service";
+import AIProfileHelper from "../AIProfileHelper";
+import { Card } from "@/components/ui/card";
 
 const PersonalInformationStep = () => {
   const { personalInfo, updatePersonalInfo, completeStep } = useProfileJourney();
@@ -19,6 +21,7 @@ const PersonalInformationStep = () => {
   const { toast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [showAIHelper, setShowAIHelper] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Create local state to track form changes
@@ -227,9 +230,86 @@ const PersonalInformationStep = () => {
       setIsSaving(false);
     }
   };
+
+  // Handle AI profile update
+  const handleAIProfileUpdate = (aiData: any) => {
+    if (aiData.extractedData) {
+      const extractedInfo = aiData.extractedData;
+      
+      // Update form data with AI extracted information
+      const updatedFormData = { ...formData };
+      
+      if (extractedInfo.personalInfo?.fullName) {
+        const nameParts = extractedInfo.personalInfo.fullName.split(' ');
+        updatedFormData.firstName = nameParts[0] || '';
+        updatedFormData.lastName = nameParts.slice(1).join(' ') || '';
+      }
+      
+      if (extractedInfo.personalInfo?.email) {
+        updatedFormData.email = extractedInfo.personalInfo.email;
+      }
+      
+      if (extractedInfo.personalInfo?.bio) {
+        updatedFormData.bio = extractedInfo.personalInfo.bio;
+      }
+      
+      setFormData(updatedFormData);
+      setShowAIHelper(false);
+      
+      toast({
+        title: "Profile updated with AI!",
+        description: "Your profile has been populated with information from your CV. Review and make any necessary changes.",
+      });
+    }
+  };
   
   return (
     <div className="space-y-6">
+      {/* AI Profile Helper - Prominent placement */}
+      {!showAIHelper && (
+        <Card className="bg-gradient-to-r from-purple-50 via-pink-50 to-orange-50 border-purple-200 p-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <div className="relative">
+                <Sparkles className="w-8 h-8 text-purple-600" />
+                <div className="absolute -top-1 -right-1 w-3 h-3 bg-pink-400 rounded-full animate-pulse"></div>
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-purple-700">Speed up your profile with AI</h3>
+                <p className="text-purple-600 text-sm">Upload your CV and let our AI magically fill in your information</p>
+              </div>
+            </div>
+            <Button
+              onClick={() => setShowAIHelper(true)}
+              className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white"
+            >
+              <Sparkles className="w-4 h-4 mr-2" />
+              Try AI Magic
+            </Button>
+          </div>
+        </Card>
+      )}
+
+      {/* AI Profile Helper Component */}
+      {showAIHelper && (
+        <div className="relative">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowAIHelper(false)}
+            className="absolute top-2 right-2 z-10 hover:bg-gray-100"
+          >
+            <X className="w-4 h-4" />
+          </Button>
+          <AIProfileHelper
+            onProfileUpdate={handleAIProfileUpdate}
+            onClose={() => setShowAIHelper(false)}
+          />
+        </div>
+      )}
+
+      {!showAIHelper && <Separator />}
+
       {/* Profile Image */}
       <div className="flex flex-col items-center sm:flex-row sm:items-start gap-6">
         <div className="flex flex-col items-center">
