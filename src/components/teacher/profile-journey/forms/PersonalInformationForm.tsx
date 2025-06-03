@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useProfileJourney } from '../ProfileJourneyContext';
 import { Camera, Phone, MapPin, User, Video, FileText, Upload, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { CVUploadNudge } from './CVUploadNudge';
 
 const countryOptions = [
   { code: '+1', name: 'United States/Canada' },
@@ -15,7 +16,7 @@ const countryOptions = [
   { code: '+255', name: 'Tanzania' },
   { code: '+256', name: 'Uganda' },
   { code: '+250', name: 'Rwanda' },
-  { code: '+234', name: 'Nigeria' },
+{ code: '+234', name: 'Nigeria' },
   { code: '+27', name: 'South Africa' },
   { code: '+20', name: 'Egypt' },
   { code: '+91', name: 'India' },
@@ -44,7 +45,45 @@ export const PersonalInformationForm = ({ onComplete }: PersonalInformationFormP
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadedImage, setUploadedImage] = useState<string | null>(personalInfo.profileImage || null);
   const [isUploading, setIsUploading] = useState(false);
+  const [showCVNudge, setShowCVNudge] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // CV upload handler
+  const handleCVUpload = async (file: File) => {
+    try {
+      // In a real implementation, you would send this to your CV parsing service
+      console.log('CV uploaded:', file.name);
+      
+      // Simulate CV parsing and auto-fill
+      // This would typically be replaced with actual API calls to extract data
+      setTimeout(() => {
+        // Mock data extraction - in real implementation this would come from CV parsing service
+        const mockData = {
+          fullName: "John Doe",
+          email: "john.doe@email.com", 
+          phone: "123456789",
+          homeAddress: "123 Main Street, City",
+          country: "Kenya",
+          bio: "Experienced educator with passion for teaching and student development."
+        };
+        
+        // Only update empty fields to avoid overwriting user input
+        Object.entries(mockData).forEach(([key, value]) => {
+          if (!personalInfo[key as keyof typeof personalInfo]) {
+            updatePersonalInfo({ [key]: value });
+          }
+        });
+        
+        setShowCVNudge(false);
+      }, 2000);
+    } catch (error) {
+      console.error('Error processing CV:', error);
+    }
+  };
+
+  const handleDismissCVNudge = () => {
+    setShowCVNudge(false);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -134,6 +173,15 @@ export const PersonalInformationForm = ({ onComplete }: PersonalInformationFormP
           <h3 className="text-2xl font-bold text-gray-900 mb-2">Personal Information</h3>
           <p className="text-gray-600">Tell us about yourself and your contact details</p>
         </div>
+
+        {/* CV Upload Nudge */}
+        {showCVNudge && (
+          <CVUploadNudge 
+            onCVUpload={handleCVUpload}
+            onDismiss={handleDismissCVNudge}
+          />
+        )}
+
         {/* Basic Information */}
         <div className="bg-gradient-to-br from-[#acb4e4] to-[#efebf0] p-6 rounded-3xl border-2 border-[#5c64d4]/20">
           <div className="flex items-center gap-3 mb-4">
