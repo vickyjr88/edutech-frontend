@@ -21,6 +21,7 @@ import { StudentView } from "@/components/teacher/students";
 import RecommendedClasses from "@/components/teacher/RecommendedClasses";
 import TabbedClassesView from "@/components/teacher/TabbedClassesView";
 import { ZoomDashboard } from "@/components/teacher/zoom";
+import { GoogleCalendarDashboard } from "@/components/teacher/google-calendar";
 import { useAuth } from "@/contexts/AuthContext";
 import {teacherService} from "@/integrations/api/services/teacher.service.ts";
 import {classService} from "@/integrations/api/services/class.service.ts";
@@ -68,9 +69,12 @@ const TeacherDashboard = () => {
     const path = location.pathname;
     const searchParams = new URLSearchParams(location.search);
     
-    // Check for zoom parameter first
+    // Check for integration parameters first
     if (searchParams.get('zoom') === 'connected') {
       return "zoom";
+    }
+    if (searchParams.get('calendar') === 'connected') {
+      return "calendar";
     }
     
     if (path.includes('/teacher-dashboard/classes')) {
@@ -86,6 +90,8 @@ const TeacherDashboard = () => {
       return "settings";
     } else if (path.includes('/teacher-dashboard/zoom')) {
       return "zoom";
+    } else if (path.includes('/teacher-dashboard/calendar')) {
+      return "calendar";
     }
     return "dashboard"; // Default tab
   };
@@ -150,7 +156,7 @@ const TeacherDashboard = () => {
     }
   }, [user]);
 
-  // Handle zoom connection success
+  // Handle integration connection success
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
     if (searchParams.get('zoom') === 'connected') {
@@ -160,6 +166,17 @@ const TeacherDashboard = () => {
       });
       // Clean up the URL parameter
       searchParams.delete('zoom');
+      const newSearch = searchParams.toString();
+      const newUrl = newSearch ? `${location.pathname}?${newSearch}` : location.pathname;
+      navigate(newUrl, { replace: true });
+    }
+    if (searchParams.get('calendar') === 'connected') {
+      toast({
+        title: "Google Calendar Connected Successfully!",
+        description: "Your Google Calendar is now connected and ready to sync your class events.",
+      });
+      // Clean up the URL parameter
+      searchParams.delete('calendar');
       const newSearch = searchParams.toString();
       const newUrl = newSearch ? `${location.pathname}?${newSearch}` : location.pathname;
       navigate(newUrl, { replace: true });
@@ -1026,6 +1043,17 @@ const TeacherDashboard = () => {
           >
             <Video className="mr-3 h-5 w-5" />
             Zoom
+          </Link>
+          <Link 
+            to="/teacher-dashboard/calendar"
+            className={`flex items-center px-4 py-3 text-sm font-medium rounded-md w-full text-left ${
+              activeTab === "calendar" 
+                ? "bg-kidato-light-blue text-kidato-purple" 
+                : "text-gray-700 hover:bg-gray-100"
+            }`}
+          >
+            <Calendar className="mr-3 h-5 w-5" />
+            Calendar
           </Link>
           <Link 
             to="/teacher-dashboard/settings"
@@ -2218,6 +2246,12 @@ const TeacherDashboard = () => {
           {!isLoading && activeTab === "zoom" && (
             <div className="max-w-7xl mx-auto">
               <ZoomDashboard />
+            </div>
+          )}
+
+          {!isLoading && activeTab === "calendar" && (
+            <div className="max-w-7xl mx-auto">
+              <GoogleCalendarDashboard />
             </div>
           )}
         </main>

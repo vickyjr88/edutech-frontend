@@ -18,6 +18,7 @@ import ProtectedRoute from "./components/auth/ProtectedRoute";
 import TeacherRoute from "./components/auth/TeacherRoute";
 import AuthCallback from "./pages/AuthCallback";
 import ZoomAuthCallback from "./pages/ZoomAuthCallback";
+import GoogleCalendarAuthCallback from "./pages/GoogleCalendarAuthCallback";
 import ForTeachers from "./pages/ForTeachers";
 import ForParents from "./pages/ForParents";
 import ForStudents from "./pages/ForStudents";
@@ -45,6 +46,7 @@ import ParentsBilling from "./pages/parents/ParentsBilling";
 import ChildDashboard from "./pages/parents/ChildDashboard";
 import TeachersPricing from "./pages/TeachersPricing";
 import TeacherZoomPage from "./pages/TeacherZoomPage";
+import TeacherGoogleCalendarPage from "./pages/TeacherGoogleCalendarPage";
 import TeacherProfileJourney from "./pages/TeacherProfileJourney";
 import TeacherProfileResume from "./pages/TeacherProfileResume";
 import TeacherClassSetupPage from "./pages/TeacherClassSetupPage";
@@ -74,6 +76,7 @@ const App = () => {
                 <Route path="/signup" element={<Signup />} />
                 <Route path="/auth/callback" element={<AuthCallback />} />
                 <Route path="/zoom/callback" element={<ZoomAuthCallback />} />
+                <Route path="/google-calendar/callback" element={<GoogleCalendarAuthCallback />} />
                 <Route path="/for-teachers" element={<ForTeachers />} />
                 <Route path="/for-parents" element={<ForParents />} />
                 <Route path="/for-students" element={<ForStudents />} />
@@ -122,6 +125,11 @@ const App = () => {
                 } />
                 
                 <Route path="/teacher-dashboard/zoom" element={
+                  <TeacherRoute requireProfileComplete={true}>
+                    <TeacherDashboard />
+                  </TeacherRoute>
+                } />
+                <Route path="/teacher-dashboard/calendar" element={
                   <TeacherRoute requireProfileComplete={true}>
                     <TeacherDashboard />
                   </TeacherRoute>
@@ -262,6 +270,7 @@ const App = () => {
                   <Route path="/signup" element={<Signup />} />
                   <Route path="/auth/callback" element={<AuthCallback />} />
                   <Route path="/zoom/callback" element={<ZoomAuthCallback />} />
+                <Route path="/google-calendar/callback" element={<GoogleCalendarAuthCallback />} />
                   <Route path="/for-teachers" element={<ForTeachers />} />
                   <Route path="/for-parents" element={<ForParents />} />
                   <Route path="/for-students" element={<ForStudents />} />
@@ -310,6 +319,11 @@ const App = () => {
                   <Route path="/teacher-dashboard/zoom" element={
                     <TeacherRoute requireProfileComplete={true}>
                       <TeacherZoomPage />
+                    </TeacherRoute>
+                  } />
+                  <Route path="/teacher-dashboard/calendar" element={
+                    <TeacherRoute requireProfileComplete={true}>
+                      <TeacherDashboard />
                     </TeacherRoute>
                   } />
                   <Route path="/teacher-profile-setup" element={

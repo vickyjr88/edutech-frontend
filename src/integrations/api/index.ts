@@ -5,3 +5,4 @@ export { classService } from './services/class.service';
 export { zoomService } from './services/zoom.service';
 export { teacherService } from './services/teacher.service';
 export { platformService } from './services/platform.service';
+export { googleCalendarService } from './services/google-calendar.service';
