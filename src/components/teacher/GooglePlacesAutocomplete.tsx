@@ -60,7 +60,6 @@ const GooglePlacesAutocomplete: React.FC<GooglePlacesAutocompleteProps> = ({
 
         if (inputRef.current) {
           const autocomplete = new google.maps.places.Autocomplete(inputRef.current, {
-            types: ["address", "establishment", "geocode"],
             fields: [
               "address_components",
               "formatted_address",
