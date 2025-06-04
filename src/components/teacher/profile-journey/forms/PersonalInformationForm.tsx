@@ -859,13 +859,15 @@ export const PersonalInformationForm = ({ onComplete }: PersonalInformationFormP
                 </div>
                 {(uploadedIdDocument || verification.idVerification) && (
                   <div className={cn(
-                    "flex items-center gap-2 text-sm",
+                    "flex flex-col gap-2 text-sm mt-2",
                     verification.idVerification ? "text-green-600" : "text-blue-600"
                   )}>
-                    <CheckCircle className="w-4 h-4" />
-                    <span>{uploadedIdDocument || "Government ID Document"}</span>
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="w-4 h-4 flex-shrink-0" />
+                      <span className="truncate">{uploadedIdDocument || "Government ID Document"}</span>
+                    </div>
                     <span className={cn(
-                      "text-xs px-2 py-1 rounded-full",
+                      "text-xs px-2 py-1 rounded-full self-start",
                       verification.idVerification 
                         ? "bg-green-100 text-green-700" 
                         : "bg-blue-100 text-blue-700"
