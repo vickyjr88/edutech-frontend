@@ -28,7 +28,7 @@ interface GooglePlacesAutocompleteProps {
 
 const GooglePlacesAutocomplete: React.FC<GooglePlacesAutocompleteProps> = ({
   onPlaceSelect,
-  placeholder = "Search for an address...",
+  placeholder = "Start typing your address in Kenya...",
   initialValue = "",
   className = "",
   label
@@ -67,7 +67,14 @@ const GooglePlacesAutocomplete: React.FC<GooglePlacesAutocompleteProps> = ({
               "geometry",
               "place_id",
               "name"
-            ]
+            ],
+            // Set bounds to Kenya region to prioritize local results but allow global search
+            bounds: new google.maps.LatLngBounds(
+              new google.maps.LatLng(-4.678, 33.909), // Southwest corner of Kenya
+              new google.maps.LatLng(5.506, 41.899)   // Northeast corner of Kenya
+            ),
+            // Don't restrict bounds strictly - allow global search but prioritize Kenya
+            strictBounds: false
           });
 
           autocomplete.addListener("place_changed", () => {
