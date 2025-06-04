@@ -24,7 +24,7 @@ interface EducationFormProps {
 }
 
 export const EducationForm = ({ onComplete }: EducationFormProps) => {
-  const { education, setEducation, completeStep } = useProfileJourney();
+  const { education, setEducation, saveEducation, completeStep } = useProfileJourney();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showCVPrefill, setShowCVPrefill] = useState(false);
@@ -179,23 +179,30 @@ export const EducationForm = ({ onComplete }: EducationFormProps) => {
         return;
       }
 
-      // Convert to the format expected by the context
+      // Convert to the format expected by the context (EducationItem format)
       const educationData = validEntries.map(entry => ({
-        id: entry.id,
+        _id: entry.id,
         institution: entry.institution,
+        institutionName: entry.institution,
         degree: entry.degree,
-        fieldOfStudy: entry.fieldOfStudy,
-        startYear: entry.startYear ? parseInt(entry.startYear) : undefined,
-        endYear: entry.endYear ? parseInt(entry.endYear) : undefined,
-        isCompleted: entry.isCompleted
+        additionalDetails: entry.fieldOfStudy,
+        startDate: entry.startYear ? `${entry.startYear}-01-01` : '',
+        endDate: entry.endYear ? `${entry.endYear}-12-31` : '',
+        isCurrentlyStudying: !entry.isCompleted,
+        institutionType: entry.degree?.toLowerCase().includes('university') || entry.degree?.toLowerCase().includes('bachelor') || entry.degree?.toLowerCase().includes('master') || entry.degree?.toLowerCase().includes('phd') ? 'university' as const : 'secondary' as const,
       }));
 
       // Update the context
       setEducation(educationData);
       
-      // Mark step as complete
-      completeStep('education');
-      onComplete();
+      // Save education to the API
+      const saveSuccess = await saveEducation();
+      
+      if (saveSuccess) {
+        // Mark step as complete only if save was successful
+        completeStep('education');
+        onComplete();
+      }
     } finally {
       setIsSubmitting(false);
     }

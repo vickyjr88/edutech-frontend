@@ -179,7 +179,9 @@ interface ProfileJourneyContextType {
   updatePersonalInfo: (data: Partial<ProfileJourneyContextType['personalInfo']>) => void;
   updateLocationInfo: (data: Partial<ProfileJourneyContextType['locationInfo']>) => void;
   setEducation: (items: EducationItem[]) => void;
+  saveEducation: () => Promise<boolean>;
   setExperience: (items: ExperienceItem[]) => void;
+  saveExperience: () => Promise<boolean>;
   setAcademicSubjects: (items: AcademicSubjectItem[]) => void;
   setAfterSchoolSubjects: (items: AfterSchoolSubjectItem[]) => void;
   setStrategies: (items: StrategyItem[]) => void;
@@ -293,7 +295,9 @@ const defaultContext: ProfileJourneyContextType = {
   updatePersonalInfo: () => {},
   updateLocationInfo: () => {},
   setEducation: () => {},
+  saveEducation: async () => false,
   setExperience: () => {},
+  saveExperience: async () => false,
   setAcademicSubjects: () => {},
   setAfterSchoolSubjects: () => {},
   setStrategies: () => {},
@@ -507,6 +511,140 @@ export const ProfileJourneyProvider = ({ children }: { children: ReactNode }) =>
         description: "An error occurred while saving your personal information",
         variant: "destructive"
       });
+    }
+  };
+
+  // Save education function - called when education step is completed
+  const saveEducation = async (): Promise<boolean> => {
+    try {
+      if (!user?.teacherId) {
+        toast({
+          title: "Error",
+          description: "Teacher ID not found. Please ensure you are logged in.",
+          variant: "destructive"
+        });
+        return false;
+      }
+
+      const teacherId = user.teacherId;
+      console.log("Saving education for teacher:", teacherId);
+      console.log("Education items to save:", education);
+
+      // Convert EducationItem format to Education format for the API
+      const educationItemsForAPI = education.map(edu => ({
+        id: edu._id && !edu._id.startsWith('edu-') ? edu._id : undefined,
+        institution: edu.institution || edu.institutionName || '',
+        degree: edu.degree || '',
+        fieldOfStudy: edu.additionalDetails || '', // Map additionalDetails to fieldOfStudy
+        startDate: edu.startDate,
+        endDate: edu.endDate,
+        isCurrentlyEnrolled: edu.isCurrentlyStudying || false,
+        grade: '', // EducationItem doesn't have grade
+        activities: '', // EducationItem doesn't have activities
+        description: edu.additionalDetails || ''
+      }));
+
+      console.log("Sending education items to API:", educationItemsForAPI);
+
+      // Call the new bulk update endpoint
+      const result = await teacherService.updateTeacherEducation(teacherId, educationItemsForAPI);
+      
+      if (result.error) {
+        throw new Error(result.error.message || 'Failed to save education information');
+      }
+
+      // Update local state with the response data if available
+      if (result.data && Array.isArray(result.data)) {
+        const updatedEducation = result.data.map((apiEdu, index) => ({
+          ...education[index],
+          _id: apiEdu.id || education[index]._id
+        }));
+        setEducation(updatedEducation);
+      }
+
+      toast({
+        title: "Success",
+        description: "Education information saved successfully",
+      });
+
+      console.log("Education saved successfully");
+      return true;
+    } catch (error) {
+      console.error("Error saving education:", error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to save education information. Please try again.",
+        variant: "destructive",
+      });
+      return false;
+    }
+  };
+
+  // Save experience function - called when experience step is completed
+  const saveExperience = async (): Promise<boolean> => {
+    try {
+      if (!user?.teacherId) {
+        toast({
+          title: "Error",
+          description: "Teacher ID not found. Please ensure you are logged in.",
+          variant: "destructive"
+        });
+        return false;
+      }
+
+      const teacherId = user.teacherId;
+      console.log("Saving experience for teacher:", teacherId);
+      console.log("Experience items to save:", experience);
+
+      // Convert ExperienceItem format to Experience format for the API
+      const experienceItemsForAPI = experience.map(exp => ({
+        id: exp._id && !exp._id.startsWith('exp-') ? exp._id : undefined,
+        position: exp.position || '',
+        institution: exp.institution || '',
+        institutionType: exp.institutionType || '',
+        startDate: exp.startDate,
+        endDate: exp.endDate,
+        isCurrentlyWorking: exp.isCurrentlyWorking || false,
+        curriculums: exp.curriculums || [],
+        grades: exp.grades || [],
+        subjects: exp.subjects || [],
+        reportingManager: exp.reportingManager,
+        additionalDetails: exp.additionalDetails || ''
+      }));
+
+      console.log("Sending experience items to API:", experienceItemsForAPI);
+
+      // Call the new bulk update endpoint
+      const result = await teacherService.updateTeacherExperience(teacherId, experienceItemsForAPI);
+      
+      if (result.error) {
+        throw new Error(result.error.message || 'Failed to save experience information');
+      }
+
+      // Update local state with the response data if available
+      if (result.data && Array.isArray(result.data)) {
+        const updatedExperience = result.data.map((apiExp, index) => ({
+          ...experience[index],
+          _id: apiExp.id || experience[index]._id
+        }));
+        setExperience(updatedExperience);
+      }
+
+      toast({
+        title: "Success",
+        description: "Experience information saved successfully",
+      });
+
+      console.log("Experience saved successfully");
+      return true;
+    } catch (error) {
+      console.error("Error saving experience:", error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to save experience information. Please try again.",
+        variant: "destructive",
+      });
+      return false;
     }
   };
   
@@ -1367,7 +1505,9 @@ export const ProfileJourneyProvider = ({ children }: { children: ReactNode }) =>
     updatePersonalInfo,
     updateLocationInfo,
     setEducation,
+    saveEducation,
     setExperience,
+    saveExperience,
     setAcademicSubjects,
     setAfterSchoolSubjects,
     setStrategies,

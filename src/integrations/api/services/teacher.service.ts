@@ -241,6 +241,36 @@ export const teacherService = {
         return api.delete<{ success: boolean }>(`/teachers/education/${id}`);
     },
 
+    // Bulk update education - send all education items as an array
+    updateTeacherEducation: (teacherId: string, educationItems: Education[]): Promise<ApiResponse<Education[]>> => {
+        // Normalize dates for all education items
+        const normalizeDate = (dateStr: string): string => {
+            if (!dateStr) return "";
+            // Remove any existing -01 day that might have been added incorrectly
+            const cleaned = dateStr.replace(/-01-01$/, "-01");
+            
+            // Ensure we have a YYYY-MM format
+            const dateMatch = cleaned.match(/^(\d{4}-\d{2})(?:-\d{2})?$/);
+            if (dateMatch) {
+                return `${dateMatch[1]}-01`;
+            }
+            
+            // If it's in another format, use formatDateForDatabase
+            return formatDateForDatabase(dateStr);
+        };
+
+        const normalizedEducationItems = educationItems.map(item => ({
+            ...item,
+            teacherProfile: teacherId,
+            startDate: item.startDate ? normalizeDate(item.startDate as string) : "",
+            endDate: item.endDate ? normalizeDate(item.endDate as string) : null
+        }));
+
+        return api.put<Education[]>(`/teachers/${teacherId}/education`, {
+            educationItems: normalizedEducationItems
+        });
+    },
+
     // Experience Management
     addExperience: (data: Experience): Promise<ApiResponse<Experience>> => {
         // Manually normalize the date format to ensure we don't get duplicate -01 days
@@ -330,6 +360,36 @@ export const teacherService = {
     deleteExperience: (id: string, teacherId: string): Promise<ApiResponse<{ success: boolean }>> => {
         // Use the pattern consistent with other endpoints: /teachers/:teacherId/experience/:id
         return api.delete<{ success: boolean }>(`/teachers/${teacherId}/experience/${id}`);
+    },
+
+    // Bulk update experience - send all experience items as an array
+    updateTeacherExperience: (teacherId: string, experienceItems: Experience[]): Promise<ApiResponse<Experience[]>> => {
+        // Normalize dates for all experience items
+        const normalizeDate = (dateStr: string): string => {
+            if (!dateStr) return "";
+            // Remove any existing -01 day that might have been added incorrectly
+            const cleaned = dateStr.replace(/-01-01$/, "-01");
+            
+            // Ensure we have a YYYY-MM format
+            const dateMatch = cleaned.match(/^(\d{4}-\d{2})(?:-\d{2})?$/);
+            if (dateMatch) {
+                return `${dateMatch[1]}-01`;
+            }
+            
+            // If it's in another format, use formatDateForDatabase
+            return formatDateForDatabase(dateStr);
+        };
+
+        const normalizedExperienceItems = experienceItems.map(item => ({
+            ...item,
+            teacherProfile: teacherId,
+            startDate: item.startDate ? normalizeDate(item.startDate as string) : "",
+            endDate: item.endDate ? normalizeDate(item.endDate as string) : null
+        }));
+
+        return api.put<Experience[]>(`/teachers/${teacherId}/experience`, {
+            experienceItems: normalizedExperienceItems
+        });
     },
 
     // Additional helper methods
