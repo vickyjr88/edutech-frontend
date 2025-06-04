@@ -452,8 +452,7 @@ export const ProfileJourneyProvider = ({ children }: { children: ReactNode }) =>
         // 2. Teacher profile data
         const teacherData: any = {
           // Note: We don't include firstName/lastName in teacherProfile
-          // Include profile image in teacher profile (could be teacher-specific)
-          ...(data.profileImage && { profileImage: data.profileImage }),
+          // Note: profileImage is handled separately via uploadProfilePhoto, not in general profile updates
           // Include intro video URL in teacher profile
           ...(data.introVideoUrl && { introVideoUrl: data.introVideoUrl }),
           // Include location data in teacher profile if available
