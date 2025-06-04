@@ -71,6 +71,7 @@ export const PersonalInformationForm = ({ onComplete }: PersonalInformationFormP
   const [uploadedImage, setUploadedImage] = useState<string | null>(personalInfo.profileImage || null);
   const [isUploading, setIsUploading] = useState(false);
   const [showCVNudge, setShowCVNudge] = useState(true);
+  const [isCVProcessing, setIsCVProcessing] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
   const [showManualAddress, setShowManualAddress] = useState(false);
   const [isUploadingIdDocument, setIsUploadingIdDocument] = useState(false);
@@ -131,6 +132,7 @@ export const PersonalInformationForm = ({ onComplete }: PersonalInformationFormP
 
   // CV upload handler
   const handleCVUpload = async (file: File) => {
+    setIsCVProcessing(true);
     try {
       console.log('CV uploaded:', file.name);
       
@@ -198,6 +200,8 @@ export const PersonalInformationForm = ({ onComplete }: PersonalInformationFormP
         description: error instanceof Error ? error.message : "Failed to process CV. Please try again.",
         variant: "destructive",
       });
+    } finally {
+      setIsCVProcessing(false);
     }
   };
 
@@ -684,11 +688,48 @@ export const PersonalInformationForm = ({ onComplete }: PersonalInformationFormP
           <p className="text-gray-600">Tell us about yourself and your contact details</p>
         </div>
 
-        {/* CV Upload Nudge */}
-        {showCVNudge && (
+        {/* CV Upload Nudge or Processing Banner */}
+        {isCVProcessing ? (
+          <div className="mb-6 p-6 bg-gradient-to-br from-blue-50 via-purple-50 to-indigo-50 rounded-3xl border-2 border-blue-200 shadow-lg">
+            <div className="text-center">
+              <div className="relative inline-block mb-4">
+                <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-3xl flex items-center justify-center mx-auto shadow-lg">
+                  <FileText className="h-8 w-8 text-white" />
+                </div>
+                <div className="absolute -top-1 -right-1 w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin bg-white"></div>
+              </div>
+              <h4 className="text-xl font-bold text-gray-900 mb-3">🔄 Processing Your CV</h4>
+              <p className="text-gray-600 mb-4 max-w-md mx-auto">
+                Our AI is analyzing your CV and extracting information to auto-fill your profile. This may take a few moments...
+              </p>
+              <div className="flex items-center justify-center gap-2 mb-4">
+                <div className="h-2 w-48 bg-gray-200 rounded-full overflow-hidden">
+                  <div className="h-full bg-gradient-to-r from-blue-400 via-purple-500 to-indigo-500 rounded-full animate-pulse"></div>
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-4 text-xs text-gray-600">
+                <div className="flex items-center justify-center gap-2">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                  Extracting personal info
+                </div>
+                <div className="flex items-center justify-center gap-2">
+                  <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse" style={{animationDelay: '0.5s'}}></div>
+                  Reading experience
+                </div>
+                <div className="flex items-center justify-center gap-2">
+                  <div className="w-2 h-2 bg-indigo-500 rounded-full animate-pulse" style={{animationDelay: '1s'}}></div>
+                  Parsing education
+                </div>
+              </div>
+              <p className="text-xs text-blue-600 mt-4 font-medium">Please wait while we process your document...</p>
+            </div>
+          </div>
+        ) : showCVNudge && (
           <CVUploadNudge 
             onCVUpload={handleCVUpload}
             onDismiss={handleDismissCVNudge}
+            onUploadStart={() => setIsCVProcessing(true)}
+            onUploadEnd={() => setIsCVProcessing(false)}
           />
         )}
 

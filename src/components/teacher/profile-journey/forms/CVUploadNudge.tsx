@@ -6,9 +6,11 @@ import { cn } from '@/lib/utils';
 interface CVUploadNudgeProps {
   onCVUpload?: (file: File) => void;
   onDismiss?: () => void;
+  onUploadStart?: () => void;
+  onUploadEnd?: () => void;
 }
 
-export const CVUploadNudge = ({ onCVUpload, onDismiss }: CVUploadNudgeProps) => {
+export const CVUploadNudge = ({ onCVUpload, onDismiss, onUploadStart, onUploadEnd }: CVUploadNudgeProps) => {
   const [isDragOver, setIsDragOver] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -61,23 +63,18 @@ export const CVUploadNudge = ({ onCVUpload, onDismiss }: CVUploadNudgeProps) => 
     }
 
     setIsUploading(true);
+    onUploadStart?.();
 
     try {
-      // Here you would typically send the file to an AI service
-      // For now, we'll just simulate the upload
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
       if (onCVUpload) {
-        onCVUpload(file);
+        await onCVUpload(file);
       }
-      
-      // Show success message
-      alert('CV uploaded successfully! We\'ll help you auto-fill your profile information.');
     } catch (error) {
       console.error('Error uploading CV:', error);
       alert('Failed to upload CV. Please try again.');
     } finally {
       setIsUploading(false);
+      onUploadEnd?.();
     }
   };
 
