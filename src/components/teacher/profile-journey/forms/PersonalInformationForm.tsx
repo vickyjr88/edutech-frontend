@@ -1037,13 +1037,13 @@ export const PersonalInformationForm = ({ onComplete }: PersonalInformationFormP
                 <Label className="text-sm font-medium">Home Address *</Label>
                 <GooglePlacesAutocomplete
                   onPlaceSelect={handlePlaceSelect}
-                  placeholder="Start typing your address..."
+                  placeholder="Search for your address, building, or nearby landmark..."
                   initialValue={localFormData.homeAddress}
                   className="[&>div>input]:rounded-xl [&>div>input]:border-purple-200 [&>div>input]:focus:border-purple-400"
                 />
                 <div className="flex items-center justify-between">
                   <p className="text-xs text-purple-600">
-                    Start typing to search for your address using Google Places
+                    Search for addresses, specific buildings, or landmarks using Google Places
                   </p>
                   <Button
                     type="button"
