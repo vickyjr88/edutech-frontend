@@ -10,7 +10,7 @@ export interface CVUploadResponse {
       uploadedAt: string;
     };
     extractedData: {
-      personalInfo: { 
+personalInfo: {
         fullName: string; 
         email: string; 
         phoneNumber: string;

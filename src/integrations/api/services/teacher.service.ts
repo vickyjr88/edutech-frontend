@@ -625,14 +625,6 @@ export const teacherService = {
         });
     },
 
-    getDocumentSignedUrl: (teacherId: string, documentType: 'background_check' | 'government_id'): Promise<ApiResponse<{ 
-        signedUrl: string;
-    }>> => {
-        return api.get<{ 
-            signedUrl: string;
-        }>(`/teachers/${teacherId}/documents/${documentType}/signed-url`);
-    },
-
     // AI Class Recommendations
     generateRecommendations: (): Promise<ApiResponse<ClassRecommendation[]>> => {
         return api.post<ClassRecommendation[]>('/teacher/recommendations/generate');
