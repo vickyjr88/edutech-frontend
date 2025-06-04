@@ -125,6 +125,13 @@ interface ProfileJourneyContextType {
     profileImage: string;
     introVideoUrl: string;
     bio: string;
+    locationCity?: string;
+    locationCounty?: string;
+    locationPostalCode?: string;
+    locationCoordinates?: {
+      latitude: number;
+      longitude: number;
+    };
   };
   locationInfo: {
     address: string;
@@ -237,6 +244,10 @@ const defaultContext: ProfileJourneyContextType = {
     profileImage: "",
     introVideoUrl: "",
     bio: "",
+    locationCity: "",
+    locationCounty: "",
+    locationPostalCode: "",
+    locationCoordinates: { latitude: 0, longitude: 0 },
   },
   locationInfo: {
     address: "",
@@ -444,7 +455,17 @@ export const ProfileJourneyProvider = ({ children }: { children: ReactNode }) =>
           // Include profile image in teacher profile (could be teacher-specific)
           ...(data.profileImage && { profileImage: data.profileImage }),
           // Include intro video URL in teacher profile
-          ...(data.introVideoUrl && { introVideoUrl: data.introVideoUrl })
+          ...(data.introVideoUrl && { introVideoUrl: data.introVideoUrl }),
+          // Include location data in teacher profile if available
+          ...(data.homeAddress && {
+            location: {
+              address: data.homeAddress,
+              city: data.locationCity || '',
+              county: data.locationCounty || '',
+              postalCode: data.locationPostalCode || '',
+              coordinates: data.locationCoordinates || { latitude: 0, longitude: 0 }
+            }
+          })
         };
         
         // Call API to update user profile data
@@ -1056,7 +1077,7 @@ export const ProfileJourneyProvider = ({ children }: { children: ReactNode }) =>
             setStrategies(profileData.strategies as any[]);
             hasLoadedStrategies = true;
           }
-          
+
           if (profileData.methodologies && profileData.methodologies.length > 0) {
             setMethodologies(profileData.methodologies as any[]);
             hasLoadedMethodologies = true;

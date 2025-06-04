@@ -121,12 +121,15 @@ export const ExpertiseForm = ({ onComplete }: ExpertiseFormProps) => {
           (cvData.languages && cvData.languages.length > 0) ||
           (cvData.skills && cvData.skills.length > 0)
         )) {
-          // Only show prefill option if forms are mostly empty
-          const hasMinimalData = experienceEntries.length === 1 && !experienceEntries[0].institution &&
-                                !subjectAreas.academic && !subjectAreas.afterSchool;
-          if (hasMinimalData) {
-            setShowCVPrefill(true);
-          }
+          console.log('CV expertise data found:', {
+            experience: cvData.experience?.length || 0,
+            subjects: cvData.subjects?.length || 0,
+            languages: cvData.languages?.length || 0,
+            skills: cvData.skills?.length || 0
+          });
+          // Show prefill option if CV has relevant data, regardless of existing entries
+          // This allows users to overwrite or merge CV data with existing data
+          setShowCVPrefill(true);
         }
       } catch (error) {
         console.log('No CV data available for prefill');

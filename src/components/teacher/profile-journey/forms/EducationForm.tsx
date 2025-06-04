@@ -60,10 +60,10 @@ export const EducationForm = ({ onComplete }: EducationFormProps) => {
       try {
         const { data: cvData, error } = await cvService.getCVExtractedData();
         if (cvData && cvData.education && cvData.education.length > 0) {
-          // Only show prefill option if there are no existing education entries
-          if (educationEntries.length === 1 && !educationEntries[0].institution) {
-            setShowCVPrefill(true);
-          }
+          console.log('CV education data found:', cvData.education);
+          // Show prefill option if CV has education data, regardless of existing entries
+          // This allows users to overwrite or merge CV data with existing data
+          setShowCVPrefill(true);
         }
       } catch (error) {
         // CV data not available, continue normally

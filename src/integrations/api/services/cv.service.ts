@@ -174,8 +174,8 @@ class CVService {
    */
   async getCVExtractedData(): Promise<{ data?: CVUploadResponse['data']['extractedData']; error?: any }> {
     try {
-      const response = await api.get<{ extractedData: CVUploadResponse['data']['extractedData'] }>('/teacher/cv/extracted-data');
-      return { data: response.data.extractedData };
+      const response = await api.get<{ success: boolean; data: { extractedData: CVUploadResponse['data']['extractedData'] } }>('/teacher/cv/extracted-data');
+      return { data: response.data.data.extractedData };
     } catch (error: any) {
       console.error('CV extracted data error:', error);
       return { 

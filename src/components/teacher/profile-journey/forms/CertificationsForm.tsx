@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useProfileJourney } from '../ProfileJourneyContext';
-import { Award, Plus, X, Shield, FileCheck, CheckCircle, FileText, Sparkles } from 'lucide-react';
+import { Award, Plus, X, FileText, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { cvService } from '@/integrations/api/services/cv.service';
 import { useToast } from '@/components/ui/use-toast';
@@ -25,8 +25,6 @@ export const CertificationsForm = ({ onComplete }: CertificationsFormProps) => {
   const { 
     certifications, 
     setCertifications, 
-    verification,
-    updateVerification,
     completeStep 
   } = useProfileJourney();
   const { toast } = useToast();
@@ -63,10 +61,10 @@ export const CertificationsForm = ({ onComplete }: CertificationsFormProps) => {
       try {
         const { data: cvData, error } = await cvService.getCVExtractedData();
         if (cvData && cvData.certifications && cvData.certifications.length > 0) {
-          // Only show prefill option if there are no existing certifications
-          if (certificationEntries.length === 1 && !certificationEntries[0].name) {
-            setShowCVPrefill(true);
-          }
+          console.log('CV certifications data found:', cvData.certifications);
+          // Show prefill option if CV has certification data, regardless of existing entries
+          // This allows users to overwrite or merge CV data with existing data
+          setShowCVPrefill(true);
         }
       } catch (error) {
         console.log('No CV data available for prefill');
@@ -145,9 +143,6 @@ export const CertificationsForm = ({ onComplete }: CertificationsFormProps) => {
     ));
   };
 
-  const handleVerificationChange = (field: 'backgroundCheck' | 'idVerification', value: boolean) => {
-    updateVerification({ [field]: value });
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -173,12 +168,8 @@ export const CertificationsForm = ({ onComplete }: CertificationsFormProps) => {
       }
 
       // Check if form has minimum required data
-      const hasRequiredData = validCertifications.length > 0 || 
-                             verification.backgroundCheck || 
-                             verification.idVerification;
-
-      if (!hasRequiredData) {
-        alert('Please add at least one certification or complete a verification step');
+      if (validCertifications.length === 0) {
+        alert('Please add at least one certification');
         return;
       }
 
@@ -190,9 +181,7 @@ export const CertificationsForm = ({ onComplete }: CertificationsFormProps) => {
     }
   };
 
-  const isFormValid = certificationEntries.some(entry => entry.name.trim()) ||
-                     verification.backgroundCheck ||
-                     verification.idVerification;
+  const isFormValid = certificationEntries.some(entry => entry.name.trim());
 
   return (
     <div className="w-full">
@@ -346,66 +335,6 @@ export const CertificationsForm = ({ onComplete }: CertificationsFormProps) => {
           </Button>
         </div>
 
-        {/* Verification Section */}
-        <div className="bg-gradient-to-br from-[#acb4e4] to-[#efebf0] p-6 rounded-3xl border-2 border-[#5c64d4]/20">
-          <div className="flex items-center gap-3 mb-6">
-            <Shield className="h-6 w-6 text-[#5c64d4]" />
-            <h4 className="text-lg font-semibold text-gray-900">Identity Verification</h4>
-          </div>
-
-          <div className="space-y-4">
-            <div className="flex items-center justify-between p-4 bg-white rounded-2xl border border-[#5c64d4]/20">
-              <div className="flex items-center gap-3">
-                <FileCheck className="h-5 w-5 text-blue-600" />
-                <div>
-                  <Label className="font-medium text-gray-900">Background Check</Label>
-                  <p className="text-sm text-gray-600">Upload background check document</p>
-                </div>
-              </div>
-              <div className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  id="backgroundCheck"
-                  checked={verification.backgroundCheck}
-                  onChange={(e) => handleVerificationChange('backgroundCheck', e.target.checked)}
-                  className="w-5 h-5 text-[#5c64d4] rounded border-gray-300 focus:ring-[#5c64d4]"
-                />
-                <Label htmlFor="backgroundCheck" className="text-sm font-medium">
-                  Completed
-                </Label>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between p-4 bg-white rounded-2xl border border-[#5c64d4]/20">
-              <div className="flex items-center gap-3">
-                <CheckCircle className="h-5 w-5 text-green-600" />
-                <div>
-                  <Label className="font-medium text-gray-900">ID Verification</Label>
-                  <p className="text-sm text-gray-600">Upload government-issued ID</p>
-                </div>
-              </div>
-              <div className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  id="idVerification"
-                  checked={verification.idVerification}
-                  onChange={(e) => handleVerificationChange('idVerification', e.target.checked)}
-                  className="w-5 h-5 text-[#5c64d4] rounded border-gray-300 focus:ring-[#5c64d4]"
-                />
-                <Label htmlFor="idVerification" className="text-sm font-medium">
-                  Completed
-                </Label>
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-4 p-4 bg-blue-50 rounded-2xl border border-blue-200">
-            <p className="text-sm text-blue-700">
-              <strong>Note:</strong> Verification documents help build trust with students and parents. 
-              You can upload these documents later in your profile settings.
-            </p>
-          </div>
-        </div>
 
         <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-6 rounded-3xl border border-green-200">
           <div className="flex items-start gap-3">

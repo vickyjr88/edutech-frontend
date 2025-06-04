@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useProfileJourney } from '../ProfileJourneyContext';
-import { Camera, Phone, MapPin, User, Video, FileText, Upload, X } from 'lucide-react';
+import { Camera, Phone, MapPin, User, Video, FileText, Upload, X, Shield, FileCheck, CheckCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { CVUploadNudge } from './CVUploadNudge';
 import { teacherService } from '@/integrations/api/services/teacher.service';
@@ -64,7 +64,7 @@ interface PersonalInformationFormProps {
 }
 
 export const PersonalInformationForm = ({ onComplete }: PersonalInformationFormProps) => {
-  const { personalInfo, updatePersonalInfo, completeStep } = useProfileJourney();
+  const { personalInfo, updatePersonalInfo, verification, completeStep } = useProfileJourney();
   const { user } = useAuth();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -73,7 +73,13 @@ export const PersonalInformationForm = ({ onComplete }: PersonalInformationFormP
   const [showCVNudge, setShowCVNudge] = useState(true);
   const [isDragOver, setIsDragOver] = useState(false);
   const [showManualAddress, setShowManualAddress] = useState(false);
+  const [isUploadingIdDocument, setIsUploadingIdDocument] = useState(false);
+  const [isUploadingBackgroundCheck, setIsUploadingBackgroundCheck] = useState(false);
+  const [uploadedIdDocument, setUploadedIdDocument] = useState<string | null>(null);
+  const [uploadedBackgroundCheck, setUploadedBackgroundCheck] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const idDocumentInputRef = useRef<HTMLInputElement>(null);
+  const backgroundCheckInputRef = useRef<HTMLInputElement>(null);
 
   // Local form state to prevent auto-save on every field change
   const [localFormData, setLocalFormData] = useState(personalInfo);
@@ -126,33 +132,72 @@ export const PersonalInformationForm = ({ onComplete }: PersonalInformationFormP
   // CV upload handler
   const handleCVUpload = async (file: File) => {
     try {
-      // In a real implementation, you would send this to your CV parsing service
       console.log('CV uploaded:', file.name);
       
-      // Simulate CV parsing and auto-fill
-      // This would typically be replaced with actual API calls to extract data
-      setTimeout(() => {
-        // Mock data extraction - in real implementation this would come from CV parsing service
-        const mockData = {
-          fullName: "John Doe",
-          email: "john.doe@email.com", 
-          phone: "123456789",
-          homeAddress: "123 Main Street, City",
-          country: "Kenya",
-          bio: "Experienced educator with passion for teaching and student development."
-        };
+      // Import the CV service
+      const { cvService } = await import('@/integrations/api/services/cv.service');
+      
+      // Upload and process CV with actual API
+      const result = await cvService.uploadCV(file);
+      
+      if (result.error) {
+        throw new Error(result.error.message || 'Failed to process CV');
+      }
+      
+      if (result.data?.data?.extractedData) {
+        const extractedData = result.data.data.extractedData;
         
-        // Only update empty fields to avoid overwriting user input
-        Object.entries(mockData).forEach(([key, value]) => {
-          if (!localFormData[key as keyof typeof localFormData]) {
-            setLocalFormData(prev => ({ ...prev, [key]: value }));
+        // Extract personal information from CV
+        const cvPersonalInfo = extractedData.personalInfo;
+        
+        if (cvPersonalInfo) {
+          // Only update empty fields to avoid overwriting user input
+          const updates: Partial<typeof localFormData> = {};
+          
+          if (!localFormData.fullName && cvPersonalInfo.fullName) {
+            updates.fullName = cvPersonalInfo.fullName;
           }
-        });
+          
+          if (!localFormData.email && cvPersonalInfo.email) {
+            updates.email = cvPersonalInfo.email;
+          }
+          
+          if (!localFormData.phone && cvPersonalInfo.phoneNumber) {
+            updates.phone = cvPersonalInfo.phoneNumber;
+          }
+          
+          if (!localFormData.bio && cvPersonalInfo.bio) {
+            updates.bio = cvPersonalInfo.bio;
+          }
+          
+          if (!localFormData.homeAddress && cvPersonalInfo.location?.address) {
+            updates.homeAddress = cvPersonalInfo.location.address;
+          }
+          
+          if (!localFormData.country && cvPersonalInfo.location?.city === "Nairobi") {
+            updates.country = "Kenya";
+          }
+          
+          // Apply updates if any
+          if (Object.keys(updates).length > 0) {
+            setLocalFormData(prev => ({ ...prev, ...updates }));
+            
+            toast({
+              title: "CV processed successfully",
+              description: `Auto-filled ${Object.keys(updates).length} fields from your CV`,
+            });
+          }
+        }
         
         setShowCVNudge(false);
-      }, 2000);
+      }
     } catch (error) {
       console.error('Error processing CV:', error);
+      toast({
+        title: "CV processing failed",
+        description: error instanceof Error ? error.message : "Failed to process CV. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -247,7 +292,15 @@ export const PersonalInformationForm = ({ onComplete }: PersonalInformationFormP
     setLocalFormData(prev => ({ 
       ...prev, 
       homeAddress: place.address,
-      country: place.country || prev.country
+      country: place.country || prev.country,
+      // Store additional location details for API
+      locationCity: place.city,
+      locationCounty: place.county,
+      locationPostalCode: place.postalCode,
+      locationCoordinates: {
+        latitude: place.latitude,
+        longitude: place.longitude
+      }
     }));
     
     // Show success feedback
@@ -436,6 +489,184 @@ export const PersonalInformationForm = ({ onComplete }: PersonalInformationFormP
     }
   };
 
+  // Handle ID document upload
+  const handleIdDocumentUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type (PDF, JPG, PNG)
+    if (!file.type.match(/^(application\/pdf|image\/(jpeg|jpg|png))$/)) {
+      toast({
+        title: "Invalid file type",
+        description: "Please select a PDF, JPG, or PNG file",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate file size (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      toast({
+        title: "File too large",
+        description: "File size should be less than 10MB",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsUploadingIdDocument(true);
+
+    try {
+      // Get teacher ID
+      let teacherId: string;
+      if (user?.teacherId) {
+        teacherId = user.teacherId;
+      } else if (user?.id) {
+        teacherId = user.id; // Fallback to user ID
+      } else {
+        throw new Error('No teacher ID found. Please ensure you are logged in.');
+      }
+
+      // Convert file to base64
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        try {
+          const result = e.target?.result as string;
+          const base64Data = result; // Keep the full data URI format
+
+          // Upload to API
+          const uploadResponse = await teacherService.uploadDocument(
+            teacherId,
+            base64Data,
+            'government_id'
+          );
+
+          if (uploadResponse.data) {
+            const fileName = file.name;
+            setUploadedIdDocument(fileName);
+            
+            toast({
+              title: "Success",
+              description: "ID document uploaded successfully. Admin will review and verify.",
+            });
+            
+            console.log('ID document uploaded:', {
+              fileUrl: uploadResponse.data.fileUrl,
+              signedUrl: uploadResponse.data.signedUrl
+            });
+          }
+        } catch (error) {
+          console.error('Error uploading ID document:', error);
+          toast({
+            title: "Upload failed",
+            description: "Failed to upload ID document. Please try again.",
+            variant: "destructive",
+          });
+        } finally {
+          setIsUploadingIdDocument(false);
+        }
+      };
+      reader.readAsDataURL(file);
+    } catch (error) {
+      console.error('Error processing ID document:', error);
+      toast({
+        title: "Error",
+        description: "Failed to process ID document. Please try again.",
+        variant: "destructive",
+      });
+      setIsUploadingIdDocument(false);
+    }
+  };
+
+  // Handle background check upload
+  const handleBackgroundCheckUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type (PDF, JPG, PNG)
+    if (!file.type.match(/^(application\/pdf|image\/(jpeg|jpg|png))$/)) {
+      toast({
+        title: "Invalid file type",
+        description: "Please select a PDF, JPG, or PNG file",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate file size (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      toast({
+        title: "File too large",
+        description: "File size should be less than 10MB",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsUploadingBackgroundCheck(true);
+
+    try {
+      // Get teacher ID
+      let teacherId: string;
+      if (user?.teacherId) {
+        teacherId = user.teacherId;
+      } else if (user?.id) {
+        teacherId = user.id; // Fallback to user ID
+      } else {
+        throw new Error('No teacher ID found. Please ensure you are logged in.');
+      }
+
+      // Convert file to base64
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        try {
+          const result = e.target?.result as string;
+          const base64Data = result; // Keep the full data URI format
+
+          // Upload to API
+          const uploadResponse = await teacherService.uploadDocument(
+            teacherId,
+            base64Data,
+            'background_check'
+          );
+
+          if (uploadResponse.data) {
+            const fileName = file.name;
+            setUploadedBackgroundCheck(fileName);
+            
+            toast({
+              title: "Success",
+              description: "Background check uploaded successfully. Admin will review and verify.",
+            });
+            
+            console.log('Background check uploaded:', {
+              fileUrl: uploadResponse.data.fileUrl,
+              signedUrl: uploadResponse.data.signedUrl
+            });
+          }
+        } catch (error) {
+          console.error('Error uploading background check:', error);
+          toast({
+            title: "Upload failed",
+            description: "Failed to upload background check. Please try again.",
+            variant: "destructive",
+          });
+        } finally {
+          setIsUploadingBackgroundCheck(false);
+        }
+      };
+      reader.readAsDataURL(file);
+    } catch (error) {
+      console.error('Error processing background check:', error);
+      toast({
+        title: "Error",
+        description: "Failed to process background check. Please try again.",
+        variant: "destructive",
+      });
+      setIsUploadingBackgroundCheck(false);
+    }
+  };
+
   const isFormValid = localFormData.fullName && 
                      localFormData.email && localFormData.phone && 
                      localFormData.homeAddress && localFormData.idCountry &&
@@ -538,14 +769,153 @@ export const PersonalInformationForm = ({ onComplete }: PersonalInformationFormP
 
               <div className="space-y-2">
                 <Label htmlFor="idNumber" className="text-sm font-medium">ID Number *</Label>
-                <Input
-                  id="idNumber"
-                  value={localFormData.idNumber}
-                  onChange={(e) => handleInputChange('idNumber', e.target.value)}
-                  placeholder="Enter ID number"
-                  className="rounded-xl border-[#5c64d4]/30 focus:border-[#5c64d4]"
-                  required
-                />
+                <div className="flex gap-2">
+                  <Input
+                    id="idNumber"
+                    value={localFormData.idNumber}
+                    onChange={(e) => handleInputChange('idNumber', e.target.value)}
+                    placeholder="Enter ID number"
+                    className="rounded-xl border-[#5c64d4]/30 focus:border-[#5c64d4]"
+                    required
+                  />
+                  <input
+                    ref={idDocumentInputRef}
+                    type="file"
+                    accept=".pdf,.jpg,.jpeg,.png"
+                    onChange={handleIdDocumentUpload}
+                    className="hidden"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => idDocumentInputRef.current?.click()}
+                    disabled={isUploadingIdDocument}
+                    className={cn(
+                      "whitespace-nowrap",
+                      verification.idVerification 
+                        ? "border-green-300 text-green-700 hover:bg-green-50" 
+                        : "border-[#5c64d4]/30 text-[#5c64d4] hover:bg-[#5c64d4]/10"
+                    )}
+                  >
+                    {isUploadingIdDocument ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-[#5c64d4] border-t-transparent rounded-full animate-spin mr-2" />
+                        Uploading...
+                      </>
+                    ) : verification.idVerification ? (
+                      <>
+                        <CheckCircle className="w-4 h-4 mr-2" />
+                        ID Uploaded
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="w-4 h-4 mr-2" />
+                        {uploadedIdDocument ? 'Change ID' : 'Upload ID'}
+                      </>
+                    )}
+                  </Button>
+                </div>
+                {(uploadedIdDocument || verification.idVerification) && (
+                  <div className={cn(
+                    "flex items-center gap-2 text-sm",
+                    verification.idVerification ? "text-green-600" : "text-blue-600"
+                  )}>
+                    <CheckCircle className="w-4 h-4" />
+                    <span>{uploadedIdDocument || "Government ID Document"}</span>
+                    <span className={cn(
+                      "text-xs px-2 py-1 rounded-full",
+                      verification.idVerification 
+                        ? "bg-green-100 text-green-700" 
+                        : "bg-blue-100 text-blue-700"
+                    )}>
+                      {verification.idVerification ? "Uploaded" : "Pending Review"}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Identity Verification */}
+          <div className="mt-6 pt-4 border-t border-[#acb4e4]/30">
+            <div className="flex items-center gap-3 mb-4">
+              <Shield className="h-5 w-5 text-[#5c64d4]" />
+              <h5 className="text-sm font-semibold text-gray-900">Identity Verification (Optional)</h5>
+            </div>
+            
+            <div className="space-y-4">
+              <div className="p-4 bg-white rounded-2xl border border-[#5c64d4]/20">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <FileCheck className="h-5 w-5 text-blue-600" />
+                    <div>
+                      <Label className="font-medium text-gray-900">Background Check Document</Label>
+                      <p className="text-sm text-gray-600">Upload your background check certificate</p>
+                    </div>
+                  </div>
+                  <div>
+                    <input
+                      ref={backgroundCheckInputRef}
+                      type="file"
+                      accept=".pdf,.jpg,.jpeg,.png"
+                      onChange={handleBackgroundCheckUpload}
+                      className="hidden"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => backgroundCheckInputRef.current?.click()}
+                      disabled={isUploadingBackgroundCheck}
+                      className={cn(
+                        verification.backgroundCheck 
+                          ? "border-green-300 text-green-700 hover:bg-green-50" 
+                          : "border-blue-200 text-blue-600 hover:bg-blue-50"
+                      )}
+                    >
+                      {isUploadingBackgroundCheck ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mr-2" />
+                          Uploading...
+                        </>
+                      ) : verification.backgroundCheck ? (
+                        <>
+                          <CheckCircle className="w-4 h-4 mr-2" />
+                          Document Uploaded
+                        </>
+                      ) : (
+                        <>
+                          <Upload className="w-4 h-4 mr-2" />
+                          {uploadedBackgroundCheck ? 'Change' : 'Upload'}
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+                {(uploadedBackgroundCheck || verification.backgroundCheck) && (
+                  <div className={cn(
+                    "flex items-center gap-2 text-sm mt-2",
+                    verification.backgroundCheck ? "text-green-600" : "text-blue-600"
+                  )}>
+                    <CheckCircle className="w-4 h-4" />
+                    <span>{uploadedBackgroundCheck || "Background Check Document"}</span>
+                    <span className={cn(
+                      "text-xs px-2 py-1 rounded-full",
+                      verification.backgroundCheck 
+                        ? "bg-green-100 text-green-700" 
+                        : "bg-blue-100 text-blue-700"
+                    )}>
+                      {verification.backgroundCheck ? "Uploaded" : "Pending Review"}
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              <div className="p-3 bg-blue-50 rounded-xl border border-blue-200">
+                <p className="text-xs text-blue-700">
+                  <strong>Note:</strong> Verification documents help build trust with students and parents. After upload, our admin team will review and verify your documents. This process typically takes 1-2 business days.
+                </p>
               </div>
             </div>
           </div>
