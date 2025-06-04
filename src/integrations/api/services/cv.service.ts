@@ -13,35 +13,55 @@ export interface CVUploadResponse {
       personalInfo: { 
         fullName: string; 
         email: string; 
+        phoneNumber: string;
         bio: string; 
+        location: {
+          city: string;
+          county: string;
+          address: string;
+        };
       };
       education: Array<{
         degree: string;
+        fieldOfStudy: string;
         institution: string;
-        year: string;
+        startYear: number;
+        endYear: number;
+        gpa: string;
         description?: string;
       }>;
       experience: Array<{
-        title: string;
-        organization: string;
-        startDate: string;
-        endDate?: string;
+        position: string;
+        institution: string;
+        subject: string;
+        startYear: number;
+        endYear: number;
+        yearsOfExperience: number;
         description?: string;
+        responsibilities?: string[];
       }>;
       certifications: Array<{
         name: string;
+        certificateType: string;
         issuer: string;
-        date?: string;
+        issueDate: string;
+        expiryDate: string;
         description?: string;
+        credentialUrl?: string;
       }>;
       subjects: Array<{
-        name: string;
-        level: string;
-        isAcademic: boolean;
+        subject: string;
+        gradeLevel: string;
+        proficiencyLevel: string;
+        curriculum: string;
+        ageRange: string;
+        description?: string;
+        isCertified: boolean;
       }>;
       languages: Array<{
-        name: string;
-        level: string;
+        language: string;
+        proficiency: string;
+        isNative: boolean;
       }>;
       skills: string[];
       summary: string;
@@ -142,6 +162,25 @@ class CVService {
       return { 
         error: {
           message: error.response?.data?.message || 'Failed to get profile status',
+          status: error.response?.status,
+          data: error.response?.data
+        }
+      };
+    }
+  }
+
+  /**
+   * Get CV extracted data for prefilling forms
+   */
+  async getCVExtractedData(): Promise<{ data?: CVUploadResponse['data']['extractedData']; error?: any }> {
+    try {
+      const response = await api.get<{ extractedData: CVUploadResponse['data']['extractedData'] }>('/teacher/cv/extracted-data');
+      return { data: response.data.extractedData };
+    } catch (error: any) {
+      console.error('CV extracted data error:', error);
+      return { 
+        error: {
+          message: error.response?.data?.message || 'No CV data found',
           status: error.response?.status,
           data: error.response?.data
         }

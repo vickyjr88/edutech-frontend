@@ -1,12 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useProfileJourney } from '../ProfileJourneyContext';
-import { BookOpen, Plus, X, Briefcase, Globe, Code, Star } from 'lucide-react';
+import { BookOpen, Plus, X, Briefcase, Globe, Code, Star, FileText, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { cvService } from '@/integrations/api/services/cv.service';
+import { useToast } from '@/components/ui/use-toast';
 
 interface ExperienceEntry {
   id: string;
@@ -46,7 +48,10 @@ export const ExpertiseForm = ({ onComplete }: ExpertiseFormProps) => {
     setTechnicalSkills,
     completeStep 
   } = useProfileJourney();
+  const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showCVPrefill, setShowCVPrefill] = useState(false);
+  const [isCVLoading, setIsCVLoading] = useState(false);
 
   // Local state for form management
   const [experienceEntries, setExperienceEntries] = useState<ExperienceEntry[]>(() => {
@@ -104,6 +109,107 @@ export const ExpertiseForm = ({ onComplete }: ExpertiseFormProps) => {
   const years = Array.from({ length: 30 }, (_, i) => currentYear - i);
   const proficiencyLevels = ['Beginner', 'Intermediate', 'Advanced', 'Native'];
   const skillLevels = ['Beginner', 'Intermediate', 'Advanced', 'Expert'];
+
+  // Check for CV extracted data on component mount
+  useEffect(() => {
+    const checkCVData = async () => {
+      try {
+        const { data: cvData, error } = await cvService.getCVExtractedData();
+        if (cvData && (
+          (cvData.experience && cvData.experience.length > 0) ||
+          (cvData.subjects && cvData.subjects.length > 0) ||
+          (cvData.languages && cvData.languages.length > 0) ||
+          (cvData.skills && cvData.skills.length > 0)
+        )) {
+          // Only show prefill option if forms are mostly empty
+          const hasMinimalData = experienceEntries.length === 1 && !experienceEntries[0].institution &&
+                                !subjectAreas.academic && !subjectAreas.afterSchool;
+          if (hasMinimalData) {
+            setShowCVPrefill(true);
+          }
+        }
+      } catch (error) {
+        console.log('No CV data available for prefill');
+      }
+    };
+
+    checkCVData();
+  }, []);
+
+  // Handle CV prefill
+  const handleCVPrefill = async () => {
+    setIsCVLoading(true);
+    try {
+      const { data: cvData, error } = await cvService.getCVExtractedData();
+      
+      if (error || !cvData) {
+        throw new Error('No data found in CV');
+      }
+
+      let itemsAdded = 0;
+
+      // Prefill experience
+      if (cvData.experience && cvData.experience.length > 0) {
+        const cvExperienceEntries: ExperienceEntry[] = cvData.experience.map((exp, index) => ({
+          id: `cv-exp-${index}`,
+          institution: exp.institution || '',
+          position: exp.position || '',
+          subjects: exp.subject || '',
+          startYear: exp.startYear?.toString() || '',
+          endYear: exp.endYear?.toString() || '',
+          description: exp.description || ''
+        }));
+        setExperienceEntries(cvExperienceEntries);
+        itemsAdded += cvExperienceEntries.length;
+      }
+
+      // Prefill subjects - using isCertified to differentiate academic vs after-school
+      if (cvData.subjects && cvData.subjects.length > 0) {
+        const academicSubjects = cvData.subjects.filter(s => s.isCertified).map(s => s.subject).join(', ');
+        const afterSchoolSubjects = cvData.subjects.filter(s => !s.isCertified).map(s => s.subject).join(', ');
+        setSubjectAreas({ academic: academicSubjects, afterSchool: afterSchoolSubjects });
+        itemsAdded += cvData.subjects.length;
+      }
+
+      // Prefill languages
+      if (cvData.languages && cvData.languages.length > 0) {
+        const cvLanguageEntries = cvData.languages.map((lang, index) => ({
+          id: `cv-lang-${index}`,
+          name: lang.language || '',
+          proficiency: lang.proficiency || 'Intermediate'
+        }));
+        setLanguageEntries(cvLanguageEntries);
+        itemsAdded += cvLanguageEntries.length;
+      }
+
+      // Prefill skills
+      if (cvData.skills && cvData.skills.length > 0) {
+        const cvSkillEntries = cvData.skills.map((skill, index) => ({
+          id: `cv-skill-${index}`,
+          name: skill,
+          level: 'Intermediate'
+        }));
+        setSkillEntries(cvSkillEntries);
+        itemsAdded += cvSkillEntries.length;
+      }
+
+      setShowCVPrefill(false);
+
+      toast({
+        title: "Experience & expertise prefilled from CV",
+        description: `Added ${itemsAdded} items from your CV`,
+      });
+    } catch (error) {
+      console.error('Error prefilling from CV:', error);
+      toast({
+        title: "Prefill failed",
+        description: "Could not extract experience data from CV",
+        variant: "destructive",
+      });
+    } finally {
+      setIsCVLoading(false);
+    }
+  };
 
   const handleAddExperience = () => {
     setExperienceEntries([...experienceEntries, {
@@ -229,6 +335,50 @@ export const ExpertiseForm = ({ onComplete }: ExpertiseFormProps) => {
           <h3 className="text-2xl font-bold text-gray-900 mb-2">Experience & Expertise</h3>
           <p className="text-gray-600">Share your teaching experience, subjects, and skills</p>
         </div>
+
+        {/* CV Prefill Nudge */}
+        {showCVPrefill && (
+          <div className="mb-6 p-4 bg-gradient-to-br from-[#5c64d4]/10 to-[#fc9323]/10 rounded-2xl border-2 border-dashed border-[#5c64d4]/30">
+            <div className="text-center">
+              <div className="inline-flex items-center gap-2 mb-3">
+                <FileText className="h-5 w-5 text-[#5c64d4]" />
+                <Sparkles className="h-4 w-4 text-[#fc9323] animate-pulse" />
+              </div>
+              <h4 className="font-semibold text-gray-900 mb-2">💼 Auto-fill from CV</h4>
+              <p className="text-sm text-gray-600 mb-4">
+                We found experience, subjects, and skills in your uploaded CV. Would you like to auto-fill this form?
+              </p>
+              <div className="flex gap-3 justify-center">
+                <Button
+                  type="button"
+                  onClick={handleCVPrefill}
+                  disabled={isCVLoading}
+                  className="bg-gradient-to-r from-[#5c64d4] to-[#fc9323] text-white hover:from-[#5c64d4]/90 hover:to-[#fc9323]/90"
+                >
+                  {isCVLoading ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                      Extracting...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-4 h-4 mr-2" />
+                      Auto-fill Experience
+                    </>
+                  )}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowCVPrefill(false)}
+                  className="border-[#5c64d4] text-[#5c64d4] hover:bg-[#5c64d4]/10"
+                >
+                  Fill manually instead
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Subject Areas */}
         <div className="bg-gradient-to-br from-[#acb4e4] to-[#efebf0] p-6 rounded-3xl border-2 border-[#5c64d4]/20">

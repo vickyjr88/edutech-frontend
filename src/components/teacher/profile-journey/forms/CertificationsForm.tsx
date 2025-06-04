@@ -1,11 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useProfileJourney } from '../ProfileJourneyContext';
-import { Award, Plus, X, Shield, FileCheck, CheckCircle } from 'lucide-react';
+import { Award, Plus, X, Shield, FileCheck, CheckCircle, FileText, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { cvService } from '@/integrations/api/services/cv.service';
+import { useToast } from '@/components/ui/use-toast';
 
 interface CertificationEntry {
   id: string;
@@ -27,7 +29,10 @@ export const CertificationsForm = ({ onComplete }: CertificationsFormProps) => {
     updateVerification,
     completeStep 
   } = useProfileJourney();
+  const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showCVPrefill, setShowCVPrefill] = useState(false);
+  const [isCVLoading, setIsCVLoading] = useState(false);
 
   // Local state for certifications
   const [certificationEntries, setCertificationEntries] = useState<CertificationEntry[]>(() => {
@@ -51,6 +56,63 @@ export const CertificationsForm = ({ onComplete }: CertificationsFormProps) => {
 
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: 30 }, (_, i) => currentYear - i);
+
+  // Check for CV extracted data on component mount
+  useEffect(() => {
+    const checkCVData = async () => {
+      try {
+        const { data: cvData, error } = await cvService.getCVExtractedData();
+        if (cvData && cvData.certifications && cvData.certifications.length > 0) {
+          // Only show prefill option if there are no existing certifications
+          if (certificationEntries.length === 1 && !certificationEntries[0].name) {
+            setShowCVPrefill(true);
+          }
+        }
+      } catch (error) {
+        console.log('No CV data available for prefill');
+      }
+    };
+
+    checkCVData();
+  }, []);
+
+  // Handle CV prefill
+  const handleCVPrefill = async () => {
+    setIsCVLoading(true);
+    try {
+      const { data: cvData, error } = await cvService.getCVExtractedData();
+      
+      if (error || !cvData || !cvData.certifications) {
+        throw new Error('No certification data found in CV');
+      }
+
+      // Convert CV certification data to form format
+      const cvCertificationEntries: CertificationEntry[] = cvData.certifications.map((cert, index) => ({
+        id: `cv-cert-${index}`,
+        name: cert.name || '',
+        issuer: cert.issuer || '',
+        year: cert.issueDate ? new Date(cert.issueDate).getFullYear().toString() : '',
+        description: cert.description || ''
+      }));
+
+      setCertificationEntries(cvCertificationEntries);
+      setShowCVPrefill(false);
+
+      toast({
+        title: "Certifications prefilled from CV",
+        description: `Added ${cvCertificationEntries.length} certifications from your CV`,
+      });
+    } catch (error) {
+      console.error('Error prefilling from CV:', error);
+      toast({
+        title: "Prefill failed",
+        description: "Could not extract certification data from CV",
+        variant: "destructive",
+      });
+    } finally {
+      setIsCVLoading(false);
+    }
+  };
 
   const handleAddCertification = () => {
     setCertificationEntries([...certificationEntries, {
@@ -142,6 +204,50 @@ export const CertificationsForm = ({ onComplete }: CertificationsFormProps) => {
           <h3 className="text-2xl font-bold text-gray-900 mb-2">Certifications & Achievements</h3>
           <p className="text-gray-600">Add your credentials and complete verification</p>
         </div>
+
+        {/* CV Prefill Nudge */}
+        {showCVPrefill && (
+          <div className="mb-6 p-4 bg-gradient-to-br from-[#5c64d4]/10 to-[#fc9323]/10 rounded-2xl border-2 border-dashed border-[#5c64d4]/30">
+            <div className="text-center">
+              <div className="inline-flex items-center gap-2 mb-3">
+                <FileText className="h-5 w-5 text-[#5c64d4]" />
+                <Sparkles className="h-4 w-4 text-[#fc9323] animate-pulse" />
+              </div>
+              <h4 className="font-semibold text-gray-900 mb-2">🏆 Auto-fill from CV</h4>
+              <p className="text-sm text-gray-600 mb-4">
+                We found certifications in your uploaded CV. Would you like to auto-fill this form?
+              </p>
+              <div className="flex gap-3 justify-center">
+                <Button
+                  type="button"
+                  onClick={handleCVPrefill}
+                  disabled={isCVLoading}
+                  className="bg-gradient-to-r from-[#5c64d4] to-[#fc9323] text-white hover:from-[#5c64d4]/90 hover:to-[#fc9323]/90"
+                >
+                  {isCVLoading ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                      Extracting...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-4 h-4 mr-2" />
+                      Auto-fill Certifications
+                    </>
+                  )}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowCVPrefill(false)}
+                  className="border-[#5c64d4] text-[#5c64d4] hover:bg-[#5c64d4]/10"
+                >
+                  Fill manually instead
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Certifications Section */}
         <div className="space-y-6">

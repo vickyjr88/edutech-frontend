@@ -1,11 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useProfileJourney } from '../ProfileJourneyContext';
-import { GraduationCap, Plus, X, BookOpen } from 'lucide-react';
+import { GraduationCap, Plus, X, BookOpen, FileText, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { cvService } from '@/integrations/api/services/cv.service';
+import { useToast } from '@/components/ui/use-toast';
 
 interface EducationEntry {
   id: string;
@@ -23,7 +25,10 @@ interface EducationFormProps {
 
 export const EducationForm = ({ onComplete }: EducationFormProps) => {
   const { education, setEducation, completeStep } = useProfileJourney();
+  const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showCVPrefill, setShowCVPrefill] = useState(false);
+  const [isCVLoading, setIsCVLoading] = useState(false);
   
   // Convert existing education to local state format
   const [educationEntries, setEducationEntries] = useState<EducationEntry[]>(() => {
@@ -48,6 +53,66 @@ export const EducationForm = ({ onComplete }: EducationFormProps) => {
       isCompleted: false
     }];
   });
+
+  // Check for CV extracted data on component mount
+  useEffect(() => {
+    const checkCVData = async () => {
+      try {
+        const { data: cvData, error } = await cvService.getCVExtractedData();
+        if (cvData && cvData.education && cvData.education.length > 0) {
+          // Only show prefill option if there are no existing education entries
+          if (educationEntries.length === 1 && !educationEntries[0].institution) {
+            setShowCVPrefill(true);
+          }
+        }
+      } catch (error) {
+        // CV data not available, continue normally
+        console.log('No CV data available for prefill');
+      }
+    };
+
+    checkCVData();
+  }, []);
+
+  // Handle CV prefill
+  const handleCVPrefill = async () => {
+    setIsCVLoading(true);
+    try {
+      const { data: cvData, error } = await cvService.getCVExtractedData();
+      
+      if (error || !cvData || !cvData.education) {
+        throw new Error('No education data found in CV');
+      }
+
+      // Convert CV education data to form format
+      const cvEducationEntries: EducationEntry[] = cvData.education.map((edu, index) => ({
+        id: `cv-edu-${index}`,
+        institution: edu.institution || '',
+        degree: edu.degree || '',
+        fieldOfStudy: edu.fieldOfStudy || '',
+        startYear: edu.startYear?.toString() || '',
+        endYear: edu.endYear?.toString() || '',
+        isCompleted: true
+      }));
+
+      setEducationEntries(cvEducationEntries);
+      setShowCVPrefill(false);
+
+      toast({
+        title: "Education prefilled from CV",
+        description: `Added ${cvEducationEntries.length} education entries from your CV`,
+      });
+    } catch (error) {
+      console.error('Error prefilling from CV:', error);
+      toast({
+        title: "Prefill failed",
+        description: "Could not extract education data from CV",
+        variant: "destructive",
+      });
+    } finally {
+      setIsCVLoading(false);
+    }
+  };
 
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: 50 }, (_, i) => currentYear - i);
@@ -150,6 +215,50 @@ export const EducationForm = ({ onComplete }: EducationFormProps) => {
           <h3 className="text-2xl font-bold text-gray-900 mb-2">Educational Background</h3>
           <p className="text-gray-600">Add your college and high school education</p>
         </div>
+
+        {/* CV Prefill Nudge */}
+        {showCVPrefill && (
+          <div className="mb-6 p-4 bg-gradient-to-br from-[#5c64d4]/10 to-[#fc9323]/10 rounded-2xl border-2 border-dashed border-[#5c64d4]/30">
+            <div className="text-center">
+              <div className="inline-flex items-center gap-2 mb-3">
+                <FileText className="h-5 w-5 text-[#5c64d4]" />
+                <Sparkles className="h-4 w-4 text-[#fc9323] animate-pulse" />
+              </div>
+              <h4 className="font-semibold text-gray-900 mb-2">📚 Auto-fill from CV</h4>
+              <p className="text-sm text-gray-600 mb-4">
+                We found education information in your uploaded CV. Would you like to auto-fill this form?
+              </p>
+              <div className="flex gap-3 justify-center">
+                <Button
+                  type="button"
+                  onClick={handleCVPrefill}
+                  disabled={isCVLoading}
+                  className="bg-gradient-to-r from-[#5c64d4] to-[#fc9323] text-white hover:from-[#5c64d4]/90 hover:to-[#fc9323]/90"
+                >
+                  {isCVLoading ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                      Extracting...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-4 h-4 mr-2" />
+                      Auto-fill Education
+                    </>
+                  )}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowCVPrefill(false)}
+                  className="border-[#5c64d4] text-[#5c64d4] hover:bg-[#5c64d4]/10"
+                >
+                  Fill manually instead
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="space-y-6">
           {educationEntries.map((entry, index) => (

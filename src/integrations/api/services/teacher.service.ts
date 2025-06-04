@@ -599,12 +599,12 @@ export const teacherService = {
     
     // Upload profile photo
     uploadProfilePhoto: (teacherId: string, base64File: string, mimeType: string): Promise<ApiResponse<{ 
-        profileImage: string;
-        _signedProfileImage?: string;
+        fileUrl: string;
+        signedUrl: string;
     }>> => {
         return api.post<{ 
-            profileImage: string;
-            _signedProfileImage?: string;
+            fileUrl: string;
+            signedUrl: string;
         }>(`/teachers/${teacherId}/profile-photo`, {
             base64File,
             mimeType
