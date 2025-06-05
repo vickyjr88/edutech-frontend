@@ -3,26 +3,95 @@ export type TechnicalSkillItem = {
   _id: string;
   name: string;
   description?: string;
+  level?: string;
   isCertified: boolean;
 };
 
-// Predefined list of technical skills
+// Comprehensive list of technical skills for digital teachers
 export const TECHNICAL_SKILLS = [
-  "Microsoft Office",
+  // Core Digital Tools
+  "Microsoft Office Suite",
   "Google Workspace",
+  "Apple iWork",
   "Learning Management Systems (LMS)",
-  "Video Conferencing Tools",
-  "Digital Assessment Tools",
-  "Interactive Whiteboard",
-  "Educational Apps",
-  "Coding/Programming",
-  "Web Design",
-  "Graphic Design",
-  "Video Editing",
+  "Moodle",
+  "Canvas",
+  "Blackboard",
+  "Google Classroom",
+  "Microsoft Teams for Education",
+  
+  // Video Conferencing & Communication
+  "Zoom",
+  "Microsoft Teams",
+  "Google Meet",
+  "Skype",
+  "Webex",
+  "Discord",
+  "Slack",
+  
+  // Content Creation
+  "Canva",
+  "Adobe Creative Suite",
+  "PowerPoint",
+  "Prezi",
+  "Figma",
+  "Video Editing (Camtasia, OBS)",
   "Audio Production",
+  "Screen Recording",
+  "Interactive Presentations",
+  
+  // Assessment & Feedback
+  "Kahoot",
+  "Quizizz",
+  "Mentimeter",
+  "Poll Everywhere",
+  "Padlet",
+  "Digital Assessment Tools",
+  "Rubric-based Grading",
+  "Online Quiz Platforms",
+  
+  // Interactive Teaching Tools
+  "Interactive Whiteboards",
+  "Smartboard",
+  "Jamboard",
+  "Miro",
+  "Nearpod",
+  "Pear Deck",
+  "Flipgrid",
+  "EdPuzzle",
+  
+  // Programming & STEM
+  "Coding/Programming",
+  "Scratch Programming",
+  "Python",
+  "JavaScript",
+  "HTML/CSS",
+  "Robotics",
+  "3D Printing",
+  "Arduino/Raspberry Pi",
+  
+  // Digital Citizenship & Safety
+  "Cybersecurity Basics",
+  "Digital Privacy",
+  "Online Safety",
+  "Data Protection",
+  
+  // Administrative & Analytics
   "Data Analysis",
-  "Cybersecurity",
-  "Cloud Computing"
+  "Excel/Sheets Advanced",
+  "Student Information Systems",
+  "Grade Management",
+  "Parent Communication Apps",
+  "Time Management Tools",
+  
+  // Emerging Technologies
+  "Virtual Reality (VR)",
+  "Augmented Reality (AR)",
+  "Artificial Intelligence Tools",
+  "Gamification",
+  "Blockchain Basics",
+  "Cloud Computing",
+  "Mobile App Development"
 ];
 
 export const fetchTechnicalSkills = async (teacherId: string): Promise<TechnicalSkillItem[]> => {

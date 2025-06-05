@@ -392,6 +392,42 @@ export const teacherService = {
         });
     },
 
+    // Bulk update subjects - send all subject items as an array
+    updateTeacherSubjects: (teacherId: string, subjectItems: any[]): Promise<ApiResponse<any[]>> => {
+        const normalizedSubjectItems = subjectItems.map(item => ({
+            ...item,
+            teacherProfile: teacherId
+        }));
+
+        return api.put<any[]>(`/teachers/${teacherId}/subjects`, {
+            subjectItems: normalizedSubjectItems
+        });
+    },
+
+    // Bulk update languages - send all language items as an array
+    updateTeacherLanguages: (teacherId: string, languageItems: LanguageItem[]): Promise<ApiResponse<LanguageItem[]>> => {
+        const normalizedLanguageItems = languageItems.map(item => ({
+            ...item,
+            teacherProfile: teacherId
+        }));
+
+        return api.put<LanguageItem[]>(`/teachers/${teacherId}/languages`, {
+            languageItems: normalizedLanguageItems
+        });
+    },
+
+    // Bulk update technical skills - send all skill items as an array
+    updateTeacherTechnicalSkills: (teacherId: string, skillItems: TechnicalSkillItem[]): Promise<ApiResponse<TechnicalSkillItem[]>> => {
+        const normalizedSkillItems = skillItems.map(item => ({
+            ...item,
+            teacherProfile: teacherId
+        }));
+
+        return api.put<TechnicalSkillItem[]>(`/teachers/${teacherId}/skills`, {
+            skillItems: normalizedSkillItems
+        });
+    },
+
     // Additional helper methods
     isProfileComplete: async (userId: string): Promise<boolean> => {
         const { data, error } = await teacherService.getProfileByUserId(userId);
