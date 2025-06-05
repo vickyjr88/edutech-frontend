@@ -1,16 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { PlusCircle, Clock, RotateCcw, Trash2, CheckCircle, BookOpen, Sparkles, Wand2, Bot } from 'lucide-react';
+import { Clock, RotateCcw, Trash2, Wand2, Bot, GraduationCap, Trophy, Star } from 'lucide-react';
 import { formatLastSavedDate, getFormMetadata, clearStoredForm } from './utils/storageUtils';
 import { useNavigate } from 'react-router-dom';
 import { classService } from '@/integrations/api/services/class.service';
 import { useAuth } from '@/contexts/AuthContext';
+import CardWithCheckIcon from '../profile/CardWithCheckIcon';
 
 interface WelcomeScreenProps {
   draftExists: boolean;
   lastSaved: number;
-  onStartNew: () => void;
+  onStartNew: (classType?: string) => void;
   onContinueDraft: () => void;
   onDiscardDraft: () => void;
   onStartWithAI?: () => void;
@@ -46,7 +47,7 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
               setDraftExists(false);
               setLastSaved(0);
             } else {
-              console.log("Verified draft class exists in backend:", data._id);
+              console.log("Verified draft class exists in backend:", data.id);
             }
           } catch (err) {
             console.error("Error verifying draft class:", err);
@@ -87,144 +88,179 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
   };
   
   return (
-    <div className="container max-w-4xl px-4 py-10">
+    <div className="container max-w-6xl px-4 py-10">
       <div className="text-center mb-10">
         <h1 className="text-3xl font-bold mb-2">Create a New Class</h1>
-        <p className="text-gray-600 max-w-xl mx-auto">
-          Set up your class with a step-by-step wizard. Your progress will be automatically saved so you can return anytime.
+        <p className="text-gray-600 max-w-2xl mx-auto">
+          Choose your class type and let us guide you through the setup process. Your progress will be automatically saved.
         </p>
       </div>
+
+      {/* Draft Notice */}
+      {draftExists && (
+        <div className="mb-8">
+          <Card className="border-blue-200 bg-blue-50">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <Clock className="h-5 w-5 text-blue-600 mr-3" />
+                  <div>
+                    <p className="font-medium text-blue-900">You have a draft in progress</p>
+                    <p className="text-sm text-blue-700">Last edited: {lastSavedText}</p>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    onClick={handleContinueDraft}
+                    variant="default"
+                    size="sm"
+                  >
+                    <RotateCcw className="h-4 w-4 mr-2" />
+                    Continue Draft
+                  </Button>
+                  <Button
+                    onClick={handleDiscardDraft}
+                    variant="outline"
+                    size="sm"
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Discard
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
       
-      <div className="grid gap-6 md:grid-cols-2">
-        <Card className="shadow-sm hover:shadow-md transition-shadow">
-          <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b">
-            <CardTitle className="flex items-center">
-              <PlusCircle className="h-5 w-5 mr-2 text-blue-500" />
-              Start Fresh
-            </CardTitle>
-            <CardDescription>
-              Create a brand new class from scratch
+      {/* Class Type Cards */}
+      <div className="grid gap-6 md:grid-cols-3">
+        {/* Academic Classes Card */}
+        <Card className="shadow-sm hover:shadow-md transition-shadow border-kidato-blue-200 relative">
+          {/* Favorite Halo */}
+          <div className="absolute -top-2 -right-2 bg-gradient-to-r from-kidato-orange to-kidato-orange-400 rounded-full p-2 shadow-lg z-10">
+            <Star className="h-4 w-4 text-white fill-current" />
+          </div>
+          <div className="absolute -top-3 -right-3 bg-kidato-orange-200 rounded-full w-8 h-8 opacity-30 animate-pulse"></div>
+          
+          <CardHeader className="pb-3 bg-gradient-to-r from-kidato-blue-50 to-kidato-purple-50 border-b border-kidato-blue-100">
+            <div className="flex items-center gap-2">
+              <GraduationCap className="h-6 w-6 text-kidato-blue" />
+              <CardTitle className="text-xl text-kidato-blue-800">Academic Classes</CardTitle>
+              <span className="text-xs bg-kidato-orange-100 text-kidato-orange-800 px-2 py-1 rounded-full font-medium">Most Popular</span>
+            </div>
+            <CardDescription className="text-kidato-blue-600">
+              Create formal curriculum-based classes
             </CardDescription>
           </CardHeader>
-          <CardContent className="pt-6">
-            <ul className="space-y-3">
-              <li className="flex items-start">
-                <div className="h-5 w-5 rounded-full bg-blue-100 flex items-center justify-center mr-2 mt-0.5">
-                  <CheckCircle className="h-3 w-3 text-blue-600" />
-                </div>
-                <span className="text-sm">Start with a blank form</span>
-              </li>
-              <li className="flex items-start">
-                <div className="h-5 w-5 rounded-full bg-blue-100 flex items-center justify-center mr-2 mt-0.5">
-                  <CheckCircle className="h-3 w-3 text-blue-600" />
-                </div>
-                <span className="text-sm">Get guided through the setup process</span>
-              </li>
-              <li className="flex items-start">
-                <div className="h-5 w-5 rounded-full bg-blue-100 flex items-center justify-center mr-2 mt-0.5">
-                  <CheckCircle className="h-3 w-3 text-blue-600" />
-                </div>
-                <span className="text-sm">Create lesson plans, schedules and more</span>
-              </li>
-            </ul>
+          <CardContent>
+            <div className="space-y-4">
+              <CardWithCheckIcon>
+                <span className="font-medium text-gray-900">Curriculum-aligned content</span>
+                <p className="text-sm text-gray-600">Math, Science, Languages, History, and more</p>
+              </CardWithCheckIcon>
+              <CardWithCheckIcon>
+                <span className="font-medium text-gray-900">Structured lesson plans</span>
+                <p className="text-sm text-gray-600">Grade-specific learning objectives</p>
+              </CardWithCheckIcon>
+              <CardWithCheckIcon>
+                <span className="font-medium text-gray-900">Assessment tools</span>
+                <p className="text-sm text-gray-600">Quizzes, assignments, and progress tracking</p>
+              </CardWithCheckIcon>
+            </div>
           </CardContent>
-          <CardFooter className="border-t pt-4 pb-4 px-6">
+          <CardFooter className="border-t border-kidato-blue-100 pt-4">
             <Button 
-              onClick={onStartNew} 
-              className="w-full"
+              onClick={() => onStartNew('academic')} 
+              className="w-full bg-gradient-to-r from-kidato-blue to-kidato-purple hover:from-kidato-blue-600 hover:to-kidato-purple-600"
             >
-              <PlusCircle className="h-4 w-4 mr-2" />
-              Create New Class
+              <GraduationCap className="h-4 w-4 mr-2" />
+              Create Academic Class
             </Button>
           </CardFooter>
         </Card>
-        
-        {draftExists ? (
-          <Card className="shadow-sm hover:shadow-md transition-shadow border-blue-200">
-            <CardHeader className="bg-gradient-to-r from-blue-50 to-blue-100 border-b">
-              <CardTitle className="flex items-center">
-                <RotateCcw className="h-5 w-5 mr-2 text-blue-600" />
-                Continue Draft
-              </CardTitle>
-              <CardDescription className="flex items-center text-blue-700">
-                <Clock className="h-3.5 w-3.5 mr-1.5" />
-                Last edited: {lastSavedText}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="pt-6">
-              <p className="text-sm mb-4 text-blue-800">
-                You have a draft in progress. You can continue where you left off or start a new class.
+
+        {/* After-School Classes Card */}
+        <Card className="shadow-sm hover:shadow-md transition-shadow border-kidato-orange-200">
+          <CardHeader className="pb-3 bg-gradient-to-r from-kidato-orange-50 to-orange-50 border-b border-kidato-orange-100">
+            <div className="flex items-center gap-2">
+              <Trophy className="h-6 w-6 text-kidato-orange" />
+              <CardTitle className="text-xl text-kidato-orange-800">After-School Classes</CardTitle>
+            </div>
+            <CardDescription className="text-kidato-orange-600">
+              Extracurricular and enrichment activities
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <CardWithCheckIcon>
+                <span className="font-medium text-gray-900">Skills & hobbies</span>
+                <p className="text-sm text-gray-600">Arts, sports, music, coding, and crafts</p>
+              </CardWithCheckIcon>
+              <CardWithCheckIcon>
+                <span className="font-medium text-gray-900">Flexible scheduling</span>
+                <p className="text-sm text-gray-600">Workshops, camps, and ongoing programs</p>
+              </CardWithCheckIcon>
+              <CardWithCheckIcon>
+                <span className="font-medium text-gray-900">Creative projects</span>
+                <p className="text-sm text-gray-600">Portfolio building and showcases</p>
+              </CardWithCheckIcon>
+            </div>
+          </CardContent>
+          <CardFooter className="border-t border-kidato-orange-100 pt-4">
+            <Button 
+              onClick={() => onStartNew('afterschool')} 
+              className="w-full bg-gradient-to-r from-kidato-orange to-kidato-orange-400 hover:from-kidato-orange-600 hover:to-kidato-orange-500"
+            >
+              <Trophy className="h-4 w-4 mr-2" />
+              Create After-School Class
+            </Button>
+          </CardFooter>
+        </Card>
+
+        {/* AI-Assisted Creation Card */}
+        <Card className="shadow-sm hover:shadow-md transition-shadow border-purple-200">
+          <CardHeader className="pb-3">
+            <div className="flex items-center gap-2">
+              <Bot className="h-6 w-6 text-purple-600" />
+              <CardTitle className="text-xl">AI-Assisted Creation</CardTitle>
+            </div>
+            <CardDescription>
+              Let AI help design your class
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <CardWithCheckIcon>
+                <span className="font-medium text-gray-900">Smart content generation</span>
+                <p className="text-sm text-gray-600">Descriptions, objectives, and outlines</p>
+              </CardWithCheckIcon>
+              <CardWithCheckIcon>
+                <span className="font-medium text-gray-900">Automated lesson plans</span>
+                <p className="text-sm text-gray-600">Tailored to your subject and level</p>
+              </CardWithCheckIcon>
+              <CardWithCheckIcon>
+                <span className="font-medium text-gray-900">Personalized suggestions</span>
+                <p className="text-sm text-gray-600">Activities, resources, and assessments</p>
+              </CardWithCheckIcon>
+            </div>
+            <div className="mt-4 p-3 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-lg border border-purple-100">
+              <p className="text-xs text-purple-700 font-medium mb-1">✨ Pro Tip</p>
+              <p className="text-xs text-purple-600">
+                Just describe your class idea and let AI create the complete structure!
               </p>
-              <div className="flex flex-col gap-3">
-                <Button
-                  onClick={handleContinueDraft}
-                  className="w-full"
-                  variant="default"
-                >
-                  <RotateCcw className="h-4 w-4 mr-2" />
-                  Continue Draft
-                </Button>
-                <Button
-                  onClick={handleDiscardDraft}
-                  className="w-full"
-                  variant="outline"
-                >
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Discard Draft
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ) : (
-          <Card className="shadow-sm hover:shadow-md transition-shadow border-purple-200">
-            <CardHeader className="bg-gradient-to-r from-purple-50 to-indigo-50 border-b border-purple-100">
-              <CardTitle className="flex items-center">
-                <Bot className="h-5 w-5 mr-2 text-purple-600" />
-                AI-Assisted Creation
-              </CardTitle>
-              <CardDescription>
-                Let AI help you create your class
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="pt-6">
-              <ul className="space-y-3">
-                <li className="flex items-start">
-                  <div className="h-5 w-5 rounded-full bg-purple-100 flex items-center justify-center mr-2 mt-0.5">
-                    <Sparkles className="h-3 w-3 text-purple-600" />
-                  </div>
-                  <span className="text-sm">Generate class description & objectives</span>
-                </li>
-                <li className="flex items-start">
-                  <div className="h-5 w-5 rounded-full bg-purple-100 flex items-center justify-center mr-2 mt-0.5">
-                    <Sparkles className="h-3 w-3 text-purple-600" />
-                  </div>
-                  <span className="text-sm">Create detailed lesson plans automatically</span>
-                </li>
-                <li className="flex items-start">
-                  <div className="h-5 w-5 rounded-full bg-purple-100 flex items-center justify-center mr-2 mt-0.5">
-                    <Sparkles className="h-3 w-3 text-purple-600" />
-                  </div>
-                  <span className="text-sm">Get tailored content for your subject</span>
-                </li>
-              </ul>
-              <div className="mt-4 p-3 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-lg border border-purple-100">
-                <p className="text-xs text-purple-700 font-medium mb-1">💡 Pro Tip</p>
-                <p className="text-xs text-purple-600">
-                  Just describe your class idea and let AI create the complete structure for you!
-                </p>
-              </div>
-            </CardContent>
-            <CardFooter className="border-t pt-4 pb-4 px-6">
-              <Button 
-                onClick={onStartWithAI}
-                className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
-              >
-                <Wand2 className="h-4 w-4 mr-2" />
-                Start with AI Helper
-              </Button>
-            </CardFooter>
-          </Card>
-        )}
+            </div>
+          </CardContent>
+          <CardFooter className="border-t pt-4">
+            <Button 
+              onClick={onStartWithAI}
+              className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
+            >
+              <Wand2 className="h-4 w-4 mr-2" />
+              Start with AI Helper
+            </Button>
+          </CardFooter>
+        </Card>
       </div>
     </div>
   );
