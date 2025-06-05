@@ -531,18 +531,28 @@ export const ProfileJourneyProvider = ({ children }: { children: ReactNode }) =>
       console.log("Education items to save:", education);
 
       // Convert EducationItem format to Education format for the API
-      const educationItemsForAPI = education.map(edu => ({
-        id: edu._id && !edu._id.startsWith('edu-') ? edu._id : undefined,
-        institution: edu.institution || edu.institutionName || '',
-        degree: edu.degree || '',
-        fieldOfStudy: edu.additionalDetails || '', // Map additionalDetails to fieldOfStudy
-        startDate: edu.startDate,
-        endDate: edu.endDate,
-        isCurrentlyEnrolled: edu.isCurrentlyStudying || false,
-        grade: '', // EducationItem doesn't have grade
-        activities: '', // EducationItem doesn't have activities
-        description: edu.additionalDetails || ''
-      }));
+      const educationItemsForAPI = education.map(edu => {
+        const baseItem = {
+          institution: edu.institution || edu.institutionName || '',
+          degree: edu.degree || '',
+          fieldOfStudy: edu.additionalDetails || '', // Map additionalDetails to fieldOfStudy
+          startDate: edu.startDate,
+          endDate: edu.endDate,
+          isCurrentlyEnrolled: edu.isCurrentlyStudying || false
+          // Removed grade, activities, and description as they're not expected by the API
+        };
+
+        // Only include id for existing items (not new items with temporary IDs)
+        if (edu._id && !edu._id.startsWith('edu-') && !edu._id.startsWith('cv-edu-')) {
+          return {
+            id: edu._id,
+            ...baseItem
+          };
+        }
+
+        // For new items, don't include the id field at all
+        return baseItem;
+      });
 
       console.log("Sending education items to API:", educationItemsForAPI);
 
@@ -597,20 +607,32 @@ export const ProfileJourneyProvider = ({ children }: { children: ReactNode }) =>
       console.log("Experience items to save:", experience);
 
       // Convert ExperienceItem format to Experience format for the API
-      const experienceItemsForAPI = experience.map(exp => ({
-        id: exp._id && !exp._id.startsWith('exp-') ? exp._id : undefined,
-        position: exp.position || '',
-        institution: exp.institution || '',
-        institutionType: exp.institutionType || '',
-        startDate: exp.startDate,
-        endDate: exp.endDate,
-        isCurrentlyWorking: exp.isCurrentlyWorking || false,
-        curriculums: exp.curriculums || [],
-        grades: exp.grades || [],
-        subjects: exp.subjects || [],
-        reportingManager: exp.reportingManager,
-        additionalDetails: exp.additionalDetails || ''
-      }));
+      const experienceItemsForAPI = experience.map(exp => {
+        const baseItem = {
+          position: exp.position || '',
+          institution: exp.institution || '',
+          institutionType: exp.institutionType || '',
+          startDate: exp.startDate,
+          endDate: exp.endDate,
+          isCurrentlyWorking: exp.isCurrentlyWorking || false,
+          curriculums: exp.curriculums || [],
+          grades: exp.grades || [],
+          subjects: exp.subjects || [],
+          reportingManager: exp.reportingManager,
+          additionalDetails: exp.additionalDetails || ''
+        };
+
+        // Only include id for existing items (not new items with temporary IDs)
+        if (exp._id && !exp._id.startsWith('exp-') && !exp._id.startsWith('temp_')) {
+          return {
+            id: exp._id,
+            ...baseItem
+          };
+        }
+
+        // For new items, don't include the id field at all
+        return baseItem;
+      });
 
       console.log("Sending experience items to API:", experienceItemsForAPI);
 
