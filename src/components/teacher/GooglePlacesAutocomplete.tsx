@@ -28,7 +28,7 @@ interface GooglePlacesAutocompleteProps {
 
 const GooglePlacesAutocomplete: React.FC<GooglePlacesAutocompleteProps> = ({
   onPlaceSelect,
-  placeholder = "Search for an address...",
+  placeholder = "Search for addresses, buildings, or places...",
   initialValue = "",
   className = "",
   label
@@ -60,14 +60,21 @@ const GooglePlacesAutocomplete: React.FC<GooglePlacesAutocompleteProps> = ({
 
         if (inputRef.current) {
           const autocomplete = new google.maps.places.Autocomplete(inputRef.current, {
-            types: ["address"],
             fields: [
               "address_components",
               "formatted_address",
               "geometry",
               "place_id",
-              "name"
-            ]
+              "name",
+              "types"
+            ],
+            // Set bounds to Kenya region to prioritize local results but allow global search
+            bounds: new google.maps.LatLngBounds(
+              new google.maps.LatLng(-4.678, 33.909), // Southwest corner of Kenya
+              new google.maps.LatLng(5.506, 41.899)   // Northeast corner of Kenya
+            ),
+            // Don't restrict bounds strictly - allow global search but prioritize Kenya
+            strictBounds: false
           });
 
           autocomplete.addListener("place_changed", () => {
@@ -92,6 +99,14 @@ const GooglePlacesAutocomplete: React.FC<GooglePlacesAutocompleteProps> = ({
               placeId: place.place_id || ""
             };
 
+            // Check if this is an establishment/business/specific building
+            const isEstablishment = place.types?.includes('establishment') || 
+                                   place.types?.includes('point_of_interest') ||
+                                   place.types?.includes('premise');
+            
+            let streetAddress = "";
+            let establishmentName = "";
+
             // Parse address components
             addressComponents.forEach((component) => {
               const types = component.types;
@@ -99,9 +114,13 @@ const GooglePlacesAutocomplete: React.FC<GooglePlacesAutocompleteProps> = ({
               if (types.includes("street_number")) {
                 placeResult.houseNumber = component.long_name;
               } else if (types.includes("route")) {
-                placeResult.address = `${placeResult.houseNumber} ${component.long_name}`.trim();
+                streetAddress = `${placeResult.houseNumber} ${component.long_name}`.trim();
+              } else if (types.includes("subpremise")) {
+                placeResult.apartment = component.long_name;
               } else if (types.includes("locality")) {
                 placeResult.city = component.long_name;
+              } else if (types.includes("sublocality_level_1") || types.includes("sublocality")) {
+                if (!placeResult.city) placeResult.city = component.long_name;
               } else if (types.includes("administrative_area_level_1")) {
                 placeResult.county = component.long_name;
               } else if (types.includes("postal_code")) {
@@ -111,7 +130,23 @@ const GooglePlacesAutocomplete: React.FC<GooglePlacesAutocompleteProps> = ({
               }
             });
 
-            // If no specific street address was found, use formatted address
+            // Handle establishment names and build proper address
+            if (isEstablishment && place.name) {
+              establishmentName = place.name;
+              
+              // For establishments, prefer to show the establishment name with street address
+              if (streetAddress) {
+                placeResult.address = `${establishmentName}, ${streetAddress}`;
+              } else {
+                // If no street address, use the formatted address but prioritize the establishment name
+                placeResult.address = place.formatted_address || establishmentName;
+              }
+            } else {
+              // For regular addresses, use street address or formatted address
+              placeResult.address = streetAddress || place.formatted_address || "";
+            }
+
+            // Ensure we have a valid address
             if (!placeResult.address && place.formatted_address) {
               placeResult.address = place.formatted_address;
             }

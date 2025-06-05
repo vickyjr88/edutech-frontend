@@ -3,12 +3,13 @@ import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Users, Mail, FileSpreadsheet, Share2 } from "lucide-react";
+import { Users, Mail, FileSpreadsheet, Share2, MessageCircle } from "lucide-react";
 
 // Import content from existing tabs
 import { EmailInviteSection } from "./invite-sections/EmailInviteSection";
 import { FileUploadSection } from "./invite-sections/FileUploadSection";
 import { ShareLinkSection } from "./invite-sections/ShareLinkSection";
+import { WhatsAppInviteSection } from "./invite-sections/WhatsAppInviteSection";
 
 interface InviteStudentsTabProps {
   classId?: string;
@@ -35,10 +36,14 @@ const InviteStudentsTab = ({ classId }: InviteStudentsTabProps) => {
       </CardHeader>
       <CardContent className="space-y-6">
         <Tabs defaultValue="email" value={inviteMethod} onValueChange={setInviteMethod} className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="email" className="flex items-center gap-2">
               <Mail className="h-3.5 w-3.5" />
               <span>Email Invite</span>
+            </TabsTrigger>
+            <TabsTrigger value="whatsapp" className="flex items-center gap-2">
+              <MessageCircle className="h-3.5 w-3.5" />
+              <span>WhatsApp/SMS</span>
             </TabsTrigger>
             <TabsTrigger value="file" className="flex items-center gap-2">
               <FileSpreadsheet className="h-3.5 w-3.5" />
@@ -53,6 +58,10 @@ const InviteStudentsTab = ({ classId }: InviteStudentsTabProps) => {
           <div className="mt-6">
             <TabsContent value="email">
               <EmailInviteSection classId={classId} />
+            </TabsContent>
+            
+            <TabsContent value="whatsapp">
+              <WhatsAppInviteSection classId={classId} />
             </TabsContent>
             
             <TabsContent value="file">

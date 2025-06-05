@@ -45,24 +45,16 @@ const formatPhoneNumber = (phone: string, countryCode: string = "+254"): string 
 
 type StepType = 
   | "personal"
-  | "location"
   | "education"
-  | "experience"
   | "expertise"
-  | "teaching-style"
-  | "verification"
-  | "platform";
+  | "certifications";
 
-// An array of all steps in order
+// An array of all steps in order - 4 comprehensive steps
 const STEPS: StepType[] = [
   "personal",
-  "location",
-  "education",
-  "experience",
+  "education", 
   "expertise",
-  "teaching-style",
-  "verification",
-  "platform"
+  "certifications"
 ];
 
 // Define the step information
@@ -72,47 +64,27 @@ interface StepInfo {
   description: string;
 }
 
-// Define the steps information
+// Define the 4-step journey information  
 const stepsInfo: Record<StepType, StepInfo> = {
   "personal": {
     id: "personal",
-    title: "Personal Information",
-    description: "Tell us about yourself"
-  },
-  "location": {
-    id: "location",
-    title: "Location & Availability",
-    description: "Where you teach and when you're available"
+    title: "Personal Info", 
+    description: "Name, contact, photo & intro video"
   },
   "education": {
     id: "education",
-    title: "Education Background",
-    description: "Your academic qualifications"
-  },
-  "experience": {
-    id: "experience",
-    title: "Teaching Experience",
-    description: "Your previous teaching roles"
+    title: "Education",
+    description: "Academic background & qualifications"
   },
   "expertise": {
     id: "expertise",
-    title: "Subject Expertise",
-    description: "Subjects and skills you can teach"
+    title: "Experience & Expertise",
+    description: "Teaching experience, subjects & skills"
   },
-  "teaching-style": {
-    id: "teaching-style",
-    title: "Teaching Style",
-    description: "Your methodologies and approaches"
-  },
-  "verification": {
-    id: "verification",
-    title: "Verification & Credentials",
-    description: "Certifications and background checks"
-  },
-  "platform": {
-    id: "platform",
-    title: "Teaching Platform",
-    description: "Set up your virtual classroom"
+  "certifications": {
+    id: "certifications", 
+    title: "Certifications",
+    description: "Credentials & achievements"
   }
 };
 
@@ -133,8 +105,9 @@ interface ProfileJourneyContextType {
   stepProgress: Record<StepType, number>;
   overallProgress: number;
   
-  // Form data
+  // Form data - Updated to match new UX structure
   personalInfo: {
+    fullName: string;
     firstName: string;
     lastName: string;
     email: string;
@@ -142,9 +115,23 @@ interface ProfileJourneyContextType {
     phone: string;
     alternativeCountryCode: string;
     alternativePhone: string;
-    bio: string;
+    homeAddress: string;
+    nationalId: string;
+    country: string;
+    idCountry: string;
+    idType: string;
+    idNumber: string;
+    taxNumber: string;
     profileImage: string;
     introVideoUrl: string;
+    bio: string;
+    locationCity?: string;
+    locationCounty?: string;
+    locationPostalCode?: string;
+    locationCoordinates?: {
+      latitude: number;
+      longitude: number;
+    };
   };
   locationInfo: {
     address: string;
@@ -192,7 +179,9 @@ interface ProfileJourneyContextType {
   updatePersonalInfo: (data: Partial<ProfileJourneyContextType['personalInfo']>) => void;
   updateLocationInfo: (data: Partial<ProfileJourneyContextType['locationInfo']>) => void;
   setEducation: (items: EducationItem[]) => void;
+  saveEducation: () => Promise<boolean>;
   setExperience: (items: ExperienceItem[]) => void;
+  saveExperience: () => Promise<boolean>;
   setAcademicSubjects: (items: AcademicSubjectItem[]) => void;
   setAfterSchoolSubjects: (items: AfterSchoolSubjectItem[]) => void;
   setStrategies: (items: StrategyItem[]) => void;
@@ -225,37 +214,42 @@ const defaultContext: ProfileJourneyContextType = {
   // Completion status
   completedSteps: {
     personal: false,
-    location: false,
     education: false,
-    experience: false,
     expertise: false,
-    "teaching-style": false,
-    verification: false,
-    platform: false
+    certifications: false
   },
   stepProgress: {
     personal: 0,
-    location: 0,
     education: 0,
-    experience: 0,
     expertise: 0,
-    "teaching-style": 0,
-    verification: 0,
-    platform: 0
+    certifications: 0
   },
   overallProgress: 0,
   
   // Form data
   personalInfo: {
+    fullName: "",
     firstName: "",
     lastName: "",
     email: "",
     countryCode: "+254", // Default to Kenya
     phone: "",
-    alternativeCountryCode: "+254", // Default to Kenya
+    alternativeCountryCode: "+254",
     alternativePhone: "",
-    bio: "",
+    homeAddress: "",
+    nationalId: "",
+    country: "Kenya",
+    idCountry: "Kenya",
+    idType: "",
+    idNumber: "",
+    taxNumber: "",
     profileImage: "",
+    introVideoUrl: "",
+    bio: "",
+    locationCity: "",
+    locationCounty: "",
+    locationPostalCode: "",
+    locationCoordinates: { latitude: 0, longitude: 0 },
   },
   locationInfo: {
     address: "",
@@ -301,7 +295,9 @@ const defaultContext: ProfileJourneyContextType = {
   updatePersonalInfo: () => {},
   updateLocationInfo: () => {},
   setEducation: () => {},
+  saveEducation: async () => false,
   setExperience: () => {},
+  saveExperience: async () => false,
   setAcademicSubjects: () => {},
   setAfterSchoolSubjects: () => {},
   setStrategies: () => {},
@@ -333,24 +329,16 @@ export const ProfileJourneyProvider = ({ children }: { children: ReactNode }) =>
   // Completion state
   const [completedSteps, setCompletedSteps] = useState<Record<StepType, boolean>>({
     personal: false,
-    location: false,
     education: false,
-    experience: false,
     expertise: false,
-    "teaching-style": false,
-    verification: false,
-    platform: false
+    certifications: false
   });
   
   const [stepProgress, setStepProgress] = useState<Record<StepType, number>>({
     personal: 0,
-    location: 0,
     education: 0,
-    experience: 0,
     expertise: 0,
-    "teaching-style": 0,
-    verification: 0,
-    platform: 0
+    certifications: 0
   });
   
   // Form data state
@@ -401,10 +389,38 @@ export const ProfileJourneyProvider = ({ children }: { children: ReactNode }) =>
         
         // Split the data between user profile (goes to /user/:id) and teacher profile (goes to /teachers/:id)
         
+        // Country name to code mapping
+        const countryNameToCode: { [key: string]: string } = {
+          'Kenya': 'KE',
+          'Tanzania': 'TZ', 
+          'Uganda': 'UG',
+          'Rwanda': 'RW',
+          'United States': 'US',
+          'Canada': 'CA',
+          'United Kingdom': 'GB',
+          'Nigeria': 'NG',
+          'South Africa': 'ZA',
+          'Egypt': 'EG',
+          'India': 'IN',
+          'Australia': 'AU',
+          'Germany': 'DE',
+          'France': 'FR'
+        };
+
+        // ID type display name to code mapping
+        const idTypeDisplayToCode: { [key: string]: string } = {
+          'National ID': 'national_id',
+          'Passport': 'passport', 
+          "Driver's License": 'drivers_license',
+          'Social Security Number': 'social_security_number',
+          'Aadhaar Card': 'aadhaar_card',
+          'Other Government ID': 'other_government_id'
+        };
+
         // 1. User profile data
         const userData: any = {
-          // Use fullName instead of firstName/lastName
-          fullName: `${data.firstName} ${data.lastName}`.trim(),
+          // Use fullName directly
+          ...(data.fullName && { fullName: data.fullName.trim() }),
           // Format phone number with the selected country code
           ...(data.phone && { 
             phoneNumber: formatPhoneNumber(data.phone, data.countryCode) 
@@ -419,20 +435,44 @@ export const ProfileJourneyProvider = ({ children }: { children: ReactNode }) =>
           // Include bio in user data
           ...(data.bio && { bio: data.bio }),
           // Email can only be updated if it's not already set
-          ...(data.email && { email: data.email })
+          ...(data.email && { email: data.email }),
+          // Include legal_id if provided
+          ...(data.idType && data.idNumber && data.idCountry && {
+            legal_id: {
+              id_type: idTypeDisplayToCode[data.idType] || data.idType.toLowerCase().replace(/\s+/g, '_').replace("'", ""),
+              id: data.idNumber,
+              country: countryNameToCode[data.idCountry] || 'XX'
+            }
+          }),
+          // Include tax_info if provided
+          ...(data.taxNumber && data.country && {
+            tax_info: {
+              tax_no: data.taxNumber,
+              country: countryNameToCode[data.country] || 'XX'
+            }
+          })
         };
         
         // 2. Teacher profile data
         const teacherData: any = {
           // Note: We don't include firstName/lastName in teacherProfile
-          // Include profile image in teacher profile (could be teacher-specific)
-          ...(data.profileImage && { profileImage: data.profileImage }),
+          // Note: profileImage is handled separately via uploadProfilePhoto, not in general profile updates
           // Include intro video URL in teacher profile
-          ...(data.introVideoUrl && { introVideoUrl: data.introVideoUrl })
+          ...(data.introVideoUrl && { introVideoUrl: data.introVideoUrl }),
+          // Include location data in teacher profile if available
+          ...(data.homeAddress && {
+            location: {
+              address: data.homeAddress,
+              city: data.locationCity || '',
+              county: data.locationCounty || '',
+              postalCode: data.locationPostalCode || '',
+              coordinates: data.locationCoordinates || { latitude: 0, longitude: 0 }
+            }
+          })
         };
         
         // Call API to update user profile data
-        const userResponse = await authService.updateUserProfile(user.id, userData);
+        const userResponse = await authService.updateUserProfile(userData);
         
         if (userResponse.error) {
           console.error("Error updating user profile:", userResponse.error);
@@ -473,6 +513,162 @@ export const ProfileJourneyProvider = ({ children }: { children: ReactNode }) =>
       });
     }
   };
+
+  // Save education function - called when education step is completed
+  const saveEducation = async (): Promise<boolean> => {
+    try {
+      if (!user?.teacherId) {
+        toast({
+          title: "Error",
+          description: "Teacher ID not found. Please ensure you are logged in.",
+          variant: "destructive"
+        });
+        return false;
+      }
+
+      const teacherId = user.teacherId;
+      console.log("Saving education for teacher:", teacherId);
+      console.log("Education items to save:", education);
+
+      // Convert EducationItem format to Education format for the API
+      const educationItemsForAPI = education.map(edu => {
+        const baseItem = {
+          institution: edu.institution || edu.institutionName || '',
+          degree: edu.degree || '',
+          fieldOfStudy: edu.additionalDetails || '', // Map additionalDetails to fieldOfStudy
+          startDate: edu.startDate,
+          endDate: edu.endDate,
+          isCurrentlyEnrolled: edu.isCurrentlyStudying || false
+          // Removed grade, activities, and description as they're not expected by the API
+        };
+
+        // Only include id for existing items (not new items with temporary IDs)
+        if (edu._id && !edu._id.startsWith('edu-') && !edu._id.startsWith('cv-edu-')) {
+          return {
+            id: edu._id,
+            ...baseItem
+          };
+        }
+
+        // For new items, don't include the id field at all
+        return baseItem;
+      });
+
+      console.log("Sending education items to API:", educationItemsForAPI);
+
+      // Call the new bulk update endpoint
+      const result = await teacherService.updateTeacherEducation(teacherId, educationItemsForAPI);
+      
+      if (result.error) {
+        throw new Error(result.error.message || 'Failed to save education information');
+      }
+
+      // Update local state with the response data if available
+      if (result.data && Array.isArray(result.data)) {
+        const updatedEducation = result.data.map((apiEdu, index) => ({
+          ...education[index],
+          _id: apiEdu.id || education[index]._id
+        }));
+        setEducation(updatedEducation);
+      }
+
+      toast({
+        title: "Success",
+        description: "Education information saved successfully",
+      });
+
+      console.log("Education saved successfully");
+      return true;
+    } catch (error) {
+      console.error("Error saving education:", error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to save education information. Please try again.",
+        variant: "destructive",
+      });
+      return false;
+    }
+  };
+
+  // Save experience function - called when experience step is completed
+  const saveExperience = async (): Promise<boolean> => {
+    try {
+      if (!user?.teacherId) {
+        toast({
+          title: "Error",
+          description: "Teacher ID not found. Please ensure you are logged in.",
+          variant: "destructive"
+        });
+        return false;
+      }
+
+      const teacherId = user.teacherId;
+      console.log("Saving experience for teacher:", teacherId);
+      console.log("Experience items to save:", experience);
+
+      // Convert ExperienceItem format to Experience format for the API
+      const experienceItemsForAPI = experience.map(exp => {
+        const baseItem = {
+          position: exp.position || '',
+          institution: exp.institution || '',
+          institutionType: exp.institutionType || '',
+          startDate: exp.startDate,
+          endDate: exp.endDate,
+          isCurrentlyWorking: exp.isCurrentlyWorking || false,
+          curriculums: exp.curriculums || [],
+          grades: exp.grades || [],
+          subjects: exp.subjects || [],
+          reportingManager: exp.reportingManager,
+          additionalDetails: exp.additionalDetails || ''
+        };
+
+        // Only include id for existing items (not new items with temporary IDs)
+        if (exp._id && !exp._id.startsWith('exp-') && !exp._id.startsWith('temp_')) {
+          return {
+            id: exp._id,
+            ...baseItem
+          };
+        }
+
+        // For new items, don't include the id field at all
+        return baseItem;
+      });
+
+      console.log("Sending experience items to API:", experienceItemsForAPI);
+
+      // Call the new bulk update endpoint
+      const result = await teacherService.updateTeacherExperience(teacherId, experienceItemsForAPI);
+      
+      if (result.error) {
+        throw new Error(result.error.message || 'Failed to save experience information');
+      }
+
+      // Update local state with the response data if available
+      if (result.data && Array.isArray(result.data)) {
+        const updatedExperience = result.data.map((apiExp, index) => ({
+          ...experience[index],
+          _id: apiExp.id || experience[index]._id
+        }));
+        setExperience(updatedExperience);
+      }
+
+      toast({
+        title: "Success",
+        description: "Experience information saved successfully",
+      });
+
+      console.log("Experience saved successfully");
+      return true;
+    } catch (error) {
+      console.error("Error saving experience:", error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to save experience information. Please try again.",
+        variant: "destructive",
+      });
+      return false;
+    }
+  };
   
   const updateLocationInfo = async (data: Partial<ProfileJourneyContextType['locationInfo']>) => {
     try {
@@ -511,7 +707,7 @@ export const ProfileJourneyProvider = ({ children }: { children: ReactNode }) =>
       }
       
       // Update progress
-      updateStepProgress("location");
+      updateStepProgress("personal");
     } catch (error) {
       console.error("Error in updateLocationInfo:", error);
       toast({
@@ -554,7 +750,7 @@ export const ProfileJourneyProvider = ({ children }: { children: ReactNode }) =>
       }
       
       // Update progress
-      updateStepProgress("verification");
+      updateStepProgress("certifications");
     } catch (error) {
       console.error("Error in updateVerification:", error);
       toast({
@@ -585,7 +781,6 @@ export const ProfileJourneyProvider = ({ children }: { children: ReactNode }) =>
         if (data.introVideoUrl) {
           apiData.introVideoUrl = data.introVideoUrl;
         }
-        
         // Only make the API call if we have data to update
         if (Object.keys(apiData).length > 0) {
           // Call API to update profile
@@ -605,7 +800,7 @@ export const ProfileJourneyProvider = ({ children }: { children: ReactNode }) =>
       }
       
       // Update progress
-      updateStepProgress("platform");
+      updateStepProgress("certifications");
     } catch (error) {
       console.error("Error in updatePlatformSettings:", error);
       toast({
@@ -624,8 +819,7 @@ export const ProfileJourneyProvider = ({ children }: { children: ReactNode }) =>
     if (step === 'personal') {
       console.log("Personal info when marking as complete:", {
         personalInfo,
-        hasFirstName: !!personalInfo.firstName,
-        hasLastName: !!personalInfo.lastName,
+        hasFullName: !!personalInfo.fullName,
         hasEmail: !!personalInfo.email,
         hasPhone: !!personalInfo.phone, 
         hasBio: !!personalInfo.bio,
@@ -654,76 +848,51 @@ export const ProfileJourneyProvider = ({ children }: { children: ReactNode }) =>
     const calculateProgress = () => {
       switch (step) {
         case "personal":
-          // Required fields
-          const nameComplete = personalInfo.firstName && personalInfo.lastName ? 1 : 0;
+          // Personal info requirements: Full Name, Email, Phone, Home Address, ID Fields, Country, Photo, Bio
+          const nameComplete = personalInfo.fullName && personalInfo.fullName.trim() ? 1 : 0;
           const emailComplete = personalInfo.email ? 1 : 0;
           const phoneComplete = personalInfo.phone ? 1 : 0;
-          const profileImageComplete = personalInfo.profileImage ? 1 : 0; // Make profile image required
-          
-          // Optional fields (contribute to progress but not required for completion)
+          const homeAddressComplete = personalInfo.homeAddress ? 1 : 0;
+          const idComplete = personalInfo.idCountry && personalInfo.idType && personalInfo.idNumber ? 1 : 0;
+          const countryComplete = personalInfo.country ? 1 : 0;
+          const profileImageComplete = personalInfo.profileImage ? 1 : 0;
           const bioComplete = personalInfo.bio && personalInfo.bio.length >= 20 ? 1 : 0;
           
-          // Required fields have higher weight (75% of total)
-          const requiredWeight = 0.8;
-          const optionalWeight = 0.2;
-          
-          const requiredProgress = ((nameComplete + emailComplete + phoneComplete + profileImageComplete) / 4) * requiredWeight * 100;
-          const optionalProgress = (bioComplete) * optionalWeight * 100;
-          
-          return Math.min(100, requiredProgress + optionalProgress);
-          
-        case "location":
-          // Required fields
-          const addressComplete = locationInfo.address ? 1 : 0;
-          const cityComplete = locationInfo.city ? 1 : 0;
-          const countyComplete = locationInfo.county ? 1 : 0;
-          const daysComplete = locationInfo.availability.days.length > 0 ? 1 : 0;
-          
-          // Calculate progress based on required fields
-          const locationProgress = ((addressComplete + cityComplete + countyComplete + daysComplete) / 4) * 100;
-          
-          return locationProgress;
+          return ((nameComplete + emailComplete + phoneComplete + homeAddressComplete + 
+                   idComplete + countryComplete + profileImageComplete + bioComplete) / 8) * 100;
           
         case "education":
-          return education.length > 0 ? 100 : 0;
+          // Education requirements: College + High School
+          const hasEducation = education.length > 0 ? 1 : 0;
+          // Could be more granular - check for college and high school separately
+          const hasCollegeEducation = education.some(edu => 
+            edu.degree?.toLowerCase().includes('bachelor') || 
+            edu.degree?.toLowerCase().includes('master') || 
+            edu.degree?.toLowerCase().includes('degree')
+          ) ? 1 : 0;
+          const hasHighSchoolEducation = education.some(edu => 
+            edu.degree?.toLowerCase().includes('high school') || 
+            edu.degree?.toLowerCase().includes('secondary')
+          ) ? 1 : 0;
           
-        case "experience":
-          return experience.length > 0 ? 100 : 0;
+          return hasEducation ? Math.max(50, (hasCollegeEducation + hasHighSchoolEducation) * 50) : 0;
           
         case "expertise":
-          // Progress is based on having entries in either academic or after-school subjects
-          const academicProgress = academicSubjects.length > 0 ? 50 : 0;
-          const afterSchoolProgress = afterSchoolSubjects.length > 0 ? 50 : 0;
+          // Experience and Expertise: Institution experience, subjects, languages, skills
+          const hasSubjects = (academicSubjects.length > 0 || afterSchoolSubjects.length > 0) ? 1 : 0;
+          const hasExperience = experience.length > 0 ? 1 : 0;
+          const hasLanguages = languages.length > 0 ? 1 : 0;
+          const hasSkills = technicalSkills.length > 0 ? 1 : 0;
           
-          return academicProgress + afterSchoolProgress;
+          return ((hasSubjects + hasExperience + hasLanguages + hasSkills) / 4) * 100;
           
-        case "teaching-style":
-          // Calculate progress based on the number of populated teaching style components
-          const totalTeachingComponents = 4; // strategies, methodologies, languages, skills
-          const filledComponents = [
-            strategies.length > 0,
-            methodologies.length > 0,
-            languages.length > 0,
-            technicalSkills.length > 0
-          ].filter(Boolean).length;
+        case "certifications":
+          // Certifications and Achievements
+          const hasCertifications = certifications.length > 0 ? 1 : 0;
+          const hasBackgroundCheck = verification.backgroundCheck ? 1 : 0;
+          const hasIdVerification = verification.idVerification ? 1 : 0;
           
-          return (filledComponents / totalTeachingComponents) * 100;
-          
-        case "verification":
-          // Progress from different verification methods
-          const certProgress = certifications.length > 0 ? 33.33 : 0;
-          const backgroundCheckProgress = verification.backgroundCheck ? 33.33 : 0;
-          const idVerificationProgress = verification.idVerification ? 33.33 : 0;
-          
-          // Any one complete method is enough for the step to be considered complete
-          return Math.min(100, certProgress + backgroundCheckProgress + idVerificationProgress);
-          
-        case "platform":
-          // Calculate progress based on platform connections
-          const zoomProgress = platformSettings.isZoomConnected ? 50 : 0;
-          const googleProgress = platformSettings.isGoogleConnected ? 50 : 0;
-          
-          return zoomProgress + googleProgress;
+          return ((hasCertifications + hasBackgroundCheck + hasIdVerification) / 3) * 100;
           
         default:
           return 0;
@@ -740,42 +909,22 @@ export const ProfileJourneyProvider = ({ children }: { children: ReactNode }) =>
     // This avoids the circular dependency where updating one state triggers an update to another
   };
   
-  // Recalculate all step progress whenever certifications or verification data changes
-  useEffect(() => {
-    // This was causing an infinite loop because updateStepProgress was updating
-    // the step progress, which then triggered this effect again
-    // We'll now only check the verification step specifically
-    updateStepProgress("verification");
-  }, [certifications, verification]);
-  
-  // Calculate progress for other steps when their data changes
+  // Calculate progress for steps when their data changes
   useEffect(() => {
     updateStepProgress("personal");
   }, [personalInfo]);
-  
-  useEffect(() => {
-    updateStepProgress("location");
-  }, [locationInfo]);
   
   useEffect(() => {
     updateStepProgress("education");
   }, [education]);
   
   useEffect(() => {
-    updateStepProgress("experience");
-  }, [experience]);
-  
-  useEffect(() => {
     updateStepProgress("expertise");
-  }, [academicSubjects, afterSchoolSubjects]);
+  }, [academicSubjects, afterSchoolSubjects, experience, languages, technicalSkills]);
   
   useEffect(() => {
-    updateStepProgress("teaching-style");
-  }, [strategies, methodologies, languages, technicalSkills]);
-  
-  useEffect(() => {
-    updateStepProgress("platform");
-  }, [platformSettings]);
+    updateStepProgress("certifications");
+  }, [certifications, verification]);
   
   // This effect checks if any steps have reached 100% and marks them as complete
   // It's separated from the progress calculation to avoid circular dependencies
@@ -812,14 +961,8 @@ export const ProfileJourneyProvider = ({ children }: { children: ReactNode }) =>
           // User info is nested in the user property
           const userInfo = profileData.user || {};
           
-          // Extract first and last name from fullName
-          let firstName = "";
-          let lastName = "";
-          if (userInfo.fullName) {
-            const nameParts = userInfo.fullName.split(' ');
-            firstName = nameParts[0] || "";
-            lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : "";
-          }
+          // Use fullName directly
+          const fullName = userInfo.fullName || "";
           
           // Extract phone numbers from the user object and add debug logging
           console.log("User info from API:", userInfo);
@@ -981,20 +1124,76 @@ export const ProfileJourneyProvider = ({ children }: { children: ReactNode }) =>
             alternativePhoneDigits
           });
           
+          // Extract legal_id and tax_info from user data
+          const legalId = (userInfo as any)?.legal_id;
+          const taxInfo = (userInfo as any)?.tax_info;
+          
+          // Map country codes to country names
+          const countryCodeToName: { [key: string]: string } = {
+            'KE': 'Kenya',
+            'TZ': 'Tanzania', 
+            'UG': 'Uganda',
+            'RW': 'Rwanda',
+            'US': 'United States',
+            'CA': 'Canada',
+            'GB': 'United Kingdom',
+            'NG': 'Nigeria',
+            'ZA': 'South Africa',
+            'EG': 'Egypt',
+            'IN': 'India',
+            'AU': 'Australia',
+            'DE': 'Germany',
+            'FR': 'France'
+          };
+          
+          // Map ID type codes to display names
+          const idTypeToDisplayName: { [key: string]: string } = {
+            'national_id': 'National ID',
+            'passport': 'Passport', 
+            'drivers_license': "Driver's License",
+            'social_security_number': 'Social Security Number',
+            'aadhaar_card': 'Aadhaar Card',
+            'other_government_id': 'Other Government ID'
+          };
+          
+          // Extract location data from profile
+          const locationData = profileData.location;
+          
+          // Determine country from multiple sources (location > legal_id > default)
+          let countryName = "Kenya"; // default
+          if (locationData?.city === "Nairobi" || locationData?.county?.includes("Nairobi")) {
+            countryName = "Kenya";
+          } else if (legalId?.country && countryCodeToName[legalId.country]) {
+            countryName = countryCodeToName[legalId.country];
+          }
+          
+          // Split fullName into firstName and lastName
+          const nameParts = fullName.trim().split(' ');
+          const firstName = nameParts[0] || '';
+          const lastName = nameParts.slice(1).join(' ') || '';
+
           // Update personal info
           setPersonalInfo({
+            fullName,
             firstName,
             lastName,
-            email: userInfo.email || "",
+            email: (userInfo as any).email || "",
             countryCode,
             phone: phoneDigits,
             alternativeCountryCode,
             alternativePhone: alternativePhoneDigits,
-            bio: userInfo.bio || "",
+            homeAddress: locationData?.address || "",
+            nationalId: "",
+            country: countryName,
+            idCountry: legalId?.country ? countryCodeToName[legalId.country] || "Kenya" : "Kenya", 
+            idType: legalId?.id_type ? idTypeToDisplayName[legalId.id_type] || legalId.id_type : "",
+            idNumber: legalId?.id || "",
+            taxNumber: taxInfo?.tax_no || "",
+            bio: (userInfo as any).bio || "",
             // Use _signedProfileImage if available, otherwise fall back to profileImage
-            profileImage: userInfo._signedProfileImage || userInfo.profileImage || profileData.profileImage || "",
+            profileImage: (userInfo as any)._signedProfileImage || (userInfo as any).profileImage || (profileData as any).profileImage || "",
             // Load intro video URL from teacher profile
-            introVideoUrl: profileData.introVideoUrl || "",
+            introVideoUrl: (profileData as any).introVideoUrl || "",
           });
           
           // Update location info
@@ -1024,52 +1223,52 @@ export const ProfileJourneyProvider = ({ children }: { children: ReactNode }) =>
           let hasLoadedCertifications = false;
           
           if (profileData.education && profileData.education.length > 0) {
-            setEducation(profileData.education);
+            setEducation(profileData.education as any[]);
             hasLoadedEducation = true;
           }
           
           if (profileData.experience && profileData.experience.length > 0) {
-            setExperience(profileData.experience);
+            setExperience(profileData.experience as any[]);
             hasLoadedExperience = true;
           }
           
           if (profileData.strategies && profileData.strategies.length > 0) {
-            setStrategies(profileData.strategies);
+            setStrategies(profileData.strategies as any[]);
             hasLoadedStrategies = true;
           }
-          
+
           if (profileData.methodologies && profileData.methodologies.length > 0) {
-            setMethodologies(profileData.methodologies);
+            setMethodologies(profileData.methodologies as any[]);
             hasLoadedMethodologies = true;
           }
           
           if (profileData.languages && profileData.languages.length > 0) {
-            setLanguages(profileData.languages);
+            setLanguages(profileData.languages as any[]);
             hasLoadedLanguages = true;
           }
           
           if (profileData.skills && profileData.skills.length > 0) {
-            setTechnicalSkills(profileData.skills);
+            setTechnicalSkills(profileData.skills as any[]);
             hasLoadedSkills = true;
           }
           
           if (profileData.subjects) {
-            const academic = profileData.subjects.filter(s => s.isAcademic === true);
-            const afterSchool = profileData.subjects.filter(s => s.isAcademic === false);
+            const academic = (profileData.subjects as any[]).filter((s: any) => s.isAcademic === true);
+            const afterSchool = (profileData.subjects as any[]).filter((s: any) => s.isAcademic === false);
             
             if (academic.length > 0) {
-              setAcademicSubjects(academic);
+              setAcademicSubjects(academic as any[]);
               hasLoadedAcademicSubjects = true;
             }
             
             if (afterSchool.length > 0) {
-              setAfterSchoolSubjects(afterSchool);
+              setAfterSchoolSubjects(afterSchool as any[]);
               hasLoadedAfterSchoolSubjects = true;
             }
           }
           
           if (profileData.certifications && profileData.certifications.length > 0) {
-            setCertifications(profileData.certifications.map(cert => ({ 
+            setCertifications((profileData.certifications as any[]).map((cert: any) => ({ 
               id: cert._id, 
               value: cert.name,
               details: cert.description || '' 
@@ -1210,241 +1409,17 @@ export const ProfileJourneyProvider = ({ children }: { children: ReactNode }) =>
             }));
           }
           
-          // Rules for each step to determine if it's complete
-          const stepCompletionRules = {
-            personal: (profile: any) => {
-              const user = profile.user || {};
-              const hasFullName = !!user.fullName && user.fullName.trim().split(' ').length >= 2;
-              const hasEmail = !!user.email;
-              const hasPhone = !!user.phoneNumber;
-              const hasBio = !!user.bio && user.bio.length >= 20; // Ensure bio has some meaningful content
-              // Check for profile image with more debugging
-              const profileImageSources = [
-                profile.profileImage,
-                user.profileImage,
-                user._signedProfileImage,
-                user.signedProfileImage
-              ];
-              const profileImageUrl = profileImageSources.find(src => !!src);
-              const hasProfileImage = !!profileImageUrl;
-              
-              console.log("Personal step validation - Raw profile data:", { 
-                profileUserObject: user,
-                profileObject: profile,
-                allProfileImageOptions: profileImageSources,
-                chosenProfileImage: profileImageUrl
-              });
-              
-              console.log("Personal step validation - Requirements check:", { 
-                hasFullName, 
-                hasEmail, 
-                hasPhone, 
-                hasBio,
-                hasProfileImage
-              });
-              
-              console.log("Will the personal step be marked complete?", 
-                hasFullName && hasEmail && hasPhone && hasProfileImage
-              );
-              
-              // If we have full name, email, phone and ANY profile image option
-              return hasFullName && hasEmail && hasPhone && hasProfileImage;
-            },
-            
-            location: (profile: any) => {
-              const location = profile.location || {};
-              const availability = profile.availability || {};
-              
-              const hasAddress = !!location.address;
-              const hasCity = !!location.city;
-              const hasAvailabilityDays = Array.isArray(availability.days) && availability.days.length > 0;
-              
-              console.log("Location step validation:", { 
-                hasAddress, 
-                hasCity, 
-                hasAvailabilityDays 
-              });
-              
-              return hasAddress && hasCity && hasAvailabilityDays;
-            },
-            
-            education: (profile: any, educationItems: EducationItem[]) => {
-              const hasEducation = educationItems.length > 0 || profile.education.length > 0;
-              
-              console.log("Education step validation:", { 
-                hasEducation, 
-                count: educationItems.length 
-              });
-              
-              return hasEducation;
-            },
-            
-            experience: (profile: any, experienceItems: ExperienceItem[]) => {
-              const hasExperience = experienceItems.length > 0 || profile.experience.length > 0;
-              
-              // console.log("Experience step validation:", {
-              //   hasExperience,
-              //   count: experienceItems.length
-              // },profile.experience);
-              
-              return hasExperience;
-            },
-            
-            expertise: (profile: any, academicSubjects: AcademicSubjectItem[], afterSchoolSubjects: AfterSchoolSubjectItem[]) => {
-              const hasAcademicSubjects = academicSubjects.length > 0 || profile.subjects.filter(s => s.isAcademic === true).length > 0;
-              const hasAfterSchoolSubjects = afterSchoolSubjects.length > 0 || profile.subjects.filter(s => s.isAcademic === false).length > 0;
-              
-              // console.log("Expertise step validation:", {
-              //   hasAcademicSubjects,
-              //   academicCount: academicSubjects.length,
-              //   hasAfterSchoolSubjects,
-              //   afterSchoolCount: afterSchoolSubjects.length
-              // });
-              
-              // Must have at least one category of subjects
-              return hasAcademicSubjects || hasAfterSchoolSubjects;
-            },
-            
-            "teaching-style": (
-              profile: any, 
-              strategies: StrategyItem[], 
-              methodologies: MethodologyItem[], 
-              languages: LanguageItem[], 
-              technicalSkills: TechnicalSkillItem[]
-            ) => {
-              const hasStrategies = strategies.length > 0 || profile.strategies.length > 0;
-              const hasMethodologies = methodologies.length > 0 || profile.methodologies.length > 0;
-              const hasLanguages = languages.length > 0 || profile.languages.length > 0;
-              const hasSkills = technicalSkills.length > 0 || profile.skills.length > 0;
-              
-              console.log("Teaching style step validation:", { 
-                hasStrategies, 
-                hasMethodologies, 
-                hasLanguages, 
-                hasSkills 
-              });
-              
-              // Need at least one teaching style component
-              return hasStrategies || hasMethodologies || hasLanguages || hasSkills;
-            },
-            
-            verification: (profile: any, certifications: any[]) => {
-              const hasBackgroundCheck = !!profile.backgroundCheckFile;
-              const hasGovernmentId = !!profile.governmentIdFile;
-              const hasCertifications = certifications.length > 0;
-              
-              console.log("Verification step validation:", { 
-                hasBackgroundCheck, 
-                hasGovernmentId, 
-                hasCertifications,
-                certCount: certifications.length 
-              });
-              
-              // Need at least one form of verification
-              return hasBackgroundCheck || hasGovernmentId || hasCertifications;
-            },
-            
-            platform: (profile: any) => {
-              const hasIntroVideo = !!profile.introVideoUrl;
-              const isZoomConnected = !!profile.isZoomConnected;
-              
-              console.log("Platform step validation:", { 
-                hasIntroVideo, 
-                isZoomConnected 
-              });
-              
-              // Either intro video or Zoom connection is required
-              return hasIntroVideo || isZoomConnected;
-            }
-          };
+          // Update verification state if we have certifications or documents
+          const hasBackgroundCheck = !!profileData.backgroundCheckFile;
+          const hasGovernmentId = !!profileData.governmentIdFile;
           
-          // Create a new completedSteps object based on data
-          const newCompletedSteps = { ...completedSteps };
-          const newStepProgress = { ...stepProgress };
-          
-          // Apply step completion rules
-          console.log("Applying step completion rules to profile data");
-          
-          // Personal step
-          if (stepCompletionRules.personal(profileData)) {
-            newCompletedSteps.personal = true;
-            newStepProgress.personal = 100;
-            console.log("Personal step marked as complete");
+          if (hasBackgroundCheck || hasGovernmentId) {
+            setVerification(prev => ({
+              ...prev,
+              backgroundCheck: hasBackgroundCheck,
+              idVerification: hasGovernmentId
+            }));
           }
-          
-          // Location step
-          if (stepCompletionRules.location(profileData)) {
-            newCompletedSteps.location = true;
-            newStepProgress.location = 100;
-            console.log("Location step marked as complete");
-          }
-          
-          // Education step
-          if (stepCompletionRules.education(profileData, education)) {
-            newCompletedSteps.education = true;
-            newStepProgress.education = 100;
-            console.log("Education step marked as complete");
-          }
-          
-          // Experience step
-          if (stepCompletionRules.experience(profileData, experience)) {
-            newCompletedSteps.experience = true;
-            newStepProgress.experience = 100;
-            console.log("Experience step marked as complete");
-          }
-          
-          // Expertise step
-          if (stepCompletionRules.expertise(profileData, academicSubjects, afterSchoolSubjects)) {
-            newCompletedSteps.expertise = true;
-            newStepProgress.expertise = 100;
-            console.log("Expertise step marked as complete");
-          }
-          
-          // Teaching style step
-          if (stepCompletionRules["teaching-style"](profileData, strategies, methodologies, languages, technicalSkills)) {
-            newCompletedSteps["teaching-style"] = true;
-            newStepProgress["teaching-style"] = 100;
-            console.log("Teaching style step marked as complete");
-          }
-          
-          // Verification step
-          if (stepCompletionRules.verification(profileData, certifications)) {
-            // Update verification state
-            const hasBackgroundCheck = !!profileData.backgroundCheckFile;
-            const hasGovernmentId = !!profileData.governmentIdFile;
-            
-            // Update verification state with document URLs if they exist
-            if (hasBackgroundCheck || hasGovernmentId) {
-              setVerification(prev => ({
-                ...prev,
-                backgroundCheck: hasBackgroundCheck,
-                idVerification: hasGovernmentId
-              }));
-            }
-            
-            // Mark step as complete
-            newCompletedSteps.verification = true;
-            newStepProgress.verification = 100;
-            console.log("Verification step marked as complete");
-          }
-          
-          // Store document URLs for CertificationsStep component to access
-          const backgroundCheckUrl = profileData.backgroundCheckFile || null;
-          const governmentIdUrl = profileData.governmentIdFile || null;
-          console.log("Document URLs from profile:", { backgroundCheckUrl, governmentIdUrl });
-          
-          // Platform step
-          if (stepCompletionRules.platform(profileData)) {
-            newCompletedSteps.platform = true;
-            newStepProgress.platform = 100;
-            console.log("Platform step marked as complete");
-          }
-          
-          console.log("Setting completedSteps:", newCompletedSteps);
-          
-          // Set the state once with the new values
-          setCompletedSteps(newCompletedSteps);
-          setStepProgress(newStepProgress);
           
           // Set loading to false after a short delay
           setTimeout(() => {
@@ -1552,7 +1527,9 @@ export const ProfileJourneyProvider = ({ children }: { children: ReactNode }) =>
     updatePersonalInfo,
     updateLocationInfo,
     setEducation,
+    saveEducation,
     setExperience,
+    saveExperience,
     setAcademicSubjects,
     setAfterSchoolSubjects,
     setStrategies,

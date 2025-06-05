@@ -8,7 +8,7 @@ import { Briefcase, Plus, Calendar, Building, Trash2, Edit, BookOpen } from "luc
 import { ExperienceStep as ProfessionalExperienceStep } from "../../professional-profile";
 
 const ExperienceStep = () => {
-  const { experience, setExperience, completeStep } = useProfileJourney();
+  const { experience, setExperience, saveExperience, completeStep } = useProfileJourney();
   
   // Handle experience changes
   const handleExperienceChange = (newExperience: any[]) => {
@@ -47,7 +47,12 @@ const ExperienceStep = () => {
     // Mark step as complete if we have at least one valid experience record
     if (hasValidExperience) {
       console.log("Marking experience step as complete");
-      completeStep("experience");
+      // Save all experience data using bulk update before completing the step
+      saveExperience().then(success => {
+        if (success) {
+          completeStep("expertise");
+        }
+      });
     }
   };
   
@@ -63,9 +68,14 @@ const ExperienceStep = () => {
     // If we already have valid experiences, mark step as complete
     if (hasValidExperience) {
       console.log("Found existing valid experiences, marking step as complete");
-      completeStep("experience");
+      // Save all experience data using bulk update before completing the step
+      saveExperience().then(success => {
+        if (success) {
+          completeStep("expertise");
+        }
+      });
     }
-  }, [experience, completeStep]);
+  }, [experience, completeStep, saveExperience]);
   
   // Format date for display
   const formatDate = (dateString?: string) => {

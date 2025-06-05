@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { AlignLeft, Plus, Send, X } from "lucide-react";
+import { enrollmentService, SingleEmailInviteRequest, BulkEmailInviteRequest } from "@/integrations/api";
 
 interface EmailInviteSectionProps {
   classId?: string;
@@ -53,7 +54,16 @@ export const EmailInviteSection = ({ classId }: EmailInviteSectionProps) => {
     return emails;
   };
 
-  const handleSendInvites = () => {
+  const handleSendInvites = async () => {
+    if (!classId) {
+      toast({
+        title: "Error",
+        description: "Class ID is required to send invitations.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     let emailsToSend: string[] = [];
     
     if (emailInputMode === 'single') {
@@ -73,20 +83,60 @@ export const EmailInviteSection = ({ classId }: EmailInviteSectionProps) => {
 
     setIsLoading(true);
     
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false);
-      toast({
-        title: "Invitations sent",
-        description: `Successfully sent invitations to ${emailsToSend.length} email${emailsToSend.length > 1 ? 's' : ''}.`,
-      });
+    try {
+      if (emailInputMode === 'single' && emailsToSend.length === 1) {
+        // Use single email invite endpoint
+        const request: SingleEmailInviteRequest = {
+          classId,
+          email: emailsToSend[0],
+          customMessage: message
+        };
+        
+        await enrollmentService.sendSingleEmailInvite(request);
+        
+        toast({
+          title: "Invitation sent",
+          description: "Successfully sent email invitation.",
+        });
+      } else {
+        // Use bulk email invite endpoint
+        const request: BulkEmailInviteRequest = {
+          classId,
+          emails: emailsToSend,
+          customMessage: message
+        };
+        
+        const result = await enrollmentService.sendBulkEmailInvites(request);
+        
+        if (result.success) {
+          toast({
+            title: "Invitations sent",
+            description: `Successfully sent ${result.successful} invitation${result.successful > 1 ? 's' : ''}${result.failed > 0 ? ` (${result.failed} failed)` : ''}.`,
+          });
+        } else {
+          toast({
+            title: "Failed to send invitations",
+            description: "Some invitations failed to send.",
+            variant: "destructive"
+          });
+        }
+      }
       
+      // Reset form on success
       if (emailInputMode === 'single') {
         setEmailInputs(['']);
       } else {
         setBulkEmails('');
       }
-    }, 1500);
+    } catch (error) {
+      toast({
+        title: "Error sending invitations",
+        description: "An error occurred while sending email invitations.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (

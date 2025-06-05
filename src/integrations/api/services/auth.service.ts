@@ -15,6 +15,23 @@ export interface RegisterData {
     role: string;
 }
 
+export interface UpdateUserData {
+    fullName?: string;
+    email?: string;
+    legal_id?: {
+        id_type: string;
+        id: string;
+        country: string;
+    };
+    tax_info?: {
+        tax_no: string;
+        country: string;
+    };
+    bio?: string;
+    phoneNumber?: string;
+    alternativePhoneNumber?: string;
+}
+
 export interface AuthResponse {
     user: User;
     token: string;
@@ -178,8 +195,8 @@ class AuthService {
             };
         }
     }
-    
-    async updateUserProfile(userId: string, userData: Partial<User>): Promise<ApiResponse<User>> {
+
+    async updateUserProfile(userData: UpdateUserData): Promise<ApiResponse<User>> {
         if (!this.getSession()) {
             return {
                 data: null,
@@ -188,11 +205,17 @@ class AuthService {
         }
 
         try {
-            // Use the PATCH /user/:id endpoint for updating basic user information
-            const response = await api.patch<User>(`/users/${userId}`, userData);
+            // Get current user ID from session
+            const currentUserId = this.session?.user?.id;
+            if (!currentUserId) {
+                throw new Error('No user ID found in session');
+            }
+
+            // Use the PATCH /users/:id endpoint for updating basic user information
+            const response = await api.patch<User>(`/users/${currentUserId}`, userData);
             
-            // If successful and the current user's session exists, update the user in the session
-            if (response.data && this.session && this.session.user.id === userId) {
+            // If successful, update the user in the session
+            if (response.data && this.session) {
                 this.setSession({
                     ...this.session,
                     user: { ...this.session.user, ...response.data }
@@ -206,7 +229,10 @@ class AuthService {
                 const refreshed = await this.refreshSession();
                 if (refreshed) {
                     // Retry with new token
-                    return await api.patch<User>(`/user/${userId}`, userData);
+                    const currentUserId = this.session?.user?.id;
+                    if (currentUserId) {
+                        return await api.patch<User>(`/users/${currentUserId}`, userData);
+                    }
                 }
             }
 
