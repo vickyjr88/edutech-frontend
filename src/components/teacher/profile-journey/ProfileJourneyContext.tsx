@@ -694,7 +694,6 @@ export const ProfileJourneyProvider = ({ children }: { children: ReactNode }) =>
       const teacherId = user.teacherId;
       console.log("Saving subjects for teacher:", teacherId);
       
-      // Use provided data or fall back to context state
       const academicToSave = academicSubjectsData || academicSubjects;
       const afterSchoolToSave = afterSchoolSubjectsData || afterSchoolSubjects;
       console.log("Academic subjects to save:", academicToSave);
