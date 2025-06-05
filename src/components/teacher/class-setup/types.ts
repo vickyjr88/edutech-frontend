@@ -62,6 +62,36 @@ export const classSchema = z.object({
   status: z.string().optional().default("draft"),
   hasCohorts: z.boolean().default(false),
   hasTeamTeaching: z.boolean().default(false),
+  
+  // Media fields (aligns with backend ClassDetail.media)
+  introVideoUrl: z.string().url().optional().or(z.literal("")),
+  thumbnailUrl: z.string().optional(),
+  
+  // Course materials files
+  courseOutlineFile: z.string().optional(), // Store file URL/path
+  syllabusFile: z.string().optional(), // Store file URL/path  
+  schemeOfWorkFile: z.string().optional(), // Store file URL/path
+  
+  // Materials and resources (aligns with backend ClassDetail.materials)
+  materials: z.array(z.object({
+    id: z.string(),
+    name: z.string(),
+    description: z.string().optional(),
+    type: z.enum(["required", "recommended", "optional"]).default("required"),
+    link: z.string().optional(),
+    file: z.string().optional(), // Store file URL/path
+    cost: z.string().optional()
+  })).default([]),
+  
+  // Resource links for additional learning materials
+  resourceLinks: z.array(z.object({
+    id: z.string(),
+    title: z.string(),
+    url: z.string().url(),
+    description: z.string().optional(),
+    type: z.enum(["article", "video", "document", "website", "tool"]).default("website")
+  })).default([]),
+  
   lessonPlans: z.array(z.object({
     id: z.string(),
     title: z.string().optional(),

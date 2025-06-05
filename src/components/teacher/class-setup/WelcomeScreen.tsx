@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Clock, RotateCcw, Trash2, Wand2, Bot, GraduationCap, Trophy, Star } from 'lucide-react';
+import { Clock, RotateCcw, Trash2, Wand2, Bot, GraduationCap, Trophy, Star, X } from 'lucide-react';
 import { formatLastSavedDate, getFormMetadata, clearStoredForm } from './utils/storageUtils';
 import { useNavigate } from 'react-router-dom';
 import { classService } from '@/integrations/api/services/class.service';
 import { useAuth } from '@/contexts/AuthContext';
 import CardWithCheckIcon from '../profile/CardWithCheckIcon';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import AIClassHelper from './AIClassHelper';
 
 interface WelcomeScreenProps {
   draftExists: boolean;
@@ -29,6 +31,7 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
   const { user } = useAuth();
   const [draftExists, setDraftExists] = useState(initialDraftExists);
   const [lastSaved, setLastSaved] = useState(initialLastSaved);
+  const [showAIModal, setShowAIModal] = useState(false);
   const lastSavedText = formatLastSavedDate(lastSaved);
 
   // Verify draft on component mount
@@ -90,9 +93,9 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
   return (
     <div className="container max-w-6xl px-4 py-10">
       <div className="text-center mb-10">
-        <h1 className="text-3xl font-bold mb-2">Create a New Class</h1>
+        <h1 className="text-3xl font-bold mb-2">Ready, Set, Teach!</h1>
         <p className="text-gray-600 max-w-2xl mx-auto">
-          Choose your class type and let us guide you through the setup process. Your progress will be automatically saved.
+            Pick your class type and begin your journey. We’ll guide you step-by-step—and don’t worry, your progress saves automatically. Let the adventure begin!
         </p>
       </div>
 
@@ -171,7 +174,10 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
           </CardContent>
           <CardFooter className="border-t border-kidato-blue-100 pt-4">
             <Button 
-              onClick={() => onStartNew('academic')} 
+              onClick={() => {
+                // Navigate directly to the enhanced academic class creator
+                navigate('/teacher-class-setup/academic');
+              }} 
               className="w-full bg-gradient-to-r from-kidato-blue to-kidato-purple hover:from-kidato-blue-600 hover:to-kidato-purple-600"
             >
               <GraduationCap className="h-4 w-4 mr-2" />
@@ -209,11 +215,11 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
           </CardContent>
           <CardFooter className="border-t border-kidato-orange-100 pt-4">
             <Button 
-              onClick={() => onStartNew('afterschool')} 
-              className="w-full bg-gradient-to-r from-kidato-orange to-kidato-orange-400 hover:from-kidato-orange-600 hover:to-kidato-orange-500"
+              disabled
+              className="w-full bg-gray-300 text-gray-500 cursor-not-allowed"
             >
               <Trophy className="h-4 w-4 mr-2" />
-              Create After-School Class
+              Coming Soon
             </Button>
           </CardFooter>
         </Card>
@@ -253,7 +259,7 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
           </CardContent>
           <CardFooter className="border-t pt-4">
             <Button 
-              onClick={onStartWithAI}
+              onClick={() => setShowAIModal(true)}
               className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
             >
               <Wand2 className="h-4 w-4 mr-2" />
@@ -262,6 +268,37 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
           </CardFooter>
         </Card>
       </div>
+
+      {/* AI Helper Modal */}
+      <Dialog open={showAIModal} onOpenChange={setShowAIModal}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <div className="flex items-center justify-between">
+              <DialogTitle className="flex items-center gap-2">
+                <Bot className="h-6 w-6 text-purple-600" />
+                AI Class Creator
+              </DialogTitle>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowAIModal(false)}
+                className="h-8 w-8 p-0"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </DialogHeader>
+          <div className="mt-4">
+            <AIClassHelper
+              onApplyChanges={(changes) => {
+                // Since we're in the welcome screen, we don't apply changes directly
+                // The AI helper will handle navigation to the actual class setup
+                console.log('AI helper changes:', changes);
+              }}
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

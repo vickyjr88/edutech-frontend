@@ -50,6 +50,7 @@ import TeacherGoogleCalendarPage from "./pages/TeacherGoogleCalendarPage";
 import TeacherProfileJourney from "./pages/TeacherProfileJourney";
 import TeacherProfileResume from "./pages/TeacherProfileResume";
 import TeacherClassSetupPage from "./pages/TeacherClassSetupPage";
+import EnhancedAcademicClassSetup from "./components/teacher/class-setup/EnhancedAcademicClassSetup";
 import TeacherClassViewPage from "./pages/TeacherClassViewPage";
 import TeacherEarningsPage from "./pages/TeacherEarningsPage";
 import DocumentViewer from "./pages/DocumentViewer";
@@ -153,6 +154,16 @@ const App = () => {
                 <Route path="/teacher-class-setup" element={
                   <TeacherRoute requireProfileComplete={true}>
                     <TeacherClassSetupPage />
+                  </TeacherRoute>
+                } />
+                <Route path="/teacher-class-setup/academic" element={
+                  <TeacherRoute requireProfileComplete={true}>
+                    <EnhancedAcademicClassSetup />
+                  </TeacherRoute>
+                } />
+                <Route path="/teacher-class-setup/academic/:classId" element={
+                  <TeacherRoute requireProfileComplete={true}>
+                    <EnhancedAcademicClassSetup />
                   </TeacherRoute>
                 } />
                 <Route path="/teacher-class-setup/:classId" element={
