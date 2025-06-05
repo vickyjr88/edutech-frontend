@@ -10,22 +10,31 @@ import MatchingClassesSection from "@/components/courses/MatchingClassesSection"
 import EnrolledClassesTable from "@/components/courses/EnrolledClassesTable";
 import CompletedClassesTable from "@/components/courses/CompletedClassesTable";
 import CourseFilters from "@/components/courses/CourseFilters";
-import { 
-  mockTeachers, 
-  mockRecommendedCourses, 
-  mockEnrolledCourses, 
-  mockCompletedCourses 
+import {
+  mockTeachers,
+  mockRecommendedCourses,
+  mockEnrolledCourses,
+  mockCompletedCourses
 } from "@/components/courses/CourseData";
 import { useAuth } from "@/contexts/AuthContext";
-import { useGetRecommendedClasses } from "@/hooks/use-class-service";
+import { useGetCompletedClassesForStudent, useGetCurrentClassesForStudent, useGetRecommendedClasses } from "@/hooks/use-class-service";
 
 const Courses = () => {
   const [filterOpen, setFilterOpen] = useState(false);
   const { user } = useAuth();
-  const { data: response } = useGetRecommendedClasses(user.id);
-  const recommendedClasses = response?.data;
+  const { data: response, isLoading } = useGetRecommendedClasses(user.id);
+  const { data: enrolledClassesResponse, isLoading: enrolledClassesLoading } = useGetCurrentClassesForStudent(user.studentId);
+  const { data: completedClassesResponse, isLoading: completedClassesLoading } = useGetCompletedClassesForStudent(user.studentId);
+  const recommendedClasses = response?.data ?? [];
+  const enrolledClasses = enrolledClassesResponse?.data ?? [];
+  const completedClasses = completedClassesResponse?.data ?? [];
 
-
+  console.log({ enrolledClasses, recommendedClasses });
+  if (isLoading || enrolledClassesLoading) return (
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-kidato-purple"></div>
+    </div>
+  );
 
   return (
     <div className="flex min-h-screen bg-gradient-to-b from-blue-50 to-white">
@@ -45,8 +54,8 @@ const Courses = () => {
                 <p className="text-gray-600">Manage all your learning experiences</p>
               </div>
               <div className="flex items-center space-x-3">
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   className="flex items-center gap-2"
                   onClick={() => setFilterOpen(!filterOpen)}
                 >
@@ -58,7 +67,7 @@ const Courses = () => {
                 </Button>
               </div>
             </div>
-            
+
             {/* Course Tabs */}
             <Tabs defaultValue="enrolled" className="mb-8">
               <TabsList className="mb-6 bg-blue-50/50 p-1 border border-blue-100">
@@ -69,21 +78,25 @@ const Courses = () => {
                   Matching Classes & Teachers
                 </TabsTrigger>
               </TabsList>
-              
+
               {/* Enrolled Courses Table */}
               <TabsContent value="enrolled">
                 <div className="mb-8">
-                  <EnrolledClassesTable enrolledCourses={mockEnrolledCourses} />
-                  <CompletedClassesTable completedCourses={mockCompletedCourses} />
+                  <EnrolledClassesTable enrolledCourses={enrolledClasses} />
+                  <CompletedClassesTable completedCourses={completedClasses} />
                 </div>
               </TabsContent>
-              
+
               {/* Matching Classes & Teachers Cards */}
               <TabsContent value="matching">
-                <MatchingClassesSection 
-                  recommendedCourses={mockRecommendedCourses} 
-                  matchingTeachers={mockTeachers} 
-                />
+                <div className="space-y-6 mb-8">
+                  {recommendedClasses?.map((recommendedClass) => (
+                    <MatchingClassesSection
+                      key={recommendedClass._id}
+                      course={recommendedClass}
+                    />
+                  ))}
+                </div>
               </TabsContent>
             </Tabs>
 

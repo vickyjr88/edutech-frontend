@@ -27,8 +27,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Link } from "react-router-dom";
+import { ClassDetail } from "@/integrations/api/services/class.service";
+import { getNextClassTime } from "@/lib/utils";
+import { formatDate } from "date-fns";
 
-export interface EnrolledCourse {
+interface EnrolledCourse {
   id: string;
   title: string;
   subject: string;
@@ -48,7 +51,7 @@ export interface EnrolledCourse {
 }
 
 interface EnrolledClassesTableProps {
-  enrolledCourses: EnrolledCourse[];
+  enrolledCourses: ClassDetail[];
 }
 
 const EnrolledClassesTable = ({ enrolledCourses }: EnrolledClassesTableProps) => {
@@ -95,8 +98,15 @@ const EnrolledClassesTable = ({ enrolledCourses }: EnrolledClassesTableProps) =>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {enrolledCourses.map((course) => (
-                <TableRow key={course.id}>
+              {enrolledCourses.map((course) => {
+                const cohort = course.cohorts?.find((cohort) => cohort.isActive) ?? course.cohorts?.[0];
+                const nextClassTime = getNextClassTime({
+                  daysOfWeek: cohort?.daysOfWeek,
+                  startTime: cohort?.startTime,
+                  endTime: cohort?.endTime
+                });
+                return (
+                <TableRow key={course._id}>
                   <TableCell className="font-medium">
                     <div>
                       <div className="font-semibold">{course.title}</div>
@@ -123,18 +133,18 @@ const EnrolledClassesTable = ({ enrolledCourses }: EnrolledClassesTableProps) =>
                   <TableCell>
                     <div className="flex items-center">
                       <Clock className="h-3.5 w-3.5 text-gray-400 mr-1" />
-                      <span className="text-sm">{course.nextClass}</span>
+                      <span className="text-sm">{nextClassTime}</span>
                     </div>
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center">
                       <Calendar className="h-3.5 w-3.5 text-gray-400 mr-1" />
-                      <span className="text-sm">{course.enrollmentDeadline}</span>
+                      <span className="text-sm">{formatDate(cohort?.enrollmentDeadline, 'MMMM d, yyyy')}</span>
                     </div>
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center">
-                      <span className="text-sm font-medium mr-2">{course.enrolledCount}/{course.maxCapacity}</span>
+                      <span className="text-sm font-medium mr-2">{cohort.currentStudents}/{cohort.maximumStudents}</span>
                       <div className="flex -space-x-2">
                         {[...Array(3)].map((_, i) => (
                           <Avatar key={i} className="border-2 border-white w-7 h-7 bg-blue-200">
@@ -160,7 +170,7 @@ const EnrolledClassesTable = ({ enrolledCourses }: EnrolledClassesTableProps) =>
                     )}
                   </TableCell>
                   <TableCell className="text-right">
-                    <Link to={`/course-progress/${course.id}`}>
+                    <Link to={`/course-progress/${course._id}`}>
                       <Button 
                         size="sm" 
                         className="bg-indigo-600 hover:bg-indigo-700 h-8"
@@ -170,7 +180,7 @@ const EnrolledClassesTable = ({ enrolledCourses }: EnrolledClassesTableProps) =>
                     </Link>
                   </TableCell>
                 </TableRow>
-              ))}
+              )})}
             </TableBody>
           </Table>
         </div>
