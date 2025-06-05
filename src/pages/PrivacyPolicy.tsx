@@ -5,9 +5,52 @@ const PrivacyPolicy = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
+      
+      {/* Hero Section with Background */}
+      <div className="relative bg-gradient-to-br from-blue-600 via-purple-600 to-indigo-700 py-20">
+        {/* Background Pattern */}
+        <div className="absolute inset-0 bg-black bg-opacity-30"></div>
+        <div className="absolute inset-0" style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Ccircle cx='7' cy='7' r='3'/%3E%3Ccircle cx='53' cy='7' r='3'/%3E%3Ccircle cx='30' cy='30' r='3'/%3E%3Ccircle cx='7' cy='53' r='3'/%3E%3Ccircle cx='53' cy='53' r='3'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+        }}></div>
+        
+        <div className="relative max-w-4xl mx-auto px-4 text-center">
+          <div className="flex items-center justify-center mb-6">
+            <div className="bg-white bg-opacity-20 rounded-full p-4 backdrop-blur-sm">
+              <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+            </div>
+          </div>
+          <h1 className="text-5xl font-bold text-white mb-4">Privacy Policy</h1>
+          <p className="text-xl text-blue-100 max-w-2xl mx-auto">
+            We are committed to protecting your personal information and ensuring the privacy of our students, teachers, and families.
+          </p>
+          <div className="flex items-center justify-center mt-8 space-x-8">
+            <div className="flex items-center text-blue-100">
+              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              GDPR Compliant
+            </div>
+            <div className="flex items-center text-blue-100">
+              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              COPPA Certified
+            </div>
+            <div className="flex items-center text-blue-100">
+              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              Secure Encryption
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div className="max-w-4xl mx-auto px-4 py-12">
-        <div className="bg-white rounded-lg shadow-lg p-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-8">Kidato Inc – Privacy Policy</h1>
+        <div className="bg-white rounded-lg shadow-lg p-8 -mt-16 relative z-10">
           
           <div className="prose prose-lg max-w-none">
             <section className="mb-8">
