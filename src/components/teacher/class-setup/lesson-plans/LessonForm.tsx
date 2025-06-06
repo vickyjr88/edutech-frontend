@@ -20,7 +20,9 @@ import {
   GraduationCap,
   Home,
   ClipboardList,
-  AlertCircle
+  AlertCircle,
+  Hash,
+  Timer
 } from "lucide-react";
 import {
   Select,
@@ -327,66 +329,93 @@ export const LessonForm = ({
       </CardHeader>
 
       <CardContent className="space-y-8">
-        {/* 1. What Will You Teach? - Lesson Basics */}
-        <div className="space-y-4">
-          <div className="flex items-center gap-2 text-lg font-semibold text-gray-800">
-            <BookOpen className="h-5 w-5 text-blue-600" />
-            <span className="text-blue-600 font-bold text-sm mr-2">STEP 1</span>
-            What Will You Teach In This Lesson?
+        {/* 1. What Will You Teach? - Enhanced Lesson Basics */}
+        <div className="space-y-6">
+          <div className="flex items-center gap-3 text-xl font-bold text-kidato-indigo-800">
+            <div className="flex items-center justify-center w-12 h-12 bg-gradient-to-br from-kidato-indigo-500 to-kidato-indigo-600 rounded-2xl shadow-lg">
+              <BookOpen className="h-6 w-6 text-white" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="bg-kidato-indigo-100 text-kidato-indigo-700 px-3 py-1 rounded-full text-sm font-bold tracking-wide">STEP 1</span>
+              </div>
+              <h3 className="text-xl font-bold text-kidato-indigo-800 mt-1">What Will You Teach In This Lesson?</h3>
+            </div>
           </div>
           
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor={`lesson-title-${lesson.id}`} className="text-sm font-medium text-gray-700">
-                Lesson Topic *
-              </Label>
-              <Input 
-                id={`lesson-title-${lesson.id}`}
-                placeholder="e.g., 'Introduction to Photosynthesis' or 'Solving Quadratic Equations'"
-                value={lesson.title || ""}
-                onChange={(e) => onUpdate("title", e.target.value)}
-                className="border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-lg h-12"
-              />
+          {/* Enhanced Lesson Title Section */}
+          <div className="space-y-4 p-6 bg-gradient-to-br from-kidato-indigo-50 to-white rounded-2xl border border-kidato-indigo-200 shadow-sm">
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <Hash className="h-5 w-5 text-kidato-indigo-600" />
+                <Label htmlFor={`lesson-title-${lesson.id}`} className="text-lg font-semibold text-kidato-indigo-800">
+                  Lesson Topic *
+                </Label>
+              </div>
+              <div className="relative">
+                <Input 
+                  id={`lesson-title-${lesson.id}`}
+                  placeholder="e.g., 'Introduction to Photosynthesis' or 'Solving Quadratic Equations'"
+                  value={lesson.title || ""}
+                  onChange={(e) => onUpdate("title", e.target.value)}
+                  className="text-xl h-16 px-6 py-4 border-2 border-kidato-indigo-200 focus:border-kidato-indigo-500 focus:ring-kidato-indigo-500 rounded-xl bg-white shadow-sm transition-all duration-200 placeholder:text-gray-400"
+                />
+                {lesson.title && (
+                  <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
+                    <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                  </div>
+                )}
+              </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor={`lesson-summary-${lesson.id}`} className="text-sm font-medium text-gray-700">
+            <div className="space-y-3">
+              <Label htmlFor={`lesson-summary-${lesson.id}`} className="text-base font-medium text-kidato-indigo-700">
                 What's this lesson about? (Brief summary)
               </Label>
               <Textarea 
                 id={`lesson-summary-${lesson.id}`}
                 placeholder="In 1-2 sentences, what will students learn in this lesson?"
-                className="resize-none border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-                rows={2}
+                className="resize-none border-2 border-kidato-indigo-200 focus:border-kidato-indigo-500 focus:ring-kidato-indigo-500 rounded-xl bg-white text-base p-4 shadow-sm transition-all duration-200"
+                rows={3}
                 value={lesson.summary || ""}
                 onChange={(e) => onUpdate("summary", e.target.value)}
               />
             </div>
           </div>
 
-          {/* Quick Setup Row */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
-            <div className="space-y-2">
-              <Label className="text-sm font-medium text-gray-700">Lesson #</Label>
+          {/* Enhanced Quick Setup Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Lesson Number */}
+            <div className="space-y-3 p-5 bg-gradient-to-br from-kidato-orange-50 to-white rounded-2xl border border-kidato-orange-200 shadow-sm">
+              <div className="flex items-center gap-2">
+                <Hash className="h-5 w-5 text-kidato-orange-600" />
+                <Label className="text-base font-semibold text-kidato-orange-800">Lesson #</Label>
+              </div>
               <Input 
                 type="number"
                 placeholder="1"
                 value={lesson.lessonNumber || lessonNumber}
                 onChange={(e) => onUpdate("lessonNumber", parseInt(e.target.value) || lessonNumber)}
-                className="border-gray-300 focus:border-blue-500 focus:ring-blue-500 h-10"
+                className="h-12 text-lg font-semibold text-center border-2 border-kidato-orange-200 focus:border-kidato-orange-500 focus:ring-kidato-orange-500 rounded-xl bg-white shadow-sm"
               />
             </div>
             
-            <div className="space-y-2">
-              <Label className="text-sm font-medium text-gray-700">Lesson Type *</Label>
-              <div className="flex flex-wrap gap-1">
+            {/* Enhanced Lesson Type Selection */}
+            <div className="space-y-4 p-5 bg-gradient-to-br from-kidato-spindle-50 to-white rounded-2xl border border-kidato-spindle-200 shadow-sm">
+              <div className="flex items-center gap-2">
+                <div className="w-5 h-5 bg-kidato-spindle-600 rounded-full flex items-center justify-center">
+                  <span className="text-white text-xs font-bold">T</span>
+                </div>
+                <Label className="text-base font-semibold text-kidato-spindle-800">Lesson Type *</Label>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
                 {Object.values(LessonType).slice(0, 4).map((type) => {
                   const isSelected = lesson.type === type;
                   const typeLabels = {
-                    [LessonType.LECTURE]: { label: 'Lecture', icon: '📖' },
-                    [LessonType.PRACTICAL]: { label: 'Practical', icon: '🔬' },
-                    [LessonType.WORKSHOP]: { label: 'Workshop', icon: '🛠️' },
-                    [LessonType.ASSESSMENT]: { label: 'Assessment', icon: '📝' }
+                    [LessonType.LECTURE]: { label: 'Lecture', icon: '📖', color: 'bg-blue-500' },
+                    [LessonType.PRACTICAL]: { label: 'Practical', icon: '🔬', color: 'bg-green-500' },
+                    [LessonType.WORKSHOP]: { label: 'Workshop', icon: '🛠️', color: 'bg-purple-500' },
+                    [LessonType.ASSESSMENT]: { label: 'Assessment', icon: '📝', color: 'bg-orange-500' }
                   };
                   const typeInfo = typeLabels[type as keyof typeof typeLabels];
                   
@@ -396,14 +425,16 @@ export const LessonForm = ({
                       type="button"
                       onClick={() => onUpdate("type", type)}
                       className={`
-                        px-2 py-1 rounded text-xs font-medium transition-all duration-200
+                        p-3 rounded-xl text-sm font-semibold transition-all duration-300 transform hover:scale-105 active:scale-95
                         ${isSelected 
-                          ? 'bg-blue-600 text-white shadow-md' 
-                          : 'bg-white text-gray-700 border border-gray-300 hover:bg-blue-50'
+                          ? 'bg-kidato-spindle-600 text-white shadow-lg border-2 border-kidato-spindle-600' 
+                          : 'bg-white text-kidato-spindle-700 border-2 border-kidato-spindle-200 hover:bg-kidato-spindle-50 hover:border-kidato-spindle-300'
                         }
                       `}
                     >
-                      <span className="mr-1">{typeInfo.icon}</span>
+                      <div className="flex items-center justify-center mb-1">
+                        <span className="text-lg">{typeInfo.icon}</span>
+                      </div>
                       {typeInfo.label}
                     </button>
                   );
@@ -411,9 +442,13 @@ export const LessonForm = ({
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label className="text-sm font-medium text-gray-700">Duration *</Label>
-              <div className="flex gap-1">
+            {/* Enhanced Duration Selection */}
+            <div className="space-y-4 p-5 bg-gradient-to-br from-kidato-gray-50 to-white rounded-2xl border border-kidato-gray-200 shadow-sm">
+              <div className="flex items-center gap-2">
+                <Timer className="h-5 w-5 text-kidato-gray-600" />
+                <Label className="text-base font-semibold text-kidato-gray-800">Duration *</Label>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
                 {[30, 45, 60, 90].map((minutes) => {
                   const isSelected = lesson.duration === minutes;
                   return (
@@ -422,14 +457,17 @@ export const LessonForm = ({
                       type="button"
                       onClick={() => onUpdate("duration", minutes)}
                       className={`
-                        px-2 py-1 rounded text-xs font-medium transition-all duration-200
+                        p-3 rounded-xl text-sm font-semibold transition-all duration-300 transform hover:scale-105 active:scale-95
                         ${isSelected 
-                          ? 'bg-blue-600 text-white shadow-md' 
-                          : 'bg-white text-gray-700 border border-gray-300 hover:bg-blue-50'
+                          ? 'bg-kidato-gray-600 text-white shadow-lg border-2 border-kidato-gray-600' 
+                          : 'bg-white text-kidato-gray-700 border-2 border-kidato-gray-200 hover:bg-kidato-gray-50 hover:border-kidato-gray-300'
                         }
                       `}
                     >
-                      {minutes}m
+                      <div className="flex items-center justify-center mb-1">
+                        <Timer className="h-4 w-4" />
+                      </div>
+                      {minutes}min
                     </button>
                   );
                 })}
@@ -445,7 +483,7 @@ export const LessonForm = ({
           <div className="flex items-center gap-2 text-lg font-semibold text-gray-800">
             <Target className="h-5 w-5 text-purple-600" />
             <span className="text-purple-600 font-bold text-sm mr-2">STEP 2</span>
-            Learning Goals - What Will Students Achieve?
+            Learning Objectives - What Will Students Achieve?
           </div>
           <p className="text-sm text-gray-600 mb-4">
             💡 <strong>What will students be able to do</strong> after this lesson that they couldn't do before?

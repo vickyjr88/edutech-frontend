@@ -1586,18 +1586,51 @@ const LessonPlanningStep = ({ form, onNext, onPrev, createdClassId }: any) => {
     );
   };
 
+  const classTitle = form.watch('title');
+  const selectedSubject = form.watch('subject');
+  const selectedCurriculum = form.watch('curriculum');
+
   return (
     <div className="space-y-8">
       <div className="text-center">
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          className="w-16 h-16 bg-gradient-to-br from-green-500 to-teal-500 rounded-full flex items-center justify-center mx-auto mb-4"
+          className="w-16 h-16 bg-gradient-to-br from-kidato-orange to-kidato-indigo rounded-full flex items-center justify-center mx-auto mb-4"
         >
           <FileText className="h-8 w-8 text-white" />
         </motion.div>
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">Plan your lessons</h2>
-        <p className="text-gray-600">Structure your curriculum into comprehensive, engaging lessons</p>
+        
+        <div className="space-y-3">
+          <h2 className="text-2xl font-bold text-gray-900">
+            Plan your lessons
+            {classTitle && (
+              <span className="block text-lg font-medium text-kidato-indigo-700 mt-1">
+                for {classTitle}
+              </span>
+            )}
+          </h2>
+          
+          <div className="space-y-2">
+            <p className="text-gray-600">Structure your curriculum into comprehensive, engaging lessons</p>
+            
+            {/* Context badges */}
+            {(selectedSubject || selectedCurriculum) && (
+              <div className="flex items-center justify-center gap-2">
+                {selectedSubject && (
+                  <Badge variant="outline" className="bg-kidato-indigo-50 text-kidato-indigo-700 border-kidato-indigo-200 text-xs">
+                    📚 {selectedSubject}
+                  </Badge>
+                )}
+                {selectedCurriculum && (
+                  <Badge variant="outline" className="bg-kidato-orange-50 text-kidato-orange-700 border-kidato-orange-200 text-xs">
+                    🎓 {selectedCurriculum}
+                  </Badge>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
       </div>
 
       <div className="max-w-6xl mx-auto">
