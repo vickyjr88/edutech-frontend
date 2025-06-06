@@ -42,6 +42,8 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 // DTOs based on backend structure
 interface CreateResourceLinkDto {
@@ -178,6 +180,8 @@ export const LessonFormRedesigned = ({
   const [aiPrompt, setAiPrompt] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedContent, setGeneratedContent] = useState<any>(null);
+  const [aiError, setAiError] = useState<string | null>(null);
+  const [selectedSections, setSelectedSections] = useState<string[]>(["all"]);
 
   // Section completion tracking
   const getSectionCompletionStatus = () => {
@@ -315,6 +319,224 @@ export const LessonFormRedesigned = ({
       e.preventDefault();
       action();
     }
+  };
+
+  // AI Helper functions
+  const generateAIContent = async () => {
+    const lessonTitle = lesson.title;
+    const lessonDuration = lesson.duration || 60;
+    const objectives = lesson.objectives || [];
+    
+    if (!lessonTitle) {
+      setAiError("Please add a lesson title first to generate a lesson plan");
+      return;
+    }
+
+    setIsGenerating(true);
+    setAiError(null);
+
+    try {
+      // Mock AI generation - in real implementation, this would call an AI service
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      const generatedPlan = generateMainContent(lessonTitle, lessonDuration, objectives);
+      onUpdate("description", generatedPlan);
+      
+    } catch (error) {
+      setAiError("Failed to generate lesson plan. Please try again.");
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const generateTitle = (prompt: string): string => {
+    const subject = extractSubject(prompt);
+    const topic = extractTopic(prompt);
+    return `${subject ? subject + ': ' : ''}${topic || 'Comprehensive Lesson'}`;
+  };
+
+  const generateSummary = (prompt: string): string => {
+    return `This lesson provides students with a comprehensive understanding of the key concepts in ${extractTopic(prompt) || 'the subject area'}. Students will engage in interactive activities and develop practical skills through hands-on learning experiences.`;
+  };
+
+  const generateObjectives = (prompt: string): CreateLessonObjectiveDto[] => {
+    const topic = extractTopic(prompt) || "the lesson content";
+    return [
+      { objective: `Students will be able to understand the fundamental concepts of ${topic}`, isCompleted: false },
+      { objective: `Students will be able to apply key principles in practical scenarios`, isCompleted: false },
+      { objective: `Students will be able to analyze and evaluate different approaches to ${topic}`, isCompleted: false }
+    ];
+  };
+
+  const generateStarterActivity = (prompt: string): string => {
+    return `Begin with a quick brainstorm: Ask students what they already know about ${extractTopic(prompt) || 'today\'s topic'}. Write their responses on the board and use this as a foundation to introduce new concepts.`;
+  };
+
+  const generateMainContent = (lessonTitle: string, duration: number, objectives: CreateLessonObjectiveDto[]): string => {
+    const topic = lessonTitle;
+    const totalMinutes = duration;
+    
+    // Calculate time allocation based on duration
+    const introTime = Math.max(5, Math.round(totalMinutes * 0.15));
+    const coreTime = Math.max(15, Math.round(totalMinutes * 0.45));
+    const practiceTime = Math.max(10, Math.round(totalMinutes * 0.25));
+    const wrapTime = Math.max(5, Math.round(totalMinutes * 0.15));
+    
+    let plan = `1. Introduction (${introTime} min) - Opening & Context Setting
+   - Welcome students and briefly review previous lesson connections
+   - Introduce today's topic: "${topic}"
+   - Share the lesson objectives with students
+   - Hook: Start with an engaging question or real-world example related to ${topic}
+
+2. Core Content Delivery (${coreTime} min) - Main Teaching Phase
+   - Break down the key concepts of ${topic} step by step
+   - Use multiple teaching methods: visual aids, demonstrations, and interactive explanations
+   - Connect new information to students' prior knowledge
+   - Encourage questions and check for understanding throughout`;
+
+    if (objectives.length > 0) {
+      plan += `\n   - Address each learning objective:\n`;
+      objectives.forEach((obj, index) => {
+        plan += `     • ${obj.objective}\n`;
+      });
+    }
+
+    plan += `
+3. Guided Practice (${practiceTime} min) - Students Apply with Support
+   - Provide structured activities where students practice the concepts
+   - Work through examples together as a class
+   - Offer immediate feedback and clarification
+   - Circulate to provide individual support where needed
+
+4. Wrap-up & Assessment (${wrapTime} min) - Consolidation
+   - Summarize the key points covered in today's lesson
+   - Quick formative assessment to check understanding
+   - Preview what's coming in the next lesson
+   - Address any final questions`;
+
+    return plan;
+  };
+
+  const generateActivities = (prompt: string): CreateLessonActivityDto[] => {
+    const topic = extractTopic(prompt) || "the topic";
+    return [
+      {
+        title: "Interactive Discussion",
+        description: "Students discuss key concepts in pairs",
+        duration: 10,
+        instructions: `Have students work in pairs to discuss the main principles of ${topic}. Each pair should identify 2-3 key points and be ready to share with the class.`
+      },
+      {
+        title: "Hands-on Practice",
+        description: "Students apply concepts through practical exercises",
+        duration: 15,
+        instructions: `Provide students with practical exercises that allow them to apply the concepts they've learned about ${topic}. Circulate and provide individual support as needed.`
+      }
+    ];
+  };
+
+  const generatePlenaryActivity = (prompt: string): string => {
+    return `Wrap up with a 'One Thing I Learned' activity. Each student shares one key insight from today's lesson. Summarize the main points and preview what's coming in the next lesson.`;
+  };
+
+  const generateAssessment = (prompt: string): string => {
+    return `Use exit tickets with 3 questions: 1) What is the most important thing you learned today? 2) What questions do you still have? 3) How confident do you feel about applying today's concepts? (Scale 1-5)`;
+  };
+
+  const generateHomework = (prompt: string): string => {
+    const topic = extractTopic(prompt) || "today's lesson";
+    return `Complete practice exercises 1-5 in your workbook. Find one real-world example of ${topic} and write a short paragraph explaining how it connects to what we learned in class.`;
+  };
+
+  const generateTeacherNotes = (prompt: string): string => {
+    return `• Check projector and materials before class\n• Have backup activities ready if timing runs short\n• Watch for students who might need extra support\n• Keep energy high with movement and interaction\n• Allow flexibility for questions and discussion`;
+  };
+
+  const generateTags = (prompt: string): string[] => {
+    const tags = ["interactive", "practical", "comprehensive"];
+    const topic = extractTopic(prompt);
+    if (topic) tags.push(topic.toLowerCase());
+    return tags;
+  };
+
+  const extractSubject = (prompt: string): string | null => {
+    const subjects = ["math", "science", "english", "history", "physics", "chemistry", "biology", "literature", "geography"];
+    for (const subject of subjects) {
+      if (prompt.toLowerCase().includes(subject)) {
+        return subject.charAt(0).toUpperCase() + subject.slice(1);
+      }
+    }
+    return null;
+  };
+
+  const extractTopic = (prompt: string): string | null => {
+    // Simple extraction - in real implementation, this would use NLP
+    const words = prompt.toLowerCase().split(' ');
+    const stopWords = ['the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by', 'about', 'lesson', 'teach', 'students', 'class'];
+    const meaningfulWords = words.filter(word => !stopWords.includes(word) && word.length > 3);
+    return meaningfulWords.length > 0 ? meaningfulWords[0] : null;
+  };
+
+  const applyGeneratedContent = () => {
+    if (!generatedContent) return;
+    
+    const sections = selectedSections.includes("all") ? ["title", "summary", "type", "duration", "objectives", "starter", "main", "activities", "plenary", "assessment", "homework", "notes", "tags"] : selectedSections;
+    
+    sections.forEach(section => {
+      switch (section) {
+        case "title":
+          onUpdate("title", generatedContent.title);
+          break;
+        case "summary":
+          onUpdate("summary", generatedContent.summary);
+          break;
+        case "type":
+          onUpdate("type", generatedContent.type);
+          break;
+        case "duration":
+          onUpdate("duration", generatedContent.duration);
+          break;
+        case "objectives":
+          onUpdate("objectives", generatedContent.objectives);
+          break;
+        case "starter":
+          onUpdate("starterActivity", generatedContent.starterActivity);
+          break;
+        case "main":
+          onUpdate("description", generatedContent.description);
+          break;
+        case "activities":
+          onUpdate("activities", generatedContent.activities);
+          break;
+        case "plenary":
+          onUpdate("plenaryActivity", generatedContent.plenaryActivity);
+          break;
+        case "assessment":
+          onUpdate("assessmentCriteria", generatedContent.assessmentCriteria);
+          break;
+        case "homework":
+          onUpdate("homework", generatedContent.homework);
+          break;
+        case "notes":
+          onUpdate("teacherNotes", generatedContent.teacherNotes);
+          break;
+        case "tags":
+          onUpdate("tags", generatedContent.tags);
+          break;
+      }
+    });
+    
+    setIsAIHelperOpen(false);
+    setGeneratedContent(null);
+    setAiPrompt("");
+    setSelectedSections(["all"]);
+  };
+
+  const resetAIHelper = () => {
+    setAiPrompt("");
+    setGeneratedContent(null);
+    setAiError(null);
+    setSelectedSections(["all"]);
   };
 
   const sections = [
@@ -814,7 +1036,29 @@ export const LessonFormRedesigned = ({
               {/* Lesson Flow */}
               <div className="space-y-4 p-6 bg-gradient-to-br from-blue-50 to-white rounded-2xl border border-blue-200 shadow-sm">
                 <div className="space-y-3">
-                  <Label className="text-lg font-semibold text-blue-800">Detailed Teaching Plan</Label>
+                  <div className="flex items-center justify-between">
+                    <Label className="text-lg font-semibold text-blue-800">Detailed Teaching Plan</Label>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={generateAIContent}
+                      disabled={isGenerating}
+                      className="bg-gradient-to-r from-purple-500 to-blue-500 text-white hover:from-purple-600 hover:to-blue-600 border-0 shadow-sm"
+                    >
+                      {isGenerating ? (
+                        <>
+                          <Loader2 className="h-3 w-3 mr-1.5 animate-spin" />
+                          Generating...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="h-3 w-3 mr-1.5" />
+                          AI Helper
+                        </>
+                      )}
+                    </Button>
+                  </div>
                   <Textarea 
                     placeholder="Describe your step-by-step lesson flow:
 
@@ -827,6 +1071,11 @@ export const LessonFormRedesigned = ({
                     value={lesson.description || ""}
                     onChange={(e) => onUpdate("description", e.target.value)}
                   />
+                  {aiError && (
+                    <Alert variant="destructive" className="mt-2">
+                      <AlertDescription>{aiError}</AlertDescription>
+                    </Alert>
+                  )}
                 </div>
               </div>
 
