@@ -32,7 +32,8 @@ import {
   Monitor,
   Zap,
   Star,
-  Hash
+  Hash,
+  Loader2
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -45,6 +46,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
 import { FormFileUpload } from '@/components/ui/form/file-upload';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
 import { ClassFormValues, CohortData, classSchema, Curriculum, CurriculumLevel, Subject } from './types';
 import { useAuth } from '@/contexts/AuthContext';
@@ -52,6 +54,7 @@ import { LessonForm } from './lesson-plans/LessonForm';
 import { platformService } from '@/integrations/api/services/platform.service';
 import { AIDescriptionButton } from '@/components/ui/ai-description-button';
 import { DescriptionContext } from '@/services/aiDescriptionService';
+import { toast } from 'sonner';
 
 interface AcademicClassCreatorProps {
   onSubmit: (data: ClassFormValues) => void;
@@ -68,7 +71,7 @@ interface StepConfig {
 }
 
 // Step Components
-const ClassFoundationStep = ({ form, onNext }: any) => {
+const ClassFoundationStep = ({ form, onNext, isSaving }: any) => {
   const [materials, setMaterials] = useState(form.watch('materials') || []);
   const [resourceLinks, setResourceLinks] = useState(form.watch('resourceLinks') || []);
   
@@ -78,50 +81,69 @@ const ClassFoundationStep = ({ form, onNext }: any) => {
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [loadingCurricula, setLoadingCurricula] = useState(false);
   const [selectedCurriculum, setSelectedCurriculum] = useState<Curriculum | null>(null);
+  
+  // Accordion state for subjects
+  const [subjectsAccordionOpen, setSubjectsAccordionOpen] = useState<string>('subjects');
+  const selectedSubject = form.watch('subject');
 
-  // Curriculum-specific styling and UX
+  // Curriculum styling with Kidato brand colors using proper Tailwind classes
   const getCurriculumStyling = (curriculumCode: string) => {
     const styles = {
       'british': {
-        gradient: 'bg-gradient-to-br from-blue-500 to-purple-600',
-        hoverGradient: 'hover:from-blue-600 hover:to-purple-700',
-        selectedGradient: 'from-blue-600 to-purple-700',
+        gradient: 'bg-gradient-to-br from-kidato-indigo to-kidato-spindle',
+        hoverGradient: 'hover:from-kidato-indigo-600 hover:to-kidato-spindle-400',
+        selectedGradient: 'from-kidato-indigo-600 to-kidato-spindle-400',
+        bgLight: 'bg-gradient-to-r from-kidato-indigo/10 to-kidato-spindle/10',
+        borderColor: 'border-kidato-indigo/30',
+        textColor: 'text-kidato-indigo',
         icon: '🇬🇧',
-        accentColor: 'blue',
+        accentColor: 'kidato-indigo',
         description: 'International General Certificate'
       },
       'ib': {
-        gradient: 'bg-gradient-to-br from-emerald-500 to-teal-600',
-        hoverGradient: 'hover:from-emerald-600 hover:to-teal-700',
-        selectedGradient: 'from-emerald-600 to-teal-700',
+        gradient: 'bg-gradient-to-br from-kidato-orange to-kidato-indigo',
+        hoverGradient: 'hover:from-kidato-orange-600 hover:to-kidato-indigo-600',
+        selectedGradient: 'from-kidato-orange-600 to-kidato-indigo-600',
+        bgLight: 'bg-gradient-to-r from-kidato-orange/10 to-kidato-indigo/10',
+        borderColor: 'border-kidato-orange/30',
+        textColor: 'text-kidato-orange',
         icon: '🌍',
-        accentColor: 'emerald',
+        accentColor: 'kidato-orange',
         description: 'International Baccalaureate'
       },
       'cbc': {
-        gradient: 'bg-gradient-to-br from-green-500 to-emerald-600',
-        hoverGradient: 'hover:from-green-600 hover:to-emerald-700',
-        selectedGradient: 'from-green-600 to-emerald-700',
+        gradient: 'bg-gradient-to-br from-kidato-spindle to-kidato-orange',
+        hoverGradient: 'hover:from-kidato-spindle-400 hover:to-kidato-orange-600',
+        selectedGradient: 'from-kidato-spindle-400 to-kidato-orange-600',
+        bgLight: 'bg-gradient-to-r from-kidato-spindle/10 to-kidato-orange/10',
+        borderColor: 'border-kidato-spindle/30',
+        textColor: 'text-kidato-spindle-700',
         icon: '🇰🇪',
-        accentColor: 'green',
+        accentColor: 'kidato-spindle',
         description: 'Kenyan National Curriculum'
       },
       'american': {
-        gradient: 'bg-gradient-to-br from-red-500 to-pink-600',
-        hoverGradient: 'hover:from-red-600 hover:to-pink-700',
-        selectedGradient: 'from-red-600 to-pink-700',
+        gradient: 'bg-gradient-to-br from-kidato-indigo via-kidato-orange to-kidato-spindle',
+        hoverGradient: 'hover:from-kidato-indigo-600 hover:via-kidato-orange-600 hover:to-kidato-spindle-400',
+        selectedGradient: 'from-kidato-indigo-600 via-kidato-orange-600 to-kidato-spindle-400',
+        bgLight: 'bg-gradient-to-r from-kidato-indigo/10 via-kidato-orange/10 to-kidato-spindle/10',
+        borderColor: 'border-kidato-indigo/30',
+        textColor: 'text-kidato-indigo',
         icon: '🇺🇸',
-        accentColor: 'red',
+        accentColor: 'kidato-indigo',
         description: 'American Education System'
       }
     };
     
     return styles[curriculumCode as keyof typeof styles] || {
-      gradient: 'bg-gradient-to-br from-gray-500 to-slate-600',
-      hoverGradient: 'hover:from-gray-600 hover:to-slate-700',
-      selectedGradient: 'from-gray-600 to-slate-700',
+      gradient: 'bg-gradient-to-br from-kidato-indigo to-kidato-spindle',
+      hoverGradient: 'hover:from-kidato-indigo-600 hover:to-kidato-spindle-400',
+      selectedGradient: 'from-kidato-indigo-600 to-kidato-spindle-400',
+      bgLight: 'bg-gradient-to-r from-kidato-indigo/10 to-kidato-spindle/10',
+      borderColor: 'border-kidato-indigo/30',
+      textColor: 'text-kidato-indigo',
       icon: '📚',
-      accentColor: 'gray',
+      accentColor: 'kidato-indigo',
       description: 'Education Curriculum'
     };
   };
@@ -356,6 +378,8 @@ const ClassFoundationStep = ({ form, onNext }: any) => {
     }
   };
 
+  const classTitle = form.watch('title');
+  
   return (
     <div className="space-y-8">
       <div className="text-center">
@@ -366,8 +390,24 @@ const ClassFoundationStep = ({ form, onNext }: any) => {
         >
           <GraduationCap className="h-8 w-8 text-white" />
         </motion.div>
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">What's your class about?</h2>
-        <p className="text-gray-600">Let's start with the foundation - what will students learn?</p>
+        <motion.h2 
+          className="text-2xl font-bold text-gray-900 mb-2"
+          initial={{ opacity: 1 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.3 }}
+          key={classTitle ? 'class-title' : 'default-title'}
+        >
+          {classTitle ? classTitle : "What's your class about?"}
+        </motion.h2>
+        <motion.p 
+          className="text-gray-600"
+          initial={{ opacity: 1 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.3 }}
+          key={classTitle ? 'class-subtitle' : 'default-subtitle'}
+        >
+          {classTitle ? "Perfect! Now let's set up the details..." : "Let's start with the foundation - what will students learn?"}
+        </motion.p>
       </div>
 
       <div className="max-w-4xl mx-auto space-y-8">
@@ -623,19 +663,35 @@ const ClassFoundationStep = ({ form, onNext }: any) => {
                           transition={{ duration: 0.4 }}
                         >
                           <FormItem>
-                            <FormLabel className="text-base font-semibold mb-4 block">
-                              Choose Subject *
-                              {isIGCSE && <span className="text-sm font-normal text-indigo-600 ml-2">(IGCSE Level)</span>}
-                              {isALevels && <span className="text-sm font-normal text-indigo-600 ml-2">(A-Level)</span>}
-                            </FormLabel>
-                            
-                            <FormDescription className="mb-6">
-                              {isIGCSE && "Select from core, foundation, or elective subjects for IGCSE level."}
-                              {isALevels && "Choose from specialized A-Level subject areas."}
-                              {!isIGCSE && !isALevels && `Select the subject you'll be teaching in ${selectedLevel?.name}.`}
-                            </FormDescription>
-                            
-                            <div className="space-y-6">
+                            <Accordion 
+                              type="single" 
+                              value={subjectsAccordionOpen} 
+                              onValueChange={setSubjectsAccordionOpen}
+                              className="w-full"
+                            >
+                              <AccordionItem value="subjects" className="border-none">
+                                <AccordionTrigger className="text-base font-semibold mb-2 hover:no-underline">
+                                  <div className="flex items-center gap-2">
+                                    <span>
+                                      Choose Subject *
+                                      {isIGCSE && <span className="text-sm font-normal text-indigo-600 ml-2">(IGCSE Level)</span>}
+                                      {isALevels && <span className="text-sm font-normal text-indigo-600 ml-2">(A-Level)</span>}
+                                    </span>
+                                    {selectedSubject && (
+                                      <Badge variant="outline" className="bg-kidato-indigo-100 text-kidato-indigo-700 border-kidato-indigo-300">
+                                        {selectedSubject}
+                                      </Badge>
+                                    )}
+                                  </div>
+                                </AccordionTrigger>
+                                <AccordionContent className="pt-2">
+                                  <FormDescription className="mb-6">
+                                    {isIGCSE && "Select from core, foundation, or elective subjects for IGCSE level."}
+                                    {isALevels && "Choose from specialized A-Level subject areas."}
+                                    {!isIGCSE && !isALevels && `Select the subject you'll be teaching in ${selectedLevel?.name}.`}
+                                  </FormDescription>
+                                  
+                                  <div className="space-y-6">
                               {Object.entries(subjectCategories).map(([category, subjectList]) => (
                                 <div key={category}>
                                   {Object.keys(subjectCategories).length > 1 && (
@@ -711,7 +767,11 @@ const ClassFoundationStep = ({ form, onNext }: any) => {
                                           initial={{ opacity: 0, scale: 0.8 }}
                                           animate={{ opacity: 1, scale: 1 }}
                                           transition={{ duration: 0.2, delay: index * 0.05 }}
-                                          onClick={() => field.onChange(subject)}
+                                          onClick={() => {
+                                            field.onChange(subject);
+                                            // Collapse accordion after selection
+                                            setTimeout(() => setSubjectsAccordionOpen(''), 300);
+                                          }}
                                           className={`
                                             px-4 py-2 rounded-full text-sm font-medium border-2 transition-all duration-200
                                             ${getCategoryStyle()}
@@ -735,20 +795,23 @@ const ClassFoundationStep = ({ form, onNext }: any) => {
                                     })}
                                   </div>
                                 </div>
-                              ))}
-                            </div>
+                                      ))}
+                                    </div>
+                                </AccordionContent>
+                              </AccordionItem>
+                            </Accordion>
                             
                             {field.value && (
                               <motion.div 
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                className="mt-4 p-4 bg-indigo-50 border border-indigo-200 rounded-lg"
+                                className="mt-4 p-4 bg-kidato-indigo-50 border border-kidato-indigo-200 rounded-lg"
                               >
                                 <div className="flex items-center gap-3">
-                                  <CheckCircle className="h-5 w-5 text-indigo-600" />
+                                  <CheckCircle className="h-5 w-5 text-kidato-indigo-600" />
                                   <div>
-                                    <h4 className="font-semibold text-indigo-900">Selected: {field.value}</h4>
-                                    <p className="text-sm text-indigo-700">
+                                    <h4 className="font-semibold text-kidato-indigo-900">Selected: {field.value}</h4>
+                                    <p className="text-sm text-kidato-indigo-700">
                                       {isIGCSE && "This IGCSE subject will prepare students for international examinations."}
                                       {isALevels && "This A-Level subject offers advanced study for university preparation."}
                                       {!isIGCSE && !isALevels && `Subject for ${selectedLevel?.name} curriculum.`}
@@ -1315,6 +1378,114 @@ const ClassFoundationStep = ({ form, onNext }: any) => {
           </CardContent>
         </Card>
 
+        {/* Introduction Video Card */}
+        <Card className="border-kidato-indigo-200 shadow-xl bg-gradient-to-br from-kidato-indigo-50 via-white to-kidato-spindle-50 overflow-hidden">
+          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-kidato-indigo-500 via-kidato-indigo-600 to-kidato-spindle-500"></div>
+          <CardHeader className="pb-4 relative">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="relative">
+                <div className="w-12 h-12 bg-gradient-to-br from-kidato-indigo-600 to-kidato-indigo-700 rounded-xl flex items-center justify-center shadow-lg">
+                  <svg 
+                    viewBox="0 0 24 24" 
+                    className="h-6 w-6 text-white" 
+                    fill="currentColor"
+                  >
+                    <path d="M23.498 6.186a2.99 2.99 0 0 0-2.123-2.123C19.505 3.5 12 3.5 12 3.5s-7.505 0-9.375.563A2.99 2.99 0 0 0 .502 6.186C-.001 8.056-.001 12-.001 12s0 3.944.503 5.814a2.99 2.99 0 0 0 2.123 2.123C4.495 20.5 12 20.5 12 20.5s7.505 0 9.375-.563a2.99 2.99 0 0 0 2.123-2.123C23.999 15.944 23.999 12 23.999 12s0-3.944-.501-5.814zM9.75 15.568V8.432L15.5 12l-5.75 3.568z"/>
+                  </svg>
+                </div>
+                <div className="absolute -top-1 -right-1 w-4 h-4 bg-white rounded-full flex items-center justify-center">
+                  <Video className="h-2.5 w-2.5 text-kidato-indigo-600" />
+                </div>
+              </div>
+              <div>
+                <CardTitle className="text-xl font-bold text-kidato-indigo-800 flex items-center gap-2">
+                  Class Introduction Video
+                  <Badge variant="secondary" className="text-xs bg-kidato-indigo-100 text-kidato-indigo-700 border-kidato-indigo-200">
+                    YouTube
+                  </Badge>
+                </CardTitle>
+                <p className="text-sm text-kidato-indigo-600 font-medium">Hook your audience with video</p>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <FormField
+              control={form.control}
+              name="introVideoUrl"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-base font-semibold text-kidato-indigo-800 mb-3 block">
+                    YouTube Video URL
+                  </FormLabel>
+                  <FormControl>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <svg 
+                          viewBox="0 0 24 24" 
+                          className="h-5 w-5 text-kidato-indigo-500" 
+                          fill="currentColor"
+                        >
+                          <path d="M23.498 6.186a2.99 2.99 0 0 0-2.123-2.123C19.505 3.5 12 3.5 12 3.5s-7.505 0-9.375.563A2.99 2.99 0 0 0 .502 6.186C-.001 8.056-.001 12-.001 12s0 3.944.503 5.814a2.99 2.99 0 0 0 2.123 2.123C4.495 20.5 12 20.5 12 20.5s7.505 0 9.375-.563a2.99 2.99 0 0 0 2.123-2.123C23.999 15.944 23.999 12 23.999 12s0-3.944-.501-5.814zM9.75 15.568V8.432L15.5 12l-5.75 3.568z"/>
+                        </svg>
+                      </div>
+                      <Input
+                        placeholder="https://youtube.com/watch?v=..."
+                        className="pl-14 pr-12 h-12 border-kidato-indigo-200 focus:border-kidato-indigo-400 focus:ring-kidato-indigo-400 bg-white text-base font-medium"
+                        {...field}
+                      />
+                      {field.value && (
+                        <div className="absolute inset-y-0 right-0 pr-4 flex items-center">
+                          <div className="flex items-center gap-1 text-green-600">
+                            <CheckCircle className="h-4 w-4" />
+                            <span className="text-xs font-medium">Valid</span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </FormControl>
+                  <div className="mt-4 p-4 bg-gradient-to-r from-kidato-indigo-50 to-kidato-spindle-50 border border-kidato-indigo-100 rounded-lg">
+                    <div className="flex items-start gap-3">
+                      <Play className="h-5 w-5 text-kidato-indigo-600 mt-0.5 flex-shrink-0" />
+                      <div className="space-y-2">
+                        <h4 className="font-semibold text-kidato-indigo-900 text-sm">Why add an intro video?</h4>
+                        <ul className="text-xs text-kidato-indigo-700 space-y-1">
+                          <li className="flex items-center gap-2">
+                            <div className="w-1 h-1 bg-kidato-indigo-500 rounded-full"></div>
+                            Build trust with parents & students
+                          </li>
+                          <li className="flex items-center gap-2">
+                            <div className="w-1 h-1 bg-kidato-indigo-500 rounded-full"></div>
+                            Showcase your teaching personality
+                          </li>
+                          <li className="flex items-center gap-2">
+                            <div className="w-1 h-1 bg-kidato-indigo-500 rounded-full"></div>
+                            Increase enrollment rates by 65%
+                          </li>
+                          <li className="flex items-center gap-2">
+                            <div className="w-1 h-1 bg-kidato-indigo-500 rounded-full"></div>
+                            Explain what makes your class unique
+                          </li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                  {!field.value && (
+                    <div className="mt-3 p-3 bg-kidato-orange-50 border border-kidato-orange-200 rounded-lg">
+                      <div className="flex items-center gap-2">
+                        <AlertCircle className="h-4 w-4 text-kidato-orange-600" />
+                        <p className="text-kidato-orange-800 text-sm font-medium">Optional but highly recommended</p>
+                      </div>
+                      <p className="text-kidato-orange-700 text-xs mt-1">
+                        Classes with introduction videos get 3x more enrollments
+                      </p>
+                    </div>
+                  )}
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </CardContent>
+        </Card>
 
         <div className="flex justify-end mt-8">
           <Button
@@ -1322,10 +1493,19 @@ const ClassFoundationStep = ({ form, onNext }: any) => {
             onClick={onNext}
             size="lg"
             className="bg-gradient-to-r from-kidato-blue to-kidato-purple hover:from-kidato-blue-600 hover:to-kidato-purple-600"
-            disabled={!form.watch('title') || !form.watch('curriculum') || !form.watch('curriculumLevel') || !form.watch('subject') || objectives.filter(obj => obj.text.trim()).length === 0 || !form.watch('courseOutlineFile')}
+            disabled={isSaving || !form.watch('title') || !form.watch('curriculum') || !form.watch('curriculumLevel') || !form.watch('subject') || objectives.filter(obj => obj.text.trim()).length === 0 || !form.watch('courseOutlineFile')}
           >
-            Continue to Lesson Planning
-            <ArrowRight className="ml-2 h-4 w-4" />
+            {isSaving ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Saving Class...
+              </>
+            ) : (
+              <>
+                Continue to Lesson Planning
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </>
+            )}
           </Button>
         </div>
       </div>
@@ -1333,7 +1513,7 @@ const ClassFoundationStep = ({ form, onNext }: any) => {
   );
 };
 
-const LessonPlanningStep = ({ form, onNext, onPrev }: any) => {
+const LessonPlanningStep = ({ form, onNext, onPrev, createdClassId }: any) => {
   const [lessons, setLessons] = useState(() => {
     const currentLessons = form.watch('lessonPlans') || [];
     // Ensure each lesson has the full LessonForm structure
@@ -1421,6 +1601,21 @@ const LessonPlanningStep = ({ form, onNext, onPrev }: any) => {
       </div>
 
       <div className="max-w-6xl mx-auto">
+        {/* Class Created Notice */}
+        {createdClassId && (
+          <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+            <div className="flex items-start gap-3">
+              <CheckCircle className="h-5 w-5 text-green-600 mt-1" />
+              <div>
+                <h4 className="font-semibold text-green-900">Class Created Successfully!</h4>
+                <p className="text-green-800 text-sm">
+                  Your class foundation has been saved. Class ID: <code className="bg-green-100 px-1 rounded text-xs">{createdClassId}</code>
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
           <div className="flex items-start gap-3">
             <Target className="h-5 w-5 text-amber-600 mt-1" />
@@ -1433,116 +1628,6 @@ const LessonPlanningStep = ({ form, onNext, onPrev }: any) => {
           </div>
         </div>
 
-        {/* Introduction Video Card */}
-        <div className="mb-6">
-          <Card className="border-red-200 shadow-xl bg-gradient-to-br from-red-50 via-white to-pink-50 overflow-hidden">
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-red-500 via-red-600 to-pink-500"></div>
-            <CardHeader className="pb-4 relative">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="relative">
-                  <div className="w-12 h-12 bg-gradient-to-br from-red-600 to-red-700 rounded-xl flex items-center justify-center shadow-lg">
-                    <svg 
-                      viewBox="0 0 24 24" 
-                      className="h-6 w-6 text-white" 
-                      fill="currentColor"
-                    >
-                      <path d="M23.498 6.186a2.99 2.99 0 0 0-2.123-2.123C19.505 3.5 12 3.5 12 3.5s-7.505 0-9.375.563A2.99 2.99 0 0 0 .502 6.186C-.001 8.056-.001 12-.001 12s0 3.944.503 5.814a2.99 2.99 0 0 0 2.123 2.123C4.495 20.5 12 20.5 12 20.5s7.505 0 9.375-.563a2.99 2.99 0 0 0 2.123-2.123C23.999 15.944 23.999 12 23.999 12s0-3.944-.501-5.814zM9.75 15.568V8.432L15.5 12l-5.75 3.568z"/>
-                    </svg>
-                  </div>
-                  <div className="absolute -top-1 -right-1 w-4 h-4 bg-white rounded-full flex items-center justify-center">
-                    <Video className="h-2.5 w-2.5 text-red-600" />
-                  </div>
-                </div>
-                <div>
-                  <CardTitle className="text-xl font-bold text-red-800 flex items-center gap-2">
-                    Class Introduction Video
-                    <Badge variant="secondary" className="text-xs bg-red-100 text-red-700 border-red-200">
-                      YouTube
-                    </Badge>
-                  </CardTitle>
-                  <p className="text-sm text-red-600 font-medium">Hook your audience with video</p>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <FormField
-                control={form.control}
-                name="introVideoUrl"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-base font-semibold text-red-800 mb-3 block">
-                      YouTube Video URL
-                    </FormLabel>
-                    <FormControl>
-                      <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                          <svg 
-                            viewBox="0 0 24 24" 
-                            className="h-5 w-5 text-red-500" 
-                            fill="currentColor"
-                          >
-                            <path d="M23.498 6.186a2.99 2.99 0 0 0-2.123-2.123C19.505 3.5 12 3.5 12 3.5s-7.505 0-9.375.563A2.99 2.99 0 0 0 .502 6.186C-.001 8.056-.001 12-.001 12s0 3.944.503 5.814a2.99 2.99 0 0 0 2.123 2.123C4.495 20.5 12 20.5 12 20.5s7.505 0 9.375-.563a2.99 2.99 0 0 0 2.123-2.123C23.999 15.944 23.999 12 23.999 12s0-3.944-.501-5.814zM9.75 15.568V8.432L15.5 12l-5.75 3.568z"/>
-                          </svg>
-                        </div>
-                        <Input
-                          placeholder="https://youtube.com/watch?v=..."
-                          className="pl-14 pr-12 h-12 border-red-200 focus:border-red-400 focus:ring-red-400 bg-white text-base font-medium"
-                          {...field}
-                        />
-                        {field.value && (
-                          <div className="absolute inset-y-0 right-0 pr-4 flex items-center">
-                            <div className="flex items-center gap-1 text-green-600">
-                              <CheckCircle className="h-4 w-4" />
-                              <span className="text-xs font-medium">Valid</span>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </FormControl>
-                    <div className="mt-4 p-4 bg-gradient-to-r from-red-50 to-pink-50 border border-red-100 rounded-lg">
-                      <div className="flex items-start gap-3">
-                        <Play className="h-5 w-5 text-red-600 mt-0.5 flex-shrink-0" />
-                        <div className="space-y-2">
-                          <h4 className="font-semibold text-red-900 text-sm">Why add an intro video?</h4>
-                          <ul className="text-xs text-red-700 space-y-1">
-                            <li className="flex items-center gap-2">
-                              <div className="w-1 h-1 bg-red-500 rounded-full"></div>
-                              Build trust with parents & students
-                            </li>
-                            <li className="flex items-center gap-2">
-                              <div className="w-1 h-1 bg-red-500 rounded-full"></div>
-                              Showcase your teaching personality
-                            </li>
-                            <li className="flex items-center gap-2">
-                              <div className="w-1 h-1 bg-red-500 rounded-full"></div>
-                              Increase enrollment rates by 65%
-                            </li>
-                            <li className="flex items-center gap-2">
-                              <div className="w-1 h-1 bg-red-500 rounded-full"></div>
-                              Explain what makes your class unique
-                            </li>
-                          </ul>
-                        </div>
-                      </div>
-                    </div>
-                    {!field.value && (
-                      <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
-                        <div className="flex items-center gap-2">
-                          <AlertCircle className="h-4 w-4 text-amber-600" />
-                          <p className="text-amber-800 text-sm font-medium">Optional but highly recommended</p>
-                        </div>
-                        <p className="text-amber-700 text-xs mt-1">
-                          Classes with introduction videos get 3x more enrollments
-                        </p>
-                      </div>
-                    )}
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </CardContent>
-          </Card>
-        </div>
 
         <div className="space-y-6">
           <AnimatePresence>
@@ -1975,6 +2060,8 @@ const AcademicClassCreator: React.FC<AcademicClassCreatorProps> = ({
   const { user } = useAuth();
   const [currentStep, setCurrentStep] = useState(0);
   const [cohorts, setCohorts] = useState<CohortData[]>([]);
+  const [createdClassId, setCreatedClassId] = useState<string | null>(classId || null);
+  const [isSaving, setIsSaving] = useState(false);
 
   const form = useForm<ClassFormValues>({
     resolver: zodResolver(classSchema),
@@ -2040,9 +2127,40 @@ const AcademicClassCreator: React.FC<AcademicClassCreatorProps> = ({
 
   const progress = ((currentStep + 1) / steps.length) * 100;
 
-  const nextStep = () => {
+  const nextStep = async () => {
     if (currentStep < steps.length - 1) {
-      setCurrentStep(currentStep + 1);
+      // Save class to API after foundation step (step 0) before moving to lesson planning
+      if (currentStep === 0 && !createdClassId) {
+        setIsSaving(true);
+        try {
+          const formData = {
+            ...form.getValues(),
+            type: 'academic',
+            isPublished: false,
+            status: 'draft'
+          };
+          
+          // Call the onSubmit function to create the class
+          const result = await onSubmit(formData);
+          
+          // If onSubmit returns a class ID, store it
+          if (result && typeof result === 'object' && 'id' in result) {
+            setCreatedClassId(result.id);
+          } else if (result && typeof result === 'string') {
+            setCreatedClassId(result);
+          }
+          
+          setCurrentStep(currentStep + 1);
+          toast.success('Class foundation saved! Moving to lesson planning...');
+        } catch (error) {
+          console.error('Error saving class:', error);
+          toast.error('Failed to save class. Please try again.');
+        } finally {
+          setIsSaving(false);
+        }
+      } else {
+        setCurrentStep(currentStep + 1);
+      }
     }
   };
 
@@ -2112,6 +2230,8 @@ const AcademicClassCreator: React.FC<AcademicClassCreatorProps> = ({
             onNext={nextStep}
             onPrev={prevStep}
             onSubmit={onSubmit}
+            isSaving={isSaving}
+            createdClassId={createdClassId}
           />
         </Form>
       </div>

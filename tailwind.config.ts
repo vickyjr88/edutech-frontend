@@ -64,35 +64,67 @@ export default {
 					ring: 'hsl(var(--sidebar-ring))'
 				},
 				kidato: {
+					// Indigo #5c64d4 - Primary brand color
+					indigo: {
+						50: '#f1f2ff',
+						100: '#e6e8ff',
+						200: '#d1d5ff',
+						300: '#acb4e4', // Spindle color
+						400: '#8891e0',
+						500: '#5c64d4', // Primary Indigo
+						600: '#4c54c4',
+						700: '#3d45b4',
+						800: '#2e3693',
+						900: '#1f2772',
+						DEFAULT: '#5c64d4'
+					},
+					// Tree Poppy #fc9323 - Secondary brand color
 					orange: {
-						50: '#fef7ed',
-						100: '#fecf99',
-						200: '#feb977', 
-						300: '#fda855',
-						400: '#fc9123',
-						500: '#fc9123', // Primary
-						600: '#e07f0f',
-						700: '#c46d00',
-						800: '#a85c00',
-						900: '#8a4a00',
-						DEFAULT: '#fc9123'
+						50: '#fff7ed',
+						100: '#ffedd5',
+						200: '#fed7aa',
+						300: '#fdba74',
+						400: '#fc9323', // Tree Poppy
+						500: '#fc9323', // Primary Orange
+						600: '#ea790b',
+						700: '#c2610c',
+						800: '#9a4e12',
+						900: '#7c3f14',
+						DEFAULT: '#fc9323'
 					},
-					purple: {
-						50: '#f0f1fe',
-						100: '#bcc1ed',
-						200: '#9ba3e4',
-						300: '#7a85db', 
-						400: '#5967d2',
-						500: '#5967d2', // Primary
-						600: '#4654c4',
-						700: '#3441b6',
-						800: '#1b2877',
-						900: '#151f5c',
-						DEFAULT: '#5967d2'
+					// Athens Gray #efebf0 - Neutral color
+					gray: {
+						50: '#f9f7fa',
+						100: '#efebf0', // Athens Gray
+						200: '#e5dfe6',
+						300: '#dbd3dc',
+						400: '#d1c7d2',
+						500: '#c7bbc8',
+						600: '#a8969a',
+						700: '#89717c',
+						800: '#6a4c5e',
+						900: '#4b2740',
+						DEFAULT: '#efebf0'
 					},
-					blue: '#5967d2', // Alias for purple
-					'light-blue': '#E1E5FF',
-					'dark-blue': '#1b2877'
+					// Spindle #acb4e4 - Light accent color
+					spindle: {
+						50: '#f7f8ff',
+						100: '#eef0ff',
+						200: '#dde1ff',
+						300: '#acb4e4', // Spindle
+						400: '#9ba3e0',
+						500: '#8a92dc',
+						600: '#7981d8',
+						700: '#6870d4',
+						800: '#575fd0',
+						900: '#464ecc',
+						DEFAULT: '#acb4e4'
+					},
+					// Legacy aliases for backward compatibility
+					blue: '#5c64d4',
+					purple: '#5c64d4',
+					'light-blue': '#acb4e4',
+					'dark-blue': '#3d45b4'
 				}
 			},
 			borderRadius: {

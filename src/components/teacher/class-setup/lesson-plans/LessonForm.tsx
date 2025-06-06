@@ -303,7 +303,7 @@ export const LessonForm = ({
   };
 
   return (
-    <Card className="w-full shadow-lg border-l-4 border-l-blue-500 bg-gradient-to-br from-white to-blue-50/30">
+    <Card className="w-full shadow-lg border-l-4 border-l-kidato-indigo-500 bg-gradient-to-br from-white to-kidato-indigo-50/30">
       <CardHeader className="pb-4">
         <div className="flex justify-between items-center">
           <CardTitle className="flex items-center gap-3 text-xl font-bold text-gray-800">
@@ -327,243 +327,245 @@ export const LessonForm = ({
       </CardHeader>
 
       <CardContent className="space-y-8">
-        {/* Basic Information */}
+        {/* 1. What Will You Teach? - Lesson Basics */}
         <div className="space-y-4">
           <div className="flex items-center gap-2 text-lg font-semibold text-gray-800">
-            <FileText className="h-5 w-5 text-blue-600" />
-            Basic Information
+            <BookOpen className="h-5 w-5 text-blue-600" />
+            <span className="text-blue-600 font-bold text-sm mr-2">STEP 1</span>
+            What Will You Teach In This Lesson?
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          
+          <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor={`lesson-title-${lesson.id}`} className="text-sm font-medium text-gray-700">
-                Title
+                Lesson Topic *
               </Label>
               <Input 
                 id={`lesson-title-${lesson.id}`}
-                placeholder="Enter a descriptive lesson title"
+                placeholder="e.g., 'Introduction to Photosynthesis' or 'Solving Quadratic Equations'"
                 value={lesson.title || ""}
                 onChange={(e) => onUpdate("title", e.target.value)}
-                className="border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                className="border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-lg h-12"
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor={`lesson-number-${lesson.id}`} className="text-sm font-medium text-gray-700">
-                Lesson Number
-              </Label>
-              <Input 
-                id={`lesson-number-${lesson.id}`}
-                type="number"
-                placeholder="e.g. 1"
-                value={lesson.lessonNumber || lessonNumber}
-                onChange={(e) => onUpdate("lessonNumber", parseInt(e.target.value) || lessonNumber)}
-                className="border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor={`lesson-type-${lesson.id}`} className="text-sm font-medium text-gray-700">
-                Lesson Type
-              </Label>
-              <Select
-                value={lesson.type || LessonType.LECTURE}
-                onValueChange={(value) => onUpdate("type", value as LessonType)}
-              >
-                <SelectTrigger className="border-gray-300 focus:border-blue-500 focus:ring-blue-500">
-                  <SelectValue placeholder="Select lesson type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={LessonType.LECTURE}>Lecture</SelectItem>
-                  <SelectItem value={LessonType.PRACTICAL}>Practical</SelectItem>
-                  <SelectItem value={LessonType.WORKSHOP}>Workshop</SelectItem>
-                  <SelectItem value={LessonType.ASSESSMENT}>Assessment</SelectItem>
-                  <SelectItem value={LessonType.DISCUSSION}>Discussion</SelectItem>
-                  <SelectItem value={LessonType.FIELD_TRIP}>Field Trip</SelectItem>
-                  <SelectItem value={LessonType.PRESENTATION}>Presentation</SelectItem>
-                  <SelectItem value={LessonType.REVIEW}>Review</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor={`lesson-duration-minutes-${lesson.id}`} className="text-sm font-medium text-gray-700">
-                Duration (minutes)
-              </Label>
-              <Input 
-                id={`lesson-duration-minutes-${lesson.id}`}
-                type="number"
-                placeholder="e.g. 60"
-                value={lesson.duration || ""}
-                onChange={(e) => onUpdate("duration", parseInt(e.target.value) || 0)}
-                className="border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor={`lesson-status-${lesson.id}`} className="text-sm font-medium text-gray-700">
-                Status
-              </Label>
-              <Select
-                value={lesson.status || LessonStatus.DRAFT}
-                onValueChange={(value) => onUpdate("status", value as LessonStatus)}
-              >
-                <SelectTrigger className="border-gray-300 focus:border-blue-500 focus:ring-blue-500">
-                  <SelectValue placeholder="Select status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={LessonStatus.DRAFT}>Draft</SelectItem>
-                  <SelectItem value={LessonStatus.SCHEDULED}>Scheduled</SelectItem>
-                  <SelectItem value={LessonStatus.IN_PROGRESS}>In Progress</SelectItem>
-                  <SelectItem value={LessonStatus.COMPLETED}>Completed</SelectItem>
-                  <SelectItem value={LessonStatus.CANCELLED}>Cancelled</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        </div>
 
-        <Separator />
-
-        {/* Summary & Description */}
-        <div className="space-y-4">
-          <div className="flex items-center gap-2 text-lg font-semibold text-gray-800">
-            <ClipboardList className="h-5 w-5 text-green-600" />
-            Overview
-          </div>
-          <div className="grid grid-cols-1 gap-4">
             <div className="space-y-2">
               <Label htmlFor={`lesson-summary-${lesson.id}`} className="text-sm font-medium text-gray-700">
-                Summary
+                What's this lesson about? (Brief summary)
               </Label>
               <Textarea 
                 id={`lesson-summary-${lesson.id}`}
-                placeholder="Brief summary of the lesson"
-                className="resize-none border-gray-300 focus:border-green-500 focus:ring-green-500"
+                placeholder="In 1-2 sentences, what will students learn in this lesson?"
+                className="resize-none border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                 rows={2}
                 value={lesson.summary || ""}
                 onChange={(e) => onUpdate("summary", e.target.value)}
               />
             </div>
+          </div>
+
+          {/* Quick Setup Row */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
             <div className="space-y-2">
-              <Label htmlFor={`lesson-description-${lesson.id}`} className="text-sm font-medium text-gray-700">
-                Description
-              </Label>
-              <Textarea 
-                id={`lesson-description-${lesson.id}`}
-                placeholder="Detailed description of the lesson content"
-                className="resize-none border-gray-300 focus:border-green-500 focus:ring-green-500"
-                rows={3}
-                value={lesson.description || ""}
-                onChange={(e) => onUpdate("description", e.target.value)}
+              <Label className="text-sm font-medium text-gray-700">Lesson #</Label>
+              <Input 
+                type="number"
+                placeholder="1"
+                value={lesson.lessonNumber || lessonNumber}
+                onChange={(e) => onUpdate("lessonNumber", parseInt(e.target.value) || lessonNumber)}
+                className="border-gray-300 focus:border-blue-500 focus:ring-blue-500 h-10"
               />
+            </div>
+            
+            <div className="space-y-2">
+              <Label className="text-sm font-medium text-gray-700">Lesson Type *</Label>
+              <div className="flex flex-wrap gap-1">
+                {Object.values(LessonType).slice(0, 4).map((type) => {
+                  const isSelected = lesson.type === type;
+                  const typeLabels = {
+                    [LessonType.LECTURE]: { label: 'Lecture', icon: '📖' },
+                    [LessonType.PRACTICAL]: { label: 'Practical', icon: '🔬' },
+                    [LessonType.WORKSHOP]: { label: 'Workshop', icon: '🛠️' },
+                    [LessonType.ASSESSMENT]: { label: 'Assessment', icon: '📝' }
+                  };
+                  const typeInfo = typeLabels[type as keyof typeof typeLabels];
+                  
+                  return (
+                    <button
+                      key={type}
+                      type="button"
+                      onClick={() => onUpdate("type", type)}
+                      className={`
+                        px-2 py-1 rounded text-xs font-medium transition-all duration-200
+                        ${isSelected 
+                          ? 'bg-blue-600 text-white shadow-md' 
+                          : 'bg-white text-gray-700 border border-gray-300 hover:bg-blue-50'
+                        }
+                      `}
+                    >
+                      <span className="mr-1">{typeInfo.icon}</span>
+                      {typeInfo.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-sm font-medium text-gray-700">Duration *</Label>
+              <div className="flex gap-1">
+                {[30, 45, 60, 90].map((minutes) => {
+                  const isSelected = lesson.duration === minutes;
+                  return (
+                    <button
+                      key={minutes}
+                      type="button"
+                      onClick={() => onUpdate("duration", minutes)}
+                      className={`
+                        px-2 py-1 rounded text-xs font-medium transition-all duration-200
+                        ${isSelected 
+                          ? 'bg-blue-600 text-white shadow-md' 
+                          : 'bg-white text-gray-700 border border-gray-300 hover:bg-blue-50'
+                        }
+                      `}
+                    >
+                      {minutes}m
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </div>
         </div>
 
         <Separator />
 
-        {/* Learning Objectives */}
+        {/* 2. Learning Goals - What will students achieve by the end? */}
         <div className="space-y-4">
           <div className="flex items-center gap-2 text-lg font-semibold text-gray-800">
             <Target className="h-5 w-5 text-purple-600" />
-            Learning Objectives *
+            <span className="text-purple-600 font-bold text-sm mr-2">STEP 2</span>
+            Learning Goals - What Will Students Achieve?
           </div>
+          <p className="text-sm text-gray-600 mb-4">
+            💡 <strong>What will students be able to do</strong> after this lesson that they couldn't do before?
+          </p>
+          
           <div className="space-y-4">
             {lesson.objectives?.map((objective, index) => (
-              <div key={index} className="p-4 bg-purple-50 rounded-lg border-2 border-purple-200 shadow-sm">
-                <div className="flex items-start gap-3">
-                  <div className="flex items-center justify-center w-8 h-8 bg-purple-200 text-purple-800 text-sm font-bold rounded-full flex-shrink-0 mt-1">
-                    {index + 1}
-                  </div>
-                  <div className="flex-1">
-                    <Label className="text-sm font-medium text-purple-800 mb-2 block">
-                      Learning Objective {index + 1}
-                    </Label>
-                    <Textarea 
-                      value={objective.objective}
-                      onChange={(e) => updateObjective(index, "objective", e.target.value)}
-                      placeholder="Describe what students will be able to do after this lesson (e.g., 'Students will be able to explain the water cycle')"
-                      rows={3}
-                      className="border-purple-300 focus:border-purple-500 focus:ring-purple-500 bg-white resize-none text-base"
-                    />
-                  </div>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => removeObjective(index)}
-                    className="text-red-600 hover:text-red-700 hover:bg-red-50 transition-colors flex-shrink-0 mt-1"
-                  >
-                    <X className="h-5 w-5" />
-                  </Button>
+              <div key={index} className="flex items-start gap-3 p-3 bg-white rounded-lg border border-purple-300">
+                <div className="flex items-center justify-center w-8 h-8 bg-purple-200 text-purple-800 text-sm font-bold rounded-full flex-shrink-0 mt-1">
+                  {index + 1}
                 </div>
+                <div className="flex-1">
+                  <Input 
+                    value={objective.objective}
+                    onChange={(e) => updateObjective(index, "objective", e.target.value)}
+                    placeholder="e.g., 'Students will be able to identify the main parts of a plant cell'"
+                    className="border-purple-300 focus:border-purple-500 focus:ring-purple-500 bg-white"
+                  />
+                </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => removeObjective(index)}
+                  className="text-red-600 hover:text-red-700 hover:bg-red-50 transition-colors flex-shrink-0"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
               </div>
             ))}
-            <div className="p-4 bg-gradient-to-r from-purple-50 to-purple-100 rounded-lg border-2 border-dashed border-purple-300 hover:border-purple-400 transition-colors">
-              <div className="space-y-3">
-                <Label className="text-sm font-medium text-purple-800 block">
-                  Add New Learning Objective
-                </Label>
-                <div className="flex gap-3">
-                  <Textarea 
-                    value={newObjective}
-                    onChange={(e) => setNewObjective(e.target.value)}
-                    placeholder="What will students learn or be able to do? (e.g., 'Students will identify the main components of...')"
-                    rows={2}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" && e.ctrlKey) {
-                        e.preventDefault();
-                        addObjective();
-                      }
-                    }}
-                    className="border-purple-300 focus:border-purple-500 focus:ring-purple-500 bg-white resize-none text-base flex-1"
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="lg"
-                    onClick={addObjective}
-                    disabled={!newObjective.trim()}
-                    className="bg-purple-600 text-white hover:bg-purple-700 border-purple-600 disabled:opacity-50 disabled:cursor-not-allowed px-6"
-                  >
-                    <Plus className="h-5 w-5 mr-2" />
-                    Add
-                  </Button>
-                </div>
-                <p className="text-xs text-purple-600 italic">
-                  Tip: Use Ctrl+Enter to quickly add an objective
-                </p>
-              </div>
+            
+            <div className="flex items-center gap-3 p-3 bg-white rounded-lg border-2 border-dashed border-purple-300">
+              <Input 
+                value={newObjective}
+                onChange={(e) => setNewObjective(e.target.value)}
+                placeholder="Add a learning goal starting with 'Students will be able to...'"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    addObjective();
+                  }
+                }}
+                className="border-purple-300 focus:border-purple-500 focus:ring-purple-500 bg-white"
+              />
+              <Button
+                type="button"
+                onClick={addObjective}
+                disabled={!newObjective.trim()}
+                className="bg-purple-600 text-white hover:bg-purple-700 disabled:opacity-50"
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
             </div>
-            
-            {(!lesson.objectives || lesson.objectives.length === 0) && (
-              <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-                <div className="flex items-center gap-2">
-                  <AlertCircle className="h-4 w-4 text-red-600" />
-                  <p className="text-red-800 text-sm font-medium">Learning objectives are required</p>
-                </div>
-                <p className="text-red-700 text-xs mt-1">Add at least one learning objective for this lesson</p>
-              </div>
-            )}
-            
-            {lesson.objectives && lesson.objectives.length > 0 && lesson.objectives.every((obj: any) => !obj.objective || obj.objective.trim() === "") && (
-              <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
-                <div className="flex items-center gap-2">
-                  <AlertCircle className="h-4 w-4 text-amber-600" />
-                  <p className="text-amber-800 text-sm font-medium">Please fill in all learning objectives</p>
-                </div>
-                <p className="text-amber-700 text-xs mt-1">Empty objectives will not be saved</p>
-              </div>
-            )}
           </div>
         </div>
 
         <Separator />
 
-        {/* Activities */}
+        {/* 3. Prerequisites - What do students need to know first? */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-2 text-lg font-semibold text-gray-800">
+            <GraduationCap className="h-5 w-5 text-indigo-600" />
+            <span className="text-indigo-600 font-bold text-sm mr-2">STEP 3</span>
+            Prerequisites - What Should Students Know First?
+          </div>
+          <p className="text-sm text-gray-600 mb-4">
+            📚 <strong>What knowledge or skills</strong> should students have before attending this lesson?
+          </p>
+          
+          <Textarea 
+            id={`lesson-prerequisites-${lesson.id}`}
+            placeholder="e.g., 'Students should know basic multiplication tables' or 'Students should understand what atoms are'"
+            className="resize-none border-indigo-300 focus:border-indigo-500 focus:ring-indigo-500"
+            rows={3}
+            value={lesson.prerequisites || ""}
+            onChange={(e) => onUpdate("prerequisites", e.target.value)}
+          />
+        </div>
+
+        <Separator />
+
+        {/* 4. Lesson Flow - How will you deliver this step by step? */}
         <div className="space-y-4">
           <div className="flex items-center gap-2 text-lg font-semibold text-gray-800">
             <Activity className="h-5 w-5 text-orange-600" />
-            Activities
+            <span className="text-orange-600 font-bold text-sm mr-2">STEP 4</span>
+            Lesson Flow - How Will You Deliver This?
           </div>
+          <p className="text-sm text-gray-600 mb-4">
+            ⏰ <strong>Plan your lesson timeline</strong> - what happens first, second, third?
+          </p>
+          
+          <div className="space-y-2">
+            <Label htmlFor={`lesson-description-${lesson.id}`} className="text-sm font-medium text-gray-700">
+              Detailed Teaching Plan
+            </Label>
+            <Textarea 
+              id={`lesson-description-${lesson.id}`}
+              placeholder="Describe how you'll teach this lesson step by step:\n\n1. Opening (5 min) - Quick review of previous lesson...\n2. Introduction (10 min) - Introduce today's topic with...\n3. Main Activity (20 min) - Students will...\n4. Wrap-up (5 min) - Summarize key points..."
+              className="resize-none border-orange-300 focus:border-orange-500 focus:ring-orange-500"
+              rows={6}
+              value={lesson.description || ""}
+              onChange={(e) => onUpdate("description", e.target.value)}
+            />
+          </div>
+        </div>
+
+        <Separator />
+
+        {/* 5. Activities - Interactive things students will do */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-2 text-lg font-semibold text-gray-800">
+            <Activity className="h-5 w-5 text-orange-600" />
+            <span className="text-orange-600 font-bold text-sm mr-2">STEP 5</span>
+            Activities - What Will Students Do?
+          </div>
+          <p className="text-sm text-gray-600 mb-4">
+            🎯 <strong>Interactive activities</strong> that engage students and help them practice what they're learning
+          </p>
+          
           <div className="space-y-4">
             {lesson.activities?.map((activity, index) => (
               <Card key={index} className="border-orange-200 bg-orange-50/50">
@@ -589,40 +591,63 @@ export const LessonForm = ({
                 <CardContent className="space-y-3">
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                     <div className="space-y-2">
-                      <Label className="text-sm font-medium text-gray-700">Title</Label>
+                      <Label className="text-sm font-medium text-gray-700">Activity Name</Label>
                       <Input 
                         value={activity.title}
                         onChange={(e) => updateActivity(index, "title", e.target.value)}
-                        placeholder="Activity title"
+                        placeholder="e.g., 'Plant Cell Drawing', 'Math Problem Solving'"
                         className="border-orange-300 focus:border-orange-500 focus:ring-orange-500 bg-white"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-sm font-medium text-gray-700">Description</Label>
+                      <Label className="text-sm font-medium text-gray-700">What Students Do</Label>
                       <Input 
                         value={activity.description}
                         onChange={(e) => updateActivity(index, "description", e.target.value)}
-                        placeholder="Activity description"
+                        placeholder="e.g., 'Work in pairs to label diagram'"
                         className="border-orange-300 focus:border-orange-500 focus:ring-orange-500 bg-white"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-sm font-medium text-gray-700">Duration (minutes)</Label>
-                      <Input 
-                        type="number"
-                        value={activity.duration}
-                        onChange={(e) => updateActivity(index, "duration", parseInt(e.target.value) || 0)}
-                        placeholder="e.g. 15"
-                        className="border-orange-300 focus:border-orange-500 focus:ring-orange-500 bg-white"
-                      />
+                      <Label className="text-sm font-medium text-gray-700">Duration</Label>
+                      <div className="space-y-2">
+                        <div className="flex flex-wrap gap-1">
+                          {[5, 10, 15, 20, 30].map((minutes) => {
+                            const isSelected = activity.duration === minutes;
+                            return (
+                              <button
+                                key={minutes}
+                                type="button"
+                                onClick={() => updateActivity(index, "duration", minutes)}
+                                className={`
+                                  px-2 py-1 rounded text-xs font-medium transition-all duration-200
+                                  ${isSelected 
+                                    ? 'bg-orange-500 text-white shadow-md' 
+                                    : 'bg-orange-100 text-orange-700 hover:bg-orange-200'
+                                  }
+                                `}
+                              >
+                                {minutes}m
+                              </button>
+                            );
+                          })}
+                        </div>
+                        <Input 
+                          type="number"
+                          value={![5, 10, 15, 20, 30].includes(activity.duration) ? activity.duration : ""}
+                          onChange={(e) => updateActivity(index, "duration", parseInt(e.target.value) || 0)}
+                          placeholder="Custom duration"
+                          className="border-orange-300 focus:border-orange-500 focus:ring-orange-500 bg-white text-xs h-8"
+                        />
+                      </div>
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-sm font-medium text-gray-700">Instructions</Label>
+                    <Label className="text-sm font-medium text-gray-700">Step-by-Step Instructions</Label>
                     <Textarea 
                       value={activity.instructions}
                       onChange={(e) => updateActivity(index, "instructions", e.target.value)}
-                      placeholder="Detailed instructions for the activity"
+                      placeholder="Write clear instructions for students:\n1. First, students will...\n2. Then they should...\n3. Finally..."
                       rows={2}
                       className="border-orange-300 focus:border-orange-500 focus:ring-orange-500 bg-white"
                     />
@@ -644,64 +669,66 @@ export const LessonForm = ({
 
         <Separator />
 
-        {/* Prerequisites & Homework */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-3">
-            <div className="flex items-center gap-2 text-lg font-semibold text-gray-800">
-              <GraduationCap className="h-5 w-5 text-indigo-600" />
-              Prerequisites
-            </div>
-            <Textarea 
-              id={`lesson-prerequisites-${lesson.id}`}
-              placeholder="What students need to know before this lesson"
-              className="resize-none border-indigo-300 focus:border-indigo-500 focus:ring-indigo-500"
-              rows={3}
-              value={lesson.prerequisites || ""}
-              onChange={(e) => onUpdate("prerequisites", e.target.value)}
-            />
-          </div>
-          <div className="space-y-3">
-            <div className="flex items-center gap-2 text-lg font-semibold text-gray-800">
-              <Home className="h-5 w-5 text-pink-600" />
-              Homework
-            </div>
-            <Textarea 
-              id={`lesson-homework-${lesson.id}`}
-              placeholder="Homework assignments for this lesson"
-              className="resize-none border-pink-300 focus:border-pink-500 focus:ring-pink-500"
-              rows={3}
-              value={lesson.homework || ""}
-              onChange={(e) => onUpdate("homework", e.target.value)}
-            />
-          </div>
-        </div>
-
-        <Separator />
-
-        {/* Assessment Criteria */}
-        <div className="space-y-3">
-          <div className="flex items-center gap-2 text-lg font-semibold text-gray-800">
-            <CheckSquare className="h-5 w-5 text-emerald-600" />
-            Assessment Criteria
-          </div>
-          <Textarea 
-            id={`lesson-assessment-${lesson.id}`}
-            placeholder="How will student learning be assessed?"
-            className="resize-none border-emerald-300 focus:border-emerald-500 focus:ring-emerald-500"
-            rows={3}
-            value={lesson.assessmentCriteria || ""}
-            onChange={(e) => onUpdate("assessmentCriteria", e.target.value)}
-          />
-        </div>
-
-        <Separator />
-
-        {/* Requirements */}
+        {/* 6. Assessment & Follow-up */}
         <div className="space-y-6">
           <div className="flex items-center gap-2 text-lg font-semibold text-gray-800">
-            <Package className="h-5 w-5 text-red-600" />
-            Requirements
+            <CheckSquare className="h-5 w-5 text-emerald-600" />
+            <span className="text-emerald-600 font-bold text-sm mr-2">STEP 6</span>
+            Assessment & Follow-up
           </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 font-medium text-gray-800">
+                <CheckSquare className="h-4 w-4 text-emerald-600" />
+                How Will You Check Understanding?
+              </div>
+              <p className="text-sm text-gray-600 mb-2">
+                📝 How will you know students learned what you taught?
+              </p>
+              <Textarea 
+                id={`lesson-assessment-${lesson.id}`}
+                placeholder="e.g., 'Exit ticket with 3 questions', 'Students explain concept to partner', 'Quick quiz at end of class'"
+                className="resize-none border-emerald-300 focus:border-emerald-500 focus:ring-emerald-500"
+                rows={3}
+                value={lesson.assessmentCriteria || ""}
+                onChange={(e) => onUpdate("assessmentCriteria", e.target.value)}
+              />
+            </div>
+            
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 font-medium text-gray-800">
+                <Home className="h-4 w-4 text-pink-600" />
+                What Will Students Do Next?
+              </div>
+              <p className="text-sm text-gray-600 mb-2">
+                🏠 Homework, practice, or preparation for next lesson
+              </p>
+              <Textarea 
+                id={`lesson-homework-${lesson.id}`}
+                placeholder="e.g., 'Practice problems 1-10 on page 45', 'Find 3 examples of photosynthesis in nature', 'Read chapter 5 before next class'"
+                className="resize-none border-pink-300 focus:border-pink-500 focus:ring-pink-500"
+                rows={3}
+                value={lesson.homework || ""}
+                onChange={(e) => onUpdate("homework", e.target.value)}
+              />
+            </div>
+          </div>
+        </div>
+
+
+        <Separator />
+
+        {/* 7. Materials & Resources */}
+        <div className="space-y-6">
+          <div className="flex items-center gap-2 text-lg font-semibold text-gray-800">
+            <Package className="h-5 w-5 text-kidato-indigo-600" />
+            <span className="text-kidato-indigo-600 font-bold text-sm mr-2">STEP 7</span>
+            Materials & Resources
+          </div>
+          <p className="text-sm text-gray-600 mb-4">
+            📦 <strong>What do you and your students need</strong> for this lesson to work well?
+          </p>
           
           {/* Add Requirements Buttons */}
           <div className="flex flex-wrap gap-2 mb-4">
@@ -710,7 +737,7 @@ export const LessonForm = ({
               variant="outline"
               size="sm"
               onClick={() => addRequirement(RequirementType.VIDEO)}
-              className="bg-red-600 text-white hover:bg-red-700 border-red-600"
+              className="bg-kidato-indigo-600 text-white hover:bg-kidato-indigo-700 border-kidato-indigo-600"
             >
               <Video className="h-4 w-4 mr-1" />
               Add Video
@@ -720,7 +747,7 @@ export const LessonForm = ({
               variant="outline"
               size="sm"
               onClick={() => addRequirement(RequirementType.ARTICLE)}
-              className="bg-blue-600 text-white hover:bg-blue-700 border-blue-600"
+              className="bg-kidato-orange-500 text-white hover:bg-kidato-orange-600 border-kidato-orange-500"
             >
               <FileText className="h-4 w-4 mr-1" />
               Add Article
@@ -730,7 +757,7 @@ export const LessonForm = ({
               variant="outline"
               size="sm"
               onClick={() => addRequirement(RequirementType.WORKSHEET)}
-              className="bg-green-600 text-white hover:bg-green-700 border-green-600"
+              className="bg-kidato-spindle-600 text-white hover:bg-kidato-spindle-700 border-kidato-spindle-600"
             >
               <ClipboardList className="h-4 w-4 mr-1" />
               Add Worksheet
@@ -740,7 +767,7 @@ export const LessonForm = ({
               variant="outline"
               size="sm"
               onClick={() => addRequirement(RequirementType.SURVEY)}
-              className="bg-purple-600 text-white hover:bg-purple-700 border-purple-600"
+              className="bg-kidato-indigo-400 text-white hover:bg-kidato-indigo-500 border-kidato-indigo-400"
             >
               <CheckSquare className="h-4 w-4 mr-1" />
               Add Survey
@@ -750,7 +777,7 @@ export const LessonForm = ({
               variant="outline"
               size="sm"
               onClick={() => addRequirement(RequirementType.MATERIALS)}
-              className="bg-amber-600 text-white hover:bg-amber-700 border-amber-600"
+              className="bg-kidato-orange-400 text-white hover:bg-kidato-orange-500 border-kidato-orange-400"
             >
               <Package className="h-4 w-4 mr-1" />
               Add Materials
@@ -760,7 +787,7 @@ export const LessonForm = ({
               variant="outline"
               size="sm"
               onClick={() => addRequirement(RequirementType.DOCUMENT_UPLOAD)}
-              className="bg-orange-600 text-white hover:bg-orange-700 border-orange-600"
+              className="bg-kidato-gray-600 text-white hover:bg-kidato-gray-700 border-kidato-gray-600"
             >
               <FileText className="h-4 w-4 mr-1" />
               Add Document Upload
@@ -770,15 +797,15 @@ export const LessonForm = ({
           {/* Requirements List */}
           <div className="space-y-4">
             {(Array.isArray(lesson.requirements) ? lesson.requirements : [])?.map((requirement, index) => (
-              <Card key={index} className="border-gray-200 bg-gray-50/50">
+              <Card key={index} className="border-kidato-gray-200 bg-kidato-gray-50/50">
                 <CardHeader className="pb-3">
                   <div className="flex justify-between items-center">
                     <div className="flex items-center gap-2">
-                      <Badge variant="secondary" className="capitalize">
+                      <Badge variant="secondary" className="capitalize bg-kidato-indigo-100 text-kidato-indigo-800">
                         {requirement.type.replace('_', ' ')}
                       </Badge>
                       {requirement.isRequired && (
-                        <Badge variant="destructive">Required</Badge>
+                        <Badge className="bg-kidato-orange-500 text-white">Required</Badge>
                       )}
                     </div>
                     <Button
@@ -800,7 +827,7 @@ export const LessonForm = ({
                         value={requirement.title}
                         onChange={(e) => updateRequirement(index, "title", e.target.value)}
                         placeholder="Requirement title"
-                        className="border-gray-300 focus:border-gray-500 focus:ring-gray-500 bg-white"
+                        className="border-kidato-gray-300 focus:border-kidato-indigo-500 focus:ring-kidato-indigo-500 bg-white"
                       />
                     </div>
                     <div className="space-y-2">
@@ -809,7 +836,7 @@ export const LessonForm = ({
                         value={requirement.description || ""}
                         onChange={(e) => updateRequirement(index, "description", e.target.value)}
                         placeholder="Brief description"
-                        className="border-gray-300 focus:border-gray-500 focus:ring-gray-500 bg-white"
+                        className="border-kidato-gray-300 focus:border-kidato-indigo-500 focus:ring-kidato-indigo-500 bg-white"
                       />
                     </div>
                   </div>
@@ -823,7 +850,7 @@ export const LessonForm = ({
                           value={requirement.url || ""}
                           onChange={(e) => updateRequirement(index, "url", e.target.value)}
                           placeholder="https://..."
-                          className="border-gray-300 focus:border-gray-500 focus:ring-gray-500 bg-white"
+                          className="border-kidato-gray-300 focus:border-kidato-indigo-500 focus:ring-kidato-indigo-500 bg-white"
                         />
                       </div>
                       <div className="space-y-2">
@@ -833,7 +860,7 @@ export const LessonForm = ({
                           value={requirement.estimatedDuration || ""}
                           onChange={(e) => updateRequirement(index, "estimatedDuration", parseInt(e.target.value) || 0)}
                           placeholder="e.g. 15"
-                          className="border-gray-300 focus:border-gray-500 focus:ring-gray-500 bg-white"
+                          className="border-kidato-gray-300 focus:border-kidato-indigo-500 focus:ring-kidato-indigo-500 bg-white"
                         />
                       </div>
                     </div>
@@ -846,7 +873,7 @@ export const LessonForm = ({
                         value={requirement.worksheetUrl || ""}
                         onChange={(e) => updateRequirement(index, "worksheetUrl", e.target.value)}
                         placeholder="https://..."
-                        className="border-gray-300 focus:border-gray-500 focus:ring-gray-500 bg-white"
+                        className="border-kidato-gray-300 focus:border-kidato-indigo-500 focus:ring-kidato-indigo-500 bg-white"
                       />
                     </div>
                   )}
@@ -859,7 +886,7 @@ export const LessonForm = ({
                           value={requirement.surveyUrl || ""}
                           onChange={(e) => updateRequirement(index, "surveyUrl", e.target.value)}
                           placeholder="https://..."
-                          className="border-gray-300 focus:border-gray-500 focus:ring-gray-500 bg-white"
+                          className="border-kidato-gray-300 focus:border-kidato-indigo-500 focus:ring-kidato-indigo-500 bg-white"
                         />
                       </div>
                       <div className="space-y-2">
@@ -868,7 +895,7 @@ export const LessonForm = ({
                           value={requirement.surveyPlatform || ""}
                           onChange={(e) => updateRequirement(index, "surveyPlatform", e.target.value)}
                           placeholder="e.g. Google Forms, SurveyMonkey"
-                          className="border-gray-300 focus:border-gray-500 focus:ring-gray-500 bg-white"
+                          className="border-kidato-gray-300 focus:border-kidato-indigo-500 focus:ring-kidato-indigo-500 bg-white"
                         />
                       </div>
                     </div>
@@ -883,7 +910,7 @@ export const LessonForm = ({
                           onChange={(e) => updateRequirement(index, "materialsDescription", e.target.value)}
                           placeholder="e.g. A candle and match-box"
                           rows={2}
-                          className="border-gray-300 focus:border-gray-500 focus:ring-gray-500 bg-white"
+                          className="border-kidato-gray-300 focus:border-kidato-indigo-500 focus:ring-kidato-indigo-500 bg-white"
                         />
                       </div>
                       <div className="space-y-2">
@@ -892,7 +919,7 @@ export const LessonForm = ({
                           value={requirement.whereToGet || ""}
                           onChange={(e) => updateRequirement(index, "whereToGet", e.target.value)}
                           placeholder="e.g. Local store, online, provided by school"
-                          className="border-gray-300 focus:border-gray-500 focus:ring-gray-500 bg-white"
+                          className="border-kidato-gray-300 focus:border-kidato-indigo-500 focus:ring-kidato-indigo-500 bg-white"
                         />
                       </div>
                     </div>
@@ -906,7 +933,7 @@ export const LessonForm = ({
                           value={requirement.acceptedFileTypes?.join(", ") || ""}
                           onChange={(e) => updateRequirement(index, "acceptedFileTypes", e.target.value.split(", ").filter(Boolean))}
                           placeholder="e.g. pdf, doc, docx"
-                          className="border-gray-300 focus:border-gray-500 focus:ring-gray-500 bg-white"
+                          className="border-kidato-gray-300 focus:border-kidato-indigo-500 focus:ring-kidato-indigo-500 bg-white"
                         />
                       </div>
                       <div className="space-y-2">
@@ -916,7 +943,7 @@ export const LessonForm = ({
                           value={requirement.maxFileSize || ""}
                           onChange={(e) => updateRequirement(index, "maxFileSize", parseInt(e.target.value) || 0)}
                           placeholder="e.g. 10"
-                          className="border-gray-300 focus:border-gray-500 focus:ring-gray-500 bg-white"
+                          className="border-kidato-gray-300 focus:border-kidato-indigo-500 focus:ring-kidato-indigo-500 bg-white"
                         />
                       </div>
                       <div className="space-y-2">
@@ -926,7 +953,7 @@ export const LessonForm = ({
                           onChange={(e) => updateRequirement(index, "uploadInstructions", e.target.value)}
                           placeholder="Instructions for file upload"
                           rows={1}
-                          className="border-gray-300 focus:border-gray-500 focus:ring-gray-500 bg-white"
+                          className="border-kidato-gray-300 focus:border-kidato-indigo-500 focus:ring-kidato-indigo-500 bg-white"
                         />
                       </div>
                     </div>
@@ -940,7 +967,7 @@ export const LessonForm = ({
                         onChange={(e) => updateRequirement(index, "instructions", e.target.value)}
                         placeholder="Detailed instructions for students"
                         rows={2}
-                        className="border-gray-300 focus:border-gray-500 focus:ring-gray-500 bg-white"
+                        className="border-kidato-gray-300 focus:border-kidato-indigo-500 focus:ring-kidato-indigo-500 bg-white"
                       />
                     </div>
                     <div className="space-y-2">
@@ -950,7 +977,7 @@ export const LessonForm = ({
                         onChange={(e) => updateRequirement(index, "notes", e.target.value)}
                         placeholder="Internal notes for teachers"
                         rows={2}
-                        className="border-gray-300 focus:border-gray-500 focus:ring-gray-500 bg-white"
+                        className="border-kidato-gray-300 focus:border-kidato-indigo-500 focus:ring-kidato-indigo-500 bg-white"
                       />
                     </div>
                   </div>
@@ -960,51 +987,118 @@ export const LessonForm = ({
           </div>
         </div>
 
+
         <Separator />
 
-        {/* Tags */}
-        <div className="space-y-4">
-          <div className="flex items-center gap-2 text-lg font-semibold text-gray-800">
-            <Tag className="h-5 w-5 text-cyan-600" />
-            Tags
-          </div>
-          <div className="space-y-3">
-            <div className="flex flex-wrap gap-2 p-3 bg-cyan-50 rounded-lg border border-cyan-200 min-h-[50px]">
-              {lesson.tags?.map((tag, index) => (
-                <Badge key={index} variant="secondary" className="flex items-center gap-1 bg-cyan-200 text-cyan-800 hover:bg-cyan-300 transition-colors">
-                  <Tag className="h-3 w-3" />
-                  {tag}
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => removeTag(index)}
-                    className="h-auto p-0 text-red-600 hover:text-red-700 ml-1"
-                  >
-                    <X className="h-3 w-3" />
-                  </Button>
-                </Badge>
-              ))}
-              {(!lesson.tags || lesson.tags.length === 0) && (
-                <span className="text-cyan-600 text-sm italic">No tags added yet</span>
-              )}
+        {/* 8. Quick References */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 text-lg font-semibold text-gray-800">
+              <Tag className="h-5 w-5 text-cyan-600" />
+              <span className="text-cyan-600 font-bold text-sm mr-2">STEP 8</span>
+              Tags & Keywords
             </div>
-            <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
-              <Input 
-                value={newTag}
-                onChange={(e) => setNewTag(e.target.value)}
-                placeholder="Add a tag"
-                onKeyDown={(e) => handleKeyDown(e, addTag)}
-                className="border-gray-300 focus:border-cyan-500 focus:ring-cyan-500"
-              />
+            <p className="text-sm text-gray-600 mb-4">
+              🏷️ <strong>Tags help organize</strong> and find this lesson later
+            </p>
+            
+            <div className="space-y-3">
+              <div className="flex flex-wrap gap-2 p-3 bg-cyan-50 rounded-lg border border-cyan-200 min-h-[50px]">
+                {lesson.tags?.map((tag, index) => (
+                  <Badge key={index} variant="secondary" className="flex items-center gap-1 bg-cyan-200 text-cyan-800 hover:bg-cyan-300 transition-colors">
+                    <Tag className="h-3 w-3" />
+                    {tag}
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removeTag(index)}
+                      className="h-auto p-0 text-red-600 hover:text-red-700 ml-1"
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </Badge>
+                ))}
+                {(!lesson.tags || lesson.tags.length === 0) && (
+                  <span className="text-cyan-600 text-sm italic">No tags added yet</span>
+                )}
+              </div>
+              <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+                <Input 
+                  value={newTag}
+                  onChange={(e) => setNewTag(e.target.value)}
+                  placeholder="e.g., 'biology', 'interactive', 'beginner'"
+                  onKeyDown={(e) => handleKeyDown(e, addTag)}
+                  className="border-gray-300 focus:border-cyan-500 focus:ring-cyan-500"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={addTag}
+                  className="bg-cyan-600 text-white hover:bg-cyan-700 border-cyan-600"
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          </div>
+          
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 text-lg font-semibold text-gray-800">
+              <FileText className="h-5 w-5 text-blue-600" />
+              Helpful Links
+            </div>
+            <p className="text-sm text-gray-600 mb-4">
+              🔗 <strong>Useful websites or resources</strong> for this lesson
+            </p>
+            
+            <div className="space-y-3">
+              {lesson.resourceLinks?.map((link, index) => (
+                <Card key={index} className="border-blue-200 bg-blue-50/50">
+                  <CardContent className="p-3">
+                    <div className="flex justify-between items-start mb-2">
+                      <div className="flex items-center gap-2">
+                        <div className="flex items-center justify-center w-5 h-5 bg-blue-200 text-blue-800 text-xs font-bold rounded-full">
+                          {index + 1}
+                        </div>
+                        <span className="text-xs font-medium text-blue-800">Link {index + 1}</span>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeResourceLink(index)}
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50 transition-colors h-6 w-6 p-0"
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                    <div className="space-y-2">
+                      <Input 
+                        value={link.title}
+                        onChange={(e) => updateResourceLink(index, "title", e.target.value)}
+                        placeholder="Link title"
+                        className="border-blue-300 focus:border-blue-500 focus:ring-blue-500 bg-white text-sm h-8"
+                      />
+                      <Input 
+                        value={link.url}
+                        onChange={(e) => updateResourceLink(index, "url", e.target.value)}
+                        placeholder="https://..."
+                        className="border-blue-300 focus:border-blue-500 focus:ring-blue-500 bg-white text-sm h-8"
+                      />
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
               <Button
                 type="button"
                 variant="outline"
-                size="sm"
-                onClick={addTag}
-                className="bg-cyan-600 text-white hover:bg-cyan-700 border-cyan-600"
+                onClick={addResourceLink}
+                className="w-full h-10 border-2 border-dashed border-blue-300 text-blue-600 hover:bg-blue-50 hover:border-blue-400 transition-colors text-sm"
               >
-                <Plus className="h-4 w-4" />
+                <Plus className="h-4 w-4 mr-2" />
+                Add Link
               </Button>
             </div>
           </div>
@@ -1012,94 +1106,49 @@ export const LessonForm = ({
 
         <Separator />
 
-        {/* Resource Links */}
-        <div className="space-y-4">
-          <div className="flex items-center gap-2 text-lg font-semibold text-gray-800">
-            <FileText className="h-5 w-5 text-blue-600" />
-            Resource Links
-          </div>
-          <div className="space-y-3">
-            {lesson.resourceLinks?.map((link, index) => (
-              <Card key={index} className="border-blue-200 bg-blue-50/50">
-                <CardContent className="p-4">
-                  <div className="flex justify-between items-start mb-3">
-                    <div className="flex items-center gap-2">
-                      <div className="flex items-center justify-center w-6 h-6 bg-blue-200 text-blue-800 text-xs font-bold rounded-full">
-                        {index + 1}
-                      </div>
-                      <span className="text-sm font-medium text-blue-800">Resource Link {index + 1}</span>
-                    </div>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => removeResourceLink(index)}
-                      className="text-red-600 hover:text-red-700 hover:bg-red-50 transition-colors"
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div className="space-y-2">
-                      <Label className="text-sm font-medium text-gray-700">Title</Label>
-                      <Input 
-                        value={link.title}
-                        onChange={(e) => updateResourceLink(index, "title", e.target.value)}
-                        placeholder="Resource title"
-                        className="border-blue-300 focus:border-blue-500 focus:ring-blue-500 bg-white"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-sm font-medium text-gray-700">URL</Label>
-                      <Input 
-                        value={link.url}
-                        onChange={(e) => updateResourceLink(index, "url", e.target.value)}
-                        placeholder="https://..."
-                        className="border-blue-300 focus:border-blue-500 focus:ring-blue-500 bg-white"
-                      />
-                    </div>
-                  </div>
-                  <div className="mt-3">
-                    <Label className="text-sm font-medium text-gray-700">Description</Label>
-                    <Textarea 
-                      value={link.description || ""}
-                      onChange={(e) => updateResourceLink(index, "description", e.target.value)}
-                      placeholder="Brief description of the resource"
-                      rows={2}
-                      className="border-blue-300 focus:border-blue-500 focus:ring-blue-500 bg-white mt-1"
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-            <Button
-              type="button"
-              variant="outline"
-              onClick={addResourceLink}
-              className="w-full h-12 border-2 border-dashed border-blue-300 text-blue-600 hover:bg-blue-50 hover:border-blue-400 transition-colors"
-            >
-              <Plus className="h-5 w-5 mr-2" />
-              Add Resource Link
-            </Button>
-          </div>
-        </div>
-
-        <Separator />
-
-        {/* Teacher Notes */}
+        {/* 9. Teacher Notes */}
         <div className="space-y-3">
           <div className="flex items-center gap-2 text-lg font-semibold text-gray-800">
             <FileText className="h-5 w-5 text-slate-600" />
-            Teacher Notes
+            <span className="text-slate-600 font-bold text-sm mr-2">STEP 9</span>
+            Private Teacher Notes
           </div>
+          <p className="text-sm text-gray-600 mb-4">
+            📝 <strong>Your private reminders</strong> - things to remember, potential challenges, backup plans
+          </p>
+          
           <Textarea 
             id={`lesson-teacher-notes-${lesson.id}`}
-            placeholder="Private notes for teachers (not visible to students)"
+            placeholder="Write yourself reminders like:\n• Don't forget to bring extra pencils\n• If activity finishes early, have backup questions ready\n• Sarah might need extra help with this concept\n• Remember to check projector before class"
             className="resize-none border-slate-300 focus:border-slate-500 focus:ring-slate-500"
             rows={4}
             value={lesson.teacherNotes || ""}
             onChange={(e) => onUpdate("teacherNotes", e.target.value)}
           />
+        </div>
+        
+        {/* Status */}
+        <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+          <div className="space-y-2">
+            <Label htmlFor={`lesson-status-${lesson.id}`} className="text-sm font-medium text-gray-700">
+              Lesson Status
+            </Label>
+            <Select
+              value={lesson.status || LessonStatus.DRAFT}
+              onValueChange={(value) => onUpdate("status", value as LessonStatus)}
+            >
+              <SelectTrigger className="border-gray-300 focus:border-blue-500 focus:ring-blue-500">
+                <SelectValue placeholder="Select status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={LessonStatus.DRAFT}>Draft - Still working on it</SelectItem>
+                <SelectItem value={LessonStatus.SCHEDULED}>Ready to Teach</SelectItem>
+                <SelectItem value={LessonStatus.IN_PROGRESS}>Currently Teaching</SelectItem>
+                <SelectItem value={LessonStatus.COMPLETED}>Finished Teaching</SelectItem>
+                <SelectItem value={LessonStatus.CANCELLED}>Cancelled</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </CardContent>
     </Card>
