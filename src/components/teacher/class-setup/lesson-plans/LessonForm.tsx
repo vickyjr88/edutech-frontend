@@ -408,14 +408,14 @@ export const LessonForm = ({
                 </div>
                 <Label className="text-base font-semibold text-kidato-spindle-800">Lesson Type *</Label>
               </div>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="flex flex-wrap gap-2">
                 {Object.values(LessonType).slice(0, 4).map((type) => {
                   const isSelected = lesson.type === type;
                   const typeLabels = {
-                    [LessonType.LECTURE]: { label: 'Lecture', icon: '📖', color: 'bg-blue-500' },
-                    [LessonType.PRACTICAL]: { label: 'Practical', icon: '🔬', color: 'bg-green-500' },
-                    [LessonType.WORKSHOP]: { label: 'Workshop', icon: '🛠️', color: 'bg-purple-500' },
-                    [LessonType.ASSESSMENT]: { label: 'Assessment', icon: '📝', color: 'bg-orange-500' }
+                    [LessonType.LECTURE]: { label: 'Lecture', icon: '📖' },
+                    [LessonType.PRACTICAL]: { label: 'Practical', icon: '🔬' },
+                    [LessonType.WORKSHOP]: { label: 'Workshop', icon: '🛠️' },
+                    [LessonType.ASSESSMENT]: { label: 'Assessment', icon: '📝' }
                   };
                   const typeInfo = typeLabels[type as keyof typeof typeLabels];
                   
@@ -425,16 +425,14 @@ export const LessonForm = ({
                       type="button"
                       onClick={() => onUpdate("type", type)}
                       className={`
-                        p-3 rounded-xl text-sm font-semibold transition-all duration-300 transform hover:scale-105 active:scale-95
+                        px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 transform hover:scale-105 active:scale-95 flex items-center gap-1
                         ${isSelected 
-                          ? 'bg-kidato-spindle-600 text-white shadow-lg border-2 border-kidato-spindle-600' 
+                          ? 'bg-kidato-spindle-600 text-white shadow-md border-2 border-kidato-spindle-600' 
                           : 'bg-white text-kidato-spindle-700 border-2 border-kidato-spindle-200 hover:bg-kidato-spindle-50 hover:border-kidato-spindle-300'
                         }
                       `}
                     >
-                      <div className="flex items-center justify-center mb-1">
-                        <span className="text-lg">{typeInfo.icon}</span>
-                      </div>
+                      <span className="text-sm">{typeInfo.icon}</span>
                       {typeInfo.label}
                     </button>
                   );
@@ -448,26 +446,25 @@ export const LessonForm = ({
                 <Timer className="h-5 w-5 text-kidato-gray-600" />
                 <Label className="text-base font-semibold text-kidato-gray-800">Duration *</Label>
               </div>
-              <div className="grid grid-cols-2 gap-2">
-                {[30, 45, 60, 90].map((minutes) => {
+              <div className="flex flex-wrap gap-2">
+                {[15, 30, 45, 60, 90, 120].map((minutes) => {
                   const isSelected = lesson.duration === minutes;
+                  const displayText = minutes >= 60 ? `${minutes / 60}h${minutes % 60 > 0 ? ` ${minutes % 60}m` : ''}` : `${minutes}m`;
+                  
                   return (
                     <button
                       key={minutes}
                       type="button"
                       onClick={() => onUpdate("duration", minutes)}
                       className={`
-                        p-3 rounded-xl text-sm font-semibold transition-all duration-300 transform hover:scale-105 active:scale-95
+                        px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 transform hover:scale-105 active:scale-95
                         ${isSelected 
-                          ? 'bg-kidato-gray-600 text-white shadow-lg border-2 border-kidato-gray-600' 
+                          ? 'bg-kidato-gray-600 text-white shadow-md border-2 border-kidato-gray-600' 
                           : 'bg-white text-kidato-gray-700 border-2 border-kidato-gray-200 hover:bg-kidato-gray-50 hover:border-kidato-gray-300'
                         }
                       `}
                     >
-                      <div className="flex items-center justify-center mb-1">
-                        <Timer className="h-4 w-4" />
-                      </div>
-                      {minutes}min
+                      {displayText}
                     </button>
                   );
                 })}

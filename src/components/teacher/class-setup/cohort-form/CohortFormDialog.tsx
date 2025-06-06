@@ -13,6 +13,12 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { Progress } from "@/components/ui/progress";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   PlusCircle, 
@@ -24,7 +30,21 @@ import {
   LifeBuoy,
   CreditCard,
   Info,
-  Check
+  Check,
+  Settings,
+  DollarSign,
+  Target,
+  BookOpen,
+  Timer,
+  Globe,
+  ChevronRight,
+  AlertCircle,
+  CheckCircle2,
+  Hash,
+  FileText,
+  Calendar as CalendarHeart,
+  GraduationCap,
+  Video
 } from "lucide-react";
 
 interface CohortFormDialogProps {
@@ -56,7 +76,7 @@ const defaultCohort: CohortData = {
   hasFlexibleSchedule: false,
   repeatSchedule: {
     pattern: "weekly",
-    daysOfWeek: ["monday"],
+    daysOfWeek: [],
     repeatEvery: 1
   },
   minStudents: 1,
@@ -80,7 +100,6 @@ const CohortFormDialog: React.FC<CohortFormDialogProps> = ({
   onOpenChange,
   onSave,
   title = "Cohort Details",
-  description = "Configure your cohort details",
   buttonText = "Add Cohort",
   buttonIcon = <PlusCircle className="h-4 w-4 mr-2" />,
   buttonVariant = "default",
@@ -88,22 +107,44 @@ const CohortFormDialog: React.FC<CohortFormDialogProps> = ({
   calculateEndDate
 }) => {
   const [formData, setFormData] = useState<CohortData>(defaultCohort);
-  const [currentStep, setCurrentStep] = useState(0);
+  const [activeSection, setActiveSection] = useState("basic");
+  const [timezone, setTimezone] = useState("EAT");
+  const [cohortDescription, setCohortDescription] = useState("");
+  const [scheduleTemplate, setScheduleTemplate] = useState("");
+  const [weeklyHours, setWeeklyHours] = useState(0);
+  const [dailySchedules, setDailySchedules] = useState<Record<string, { enabled: boolean; startTime: string; endTime: string; duration: number }>>({});
   const [isDirty, setIsDirty] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   
-  const steps = [
-    { id: "schedule", title: "Schedule", icon: CalendarIcon },
-    { id: "enrollment", title: "Enrollment", icon: Users },
-    { id: "pricing", title: "Pricing", icon: CreditCard }
+  const sections = [
+    { id: "basic", title: "Cohort Details", icon: Settings, description: "Set up the basic information for your cohort" },
+    { id: "schedule", title: "Class Schedule", icon: CalendarIcon, description: "Define when and how often your cohort meets" },
+    { id: "enrollment", title: "Student Enrollment", icon: Users, description: "Set enrollment limits and deadlines" },
+    { id: "pricing", title: "Course Pricing", icon: DollarSign, description: "Set the cost and any discounts for this cohort" },
+    { id: "sessions", title: "Session Planning", icon: BookOpen, description: "Plan your class dates and virtual meeting setup" }
   ];
   
+  // Initialize daily schedules for each day
+  useEffect(() => {
+    const initialSchedules: Record<string, { enabled: boolean; startTime: string; endTime: string; duration: number }> = {};
+    daysOfWeek.forEach(day => {
+      initialSchedules[day.value] = {
+        enabled: false,
+        startTime: "09:00",
+        endTime: "10:00",
+        duration: 60
+      };
+    });
+    setDailySchedules(initialSchedules);
+  }, []);
+
   // Reset form when dialog opens or cohort changes
   useEffect(() => {
     if (isOpen) {
       if (cohort) {
         // Edit mode - use provided cohort data
         setFormData(cohort);
+        setCohortDescription(cohort.name || "");
       } else {
         // Create mode - use default values but with a new ID
         setFormData({
@@ -111,13 +152,22 @@ const CohortFormDialog: React.FC<CohortFormDialogProps> = ({
           id: String(Date.now()),
           numberOfLessons: totalNumberOfLessons
         });
+        setCohortDescription("");
       }
-      setCurrentStep(0);
+      setActiveSection("basic");
       setIsDirty(false);
       setErrors({});
     }
   }, [isOpen, cohort, totalNumberOfLessons]);
   
+  // Calculate weekly hours based on daily schedules
+  useEffect(() => {
+    const totalHours = Object.values(dailySchedules)
+      .filter(schedule => schedule.enabled)
+      .reduce((total, schedule) => total + (schedule.duration / 60), 0);
+    setWeeklyHours(totalHours);
+  }, [dailySchedules]);
+
   // Update end date when start date or repeat pattern changes
   useEffect(() => {
     if (formData.startDate) {
@@ -172,46 +222,101 @@ const CohortFormDialog: React.FC<CohortFormDialogProps> = ({
     
     updateRepeatScheduleField("daysOfWeek", updatedDays);
   };
+
+  const updateDailySchedule = (day: string, field: string, value: any) => {
+    setDailySchedules(prev => ({
+      ...prev,
+      [day]: {
+        ...prev[day],
+        [field]: value,
+        ...(field === 'startTime' || field === 'endTime' ? {
+          duration: calculateDuration(field === 'startTime' ? value : prev[day].startTime, field === 'endTime' ? value : prev[day].endTime)
+        } : {})
+      }
+    }));
+    setIsDirty(true);
+  };
+
+  const calculateDuration = (startTime: string, endTime: string): number => {
+    if (!startTime || !endTime) return 0;
+    const start = new Date(`2000-01-01T${startTime}`);
+    const end = new Date(`2000-01-01T${endTime}`);
+    return Math.max(0, (end.getTime() - start.getTime()) / (1000 * 60)); // duration in minutes
+  };
+
+  const applyScheduleTemplate = (template: string) => {
+    const templates = {
+      "weekday-morning": {
+        days: ["monday", "tuesday", "wednesday", "thursday", "friday"],
+        startTime: "09:00",
+        endTime: "11:00"
+      },
+      "evening": {
+        days: ["monday", "wednesday", "friday"],
+        startTime: "18:00",
+        endTime: "20:00"
+      },
+      "weekend": {
+        days: ["saturday", "sunday"],
+        startTime: "09:00",
+        endTime: "17:00"
+      }
+    };
+
+    const templateConfig = templates[template as keyof typeof templates];
+    if (templateConfig) {
+      const newSchedules = { ...dailySchedules };
+      Object.keys(newSchedules).forEach(day => {
+        newSchedules[day] = {
+          enabled: templateConfig.days.includes(day),
+          startTime: templateConfig.startTime,
+          endTime: templateConfig.endTime,
+          duration: calculateDuration(templateConfig.startTime, templateConfig.endTime)
+        };
+      });
+      setDailySchedules(newSchedules);
+      updateRepeatScheduleField("daysOfWeek", templateConfig.days);
+      setScheduleTemplate(template);
+    }
+  };
+
+  // Section completion tracking
+  const getSectionCompletionStatus = () => {
+    return {
+      basic: !!(formData.name && timezone),
+      schedule: !!(formData.startDate && formData.repeatSchedule.daysOfWeek.length > 0 && weeklyHours > 0),
+      enrollment: !!(formData.minStudents && formData.maxStudents),
+      pricing: !!(formData.price && parseFloat(formData.price) > 0),
+      sessions: !!(formData.startDate && formData.endDate)
+    };
+  };
+
+  const completionStatus = getSectionCompletionStatus();
+  const completedSections = Object.values(completionStatus).filter(Boolean).length;
+  const completionPercentage = (completedSections / sections.length) * 100;
   
-  // Validate individual step
-  const validateStep = (stepIndex: number): boolean => {
+  // Validate individual section
+  const validateSection = (sectionId: string): boolean => {
     const newErrors: Record<string, string> = {};
     
-    if (stepIndex === 0) { // Schedule step
+    if (sectionId === "basic") {
       if (!formData.name) {
         newErrors.name = "Cohort name is required";
       }
-      
+    }
+    
+    if (sectionId === "schedule") {
       if (!formData.startDate) {
         newErrors.startDate = "Start date is required";
       }
       
-      if (!formData.startTime) {
-        newErrors.startTime = "Start time is required";
-      }
-      
-      if (!formData.endTime) {
-        newErrors.endTime = "End time is required";
-      }
-      
-      // Time validation
-      if (formData.startTime && formData.endTime) {
-        const start = new Date(`2000-01-01T${formData.startTime}`);
-        const end = new Date(`2000-01-01T${formData.endTime}`);
-        
-        if (start >= end) {
-          newErrors.endTime = "End time must be after start time";
-        }
+      if (formData.repeatSchedule.daysOfWeek.length === 0) {
+        newErrors.daysOfWeek = "At least one day of the week must be selected";
       }
       
       // Pattern validation
       if (formData.repeatSchedule.pattern === "twice-weekly" && formData.repeatSchedule.daysOfWeek.length !== 2) {
         newErrors.repeatPattern = "Twice-weekly schedule requires exactly 2 days";
-      }
-      
-      // Days of week validation
-      if (formData.repeatSchedule.daysOfWeek.length === 0) {
-        newErrors.daysOfWeek = "At least one day of the week must be selected";
       }
       
       // If custom pattern, ensure repeatEvery is valid
@@ -221,7 +326,7 @@ const CohortFormDialog: React.FC<CohortFormDialogProps> = ({
       }
     }
     
-    if (stepIndex === 1) { // Enrollment step
+    if (sectionId === "enrollment") {
       if (formData.minStudents <= 0) {
         newErrors.minStudents = "Minimum students must be at least 1";
       }
@@ -237,8 +342,8 @@ const CohortFormDialog: React.FC<CohortFormDialogProps> = ({
       }
     }
     
-    if (stepIndex === 2) { // Pricing step
-      if (formData.price && isNaN(parseFloat(formData.price))) {
+    if (sectionId === "pricing") {
+      if (!formData.price || isNaN(parseFloat(formData.price))) {
         newErrors.price = "Price must be a valid number";
       }
       
@@ -252,109 +357,31 @@ const CohortFormDialog: React.FC<CohortFormDialogProps> = ({
   };
 
   const validateForm = (): boolean => {
-    const newErrors: Record<string, string> = {};
-    
-    // Required fields
-    if (!formData.name) {
-      newErrors.name = "Cohort name is required";
-    }
-    
-    if (!formData.startDate) {
-      newErrors.startDate = "Start date is required";
-    }
-    
-    if (!formData.startTime) {
-      newErrors.startTime = "Start time is required";
-    }
-    
-    if (!formData.endTime) {
-      newErrors.endTime = "End time is required";
-    }
-    
-    // Time validation
-    if (formData.startTime && formData.endTime) {
-      const start = new Date(`2000-01-01T${formData.startTime}`);
-      const end = new Date(`2000-01-01T${formData.endTime}`);
-      
-      if (start >= end) {
-        newErrors.endTime = "End time must be after start time";
-      }
-    }
-    
-    // Enrollment validation
-    if (formData.minStudents <= 0) {
-      newErrors.minStudents = "Minimum students must be at least 1";
-    }
-    
-    if (formData.maxStudents < formData.minStudents) {
-      newErrors.maxStudents = "Maximum students must be greater than or equal to minimum students";
-    }
-    
-    // Price validation
-    if (formData.price && isNaN(parseFloat(formData.price))) {
-      newErrors.price = "Price must be a valid number";
-    }
-    
-    // Discount validation
-    if (formData.discount && (isNaN(parseFloat(formData.discount)) || parseFloat(formData.discount) < 0 || parseFloat(formData.discount) > 100)) {
-      newErrors.discount = "Discount must be a valid percentage (0-100)";
-    }
-    
-    // Pattern validation
-    if (formData.repeatSchedule.pattern === "twice-weekly" && formData.repeatSchedule.daysOfWeek.length !== 2) {
-      newErrors.repeatPattern = "Twice-weekly schedule requires exactly 2 days";
-    }
-    
-    // Days of week validation - ensure at least one day is selected
-    if (formData.repeatSchedule.daysOfWeek.length === 0) {
-      newErrors.daysOfWeek = "At least one day of the week must be selected";
-    }
-    
-    // Deadline validation - if set, should be on or before start date
-    if (formData.enrollmentDeadline && formData.startDate && 
-        formData.enrollmentDeadline > formData.startDate) {
-      newErrors.enrollmentDeadline = "Enrollment deadline should be on or before the start date";
-    }
-    
-    // If custom pattern, ensure repeatEvery is valid
-    if (formData.repeatSchedule.pattern === "custom" && 
-        (formData.repeatSchedule.repeatEvery <= 0 || formData.repeatSchedule.repeatEvery > 4)) {
-      newErrors.repeatEvery = "Repeat interval must be between 1 and 4 weeks";
-    }
-    
-    // Navigate to first step with errors
-    if (Object.keys(newErrors).length > 0) {
-      if (newErrors.name || newErrors.startDate || newErrors.startTime || 
-          newErrors.endTime || newErrors.repeatPattern || newErrors.daysOfWeek || 
-          newErrors.repeatEvery) {
-        setCurrentStep(0); // Schedule step
-      } else if (newErrors.minStudents || newErrors.maxStudents || 
-                 newErrors.enrollmentDeadline) {
-        setCurrentStep(1); // Enrollment step
-      } else if (newErrors.price || newErrors.discount) {
-        setCurrentStep(2); // Pricing step
-      }
-    }
-    
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    const allValid = sections.every(section => validateSection(section.id));
+    return allValid;
   };
   
   const handleNext = () => {
-    if (validateStep(currentStep)) {
-      if (currentStep < steps.length - 1) {
-        setCurrentStep(currentStep + 1);
+    const currentIndex = sections.findIndex(s => s.id === activeSection);
+    if (validateSection(activeSection)) {
+      if (currentIndex < sections.length - 1) {
+        setActiveSection(sections[currentIndex + 1].id);
       } else {
-        // Final step - save the cohort
+        // Final section - save the cohort
         handleSave();
       }
     }
   };
 
   const handlePrevious = () => {
-    if (currentStep > 0) {
-      setCurrentStep(currentStep - 1);
+    const currentIndex = sections.findIndex(s => s.id === activeSection);
+    if (currentIndex > 0) {
+      setActiveSection(sections[currentIndex - 1].id);
     }
+  };
+
+  const navigateToSection = (sectionId: string) => {
+    setActiveSection(sectionId);
   };
 
   const handleSave = () => {
@@ -374,155 +401,559 @@ const CohortFormDialog: React.FC<CohortFormDialogProps> = ({
       
       // Reset form state
       setFormData(defaultCohort);
-      setCurrentStep(0);
+      setActiveSection("basic");
       setErrors({});
+      setCohortDescription("");
+      setTimezone("EAT");
+      setScheduleTemplate("");
+      setWeeklyHours(0);
     }
   };
   
-  const renderScheduleStep = () => (
-    <div className="mt-0 space-y-8">
-      <h3 className="text-xl font-semibold mb-8 text-gray-900">Schedule Details</h3>
-      <div className="space-y-8">
+  // SECTION 1: BASIC INFORMATION
+  const renderBasicSection = () => (
+    <div className="space-y-6">
+      <div className="flex items-center gap-3">
+        <div className="flex items-center justify-center w-12 h-12 bg-gradient-to-br from-kidato-indigo-500 to-kidato-indigo-600 rounded-2xl shadow-lg">
+          <Settings className="h-6 w-6 text-white" />
+        </div>
+        <div>
+          <h3 className="text-xl font-bold text-kidato-indigo-800">Cohort Details</h3>
+          <p className="text-sm text-gray-600">Set up the basic information for your cohort</p>
+        </div>
+      </div>
+
+      <div className="space-y-6 p-6 bg-gradient-to-br from-kidato-indigo-50 to-white rounded-2xl border border-kidato-indigo-200 shadow-sm">
         <div className="space-y-4">
-          <Label htmlFor="cohort-name" className="text-base font-medium text-gray-700">
+          <Label htmlFor="cohort-name" className="text-lg font-semibold text-kidato-indigo-800">
             Cohort Name <span className="text-red-500">*</span>
           </Label>
           <Input
             id="cohort-name"
             value={formData.name}
             onChange={(e) => updateFormField("name", e.target.value)}
-            placeholder="Enter cohort name"
-            className={cn("h-12 text-base", errors.name ? "border-red-500" : "")}
+            placeholder="e.g., Advanced Python - Fall 2025"
+            className={cn("h-12 text-base border-2 border-kidato-indigo-200 focus:border-kidato-indigo-500 focus:ring-kidato-indigo-500 rounded-xl bg-white shadow-sm", errors.name ? "border-red-500" : "")}
           />
           {errors.name && <p className="text-red-500 text-sm mt-2">{errors.name}</p>}
         </div>
-        
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-4">
-            <div className="flex items-center space-x-2 h-6">
-              <Label className="text-base font-medium text-gray-700">
-                Start Date <span className="text-red-500">*</span>
-              </Label>
+            <Label className="text-base font-medium text-kidato-indigo-700">Status</Label>
+            <div className="flex items-center justify-between p-4 bg-white rounded-lg border border-kidato-indigo-200">
+              <div className="space-y-1">
+                <div className="flex items-center space-x-3">
+                  <Switch
+                    checked={formData.isActive}
+                    onCheckedChange={(checked) => updateFormField("isActive", checked)}
+                  />
+                  <span className={`text-base font-medium ${formData.isActive ? 'text-green-600' : 'text-gray-500'}`}>
+                    {formData.isActive ? 'Active' : 'Inactive'}
+                  </span>
+                </div>
+                <p className="text-sm text-gray-600">
+                  Inactive cohorts won't accept new enrollments
+                </p>
+              </div>
             </div>
+          </div>
+
+          <div className="space-y-4">
+            <Label className="text-base font-medium text-kidato-indigo-700">Timezone</Label>
+            <Select value={timezone} onValueChange={setTimezone}>
+              <SelectTrigger className="h-12 border-2 border-kidato-indigo-200 focus:border-kidato-indigo-500 focus:ring-kidato-indigo-500 rounded-xl bg-white">
+                <div className="flex items-center gap-2">
+                  <Globe className="h-4 w-4 text-kidato-indigo-600" />
+                  <SelectValue placeholder="Select timezone" />
+                </div>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="EAT">East Africa Time (EAT)</SelectItem>
+                <SelectItem value="UTC">Coordinated Universal Time (UTC)</SelectItem>
+                <SelectItem value="EST">Eastern Standard Time (EST)</SelectItem>
+                <SelectItem value="PST">Pacific Standard Time (PST)</SelectItem>
+                <SelectItem value="GMT">Greenwich Mean Time (GMT)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          <Label className="text-base font-medium text-kidato-indigo-700">Description (Optional)</Label>
+          <Textarea
+            value={cohortDescription}
+            onChange={(e) => setCohortDescription(e.target.value)}
+            placeholder="Brief overview of this cohort - what makes it special, who it's for, etc."
+            className="border-2 border-kidato-indigo-200 focus:border-kidato-indigo-500 focus:ring-kidato-indigo-500 rounded-xl bg-white"
+            rows={3}
+          />
+        </div>
+      </div>
+    </div>
+  );
+
+  // SECTION 3: ENROLLMENT & CAPACITY
+  const renderEnrollmentSection = () => (
+    <div className="space-y-6">
+      <div className="flex items-center gap-3">
+        <div className="flex items-center justify-center w-12 h-12 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl shadow-lg">
+          <Users className="h-6 w-6 text-white" />
+        </div>
+        <div>
+          <h3 className="text-xl font-bold text-emerald-800">Student Enrollment</h3>
+          <p className="text-sm text-gray-600">Set enrollment limits and deadlines</p>
+        </div>
+      </div>
+
+      <div className="space-y-6 p-6 bg-gradient-to-br from-emerald-50 to-white rounded-2xl border border-emerald-200 shadow-sm">
+        {/* Class Size Range */}
+        <div className="space-y-4">
+          <Label className="text-lg font-semibold text-emerald-800">Class Size Range</Label>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="space-y-3">
+              <Label htmlFor="min-students" className="text-base font-medium text-gray-700">
+                Minimum Students <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="min-students"
+                type="number"
+                min="1"
+                value={formData.minStudents}
+                onChange={(e) => updateFormField("minStudents", parseInt(e.target.value) || 1)}
+                className={cn("h-12 text-base border-2 border-emerald-200 focus:border-emerald-500 focus:ring-emerald-500 rounded-xl", errors.minStudents ? "border-red-500" : "")}
+              />
+              <p className="text-sm text-gray-600">
+                Minimum number of students needed for the class to run
+              </p>
+              {errors.minStudents && <p className="text-red-500 text-sm">{errors.minStudents}</p>}
+            </div>
+            
+            <div className="space-y-3">
+              <Label htmlFor="max-students" className="text-base font-medium text-gray-700">
+                Maximum Students <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="max-students"
+                type="number"
+                min={formData.minStudents}
+                value={formData.maxStudents}
+                onChange={(e) => updateFormField("maxStudents", parseInt(e.target.value) || formData.minStudents)}
+                className={cn("h-12 text-base border-2 border-emerald-200 focus:border-emerald-500 focus:ring-emerald-500 rounded-xl", errors.maxStudents ? "border-red-500" : "")}
+              />
+              <p className="text-sm text-gray-600">
+                Maximum enrollment capacity for this cohort
+              </p>
+              {errors.maxStudents && <p className="text-red-500 text-sm">{errors.maxStudents}</p>}
+            </div>
+          </div>
+          
+          {/* Capacity Indicator */}
+          <div className="p-4 bg-white rounded-lg border border-emerald-200">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-medium text-gray-700">Current Enrollment</span>
+              <span className="text-sm text-gray-600">0/{formData.maxStudents} students</span>
+            </div>
+            <Progress value={0} className="h-2" />
+            <div className="mt-2 text-xs text-gray-600">
+              Class will run with minimum {formData.minStudents} student{formData.minStudents !== 1 ? 's' : ''}
+            </div>
+          </div>
+        </div>
+
+        {/* Enrollment Deadline */}
+        <div className="space-y-4">
+          <Label className="text-lg font-semibold text-emerald-800">Enrollment Deadline</Label>
+          <div className="space-y-3">
             <Popover>
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
                   className={cn(
-                    "w-full justify-start text-left h-12 text-base",
-                    !formData.startDate && "text-muted-foreground",
-                    errors.startDate && "border-red-500"
+                    "w-full justify-start text-left h-12 text-base border-2 border-emerald-200 focus:border-emerald-500",
+                    !formData.enrollmentDeadline && "text-muted-foreground"
                   )}
                 >
                   <CalendarIcon className="mr-3 h-5 w-5" />
-                  {formData.startDate ? (
-                    format(formData.startDate, "PPP")
+                  {formData.enrollmentDeadline ? (
+                    format(formData.enrollmentDeadline, "PPP")
                   ) : (
-                    <span>Select start date</span>
+                    <span>Set enrollment deadline (optional)</span>
                   )}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">
                 <Calendar
                   mode="single"
-                  selected={formData.startDate || undefined}
-                  onSelect={(date) => updateFormField("startDate", date)}
+                  selected={formData.enrollmentDeadline || undefined}
+                  onSelect={(date) => updateFormField("enrollmentDeadline", date)}
                   className="p-3 pointer-events-auto"
                   initialFocus
                 />
               </PopoverContent>
             </Popover>
-            {errors.startDate && <p className="text-red-500 text-sm mt-2">{errors.startDate}</p>}
+            <p className="text-sm text-gray-600">
+              Last day students can enroll in this cohort
+            </p>
+            {errors.enrollmentDeadline && (
+              <p className="text-red-500 text-sm mt-2">
+                {errors.enrollmentDeadline}
+              </p>
+            )}
+            {formData.enrollmentDeadline && formData.startDate && 
+             formData.enrollmentDeadline > formData.startDate && !errors.enrollmentDeadline && (
+              <div className="flex items-center gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                <AlertCircle className="h-4 w-4 text-amber-600" />
+                <p className="text-amber-700 text-sm">
+                  Warning: Deadline is after start date
+                </p>
+              </div>
+            )}
           </div>
-          
-          <div className="space-y-4">
-            <div className="flex items-center space-x-2 h-6">
-              <Label className="text-base font-medium text-gray-700">
-                End Date (Auto-calculated)
+        </div>
+      </div>
+    </div>
+  );
+
+  // SECTION 4: PRICING & FEES
+  const renderPricingSection = () => (
+    <div className="space-y-6">
+      <div className="flex items-center gap-3">
+        <div className="flex items-center justify-center w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl shadow-lg">
+          <DollarSign className="h-6 w-6 text-white" />
+        </div>
+        <div>
+          <h3 className="text-xl font-bold text-purple-800">Course Pricing</h3>
+          <p className="text-sm text-gray-600">Set the cost and any discounts for this cohort</p>
+        </div>
+      </div>
+
+      <div className="space-y-6 p-6 bg-gradient-to-br from-purple-50 to-white rounded-2xl border border-purple-200 shadow-sm">
+        {/* Price Per Lesson and Total */}
+        <div className="space-y-4">
+          <Label className="text-lg font-semibold text-purple-800">Course Pricing</Label>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="space-y-3">
+              <Label htmlFor="cohort-price" className="text-base font-medium text-gray-700">
+                Price for Entire Course (KES) <span className="text-red-500">*</span>
               </Label>
-              <InfoIcon className="h-4 w-4 text-blue-500" />
+              <div className="relative">
+                <span className="absolute left-3 top-3.5 text-gray-500 text-base">KES</span>
+                <Input
+                  id="cohort-price"
+                  className={cn("pl-12 h-12 text-base border-2 border-purple-200 focus:border-purple-500 focus:ring-purple-500 rounded-xl", errors.price && "border-red-500")}
+                  type="number"
+                  min="0"
+                  step="100"
+                  value={formData.price}
+                  onChange={(e) => updateFormField("price", e.target.value)}
+                  placeholder="15000"
+                />
+              </div>
+              <p className="text-sm text-gray-600">
+                Total price for all {totalNumberOfLessons} lessons
+              </p>
+              {errors.price && <p className="text-red-500 text-sm">{errors.price}</p>}
             </div>
+            
+            <div className="space-y-3">
+              <Label htmlFor="cohort-discount" className="text-base font-medium text-gray-700">
+                Discount (%)
+              </Label>
+              <Input
+                id="cohort-discount"
+                type="number"
+                min="0"
+                max="100"
+                value={formData.discount}
+                onChange={(e) => updateFormField("discount", e.target.value)}
+                placeholder="10"
+                className={cn("h-12 text-base border-2 border-purple-200 focus:border-purple-500 focus:ring-purple-500 rounded-xl", errors.discount ? "border-red-500" : "")}
+              />
+              <p className="text-sm text-gray-600">
+                Discount for siblings, friends, or early enrollment
+              </p>
+              {errors.discount && <p className="text-red-500 text-sm">{errors.discount}</p>}
+            </div>
+          </div>
+        </div>
+        
+        {/* Pricing Summary */}
+        <div className="p-6 bg-white rounded-2xl border border-purple-200 shadow-sm">
+          <h4 className="text-lg font-semibold text-purple-800 mb-4">Pricing Summary</h4>
+          <div className="space-y-3">
+            <div className="flex justify-between items-center">
+              <span className="text-gray-700">Price per lesson:</span>
+              <span className="font-medium">KES {formData.price ? (parseFloat(formData.price) / totalNumberOfLessons).toFixed(0) : '0'}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-gray-700">Total lessons:</span>
+              <span className="font-medium">{totalNumberOfLessons}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-gray-700">Subtotal:</span>
+              <span className="font-medium">KES {formData.price || '0'}</span>
+            </div>
+            {formData.discount && parseFloat(formData.discount) > 0 && (
+              <div className="flex justify-between items-center">
+                <span className="text-gray-700">Discount ({formData.discount}%):</span>
+                <span className="font-medium text-red-600">- KES {formData.price ? ((parseFloat(formData.price) * parseFloat(formData.discount)) / 100).toFixed(0) : '0'}</span>
+              </div>
+            )}
+            <Separator />
+            <div className="flex justify-between items-center text-lg">
+              <span className="font-bold text-purple-800">Final Course Price:</span>
+              <span className="font-bold text-purple-800">
+                KES {formData.price ? (parseFloat(formData.price) - ((parseFloat(formData.price) * parseFloat(formData.discount || '0')) / 100)).toFixed(0) : '0'}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Pricing Tips */}
+        <div className="p-4 bg-blue-50 border border-blue-100 rounded-lg">
+          <div className="flex items-center gap-2 mb-2">
+            <Info className="h-4 w-4 text-blue-600" />
+            <h4 className="text-sm font-medium text-blue-800">Pricing Tips</h4>
+          </div>
+          <p className="text-sm text-blue-700">
+            Setting the right price can help attract students while ensuring your time is valued.
+            Consider your expertise, preparation time, and the value your students will receive.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+
+  // SECTION 2: SCHEDULE & TIMING
+  const renderScheduleSection = () => (
+    <div className="space-y-6">
+      <div className="flex items-center gap-3">
+        <div className="flex items-center justify-center w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl shadow-lg">
+          <CalendarIcon className="h-6 w-6 text-white" />
+        </div>
+        <div>
+          <h3 className="text-xl font-bold text-blue-800">Class Schedule</h3>
+          <p className="text-sm text-gray-600">Define when and how often your cohort meets</p>
+        </div>
+      </div>
+
+      <div className="space-y-6">
+        {/* Quick Schedule Templates */}
+        <div className="space-y-4 p-6 bg-gradient-to-br from-blue-50 to-white rounded-2xl border border-blue-200 shadow-sm">
+          <Label className="text-lg font-semibold text-blue-800">Quick Time Templates</Label>
+          <p className="text-sm text-gray-600">Choose a common schedule pattern to get started quickly</p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <Button
-              variant="outline"
-              className="w-full justify-start text-left h-12 text-base"
-              disabled
+              type="button"
+              variant={scheduleTemplate === "weekday-morning" ? "default" : "outline"}
+              onClick={() => applyScheduleTemplate("weekday-morning")}
+              className="h-auto p-4 flex flex-col items-start gap-2 text-left"
             >
-              <CalendarIcon className="mr-3 h-5 w-5" />
-              {formData.endDate ? (
-                format(formData.endDate, "PPP")
-              ) : (
-                <span>Will be calculated</span>
-              )}
+              <div className="font-medium">Weekday Mornings</div>
+              <div className="text-xs text-muted-foreground">Mon-Fri, 9am-11am</div>
+            </Button>
+            <Button
+              type="button"
+              variant={scheduleTemplate === "evening" ? "default" : "outline"}
+              onClick={() => applyScheduleTemplate("evening")}
+              className="h-auto p-4 flex flex-col items-start gap-2 text-left"
+            >
+              <div className="font-medium">Evening Classes</div>
+              <div className="text-xs text-muted-foreground">Mon/Wed/Fri, 6pm-8pm</div>
+            </Button>
+            <Button
+              type="button"
+              variant={scheduleTemplate === "weekend" ? "default" : "outline"}
+              onClick={() => applyScheduleTemplate("weekend")}
+              className="h-auto p-4 flex flex-col items-start gap-2 text-left"
+            >
+              <div className="font-medium">Weekend Intensive</div>
+              <div className="text-xs text-muted-foreground">Sat/Sun, 9am-5pm</div>
             </Button>
           </div>
         </div>
-        
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-          <div className="space-y-4">
-            <Label htmlFor="start-time" className="text-base font-medium text-gray-700">
-              Start Time <span className="text-red-500">*</span>
-            </Label>
-            <Input
-              id="start-time"
-              type="time"
-              value={formData.startTime}
-              onChange={(e) => updateFormField("startTime", e.target.value)}
-              className={cn("h-12 text-base", errors.startTime ? "border-red-500" : "")}
-            />
-            {errors.startTime && <p className="text-red-500 text-sm mt-2">{errors.startTime}</p>}
-          </div>
-          
-          <div className="space-y-4">
-            <Label htmlFor="end-time" className="text-base font-medium text-gray-700">
-              End Time <span className="text-red-500">*</span>
-            </Label>
-            <Input
-              id="end-time"
-              type="time"
-              value={formData.endTime}
-              onChange={(e) => updateFormField("endTime", e.target.value)}
-              className={cn("h-12 text-base", errors.endTime ? "border-red-500" : "")}
-            />
-            {errors.endTime && <p className="text-red-500 text-sm mt-2">{errors.endTime}</p>}
+
+        {/* Start & End Dates */}
+        <div className="space-y-4 p-6 bg-white rounded-2xl border border-blue-200 shadow-sm">
+          <Label className="text-lg font-semibold text-blue-800">Course Timeline</Label>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="space-y-3">
+              <Label className="text-base font-medium text-gray-700">
+                Start Date <span className="text-red-500">*</span>
+              </Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left h-12 text-base border-2 border-blue-200 focus:border-blue-500",
+                      !formData.startDate && "text-muted-foreground",
+                      errors.startDate && "border-red-500"
+                    )}
+                  >
+                    <CalendarIcon className="mr-3 h-5 w-5" />
+                    {formData.startDate ? (
+                      format(formData.startDate, "PPP")
+                    ) : (
+                      <span>Select start date</span>
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={formData.startDate || undefined}
+                    onSelect={(date) => updateFormField("startDate", date)}
+                    className="p-3 pointer-events-auto"
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+              {errors.startDate && <p className="text-red-500 text-sm mt-2">{errors.startDate}</p>}
+            </div>
+            
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <Label className="text-base font-medium text-gray-700">
+                  End Date (Auto-calculated)
+                </Label>
+                <InfoIcon className="h-4 w-4 text-blue-500" />
+              </div>
+              <Button
+                variant="outline"
+                className="w-full justify-start text-left h-12 text-base border-2 border-gray-200"
+                disabled
+              >
+                <CalendarIcon className="mr-3 h-5 w-5" />
+                {formData.endDate ? (
+                  format(formData.endDate, "PPP")
+                ) : (
+                  <span>Will be calculated based on schedule</span>
+                )}
+              </Button>
+            </div>
           </div>
         </div>
-        
-        <div className="space-y-6 bg-gray-50 p-6 rounded-lg">
-          <div className="space-y-4">
-            <Label className="text-base font-medium text-gray-700">
-              Repeat Pattern <span className="text-red-500">*</span>
-            </Label>
-            <RadioGroup
-              value={formData.repeatSchedule.pattern}
-              onValueChange={(value) => updateRepeatScheduleField("pattern", value)}
-              className="space-y-3"
-            >
-              <div className="flex items-center space-x-3 p-3 border rounded-lg bg-white">
-                <RadioGroupItem value="weekly" id="weekly" />
-                <Label htmlFor="weekly" className="text-base cursor-pointer">Weekly</Label>
-              </div>
-              <div className="flex items-center space-x-3 p-3 border rounded-lg bg-white">
-                <RadioGroupItem value="twice-weekly" id="twice-weekly" />
-                <Label htmlFor="twice-weekly" className="text-base cursor-pointer">Twice Weekly</Label>
-              </div>
-              <div className="flex items-center space-x-3 p-3 border rounded-lg bg-white">
-                <RadioGroupItem value="custom" id="custom" />
-                <Label htmlFor="custom" className="text-base cursor-pointer">Custom</Label>
-              </div>
-            </RadioGroup>
-            {errors.repeatPattern && <p className="text-red-500 text-sm mt-2">{errors.repeatPattern}</p>}
+
+        {/* Weekly Schedule Builder */}
+        <div className="space-y-4 p-6 bg-gradient-to-br from-green-50 to-white rounded-2xl border border-green-200 shadow-sm">
+          <div className="flex items-center justify-between">
+            <div>
+              <Label className="text-lg font-semibold text-green-800">Weekly Schedule Builder</Label>
+              <p className="text-sm text-gray-600 mt-1">Select days and set specific times for each day</p>
+            </div>
+            <div className="text-right">
+              <div className="text-sm text-gray-600">Total weekly hours:</div>
+              <div className="text-lg font-bold text-green-600">{weeklyHours.toFixed(1)} hours</div>
+            </div>
           </div>
           
+          <div className="space-y-3">
+            {daysOfWeek.map((day) => {
+              const schedule = dailySchedules[day.value] || { enabled: false, startTime: "09:00", endTime: "10:00", duration: 60 };
+              const isSelected = formData.repeatSchedule.daysOfWeek.includes(day.value);
+              
+              return (
+                <div 
+                  key={day.value} 
+                  className={cn(
+                    "flex items-center justify-between p-4 rounded-lg border-2 transition-all",
+                    isSelected 
+                      ? "border-green-500 bg-green-50" 
+                      : "border-gray-200 bg-white hover:border-gray-300"
+                  )}
+                >
+                  <div className="flex items-center gap-4">
+                    <Checkbox
+                      checked={isSelected}
+                      onCheckedChange={() => {
+                        toggleDayOfWeek(day.value);
+                        updateDailySchedule(day.value, "enabled", !schedule.enabled);
+                      }}
+                      className="w-5 h-5"
+                    />
+                    <Label className={cn("text-base font-medium w-20", isSelected ? "text-green-700" : "text-gray-700")}>
+                      {day.label}
+                    </Label>
+                  </div>
+                  
+                  {isSelected && (
+                    <div className="flex items-center gap-3">
+                      <Input
+                        type="time"
+                        value={schedule.startTime}
+                        onChange={(e) => updateDailySchedule(day.value, "startTime", e.target.value)}
+                        className="w-24 h-8 text-sm"
+                      />
+                      <span className="text-gray-500">to</span>
+                      <Input
+                        type="time"
+                        value={schedule.endTime}
+                        onChange={(e) => updateDailySchedule(day.value, "endTime", e.target.value)}
+                        className="w-24 h-8 text-sm"
+                      />
+                      <Badge variant="secondary" className="ml-2">
+                        {Math.floor(schedule.duration / 60)}h {schedule.duration % 60}m
+                      </Badge>
+                    </div>
+                  )}
+                  
+                  {!isSelected && (
+                    <div className="text-sm text-gray-400 italic">Click to enable</div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+          
+          {errors.daysOfWeek && <p className="text-red-500 text-sm mt-2">{errors.daysOfWeek}</p>}
+        </div>
+
+        {/* Repeat Pattern */}
+        <div className="space-y-4 p-6 bg-gray-50 rounded-2xl border border-gray-200 shadow-sm">
+          <Label className="text-lg font-semibold text-gray-800">
+            Repeat Pattern <span className="text-red-500">*</span>
+          </Label>
+          <RadioGroup
+            value={formData.repeatSchedule.pattern}
+            onValueChange={(value) => updateRepeatScheduleField("pattern", value)}
+            className="grid grid-cols-1 md:grid-cols-3 gap-4"
+          >
+            <div className="flex items-center space-x-3 p-4 border-2 rounded-lg bg-white hover:bg-gray-50 transition-colors">
+              <RadioGroupItem value="weekly" id="weekly" />
+              <div>
+                <Label htmlFor="weekly" className="text-base font-medium cursor-pointer">Weekly</Label>
+                <p className="text-xs text-gray-600">Same days every week</p>
+              </div>
+            </div>
+            <div className="flex items-center space-x-3 p-4 border-2 rounded-lg bg-white hover:bg-gray-50 transition-colors">
+              <RadioGroupItem value="twice-weekly" id="twice-weekly" />
+              <div>
+                <Label htmlFor="twice-weekly" className="text-base font-medium cursor-pointer">Bi-weekly</Label>
+                <p className="text-xs text-gray-600">Every other week</p>
+              </div>
+            </div>
+            <div className="flex items-center space-x-3 p-4 border-2 rounded-lg bg-white hover:bg-gray-50 transition-colors">
+              <RadioGroupItem value="custom" id="custom" />
+              <div>
+                <Label htmlFor="custom" className="text-base font-medium cursor-pointer">Custom</Label>
+                <p className="text-xs text-gray-600">Set your own pattern</p>
+              </div>
+            </div>
+          </RadioGroup>
+          {errors.repeatPattern && <p className="text-red-500 text-sm mt-2">{errors.repeatPattern}</p>}
+          
           {formData.repeatSchedule.pattern === "custom" && (
-            <div className="space-y-4">
-              <Label htmlFor="repeat-every" className="text-base font-medium text-gray-700">
+            <div className="space-y-3 mt-4">
+              <Label className="text-base font-medium text-gray-700">
                 Repeat Every (weeks)
               </Label>
               <Select
                 value={formData.repeatSchedule.repeatEvery.toString()}
                 onValueChange={(value) => updateRepeatScheduleField("repeatEvery", parseInt(value))}
               >
-                <SelectTrigger className="h-12 text-base">
+                <SelectTrigger className="h-10 text-base">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -535,235 +966,151 @@ const CohortFormDialog: React.FC<CohortFormDialogProps> = ({
               {errors.repeatEvery && <p className="text-red-500 text-sm mt-2">{errors.repeatEvery}</p>}
             </div>
           )}
-          
-          <div className="space-y-6">
-            <Label className="text-base font-medium text-gray-700">
-              Days of Week <span className="text-red-500">*</span>
-            </Label>
-            <div className="space-y-3">
-              {daysOfWeek.map((day) => {
-                const isSelected = formData.repeatSchedule.daysOfWeek.includes(day.value);
-                return (
-                  <div 
-                    key={day.value} 
-                    className={cn(
-                      "relative cursor-pointer transition-all duration-200 rounded-lg border-2 p-4 hover:shadow-sm",
-                      isSelected 
-                        ? "border-blue-500 bg-blue-50 shadow-sm" 
-                        : "border-gray-200 bg-white hover:border-gray-300"
-                    )}
-                    onClick={() => toggleDayOfWeek(day.value)}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-4">
-                        <div className={cn(
-                          "w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors",
-                          isSelected 
-                            ? "border-blue-500 bg-blue-500" 
-                            : "border-gray-300"
-                        )}>
-                          {isSelected && (
-                            <Check className="w-4 h-4 text-white" />
-                          )}
-                        </div>
-                        <Label 
-                          htmlFor={day.value} 
-                          className={cn(
-                            "text-base font-medium cursor-pointer transition-colors",
-                            isSelected ? "text-blue-700" : "text-gray-700"
-                          )}
-                        >
-                          {day.label}
-                        </Label>
-                      </div>
-                      {isSelected && (
-                        <div className="text-blue-500 text-sm font-medium">
-                          Selected
-                        </div>
-                      )}
-                    </div>
-                    <input
-                      type="checkbox"
-                      id={day.value}
-                      checked={isSelected}
-                      onChange={() => toggleDayOfWeek(day.value)}
-                      className="sr-only"
-                    />
-                  </div>
-                );
-              })}
-            </div>
-            {errors.daysOfWeek && <p className="text-red-500 text-sm mt-2">{errors.daysOfWeek}</p>}
+        </div>
+
+        {/* Schedule Summary */}
+        <div className="p-4 bg-blue-50 border border-blue-100 rounded-lg">
+          <div className="flex items-center gap-2 mb-2">
+            <Info className="h-4 w-4 text-blue-600" />
+            <h4 className="text-sm font-medium text-blue-800">Schedule Summary</h4>
+          </div>
+          <div className="text-sm text-blue-700">
+            {formData.repeatSchedule.daysOfWeek.length > 0 ? (
+              <>
+                Classes on: {formData.repeatSchedule.daysOfWeek.map(day => 
+                  daysOfWeek.find(d => d.value === day)?.label
+                ).join(", ")}
+                <br />
+                Total weekly hours: {weeklyHours.toFixed(1)} hours
+                <br />
+                Pattern: {formData.repeatSchedule.pattern === "custom" 
+                  ? `Every ${formData.repeatSchedule.repeatEvery} week(s)` 
+                  : formData.repeatSchedule.pattern}
+              </>
+            ) : (
+              "No schedule selected yet"
+            )}
           </div>
         </div>
-        
-        <div className="space-y-4 bg-blue-50 p-6 rounded-lg border border-blue-100">
-          <Label htmlFor="cohort-active" className="text-base font-medium text-gray-700">
-            Cohort Status
-          </Label>
+      </div>
+    </div>
+  );
+
+  // SECTION 5: SESSION PLANNING
+  const renderSessionsSection = () => (
+    <div className="space-y-6">
+      <div className="flex items-center gap-3">
+        <div className="flex items-center justify-center w-12 h-12 bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl shadow-lg">
+          <BookOpen className="h-6 w-6 text-white" />
+        </div>
+        <div>
+          <h3 className="text-xl font-bold text-orange-800">Session Planning</h3>
+          <p className="text-sm text-gray-600">Plan your class dates and virtual meeting setup</p>
+        </div>
+      </div>
+
+      <div className="space-y-6 p-6 bg-gradient-to-br from-orange-50 to-white rounded-2xl border border-orange-200 shadow-sm">
+        {/* Auto-Generate Class Dates */}
+        <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <div className="space-y-1">
-              <div className="flex items-center space-x-3">
-                <Switch
-                  id="cohort-active"
-                  checked={formData.isActive}
-                  onCheckedChange={(checked) => updateFormField("isActive", checked)}
-                />
-                <span className={`text-base font-medium ${formData.isActive ? 'text-green-600' : 'text-gray-500'}`}>
-                  {formData.isActive ? 'Active' : 'Inactive'}
-                </span>
+            <div>
+              <Label className="text-lg font-semibold text-orange-800">Class Dates</Label>
+              <p className="text-sm text-gray-600 mt-1">Preview of all planned session dates</p>
+            </div>
+            <Button
+              type="button"
+              onClick={() => {
+                // This would trigger auto-generation of dates based on schedule
+                console.log('Auto-generating class dates...');
+              }}
+              className="bg-orange-600 hover:bg-orange-700 text-white"
+            >
+              <CalendarHeart className="h-4 w-4 mr-2" />
+              Auto-Generate Dates
+            </Button>
+          </div>
+          
+          {/* Class Dates Preview */}
+          <div className="bg-white rounded-lg border border-orange-200 p-4">
+            <div className="text-sm text-gray-600 mb-3">Upcoming Sessions Preview</div>
+            {formData.startDate && formData.endDate ? (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between p-2 bg-gray-50 rounded text-sm">
+                  <span>Session 1</span>
+                  <span>{format(formData.startDate, "PPP")}</span>
+                </div>
+                <div className="text-xs text-gray-500 text-center">... and {totalNumberOfLessons - 1} more sessions</div>
+                <div className="flex items-center justify-between p-2 bg-gray-50 rounded text-sm">
+                  <span>Final Session</span>
+                  <span>{format(formData.endDate, "PPP")}</span>
+                </div>
               </div>
-              <p className="text-sm text-muted-foreground">
-                Inactive cohorts won't accept new enrollments
-              </p>
+            ) : (
+              <div className="text-sm text-gray-500 italic text-center py-4">
+                Set start date and schedule to preview class dates
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Next Session Display */}
+        {formData.startDate && (
+          <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+            <div className="flex items-center gap-2 mb-2">
+              <CheckCircle2 className="h-4 w-4 text-green-600" />
+              <span className="text-sm font-medium text-green-800">Next Session</span>
+            </div>
+            <div className="text-sm text-green-700">
+              {formData.startDate > new Date() ? (
+                <>Starts {format(formData.startDate, "PPP")} at {formData.startTime || '09:00'}</>
+              ) : (
+                <>Course has already started</>
+              )}
             </div>
           </div>
-        </div>
-      </div>
-    </div>
-  );
+        )}
 
-  const renderEnrollmentStep = () => (
-    <div className="mt-0 space-y-6">
-      <h3 className="text-lg font-medium mb-6">Enrollment Settings</h3>
-      <div className="space-y-6">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <div className="space-y-3">
-            <Label htmlFor="min-students">Minimum Students <span className="text-red-500">*</span></Label>
-            <Input
-              id="min-students"
-              type="number"
-              min="1"
-              value={formData.minStudents}
-              onChange={(e) => updateFormField("minStudents", parseInt(e.target.value) || 1)}
-              className={errors.minStudents ? "border-red-500" : ""}
-            />
-            <p className="text-xs text-muted-foreground">
-              Minimum number of students needed for the class to run
-            </p>
-            {errors.minStudents && <p className="text-red-500 text-xs">{errors.minStudents}</p>}
-          </div>
-          
-          <div className="space-y-3">
-            <Label htmlFor="max-students">Maximum Students <span className="text-red-500">*</span></Label>
-            <Input
-              id="max-students"
-              type="number"
-              min={formData.minStudents}
-              value={formData.maxStudents}
-              onChange={(e) => updateFormField("maxStudents", parseInt(e.target.value) || formData.minStudents)}
-              className={errors.maxStudents ? "border-red-500" : ""}
-            />
-            <p className="text-xs text-muted-foreground">
-              Maximum enrollment capacity for this cohort
-            </p>
-            {errors.maxStudents && <p className="text-red-500 text-xs">{errors.maxStudents}</p>}
-          </div>
-        </div>
-        
-        <div className="space-y-2">
-          <Label>Enrollment Deadline</Label>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                className={cn(
-                  "w-full justify-start text-left",
-                  !formData.enrollmentDeadline && "text-muted-foreground"
-                )}
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {formData.enrollmentDeadline ? (
-                  format(formData.enrollmentDeadline, "PPP")
-                ) : (
-                  <span>Set enrollment deadline</span>
-                )}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <Calendar
-                mode="single"
-                selected={formData.enrollmentDeadline || undefined}
-                onSelect={(date) => updateFormField("enrollmentDeadline", date)}
-                className="p-3 pointer-events-auto"
-                initialFocus
-              />
-            </PopoverContent>
-          </Popover>
-          <p className="text-xs text-muted-foreground">
-            Last day students can enroll in this cohort
-          </p>
-          {errors.enrollmentDeadline && (
-            <p className="text-red-500 text-xs mt-1">
-              {errors.enrollmentDeadline}
-            </p>
-          )}
-          {formData.enrollmentDeadline && formData.startDate && 
-           formData.enrollmentDeadline > formData.startDate && !errors.enrollmentDeadline && (
-            <p className="text-amber-600 text-xs flex items-center mt-1">
-              <InfoIcon className="h-3 w-3 mr-1" />
-              Warning: Deadline is after start date
-            </p>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderPricingStep = () => (
-    <div className="mt-0 space-y-6">
-      <h3 className="text-lg font-medium mb-6">Pricing Information</h3>
-      <div className="space-y-6">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <div className="space-y-3">
-            <Label htmlFor="cohort-price">Price for Entire Class</Label>
-            <div className="relative">
-              <span className="absolute left-3 top-2.5 text-gray-500">$</span>
+        {/* Zoom Meeting Setup */}
+        <div className="space-y-4">
+          <Label className="text-lg font-semibold text-orange-800">Virtual Meeting Setup (Optional)</Label>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-3">
+              <Label className="text-base font-medium text-gray-700">Meeting ID</Label>
               <Input
-                id="cohort-price"
-                className={cn("pl-7", errors.price && "border-red-500")}
-                type="number"
-                min="0"
-                step="0.01"
-                value={formData.price}
-                onChange={(e) => updateFormField("price", e.target.value)}
-                placeholder="0.00"
+                placeholder="e.g., 123-456-7890"
+                className="h-10 border-2 border-orange-200 focus:border-orange-500 focus:ring-orange-500 rounded-xl"
               />
             </div>
-            <p className="text-xs text-muted-foreground">
-              Total price for all {totalNumberOfLessons} lessons
-            </p>
-            {errors.price && <p className="text-red-500 text-xs">{errors.price}</p>}
+            <div className="space-y-3">
+              <Label className="text-base font-medium text-gray-700">Passcode</Label>
+              <Input
+                placeholder="e.g., 123abc"
+                className="h-10 border-2 border-orange-200 focus:border-orange-500 focus:ring-orange-500 rounded-xl"
+              />
+            </div>
           </div>
-          
-          <div className="space-y-3">
-            <Label htmlFor="cohort-discount">Discount (%)</Label>
-            <Input
-              id="cohort-discount"
-              type="number"
-              min="0"
-              max="100"
-              value={formData.discount}
-              onChange={(e) => updateFormField("discount", e.target.value)}
-              placeholder="0"
-              className={errors.discount ? "border-red-500" : ""}
-            />
-            <p className="text-xs text-muted-foreground">
-              Discount percentage for siblings, friends, or early enrollment
-            </p>
-            {errors.discount && <p className="text-red-500 text-xs">{errors.discount}</p>}
+          <div className="flex items-center space-x-2">
+            <Checkbox id="auto-generate-meeting" />
+            <Label htmlFor="auto-generate-meeting" className="text-sm text-gray-700">
+              Auto-generate new meeting for each session
+            </Label>
           </div>
         </div>
-        
-        <div className="p-4 bg-blue-50 border border-blue-100 rounded-md">
-          <div className="flex items-center">
-            <Info className="h-4 w-4 mr-2 text-blue-600" />
-            <h3 className="text-sm font-medium text-blue-800">Pricing Information</h3>
+
+        {/* Session Summary */}
+        <div className="p-4 bg-orange-50 border border-orange-100 rounded-lg">
+          <div className="flex items-center gap-2 mb-2">
+            <Info className="h-4 w-4 text-orange-600" />
+            <h4 className="text-sm font-medium text-orange-800">Session Summary</h4>
           </div>
-          <p className="ml-6 mt-1 text-sm text-blue-700">
-            Setting the right price can help attract students while ensuring your time is valued.
-            Consider your expertise, preparation time, and the value your students will receive.
-          </p>
+          <div className="text-sm text-orange-700 space-y-1">
+            <div>Total sessions: {totalNumberOfLessons}</div>
+            <div>Duration: {formData.startDate && formData.endDate ? 
+              `${Math.ceil((formData.endDate.getTime() - formData.startDate.getTime()) / (1000 * 60 * 60 * 24))} days` : 
+              'Not calculated yet'
+            }</div>
+            <div>Weekly commitment: {weeklyHours.toFixed(1)} hours</div>
+          </div>
         </div>
       </div>
     </div>
@@ -799,70 +1146,96 @@ const CohortFormDialog: React.FC<CohortFormDialogProps> = ({
             {cohort ? "Edit Cohort" : "Create New Cohort"}
           </DialogTitle>
           <DialogDescription>
-            Step {currentStep + 1} of {steps.length}: {steps[currentStep].title}
+            {sections.find(s => s.id === activeSection)?.description || "Configure your cohort"}
           </DialogDescription>
         </DialogHeader>
         
         {/* Progress indicator */}
-        <div className="px-6 py-2">
-          <div className="flex items-center justify-between mb-2">
-            {steps.map((step, index) => {
-              const StepIcon = step.icon;
-              return (
-                <div
-                  key={step.id}
-                  className={cn(
-                    "flex items-center justify-center w-8 h-8 rounded-full border-2 transition-colors",
-                    index <= currentStep
-                      ? "bg-blue-500 border-blue-500 text-white"
-                      : "border-gray-300 text-gray-400"
-                  )}
-                >
-                  {index < currentStep ? (
-                    <Check className="h-4 w-4" />
-                  ) : (
-                    <StepIcon className="h-4 w-4" />
-                  )}
-                </div>
-              );
-            })}
+        <div className="px-6 py-4">
+          <div className="flex items-center justify-between mb-4">
+            <div className="text-sm text-gray-600">
+              {completedSections} of {sections.length} sections completed
+            </div>
+            <div className="text-sm font-medium text-blue-600">
+              {completionPercentage.toFixed(0)}% complete
+            </div>
           </div>
-          <div className="w-full bg-gray-200 rounded-full h-2">
-            <div
-              className="bg-blue-500 h-2 rounded-full transition-all duration-300"
-              style={{ width: `${((currentStep + 1) / steps.length) * 100}%` }}
-            />
-          </div>
+          <Progress value={completionPercentage} className="h-2" />
         </div>
         
         <div className="flex-grow overflow-hidden py-4">
           <ScrollArea className="h-full">
-            <div className="px-8 py-2">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={currentStep}
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.2 }}
-              >
-                {currentStep === 0 && renderScheduleStep()}
-                {currentStep === 1 && renderEnrollmentStep()}
-                {currentStep === 2 && renderPricingStep()}
-              </motion.div>
-            </AnimatePresence>
+            <div className="px-6">
+              <Tabs value={activeSection} onValueChange={setActiveSection}>
+                {/* Section Navigation */}
+                <div className="mb-6">
+                  <TabsList className="grid w-full grid-cols-5 h-auto p-1 bg-gray-100">
+                    {sections.map((section) => {
+                      const Icon = section.icon;
+                      const isCompleted = completionStatus[section.id as keyof typeof completionStatus];
+                      return (
+                        <TabsTrigger
+                          key={section.id}
+                          value={section.id}
+                          className="flex flex-col items-center gap-1 px-2 py-3 text-xs data-[state=active]:bg-white data-[state=active]:shadow-sm"
+                        >
+                          <div className="flex items-center gap-1">
+                            <Icon className={`h-4 w-4 ${isCompleted ? 'text-green-600' : 'text-gray-500'}`} />
+                            {isCompleted && <CheckCircle2 className="h-3 w-3 text-green-600" />}
+                          </div>
+                          <span className="font-medium text-center leading-tight">{section.title}</span>
+                        </TabsTrigger>
+                      );
+                    })}
+                  </TabsList>
+                </div>
+
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={activeSection}
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <TabsContent value="basic" className="mt-0">
+                      {renderBasicSection()}
+                    </TabsContent>
+                    <TabsContent value="schedule" className="mt-0">
+                      {renderScheduleSection()}
+                    </TabsContent>
+                    <TabsContent value="enrollment" className="mt-0">
+                      {renderEnrollmentSection()}
+                    </TabsContent>
+                    <TabsContent value="pricing" className="mt-0">
+                      {renderPricingSection()}
+                    </TabsContent>
+                    <TabsContent value="sessions" className="mt-0">
+                      {renderSessionsSection()}
+                    </TabsContent>
+                  </motion.div>
+                </AnimatePresence>
+              </Tabs>
             </div>
           </ScrollArea>
         </div>
         
         <DialogFooter className="pt-4 border-t flex items-center justify-between">
-          <div className="flex items-center">
-            <div className="mr-auto flex items-center text-sm">
-              <CalendarIcon className="h-4 w-4 mr-1.5 text-muted-foreground" />
-              <span className="text-muted-foreground">
-                {totalNumberOfLessons} lessons
-              </span>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center text-sm text-muted-foreground">
+              <CalendarIcon className="h-4 w-4 mr-1.5" />
+              <span>{totalNumberOfLessons} lessons</span>
             </div>
+            <div className="flex items-center text-sm text-muted-foreground">
+              <Clock className="h-4 w-4 mr-1.5" />
+              <span>{weeklyHours.toFixed(1)}h/week</span>
+            </div>
+            {formData.price && (
+              <div className="flex items-center text-sm text-muted-foreground">
+                <DollarSign className="h-4 w-4 mr-1.5" />
+                <span>KES {formData.price}</span>
+              </div>
+            )}
           </div>
           <div className="flex gap-2">
             <Button
@@ -879,15 +1252,21 @@ const CohortFormDialog: React.FC<CohortFormDialogProps> = ({
             >
               Cancel
             </Button>
-            {currentStep > 0 && (
+            {sections.findIndex(s => s.id === activeSection) > 0 && (
               <Button variant="outline" onClick={handlePrevious}>
+                <ChevronRight className="h-4 w-4 mr-1 rotate-180" />
                 Previous
               </Button>
             )}
-            <Button onClick={handleNext}>
-              {currentStep === steps.length - 1 
+            <Button onClick={handleNext} disabled={!validateSection(activeSection)}>
+              {sections.findIndex(s => s.id === activeSection) === sections.length - 1
                 ? (cohort ? "Update Cohort" : "Create Cohort")
-                : "Next"
+                : (
+                  <>
+                    Next
+                    <ChevronRight className="h-4 w-4 ml-1" />
+                  </>
+                )
               }
             </Button>
           </div>

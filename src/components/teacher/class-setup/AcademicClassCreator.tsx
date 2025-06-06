@@ -50,7 +50,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 
 import { ClassFormValues, CohortData, classSchema, Curriculum, CurriculumLevel, Subject } from './types';
 import { useAuth } from '@/contexts/AuthContext';
-import { LessonForm } from './lesson-plans/LessonForm';
+import { LessonFormRedesigned } from './lesson-plans/LessonFormRedesigned';
 import { platformService } from '@/integrations/api/services/platform.service';
 import { AIDescriptionButton } from '@/components/ui/ai-description-button';
 import { DescriptionContext } from '@/services/aiDescriptionService';
@@ -71,15 +71,13 @@ interface StepConfig {
 }
 
 // Step Components
-const ClassFoundationStep = ({ form, onNext, isSaving }: any) => {
+const ClassFoundationStep = ({ form, onNext, isSaving, curricula, loadingCurricula }: any) => {
   const [materials, setMaterials] = useState(form.watch('materials') || []);
   const [resourceLinks, setResourceLinks] = useState(form.watch('resourceLinks') || []);
   
   // Curriculum API state
-  const [curricula, setCurricula] = useState<Curriculum[]>([]);
   const [curriculumLevels, setCurriculumLevels] = useState<CurriculumLevel[]>([]);
   const [subjects, setSubjects] = useState<Subject[]>([]);
-  const [loadingCurricula, setLoadingCurricula] = useState(false);
   const [selectedCurriculum, setSelectedCurriculum] = useState<Curriculum | null>(null);
   
   // Accordion state for subjects
@@ -165,26 +163,6 @@ const ClassFoundationStep = ({ form, onNext, isSaving }: any) => {
   // File upload states
   const [uploadingFiles, setUploadingFiles] = useState<{[key: string]: boolean}>({});
 
-  // Fetch curricula on component mount
-  useEffect(() => {
-    const fetchCurricula = async () => {
-      setLoadingCurricula(true);
-      try {
-        const response = await platformService.getCurricula();
-        if (response.data && !response.error) {
-          setCurricula(response.data);
-        } else if (response.error) {
-          console.error('API Error:', response.error);
-        }
-      } catch (error) {
-        console.error('Error fetching curricula:', error);
-      } finally {
-        setLoadingCurricula(false);
-      }
-    };
-    
-    fetchCurricula();
-  }, []);
 
   // Set curriculum levels when curriculum changes (no API call needed)
   const setCurriculumLevelsFromData = (curriculumId: string) => {
@@ -1492,7 +1470,7 @@ const ClassFoundationStep = ({ form, onNext, isSaving }: any) => {
             type="button"
             onClick={onNext}
             size="lg"
-            className="bg-gradient-to-r from-kidato-blue to-kidato-purple hover:from-kidato-blue-600 hover:to-kidato-purple-600"
+            className="bg-gradient-to-r from-kidato-indigo-500 to-kidato-orange-500 hover:from-kidato-indigo-600 hover:to-kidato-orange-600 text-white font-semibold px-8 py-3 rounded-xl shadow-lg transition-all duration-200 transform hover:scale-105"
             disabled={isSaving || !form.watch('title') || !form.watch('curriculum') || !form.watch('curriculumLevel') || !form.watch('subject') || objectives.filter(obj => obj.text.trim()).length === 0 || !form.watch('courseOutlineFile')}
           >
             {isSaving ? (
@@ -1672,7 +1650,7 @@ const LessonPlanningStep = ({ form, onNext, onPrev, createdClassId }: any) => {
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 0.3 }}
               >
-                <LessonForm
+                <LessonFormRedesigned
                   lesson={lesson}
                   onUpdate={(field: string, value: any) => updateLesson(index, field, value)}
                   onRemove={() => removeLesson(index)}
@@ -1715,7 +1693,7 @@ const LessonPlanningStep = ({ form, onNext, onPrev, createdClassId }: any) => {
             type="button"
             onClick={onNext}
             size="lg"
-            className="bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600"
+            className="bg-gradient-to-r from-kidato-indigo-500 to-kidato-orange-500 hover:from-kidato-indigo-600 hover:to-kidato-orange-600 text-white font-semibold px-8 py-3 rounded-xl shadow-lg transition-all duration-200 transform hover:scale-105"
             disabled={!validateLessons()}
           >
             Set Schedule & Pricing
@@ -1727,7 +1705,7 @@ const LessonPlanningStep = ({ form, onNext, onPrev, createdClassId }: any) => {
   );
 };
 
-const SchedulePricingStep = ({ form, cohorts, setCohorts, onNext, onPrev }: any) => {
+const SchedulePricingStep = ({ form, cohorts, setCohorts, onNext, onPrev, curricula }: any) => {
   const addCohort = () => {
     const newCohort: Partial<CohortData> = {
       id: Date.now().toString(),
@@ -1754,36 +1732,75 @@ const SchedulePricingStep = ({ form, cohorts, setCohorts, onNext, onPrev }: any)
     setCohorts([...cohorts, newCohort]);
   };
 
+  // Get current class data for display
+  const classTitle = form.watch('title') || 'Untitled Class';
+  const curriculumId = form.watch('curriculum') || '';
+  const curriculumLevel = form.watch('curriculumLevel') || '';
+  const subject = form.watch('subject') || '';
+  const lessonPlans = form.watch('lessonPlans') || [];
+
+  // Look up curriculum name from API data
+  const curriculum = curricula?.find((c: any) => c.id === curriculumId || c._id === curriculumId)?.name || curriculumId || 'Not specified';
+
   return (
     <div className="space-y-8">
+      {/* Enhanced Header with Class Info */}
       <div className="text-center">
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          className="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-4"
+          className="w-16 h-16 bg-gradient-to-br from-kidato-indigo-500 to-kidato-orange-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg"
         >
           <Calendar className="h-8 w-8 text-white" />
         </motion.div>
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">Schedule & Pricing</h2>
-        <p className="text-gray-600">When will your class run and how much will it cost?</p>
+        <h2 className="text-3xl font-bold text-kidato-indigo-800 mb-2">Schedule & Pricing</h2>
+        <p className="text-kidato-indigo-600 text-lg">When will your class run and how much will it cost?</p>
+        
+        {/* Class Context Info */}
+        <div className="mt-6 p-6 bg-gradient-to-r from-kidato-indigo-50 to-kidato-orange-50 rounded-2xl border border-kidato-indigo-200 max-w-2xl mx-auto">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-8 h-8 bg-kidato-indigo-600 rounded-lg flex items-center justify-center">
+              <BookOpen className="h-5 w-5 text-white" />
+            </div>
+            <h3 className="text-xl font-bold text-kidato-indigo-800">Class Overview</h3>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
+            <div>
+              <h4 className="font-semibold text-kidato-indigo-700 text-sm mb-1">Class Title</h4>
+              <p className="text-kidato-indigo-900 font-medium">{classTitle}</p>
+            </div>
+            <div>
+              <h4 className="font-semibold text-kidato-indigo-700 text-sm mb-1">Subject</h4>
+              <p className="text-kidato-indigo-900 font-medium">{subject}</p>
+            </div>
+            <div>
+              <h4 className="font-semibold text-kidato-indigo-700 text-sm mb-1">Curriculum</h4>
+              <p className="text-kidato-indigo-900 font-medium">{curriculum}</p>
+            </div>
+            <div>
+              <h4 className="font-semibold text-kidato-indigo-700 text-sm mb-1">Total Lessons</h4>
+              <p className="text-kidato-indigo-900 font-medium">{lessonPlans.length} lessons planned</p>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="max-w-4xl mx-auto">
-        <Card className="border-purple-200 shadow-lg">
-          <CardHeader className="bg-gradient-to-r from-purple-50 to-pink-50 border-b">
-            <CardTitle className="flex items-center gap-2">
-              <Calendar className="h-5 w-5 text-purple-600" />
+        <Card className="border-kidato-indigo-200 shadow-lg">
+          <CardHeader className="bg-gradient-to-r from-kidato-indigo-50 to-kidato-orange-50 border-b border-kidato-indigo-200">
+            <CardTitle className="flex items-center gap-2 text-kidato-indigo-800">
+              <Calendar className="h-5 w-5 text-kidato-indigo-600" />
               Class Schedule
             </CardTitle>
-            <CardDescription>Set up when and how your class will run</CardDescription>
+            <CardDescription className="text-kidato-indigo-600">Set up when and how your class will run</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6 pt-6">
             {cohorts.length === 0 && (
               <div className="text-center py-8">
-                <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">No cohorts yet</h3>
-                <p className="text-gray-600 mb-4">Create your first class schedule</p>
-                <Button onClick={addCohort} className="bg-purple-600 hover:bg-purple-700">
+                <Calendar className="h-12 w-12 text-kidato-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-kidato-indigo-900 mb-2">No cohorts yet</h3>
+                <p className="text-kidato-indigo-600 mb-4">Create your first class schedule</p>
+                <Button onClick={addCohort} className="bg-gradient-to-r from-kidato-indigo-500 to-kidato-orange-500 hover:from-kidato-indigo-600 hover:to-kidato-orange-600 text-white font-semibold px-6 py-3 rounded-xl shadow-lg">
                   <Plus className="h-4 w-4 mr-2" />
                   Create Schedule
                 </Button>
@@ -1791,7 +1808,7 @@ const SchedulePricingStep = ({ form, cohorts, setCohorts, onNext, onPrev }: any)
             )}
 
             {cohorts.map((cohort: any, index: number) => (
-              <Card key={cohort.id} className="border-l-4 border-l-purple-500">
+              <Card key={cohort.id} className="border-l-4 border-l-kidato-indigo-500 bg-gradient-to-r from-kidato-indigo-50 to-white">
                 <CardContent className="pt-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
@@ -1814,7 +1831,7 @@ const SchedulePricingStep = ({ form, cohorts, setCohorts, onNext, onPrev }: any)
                       <div className="flex gap-2 mt-1">
                         <Input
                           type="number"
-                          placeholder="Min"
+                      placeholder="Min"
                           value={cohort.minStudents}
                           onChange={(e) => {
                             const updated = cohorts.map((c: any, i: number) => 
@@ -1883,6 +1900,7 @@ const SchedulePricingStep = ({ form, cohorts, setCohorts, onNext, onPrev }: any)
             variant="outline"
             onClick={onPrev}
             size="lg"
+            className="border-kidato-indigo-200 text-kidato-indigo-700 hover:bg-kidato-indigo-50 hover:border-kidato-indigo-300"
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to Lessons
@@ -1891,7 +1909,7 @@ const SchedulePricingStep = ({ form, cohorts, setCohorts, onNext, onPrev }: any)
             type="button"
             onClick={onNext}
             size="lg"
-            className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
+            className="bg-gradient-to-r from-kidato-indigo-500 to-kidato-orange-500 hover:from-kidato-indigo-600 hover:to-kidato-orange-600 text-white font-semibold px-8 py-3 rounded-xl shadow-lg transition-all duration-200 transform hover:scale-105"
             disabled={cohorts.length === 0}
           >
             Review & Publish
@@ -1910,7 +1928,7 @@ const ReviewPublishStep = ({ form, cohorts, onSubmit, onPrev }: any) => {
     setIsPublishing(true);
     const formData = {
       ...form.getValues(),
-      type: 'academic',
+      type: 'academic' as const,
       isPublished: true,
       status: 'published'
     };
@@ -1925,7 +1943,7 @@ const ReviewPublishStep = ({ form, cohorts, onSubmit, onPrev }: any) => {
   const handleSaveDraft = async () => {
     const formData = {
       ...form.getValues(),
-      type: 'academic',
+      type: 'academic' as const,
       isPublished: false,
       status: 'draft'
     };
@@ -2095,6 +2113,8 @@ const AcademicClassCreator: React.FC<AcademicClassCreatorProps> = ({
   const [cohorts, setCohorts] = useState<CohortData[]>([]);
   const [createdClassId, setCreatedClassId] = useState<string | null>(classId || null);
   const [isSaving, setIsSaving] = useState(false);
+  const [curricula, setCurricula] = useState<Curriculum[]>([]);
+  const [loadingCurricula, setLoadingCurricula] = useState(true);
 
   const form = useForm<ClassFormValues>({
     resolver: zodResolver(classSchema),
@@ -2126,6 +2146,25 @@ const AcademicClassCreator: React.FC<AcademicClassCreatorProps> = ({
       ...initialValues
     }
   });
+
+  // Fetch curricula data
+  useEffect(() => {
+    const fetchCurricula = async () => {
+      try {
+        setLoadingCurricula(true);
+        const response = await platformService.getCurricula();
+        if (response.data && !response.error) {
+          setCurricula(response.data);
+        }
+      } catch (error) {
+        console.error('Error fetching curricula:', error);
+      } finally {
+        setLoadingCurricula(false);
+      }
+    };
+    
+    fetchCurricula();
+  }, []);
 
   const steps: StepConfig[] = [
     {
@@ -2168,19 +2207,23 @@ const AcademicClassCreator: React.FC<AcademicClassCreatorProps> = ({
         try {
           const formData = {
             ...form.getValues(),
-            type: 'academic',
+            type: 'academic' as const,
             isPublished: false,
             status: 'draft'
           };
           
           // Call the onSubmit function to create the class
-          const result = await onSubmit(formData);
-          
-          // If onSubmit returns a class ID, store it
-          if (result && typeof result === 'object' && 'id' in result) {
-            setCreatedClassId(result.id);
-          } else if (result && typeof result === 'string') {
-            setCreatedClassId(result);
+          try {
+            const result = await onSubmit(formData);
+            
+            // If onSubmit returns a class ID, store it
+            if (result && typeof result === 'object' && 'id' in result) {
+              setCreatedClassId((result as any).id);
+            } else if (result && typeof result === 'string') {
+              setCreatedClassId(result);
+            }
+          } catch (submitError) {
+            console.error('Submit error:', submitError);
           }
           
           setCurrentStep(currentStep + 1);
@@ -2265,6 +2308,8 @@ const AcademicClassCreator: React.FC<AcademicClassCreatorProps> = ({
             onSubmit={onSubmit}
             isSaving={isSaving}
             createdClassId={createdClassId}
+            curricula={curricula}
+            loadingCurricula={loadingCurricula}
           />
         </Form>
       </div>
