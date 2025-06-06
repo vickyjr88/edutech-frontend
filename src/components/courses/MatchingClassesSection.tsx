@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { ClassDetail } from "@/integrations/api/services/class.service";
 import { useGetTeacherProfileById } from "@/hooks/use-teacher-service";
-import { describeAvailability, getNextClassTime } from "@/lib/utils";
+import { describeAvailability, getNextClassTime, getUserInitials } from "@/lib/utils";
 import { useGetClassEnrollments, useSelfEnroll } from "@/hooks/use-enrollment-service";
 import { formatDate } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
@@ -23,7 +23,7 @@ function courseIsNew(course: ClassDetail) {
 
 const MatchingClassesSection = ({ course }: MatchingClassesSectionProps) => {
   const { data: response, isLoading: loadingTeacher } = useGetTeacherProfileById(course.teacher._id);
-  const { data: enrollmentsResponse, isLoading: loadingEnrollments } = useGetClassEnrollments(course.id);
+  const { data: enrollmentsResponse, isLoading: loadingEnrollments } = useGetClassEnrollments(course._id);
   const { mutate: enroll } = useSelfEnroll();
   const { toast } = useToast();
   const matchingTeacher = response?.data; // once teacher profile image is included in course.user, we can remove this
@@ -164,14 +164,14 @@ const MatchingClassesSection = ({ course }: MatchingClassesSectionProps) => {
               <span className="text-sm font-medium text-blue-800">Classmates taking this course</span>
             </div>
             <div className="flex flex-wrap gap-2">
-              {enrollments?.map((student, i) => (
+              {course.studentsList?.map((student, i) => (
                 <div key={i} className="flex items-center bg-white rounded-full py-1 px-3 border border-blue-100">
                   <Avatar className="h-6 w-6 mr-2">
-                    <AvatarFallback className="bg-blue-100 text-xs text-blue-700">{student.avatar}</AvatarFallback>
+                    <AvatarFallback className="bg-blue-100 text-xs text-blue-700">{student.profileImage ?? getUserInitials(student.fullName)}</AvatarFallback>
                   </Avatar>
-                  <span className="text-xs">{student.name}</span>
+                  <span className="text-xs">{student.fullName}</span>
                   <Badge variant="outline" className="ml-2 text-[10px] px-1 py-0 h-4 bg-blue-50">
-                    {student.shared} shared {student.shared > 1 ? "classes" : "class"}
+                    {student.shared || 0} shared {student.shared > 1 ? "classes" : "class"}
                   </Badge>
                 </div>
               ))}

@@ -1,8 +1,8 @@
 
-import { 
-  BookOpen, 
-  Clock, 
-  Calendar, 
+import {
+  BookOpen,
+  Clock,
+  Calendar,
   Star,
   FileText,
   Users,
@@ -13,9 +13,9 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
-  Card, 
-  CardHeader, 
-  CardTitle, 
+  Card,
+  CardHeader,
+  CardTitle,
   CardContent
 } from "@/components/ui/card";
 import {
@@ -54,7 +54,6 @@ interface EnrolledClassesTableProps {
   enrolledCourses: ClassDetail[];
 }
 
-const EnrolledClassesTable = ({ enrolledCourses }: EnrolledClassesTableProps) => {
   // Generate avatar initials for demo
   const generateInitials = (index: number) => {
     const initials = ["JD", "TS", "EW", "AM", "KP", "RJ"];
@@ -74,6 +73,8 @@ const EnrolledClassesTable = ({ enrolledCourses }: EnrolledClassesTableProps) =>
         return <FileText className="h-4 w-4 text-blue-500" />;
     }
   };
+
+const EnrolledClassesTable = ({ enrolledCourses }: EnrolledClassesTableProps) => {
 
   return (
     <Card>
@@ -98,94 +99,105 @@ const EnrolledClassesTable = ({ enrolledCourses }: EnrolledClassesTableProps) =>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {enrolledCourses.map((course) => {
-                const cohort = course.cohorts?.find((cohort) => cohort.isActive) ?? course.cohorts?.[0];
-                const nextClassTime = getNextClassTime({
-                  daysOfWeek: cohort?.daysOfWeek,
-                  startTime: cohort?.startTime,
-                  endTime: cohort?.endTime
-                });
+              {enrolledCourses.map((enrollment) => {
+                
                 return (
-                <TableRow key={course._id}>
-                  <TableCell className="font-medium">
-                    <div>
-                      <div className="font-semibold">{course.title}</div>
-                      <div className="flex items-center gap-2 mt-1">
-                        <Badge variant="secondary" className="bg-blue-100 text-blue-700 hover:bg-blue-200">
-                          {course.subject}
-                        </Badge>
-                        <div className="flex items-center text-amber-500">
-                          <Star className="h-3.5 w-3.5 fill-amber-500 mr-1" />
-                          <span className="font-medium">{course.rating}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="w-[100px]">
-                      <div className="flex justify-between items-center mb-1">
-                        <span className="text-xs text-gray-600"></span>
-                        <span className="text-xs font-medium">{course.progress}%</span>
-                      </div>
-                      <Progress value={course.progress} className="h-2" />
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center">
-                      <Clock className="h-3.5 w-3.5 text-gray-400 mr-1" />
-                      <span className="text-sm">{nextClassTime}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center">
-                      <Calendar className="h-3.5 w-3.5 text-gray-400 mr-1" />
-                      <span className="text-sm">{formatDate(cohort?.enrollmentDeadline, 'MMMM d, yyyy')}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center">
-                      <span className="text-sm font-medium mr-2">{cohort.currentStudents}/{cohort.maximumStudents}</span>
-                      <div className="flex -space-x-2">
-                        {[...Array(3)].map((_, i) => (
-                          <Avatar key={i} className="border-2 border-white w-7 h-7 bg-blue-200">
-                            <AvatarFallback className="text-xs text-blue-700">
-                              {generateInitials(i)}
-                            </AvatarFallback>
-                          </Avatar>
-                        ))}
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    {course.activityStatus ? (
-                      <div className="flex items-center">
-                        {getActivityIcon(course.activityStatus.type)}
-                        <div className="ml-2">
-                          <p className="text-sm font-medium">{course.activityStatus.label}</p>
-                          <p className="text-xs text-gray-500">Due: {course.activityStatus.dueDate}</p>
-                        </div>
-                      </div>
-                    ) : (
-                      <span className="text-sm text-gray-500">No upcoming activities</span>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Link to={`/course-progress/${course._id}`}>
-                      <Button 
-                        size="sm" 
-                        className="bg-indigo-600 hover:bg-indigo-700 h-8"
-                      >
-                        View Progress
-                      </Button>
-                    </Link>
-                  </TableCell>
-                </TableRow>
-              )})}
+                  <CourseRow
+                    key={enrollment._id}
+                    enrollment={enrollment} />
+                )
+              })}
             </TableBody>
           </Table>
         </div>
       </CardContent>
     </Card>
+  );
+};
+
+const CourseRow = ({ enrollment }: { enrollment: ClassDetail }) => {
+  const { class: course } = enrollment;
+  const cohort = course.cohorts?.find((cohort) => cohort.isActive) ?? course.cohorts?.[0];
+  const nextClassTime = cohort && getNextClassTime({
+    daysOfWeek: cohort?.daysOfWeek,
+    startTime: cohort?.startTime,
+    endTime: cohort?.endTime
+  });
+  return (
+    <TableRow key={course._id}>
+      <TableCell className="font-medium">
+        <div>
+          <div className="font-semibold">{course.title}</div>
+          <div className="flex items-center gap-2 mt-1">
+            <Badge variant="secondary" className="bg-blue-100 text-blue-700 hover:bg-blue-200">
+              {course.subject}
+            </Badge>
+            <div className="flex items-center text-amber-500">
+              <Star className="h-3.5 w-3.5 fill-amber-500 mr-1" />
+              <span className="font-medium">{course.rating}</span>
+            </div>
+          </div>
+        </div>
+      </TableCell>
+      <TableCell>
+        <div className="w-[100px]">
+          <div className="flex justify-between items-center mb-1">
+            <span className="text-xs text-gray-600"></span>
+            <span className="text-xs font-medium">{enrollment?.progress}%</span>
+          </div>
+          <Progress value={enrollment?.progress ?? 20} className="h-2" />
+        </div>
+      </TableCell>
+      <TableCell>
+        <div className="flex items-center">
+          <Clock className="h-3.5 w-3.5 text-gray-400 mr-1" />
+          <span className="text-sm">{nextClassTime}</span>
+        </div>
+      </TableCell>
+      <TableCell>
+        <div className="flex items-center">
+          <Calendar className="h-3.5 w-3.5 text-gray-400 mr-1" />
+          <span className="text-sm">{cohort && formatDate(cohort.enrollmentDeadline, 'MMMM d, yyyy')}</span>
+        </div>
+      </TableCell>
+      <TableCell>
+        <div className="flex items-center">
+          <span className="text-sm font-medium mr-2">{course?.studentsList?.length}/{cohort?.maximumStudents}</span>
+          <div className="flex -space-x-2">
+            {[...Array(3)].map((_, i) => (
+              <Avatar key={i} className="border-2 border-white w-7 h-7 bg-blue-200">
+                <AvatarFallback className="text-xs text-blue-700">
+                  {generateInitials(i)}
+                </AvatarFallback>
+              </Avatar>
+            ))}
+          </div>
+        </div>
+      </TableCell>
+      <TableCell>
+        {course.activityStatus ? (
+          <div className="flex items-center">
+            {getActivityIcon(course.activityStatus.type)}
+            <div className="ml-2">
+              <p className="text-sm font-medium">{course.activityStatus.label}</p>
+              <p className="text-xs text-gray-500">Due: {course.activityStatus.dueDate}</p>
+            </div>
+          </div>
+        ) : (
+          <span className="text-sm text-gray-500">No upcoming activities</span>
+        )}
+      </TableCell>
+      <TableCell className="text-right">
+        <Link to={`/course-progress/${course._id}`}>
+          <Button
+            size="sm"
+            className="bg-indigo-600 hover:bg-indigo-700 h-8"
+          >
+            View Progress
+          </Button>
+        </Link>
+      </TableCell>
+    </TableRow>
   );
 };
 

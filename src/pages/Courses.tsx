@@ -10,12 +10,7 @@ import MatchingClassesSection from "@/components/courses/MatchingClassesSection"
 import EnrolledClassesTable from "@/components/courses/EnrolledClassesTable";
 import CompletedClassesTable from "@/components/courses/CompletedClassesTable";
 import CourseFilters from "@/components/courses/CourseFilters";
-import {
-  mockTeachers,
-  mockRecommendedCourses,
-  mockEnrolledCourses,
-  mockCompletedCourses
-} from "@/components/courses/CourseData";
+
 import { useAuth } from "@/contexts/AuthContext";
 import { useGetCompletedClassesForStudent, useGetCurrentClassesForStudent, useGetRecommendedClasses } from "@/hooks/use-class-service";
 
@@ -23,14 +18,14 @@ const Courses = () => {
   const [filterOpen, setFilterOpen] = useState(false);
   const { user } = useAuth();
   const { data: response, isLoading } = useGetRecommendedClasses(user.id);
-  const { data: enrolledClassesResponse, isLoading: enrolledClassesLoading } = useGetCurrentClassesForStudent(user.studentId);
-  const { data: completedClassesResponse, isLoading: completedClassesLoading } = useGetCompletedClassesForStudent(user.studentId);
+  const { data: enrolledClassesResponse, isLoading: enrolledClassesLoading } = useGetCurrentClassesForStudent(user.id);
+  const { data: completedClassesResponse, isLoading: completedClassesLoading } = useGetCompletedClassesForStudent(user.id);
   const recommendedClasses = response?.data ?? [];
   const enrolledClasses = enrolledClassesResponse?.data ?? [];
   const completedClasses = completedClassesResponse?.data ?? [];
 
-  console.log({ enrolledClasses, recommendedClasses });
-  if (isLoading || enrolledClassesLoading) return (
+  console.log({ enrolledClasses, recommendedClasses, user });
+  if (isLoading || enrolledClassesLoading || completedClassesLoading) return (
     <div className="min-h-screen flex items-center justify-center">
       <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-kidato-purple"></div>
     </div>
