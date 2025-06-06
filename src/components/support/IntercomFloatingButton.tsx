@@ -4,6 +4,20 @@ import { Button } from '@/components/ui/button';
 import { MessageCircle, HelpCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
+// Custom Intercom Icon Component
+const IntercomIcon: React.FC<{ className?: string }> = ({ className }) => (
+  <svg
+    className={className}
+    viewBox="0 0 28 32"
+    fill="currentColor"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path d="M28 32S24 16 16 16 4 32 4 32h24zM24 16V8c0-4.4-3.6-8-8-8s-8 3.6-8 8v8c0 2.2 1.8 4 4 4h8c2.2 0 4-1.8 4-4z"/>
+    <circle cx="8" cy="12" r="2"/>
+    <circle cx="20" cy="12" r="2"/>
+  </svg>
+);
+
 interface IntercomFloatingButtonProps {
   position?: 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
   variant?: 'help' | 'chat';

@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
-import { CheckCircle, User, BookOpen, Star, Award, ChevronRight, Camera, Phone, MapPin, GraduationCap, X } from 'lucide-react';
+import { CheckCircle, User, BookOpen, Star, Award, ChevronRight, Camera, Phone, MapPin, GraduationCap, X, LogOut } from 'lucide-react';
 import { useProfileJourney } from './ProfileJourneyContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { cn } from "@/lib/utils";
 import { PersonalInformationForm } from './forms/PersonalInformationForm';
 import { EducationForm } from './forms/EducationForm';
 import { ExpertiseForm } from './forms/ExpertiseForm';
 import { CertificationsForm } from './forms/CertificationsForm';
+import { Button } from '@/components/ui/button';
 
 const TeacherJourneySteps = () => {
   const { 
@@ -18,9 +20,16 @@ const TeacherJourneySteps = () => {
     nextStep
   } = useProfileJourney();
   
+  const { signOut } = useAuth();
+  
   // Page state
   const [showFormPage, setShowFormPage] = useState(false);
   const [selectedStep, setSelectedStep] = useState<string | null>(null);
+  
+  // Handle logout
+  const handleLogout = async () => {
+    await signOut();
+  };
   
   // Count completed steps
   const completedStepsCount = Object.values(completedSteps).filter(Boolean).length;
@@ -106,10 +115,36 @@ const TeacherJourneySteps = () => {
     return firstIncompleteStep === step;
   };
   
+  // Simplified Top Navigation Bar Component
+  const TopNavigationBar = () => (
+    <div className="bg-white border-b border-gray-200 p-4 shadow-sm">
+      <div className="max-w-7xl mx-auto flex items-center justify-between">
+        {/* Logo/Brand */}
+        <div className="flex items-center gap-3">
+          <img 
+            src="/favicon.ico" 
+            alt="Kidato Logo" 
+            className="w-10 h-10"
+          />
+          <h1 className="text-xl font-bold text-gray-900">Kidato</h1>
+        </div>
+
+        {/* Logout Button */}
+        <Button variant="ghost" size="sm" onClick={handleLogout} className="text-red-600 hover:text-red-700 hover:bg-red-50">
+          <LogOut className="mr-2 h-4 w-4" />
+          <span>Sign out</span>
+        </Button>
+      </div>
+    </div>
+  );
+
   // Show form page if selected
   if (showFormPage && selectedStep) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
+        {/* Top Navigation */}
+        <TopNavigationBar />
+        
         {/* Header with back button */}
         <div className="bg-white border-b border-gray-200 p-6">
           <div className="max-w-4xl mx-auto flex items-center justify-between">
@@ -154,7 +189,7 @@ const TeacherJourneySteps = () => {
           {selectedStep === 'expertise' && (
             <ExpertiseForm onComplete={handleStepComplete} />
           )}
-          {selectedStep === 'certifications' && (
+    {selectedStep === 'certifications' && (
             <CertificationsForm onComplete={handleStepComplete} />
           )}
         </div>
@@ -163,7 +198,11 @@ const TeacherJourneySteps = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-gray-50 to-blue-50 p-8">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
+      {/* Top Navigation */}
+      <TopNavigationBar />
+      
+      <div className="flex flex-col items-center justify-center p-8 min-h-[calc(100vh-80px)]">
 
         {/* Header */}
         <div className="text-center mb-12">
@@ -172,9 +211,14 @@ const TeacherJourneySteps = () => {
               {completedStepsCount}/{steps.length}
             </div>
             <div className="text-left">
-              <h1 className="text-4xl font-bold text-gray-900">Teaching Profile</h1>
+              <h1 className="text-4xl font-bold text-gray-900">
+                {completedStepsCount === steps.length ? "Welcome to Kidato! 🎉" : "Welcome to Kidato!"}
+              </h1>
               <p className="text-xl text-gray-600">
-                {completedStepsCount === steps.length ? "All done! 🎉" : "Click any step to begin"}
+                {completedStepsCount === steps.length 
+                  ? "Your teaching profile is complete and ready to inspire students!" 
+                  : "Let's build your amazing teaching profile together"
+                }
               </p>
             </div>
           </div>
@@ -336,6 +380,7 @@ const TeacherJourneySteps = () => {
             </div>
           )}
         </div>
+      </div>
     </div>
   );
 };

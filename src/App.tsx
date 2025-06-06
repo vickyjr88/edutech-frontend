@@ -54,6 +54,8 @@ import TeacherClassViewPage from "./pages/TeacherClassViewPage";
 import TeacherEarningsPage from "./pages/TeacherEarningsPage";
 import DocumentViewer from "./pages/DocumentViewer";
 import DocumentProxy from "./pages/DocumentProxy";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsAndConditions from "./pages/TermsAndConditions";
 
 // Create a client
 const queryClient = new QueryClient();
@@ -86,6 +88,10 @@ const App = () => {
                 <Route path="/class/:id" element={<ClassDetailsPage />} />
                 <Route path="/teacher/:teacherId" element={<TeacherProfilePage />} />
                 <Route path="/teacher-pricing" element={<TeachersPricing />} />
+                
+                {/* Legal Pages */}
+                <Route path="/privacy" element={<PrivacyPolicy />} />
+                <Route path="/terms" element={<TermsAndConditions />} />
                 
                 {/* Protected Routes */}
                 <Route path="/student-dashboard" element={
@@ -280,6 +286,10 @@ const App = () => {
                   <Route path="/class/:id" element={<ClassDetailsPage />} />
                   <Route path="/teacher/:teacherId" element={<TeacherProfilePage />} />
                   <Route path="/teacher-pricing" element={<TeachersPricing />} />
+                  
+                  {/* Legal Pages */}
+                  <Route path="/privacy" element={<PrivacyPolicy />} />
+                  <Route path="/terms" element={<TermsAndConditions />} />
                   
                   <Route path="/student-dashboard" element={
                     <ProtectedRoute>

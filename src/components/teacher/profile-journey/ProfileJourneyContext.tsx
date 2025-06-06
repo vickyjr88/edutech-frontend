@@ -181,7 +181,10 @@ interface ProfileJourneyContextType {
   setEducation: (items: EducationItem[]) => void;
   saveEducation: () => Promise<boolean>;
   setExperience: (items: ExperienceItem[]) => void;
-  saveExperience: () => Promise<boolean>;
+  saveExperience: (experienceData?: ExperienceItem[]) => Promise<boolean>;
+  saveSubjects: (academicSubjectsData?: AcademicSubjectItem[], afterSchoolSubjectsData?: AfterSchoolSubjectItem[]) => Promise<boolean>;
+  saveLanguages: (languagesData?: LanguageItem[]) => Promise<boolean>;
+  saveTechnicalSkills: (skillsData?: TechnicalSkillItem[]) => Promise<boolean>;
   setAcademicSubjects: (items: AcademicSubjectItem[]) => void;
   setAfterSchoolSubjects: (items: AfterSchoolSubjectItem[]) => void;
   setStrategies: (items: StrategyItem[]) => void;
@@ -298,6 +301,9 @@ const defaultContext: ProfileJourneyContextType = {
   saveEducation: async () => false,
   setExperience: () => {},
   saveExperience: async () => false,
+  saveSubjects: async () => false,
+  saveLanguages: async () => false,
+  saveTechnicalSkills: async () => false,
   setAcademicSubjects: () => {},
   setAfterSchoolSubjects: () => {},
   setStrategies: () => {},
@@ -591,7 +597,7 @@ export const ProfileJourneyProvider = ({ children }: { children: ReactNode }) =>
   };
 
   // Save experience function - called when experience step is completed
-  const saveExperience = async (): Promise<boolean> => {
+  const saveExperience = async (experienceData?: ExperienceItem[]): Promise<boolean> => {
     try {
       if (!user?.teacherId) {
         toast({
@@ -604,10 +610,13 @@ export const ProfileJourneyProvider = ({ children }: { children: ReactNode }) =>
 
       const teacherId = user.teacherId;
       console.log("Saving experience for teacher:", teacherId);
-      console.log("Experience items to save:", experience);
+      
+      // Use provided data or fall back to context state
+      const experienceToSave = experienceData || experience;
+      console.log("Experience items to save:", experienceToSave);
 
       // Convert ExperienceItem format to Experience format for the API
-      const experienceItemsForAPI = experience.map(exp => {
+      const experienceItemsForAPI = experienceToSave.map(exp => {
         const baseItem = {
           position: exp.position || '',
           institution: exp.institution || '',
@@ -623,7 +632,7 @@ export const ProfileJourneyProvider = ({ children }: { children: ReactNode }) =>
         };
 
         // Only include id for existing items (not new items with temporary IDs)
-        if (exp._id && !exp._id.startsWith('exp-') && !exp._id.startsWith('temp_')) {
+      if (exp._id && !exp._id.startsWith('cv-') && !exp._id.startsWith('temp_')) {
           return {
             id: exp._id,
             ...baseItem
@@ -646,8 +655,8 @@ export const ProfileJourneyProvider = ({ children }: { children: ReactNode }) =>
       // Update local state with the response data if available
       if (result.data && Array.isArray(result.data)) {
         const updatedExperience = result.data.map((apiExp, index) => ({
-          ...experience[index],
-          _id: apiExp.id || experience[index]._id
+          ...experienceToSave[index],
+          _id: apiExp.id || experienceToSave[index]._id
         }));
         setExperience(updatedExperience);
       }
@@ -664,6 +673,279 @@ export const ProfileJourneyProvider = ({ children }: { children: ReactNode }) =>
       toast({
         title: "Error",
         description: error instanceof Error ? error.message : "Failed to save experience information. Please try again.",
+        variant: "destructive",
+      });
+      return false;
+    }
+  };
+
+  // Save subjects function - called when subjects are updated
+  const saveSubjects = async (academicSubjectsData?: AcademicSubjectItem[], afterSchoolSubjectsData?: AfterSchoolSubjectItem[]): Promise<boolean> => {
+    try {
+      if (!user?.teacherId) {
+        toast({
+          title: "Error",
+          description: "Teacher ID not found. Please ensure you are logged in.",
+          variant: "destructive"
+        });
+        return false;
+      }
+
+      const teacherId = user.teacherId;
+      console.log("Saving subjects for teacher:", teacherId);
+      
+      const academicToSave = academicSubjectsData || academicSubjects;
+      const afterSchoolToSave = afterSchoolSubjectsData || afterSchoolSubjects;
+      console.log("Academic subjects to save:", academicToSave);
+      console.log("After-school subjects to save:", afterSchoolToSave);
+
+      // Convert subject items to API format and filter out empty subjects
+      const academicSubjectsForAPI = academicToSave
+        .filter(subject => subject.subject && subject.subject.trim()) // Only include non-empty subjects
+        .map(subject => {
+          const baseItem = {
+            subject: subject.subject.trim(), // AcademicSubjectItem uses 'subject' field
+            isAcademic: true,
+            teacherProfile: teacherId,
+            // Include curriculum and gradeLevel if available for academic subjects
+            ...(subject.curriculum && { curriculum: subject.curriculum }),
+            ...(subject.gradeLevel && { gradeLevel: subject.gradeLevel })
+          };
+
+          // Only include id for existing items (not new items with temporary IDs)
+          if (subject._id && !subject._id.startsWith('cv-academic')) {
+            return {
+              id: subject._id,
+              ...baseItem
+            };
+          }
+
+          // For new items, don't include the id field at all
+          return baseItem;
+        });
+
+      const afterSchoolSubjectsForAPI = afterSchoolToSave
+        .filter(subject => subject.subject && subject.subject.trim()) // Only include non-empty subjects
+        .map(subject => {
+          const baseItem = {
+            subject: subject.subject.trim(), // AfterSchoolSubjectItem uses 'subject' field
+            isAcademic: false,
+            teacherProfile: teacherId
+          };
+
+          // Only include id for existing items (not new items with temporary IDs)
+          if (subject._id && !subject._id.startsWith('afterschool-')) {
+            return {
+              id: subject._id,
+              ...baseItem
+            };
+          }
+
+          // For new items, don't include the id field at all
+          return baseItem;
+        });
+
+      const allSubjectsForAPI = [...academicSubjectsForAPI, ...afterSchoolSubjectsForAPI];
+
+      console.log("Sending subjects to API:", allSubjectsForAPI);
+
+      // Call the bulk update endpoint
+      const result = await teacherService.updateTeacherSubjects(teacherId, allSubjectsForAPI);
+      
+      if (result.error) {
+        throw new Error(result.error.message || 'Failed to save subjects information');
+      }
+
+      // Update local state with the response data if available
+      if (result.data && Array.isArray(result.data)) {
+        const updatedAcademicSubjects = result.data
+          .filter(subject => subject.isAcademic)
+          .map((apiSubject, index) => ({
+            ...academicToSave[index] || {},
+            _id: apiSubject.id || apiSubject._id,
+            subject: apiSubject.subject || apiSubject.name // API returns 'subject' field
+          }));
+        
+        const updatedAfterSchoolSubjects = result.data
+          .filter(subject => !subject.isAcademic)
+          .map((apiSubject, index) => ({
+            ...afterSchoolToSave[index] || {},
+            _id: apiSubject.id || apiSubject._id,
+            subject: apiSubject.subject || apiSubject.name // API returns 'subject' field
+          }));
+        
+        setAcademicSubjects(updatedAcademicSubjects);
+        setAfterSchoolSubjects(updatedAfterSchoolSubjects);
+      }
+
+      toast({
+        title: "Success",
+        description: "Subjects information saved successfully",
+      });
+
+      console.log("Subjects saved successfully");
+      return true;
+    } catch (error) {
+      console.error("Error saving subjects:", error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to save subjects information. Please try again.",
+        variant: "destructive",
+      });
+      return false;
+    }
+  };
+
+  // Save languages function - called when languages are updated
+  const saveLanguages = async (languagesData?: LanguageItem[]): Promise<boolean> => {
+    try {
+      if (!user?.teacherId) {
+        toast({
+          title: "Error",
+          description: "Teacher ID not found. Please ensure you are logged in.",
+          variant: "destructive"
+        });
+        return false;
+      }
+
+      const teacherId = user.teacherId;
+      console.log("Saving languages for teacher:", teacherId);
+      
+      // Use provided data or fall back to context state
+      const languagesToSave = languagesData || languages;
+      console.log("Languages to save:", languagesToSave);
+
+      // Convert language items to API format
+      const languagesForAPI = languagesToSave.map(lang => {
+        const baseItem = {
+          name: lang.name || lang.language || '', // Use name field as per API requirement
+          proficiency: lang.proficiency || '',
+          teacherProfile: teacherId
+        };
+
+        // Only include id for existing items (not new items with temporary IDs)
+        if (lang._id && !lang._id.startsWith('lang-') && !lang._id.startsWith('cv-lang-')) {
+          return {
+            id: lang._id,
+            ...baseItem
+          };
+        }
+
+        // For new items, don't include the id field at all
+        return baseItem;
+      });
+
+      console.log("Sending languages to API:", languagesForAPI);
+
+      // Call the bulk update endpoint
+      const result = await teacherService.updateTeacherLanguages(teacherId, languagesForAPI);
+      
+      if (result.error) {
+        throw new Error(result.error.message || 'Failed to save languages information');
+      }
+
+      // Update local state with the response data if available
+      if (result.data && Array.isArray(result.data)) {
+        const updatedLanguages = result.data.map((apiLang, index) => ({
+          ...languagesToSave[index],
+          _id: apiLang.id || languagesToSave[index]._id
+        }));
+        setLanguages(updatedLanguages);
+      }
+
+      toast({
+        title: "Success",
+        description: "Languages information saved successfully",
+      });
+
+      console.log("Languages saved successfully");
+      return true;
+    } catch (error) {
+      console.error("Error saving languages:", error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to save languages information. Please try again.",
+        variant: "destructive",
+      });
+      return false;
+    }
+  };
+
+  // Save technical skills function - called when technical skills are updated
+  const saveTechnicalSkills = async (skillsData?: TechnicalSkillItem[]): Promise<boolean> => {
+    try {
+      if (!user?.teacherId) {
+        toast({
+          title: "Error",
+          description: "Teacher ID not found. Please ensure you are logged in.",
+          variant: "destructive"
+        });
+        return false;
+      }
+
+      const teacherId = user.teacherId;
+      console.log("Saving technical skills for teacher:", teacherId);
+      
+      // Use provided data or fall back to context state
+      const skillsToSave = skillsData || technicalSkills;
+      console.log("Technical skills to save:", skillsToSave);
+
+      // Convert technical skill items to API format
+      const skillsForAPI = skillsToSave.map(skill => {
+        const baseItem = {
+          skill: skill.name || '', // TechnicalSkillItem uses 'name' field, but API expects 'skill'
+          description: skill.description || '',
+          level: skill.level || '',
+          isCertified: skill.isCertified || false,
+          teacherProfile: teacherId
+        };
+
+        // Only include id for existing items (not new items with temporary IDs)
+        if (skill._id && !skill._id.startsWith('skill-') && !skill._id.startsWith('cv-skill-')) {
+          return {
+            id: skill._id,
+            ...baseItem
+          };
+        }
+
+        // For new items, don't include the id field at all
+        return baseItem;
+      });
+
+      console.log("Sending technical skills to API:", skillsForAPI);
+
+      // Call the bulk update endpoint
+      const result = await teacherService.updateTeacherTechnicalSkills(teacherId, skillsForAPI);
+      
+      if (result.error) {
+        throw new Error(result.error.message || 'Failed to save technical skills information');
+      }
+
+      // Update local state with the response data if available
+      if (result.data && Array.isArray(result.data)) {
+        const updatedSkills = result.data.map((apiSkill, index) => ({
+          ...skillsToSave[index],
+          _id: apiSkill.id || skillsToSave[index]._id,
+          name: apiSkill.skill || apiSkill.name, // API returns 'skill' field, map to 'name'
+          description: apiSkill.description || '',
+          level: apiSkill.level || '',
+          isCertified: apiSkill.isCertified || false
+        }));
+        setTechnicalSkills(updatedSkills);
+      }
+
+      toast({
+        title: "Success",
+        description: "Technical skills information saved successfully",
+      });
+
+      console.log("Technical skills saved successfully");
+      return true;
+    } catch (error) {
+      console.error("Error saving technical skills:", error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to save technical skills information. Please try again.",
         variant: "destructive",
       });
       return false;
@@ -1532,10 +1814,13 @@ export const ProfileJourneyProvider = ({ children }: { children: ReactNode }) =>
     saveExperience,
     setAcademicSubjects,
     setAfterSchoolSubjects,
+    saveSubjects,
     setStrategies,
     setMethodologies,
     setLanguages,
+    saveLanguages,
     setTechnicalSkills,
+    saveTechnicalSkills,
     setCertifications,
     updateVerification,
     updatePlatformSettings,
