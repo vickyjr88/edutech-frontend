@@ -741,7 +741,17 @@ export const teacherService = {
             reason
         });
     },
-
+    generateCustomClassDescription: (prompt: string): Promise<ApiResponse<{
+        "success": boolean,
+        "message": string,
+        "data": {
+            "description": string
+        }
+    }>> => {
+        return api.post<any>('/teacher/custom-class/generate-description', {
+            prompt
+        });
+    },
     // Custom Class Generation
     generateCustomClass: (prompt: string): Promise<ApiResponse<{
         generatedClass: {

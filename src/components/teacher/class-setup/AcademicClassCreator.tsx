@@ -46,9 +46,12 @@ import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
 import { FormFileUpload } from '@/components/ui/form/file-upload';
 
-import { ClassFormValues, CohortData, classSchema } from './types';
+import { ClassFormValues, CohortData, classSchema, Curriculum, CurriculumLevel, Subject } from './types';
 import { useAuth } from '@/contexts/AuthContext';
 import { LessonForm } from './lesson-plans/LessonForm';
+import { platformService } from '@/integrations/api/services/platform.service';
+import { AIDescriptionButton } from '@/components/ui/ai-description-button';
+import { DescriptionContext } from '@/services/aiDescriptionService';
 
 interface AcademicClassCreatorProps {
   onSubmit: (data: ClassFormValues) => void;
@@ -68,6 +71,61 @@ interface StepConfig {
 const ClassFoundationStep = ({ form, onNext }: any) => {
   const [materials, setMaterials] = useState(form.watch('materials') || []);
   const [resourceLinks, setResourceLinks] = useState(form.watch('resourceLinks') || []);
+  
+  // Curriculum API state
+  const [curricula, setCurricula] = useState<Curriculum[]>([]);
+  const [curriculumLevels, setCurriculumLevels] = useState<CurriculumLevel[]>([]);
+  const [subjects, setSubjects] = useState<Subject[]>([]);
+  const [loadingCurricula, setLoadingCurricula] = useState(false);
+  const [selectedCurriculum, setSelectedCurriculum] = useState<Curriculum | null>(null);
+
+  // Curriculum-specific styling and UX
+  const getCurriculumStyling = (curriculumCode: string) => {
+    const styles = {
+      'british': {
+        gradient: 'bg-gradient-to-br from-blue-500 to-purple-600',
+        hoverGradient: 'hover:from-blue-600 hover:to-purple-700',
+        selectedGradient: 'from-blue-600 to-purple-700',
+        icon: '🇬🇧',
+        accentColor: 'blue',
+        description: 'International General Certificate'
+      },
+      'ib': {
+        gradient: 'bg-gradient-to-br from-emerald-500 to-teal-600',
+        hoverGradient: 'hover:from-emerald-600 hover:to-teal-700',
+        selectedGradient: 'from-emerald-600 to-teal-700',
+        icon: '🌍',
+        accentColor: 'emerald',
+        description: 'International Baccalaureate'
+      },
+      'cbc': {
+        gradient: 'bg-gradient-to-br from-green-500 to-emerald-600',
+        hoverGradient: 'hover:from-green-600 hover:to-emerald-700',
+        selectedGradient: 'from-green-600 to-emerald-700',
+        icon: '🇰🇪',
+        accentColor: 'green',
+        description: 'Kenyan National Curriculum'
+      },
+      'american': {
+        gradient: 'bg-gradient-to-br from-red-500 to-pink-600',
+        hoverGradient: 'hover:from-red-600 hover:to-pink-700',
+        selectedGradient: 'from-red-600 to-pink-700',
+        icon: '🇺🇸',
+        accentColor: 'red',
+        description: 'American Education System'
+      }
+    };
+    
+    return styles[curriculumCode as keyof typeof styles] || {
+      gradient: 'bg-gradient-to-br from-gray-500 to-slate-600',
+      hoverGradient: 'hover:from-gray-600 hover:to-slate-700',
+      selectedGradient: 'from-gray-600 to-slate-700',
+      icon: '📚',
+      accentColor: 'gray',
+      description: 'Education Curriculum'
+    };
+  };
+
   const [objectives, setObjectives] = useState(() => {
     const currentObjectives = form.watch('objectives');
     if (currentObjectives && typeof currentObjectives === 'string') {
@@ -84,6 +142,108 @@ const ClassFoundationStep = ({ form, onNext }: any) => {
   
   // File upload states
   const [uploadingFiles, setUploadingFiles] = useState<{[key: string]: boolean}>({});
+
+  // Fetch curricula on component mount
+  useEffect(() => {
+    const fetchCurricula = async () => {
+      setLoadingCurricula(true);
+      try {
+        const response = await platformService.getCurricula();
+        if (response.data && !response.error) {
+          setCurricula(response.data);
+        } else if (response.error) {
+          console.error('API Error:', response.error);
+        }
+      } catch (error) {
+        console.error('Error fetching curricula:', error);
+      } finally {
+        setLoadingCurricula(false);
+      }
+    };
+    
+    fetchCurricula();
+  }, []);
+
+  // Set curriculum levels when curriculum changes (no API call needed)
+  const setCurriculumLevelsFromData = (curriculumId: string) => {
+    if (!curriculumId) {
+      setCurriculumLevels([]);
+      return;
+    }
+    
+    const curriculum = curricula.find(c => c._id === curriculumId || c.code === curriculumId);
+    if (curriculum && curriculum.levels) {
+      setCurriculumLevels(curriculum.levels);
+    } else {
+      setCurriculumLevels([]);
+    }
+  };
+
+  // Set subjects when curriculum and level change (no API call needed)
+  const setSubjectsFromData = (curriculumId: string, levelId: string) => {
+    if (!curriculumId || !levelId) {
+      setSubjects([]);
+      return;
+    }
+    
+    const curriculum = curricula.find(c => c._id === curriculumId || c.code === curriculumId);
+    if (!curriculum) {
+      setSubjects([]);
+      return;
+    }
+    
+    const level = curriculum.levels.find(l => l.code === levelId);
+    if (!level || !level.subjects) {
+      setSubjects([]);
+      return;
+    }
+    
+    // Convert subjects to standardized format
+    let subjectsList: Subject[] = [];
+    
+    if (Array.isArray(level.subjects)) {
+      // Simple array of subject names
+      subjectsList = level.subjects.map((name, index) => ({
+        id: `${curriculumId}_${levelId}_${index}`,
+        name,
+        curriculumId,
+        levelId
+      }));
+    } else {
+      // Object with categories (like IGCSE/A-Levels)
+      let index = 0;
+      Object.entries(level.subjects).forEach(([category, subjectArray]) => {
+        if (Array.isArray(subjectArray)) {
+          subjectArray.forEach((name: string) => {
+            subjectsList.push({
+              id: `${curriculumId}_${levelId}_${category}_${index++}`,
+              name,
+              category,
+              curriculumId,
+              levelId
+            });
+          });
+        } else if (typeof subjectArray === 'object') {
+          // Handle nested categories (like CBC pathways)
+          Object.entries(subjectArray).forEach(([subCategory, subSubjectArray]) => {
+            if (Array.isArray(subSubjectArray)) {
+              subSubjectArray.forEach((name: string) => {
+                subjectsList.push({
+                  id: `${curriculumId}_${levelId}_${category}_${subCategory}_${index++}`,
+                  name,
+                  category: `${category}-${subCategory}`,
+                  curriculumId,
+                  levelId
+                });
+              });
+            }
+          });
+        }
+      });
+    }
+    
+    setSubjects(subjectsList);
+  };
   
   // Learning objectives functions
   const addObjective = () => {
@@ -212,13 +372,24 @@ const ClassFoundationStep = ({ form, onNext }: any) => {
 
       <div className="max-w-4xl mx-auto space-y-8">
         {/* Basic Information Card */}
-        <Card className="border-kidato-blue-200 shadow-lg">
-          <CardHeader className="bg-gradient-to-r from-kidato-blue-50 to-kidato-purple-50 border-b">
+            <Card className={`${selectedCurriculum ? `border-${getCurriculumStyling(selectedCurriculum.code).accentColor}-200` : 'border-kidato-blue-200'} shadow-lg`}>
+          <CardHeader className={`${selectedCurriculum ? `bg-gradient-to-r from-${getCurriculumStyling(selectedCurriculum.code).accentColor}-50 to-${getCurriculumStyling(selectedCurriculum.code).accentColor}-100` : 'bg-gradient-to-r from-kidato-blue-50 to-kidato-purple-50'} border-b`}>
             <CardTitle className="flex items-center gap-2">
-              <BookOpen className="h-5 w-5 text-kidato-blue" />
+              <BookOpen className={`h-5 w-5 ${selectedCurriculum ? `text-${getCurriculumStyling(selectedCurriculum.code).accentColor}-600` : 'text-kidato-blue'}`} />
               Class Foundation
+              {selectedCurriculum && (
+                <span className="text-sm bg-white px-2 py-1 rounded-full flex items-center gap-1">
+                  {getCurriculumStyling(selectedCurriculum.code).icon}
+                  {selectedCurriculum.code}
+                </span>
+              )}
             </CardTitle>
-            <CardDescription>The essential details that define your class</CardDescription>
+            <CardDescription>
+              {selectedCurriculum 
+                ? `Create your ${selectedCurriculum.name} class with tailored settings`
+                : 'The essential details that define your class'
+              }
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6 pt-6">
             <FormField
@@ -242,82 +413,494 @@ const ClassFoundationStep = ({ form, onNext }: any) => {
               )}
             />
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <FormField
-                control={form.control}
-                name="subject"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-base font-semibold">Subject *</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger className="h-12">
-                          <SelectValue placeholder="Select subject" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="mathematics">Mathematics</SelectItem>
-                        <SelectItem value="english">English</SelectItem>
-                        <SelectItem value="kiswahili">Kiswahili</SelectItem>
-                        <SelectItem value="science">Science</SelectItem>
-                        <SelectItem value="social-studies">Social Studies</SelectItem>
-                        <SelectItem value="religious-education">Religious Education</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+            {/* Curriculum Selection */}
+            <FormField
+              control={form.control}
+              name="curriculum"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-base font-semibold mb-4 block">Choose Your Curriculum *</FormLabel>
+                  {loadingCurricula ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {[...Array(6)].map((_, i) => (
+                        <div key={i} className="h-32 bg-gray-200 rounded-xl animate-pulse" />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+                      {curricula.map((curriculum) => {
+                        const styling = getCurriculumStyling(curriculum.code);
+                        const isSelected = field.value === curriculum._id;
+                        
+                        return (
+                          <motion.div
+                            key={curriculum._id}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.3 }}
+                            className={`
+                              relative p-6 rounded-xl cursor-pointer transition-all duration-300 
+                              ${isSelected 
+                                ? `bg-gradient-to-br ${styling.selectedGradient} ring-4 ring-white ring-opacity-60 shadow-2xl scale-105` 
+                                : `${styling.gradient} ${styling.hoverGradient} hover:scale-105 shadow-lg hover:shadow-xl`
+                              }
+                              text-white group
+                            `}
+                            onClick={() => {
+                              field.onChange(curriculum._id);
+                              setSelectedCurriculum(curriculum);
+                              setCurriculumLevelsFromData(curriculum._id);
+                              // Reset dependent fields
+                              form.setValue('curriculumLevel', '');
+                              form.setValue('subject', '');
+                              setSubjects([]);
+                            }}
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                          >
+                            {/* Selection indicator */}
+                            {isSelected && (
+                              <motion.div 
+                                initial={{ scale: 0 }}
+                                animate={{ scale: 1 }}
+                                className="absolute -top-2 -right-2 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-lg"
+                              >
+                                <CheckCircle className="h-5 w-5 text-green-600" />
+                              </motion.div>
+                            )}
+                            
+                            {/* Curriculum icon */}
+                            <div className="text-3xl mb-3 transform group-hover:scale-110 transition-transform duration-300">
+                              {styling.icon}
+                            </div>
+                            
+                            {/* Curriculum name */}
+                            <h3 className="text-lg font-bold mb-2 group-hover:text-opacity-90">
+                              {curriculum.name}
+                            </h3>
+                            
+                            {/* Description */}
+                            <p className="text-sm opacity-90 group-hover:opacity-100 transition-opacity duration-300">
+                              {styling.description}
+                            </p>
+                            
+                            {/* Curriculum code badge */}
+                            <div className="absolute top-4 right-4 px-2 py-1 bg-white bg-opacity-20 rounded-md text-xs font-medium">
+                              {curriculum.code}
+                            </div>
+                          </motion.div>
+                        );
+                      })}
+                    </div>
+                  )}
+                  
+                  {/* Selected curriculum info */}
+                  {selectedCurriculum && (
+                    <motion.div 
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="text-2xl">{getCurriculumStyling(selectedCurriculum.code).icon}</div>
+                        <div>
+                          <h4 className="font-semibold text-blue-900">Selected: {selectedCurriculum.name}</h4>
+                          <p className="text-sm text-blue-700">{selectedCurriculum.description}</p>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                  
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-              <FormField
-                control={form.control}
-                name="gradeLevel"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-base font-semibold">Grade Level *</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger className="h-12">
-                          <SelectValue placeholder="Select grade" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="grade-1">Grade 1</SelectItem>
-                        <SelectItem value="grade-2">Grade 2</SelectItem>
-                        <SelectItem value="grade-3">Grade 3</SelectItem>
-                        <SelectItem value="grade-4">Grade 4</SelectItem>
-                        <SelectItem value="grade-5">Grade 5</SelectItem>
-                        <SelectItem value="grade-6">Grade 6</SelectItem>
-                        <SelectItem value="grade-7">Grade 7</SelectItem>
-                        <SelectItem value="grade-8">Grade 8</SelectItem>
-                        <SelectItem value="grade-9">Grade 9</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
+            {/* British Curriculum Specific Flow */}
+            {selectedCurriculum && (selectedCurriculum.code === 'british' || selectedCurriculum.code === 'BRITISH') ? (
+              <div className="space-y-8">
+                {/* Key Stage Selection for British Curriculum */}
+                <FormField
+                  control={form.control}
+                  name="curriculumLevel"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-base font-semibold mb-4 block">Choose Key Stage *</FormLabel>
+                      <FormDescription className="mb-6">
+                        British curriculum is organized by Key Stages. Select the appropriate stage for your class.
+                      </FormDescription>
+                      
+                      {curriculumLevels.length === 0 ? (
+                        <div className="text-center py-8">
+                          <p className="text-gray-500">No Key Stages available for this curriculum</p>
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+                          {curriculumLevels.map((level) => {
+                            const isSelected = field.value === level.code;
+                            
+                            return (
+                              <motion.div
+                                key={level.code}
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.3 }}
+                                className={`
+                                  relative p-5 rounded-lg cursor-pointer transition-all duration-300 border-2
+                                  ${isSelected 
+                                    ? 'bg-gradient-to-br from-indigo-500 to-blue-600 text-white border-indigo-300 shadow-lg scale-105' 
+                                    : 'bg-white border-indigo-200 hover:border-indigo-400 hover:shadow-md hover:scale-102'
+                                  }
+                                `}
+                                onClick={() => {
+                                  field.onChange(level.code);
+                                  setSubjectsFromData(form.watch('curriculum'), level.code);
+                                  // Reset subject when level changes
+                                  form.setValue('subject', '');
+                                }}
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
+                              >
+                                {/* Selection indicator */}
+                                {isSelected && (
+                                  <motion.div 
+                                    initial={{ scale: 0 }}
+                                    animate={{ scale: 1 }}
+                                    className="absolute -top-2 -right-2 w-6 h-6 bg-white rounded-full flex items-center justify-center shadow-md"
+                                  >
+                                    <CheckCircle className="h-4 w-4 text-green-600" />
+                                  </motion.div>
+                                )}
+                                
+                                {/* Key Stage info */}
+                                <h3 className={`text-base font-bold mb-2 ${isSelected ? 'text-white' : 'text-indigo-900'}`}>
+                                  {level.name}
+                                </h3>
+                                <p className={`text-sm ${isSelected ? 'text-indigo-100' : 'text-indigo-700'}`}>
+                                  {level.gradeRange}
+                                </p>
+                                <p className={`text-xs mt-1 ${isSelected ? 'text-indigo-200' : 'text-indigo-600'}`}>
+                                  Ages {level.ageRange}
+                                </p>
+                              </motion.div>
+                            );
+                          })}
+                        </div>
+                      )}
+                      
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Subject Selection for British Curriculum */}
+                {form.watch('curriculumLevel') && (
+                  <FormField
+                    control={form.control}
+                    name="subject"
+                    render={({ field }) => {
+                      const selectedLevel = curriculumLevels.find(l => l.code === form.watch('curriculumLevel'));
+                      const isIGCSE = selectedLevel?.code === 'key-stage-4';
+                      const isALevels = selectedLevel?.code === 'a-levels';
+                      
+                      // Get subjects based on level structure
+                      const getSubjectsByCategory = () => {
+                        if (!selectedLevel || !selectedLevel.subjects) return {};
+                        
+                        if (Array.isArray(selectedLevel.subjects)) {
+                          return { 'All Subjects': selectedLevel.subjects };
+                        }
+                        
+                        return selectedLevel.subjects;
+                      };
+                      
+                      const subjectCategories = getSubjectsByCategory();
+                      
+                      return (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          transition={{ duration: 0.4 }}
+                        >
+                          <FormItem>
+                            <FormLabel className="text-base font-semibold mb-4 block">
+                              Choose Subject *
+                              {isIGCSE && <span className="text-sm font-normal text-indigo-600 ml-2">(IGCSE Level)</span>}
+                              {isALevels && <span className="text-sm font-normal text-indigo-600 ml-2">(A-Level)</span>}
+                            </FormLabel>
+                            
+                            <FormDescription className="mb-6">
+                              {isIGCSE && "Select from core, foundation, or elective subjects for IGCSE level."}
+                              {isALevels && "Choose from specialized A-Level subject areas."}
+                              {!isIGCSE && !isALevels && `Select the subject you'll be teaching in ${selectedLevel?.name}.`}
+                            </FormDescription>
+                            
+                            <div className="space-y-6">
+                              {Object.entries(subjectCategories).map(([category, subjectList]) => (
+                                <div key={category}>
+                                  {Object.keys(subjectCategories).length > 1 && (
+                                    <h4 className="text-sm font-semibold text-gray-700 mb-3 uppercase tracking-wide">
+                                      {category === 'core' && '🔵 Core Subjects'}
+                                      {category === 'foundation' && '🟡 Foundation Subjects'}
+                                      {category === 'electives' && '🟢 Elective Subjects'}
+                                      {category === 'non-exam' && '⚪ Non-Exam Subjects'}
+                                      {category === 'stem' && '🔬 STEM Subjects'}
+                                      {category === 'humanities' && '📚 Humanities'}
+                                      {category === 'languages' && '🗣️ Languages'}
+                                      {category === 'arts' && '🎨 Arts'}
+                                      {category === 'business' && '💼 Business'}
+                                      {!['core', 'foundation', 'electives', 'non-exam', 'stem', 'humanities', 'languages', 'arts', 'business'].includes(category) && category}
+                                    </h4>
+                                  )}
+                                  
+                                  <div className="flex flex-wrap gap-3">
+                                    {(Array.isArray(subjectList) ? subjectList : []).map((subject, index) => {
+                                      const subjectId = `${category}-${index}`;
+                                      const isSelected = field.value === subject;
+                                      
+                                      // Category-specific styling
+                                      const getCategoryStyle = () => {
+                                        switch (category) {
+                                          case 'core':
+                                            return isSelected 
+                                              ? 'bg-blue-600 text-white border-blue-600' 
+                                              : 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100 hover:border-blue-300';
+                                          case 'foundation':
+                                            return isSelected 
+                                              ? 'bg-amber-600 text-white border-amber-600' 
+                                              : 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100 hover:border-amber-300';
+                                          case 'electives':
+                                            return isSelected 
+                                              ? 'bg-green-600 text-white border-green-600' 
+                                              : 'bg-green-50 text-green-700 border-green-200 hover:bg-green-100 hover:border-green-300';
+                                          case 'non-exam':
+                                            return isSelected 
+                                              ? 'bg-gray-600 text-white border-gray-600' 
+                                              : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100 hover:border-gray-300';
+                                          case 'stem':
+                                            return isSelected 
+                                              ? 'bg-purple-600 text-white border-purple-600' 
+                                              : 'bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100 hover:border-purple-300';
+                                          case 'humanities':
+                                            return isSelected 
+                                              ? 'bg-rose-600 text-white border-rose-600' 
+                                              : 'bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100 hover:border-rose-300';
+                                          case 'languages':
+                                            return isSelected 
+                                              ? 'bg-cyan-600 text-white border-cyan-600' 
+                                              : 'bg-cyan-50 text-cyan-700 border-cyan-200 hover:bg-cyan-100 hover:border-cyan-300';
+                                          case 'arts':
+                                            return isSelected 
+                                              ? 'bg-pink-600 text-white border-pink-600' 
+                                              : 'bg-pink-50 text-pink-700 border-pink-200 hover:bg-pink-100 hover:border-pink-300';
+                                          case 'business':
+                                            return isSelected 
+                                              ? 'bg-emerald-600 text-white border-emerald-600' 
+                                              : 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100 hover:border-emerald-300';
+                                          default:
+                                            return isSelected 
+                                              ? 'bg-indigo-600 text-white border-indigo-600' 
+                                              : 'bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100 hover:border-indigo-300';
+                                        }
+                                      };
+                                      
+                                      return (
+                                        <motion.button
+                                          key={subjectId}
+                                          type="button"
+                                          initial={{ opacity: 0, scale: 0.8 }}
+                                          animate={{ opacity: 1, scale: 1 }}
+                                          transition={{ duration: 0.2, delay: index * 0.05 }}
+                                          onClick={() => field.onChange(subject)}
+                                          className={`
+                                            px-4 py-2 rounded-full text-sm font-medium border-2 transition-all duration-200
+                                            ${getCategoryStyle()}
+                                            ${isSelected ? 'shadow-lg scale-105' : 'hover:scale-105 hover:shadow-md'}
+                                          `}
+                                          whileHover={{ scale: 1.05 }}
+                                          whileTap={{ scale: 0.95 }}
+                                        >
+                                          {subject}
+                                          {isSelected && (
+                                            <motion.span
+                                              initial={{ scale: 0 }}
+                                              animate={{ scale: 1 }}
+                                              className="ml-2"
+                                            >
+                                              ✓
+                                            </motion.span>
+                                          )}
+                                        </motion.button>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                            
+                            {field.value && (
+                              <motion.div 
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="mt-4 p-4 bg-indigo-50 border border-indigo-200 rounded-lg"
+                              >
+                                <div className="flex items-center gap-3">
+                                  <CheckCircle className="h-5 w-5 text-indigo-600" />
+                                  <div>
+                                    <h4 className="font-semibold text-indigo-900">Selected: {field.value}</h4>
+                                    <p className="text-sm text-indigo-700">
+                                      {isIGCSE && "This IGCSE subject will prepare students for international examinations."}
+                                      {isALevels && "This A-Level subject offers advanced study for university preparation."}
+                                      {!isIGCSE && !isALevels && `Subject for ${selectedLevel?.name} curriculum.`}
+                                    </p>
+                                  </div>
+                                </div>
+                              </motion.div>
+                            )}
+                            
+                            <FormMessage />
+                          </FormItem>
+                        </motion.div>
+                      );
+                    }}
+                  />
                 )}
-              />
-            </div>
+              </div>
+            ) : (
+              /* Standard curriculum flow for non-British curricula */
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <FormField
+                  control={form.control}
+                  name="curriculumLevel"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-base font-semibold">Grade Level *</FormLabel>
+                      <Select 
+                        onValueChange={(value) => {
+                          field.onChange(value);
+                          const curriculumId = form.watch('curriculum');
+                          if (curriculumId && value) {
+                            setSubjectsFromData(curriculumId, value);
+                          }
+                          // Reset subject when level changes
+                          form.setValue('subject', '');
+                        }} 
+                        defaultValue={field.value}
+                        disabled={!form.watch('curriculum')}
+                      >
+                        <FormControl>
+                          <SelectTrigger className="h-12">
+                            <SelectValue placeholder={
+                              !form.watch('curriculum') 
+                                ? "Select curriculum first" 
+                                : "Select grade level"
+                            } />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {curriculumLevels.map((level) => (
+                            <SelectItem key={level.code} value={level.code}>
+                              {level.name} ({level.gradeRange})
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="subject"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-base font-semibold">Subject *</FormLabel>
+                      <Select 
+                        onValueChange={field.onChange} 
+                        defaultValue={field.value}
+                        disabled={!form.watch('curriculum') || !form.watch('curriculumLevel')}
+                      >
+                        <FormControl>
+                          <SelectTrigger className="h-12">
+                            <SelectValue placeholder={
+                              !form.watch('curriculum') || !form.watch('curriculumLevel')
+                                ? "Select curriculum and level first" 
+                                : "Select subject"
+                            } />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {subjects.map((subject) => (
+                            <SelectItem key={subject.id} value={subject.name}>
+                              {subject.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            )}
 
             <FormField
               control={form.control}
               name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-base font-semibold">Class Description *</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Describe what students will learn, your teaching approach, and what makes this class special..."
-                      className="min-h-32 resize-none"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormDescription>
-                    Help parents and students understand what to expect from your class
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
+              render={({ field }) => {
+                // Build context for AI description generation
+                const aiContext: DescriptionContext = {
+                  title: form.watch("title"),
+                  curriculum: selectedCurriculum?.name || selectedCurriculum?.code,
+                  curriculumLevel: curriculumLevels.find(l => 
+                    l.code === form.watch("curriculumLevel")
+                  )?.name,
+                  subject: form.watch("subject"),
+                  classType: 'academic'
+                };
+
+                // Check if we have enough context for AI generation
+                const hasEnoughContext = aiContext.title || aiContext.subject;
+
+                return (
+                  <FormItem>
+                    <FormLabel className="text-base font-semibold">Class Description *</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Describe what students will learn, your teaching approach, and what makes this class special..."
+                        className="min-h-32 resize-none"
+                        {...field}
+                      />
+                    </FormControl>
+                    {hasEnoughContext && (
+                      <div className="mt-3">
+                        <AIDescriptionButton
+                          context={aiContext}
+                          onApplyDescription={(description) => {
+                            console.log('Setting description in form (inline):', description);
+                            field.onChange(description);
+                            form.setValue('description', description);
+                          }}
+                          variant="inline"
+                        />
+                      </div>
+                    )}
+                    <FormDescription>
+                      {selectedCurriculum 
+                        ? `Describe your ${selectedCurriculum.name} class to help parents and students understand the curriculum approach and what to expect`
+                        : 'Help parents and students understand what to expect from your class'
+                      }
+                      {!hasEnoughContext && (
+                        <span className="block mt-2 text-amber-600 text-sm font-medium">
+                          ✨ Add a class title above to enable AI-powered description generation
+                        </span>
+                      )}
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                );
+              }}
             />
 
             {/* Learning Objectives */}
@@ -417,29 +1000,6 @@ const ClassFoundationStep = ({ form, onNext }: any) => {
               )}
             </div>
 
-            {/* YouTube Intro Video URL */}
-            <FormField
-              control={form.control}
-              name="introVideoUrl"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-base font-semibold flex items-center gap-2">
-                    <Video className="h-4 w-4" />
-                    Introduction Video (YouTube URL)
-                  </FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="https://youtube.com/watch?v=..."
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormDescription>
-                    Add a YouTube video introducing your class to help students understand what to expect
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
           </CardContent>
         </Card>
 
@@ -762,7 +1322,7 @@ const ClassFoundationStep = ({ form, onNext }: any) => {
             onClick={onNext}
             size="lg"
             className="bg-gradient-to-r from-kidato-blue to-kidato-purple hover:from-kidato-blue-600 hover:to-kidato-purple-600"
-            disabled={!form.watch('title') || !form.watch('subject') || !form.watch('gradeLevel') || objectives.filter(obj => obj.text.trim()).length === 0 || !form.watch('courseOutlineFile')}
+            disabled={!form.watch('title') || !form.watch('curriculum') || !form.watch('curriculumLevel') || !form.watch('subject') || objectives.filter(obj => obj.text.trim()).length === 0 || !form.watch('courseOutlineFile')}
           >
             Continue to Lesson Planning
             <ArrowRight className="ml-2 h-4 w-4" />
@@ -871,6 +1431,117 @@ const LessonPlanningStep = ({ form, onNext, onPrev }: any) => {
               </p>
             </div>
           </div>
+        </div>
+
+        {/* Introduction Video Card */}
+        <div className="mb-6">
+          <Card className="border-red-200 shadow-xl bg-gradient-to-br from-red-50 via-white to-pink-50 overflow-hidden">
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-red-500 via-red-600 to-pink-500"></div>
+            <CardHeader className="pb-4 relative">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="relative">
+                  <div className="w-12 h-12 bg-gradient-to-br from-red-600 to-red-700 rounded-xl flex items-center justify-center shadow-lg">
+                    <svg 
+                      viewBox="0 0 24 24" 
+                      className="h-6 w-6 text-white" 
+                      fill="currentColor"
+                    >
+                      <path d="M23.498 6.186a2.99 2.99 0 0 0-2.123-2.123C19.505 3.5 12 3.5 12 3.5s-7.505 0-9.375.563A2.99 2.99 0 0 0 .502 6.186C-.001 8.056-.001 12-.001 12s0 3.944.503 5.814a2.99 2.99 0 0 0 2.123 2.123C4.495 20.5 12 20.5 12 20.5s7.505 0 9.375-.563a2.99 2.99 0 0 0 2.123-2.123C23.999 15.944 23.999 12 23.999 12s0-3.944-.501-5.814zM9.75 15.568V8.432L15.5 12l-5.75 3.568z"/>
+                    </svg>
+                  </div>
+                  <div className="absolute -top-1 -right-1 w-4 h-4 bg-white rounded-full flex items-center justify-center">
+                    <Video className="h-2.5 w-2.5 text-red-600" />
+                  </div>
+                </div>
+                <div>
+                  <CardTitle className="text-xl font-bold text-red-800 flex items-center gap-2">
+                    Class Introduction Video
+                    <Badge variant="secondary" className="text-xs bg-red-100 text-red-700 border-red-200">
+                      YouTube
+                    </Badge>
+                  </CardTitle>
+                  <p className="text-sm text-red-600 font-medium">Hook your audience with video</p>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <FormField
+                control={form.control}
+                name="introVideoUrl"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-base font-semibold text-red-800 mb-3 block">
+                      YouTube Video URL
+                    </FormLabel>
+                    <FormControl>
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                          <svg 
+                            viewBox="0 0 24 24" 
+                            className="h-5 w-5 text-red-500" 
+                            fill="currentColor"
+                          >
+                            <path d="M23.498 6.186a2.99 2.99 0 0 0-2.123-2.123C19.505 3.5 12 3.5 12 3.5s-7.505 0-9.375.563A2.99 2.99 0 0 0 .502 6.186C-.001 8.056-.001 12-.001 12s0 3.944.503 5.814a2.99 2.99 0 0 0 2.123 2.123C4.495 20.5 12 20.5 12 20.5s7.505 0 9.375-.563a2.99 2.99 0 0 0 2.123-2.123C23.999 15.944 23.999 12 23.999 12s0-3.944-.501-5.814zM9.75 15.568V8.432L15.5 12l-5.75 3.568z"/>
+                          </svg>
+                        </div>
+                        <Input
+                          placeholder="https://youtube.com/watch?v=..."
+                          className="pl-14 pr-12 h-12 border-red-200 focus:border-red-400 focus:ring-red-400 bg-white text-base font-medium"
+                          {...field}
+                        />
+                        {field.value && (
+                          <div className="absolute inset-y-0 right-0 pr-4 flex items-center">
+                            <div className="flex items-center gap-1 text-green-600">
+                              <CheckCircle className="h-4 w-4" />
+                              <span className="text-xs font-medium">Valid</span>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </FormControl>
+                    <div className="mt-4 p-4 bg-gradient-to-r from-red-50 to-pink-50 border border-red-100 rounded-lg">
+                      <div className="flex items-start gap-3">
+                        <Play className="h-5 w-5 text-red-600 mt-0.5 flex-shrink-0" />
+                        <div className="space-y-2">
+                          <h4 className="font-semibold text-red-900 text-sm">Why add an intro video?</h4>
+                          <ul className="text-xs text-red-700 space-y-1">
+                            <li className="flex items-center gap-2">
+                              <div className="w-1 h-1 bg-red-500 rounded-full"></div>
+                              Build trust with parents & students
+                            </li>
+                            <li className="flex items-center gap-2">
+                              <div className="w-1 h-1 bg-red-500 rounded-full"></div>
+                              Showcase your teaching personality
+                            </li>
+                            <li className="flex items-center gap-2">
+                              <div className="w-1 h-1 bg-red-500 rounded-full"></div>
+                              Increase enrollment rates by 65%
+                            </li>
+                            <li className="flex items-center gap-2">
+                              <div className="w-1 h-1 bg-red-500 rounded-full"></div>
+                              Explain what makes your class unique
+                            </li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+                    {!field.value && (
+                      <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                        <div className="flex items-center gap-2">
+                          <AlertCircle className="h-4 w-4 text-amber-600" />
+                          <p className="text-amber-800 text-sm font-medium">Optional but highly recommended</p>
+                        </div>
+                        <p className="text-amber-700 text-xs mt-1">
+                          Classes with introduction videos get 3x more enrollments
+                        </p>
+                      </div>
+                    )}
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </CardContent>
+          </Card>
         </div>
 
         <div className="space-y-6">
@@ -1310,8 +1981,9 @@ const AcademicClassCreator: React.FC<AcademicClassCreatorProps> = ({
     defaultValues: {
       type: 'academic',
       title: '',
+      curriculum: '',
+      curriculumLevel: '',
       subject: '',
-      gradeLevel: '',
       description: '',
       objectives: '',
       numberOfLessons: 8,
