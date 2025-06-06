@@ -13,8 +13,6 @@ import {
   Clock,
   GraduationCap,
   CheckCircle,
-  Eye,
-  EyeOff,
   Sparkles,
   ArrowRight,
   ArrowLeft,
@@ -25,7 +23,16 @@ import {
   ExternalLink,
   X,
   Link2,
-  Paperclip
+  Paperclip,
+  Play,
+  BookmarkCheck,
+  AlertCircle,
+  Trash2,
+  Timer,
+  Monitor,
+  Zap,
+  Star,
+  Hash
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -41,6 +48,7 @@ import { FormFileUpload } from '@/components/ui/form/file-upload';
 
 import { ClassFormValues, CohortData, classSchema } from './types';
 import { useAuth } from '@/contexts/AuthContext';
+import { LessonForm } from './lesson-plans/LessonForm';
 
 interface AcademicClassCreatorProps {
   onSubmit: (data: ClassFormValues) => void;
@@ -58,7 +66,6 @@ interface StepConfig {
 
 // Step Components
 const ClassFoundationStep = ({ form, onNext }: any) => {
-  const [showPreview, setShowPreview] = useState(false);
   const [materials, setMaterials] = useState(form.watch('materials') || []);
   const [resourceLinks, setResourceLinks] = useState(form.watch('resourceLinks') || []);
   const [objectives, setObjectives] = useState(() => {
@@ -315,65 +322,94 @@ const ClassFoundationStep = ({ form, onNext }: any) => {
 
             {/* Learning Objectives */}
             <div>
-              <FormLabel className="text-base font-semibold mb-4 block">Learning Objectives</FormLabel>
+              <FormLabel className="text-base font-semibold mb-4 block">Learning Objectives *</FormLabel>
               <FormDescription className="mb-4">
                 What specific skills or knowledge will students gain? Add one objective at a time.
               </FormDescription>
               
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {objectives.map((objective, index) => (
-                  <div key={objective.id} className="flex items-start gap-3 p-3 border rounded-lg bg-gray-50">
-                    <div className="flex-shrink-0 w-6 h-6 bg-kidato-blue rounded-full flex items-center justify-center text-white text-sm font-medium mt-1">
-                      {index + 1}
+                  <div key={objective.id} className="p-4 bg-purple-50 rounded-lg border-2 border-purple-200 shadow-sm">
+                    <div className="flex items-start gap-3">
+                      <div className="flex items-center justify-center w-8 h-8 bg-purple-200 text-purple-800 text-sm font-bold rounded-full flex-shrink-0 mt-1">
+                        {index + 1}
+                      </div>
+                      <div className="flex-1">
+                        <FormLabel className="text-sm font-medium text-purple-800 mb-2 block">
+                          Learning Objective {index + 1}
+                        </FormLabel>
+                        <Textarea
+                          placeholder="Describe what students will be able to do after this lesson (e.g., 'Students will be able to solve complex algebraic equations and apply them to real-world problems')"
+                          value={objective.text}
+                          onChange={(e) => updateObjective(objective.id, e.target.value)}
+                          rows={3}
+                          className="border-purple-300 focus:border-purple-500 focus:ring-purple-500 bg-white resize-none text-base"
+                        />
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeObjective(objective.id)}
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50 transition-colors flex-shrink-0 mt-1"
+                      >
+                        <X className="h-5 w-5" />
+                      </Button>
                     </div>
-                    <div className="flex-1">
-                      <Input
-                        placeholder="e.g., Solve complex algebraic equations"
-                        value={objective.text}
-                        onChange={(e) => updateObjective(objective.id, e.target.value)}
-                        className="border-0 bg-transparent p-0 h-auto text-base focus-visible:ring-0 focus-visible:ring-offset-0"
-                      />
-                    </div>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => removeObjective(objective.id)}
-                      className="text-gray-400 hover:text-red-500 p-1 h-6 w-6"
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
                   </div>
                 ))}
                 
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={addObjective}
-                  className="w-full h-12 border-dashed border-2 border-gray-300 hover:border-kidato-blue hover:bg-kidato-blue-50 text-gray-600 hover:text-kidato-blue"
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Learning Objective
-                </Button>
+                <div className="p-4 bg-gradient-to-r from-purple-50 to-purple-100 rounded-lg border-2 border-dashed border-purple-300 hover:border-purple-400 transition-colors">
+                  <div className="space-y-3">
+                    <FormLabel className="text-sm font-medium text-purple-800 block">
+                      Add New Learning Objective
+                    </FormLabel>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={addObjective}
+                      size="lg"
+                      className="w-full bg-purple-600 text-white hover:bg-purple-700 border-purple-600 px-6"
+                    >
+                      <Plus className="h-5 w-5 mr-2" />
+                      Add Learning Objective
+                    </Button>
+                    <p className="text-xs text-purple-600 italic text-center">
+                      Create detailed objectives that describe what students will achieve
+                    </p>
+                  </div>
+                </div>
                 
                 {objectives.length === 0 && (
-                  <div className="text-center py-8 border-2 border-dashed border-gray-200 rounded-lg">
-                    <Target className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                    <p className="text-gray-500 text-sm">No learning objectives added yet</p>
-                    <p className="text-gray-400 text-xs mt-1">Click "Add Learning Objective" to get started</p>
+                  <div className="text-center py-8 border-2 border-dashed border-red-200 rounded-lg bg-red-50">
+                    <Target className="h-8 w-8 text-red-400 mx-auto mb-2" />
+                    <p className="text-red-600 text-sm font-medium">Learning objectives are required</p>
+                    <p className="text-red-500 text-xs mt-1">Add at least one learning objective to continue</p>
+                  </div>
+                )}
+                
+                {objectives.filter(obj => obj.text.trim()).length === 0 && objectives.length > 0 && (
+                  <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                    <p className="text-amber-800 text-sm font-medium">Please fill in all learning objectives</p>
+                    <p className="text-amber-700 text-xs mt-1">Empty objectives will not be saved</p>
                   </div>
                 )}
               </div>
               
               {objectives.length > 0 && (
-                <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                  <h4 className="text-sm font-semibold text-blue-800 mb-2">Preview:</h4>
-                  <p className="text-sm text-blue-700 mb-2">By the end of this class, students will be able to:</p>
-                  <ul className="text-sm text-blue-600 space-y-1">
+                <div className="mt-4 p-4 bg-blue-50 border-2 border-blue-200 rounded-lg">
+                  <h4 className="text-sm font-semibold text-blue-800 mb-3 flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4" />
+                    Preview: Learning Outcomes
+                  </h4>
+                  <p className="text-sm text-blue-700 mb-3 font-medium">By the end of this class, students will be able to:</p>
+                  <ul className="text-sm text-blue-600 space-y-2">
                     {objectives.filter(obj => obj.text.trim()).map((objective, index) => (
-                      <li key={objective.id} className="flex items-start gap-2">
-                        <span className="text-blue-500 mt-0.5">•</span>
-                        <span>{objective.text}</span>
+                      <li key={objective.id} className="flex items-start gap-3 p-2 bg-blue-100 rounded">
+                        <span className="flex items-center justify-center w-5 h-5 bg-blue-500 text-white text-xs font-bold rounded-full flex-shrink-0 mt-0.5">
+                          {index + 1}
+                        </span>
+                        <span className="flex-1">{objective.text}</span>
                       </li>
                     ))}
                   </ul>
@@ -414,18 +450,21 @@ const ClassFoundationStep = ({ form, onNext }: any) => {
               <FileText className="h-5 w-5 text-green-600" />
               Course Documents
             </CardTitle>
-            <CardDescription>Upload essential documents for your class</CardDescription>
+            <CardDescription>Upload essential documents for your class (Course Outline is required)</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6 pt-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {/* Course Outline */}
-              <div>
+              <div className={`${!form.watch('courseOutlineFile') ? 'ring-2 ring-red-200 bg-red-50 p-3 rounded-lg' : ''}`}>
                 <FormField
                   control={form.control}
                   name="courseOutlineFile"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-sm font-semibold">Course Outline</FormLabel>
+                      <FormLabel className="text-sm font-semibold flex items-center gap-1">
+                        Course Outline *
+                        {!field.value && <span className="text-red-500 text-xs">(Required)</span>}
+                      </FormLabel>
                       <FormFileUpload
                         accept=".pdf,.doc,.docx"
                         acceptedFileTypes=".pdf,.doc,.docx"
@@ -437,6 +476,11 @@ const ClassFoundationStep = ({ form, onNext }: any) => {
                       {field.value && (
                         <div className="mt-2 p-2 bg-green-50 rounded border border-green-200">
                           <p className="text-sm text-green-700">✓ {field.value}</p>
+                        </div>
+                      )}
+                      {!field.value && (
+                        <div className="mt-2 p-2 bg-red-50 rounded border border-red-200">
+                          <p className="text-sm text-red-700">⚠ Course outline document is required</p>
                         </div>
                       )}
                       <FormMessage />
@@ -499,6 +543,16 @@ const ClassFoundationStep = ({ form, onNext }: any) => {
                 />
               </div>
             </div>
+            
+            {!form.watch('courseOutlineFile') && (
+              <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                <div className="flex items-center gap-2">
+                  <AlertCircle className="h-4 w-4 text-red-600" />
+                  <p className="text-red-800 text-sm font-medium">Course Outline is required</p>
+                </div>
+                <p className="text-red-700 text-xs mt-1">Please upload a course outline document to continue</p>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -701,101 +755,6 @@ const ClassFoundationStep = ({ form, onNext }: any) => {
           </CardContent>
         </Card>
 
-        {/* Live Preview */}
-        <Card className="border-gray-200">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <p className="font-medium text-gray-900">Preview as you build</p>
-                <p className="text-sm text-gray-600">See how your class will look to students</p>
-              </div>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setShowPreview(!showPreview)}
-                className="flex items-center gap-2"
-              >
-                {showPreview ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                {showPreview ? 'Hide Preview' : 'Show Preview'}
-              </Button>
-            </div>
-
-            <AnimatePresence>
-              {showPreview && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  className="border rounded-lg p-6 bg-gradient-to-br from-blue-50 to-purple-50"
-                >
-                  <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 bg-kidato-blue rounded-lg flex items-center justify-center">
-                      <BookOpen className="h-6 w-6 text-white" />
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="text-xl font-bold text-gray-900">
-                        {form.watch('title') || 'Your Class Title'}
-                      </h3>
-                      <div className="flex items-center gap-3 mt-2 mb-4">
-                        <Badge variant="secondary">
-                          {form.watch('subject') || 'Subject'}
-                        </Badge>
-                        <Badge variant="outline">
-                          {form.watch('gradeLevel') || 'Grade Level'}
-                        </Badge>
-                      </div>
-                      <p className="text-gray-600 leading-relaxed">
-                        {form.watch('description') || 'Your class description will appear here...'}
-                      </p>
-                      
-                      {objectives.length > 0 && (
-                        <div className="mt-4">
-                          <p className="text-sm font-semibold text-gray-700 mb-2">Learning Objectives:</p>
-                          <ul className="text-sm text-gray-600 space-y-1">
-                            {objectives.filter(obj => obj.text.trim()).slice(0, 3).map((objective, index) => (
-                              <li key={objective.id} className="flex items-center gap-2">
-                                <span className="w-1 h-1 bg-gray-400 rounded-full"></span>
-                                {objective.text}
-                              </li>
-                            ))}
-                            {objectives.filter(obj => obj.text.trim()).length > 3 && (
-                              <li className="text-xs text-gray-500">...and {objectives.filter(obj => obj.text.trim()).length - 3} more</li>
-                            )}
-                          </ul>
-                        </div>
-                      )}
-                      
-                      {form.watch('introVideoUrl') && (
-                        <div className="mt-4 flex items-center gap-2 text-blue-600">
-                          <Video className="h-4 w-4" />
-                          <span className="text-sm">Introduction video available</span>
-                        </div>
-                      )}
-                      
-                      {materials.length > 0 && (
-                        <div className="mt-4">
-                          <p className="text-sm font-semibold text-gray-700 mb-2">Required Materials:</p>
-                          <ul className="text-sm text-gray-600 space-y-1">
-                            {materials.slice(0, 3).map((material: any, index: number) => (
-                              <li key={index} className="flex items-center gap-2">
-                                <span className="w-1 h-1 bg-gray-400 rounded-full"></span>
-                                {material.name || `Material ${index + 1}`}
-                              </li>
-                            ))}
-                            {materials.length > 3 && (
-                              <li className="text-xs text-gray-500">...and {materials.length - 3} more</li>
-                            )}
-                          </ul>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </CardContent>
-        </Card>
 
         <div className="flex justify-end mt-8">
           <Button
@@ -803,7 +762,7 @@ const ClassFoundationStep = ({ form, onNext }: any) => {
             onClick={onNext}
             size="lg"
             className="bg-gradient-to-r from-kidato-blue to-kidato-purple hover:from-kidato-blue-600 hover:to-kidato-purple-600"
-            disabled={!form.watch('title') || !form.watch('subject') || !form.watch('gradeLevel')}
+            disabled={!form.watch('title') || !form.watch('subject') || !form.watch('gradeLevel') || objectives.filter(obj => obj.text.trim()).length === 0 || !form.watch('courseOutlineFile')}
           >
             Continue to Lesson Planning
             <ArrowRight className="ml-2 h-4 w-4" />
@@ -815,14 +774,43 @@ const ClassFoundationStep = ({ form, onNext }: any) => {
 };
 
 const LessonPlanningStep = ({ form, onNext, onPrev }: any) => {
-  const [lessons, setLessons] = useState(form.watch('lessonPlans') || []);
+  const [lessons, setLessons] = useState(() => {
+    const currentLessons = form.watch('lessonPlans') || [];
+    // Ensure each lesson has the full LessonForm structure
+    return currentLessons.map((lesson: any, index: number) => ({
+      id: lesson.id || Date.now().toString() + index,
+      title: lesson.title || '',
+      description: lesson.description || '',
+      duration: lesson.duration || '60',
+      lessonNumber: lesson.lessonNumber || index + 1,
+      durationInMinutes: lesson.durationInMinutes || 60,
+      summary: lesson.summary || '',
+      objectives: lesson.objectives || [],
+      activities: lesson.activities || [],
+      prerequisites: lesson.prerequisites || '',
+      homework: lesson.homework || '',
+      assessmentCriteria: lesson.assessmentCriteria || '',
+      tags: lesson.tags || [],
+      requirements: lesson.requirements || { videos: [], materials: [] }
+    }));
+  });
 
   const addLesson = () => {
     const newLesson = {
       id: Date.now().toString(),
       title: '',
       description: '',
-      duration: '60'
+      duration: '60',
+      lessonNumber: lessons.length + 1,
+      durationInMinutes: 60,
+      summary: '',
+      objectives: [],
+      activities: [],
+      prerequisites: '',
+      homework: '',
+      assessmentCriteria: '',
+      tags: [],
+      requirements: { videos: [], materials: [] }
     };
     const updatedLessons = [...lessons, newLesson];
     setLessons(updatedLessons);
@@ -831,16 +819,31 @@ const LessonPlanningStep = ({ form, onNext, onPrev }: any) => {
 
   const removeLesson = (index: number) => {
     const updatedLessons = lessons.filter((_: any, i: number) => i !== index);
-    setLessons(updatedLessons);
-    form.setValue('lessonPlans', updatedLessons);
+    // Re-number the remaining lessons
+    const renumberedLessons = updatedLessons.map((lesson: any, i: number) => ({
+      ...lesson,
+      lessonNumber: i + 1
+    }));
+    setLessons(renumberedLessons);
+    form.setValue('lessonPlans', renumberedLessons);
   };
 
-  const updateLesson = (index: number, field: string, value: string) => {
+  const updateLesson = (index: number, field: string, value: any) => {
     const updatedLessons = lessons.map((lesson: any, i: number) => 
       i === index ? { ...lesson, [field]: value } : lesson
     );
     setLessons(updatedLessons);
     form.setValue('lessonPlans', updatedLessons);
+  };
+
+  const validateLessons = () => {
+    return lessons.length > 0 && lessons.every((lesson: any) => 
+      lesson.title && 
+      lesson.description &&
+      lesson.objectives &&
+      lesson.objectives.length >= 1 &&
+      lesson.objectives.every((obj: any) => obj.objective && obj.objective.trim().length > 0)
+    );
   };
 
   return (
@@ -854,23 +857,23 @@ const LessonPlanningStep = ({ form, onNext, onPrev }: any) => {
           <FileText className="h-8 w-8 text-white" />
         </motion.div>
         <h2 className="text-2xl font-bold text-gray-900 mb-2">Plan your lessons</h2>
-        <p className="text-gray-600">Structure your curriculum into engaging, manageable lessons</p>
+        <p className="text-gray-600">Structure your curriculum into comprehensive, engaging lessons</p>
       </div>
 
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-6xl mx-auto">
         <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
           <div className="flex items-start gap-3">
             <Target className="h-5 w-5 text-amber-600 mt-1" />
             <div>
               <h4 className="font-semibold text-amber-900">Teaching Tip</h4>
               <p className="text-amber-800 text-sm">
-                Plan 4-8 core lessons that build on each other. You can always add more lessons later as you teach.
+                Create detailed lesson plans with objectives, activities, and assessments. Each lesson should build upon the previous one for optimal learning outcomes.
               </p>
             </div>
           </div>
         </div>
 
-        <div className="space-y-4">
+        <div className="space-y-6">
           <AnimatePresence>
             {lessons.map((lesson: any, index: number) => (
               <motion.div
@@ -878,78 +881,35 @@ const LessonPlanningStep = ({ form, onNext, onPrev }: any) => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.2 }}
+                transition={{ duration: 0.3 }}
               >
-                <Card className="border-l-4 border-l-green-500">
-                  <CardHeader className="pb-3">
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-lg">Lesson {index + 1}</CardTitle>
-                      {lessons.length > 1 && (
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => removeLesson(index)}
-                          className="text-red-500 hover:text-red-700"
-                        >
-                          Remove
-                        </Button>
-                      )}
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div className="md:col-span-2">
-                        <label className="text-sm font-medium text-gray-700">Lesson Title *</label>
-                        <Input
-                          placeholder="e.g., Introduction to Fractions"
-                          value={lesson.title}
-                          onChange={(e) => updateLesson(index, 'title', e.target.value)}
-                          className="mt-1"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium text-gray-700">Duration (minutes)</label>
-                        <Select
-                          value={lesson.duration}
-                          onValueChange={(value) => updateLesson(index, 'duration', value)}
-                        >
-                          <SelectTrigger className="mt-1">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="30">30 minutes</SelectItem>
-                            <SelectItem value="45">45 minutes</SelectItem>
-                            <SelectItem value="60">60 minutes</SelectItem>
-                            <SelectItem value="90">90 minutes</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-700">Lesson Description *</label>
-                      <Textarea
-                        placeholder="What will students learn and do in this lesson?"
-                        value={lesson.description}
-                        onChange={(e) => updateLesson(index, 'description', e.target.value)}
-                        className="mt-1 min-h-20"
-                      />
-                    </div>
-                  </CardContent>
-                </Card>
+                <LessonForm
+                  lesson={lesson}
+                  onUpdate={(field: string, value: any) => updateLesson(index, field, value)}
+                  onRemove={() => removeLesson(index)}
+                  isRemovable={lessons.length > 1}
+                  lessonNumber={index + 1}
+                />
               </motion.div>
             ))}
           </AnimatePresence>
 
-          <Button
-            type="button"
-            variant="outline"
-            onClick={addLesson}
-            className="w-full h-12 border-dashed border-2 border-gray-300 hover:border-green-400 hover:bg-green-50"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Add Another Lesson
-          </Button>
+          <Card className="border-2 border-dashed border-gray-300 hover:border-green-400 hover:bg-green-50/30 transition-colors">
+            <CardContent className="p-8">
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={addLesson}
+                className="w-full h-16 text-gray-600 hover:text-green-600 hover:bg-transparent"
+              >
+                <Plus className="h-6 w-6 mr-3" />
+                <div className="text-left">
+                  <div className="font-medium">Add Another Lesson</div>
+                  <div className="text-sm text-gray-500">Create a comprehensive lesson plan</div>
+                </div>
+              </Button>
+            </CardContent>
+          </Card>
         </div>
 
         <div className="flex justify-between mt-8">
@@ -967,7 +927,7 @@ const LessonPlanningStep = ({ form, onNext, onPrev }: any) => {
             onClick={onNext}
             size="lg"
             className="bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600"
-            disabled={lessons.length === 0 || !lessons.every((l: any) => l.title && l.description)}
+            disabled={!validateLessons()}
           >
             Set Schedule & Pricing
             <ArrowRight className="ml-2 h-4 w-4" />
