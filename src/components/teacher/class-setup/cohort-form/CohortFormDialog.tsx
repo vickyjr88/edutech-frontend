@@ -177,14 +177,25 @@ const CohortFormDialog: React.FC<CohortFormDialogProps> = ({
         formData.repeatSchedule
       );
       
-      if (calculatedEndDate && (!formData.endDate || calculatedEndDate.getTime() !== formData.endDate.getTime())) {
+      // Only update if the calculated date is different and we have a valid date
+      const currentEndTime = formData.endDate?.getTime();
+      const calculatedEndTime = calculatedEndDate?.getTime();
+      
+      if (calculatedEndDate && calculatedEndTime && currentEndTime !== calculatedEndTime) {
         setFormData(prev => ({
           ...prev,
           endDate: calculatedEndDate
         }));
       }
     }
-  }, [formData.startDate, formData.repeatSchedule, totalNumberOfLessons, calculateEndDate]);
+  }, [
+    formData.startDate?.getTime(), 
+    formData.repeatSchedule.pattern, 
+    formData.repeatSchedule.repeatEvery, 
+    formData.repeatSchedule.daysOfWeek.join(','), 
+    totalNumberOfLessons, 
+    calculateEndDate
+  ]);
   
   const updateFormField = (field: keyof CohortData, value: any) => {
     setFormData(prev => ({
@@ -1118,12 +1129,14 @@ const CohortFormDialog: React.FC<CohortFormDialogProps> = ({
   
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogTrigger asChild>
-        <Button variant={buttonVariant} className="flex items-center">
-          {buttonIcon}
-          {buttonText}
-        </Button>
-      </DialogTrigger>
+      {buttonText && (
+        <DialogTrigger asChild>
+          <Button variant={buttonVariant} className="flex items-center">
+            {buttonIcon}
+            {buttonText}
+          </Button>
+        </DialogTrigger>
+      )}
       
       <DialogContent
         className="max-w-5xl max-h-[90vh] overflow-hidden flex flex-col"
@@ -1146,7 +1159,16 @@ const CohortFormDialog: React.FC<CohortFormDialogProps> = ({
             {cohort ? "Edit Cohort" : "Create New Cohort"}
           </DialogTitle>
           <DialogDescription>
-            {sections.find(s => s.id === activeSection)?.description || "Configure your cohort"}
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-kidato-indigo-600">
+                  Active Section: {sections.find(s => s.id === activeSection)?.title || "Loading..."}
+                </span>
+              </div>
+              <div className="text-sm text-gray-600">
+                {sections.find(s => s.id === activeSection)?.description || "Configure your cohort"}
+              </div>
+            </div>
           </DialogDescription>
         </DialogHeader>
         
@@ -1169,7 +1191,7 @@ const CohortFormDialog: React.FC<CohortFormDialogProps> = ({
               <Tabs value={activeSection} onValueChange={setActiveSection}>
                 {/* Section Navigation */}
                 <div className="mb-6">
-                  <TabsList className="grid w-full grid-cols-5 h-auto p-1 bg-gray-100">
+                  <TabsList className="grid w-full grid-cols-5 h-auto p-2 bg-gradient-to-r from-gray-100 to-gray-50 rounded-xl border shadow-sm">
                     {sections.map((section) => {
                       const Icon = section.icon;
                       const isCompleted = completionStatus[section.id as keyof typeof completionStatus];
@@ -1177,44 +1199,37 @@ const CohortFormDialog: React.FC<CohortFormDialogProps> = ({
                         <TabsTrigger
                           key={section.id}
                           value={section.id}
-                          className="flex flex-col items-center gap-1 px-2 py-3 text-xs data-[state=active]:bg-white data-[state=active]:shadow-sm"
+                          onClick={() => setActiveSection(section.id)}
+                          className="flex flex-col items-center gap-2 px-3 py-4 text-sm data-[state=active]:bg-white data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-kidato-indigo-200 rounded-lg transition-all duration-200 hover:bg-white/50 cursor-pointer"
                         >
                           <div className="flex items-center gap-1">
-                            <Icon className={`h-4 w-4 ${isCompleted ? 'text-green-600' : 'text-gray-500'}`} />
-                            {isCompleted && <CheckCircle2 className="h-3 w-3 text-green-600" />}
+                            <Icon className={`h-5 w-5 ${isCompleted ? 'text-green-600' : activeSection === section.id ? 'text-kidato-indigo-600' : 'text-gray-500'}`} />
+                            {isCompleted && <CheckCircle2 className="h-4 w-4 text-green-600" />}
                           </div>
-                          <span className="font-medium text-center leading-tight">{section.title}</span>
+                          <span className={`font-medium text-center leading-tight ${activeSection === section.id ? 'text-kidato-indigo-800' : 'text-gray-700'}`}>
+                            {section.title}
+                          </span>
                         </TabsTrigger>
                       );
                     })}
                   </TabsList>
                 </div>
 
-                <AnimatePresence mode="wait">
-                  <motion.div
-                    key={activeSection}
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <TabsContent value="basic" className="mt-0">
-                      {renderBasicSection()}
-                    </TabsContent>
-                    <TabsContent value="schedule" className="mt-0">
-                      {renderScheduleSection()}
-                    </TabsContent>
-                    <TabsContent value="enrollment" className="mt-0">
-                      {renderEnrollmentSection()}
-                    </TabsContent>
-                    <TabsContent value="pricing" className="mt-0">
-                      {renderPricingSection()}
-                    </TabsContent>
-                    <TabsContent value="sessions" className="mt-0">
-                      {renderSessionsSection()}
-                    </TabsContent>
-                  </motion.div>
-                </AnimatePresence>
+                <TabsContent value="basic" className="mt-0">
+                  {renderBasicSection()}
+                </TabsContent>
+                <TabsContent value="schedule" className="mt-0">
+                  {renderScheduleSection()}
+                </TabsContent>
+                <TabsContent value="enrollment" className="mt-0">
+                  {renderEnrollmentSection()}
+                </TabsContent>
+                <TabsContent value="pricing" className="mt-0">
+                  {renderPricingSection()}
+                </TabsContent>
+                <TabsContent value="sessions" className="mt-0">
+                  {renderSessionsSection()}
+                </TabsContent>
               </Tabs>
             </div>
           </ScrollArea>

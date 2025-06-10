@@ -16,10 +16,13 @@ import {
   Users,
   DollarSign,
   Calendar,
-  Trash2
+  Trash2,
+  Brain,
+  Grid
 } from 'lucide-react';
 import RecommendedClasses from './RecommendedClasses';
 import { ClassRecommendation } from '@/integrations/api/services/teacher.service';
+import EnhancedClassesCommandCenter from '../classes/EnhancedClassesCommandCenter';
 
 interface TabbedClassesViewProps {
   classes: any[];
@@ -45,6 +48,7 @@ const TabbedClassesView: React.FC<TabbedClassesViewProps> = ({
   onCreateClassFromRecommendation
 }) => {
   const [activeClassTab, setActiveClassTab] = useState<ClassStatus>('published');
+  const [useEnhancedView, setUseEnhancedView] = useState(true);
 
   // Categorize classes by status
   const categorizeClasses = () => {
@@ -293,16 +297,54 @@ const TabbedClassesView: React.FC<TabbedClassesViewProps> = ({
     );
   }
 
+  // If enhanced view is enabled and there are classes, use the command center
+  if (useEnhancedView && classes.length > 0) {
+    return (
+      <EnhancedClassesCommandCenter
+        classes={classes}
+        isLoading={isLoading}
+        hasClassesSetup={hasClassesSetup}
+        onCreateClass={onCreateClass}
+        onViewClass={onViewClass}
+        onSetupClassSettings={onSetupClassSettings}
+        onDeleteClass={onDeleteClass}
+        onCreateClassFromRecommendation={onCreateClassFromRecommendation}
+      />
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-bold">My Classes</h2>
-        {hasClassesSetup && (
-          <Button onClick={onCreateClass} className="bg-kidato-purple hover:bg-kidato-purple-600">
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Create New Class
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          {classes.length > 0 && (
+            <div className="flex items-center gap-2 mr-4">
+              <Button
+                variant={useEnhancedView ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setUseEnhancedView(true)}
+              >
+                <Brain className="h-4 w-4 mr-2" />
+                Smart View
+              </Button>
+              <Button
+                variant={!useEnhancedView ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setUseEnhancedView(false)}
+              >
+                <Grid className="h-4 w-4 mr-2" />
+                Simple View
+              </Button>
+            </div>
+          )}
+          {hasClassesSetup && (
+            <Button onClick={onCreateClass} className="bg-kidato-purple hover:bg-kidato-purple-600">
+              <PlusCircle className="mr-2 h-4 w-4" />
+              Create New Class
+            </Button>
+          )}
+        </div>
       </div>
 
       <Tabs value={activeClassTab} onValueChange={(value) => setActiveClassTab(value as ClassStatus)}>

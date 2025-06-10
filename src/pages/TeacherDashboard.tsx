@@ -15,6 +15,7 @@ import TeacherProfessionalProfileForm from "@/components/teacher/TeacherProfessi
 import ClassSetupForm from "@/components/teacher/ClassSetupForm";
 import EnhancedClassSetup from "@/components/teacher/class-setup/EnhancedClassSetup";
 import TeacherClassView from "@/components/teacher/class-view/TeacherClassView";
+import EnhancedClassDetailPage from "@/components/class-detail/EnhancedClassDetailPage";
 import CreateClassForm from "@/components/teacher/CreateClassForm"; // Kept for backwards compatibility
 import EnrollStudentsPage from "@/components/teacher/enrollment/EnrollStudentsPage";
 import { StudentView } from "@/components/teacher/students";
@@ -1032,28 +1033,6 @@ const TeacherDashboard = () => {
           >
             <DollarSign className="mr-3 h-5 w-5" />
             Earnings
-          </Link>
-          <Link 
-            to="/teacher-dashboard/zoom"
-            className={`flex items-center px-4 py-3 text-sm font-medium rounded-md w-full text-left ${
-              activeTab === "zoom" 
-                ? "bg-kidato-light-blue text-kidato-purple" 
-                : "text-gray-700 hover:bg-gray-100"
-            }`}
-          >
-            <Video className="mr-3 h-5 w-5" />
-            Zoom
-          </Link>
-          <Link 
-            to="/teacher-dashboard/calendar"
-            className={`flex items-center px-4 py-3 text-sm font-medium rounded-md w-full text-left ${
-              activeTab === "calendar" 
-                ? "bg-kidato-light-blue text-kidato-purple" 
-                : "text-gray-700 hover:bg-gray-100"
-            }`}
-          >
-            <Calendar className="mr-3 h-5 w-5" />
-            Calendar
           </Link>
           <Link 
             to="/teacher-dashboard/settings"
@@ -2232,15 +2211,10 @@ const TeacherDashboard = () => {
           )}
 
           {!isLoading && activeTab === "viewClass" && selectedClass && (
-            <div className="space-y-4">
-              <div className="flex items-center">
-                <Button variant="outline" size="sm" onClick={handleBackToClasses}>
-                  <ChevronLeft className="h-4 w-4 mr-1" />
-                  Back to Classes
-                </Button>
-              </div>
-              <TeacherClassView classId={selectedClass._id || selectedClass.id} />
-            </div>
+            <EnhancedClassDetailPage 
+              classData={selectedClass}
+              onBack={handleBackToClasses}
+            />
           )}
 
           {!isLoading && activeTab === "zoom" && (
