@@ -18,7 +18,7 @@ import TeacherClassView from "@/components/teacher/class-view/TeacherClassView";
 import EnhancedClassDetailPage from "@/components/class-detail/EnhancedClassDetailPage";
 import CreateClassForm from "@/components/teacher/CreateClassForm"; // Kept for backwards compatibility
 import EnrollStudentsPage from "@/components/teacher/enrollment/EnrollStudentsPage";
-import { StudentView } from "@/components/teacher/students";
+import AIStudentsPage from "@/components/teacher/students/AIStudentsPage";
 import RecommendedClasses from "@/components/teacher/RecommendedClasses";
 import TabbedClassesView from "@/components/teacher/TabbedClassesView";
 import TeacherOnboardingDashboard from "@/components/teacher/TeacherOnboardingDashboard";
@@ -1347,7 +1347,7 @@ const TeacherDashboard = () => {
                   onConnectDrive={() => console.log("Connect drive")}
                 />
               ) : (
-                <StudentView
+                <AIStudentsPage
                   onViewProfile={(studentId) => console.log("View student profile:", studentId)}
                   onEnrollStudents={handleEnrollStudents}
                 />
