@@ -22,6 +22,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Progress } from "@/components/ui/progress";
 import { Checkbox } from "@/components/ui/checkbox";
+import { SmartMessageComposer } from "../messaging/SmartMessageComposer";
+import { MessageAnalyticsDashboard } from "../messaging/MessageAnalyticsDashboard";
 
 // Types
 interface Student {
@@ -144,6 +146,8 @@ const AIStudentsPage: React.FC<AIStudentsPageProps> = ({
   const [selectedFilter, setSelectedFilter] = useState("All");
   const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
   const [showAIAssistant, setShowAIAssistant] = useState(false);
+  const [showMessageComposer, setShowMessageComposer] = useState(false);
+  const [showAnalyticsDashboard, setShowAnalyticsDashboard] = useState(false);
 
   // Generate class data from teacher's actual classes
   const classData = useMemo(() => {
@@ -234,6 +238,34 @@ const AIStudentsPage: React.FC<AIStudentsPageProps> = ({
         return <Badge className="bg-red-500 hover:bg-red-500/90 text-white">Inactive</Badge>;
       default: 
         return <Badge variant="outline">Active</Badge>;
+    }
+  };
+
+  // Convert student data for messaging component
+  const messagingStudents = useMemo(() => {
+    return studentsData.map(student => ({
+      ...student,
+      preferredPlatform: 'whatsapp' as const,
+      responseRate: Math.floor(Math.random() * 40) + 60
+    }));
+  }, []);
+
+  const handleSendMessage = (messageData: any) => {
+    console.log('Sending message:', messageData);
+    // Here you would integrate with your messaging API
+  };
+
+  const handleMessageStudent = (studentId: string) => {
+    const student = studentsData.find(s => s.id === studentId);
+    if (student) {
+      setSelectedStudents([studentId]);
+      setShowMessageComposer(true);
+    }
+  };
+
+  const handleBulkMessage = () => {
+    if (selectedStudents.length > 0) {
+      setShowMessageComposer(true);
     }
   };
 
@@ -391,13 +423,23 @@ const AIStudentsPage: React.FC<AIStudentsPageProps> = ({
                 <span className="font-medium">{selectedStudents.length} students selected</span>
               </div>
               <div className="flex gap-2">
-                <Button variant="secondary" size="sm" className="bg-white/20 hover:bg-white/30 text-white border-0">
+                <Button 
+                  variant="secondary" 
+                  size="sm" 
+                  className="bg-white/20 hover:bg-white/30 text-white border-0"
+                  onClick={handleBulkMessage}
+                >
                   <MessageCircle className="w-4 h-4 mr-2" />
                   Send Message
                 </Button>
-                <Button variant="secondary" size="sm" className="bg-white/20 hover:bg-white/30 text-white border-0">
+                <Button 
+                  variant="secondary" 
+                  size="sm" 
+                  className="bg-white/20 hover:bg-white/30 text-white border-0"
+                  onClick={() => setShowAnalyticsDashboard(true)}
+                >
                   <BarChart3 className="w-4 h-4 mr-2" />
-                  Generate Report
+                  View Analytics
                 </Button>
                 <Button variant="secondary" size="sm" className="bg-white/20 hover:bg-white/30 text-white border-0">
                   <Users className="w-4 h-4 mr-2" />
@@ -516,6 +558,7 @@ const AIStudentsPage: React.FC<AIStudentsPageProps> = ({
                     size="sm" 
                     variant="ghost" 
                     className="flex-1 text-[#f99325] hover:bg-[#f99325]/10"
+                    onClick={() => handleMessageStudent(student.id)}
                   >
                     <MessageCircle className="w-4 h-4 mr-1" />
                     Message
@@ -671,6 +714,24 @@ const AIStudentsPage: React.FC<AIStudentsPageProps> = ({
           <Brain className="w-6 h-6 text-white" />
         </Button>
       </div>
+
+      {/* Message Composer Modal */}
+      <SmartMessageComposer
+        isOpen={showMessageComposer}
+        onClose={() => {
+          setShowMessageComposer(false);
+          setSelectedStudents([]);
+        }}
+        selectedStudents={selectedStudents.map(id => messagingStudents.find(s => s.id === id)!).filter(Boolean)}
+        allStudents={messagingStudents}
+        onSendMessage={handleSendMessage}
+      />
+
+      {/* Analytics Dashboard Modal */}
+      <MessageAnalyticsDashboard
+        isOpen={showAnalyticsDashboard}
+        onClose={() => setShowAnalyticsDashboard(false)}
+      />
     </div>
   );
 };
