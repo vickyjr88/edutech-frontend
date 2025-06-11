@@ -1350,6 +1350,7 @@ const TeacherDashboard = () => {
                 <AIStudentsPage
                   onViewProfile={(studentId) => console.log("View student profile:", studentId)}
                   onEnrollStudents={handleEnrollStudents}
+                  classes={classes}
                 />
               )}
             </>
