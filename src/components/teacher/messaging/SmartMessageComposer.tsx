@@ -319,135 +319,139 @@ export const SmartMessageComposer: React.FC<SmartMessageComposerProps> = ({
         <p className="text-xl text-gray-600">Choose from smart groups or select individual students</p>
       </div>
 
-      {/* Smart Groups - Enhanced Layout with Accordion */}
-      <div className="mb-12">
-        <Accordion 
-          type="single" 
-          collapsible 
-          value={accordionValue} 
-          onValueChange={setAccordionValue}
-          className="w-full"
-        >
-          <AccordionItem value="ai-groups" className="border-0">
-            <AccordionTrigger className="hover:no-underline p-0 pb-6">
-              <div className="flex items-center gap-4 w-full">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-gradient-to-br from-[#5e6ad2] to-[#abb4dd] rounded-xl flex items-center justify-center">
-                    <Brain className="w-5 h-5 text-white" />
-                  </div>
-                  <div className="text-left">
-                    <h3 className="text-2xl font-bold text-gray-900">AI-Recommended Groups</h3>
-                    <p className="text-gray-600">Smart categorization based on student behavior and performance</p>
+      {/* Smart Groups - Enhanced Layout with Accordion - Only show if no students were pre-selected */}
+      {selectedStudents.length === 0 && (
+        <div className="mb-12">
+          <Accordion 
+            type="single" 
+            collapsible 
+            value={accordionValue} 
+            onValueChange={setAccordionValue}
+            className="w-full"
+          >
+            <AccordionItem value="ai-groups" className="border-0">
+              <AccordionTrigger className="hover:no-underline p-0 pb-6">
+                <div className="flex items-center gap-4 w-full">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-gradient-to-br from-[#5e6ad2] to-[#abb4dd] rounded-xl flex items-center justify-center">
+                      <Brain className="w-5 h-5 text-white" />
+                    </div>
+                    <div className="text-left">
+                      <h3 className="text-2xl font-bold text-gray-900">AI-Recommended Groups</h3>
+                      <p className="text-gray-600">Smart categorization based on student behavior and performance</p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </AccordionTrigger>
-            <AccordionContent className="pt-2">
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
-                {SMART_GROUPS.map((group, index) => (
-                  <Card 
-                    key={group.id} 
-                    className={`relative border-2 cursor-pointer hover:shadow-xl transition-all duration-300 hover:scale-105 transform ${
-                      selectedGroups.includes(group.id) 
-                        ? 'ring-4 ring-opacity-50 shadow-2xl scale-105' + ' ' + getColorClass(group.color).replace('border-', 'ring-')
-                        : getColorClass(group.color)
-                    }`}
-                    style={{
-                      animationDelay: `${index * 100}ms`
-                    }}
-                  >
-                    <CardContent className="p-6">
-                      <div className="space-y-4">
-                        <div className="flex items-start justify-between">
-                          <Checkbox
-                            checked={selectedGroups.includes(group.id)}
-                            onCheckedChange={(checked) => handleGroupSelect(group.id, checked as boolean)}
-                            className="h-6 w-6 mt-1"
-                          />
-                          <Badge variant="secondary" className="px-3 py-1 font-semibold">
-                            {group.count} students
-                          </Badge>
-                        </div>
-                        
-                        <div className="space-y-2">
-                          <h4 className="text-lg font-bold leading-tight">{group.title}</h4>
-                          <p className="text-sm opacity-90 leading-relaxed">{group.aiReason}</p>
-                        </div>
-
-                        {/* Visual indicator */}
-                        <div className="flex items-center gap-2 pt-2">
-                          <div className={`w-2 h-2 rounded-full ${
-                            group.color === 'warning' ? 'bg-[#f99325]' :
-                            group.color === 'success' ? 'bg-[#2ed573]' :
-                            group.color === 'danger' ? 'bg-red-500' : 'bg-[#5e6ad2]'
-                          } animate-pulse`} />
-                          <span className="text-xs font-medium opacity-75">
-                            {group.color === 'warning' ? 'Needs Support' :
-                             group.color === 'success' ? 'High Performers' :
-                             group.color === 'danger' ? 'Urgent Attention' : 'Celebrating Success'}
-                          </span>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </AccordionContent>
-          </AccordionItem>
-        </Accordion>
-        
-        {/* Selected Groups Tags */}
-        {selectedGroups.length > 0 && (
-          <div className="mt-6">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-8 h-8 bg-gradient-to-br from-[#5e6ad2] to-[#abb4dd] rounded-lg flex items-center justify-center">
-                <Check className="w-4 h-4 text-white" />
-              </div>
-              <h4 className="text-lg font-semibold text-gray-900">Selected Groups</h4>
-            </div>
-            <div className="flex flex-wrap gap-3">
-              {selectedGroups.map((groupId) => {
-                const group = SMART_GROUPS.find(g => g.id === groupId);
-                if (!group) return null;
-                
-                return (
-                  <div
-                    key={groupId}
-                    className={`inline-flex items-center gap-2 px-4 py-2 rounded-full border-2 shadow-sm transition-all duration-200 ${getColorClass(group.color)}`}
-                  >
-                    <div className={`w-2 h-2 rounded-full ${
-                      group.color === 'warning' ? 'bg-[#f99325]' :
-                      group.color === 'success' ? 'bg-[#2ed573]' :
-                      group.color === 'danger' ? 'bg-red-500' : 'bg-[#5e6ad2]'
-                    }`} />
-                    <span className="font-medium text-sm">{group.title}</span>
-                    <Badge variant="secondary" className="text-xs font-semibold">
-                      {group.count}
-                    </Badge>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleGroupSelect(groupId, false)}
-                      className="h-5 w-5 p-0 hover:bg-black/10 rounded-full"
+              </AccordionTrigger>
+              <AccordionContent className="pt-2">
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+                  {SMART_GROUPS.map((group, index) => (
+                    <Card 
+                      key={group.id} 
+                      className={`relative border-2 cursor-pointer hover:shadow-xl transition-all duration-300 hover:scale-105 transform ${
+                        selectedGroups.includes(group.id) 
+                          ? 'ring-4 ring-opacity-50 shadow-2xl scale-105' + ' ' + getColorClass(group.color).replace('border-', 'ring-')
+                          : getColorClass(group.color)
+                      }`}
+                      style={{
+                        animationDelay: `${index * 100}ms`
+                      }}
                     >
-                      <X className="w-3 h-3" />
-                    </Button>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-      </div>
+                      <CardContent className="p-6">
+                        <div className="space-y-4">
+                          <div className="flex items-start justify-between">
+                            <Checkbox
+                              checked={selectedGroups.includes(group.id)}
+                              onCheckedChange={(checked) => handleGroupSelect(group.id, checked as boolean)}
+                              className="h-6 w-6 mt-1"
+                            />
+                            <Badge variant="secondary" className="px-3 py-1 font-semibold">
+                              {group.count} students
+                            </Badge>
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <h4 className="text-lg font-bold leading-tight">{group.title}</h4>
+                            <p className="text-sm opacity-90 leading-relaxed">{group.aiReason}</p>
+                          </div>
 
-      {/* Divider */}
-      <div className="flex items-center gap-4 my-12">
-        <div className="flex-1 h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent" />
-        <div className="px-4 py-2 bg-white rounded-full border border-gray-200 shadow-sm">
-          <span className="text-sm font-medium text-gray-500">OR</span>
+                          {/* Visual indicator */}
+                          <div className="flex items-center gap-2 pt-2">
+                            <div className={`w-2 h-2 rounded-full ${
+                              group.color === 'warning' ? 'bg-[#f99325]' :
+                              group.color === 'success' ? 'bg-[#2ed573]' :
+                              group.color === 'danger' ? 'bg-red-500' : 'bg-[#5e6ad2]'
+                            } animate-pulse`} />
+                            <span className="text-xs font-medium opacity-75">
+                              {group.color === 'warning' ? 'Needs Support' :
+                               group.color === 'success' ? 'High Performers' :
+                               group.color === 'danger' ? 'Urgent Attention' : 'Celebrating Success'}
+                            </span>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
+          
+          {/* Selected Groups Tags */}
+          {selectedGroups.length > 0 && (
+            <div className="mt-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-8 h-8 bg-gradient-to-br from-[#5e6ad2] to-[#abb4dd] rounded-lg flex items-center justify-center">
+                  <Check className="w-4 h-4 text-white" />
+                </div>
+                <h4 className="text-lg font-semibold text-gray-900">Selected Groups</h4>
+              </div>
+              <div className="flex flex-wrap gap-3">
+                {selectedGroups.map((groupId) => {
+                  const group = SMART_GROUPS.find(g => g.id === groupId);
+                  if (!group) return null;
+                  
+                  return (
+                    <div
+                      key={groupId}
+                      className={`inline-flex items-center gap-2 px-4 py-2 rounded-full border-2 shadow-sm transition-all duration-200 ${getColorClass(group.color)}`}
+                    >
+                      <div className={`w-2 h-2 rounded-full ${
+                        group.color === 'warning' ? 'bg-[#f99325]' :
+                        group.color === 'success' ? 'bg-[#2ed573]' :
+                        group.color === 'danger' ? 'bg-red-500' : 'bg-[#5e6ad2]'
+                      }`} />
+                      <span className="font-medium text-sm">{group.title}</span>
+                      <Badge variant="secondary" className="text-xs font-semibold">
+                        {group.count}
+                      </Badge>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleGroupSelect(groupId, false)}
+                        className="h-5 w-5 p-0 hover:bg-black/10 rounded-full"
+                      >
+                        <X className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
-        <div className="flex-1 h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent" />
-      </div>
+      )}
+
+      {/* Divider - Only show if no students were pre-selected */}
+      {selectedStudents.length === 0 && (
+        <div className="flex items-center gap-4 my-12">
+          <div className="flex-1 h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent" />
+          <div className="px-4 py-2 bg-white rounded-full border border-gray-200 shadow-sm">
+            <span className="text-sm font-medium text-gray-500">OR</span>
+          </div>
+          <div className="flex-1 h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent" />
+        </div>
+      )}
 
       {/* Individual Students - Enhanced Layout */}
       <div className="mb-12">
