@@ -21,6 +21,7 @@ import EnrollStudentsPage from "@/components/teacher/enrollment/EnrollStudentsPa
 import { StudentView } from "@/components/teacher/students";
 import RecommendedClasses from "@/components/teacher/RecommendedClasses";
 import TabbedClassesView from "@/components/teacher/TabbedClassesView";
+import TeacherOnboardingDashboard from "@/components/teacher/TeacherOnboardingDashboard";
 import { ZoomDashboard } from "@/components/teacher/zoom";
 import { GoogleCalendarDashboard } from "@/components/teacher/google-calendar";
 import { useAuth } from "@/contexts/AuthContext";
@@ -1023,17 +1024,27 @@ const TeacherDashboard = () => {
             <Calendar className="mr-3 h-5 w-5" />
             Schedule
           </Link>
-          <Link 
-            to="/teacher-earnings"
-            className={`flex items-center px-4 py-3 text-sm font-medium rounded-md w-full text-left ${
-              activeTab === "earnings" 
-                ? "bg-kidato-light-blue text-kidato-purple" 
-                : "text-gray-700 hover:bg-gray-100"
-            }`}
-          >
-            <DollarSign className="mr-3 h-5 w-5" />
-            Earnings
-          </Link>
+          {/* Only show Earnings if teacher has classes with enrollments */}
+          {(() => {
+            const hasEnrollments = classes.some(classItem => {
+              const currentEnrollment = classItem.enrollment?.current || 0;
+              return currentEnrollment > 0;
+            });
+            
+            return hasEnrollments && (
+              <Link 
+                to="/teacher-earnings"
+                className={`flex items-center px-4 py-3 text-sm font-medium rounded-md w-full text-left ${
+                  activeTab === "earnings" 
+                    ? "bg-kidato-light-blue text-kidato-purple" 
+                    : "text-gray-700 hover:bg-gray-100"
+                }`}
+              >
+                <DollarSign className="mr-3 h-5 w-5" />
+                Earnings
+              </Link>
+            );
+          })()}
           <Link 
             to="/teacher-dashboard/settings"
             className={`flex items-center px-4 py-3 text-sm font-medium rounded-md w-full text-left ${
@@ -1280,26 +1291,19 @@ const TeacherDashboard = () => {
 
           {!isLoading && activeTab === "dashboard" && (
             <div className="space-y-6">
-              {!hasProfile ? (
-                <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-                  <div className="bg-gradient-to-r from-blue-600 to-indigo-700 p-8 text-white">
-                    <h2 className="text-3xl font-bold mb-4">Welcome to Kidato!</h2>
-                    <p className="text-xl opacity-90">Complete your profile to start your teaching journey</p>
-                  </div>
-                  <div className="p-8">
-                    <div className="mb-6">
-                      <h3 className="text-xl font-semibold mb-3 text-gray-800">First Step: Complete Your Teacher Profile</h3>
-                      <p className="text-gray-600 mb-4">Set up your professional profile to connect with students who match your teaching style and expertise.</p>
-                    </div>
-                    <Button 
-                      className="w-full py-3 text-lg bg-kidato-purple hover:bg-kidato-purple-600"
-                      onClick={() => navigate("/teacher-profile-setup")}
-                    >
-                      <User className="mr-2 h-5 w-5" />
-                      Complete Your Profile
-                    </Button>
-                  </div>
-                </div>
+              {!hasProfile || classes.length === 0 ? (
+                <TeacherOnboardingDashboard
+                  hasProfile={hasProfile}
+                  hasClasses={classes.length > 0}
+                  zoomConnected={false}
+                  calendarConnected={false}
+                  driveConnected={false}
+                  onCreateClass={handleCreateClass}
+                  onViewProfile={() => navigate("/teacher-profile")}
+                  onConnectZoom={() => console.log("Connect Zoom")}
+                  onConnectCalendar={() => console.log("Connect Calendar")}
+                  onConnectDrive={() => console.log("Connect Drive")}
+                />
               ) : (
                 <>
                   <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
@@ -1686,10 +1690,27 @@ const TeacherDashboard = () => {
           )}
 
           {!isLoading && activeTab === "students" && !showEnrollStudents && (
-            <StudentView
-              onViewProfile={(studentId) => console.log("View student profile:", studentId)}
-              onEnrollStudents={handleEnrollStudents}
-            />
+            <>
+              {classes.length === 0 ? (
+                <TeacherOnboardingDashboard
+                  hasProfile={hasProfile}
+                  hasClasses={classes.length > 0}
+                  zoomConnected={false} // You may want to track this state
+                  calendarConnected={false} // You may want to track this state
+                  driveConnected={false} // You may want to track this state
+                  onCreateClass={handleCreateClass}
+                  onViewProfile={() => navigate("/teacher-dashboard/settings")}
+                  onConnectZoom={() => navigate("/teacher-dashboard/zoom")}
+                  onConnectCalendar={() => navigate("/teacher-dashboard/calendar")}
+                  onConnectDrive={() => console.log("Connect drive")}
+                />
+              ) : (
+                <StudentView
+                  onViewProfile={(studentId) => console.log("View student profile:", studentId)}
+                  onEnrollStudents={handleEnrollStudents}
+                />
+              )}
+            </>
           )}
 
           {!isLoading && activeTab === "enrollment" && (
@@ -1713,140 +1734,138 @@ const TeacherDashboard = () => {
           )}
 
           {!isLoading && activeTab === "schedule" && (
-            <div className="space-y-6">
-              <div className="flex flex-col lg:flex-row gap-6">
-                {/* Main calendar section */}
-                <div className="lg:w-2/3">
-                  <Card className="border-t-4 border-t-sky-500">
-                    <CardHeader className="flex flex-row items-center justify-between pb-2">
-                      <div>
-                        <CardTitle className="text-xl flex items-center text-gray-800">
-                          <Calendar className="mr-2 h-5 w-5 text-sky-600" />
-                          Teaching Schedule
-                        </CardTitle>
-                        <CardDescription>
-                          Manage your classes and availability
-                        </CardDescription>
-                      </div>
-                      <div className="flex gap-2">
-                        <Button size="sm" variant="outline" className="text-xs">
-                          Day
-                        </Button>
-                        <Button size="sm" variant="default" className="bg-sky-600 text-xs">
-                          Week
-                        </Button>
-                        <Button size="sm" variant="outline" className="text-xs">
-                          Month
-                        </Button>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      {classes.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center bg-sky-50 rounded-lg p-12 text-center">
-                          <Calendar className="h-16 w-16 text-sky-300 mb-4" />
-                          <h3 className="text-lg font-medium text-gray-900 mb-1">No Classes to Schedule</h3>
-                          <p className="text-sm text-gray-500 mb-6 max-w-md">
-                            You need to create and publish classes before you can schedule teaching sessions.
-                          </p>
-                          <Button 
-                            className="bg-sky-600 hover:bg-sky-700"
-                            onClick={handleCreateClass}
-                          >
-                            <PlusCircle className="mr-2 h-4 w-4" />
-                            Create Your First Class
-                          </Button>
-                        </div>
-                      ) : (
-                        <div className="mt-2">
-                          {/* Calendar week view */}
-                          <div className="border rounded-md overflow-hidden">
-                            {/* Week navigation */}
-                            <div className="flex items-center justify-between px-4 py-2 bg-gray-50 border-b">
-                              <div className="flex items-center space-x-2">
-                                <Button variant="ghost" size="icon" className="h-8 w-8">
-                                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-600">
-                                    <path d="m15 18-6-6 6-6"/>
-                                  </svg>
-                                </Button>
-                                <Button variant="ghost" size="sm" className="h-8 text-xs">
-                                  Today
-                                </Button>
-                                <Button variant="ghost" size="icon" className="h-8 w-8">
-                                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-600">
-                                    <path d="m9 18 6-6-6-6"/>
-                                  </svg>
-                                </Button>
-                              </div>
-                              <h3 className="text-sm font-medium">May 19 - May 25, 2024</h3>
-                              <div></div>
-                            </div>
-                            
-                            {/* Days of the week */}
-                            <div className="grid grid-cols-7 text-center border-b bg-gray-50">
-                              {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, i) => (
-                                <div key={i} className="py-2 text-xs font-medium">
-                                  <div>{day}</div>
-                                  <div className={`text-sm mt-1 ${i === 2 ? "h-6 w-6 rounded-full bg-sky-600 text-white flex items-center justify-center mx-auto" : ""}`}>
-                                    {i + 19}
-                                  </div>
+            <>
+              {classes.length === 0 ? (
+                <TeacherOnboardingDashboard
+                  hasProfile={hasProfile}
+                  hasClasses={classes.length > 0}
+                  zoomConnected={false}
+                  calendarConnected={false}
+                  driveConnected={false}
+                  onCreateClass={handleCreateClass}
+                  onViewProfile={() => navigate("/teacher-profile")}
+                  onConnectZoom={() => navigate("/teacher-dashboard/zoom")}
+                  onConnectCalendar={() => navigate("/teacher-dashboard/calendar")}
+                  onConnectDrive={() => console.log("Connect drive")}
+                />
+              ) : (
+                <div className="space-y-6">
+                  <div className="flex flex-col lg:flex-row gap-6">
+                    {/* Main calendar section */}
+                    <div className="lg:w-2/3">
+                      <Card className="border-t-4 border-t-sky-500">
+                        <CardHeader className="flex flex-row items-center justify-between pb-2">
+                          <div>
+                            <CardTitle className="text-xl flex items-center text-gray-800">
+                              <Calendar className="mr-2 h-5 w-5 text-sky-600" />
+                              Teaching Schedule
+                            </CardTitle>
+                            <CardDescription>
+                              Manage your classes and availability
+                            </CardDescription>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button size="sm" variant="outline" className="text-xs">
+                              Day
+                            </Button>
+                            <Button size="sm" variant="default" className="bg-sky-600 text-xs">
+                              Week
+                            </Button>
+                            <Button size="sm" variant="outline" className="text-xs">
+                              Month
+                            </Button>
+                          </div>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="mt-2">
+                            {/* Calendar week view */}
+                            <div className="border rounded-md overflow-hidden">
+                              {/* Week navigation */}
+                              <div className="flex items-center justify-between px-4 py-2 bg-gray-50 border-b">
+                                <div className="flex items-center space-x-2">
+                                  <Button variant="ghost" size="icon" className="h-8 w-8">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-600">
+                                      <path d="m15 18-6-6 6-6"/>
+                                    </svg>
+                                  </Button>
+                                  <Button variant="ghost" size="sm" className="h-8 text-xs">
+                                    Today
+                                  </Button>
+                                  <Button variant="ghost" size="icon" className="h-8 w-8">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-600">
+                                      <path d="m9 18 6-6-6-6"/>
+                                    </svg>
+                                  </Button>
                                 </div>
-                              ))}
-                            </div>
-                            
-                            {/* Time slots */}
-                            <div className="relative" style={{ height: "500px" }}>
-                              {/* Time markers */}
-                              <div className="absolute top-0 left-0 w-full h-full grid grid-cols-1 gap-0">
-                                {[9, 10, 11, 12, 13, 14, 15, 16, 17].map((hour, i) => (
-                                  <div key={i} className="relative border-b border-gray-100">
-                                    <div className="absolute -top-2.5 left-1 text-xs text-gray-400 bg-white px-1">
-                                      {hour % 12 === 0 ? '12' : hour % 12}{hour >= 12 ? 'pm' : 'am'}
+                                <h3 className="text-sm font-medium">May 19 - May 25, 2024</h3>
+                                <div></div>
+                              </div>
+                              
+                              {/* Days of the week */}
+                              <div className="grid grid-cols-7 text-center border-b bg-gray-50">
+                                {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, i) => (
+                                  <div key={i} className="py-2 text-xs font-medium">
+                                    <div>{day}</div>
+                                    <div className={`text-sm mt-1 ${i === 2 ? "h-6 w-6 rounded-full bg-sky-600 text-white flex items-center justify-center mx-auto" : ""}`}>
+                                      {i + 19}
                                     </div>
                                   </div>
                                 ))}
                               </div>
                               
-                              {/* Week grid */}
-                              <div className="absolute top-0 left-8 right-0 h-full grid grid-cols-7 gap-0">
-                                {/* Sample day columns */}
-                                {Array(7).fill(0).map((_, dayIndex) => (
-                                  <div key={dayIndex} className="relative border-l first:border-l-0 h-full">
-                                    {/* Sample events */}
-                                    {dayIndex === 2 && (
-                                      <div className="absolute top-0 left-1 right-1 h-[120px] mt-2 rounded-md bg-blue-100 border border-blue-200 p-2 overflow-hidden">
-                                        <div className="text-xs font-medium text-blue-800">Math Class</div>
-                                        <div className="text-xs text-blue-700">9:00am - 10:00am</div>
-                                        <div className="text-xs text-blue-600 mt-1">Grade 7</div>
+                              {/* Time slots */}
+                              <div className="relative" style={{ height: "500px" }}>
+                                {/* Time markers */}
+                                <div className="absolute top-0 left-0 w-full h-full grid grid-cols-1 gap-0">
+                                  {[9, 10, 11, 12, 13, 14, 15, 16, 17].map((hour, i) => (
+                                    <div key={i} className="relative border-b border-gray-100">
+                                      <div className="absolute -top-2.5 left-1 text-xs text-gray-400 bg-white px-1">
+                                        {hour % 12 === 0 ? '12' : hour % 12}{hour >= 12 ? 'pm' : 'am'}
                                       </div>
-                                    )}
-                                    {dayIndex === 2 && (
-                                      <div className="absolute top-[240px] left-1 right-1 h-[120px] rounded-md bg-purple-100 border border-purple-200 p-2 overflow-hidden">
-                                        <div className="text-xs font-medium text-purple-800">Science Lab</div>
-                                        <div className="text-xs text-purple-700">1:00pm - 2:00pm</div>
-                                        <div className="text-xs text-purple-600 mt-1">Grade 5</div>
-                                      </div>
-                                    )}
-                                    {dayIndex === 4 && (
-                                      <div className="absolute top-[120px] left-1 right-1 h-[120px] rounded-md bg-green-100 border border-green-200 p-2 overflow-hidden">
-                                        <div className="text-xs font-medium text-green-800">English Literature</div>
-                                        <div className="text-xs text-green-700">11:00am - 12:00pm</div>
-                                        <div className="text-xs text-green-600 mt-1">Grade 8</div>
-                                      </div>
-                                    )}
-                                    {dayIndex === 5 && (
-                                      <div className="absolute top-[360px] left-1 right-1 h-[120px] rounded-md bg-amber-100 border border-amber-200 p-2 overflow-hidden">
-                                        <div className="text-xs font-medium text-amber-800">Art Class</div>
-                                        <div className="text-xs text-amber-700">3:00pm - 4:00pm</div>
-                                        <div className="text-xs text-amber-600 mt-1">Grade 6</div>
-                                      </div>
-                                    )}
-                                  </div>
-                                ))}
+                                    </div>
+                                  ))}
+                                </div>
+                                
+                                {/* Week grid */}
+                                <div className="absolute top-0 left-8 right-0 h-full grid grid-cols-7 gap-0">
+                                  {/* Sample day columns */}
+                                  {Array(7).fill(0).map((_, dayIndex) => (
+                                    <div key={dayIndex} className="relative border-l first:border-l-0 h-full">
+                                      {/* Sample events */}
+                                      {dayIndex === 2 && (
+                                        <div className="absolute top-0 left-1 right-1 h-[120px] mt-2 rounded-md bg-blue-100 border border-blue-200 p-2 overflow-hidden">
+                                          <div className="text-xs font-medium text-blue-800">Math Class</div>
+                                          <div className="text-xs text-blue-700">9:00am - 10:00am</div>
+                                          <div className="text-xs text-blue-600 mt-1">Grade 7</div>
+                                        </div>
+                                      )}
+                                      {dayIndex === 2 && (
+                                        <div className="absolute top-[240px] left-1 right-1 h-[120px] rounded-md bg-purple-100 border border-purple-200 p-2 overflow-hidden">
+                                          <div className="text-xs font-medium text-purple-800">Science Lab</div>
+                                          <div className="text-xs text-purple-700">1:00pm - 2:00pm</div>
+                                          <div className="text-xs text-purple-600 mt-1">Grade 5</div>
+                                        </div>
+                                      )}
+                                      {dayIndex === 4 && (
+                                        <div className="absolute top-[120px] left-1 right-1 h-[120px] rounded-md bg-green-100 border border-green-200 p-2 overflow-hidden">
+                                          <div className="text-xs font-medium text-green-800">English Literature</div>
+                                          <div className="text-xs text-green-700">11:00am - 12:00pm</div>
+                                          <div className="text-xs text-green-600 mt-1">Grade 8</div>
+                                        </div>
+                                      )}
+                                      {dayIndex === 5 && (
+                                        <div className="absolute top-[360px] left-1 right-1 h-[120px] rounded-md bg-amber-100 border border-amber-200 p-2 overflow-hidden">
+                                          <div className="text-xs font-medium text-amber-800">Art Class</div>
+                                          <div className="text-xs text-amber-700">3:00pm - 4:00pm</div>
+                                          <div className="text-xs text-amber-600 mt-1">Grade 6</div>
+                                        </div>
+                                      )}
+                                    </div>
+                                  ))}
+                                </div>
                               </div>
                             </div>
                           </div>
-                        </div>
-                      )}
                     </CardContent>
                   </Card>
                 </div>
@@ -2208,6 +2227,8 @@ const TeacherDashboard = () => {
                 </CardContent>
               </Card>
             </div>
+              )}
+            </>
           )}
 
           {!isLoading && activeTab === "viewClass" && selectedClass && (

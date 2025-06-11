@@ -18,11 +18,17 @@ import {
   Calendar,
   Trash2,
   Brain,
-  Grid
+  Grid,
+  MessageCircle,
+  Video,
+  Settings,
+  TrendingUp,
+  Zap
 } from 'lucide-react';
 import RecommendedClasses from './RecommendedClasses';
 import { ClassRecommendation } from '@/integrations/api/services/teacher.service';
 import EnhancedClassesCommandCenter from '../classes/EnhancedClassesCommandCenter';
+import TeacherOnboardingDashboard from './TeacherOnboardingDashboard';
 
 interface TabbedClassesViewProps {
   classes: any[];
@@ -33,6 +39,15 @@ interface TabbedClassesViewProps {
   onSetupClassSettings: () => void;
   onDeleteClass?: (classItem: any) => void;
   onCreateClassFromRecommendation?: (recommendation: ClassRecommendation) => void;
+  // Onboarding dashboard props
+  hasProfile?: boolean;
+  zoomConnected?: boolean;
+  calendarConnected?: boolean;
+  driveConnected?: boolean;
+  onViewProfile?: () => void;
+  onConnectZoom?: () => void;
+  onConnectCalendar?: () => void;
+  onConnectDrive?: () => void;
 }
 
 type ClassStatus = 'published' | 'draft' | 'pending_review' | 'archived' | 'recommendations';
@@ -45,7 +60,16 @@ const TabbedClassesView: React.FC<TabbedClassesViewProps> = ({
   onViewClass,
   onSetupClassSettings,
   onDeleteClass,
-  onCreateClassFromRecommendation
+  onCreateClassFromRecommendation,
+  // Onboarding dashboard props
+  hasProfile = true,
+  zoomConnected = false,
+  calendarConnected = false,
+  driveConnected = false,
+  onViewProfile = () => {},
+  onConnectZoom = () => {},
+  onConnectCalendar = () => {},
+  onConnectDrive = () => {}
 }) => {
   const [activeClassTab, setActiveClassTab] = useState<ClassStatus>('published');
   const [useEnhancedView, setUseEnhancedView] = useState(true);
@@ -92,7 +116,7 @@ const TabbedClassesView: React.FC<TabbedClassesViewProps> = ({
     const getStatusBadge = () => {
       if (classItem.status === 'pending_review') {
         return (
-          <Badge variant="outline" className="border-yellow-200 bg-yellow-50 text-yellow-700">
+          <Badge variant="outline" className="border-sea-buckthorn-200 bg-sea-buckthorn-50 text-sea-buckthorn-700 kidato-status-pending">
             <Clock className="h-3 w-3 mr-1" />
             Pending Review
           </Badge>
@@ -100,7 +124,7 @@ const TabbedClassesView: React.FC<TabbedClassesViewProps> = ({
       }
       if (classItem.status === 'archived') {
         return (
-          <Badge variant="outline" className="border-gray-200 bg-gray-50 text-gray-600">
+          <Badge variant="outline" className="border-athens-gray-300 bg-athens-gray-100 text-pigeon-post-700">
             <XCircle className="h-3 w-3 mr-1" />
             Archived
           </Badge>
@@ -108,14 +132,14 @@ const TabbedClassesView: React.FC<TabbedClassesViewProps> = ({
       }
       if (classItem.status === 'published') {
         return (
-          <Badge variant="outline" className="border-green-200 bg-green-50 text-green-700">
+          <Badge variant="outline" className="border-indigo-200 bg-indigo-50 text-indigo-700 kidato-status-published">
             <CheckCircle2 className="h-3 w-3 mr-1" />
             Published
           </Badge>
         );
       }
       return (
-        <Badge variant="outline" className="border-orange-200 bg-orange-50 text-orange-700">
+        <Badge variant="outline" className="border-pigeon-post-200 bg-pigeon-post-50 text-pigeon-post-700 kidato-status-draft">
           <AlertCircle className="h-3 w-3 mr-1" />
           Draft
         </Badge>
@@ -125,7 +149,7 @@ const TabbedClassesView: React.FC<TabbedClassesViewProps> = ({
     return (
       <Card 
         key={classId} 
-        className="cursor-pointer hover:shadow-md transition-shadow" 
+        className="cursor-pointer kidato-card-hover group bg-white border border-athens-gray-200 hover:border-indigo-200" 
         onClick={() => onViewClass(classItem)}
       >
         <CardHeader>
@@ -146,13 +170,13 @@ const TabbedClassesView: React.FC<TabbedClassesViewProps> = ({
           
           {/* Show additional info for published classes */}
           {classItem.status === 'published' && (
-            <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+            <div className="mb-4 p-3 bg-indigo-50 border border-indigo-200 rounded-lg group-hover:bg-indigo-100 transition-colors duration-200">
               <div className="flex justify-between items-center mb-2">
-                <div className="flex items-center text-sm font-medium text-green-800">
+                <div className="flex items-center text-sm font-medium text-indigo-800">
                   <Calendar className="h-4 w-4 mr-1" />
                   Active Cohort
                 </div>
-                <div className="flex items-center text-sm font-bold text-green-900">
+                <div className="flex items-center text-sm font-bold text-indigo-900">
                   <DollarSign className="h-4 w-4 mr-1" />
                   {(() => {
                     // Try different price sources
@@ -176,7 +200,7 @@ const TabbedClassesView: React.FC<TabbedClassesViewProps> = ({
                   })()}
                 </div>
               </div>
-              <div className="flex justify-between text-xs text-green-700">
+              <div className="flex justify-between text-xs text-indigo-700">
                 <span>
                   {classItem.cohorts && classItem.cohorts.length > 0 
                     ? `Cohort ${classItem.cohorts[0].name || 'A'} • ${classItem.cohorts[0].schedule || classItem.cohorts[0].startTime && classItem.cohorts[0].endTime ? `${classItem.cohorts[0].startTime}-${classItem.cohorts[0].endTime}` : 'Schedule TBD'}` 
@@ -191,13 +215,32 @@ const TabbedClassesView: React.FC<TabbedClassesViewProps> = ({
             </div>
           )}
           
+          {/* Smart Alerts */}
+          {classItem.status === 'published' && currentEnrollment === 0 && (
+            <div className="mb-3 p-2 bg-sea-buckthorn-50 border border-sea-buckthorn-200 rounded-lg kidato-urgent-pulse">
+              <div className="flex items-center text-sm text-sea-buckthorn-800">
+                <Zap className="h-4 w-4 mr-2" />
+                <span className="font-medium">No students enrolled yet! Share your class link.</span>
+              </div>
+            </div>
+          )}
+          
+          {classItem.status === 'draft' && (
+            <div className="mb-3 p-2 bg-pigeon-post-50 border border-pigeon-post-200 rounded-lg">
+              <div className="flex items-center text-sm text-pigeon-post-800">
+                <TrendingUp className="h-4 w-4 mr-2" />
+                <span className="font-medium">Ready to publish? Complete your class setup first.</span>
+              </div>
+            </div>
+          )}
+
           <div className="flex justify-between items-center">
             <div className="flex gap-4 text-sm">
-              <span className="flex items-center text-gray-500">
+              <span className="flex items-center text-pigeon-post-600 group-hover:text-pigeon-post-700 transition-colors">
                 <Eye className="h-4 w-4 mr-1" />
                 {currentEnrollment} students
               </span>
-              <span className="text-xs px-2 py-1 bg-gray-100 rounded-full">
+              <span className="text-xs px-2 py-1 bg-athens-gray-100 text-pigeon-post-700 rounded-full group-hover:bg-pigeon-post-100 transition-colors">
                 {classItem.type === "academic" ? classItem.gradeLevel : classItem.ageRange}
               </span>
             </div>
@@ -218,10 +261,72 @@ const TabbedClassesView: React.FC<TabbedClassesViewProps> = ({
                 </Button>
               )}
               {classItem.status === 'published' && (
-                <Badge variant="secondary" className="bg-kidato-purple-100 text-kidato-purple-dark">
-                  Live
+                <Badge variant="secondary" className="bg-indigo-100 text-indigo-700 kidato-celebration">
+                  🎉 Live
                 </Badge>
               )}
+            </div>
+          </div>
+
+          {/* Contextual Action Buttons */}
+          <div className="mt-4 pt-3 border-t border-athens-gray-200">
+            <div className="flex justify-between items-center">
+              <div className="flex gap-2">
+                {classItem.status === 'published' && (
+                  <>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        // Handle message students action
+                      }}
+                      className="border-indigo-200 text-indigo-700 hover:bg-indigo-50 hover:border-indigo-300 transition-all duration-200"
+                    >
+                      <MessageCircle className="h-4 w-4 mr-1" />
+                      Message
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        // Handle start session action
+                      }}
+                      className="border-sea-buckthorn-200 text-sea-buckthorn-700 hover:bg-sea-buckthorn-50 hover:border-sea-buckthorn-300 transition-all duration-200"
+                    >
+                      <Video className="h-4 w-4 mr-1" />
+                      Start Session
+                    </Button>
+                  </>
+                )}
+                {classItem.status === 'draft' && (
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      // Handle edit action
+                    }}
+                    className="border-pigeon-post-200 text-pigeon-post-700 hover:bg-pigeon-post-50 hover:border-pigeon-post-300 transition-all duration-200"
+                  >
+                    <Settings className="h-4 w-4 mr-1" />
+                    Complete Setup
+                  </Button>
+                )}
+              </div>
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onViewClass(classItem);
+                }}
+                className="text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 transition-all duration-200"
+              >
+                <Eye className="h-4 w-4 mr-1" />
+                View Details
+              </Button>
             </div>
           </div>
         </CardContent>
@@ -232,31 +337,31 @@ const TabbedClassesView: React.FC<TabbedClassesViewProps> = ({
   const renderEmptyState = (type: ClassStatus) => {
     const emptyStates = {
       published: {
-        icon: <CheckCircle2 className="h-16 w-16 text-green-300 mb-4" />,
+        icon: <CheckCircle2 className="h-16 w-16 text-indigo-300 mb-4" />,
         title: "No Published Classes",
         description: "You don't have any published classes yet. Create and publish your first class to start teaching.",
         action: "Create New Class"
       },
       draft: {
-        icon: <AlertCircle className="h-16 w-16 text-orange-300 mb-4" />,
+        icon: <AlertCircle className="h-16 w-16 text-pigeon-post-400 mb-4" />,
         title: "No Draft Classes",
         description: "All your classes are published! Create a new class if you want to work on something new.",
         action: "Create New Class"
       },
       pending_review: {
-        icon: <Clock className="h-16 w-16 text-yellow-300 mb-4" />,
+        icon: <Clock className="h-16 w-16 text-sea-buckthorn-300 mb-4" />,
         title: "No Classes Pending Review",
         description: "You don't have any classes awaiting review. Great job keeping your content up to date!",
         action: "Create New Class"
       },
       archived: {
-        icon: <XCircle className="h-16 w-16 text-gray-300 mb-4" />,
+        icon: <XCircle className="h-16 w-16 text-athens-gray-400 mb-4" />,
         title: "No Archived Classes",
         description: "You don't have any archived classes. All your classes are active!",
         action: "Create New Class"
       },
       recommendations: {
-        icon: <Sparkles className="h-16 w-16 text-kidato-orange-300 mb-4" />,
+        icon: <Sparkles className="h-16 w-16 text-sea-buckthorn-400 mb-4" />,
         title: "No Recommendations",
         description: "AI-powered class recommendations will appear here based on your teaching profile.",
         action: "Generate Recommendations"
@@ -266,19 +371,19 @@ const TabbedClassesView: React.FC<TabbedClassesViewProps> = ({
     const state = emptyStates[type];
 
     return (
-      <div className="flex flex-col items-center justify-center bg-white rounded-lg border border-dashed p-12">
+      <div className="flex flex-col items-center justify-center bg-white rounded-lg border border-dashed border-athens-gray-300 p-12 hover:border-indigo-300 transition-colors duration-300">
         {state.icon}
         <h3 className="text-lg font-medium text-gray-900 mb-1">{state.title}</h3>
         <p className="text-sm text-gray-500 mb-6 text-center max-w-md">
           {state.description}
         </p>
         {hasClassesSetup ? (
-          <Button onClick={onCreateClass} className="bg-kidato-purple hover:bg-kidato-purple-600">
+          <Button onClick={onCreateClass} className="bg-indigo-500 hover:bg-indigo-600 text-white transition-all duration-200 hover:scale-105">
             <PlusCircle className="mr-2 h-4 w-4" />
             {state.action}
           </Button>
         ) : (
-          <Button onClick={onSetupClassSettings} className="bg-kidato-purple hover:bg-kidato-purple-600">
+          <Button onClick={onSetupClassSettings} className="bg-indigo-500 hover:bg-indigo-600 text-white transition-all duration-200 hover:scale-105">
             Set Up Your Classroom First
           </Button>
         )}
@@ -290,10 +395,28 @@ const TabbedClassesView: React.FC<TabbedClassesViewProps> = ({
     return (
       <div className="flex justify-center py-8">
         <div className="flex flex-col items-center">
-          <Loader2 className="h-12 w-12 animate-spin text-kidato-purple mb-3" />
+          <Loader2 className="h-12 w-12 animate-spin text-indigo-500 mb-3" />
           <p className="text-gray-600">Loading your classes...</p>
         </div>
       </div>
+    );
+  }
+
+  // Show onboarding dashboard when teacher has no classes at all
+  if (classes.length === 0) {
+    return (
+      <TeacherOnboardingDashboard
+        hasProfile={hasProfile}
+        hasClasses={false}
+        zoomConnected={zoomConnected}
+        calendarConnected={calendarConnected}
+        driveConnected={driveConnected}
+        onCreateClass={onCreateClass}
+        onViewProfile={onViewProfile}
+        onConnectZoom={onConnectZoom}
+        onConnectCalendar={onConnectCalendar}
+        onConnectDrive={onConnectDrive}
+      />
     );
   }
 
@@ -339,7 +462,7 @@ const TabbedClassesView: React.FC<TabbedClassesViewProps> = ({
             </div>
           )}
           {hasClassesSetup && (
-            <Button onClick={onCreateClass} className="bg-kidato-purple hover:bg-kidato-purple-600">
+            <Button onClick={onCreateClass} className="bg-indigo-500 hover:bg-indigo-600 text-white transition-all duration-200 hover:scale-105">
               <PlusCircle className="mr-2 h-4 w-4" />
               Create New Class
             </Button>
@@ -353,7 +476,7 @@ const TabbedClassesView: React.FC<TabbedClassesViewProps> = ({
             <CheckCircle2 className="h-4 w-4" />
             Published
             {counts.published > 0 && (
-              <Badge variant="secondary" className="ml-1 bg-green-100 text-green-700">
+              <Badge variant="secondary" className="ml-1 bg-indigo-100 text-indigo-700 kidato-gentle-pulse">
                 {counts.published}
               </Badge>
             )}
@@ -366,7 +489,7 @@ const TabbedClassesView: React.FC<TabbedClassesViewProps> = ({
             <AlertCircle className="h-4 w-4" />
             Draft
             {counts.draft > 0 && (
-              <Badge variant="secondary" className="ml-1 bg-orange-100 text-orange-700">
+              <Badge variant="secondary" className="ml-1 bg-pigeon-post-100 text-pigeon-post-700">
                 {counts.draft}
               </Badge>
             )}
@@ -375,7 +498,7 @@ const TabbedClassesView: React.FC<TabbedClassesViewProps> = ({
             <XCircle className="h-4 w-4" />
             Archived
             {counts.archived > 0 && (
-              <Badge variant="secondary" className="ml-1 bg-gray-100 text-gray-600">
+              <Badge variant="secondary" className="ml-1 bg-athens-gray-100 text-pigeon-post-600">
                 {counts.archived}
               </Badge>
             )}
@@ -384,7 +507,7 @@ const TabbedClassesView: React.FC<TabbedClassesViewProps> = ({
             <Clock className="h-4 w-4" />
             Pending Review
             {counts.pending_review > 0 && (
-              <Badge variant="secondary" className="ml-1 bg-yellow-100 text-yellow-700">
+              <Badge variant="secondary" className="ml-1 bg-sea-buckthorn-100 text-sea-buckthorn-700 kidato-urgent-pulse">
                 {counts.pending_review}
               </Badge>
             )}

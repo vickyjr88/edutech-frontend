@@ -59,3 +59,115 @@
   position: relative;
   z-index: 5;
 }
+
+/* Kidato Brand Enhanced Animations for Class Cards */
+@keyframes gentle-pulse {
+  0%, 100% { 
+    opacity: 1; 
+    transform: scale(1);
+  }
+  50% { 
+    opacity: 0.8; 
+    transform: scale(1.02);
+  }
+}
+
+@keyframes urgent-pulse {
+  0%, 100% { 
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(249, 147, 37, 0.4); /* Sea Buckthorn */
+  }
+  50% { 
+    transform: scale(1.02);
+    box-shadow: 0 0 0 8px rgba(249, 147, 37, 0);
+  }
+}
+
+@keyframes indigo-glow {
+  0%, 100% { 
+    box-shadow: 0 0 5px rgba(94, 106, 210, 0.3); /* Indigo */
+  }
+  50% { 
+    box-shadow: 0 0 20px rgba(94, 106, 210, 0.6);
+  }
+}
+
+@keyframes celebration {
+  0% { transform: scale(1) rotate(0deg); }
+  25% { transform: scale(1.05) rotate(2deg); }
+  75% { transform: scale(1.05) rotate(-2deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+
+@keyframes fade-in-out {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+@keyframes sea-buckthorn-pulse {
+  0%, 100% { 
+    border-color: #f99325;
+    box-shadow: 0 0 0 0 rgba(249, 147, 37, 0.4);
+  }
+  50% { 
+    border-color: #f99325;
+    box-shadow: 0 0 0 4px rgba(249, 147, 37, 0.1);
+  }
+}
+
+@keyframes card-hover-lift {
+  0% { 
+    transform: translateY(0) scale(1);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  }
+  100% { 
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  }
+}
+
+/* Animation classes for Kidato components */
+.kidato-gentle-pulse {
+  animation: gentle-pulse 2s ease-in-out infinite;
+}
+
+.kidato-urgent-pulse {
+  animation: urgent-pulse 1.5s ease-in-out infinite;
+}
+
+.kidato-indigo-glow {
+  animation: indigo-glow 2s ease-in-out infinite;
+}
+
+.kidato-celebration {
+  animation: celebration 0.6s ease-in-out;
+}
+
+.kidato-fade-pulse {
+  animation: fade-in-out 2s ease-in-out infinite;
+}
+
+.kidato-sea-buckthorn-pulse {
+  animation: sea-buckthorn-pulse 1.8s ease-in-out infinite;
+}
+
+.kidato-card-hover {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.kidato-card-hover:hover {
+  animation: card-hover-lift 0.3s ease-out forwards;
+}
+
+/* Enhanced status badge animations */
+.kidato-status-published {
+  animation: indigo-glow 3s ease-in-out infinite;
+}
+
+.kidato-status-pending {
+  animation: sea-buckthorn-pulse 2s ease-in-out infinite;
+}
+
+.kidato-status-draft {
+  animation: fade-in-out 4s ease-in-out infinite;
+}

@@ -369,9 +369,29 @@ const TeacherJourneySteps = () => {
         {/* Bottom Status */}
         <div className="mt-16 text-center">
           {overallProgress === 100 ? (
-            <div className="bg-emerald-100 text-emerald-800 px-8 py-4 rounded-2xl inline-flex items-center gap-3 shadow-lg">
-              <CheckCircle className="w-8 h-8" />
-              <span className="text-lg font-semibold">Profile Complete! Students can find you now.</span>
+            <div className="space-y-6">
+              <div className="bg-emerald-100 text-emerald-800 px-8 py-4 rounded-2xl inline-flex items-center gap-3 shadow-lg">
+                <CheckCircle className="w-8 h-8" />
+                <span className="text-lg font-semibold">Profile Complete! Students can find you now.</span>
+              </div>
+              
+              <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                <Button
+                  onClick={() => window.location.href = '/teacher-dashboard'}
+                  className="bg-gradient-to-r from-[#5c64d4] to-[#fc9323] hover:from-[#4c54c4] hover:to-[#ec8313] text-white px-8 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
+                >
+                  Go to Dashboard
+                  <ChevronRight className="w-5 h-5 ml-2" />
+                </Button>
+                
+                <Button
+                  variant="outline"
+                  onClick={() => window.location.href = '/all-classes'}
+                  className="border-2 border-[#5c64d4] text-[#5c64d4] hover:bg-[#5c64d4] hover:text-white px-8 py-3 rounded-xl font-semibold transition-all duration-300"
+                >
+                  Browse Classes
+                </Button>
+              </div>
             </div>
           ) : (
             <div className="bg-blue-100 text-blue-800 px-8 py-4 rounded-2xl inline-flex items-center gap-3">

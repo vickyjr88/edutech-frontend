@@ -1222,8 +1222,35 @@ export const ProfileJourneyProvider = ({ children }: { children: ReactNode }) =>
     });
   }, [stepProgress]);
 
+  // This effect marks the teacher profile as complete when all steps are finished
+  useEffect(() => {
+    const allStepsComplete = STEPS.every(step => completedSteps[step]);
+    
+    if (allStepsComplete && user?.teacherId) {
+      console.log("All steps completed, marking teacher profile as complete");
+      
+      // Automatically mark the teacher profile as complete
+      teacherService.updateProfile(user.teacherId, {
+        isProfileComplete: true
+      }).then(({ error }) => {
+        if (error) {
+          console.error("Error marking profile as complete:", error);
+        } else {
+          console.log("Teacher profile marked as complete successfully");
+        }
+      }).catch(error => {
+        console.error("Error marking profile as complete:", error);
+      });
+    }
+  }, [completedSteps, user?.teacherId]);
+
   // Calculate overall progress
-  const overallProgress = Object.values(stepProgress).reduce((sum, progress) => sum + progress, 0) / STEPS.length;
+  const completedStepsCount = Object.values(completedSteps).filter(Boolean).length;
+  
+  // If all steps are completed, show 100%
+  const overallProgress = completedStepsCount === STEPS.length 
+    ? 100
+    : Object.values(stepProgress).reduce((sum, progress) => sum + progress, 0) / STEPS.length;
   
   // Load teacher profile data when component mounts
   useEffect(() => {
@@ -1241,7 +1268,7 @@ export const ProfileJourneyProvider = ({ children }: { children: ReactNode }) =>
         console.log("Loaded teacher profile:", profileData);
         if (profileData) {
           // User info is nested in the user property
-          const userInfo = profileData.user || {};
+          const userInfo = profileData.user || {} as any;
           
           // Use fullName directly
           const fullName = userInfo.fullName || "";
