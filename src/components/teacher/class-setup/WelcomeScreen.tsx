@@ -137,7 +137,7 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
       )}
       
       {/* Class Type Cards */}
-      <div className="grid gap-6 md:grid-cols-3">
+      <div className="grid gap-6 md:grid-cols-2">
         {/* Academic Classes Card */}
         <Card className="shadow-sm hover:shadow-md transition-shadow border-kidato-blue-200 relative">
           {/* Favorite Halo */}
@@ -224,8 +224,8 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
           </CardFooter>
         </Card>
 
-        {/* AI-Assisted Creation Card */}
-        <Card className="shadow-sm hover:shadow-md transition-shadow border-purple-200">
+        {/* AI-Assisted Creation Card - HIDDEN */}
+        {/* <Card className="shadow-sm hover:shadow-md transition-shadow border-purple-200">
           <CardHeader className="pb-3">
             <div className="flex items-center gap-2">
               <Bot className="h-6 w-6 text-purple-600" />
@@ -266,7 +266,7 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
               Start with AI Helper
             </Button>
           </CardFooter>
-        </Card>
+        </Card> */}
       </div>
 
       {/* AI Helper Modal */}
