@@ -390,6 +390,173 @@ const ClassFoundationStep = ({ form, onNext, isSaving, curricula, loadingCurricu
       </div>
 
       <div className="max-w-4xl mx-auto space-y-8">
+        {/* Course Documents Card - Moved to top for AI generation */}
+        <Card className="border-green-200 shadow-lg">
+          <CardHeader className="bg-gradient-to-r from-green-50 to-emerald-50 border-b">
+            <CardTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5 text-green-600" />
+              Course Documents
+            </CardTitle>
+            <CardDescription>Upload your course outline first - we'll use it to help generate your class details (Course Outline is required)</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6 pt-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Course Outline */}
+              <div className={`${!form.watch('courseOutlineFile') ? 'ring-2 ring-red-200 bg-red-50 p-3 rounded-lg' : ''}`}>
+                <FormField
+                  control={form.control}
+                  name="courseOutlineFile"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-sm font-semibold flex items-center gap-1">
+                        Course Outline *
+                        {!field.value && <span className="text-red-500 text-xs">(Required)</span>}
+                      </FormLabel>
+                      <FormFileUpload
+                        accept=".pdf,.doc,.docx"
+                        acceptedFileTypes=".pdf,.doc,.docx"
+                        onFilesSelected={(files) => handleFileUpload('courseOutlineFile', files)}
+                        label="Upload Course Outline"
+                        description="PDF, DOC, or DOCX files"
+                        icon={<Paperclip className="h-8 w-8 text-gray-400" />}
+                      />
+                      {field.value && (
+                        <div className="mt-2 p-2 bg-green-50 rounded border border-green-200">
+                          <div className="flex items-center justify-between">
+                            <p className="text-sm text-green-700">✓ {field.value}</p>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                form.setValue('courseOutlineFile', '');
+                              }}
+                              className="text-red-500 hover:text-red-700 hover:bg-red-50 h-6 w-6 p-0"
+                            >
+                              <X className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+                      {!field.value && (
+                        <div className="mt-2 p-2 bg-red-50 rounded border border-red-200">
+                          <p className="text-sm text-red-700">⚠ Course outline document is required</p>
+                        </div>
+                      )}
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              {/* Syllabus */}
+              <div>
+                <FormField
+                  control={form.control}
+                  name="syllabusFile"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-sm font-semibold">Syllabus</FormLabel>
+                      <FormFileUpload
+                        accept=".pdf,.doc,.docx"
+                        acceptedFileTypes=".pdf,.doc,.docx"
+                        onFilesSelected={(files) => handleFileUpload('syllabusFile', files)}
+                        label="Upload Syllabus"
+                        description="PDF, DOC, or DOCX files"
+                        icon={<Paperclip className="h-8 w-8 text-gray-400" />}
+                      />
+                      {field.value && (
+                        <div className="mt-2 p-2 bg-green-50 rounded border border-green-200">
+                          <div className="flex items-center justify-between">
+                            <p className="text-sm text-green-700">✓ {field.value}</p>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                form.setValue('syllabusFile', '');
+                              }}
+                              className="text-red-500 hover:text-red-700 hover:bg-red-50 h-6 w-6 p-0"
+                            >
+                              <X className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              {/* Scheme of Work */}
+              <div>
+                <FormField
+                  control={form.control}
+                  name="schemeOfWorkFile"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-sm font-semibold">Scheme of Work</FormLabel>
+                      <FormFileUpload
+                        accept=".pdf,.doc,.docx"
+                        acceptedFileTypes=".pdf,.doc,.docx"
+                        onFilesSelected={(files) => handleFileUpload('schemeOfWorkFile', files)}
+                        label="Upload Scheme of Work"
+                        description="PDF, DOC, or DOCX files"
+                        icon={<Paperclip className="h-8 w-8 text-gray-400" />}
+                      />
+                      {field.value && (
+                        <div className="mt-2 p-2 bg-green-50 rounded border border-green-200">
+                          <div className="flex items-center justify-between">
+                            <p className="text-sm text-green-700">✓ {field.value}</p>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                form.setValue('schemeOfWorkFile', '');
+                              }}
+                              className="text-red-500 hover:text-red-700 hover:bg-red-50 h-6 w-6 p-0"
+                            >
+                              <X className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </div>
+            
+            {!form.watch('courseOutlineFile') && (
+              <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                <div className="flex items-center gap-2">
+                  <AlertCircle className="h-4 w-4 text-red-600" />
+                  <p className="text-red-800 text-sm font-medium">Course Outline is required</p>
+                </div>
+                <p className="text-red-700 text-xs mt-1">Please upload a course outline document to continue</p>
+              </div>
+            )}
+            
+            {/* AI Generation Hint */}
+            {form.watch('courseOutlineFile') && (
+              <div className="p-4 bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 rounded-lg">
+                <div className="flex items-start gap-3">
+                  <Sparkles className="h-5 w-5 text-purple-600 mt-1" />
+                  <div>
+                    <h4 className="font-semibold text-purple-900 text-sm">Ready for AI Magic!</h4>
+                    <p className="text-purple-800 text-xs mt-1">
+                      Once you select your curriculum and subject below, we can help generate your class title, description, objectives, and lesson plans based on your uploaded documents.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
         {/* Basic Information Card */}
             <Card className={`${selectedCurriculum ? `border-${getCurriculumStyling(selectedCurriculum.code).accentColor}-200` : 'border-kidato-blue-200'} shadow-lg`}>
           <CardHeader className={`${selectedCurriculum ? `bg-gradient-to-r from-${getCurriculumStyling(selectedCurriculum.code).accentColor}-50 to-${getCurriculumStyling(selectedCurriculum.code).accentColor}-100` : 'bg-gradient-to-r from-kidato-blue-50 to-kidato-purple-50'} border-b`}>
@@ -1042,158 +1209,6 @@ const ClassFoundationStep = ({ form, onNext, isSaving, curricula, loadingCurricu
               )}
             </div>
 
-          </CardContent>
-        </Card>
-
-        {/* Course Documents Card */}
-        <Card className="border-green-200 shadow-lg">
-          <CardHeader className="bg-gradient-to-r from-green-50 to-emerald-50 border-b">
-            <CardTitle className="flex items-center gap-2">
-              <FileText className="h-5 w-5 text-green-600" />
-              Course Documents
-            </CardTitle>
-            <CardDescription>Upload essential documents for your class (Course Outline is required)</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6 pt-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Course Outline */}
-              <div className={`${!form.watch('courseOutlineFile') ? 'ring-2 ring-red-200 bg-red-50 p-3 rounded-lg' : ''}`}>
-                <FormField
-                  control={form.control}
-                  name="courseOutlineFile"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-sm font-semibold flex items-center gap-1">
-                        Course Outline *
-                        {!field.value && <span className="text-red-500 text-xs">(Required)</span>}
-                      </FormLabel>
-                      <FormFileUpload
-                        accept=".pdf,.doc,.docx"
-                        acceptedFileTypes=".pdf,.doc,.docx"
-                        onFilesSelected={(files) => handleFileUpload('courseOutlineFile', files)}
-                        label="Upload Course Outline"
-                        description="PDF, DOC, or DOCX files"
-                        icon={<Paperclip className="h-8 w-8 text-gray-400" />}
-                      />
-                      {field.value && (
-                        <div className="mt-2 p-2 bg-green-50 rounded border border-green-200">
-                          <div className="flex items-center justify-between">
-                            <p className="text-sm text-green-700">✓ {field.value}</p>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => {
-                                form.setValue('courseOutlineFile', '');
-                              }}
-                              className="text-red-500 hover:text-red-700 hover:bg-red-50 h-6 w-6 p-0"
-                            >
-                              <X className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        </div>
-                      )}
-                      {!field.value && (
-                        <div className="mt-2 p-2 bg-red-50 rounded border border-red-200">
-                          <p className="text-sm text-red-700">⚠ Course outline document is required</p>
-                        </div>
-                      )}
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              {/* Syllabus */}
-              <div>
-                <FormField
-                  control={form.control}
-                  name="syllabusFile"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-sm font-semibold">Syllabus</FormLabel>
-                      <FormFileUpload
-                        accept=".pdf,.doc,.docx"
-                        acceptedFileTypes=".pdf,.doc,.docx"
-                        onFilesSelected={(files) => handleFileUpload('syllabusFile', files)}
-                        label="Upload Syllabus"
-                        description="PDF, DOC, or DOCX files"
-                        icon={<Paperclip className="h-8 w-8 text-gray-400" />}
-                      />
-                      {field.value && (
-                        <div className="mt-2 p-2 bg-green-50 rounded border border-green-200">
-                          <div className="flex items-center justify-between">
-                            <p className="text-sm text-green-700">✓ {field.value}</p>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => {
-                                form.setValue('syllabusFile', '');
-                              }}
-                              className="text-red-500 hover:text-red-700 hover:bg-red-50 h-6 w-6 p-0"
-                            >
-                              <X className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        </div>
-                      )}
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              {/* Scheme of Work */}
-              <div>
-                <FormField
-                  control={form.control}
-                  name="schemeOfWorkFile"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-sm font-semibold">Scheme of Work</FormLabel>
-                      <FormFileUpload
-                        accept=".pdf,.doc,.docx"
-                        acceptedFileTypes=".pdf,.doc,.docx"
-                        onFilesSelected={(files) => handleFileUpload('schemeOfWorkFile', files)}
-                        label="Upload Scheme of Work"
-                        description="PDF, DOC, or DOCX files"
-                        icon={<Paperclip className="h-8 w-8 text-gray-400" />}
-                      />
-                      {field.value && (
-                        <div className="mt-2 p-2 bg-green-50 rounded border border-green-200">
-                          <div className="flex items-center justify-between">
-                            <p className="text-sm text-green-700">✓ {field.value}</p>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => {
-                                form.setValue('schemeOfWorkFile', '');
-                              }}
-                              className="text-red-500 hover:text-red-700 hover:bg-red-50 h-6 w-6 p-0"
-                            >
-                              <X className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        </div>
-                      )}
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            </div>
-            
-            {!form.watch('courseOutlineFile') && (
-              <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-                <div className="flex items-center gap-2">
-                  <AlertCircle className="h-4 w-4 text-red-600" />
-                  <p className="text-red-800 text-sm font-medium">Course Outline is required</p>
-                </div>
-                <p className="text-red-700 text-xs mt-1">Please upload a course outline document to continue</p>
-              </div>
-            )}
           </CardContent>
         </Card>
 
