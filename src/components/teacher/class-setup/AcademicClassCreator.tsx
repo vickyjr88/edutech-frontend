@@ -1077,7 +1077,20 @@ const ClassFoundationStep = ({ form, onNext, isSaving, curricula, loadingCurricu
                       />
                       {field.value && (
                         <div className="mt-2 p-2 bg-green-50 rounded border border-green-200">
-                          <p className="text-sm text-green-700">✓ {field.value}</p>
+                          <div className="flex items-center justify-between">
+                            <p className="text-sm text-green-700">✓ {field.value}</p>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                form.setValue('courseOutlineFile', '');
+                              }}
+                              className="text-red-500 hover:text-red-700 hover:bg-red-50 h-6 w-6 p-0"
+                            >
+                              <X className="h-3 w-3" />
+                            </Button>
+                          </div>
                         </div>
                       )}
                       {!field.value && (
@@ -1109,7 +1122,20 @@ const ClassFoundationStep = ({ form, onNext, isSaving, curricula, loadingCurricu
                       />
                       {field.value && (
                         <div className="mt-2 p-2 bg-green-50 rounded border border-green-200">
-                          <p className="text-sm text-green-700">✓ {field.value}</p>
+                          <div className="flex items-center justify-between">
+                            <p className="text-sm text-green-700">✓ {field.value}</p>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                form.setValue('syllabusFile', '');
+                              }}
+                              className="text-red-500 hover:text-red-700 hover:bg-red-50 h-6 w-6 p-0"
+                            >
+                              <X className="h-3 w-3" />
+                            </Button>
+                          </div>
                         </div>
                       )}
                       <FormMessage />
@@ -1136,7 +1162,20 @@ const ClassFoundationStep = ({ form, onNext, isSaving, curricula, loadingCurricu
                       />
                       {field.value && (
                         <div className="mt-2 p-2 bg-green-50 rounded border border-green-200">
-                          <p className="text-sm text-green-700">✓ {field.value}</p>
+                          <div className="flex items-center justify-between">
+                            <p className="text-sm text-green-700">✓ {field.value}</p>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                form.setValue('schemeOfWorkFile', '');
+                              }}
+                              className="text-red-500 hover:text-red-700 hover:bg-red-50 h-6 w-6 p-0"
+                            >
+                              <X className="h-3 w-3" />
+                            </Button>
+                          </div>
                         </div>
                       )}
                       <FormMessage />
