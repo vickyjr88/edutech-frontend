@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,37 +13,25 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Progress } from "@/components/ui/progress";
-import { motion, AnimatePresence } from "framer-motion";
 import { 
   PlusCircle, 
   CalendarIcon, 
   Clock, 
   Users, 
   InfoIcon,
-  Repeat,
-  LifeBuoy,
-  CreditCard,
   Info,
-  Check,
   Settings,
   DollarSign,
-  Target,
   BookOpen,
-  Timer,
   Globe,
   ChevronRight,
   AlertCircle,
   CheckCircle2,
-  Hash,
-  FileText,
-  Calendar as CalendarHeart,
-  GraduationCap,
-  Video
+  Calendar as CalendarHeart
 } from "lucide-react";
 
 interface CohortFormDialogProps {
@@ -99,7 +86,6 @@ const CohortFormDialog: React.FC<CohortFormDialogProps> = ({
   isOpen,
   onOpenChange,
   onSave,
-  title = "Cohort Details",
   buttonText = "Add Cohort",
   buttonIcon = <PlusCircle className="h-4 w-4 mr-2" />,
   buttonVariant = "default",
@@ -370,8 +356,7 @@ const CohortFormDialog: React.FC<CohortFormDialogProps> = ({
   };
 
   const validateForm = (): boolean => {
-    const allValid = sections.every(section => validateSection(section.id));
-    return allValid;
+    return sections.every(section => validateSection(section.id));
   };
   
   const handleNext = () => {
@@ -393,9 +378,6 @@ const CohortFormDialog: React.FC<CohortFormDialogProps> = ({
     }
   };
 
-  const navigateToSection = (sectionId: string) => {
-    setActiveSection(sectionId);
-  };
 
   const handleSave = () => {
     if (validateForm()) {
@@ -648,10 +630,10 @@ const CohortFormDialog: React.FC<CohortFormDialogProps> = ({
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="space-y-3">
               <Label htmlFor="cohort-price" className="text-base font-medium text-gray-700">
-                Price for Entire Course (KES) <span className="text-red-500">*</span>
+                Price for Entire Course (USD) <span className="text-red-500">*</span>
               </Label>
               <div className="relative">
-                <span className="absolute left-3 top-3.5 text-gray-500 text-base">KES</span>
+                <span className="absolute left-3 top-3.5 text-gray-500 text-base">$</span>
                 <Input
                   id="cohort-price"
                   className={cn("pl-12 h-12 text-base border-2 border-purple-200 focus:border-purple-500 focus:ring-purple-500 rounded-xl", errors.price && "border-red-500")}
@@ -660,11 +642,11 @@ const CohortFormDialog: React.FC<CohortFormDialogProps> = ({
                   step="100"
                   value={formData.price}
                   onChange={(e) => updateFormField("price", e.target.value)}
-                  placeholder="15000"
+                  placeholder="150"
                 />
               </div>
               <p className="text-sm text-gray-600">
-                Total price for all {totalNumberOfLessons} lessons
+                Total price for all {totalNumberOfLessons} lessons in USD
               </p>
               {errors.price && <p className="text-red-500 text-sm">{errors.price}</p>}
             </div>
@@ -697,7 +679,7 @@ const CohortFormDialog: React.FC<CohortFormDialogProps> = ({
           <div className="space-y-3">
             <div className="flex justify-between items-center">
               <span className="text-gray-700">Price per lesson:</span>
-              <span className="font-medium">KES {formData.price ? (parseFloat(formData.price) / totalNumberOfLessons).toFixed(0) : '0'}</span>
+              <span className="font-medium">${formData.price ? (parseFloat(formData.price) / totalNumberOfLessons).toFixed(0) : '0'}</span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-gray-700">Total lessons:</span>
@@ -705,19 +687,19 @@ const CohortFormDialog: React.FC<CohortFormDialogProps> = ({
             </div>
             <div className="flex justify-between items-center">
               <span className="text-gray-700">Subtotal:</span>
-              <span className="font-medium">KES {formData.price || '0'}</span>
+              <span className="font-medium">${formData.price || '0'}</span>
             </div>
             {formData.discount && parseFloat(formData.discount) > 0 && (
               <div className="flex justify-between items-center">
                 <span className="text-gray-700">Discount ({formData.discount}%):</span>
-                <span className="font-medium text-red-600">- KES {formData.price ? ((parseFloat(formData.price) * parseFloat(formData.discount)) / 100).toFixed(0) : '0'}</span>
+                <span className="font-medium text-red-600">- ${formData.price ? ((parseFloat(formData.price) * parseFloat(formData.discount)) / 100).toFixed(0) : '0'}</span>
               </div>
             )}
             <Separator />
             <div className="flex justify-between items-center text-lg">
               <span className="font-bold text-purple-800">Final Course Price:</span>
               <span className="font-bold text-purple-800">
-                KES {formData.price ? (parseFloat(formData.price) - ((parseFloat(formData.price) * parseFloat(formData.discount || '0')) / 100)).toFixed(0) : '0'}
+                ${formData.price ? (parseFloat(formData.price) - ((parseFloat(formData.price) * parseFloat(formData.discount || '0')) / 100)).toFixed(0) : '0'}
               </span>
             </div>
           </div>
@@ -1083,30 +1065,51 @@ const CohortFormDialog: React.FC<CohortFormDialogProps> = ({
           </div>
         )}
 
-        {/* Zoom Meeting Setup */}
+        {/* Google Calendar Integration Nudge */}
         <div className="space-y-4">
-          <Label className="text-lg font-semibold text-orange-800">Virtual Meeting Setup (Optional)</Label>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-3">
-              <Label className="text-base font-medium text-gray-700">Meeting ID</Label>
-              <Input
-                placeholder="e.g., 123-456-7890"
-                className="h-10 border-2 border-orange-200 focus:border-orange-500 focus:ring-orange-500 rounded-xl"
-              />
+          <div className="p-6 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl">
+            <div className="flex items-start gap-4">
+              <div className="flex items-center justify-center w-12 h-12 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl shadow-lg">
+                <CalendarHeart className="h-6 w-6 text-white" />
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-lg font-semibold text-blue-900">Connect Google Calendar</h3>
+                  <Badge variant="outline" className="bg-yellow-100 border-yellow-300 text-yellow-800">
+                    Recommended
+                  </Badge>
+                </div>
+                <p className="text-sm text-blue-700 mb-4">
+                  Automatically sync your cohort sessions with Google Calendar to stay organized and send calendar invites to students.
+                </p>
+                <div className="flex items-center gap-3">
+                  <Button 
+                    type="button"
+                    size="sm"
+                    className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-md"
+                    onClick={() => {
+                      // This would trigger Google Calendar integration
+                      console.log('Connecting Google Calendar...');
+                    }}
+                  >
+                    <Globe className="h-4 w-4 mr-2" />
+                    Connect Google Calendar
+                  </Button>
+                  <Button 
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="text-blue-600 hover:text-blue-800"
+                    onClick={() => {
+                      // This would skip for now
+                      console.log('Skipping Google Calendar connection...');
+                    }}
+                  >
+                    Skip for now
+                  </Button>
+                </div>
+              </div>
             </div>
-            <div className="space-y-3">
-              <Label className="text-base font-medium text-gray-700">Passcode</Label>
-              <Input
-                placeholder="e.g., 123abc"
-                className="h-10 border-2 border-orange-200 focus:border-orange-500 focus:ring-orange-500 rounded-xl"
-              />
-            </div>
-          </div>
-          <div className="flex items-center space-x-2">
-            <Checkbox id="auto-generate-meeting" />
-            <Label htmlFor="auto-generate-meeting" className="text-sm text-gray-700">
-              Auto-generate new meeting for each session
-            </Label>
           </div>
         </div>
 
@@ -1130,57 +1133,64 @@ const CohortFormDialog: React.FC<CohortFormDialogProps> = ({
   );
   
   return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+    <>
       {buttonText && (
-        <DialogTrigger asChild>
-          <Button variant={buttonVariant} className="flex items-center">
-            {buttonIcon}
-            {buttonText}
-          </Button>
-        </DialogTrigger>
+        <Button variant={buttonVariant} className="flex items-center" onClick={() => onOpenChange(true)}>
+          {buttonIcon}
+          {buttonText}
+        </Button>
       )}
       
-      <DialogContent
-        className="max-w-5xl max-h-[90vh] overflow-hidden flex flex-col"
-        onEscapeKeyDown={(e) => {
-          // Prevent escape from closing if dirty
-          if (isDirty) {
-            e.preventDefault();
-          }
-        }}
-        onInteractOutside={(e) => {
-          // Prevent outside click from closing if dirty
-          if (isDirty) {
-            e.preventDefault();
-          }
-        }}
-      >
-        <DialogHeader className="pb-4 border-b">
-          <DialogTitle className="flex items-center">
-            <Users className="h-5 w-5 mr-2" />
-            {cohort ? "Edit Cohort" : "Create New Cohort"}
-          </DialogTitle>
-          <DialogDescription>
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-kidato-indigo-600">
-                  Active Section: {sections.find(s => s.id === activeSection)?.title || "Loading..."}
-                </span>
-              </div>
-              <div className="text-sm text-gray-600">
-                {sections.find(s => s.id === activeSection)?.description || "Configure your cohort"}
+      {/* Full-screen overlay */}
+      {isOpen && (
+        <div className="fixed inset-0 z-50 bg-gradient-to-br from-kidato-indigo-900/80 via-black/60 to-kidato-purple-900/80 backdrop-blur-sm flex items-center justify-center p-4">
+          {/* Main popup container - 70% viewport */}
+          <div 
+            className="bg-gradient-to-br from-white via-kidato-indigo-50/50 to-white rounded-2xl shadow-2xl border border-kidato-indigo-200/50 w-[70%] h-full flex flex-col overflow-hidden animate-in fade-in-0 zoom-in-95 duration-300"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="px-6 py-4 border-b bg-gradient-to-r from-kidato-indigo-600 via-kidato-purple-600 to-kidato-indigo-700">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center justify-center w-10 h-10 bg-kidato-indigo-600 rounded-xl">
+                    <Users className="h-5 w-5 text-white" />
+                  </div>
+                  <div>
+                    <h1 className="text-2xl font-bold text-white">
+                      {cohort ? "Edit Cohort" : "Create New Cohort"}
+                    </h1>
+                    <p className="text-sm text-kidato-indigo-100">
+                      Active Section: {sections.find(s => s.id === activeSection)?.title || "Loading..."}
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    if (isDirty) {
+                      if (confirm("Discard changes?")) {
+                        onOpenChange(false);
+                      }
+                    } else {
+                      onOpenChange(false);
+                    }
+                  }}
+                  className="text-white/70 hover:text-white"
+                >
+                  ✕
+                </Button>
               </div>
             </div>
-          </DialogDescription>
-        </DialogHeader>
         
         {/* Progress indicator */}
-        <div className="px-6 py-4">
+        <div className="px-6 py-4 bg-gradient-to-r from-kidato-indigo-50 to-white">
           <div className="flex items-center justify-between mb-4">
             <div className="text-sm text-gray-600">
               {completedSections} of {sections.length} sections completed
             </div>
-            <div className="text-sm font-medium text-blue-600">
+            <div className="text-sm font-medium text-kidato-indigo-600">
               {completionPercentage.toFixed(0)}% complete
             </div>
           </div>
@@ -1193,7 +1203,7 @@ const CohortFormDialog: React.FC<CohortFormDialogProps> = ({
               <Tabs value={activeSection} onValueChange={setActiveSection}>
                 {/* Section Navigation */}
                 <div className="mb-6">
-                  <TabsList className="grid w-full grid-cols-5 h-auto p-2 bg-gradient-to-r from-gray-100 to-gray-50 rounded-xl border shadow-sm">
+                  <TabsList className="grid w-full grid-cols-5 h-auto p-2 bg-gradient-to-r from-kidato-spindle-300 via-kidato-gray-100 to-kidato-spindle-300 rounded-xl border border-kidato-indigo/20 shadow-sm">
                     {sections.map((section) => {
                       const Icon = section.icon;
                       const isCompleted = completionStatus[section.id as keyof typeof completionStatus];
@@ -1202,13 +1212,13 @@ const CohortFormDialog: React.FC<CohortFormDialogProps> = ({
                           key={section.id}
                           value={section.id}
                           onClick={() => setActiveSection(section.id)}
-                          className="flex flex-col items-center gap-2 px-3 py-4 text-sm data-[state=active]:bg-white data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-kidato-indigo-200 rounded-lg transition-all duration-200 hover:bg-white/50 cursor-pointer"
+                          className="flex flex-col items-center gap-2 px-3 py-4 text-sm data-[state=active]:bg-gradient-to-br data-[state=active]:from-kidato-indigo data-[state=active]:to-kidato-orange data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:border data-[state=active]:border-kidato-indigo/30 rounded-lg transition-all duration-200 hover:bg-gradient-to-br hover:from-kidato-spindle-100 hover:to-kidato-gray-50 cursor-pointer"
                         >
                           <div className="flex items-center gap-1">
-                            <Icon className={`h-5 w-5 ${isCompleted ? 'text-green-600' : activeSection === section.id ? 'text-kidato-indigo-600' : 'text-gray-500'}`} />
-                            {isCompleted && <CheckCircle2 className="h-4 w-4 text-green-600" />}
+                            <Icon className={`h-5 w-5 ${isCompleted ? 'text-green-400' : activeSection === section.id ? 'text-white' : 'text-gray-500'}`} />
+                            {isCompleted && <CheckCircle2 className={`h-4 w-4 ${activeSection === section.id ? 'text-green-200' : 'text-green-600'}`} />}
                           </div>
-                          <span className={`font-medium text-center leading-tight ${activeSection === section.id ? 'text-kidato-indigo-800' : 'text-gray-700'}`}>
+                          <span className={`font-medium text-center leading-tight ${activeSection === section.id ? 'text-white' : 'text-gray-700'}`}>
                             {section.title}
                           </span>
                         </TabsTrigger>
@@ -1237,59 +1247,62 @@ const CohortFormDialog: React.FC<CohortFormDialogProps> = ({
           </ScrollArea>
         </div>
         
-        <DialogFooter className="pt-4 border-t flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center text-sm text-muted-foreground">
-              <CalendarIcon className="h-4 w-4 mr-1.5" />
-              <span>{totalNumberOfLessons} lessons</span>
-            </div>
-            <div className="flex items-center text-sm text-muted-foreground">
-              <Clock className="h-4 w-4 mr-1.5" />
-              <span>{weeklyHours.toFixed(1)}h/week</span>
-            </div>
-            {formData.price && (
-              <div className="flex items-center text-sm text-muted-foreground">
-                <DollarSign className="h-4 w-4 mr-1.5" />
-                <span>KES {formData.price}</span>
+            {/* Footer */}
+            <div className="px-6 py-4 border-t bg-gradient-to-r from-kidato-indigo-50 via-white to-kidato-purple-50 flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="flex items-center text-sm text-muted-foreground">
+                  <CalendarIcon className="h-4 w-4 mr-1.5" />
+                  <span>{totalNumberOfLessons} lessons</span>
+                </div>
+                <div className="flex items-center text-sm text-muted-foreground">
+                  <Clock className="h-4 w-4 mr-1.5" />
+                  <span>{weeklyHours.toFixed(1)}h/week</span>
+                </div>
+                {formData.price && (
+                  <div className="flex items-center text-sm text-muted-foreground">
+                    <DollarSign className="h-4 w-4 mr-1.5" />
+                    <span>${formData.price}</span>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              onClick={() => {
-                if (isDirty) {
-                  if (confirm("Discard changes?")) {
-                    onOpenChange(false);
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    if (isDirty) {
+                      if (confirm("Discard changes?")) {
+                        onOpenChange(false);
+                      }
+                    } else {
+                      onOpenChange(false);
+                    }
+                  }}
+                >
+                  Cancel
+                </Button>
+                {sections.findIndex(s => s.id === activeSection) > 0 && (
+                  <Button variant="outline" onClick={handlePrevious}>
+                    <ChevronRight className="h-4 w-4 mr-1 rotate-180" />
+                    Previous
+                  </Button>
+                )}
+                <Button onClick={handleNext} disabled={!isValidSection(activeSection)}>
+                  {sections.findIndex(s => s.id === activeSection) === sections.length - 1
+                    ? (cohort ? "Update Cohort" : "Create Cohort")
+                    : (
+                      <>
+                        Next
+                        <ChevronRight className="h-4 w-4 ml-1" />
+                      </>
+                    )
                   }
-                } else {
-                  onOpenChange(false);
-                }
-              }}
-            >
-              Cancel
-            </Button>
-            {sections.findIndex(s => s.id === activeSection) > 0 && (
-              <Button variant="outline" onClick={handlePrevious}>
-                <ChevronRight className="h-4 w-4 mr-1 rotate-180" />
-                Previous
-              </Button>
-            )}
-            <Button onClick={handleNext} disabled={!isValidSection(activeSection)}>
-              {sections.findIndex(s => s.id === activeSection) === sections.length - 1
-                ? (cohort ? "Update Cohort" : "Create Cohort")
-                : (
-                  <>
-                    Next
-                    <ChevronRight className="h-4 w-4 ml-1" />
-                  </>
-                )
-              }
-            </Button>
+                </Button>
+              </div>
+            </div>
           </div>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </div>
+      )}
+    </>
   );
 };
 
