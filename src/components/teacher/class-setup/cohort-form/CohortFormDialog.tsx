@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -168,34 +168,10 @@ const CohortFormDialog: React.FC<CohortFormDialogProps> = ({
     setWeeklyHours(totalHours);
   }, [dailySchedules]);
 
-  // Update end date when start date or repeat pattern changes
-  useEffect(() => {
-    if (formData.startDate) {
-      const calculatedEndDate = calculateEndDate(
-        formData.startDate,
-        totalNumberOfLessons,
-        formData.repeatSchedule
-      );
-      
-      // Only update if the calculated date is different and we have a valid date
-      const currentEndTime = formData.endDate?.getTime();
-      const calculatedEndTime = calculatedEndDate?.getTime();
-      
-      if (calculatedEndDate && calculatedEndTime && currentEndTime !== calculatedEndTime) {
-        setFormData(prev => ({
-          ...prev,
-          endDate: calculatedEndDate
-        }));
-      }
-    }
-  }, [
-    formData.startDate?.getTime(), 
-    formData.repeatSchedule.pattern, 
-    formData.repeatSchedule.repeatEvery, 
-    formData.repeatSchedule.daysOfWeek.join(','), 
-    totalNumberOfLessons, 
-    calculateEndDate
-  ]);
+  // Calculate end date when needed, not in useEffect to avoid infinite loop
+  const calculatedEndDate = formData.startDate ? 
+    calculateEndDate(formData.startDate, totalNumberOfLessons, formData.repeatSchedule) : 
+    null;
   
   const updateFormField = (field: keyof CohortData, value: any) => {
     setFormData(prev => ({
@@ -291,22 +267,48 @@ const CohortFormDialog: React.FC<CohortFormDialogProps> = ({
     }
   };
 
-  // Section completion tracking
-  const getSectionCompletionStatus = () => {
+  // Section completion tracking - memoized to prevent unnecessary re-renders
+  const completionStatus = useMemo(() => {
     return {
       basic: !!(formData.name && timezone),
       schedule: !!(formData.startDate && formData.repeatSchedule.daysOfWeek.length > 0 && weeklyHours > 0),
       enrollment: !!(formData.minStudents && formData.maxStudents),
       pricing: !!(formData.price && parseFloat(formData.price) > 0),
-      sessions: !!(formData.startDate && formData.endDate)
+      sessions: !!(formData.startDate && calculatedEndDate)
     };
-  };
+  }, [formData.name, timezone, formData.startDate, formData.repeatSchedule.daysOfWeek.length, weeklyHours, formData.minStudents, formData.maxStudents, formData.price, calculatedEndDate]);
 
-  const completionStatus = getSectionCompletionStatus();
   const completedSections = Object.values(completionStatus).filter(Boolean).length;
   const completionPercentage = (completedSections / sections.length) * 100;
   
-  // Validate individual section
+  // Validate individual section without updating errors state (to prevent infinite loops)
+  const isValidSection = useCallback((sectionId: string): boolean => {
+    if (sectionId === "basic") {
+      return !!(formData.name);
+    }
+    
+    if (sectionId === "schedule") {
+      return !!(formData.startDate && formData.repeatSchedule.daysOfWeek.length > 0 &&
+        !(formData.repeatSchedule.pattern === "twice-weekly" && formData.repeatSchedule.daysOfWeek.length !== 2) &&
+        !(formData.repeatSchedule.pattern === "custom" && 
+          (formData.repeatSchedule.repeatEvery <= 0 || formData.repeatSchedule.repeatEvery > 4)));
+    }
+    
+    if (sectionId === "enrollment") {
+      return !!(formData.minStudents > 0 && formData.maxStudents >= formData.minStudents &&
+        !(formData.enrollmentDeadline && formData.startDate && 
+          formData.enrollmentDeadline > formData.startDate));
+    }
+    
+    if (sectionId === "pricing") {
+      return !!(formData.price && !isNaN(parseFloat(formData.price)) &&
+        (!formData.discount || (!isNaN(parseFloat(formData.discount)) && parseFloat(formData.discount) >= 0 && parseFloat(formData.discount) <= 100)));
+    }
+    
+    return true;
+  }, [formData.name, formData.startDate, formData.repeatSchedule.daysOfWeek.length, formData.repeatSchedule.pattern, formData.repeatSchedule.repeatEvery, formData.minStudents, formData.maxStudents, formData.enrollmentDeadline, formData.price, formData.discount]);
+
+  // Validate individual section and update errors (only called when explicitly validating)
   const validateSection = (sectionId: string): boolean => {
     const newErrors: Record<string, string> = {};
     
@@ -1044,7 +1046,7 @@ const CohortFormDialog: React.FC<CohortFormDialogProps> = ({
           {/* Class Dates Preview */}
           <div className="bg-white rounded-lg border border-orange-200 p-4">
             <div className="text-sm text-gray-600 mb-3">Upcoming Sessions Preview</div>
-            {formData.startDate && formData.endDate ? (
+            {formData.startDate && calculatedEndDate ? (
               <div className="space-y-2">
                 <div className="flex items-center justify-between p-2 bg-gray-50 rounded text-sm">
                   <span>Session 1</span>
@@ -1053,7 +1055,7 @@ const CohortFormDialog: React.FC<CohortFormDialogProps> = ({
                 <div className="text-xs text-gray-500 text-center">... and {totalNumberOfLessons - 1} more sessions</div>
                 <div className="flex items-center justify-between p-2 bg-gray-50 rounded text-sm">
                   <span>Final Session</span>
-                  <span>{format(formData.endDate, "PPP")}</span>
+                  <span>{format(calculatedEndDate, "PPP")}</span>
                 </div>
               </div>
             ) : (
@@ -1273,7 +1275,7 @@ const CohortFormDialog: React.FC<CohortFormDialogProps> = ({
                 Previous
               </Button>
             )}
-            <Button onClick={handleNext} disabled={!validateSection(activeSection)}>
+            <Button onClick={handleNext} disabled={!isValidSection(activeSection)}>
               {sections.findIndex(s => s.id === activeSection) === sections.length - 1
                 ? (cohort ? "Update Cohort" : "Create Cohort")
                 : (
