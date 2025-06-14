@@ -2,32 +2,44 @@
 import { api, ApiResponse } from '../client';
 
 export interface Class {
-    id: string;
+    _id: string;
     title: string;
     subject: string;
     type: string;
     gradeLevel: string;
     teacher: {
-        id: string;
+        _id: string;
         name: string;
     };
     rating: number;
     totalReviews: number;
-    enrollment: {
-        current: number;
-        maximum: number;
-    };
-    schedule?: {
-        daysOfWeek: string[];
-        startTime: string;
-        endTime: string;
-    };
-    price: number;
     discount: number;
-    featured: boolean;
+    isFeatured: boolean;
     thumbnailUrl?: string;
     status?: 'draft' | 'pending_review' | 'archived' | 'published';
+    createdAt: string;
+    updatedAt: string;
 }
+
+export interface Cohort {
+    name: string;
+    isActive: boolean;
+    startDate: string; // ISO date string
+    endDate: string; // ISO date string
+    startTime: string;
+    endTime: string;
+    repeatPattern: string;
+    daysOfWeek: string[];
+    customLessonTimes: boolean;
+    minimumStudents: number;
+    maximumStudents: number;
+    currentStudents: number;
+    enrollmentDeadline: string; // ISO date string
+    price: number;
+    discount: number;
+    classDates: string[]; // Probably ISO date strings
+    _id: string;
+  };
 
 export interface ClassDetail extends Class {
     description: string;
@@ -42,8 +54,9 @@ export interface ClassDetail extends Class {
         id: string;
         name: string;
     }[];
-    cohorts?: never[];
+    cohorts?: Cohort[];
     isPublished: boolean;
+    enrolledStudents?: number;
     enableMultipleCohorts: boolean;
     enableTeamTeaching: boolean;
     isPublic: boolean;
@@ -214,8 +227,8 @@ export const classService = {
         return api.get<Class[]>('/classes/popular');
     },
 
-    getRecommended: (userId: string): Promise<ApiResponse<Class[]>> => {
-        return api.get<Class[]>(`/classes/recommended/${userId}`);
+    getRecommended: (userId: string): Promise<ApiResponse<ClassDetail[]>> => {
+        return api.get<ClassDetail[]>(`/classes/recommended/${userId}`);
     },
 
     // Student-focused operations

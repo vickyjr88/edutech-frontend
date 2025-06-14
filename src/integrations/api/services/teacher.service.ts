@@ -9,6 +9,12 @@ import {
 } from "@/components/teacher/professional-profile";
 import {formatDateForDatabase} from "@/components/teacher/professional-profile/utils/educationUtils.ts";
 
+export interface BaseEntity {
+    _id: string;
+    createdAt: string;
+    updatedAt: string;
+    __v: number;
+  }
 // Certification interface for API calls
 export interface TeacherCertification {
     _id?: string;
@@ -21,6 +27,21 @@ export interface TeacherCertification {
     credentialUrl?: string;
     description?: string;
 }
+
+export interface Subject extends BaseEntity {
+    teacherProfile: string;
+    curriculum?: string;
+    subject: string;
+    gradeLevel?: string;
+    proficiencyLevel?: string;
+    ageRange?: string;
+    gender?: string;
+    religion?: string;
+    description: string;
+    isCertified: boolean;
+    isAcademic: boolean;
+    resources: string[];
+  }
 
 export interface TeacherProfile {
     id: string;
@@ -41,7 +62,7 @@ export interface TeacherProfile {
     experience: Experience[];
     strategies: string[];
     methodologies: string[];
-    subjects: object[];
+    subjects: Subject[];
     skills: object[];
     languages: object[];
     certifications: object[];
