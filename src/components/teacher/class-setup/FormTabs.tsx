@@ -11,7 +11,7 @@ import BasicInformationTab from "./BasicInformationTab";
 import LessonPlansTab from "./LessonPlansTab";
 import CohortsTab from "./CohortsTab";
 import TeachingTeamTab from "./TeachingTeamTab";
-import PreviewTab from "./PreviewTab";
+import ClassPreviewPage from "./ClassPreviewPage";
 
 interface FormTabsProps {
   onSubmit: (values: ClassFormValues) => void;
@@ -143,13 +143,39 @@ const FormTabs = ({ onSubmit }: FormTabsProps) => {
           </TabsContent>
           
           <TabsContent value="preview">
-            <PreviewTab 
+            <ClassPreviewPage 
               form={form}
               onPreviousTab={() => handleNavigateTab("teaching")}
               isSubmitting={isSubmitting}
               cohorts={cohorts}
               teamMembers={teamMembers}
               checkClassCompleteness={checkClassCompleteness}
+              onPublish={() => {
+                // Set required fields for publishing
+                form.setValue("isPublic", true);
+                form.setValue("isPublished", true);
+                form.setValue("status", "published");
+                
+                // Submit the form with custom values for API
+                onSubmit({
+                  ...form.getValues(),
+                  isPublic: true,
+                  isPublished: true,
+                  status: "published"
+                });
+              }}
+              onSaveDraft={() => {
+                // Set required fields for draft
+                form.setValue("isPublished", false);
+                form.setValue("status", "draft");
+                
+                // Submit the form as draft
+                onSubmit({
+                  ...form.getValues(),
+                  isPublished: false,
+                  status: "draft"
+                });
+              }}
             />
           </TabsContent>
         </form>

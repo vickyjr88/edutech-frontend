@@ -56,6 +56,7 @@ import { AIDescriptionButton } from '@/components/ui/ai-description-button';
 import { DescriptionContext } from '@/services/aiDescriptionService';
 import { toast } from 'sonner';
 import CohortFormDialog from './cohort-form/CohortFormDialog';
+import ClassPreviewPage from './ClassPreviewPage';
 
 interface AcademicClassCreatorProps {
   onSubmit: (data: ClassFormValues) => void;
@@ -2310,7 +2311,7 @@ const AcademicClassCreator: React.FC<AcademicClassCreatorProps> = ({
       title: 'Review & Publish',
       description: 'Final review and launch',
       icon: CheckCircle,
-      component: ReviewPublishStep
+      component: ClassPreviewPage
     }
   ];
 
