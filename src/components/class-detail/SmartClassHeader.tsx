@@ -18,7 +18,11 @@ import {
   Settings,
   Play,
   Pause,
-  Phone
+  Phone,
+  Edit,
+  MoreVertical,
+  BookOpen,
+  UserPlus
 } from 'lucide-react';
 import { SmartClassHeader as SmartClassHeaderType, TeachingMode, PreparationStatus } from '@/types/class-detail';
 import { cn } from '@/lib/utils';
@@ -133,12 +137,12 @@ const SmartClassHeader: React.FC<SmartClassHeaderProps> = ({
           {/* Class Info & Countdown */}
           <div className="lg:col-span-2 space-y-4">
             <div className="flex items-start justify-between">
-              <div>
+              <div className="flex-1">
                 <h1 className="text-2xl lg:text-3xl font-bold text-gray-900">{data.classTitle}</h1>
                 <p className="text-lg text-gray-600 mt-1">{data.subject}</p>
               </div>
               
-              {/* Mode Indicator */}
+              {/* Mode Indicator & Quick Actions */}
               <div className="flex items-center gap-2">
                 <div className={cn("w-3 h-3 rounded-full", modeConfig.color)} />
                 <Badge variant="outline" className="text-sm">
@@ -165,16 +169,40 @@ const SmartClassHeader: React.FC<SmartClassHeaderProps> = ({
               </div>
               
               <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
+                <div className="group relative">
                   <p className="text-gray-600">Topic</p>
-                  <p className="font-medium">{data.nextSession.lessonTopic}</p>
+                  <div className="flex items-center justify-between">
+                    <p className="font-medium flex-1">{data.nextSession.lessonTopic}</p>
+                    {data.currentMode !== 'teaching' && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6 p-0 text-gray-400 hover:text-gray-600"
+                        onClick={() => onActionClick?.('addLesson')}
+                      >
+                        <BookOpen className="h-3 w-3" />
+                      </Button>
+                    )}
+                  </div>
                 </div>
-                <div>
+                <div className="group relative">
                   <p className="text-gray-600">Expected Students</p>
-                  <p className="font-medium flex items-center gap-1">
-                    <Users className="h-4 w-4" />
-                    {data.nextSession.studentsExpected}
-                  </p>
+                  <div className="flex items-center justify-between">
+                    <p className="font-medium flex items-center gap-1 flex-1">
+                      <Users className="h-4 w-4" />
+                      {data.nextSession.studentsExpected}
+                    </p>
+                    {data.currentMode !== 'teaching' && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6 p-0 text-gray-400 hover:text-gray-600"
+                        onClick={() => onActionClick?.('addStudent')}
+                      >
+                        <UserPlus className="h-3 w-3" />
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>

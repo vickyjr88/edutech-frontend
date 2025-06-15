@@ -10,7 +10,15 @@ import {
   Calendar,
   Video,
   RefreshCw,
-  ExternalLink
+  ExternalLink,
+  Edit,
+  Plus,
+  BookOpen,
+  UserPlus,
+  MoreHorizontal,
+  Wand2,
+  Copy,
+  Archive
 } from 'lucide-react';
 
 // Enhanced components
@@ -19,6 +27,8 @@ import AdaptiveDashboard from './AdaptiveDashboard';
 import IntelligentSidebar from './IntelligentSidebar';
 import EnhancedStudentInsights from './EnhancedStudentInsights';
 import PredictiveAnalytics from './PredictiveAnalytics';
+import LessonPlansTimeline from './LessonPlansTimeline';
+import LessonPlanCreatorModal from './LessonPlanCreatorModal';
 
 // Types and utilities
 import { ClassDetailContext, TeachingMode } from '@/types/class-detail';
@@ -38,6 +48,8 @@ const EnhancedClassDetailPage: React.FC<EnhancedClassDetailPageProps> = ({
   const [activeTab, setActiveTab] = useState<string>('overview');
   const [isLoading, setIsLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [showEditMenu, setShowEditMenu] = useState(false);
+  const [isLessonModalOpen, setIsLessonModalOpen] = useState(false);
 
   // Initialize enhanced context
   useEffect(() => {
@@ -100,6 +112,40 @@ const EnhancedClassDetailPage: React.FC<EnhancedClassDetailPageProps> = ({
         // Open messaging interface
         console.log('Opening message interface for student:', data);
         break;
+      case 'editClass':
+        // Navigate to class setup page for editing
+        window.location.href = `/teacher-class-setup/${classData?.id}`;
+        break;
+      case 'addLesson':
+        // Open lesson creation modal
+        setIsLessonModalOpen(true);
+        break;
+      case 'manageCohorts':
+        // Navigate to cohort management
+        console.log('Opening cohort management interface');
+        break;
+      case 'addStudent':
+        // Open student enrollment
+        console.log('Opening student enrollment interface');
+        break;
+      case 'duplicateClass':
+        // Duplicate class functionality
+        console.log('Duplicating class with ID:', classData?.id);
+        break;
+      case 'aiOptimize':
+        // AI optimization suggestions
+        console.log('Opening AI optimization suggestions');
+        break;
+      case 'editLesson':
+        // Edit specific lesson
+        console.log('Opening lesson editor for:', data);
+        break;
+      case 'markLessonComplete':
+        // Mark lesson as complete
+        console.log('Marking lesson complete:', data);
+        // Here you would call an API to update lesson completion status
+        setRefreshKey(prev => prev + 1); // Refresh the data
+        break;
       default:
         console.log('Unhandled action:', actionId);
     }
@@ -126,6 +172,14 @@ const EnhancedClassDetailPage: React.FC<EnhancedClassDetailPageProps> = ({
       ...context,
       sidebarWidgets: updatedWidgets
     });
+  };
+
+  const handleSaveLessonPlan = (lessonPlan: any) => {
+    console.log('Saving lesson plan:', lessonPlan);
+    // Here you would call an API to save the lesson plan
+    // For now, we'll just refresh the data to show the new lesson in the timeline
+    setRefreshKey(prev => prev + 1);
+    setIsLessonModalOpen(false);
   };
 
   const getModeDescription = (mode: TeachingMode) => {
@@ -221,10 +275,14 @@ const EnhancedClassDetailPage: React.FC<EnhancedClassDetailPageProps> = ({
 
             {/* Tabbed Interface */}
             <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid w-full grid-cols-4">
+              <TabsList className="grid w-full grid-cols-5">
                 <TabsTrigger value="overview" className="flex items-center gap-2">
                   <Brain className="h-4 w-4" />
                   Dashboard
+                </TabsTrigger>
+                <TabsTrigger value="lessons" className="flex items-center gap-2">
+                  <BookOpen className="h-4 w-4" />
+                  Lessons
                 </TabsTrigger>
                 <TabsTrigger value="students" className="flex items-center gap-2">
                   <Users className="h-4 w-4" />
@@ -249,6 +307,18 @@ const EnhancedClassDetailPage: React.FC<EnhancedClassDetailPageProps> = ({
                   zoomOptimization={context.zoomOptimization}
                   teachingEffectiveness={context.teachingEffectiveness}
                   onActionClick={handleActionClick}
+                />
+              </TabsContent>
+
+              <TabsContent value="lessons" className="mt-6">
+                <LessonPlansTimeline
+                  lessonPlans={classData?.lessonPlans || []}
+                  currentLessonIndex={classData?.currentLessonIndex || 0}
+                  classStartDate={classData?.startDate ? new Date(classData.startDate) : new Date()}
+                  onLessonClick={(lesson) => console.log('Lesson clicked:', lesson)}
+                  onEditLesson={(lesson) => handleActionClick('editLesson', lesson)}
+                  onMarkComplete={(lesson) => handleActionClick('markLessonComplete', lesson)}
+                  onAddLesson={() => handleActionClick('addLesson')}
                 />
               </TabsContent>
 
@@ -355,6 +425,108 @@ const EnhancedClassDetailPage: React.FC<EnhancedClassDetailPageProps> = ({
           </div>
         </div>
       )}
+
+      {/* Smart Editing FAB & Quick Actions */}
+      {context.currentMode !== 'teaching' && (
+        <div className="fixed bottom-6 right-6 z-50">
+          {/* Quick Edit Menu */}
+          {showEditMenu && (
+            <div className="absolute bottom-16 right-0 mb-4 bg-white rounded-lg shadow-xl border border-gray-200 p-2 min-w-48">
+              <div className="space-y-1">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-full justify-start gap-3"
+                  onClick={() => {
+                    handleActionClick('addLesson');
+                    setShowEditMenu(false);
+                  }}
+                >
+                  <BookOpen className="h-4 w-4" />
+                  Add Lesson Plan
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-full justify-start gap-3"
+                  onClick={() => {
+                    handleActionClick('manageCohorts');
+                    setShowEditMenu(false);
+                  }}
+                >
+                  <Users className="h-4 w-4" />
+                  Manage Cohorts
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-full justify-start gap-3"
+                  onClick={() => {
+                    handleActionClick('addStudent');
+                    setShowEditMenu(false);
+                  }}
+                >
+                  <UserPlus className="h-4 w-4" />
+                  Enroll Students
+                </Button>
+                <div className="border-t border-gray-100 my-1" />
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-full justify-start gap-3"
+                  onClick={() => {
+                    handleActionClick('duplicateClass');
+                    setShowEditMenu(false);
+                  }}
+                >
+                  <Copy className="h-4 w-4" />
+                  Duplicate Class
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-full justify-start gap-3"
+                  onClick={() => {
+                    handleActionClick('aiOptimize');
+                    setShowEditMenu(false);
+                  }}
+                >
+                  <Wand2 className="h-4 w-4" />
+                  AI Optimize
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Floating Action Button */}
+          <Button
+            className="w-14 h-14 rounded-full bg-blue-600 hover:bg-blue-700 shadow-lg hover:shadow-xl transition-all duration-200"
+            onClick={() => setShowEditMenu(!showEditMenu)}
+          >
+            {showEditMenu ? (
+              <MoreHorizontal className="h-6 w-6 rotate-90" />
+            ) : (
+              <Edit className="h-6 w-6" />
+            )}
+          </Button>
+        </div>
+      )}
+
+      {/* Click outside to close menu */}
+      {showEditMenu && (
+        <div 
+          className="fixed inset-0 z-40" 
+          onClick={() => setShowEditMenu(false)}
+        />
+      )}
+
+      {/* Lesson Plan Creator Modal */}
+      <LessonPlanCreatorModal
+        open={isLessonModalOpen}
+        onOpenChange={setIsLessonModalOpen}
+        onSave={handleSaveLessonPlan}
+        nextSequenceNumber={(classData?.lessonPlans?.length || 0) + 1}
+      />
     </div>
   );
 };
