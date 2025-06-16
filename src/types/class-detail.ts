@@ -43,9 +43,18 @@ export interface QuickAction {
   enabled?: boolean;
 }
 
+export interface ClassObjective {
+  id: string;
+  text: string;
+  completed: boolean;
+  priority: 'high' | 'medium' | 'low';
+  category: 'knowledge' | 'skills' | 'understanding' | 'application';
+}
+
 export interface SmartClassHeader {
   classTitle: string;
   subject: string;
+  objectives: ClassObjective[];
   nextSession: NextSession;
   teachingMomentum: TeachingMomentum;
   preparationScore: number; // 0-100

@@ -10,7 +10,8 @@ import {
   ZoomOptimization,
   QuickAction,
   NextSession,
-  TeachingMomentum
+  TeachingMomentum,
+  ClassObjective
 } from '@/types/class-detail';
 
 // Determine teaching mode based on time to class
@@ -413,6 +414,55 @@ export function generateZoomOptimization(): ZoomOptimization {
   };
 }
 
+// Extract and format class objectives from API data
+export function extractClassObjectives(classData: any): ClassObjective[] {
+  if (!classData.objectives) return [];
+  
+  // Handle string format (comma-separated objectives)
+  if (typeof classData.objectives === 'string') {
+    return classData.objectives
+      .split('•')
+      .map(obj => obj.trim())
+      .filter(obj => obj.length > 0)
+      .map((text, index) => ({
+        id: `objective_${index + 1}`,
+        text: text.replace(/^[-•\d+\.\s]+/, '').trim(),
+        completed: false, // Default to not completed
+        priority: index === 0 ? 'high' : index === 1 ? 'medium' : 'low' as any,
+        category: inferObjectiveCategory(text)
+      }));
+  }
+  
+  // Handle array format
+  if (Array.isArray(classData.objectives)) {
+    return classData.objectives.map((objective, index) => ({
+      id: objective.id || `objective_${index + 1}`,
+      text: objective.objective || objective.text || objective,
+      completed: objective.isCompleted || objective.completed || false,
+      priority: objective.priority || (index === 0 ? 'high' : index === 1 ? 'medium' : 'low') as any,
+      category: objective.category || inferObjectiveCategory(objective.objective || objective.text || objective)
+    }));
+  }
+  
+  return [];
+}
+
+// Infer objective category based on content
+function inferObjectiveCategory(text: string): 'knowledge' | 'skills' | 'understanding' | 'application' {
+  const lowerText = text.toLowerCase();
+  
+  if (lowerText.includes('apply') || lowerText.includes('use') || lowerText.includes('solve') || lowerText.includes('create')) {
+    return 'application';
+  }
+  if (lowerText.includes('analyze') || lowerText.includes('understand') || lowerText.includes('explain') || lowerText.includes('interpret')) {
+    return 'understanding';
+  }
+  if (lowerText.includes('demonstrate') || lowerText.includes('perform') || lowerText.includes('execute') || lowerText.includes('show')) {
+    return 'skills';
+  }
+  return 'knowledge'; // Default category
+}
+
 // Helper functions
 function getTimeToNextClass(classData: any): number {
   // Mock implementation - returns random time
@@ -492,6 +542,7 @@ export function enhanceClassDetailData(classData: any): ClassDetailContext {
   const header: SmartClassHeader = {
     classTitle: classData.title || 'Advanced Mathematics',
     subject: classData.subject || 'Mathematics',
+    objectives: extractClassObjectives(classData),
     nextSession,
     teachingMomentum,
     preparationScore,

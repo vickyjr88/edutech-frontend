@@ -1,5 +1,5 @@
-import React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
+import React, { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -22,7 +22,9 @@ import {
   Edit,
   MoreVertical,
   BookOpen,
-  UserPlus
+  UserPlus,
+  Target,
+  Eye
 } from 'lucide-react';
 import { SmartClassHeader as SmartClassHeaderType, TeachingMode, PreparationStatus } from '@/types/class-detail';
 import { cn } from '@/lib/utils';
@@ -38,6 +40,26 @@ const SmartClassHeader: React.FC<SmartClassHeaderProps> = ({
   onModeChange,
   onActionClick
 }) => {
+  const [showObjectives, setShowObjectives] = useState(false);
+
+  const getCategoryColor = (category: string) => {
+    switch (category) {
+      case 'knowledge': return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'skills': return 'bg-green-100 text-green-800 border-green-200';
+      case 'understanding': return 'bg-purple-100 text-purple-800 border-purple-200';
+      case 'application': return 'bg-orange-100 text-orange-800 border-orange-200';
+      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+    }
+  };
+
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'high': return 'border-l-red-500';
+      case 'medium': return 'border-l-yellow-500';
+      case 'low': return 'border-l-green-500';
+      default: return 'border-l-gray-500';
+    }
+  };
   const getPreparationStatusConfig = (score: number): { 
     status: PreparationStatus; 
     color: string; 
@@ -209,6 +231,104 @@ const SmartClassHeader: React.FC<SmartClassHeaderProps> = ({
 
             {/* Quick Actions */}
             <div className="flex flex-wrap gap-2">
+              {/* Class Objectives Button with Floating Card */}
+              <div className="relative">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="border-blue-300 text-blue-700 hover:bg-blue-50 hover:border-blue-400"
+                  onMouseEnter={() => setShowObjectives(true)}
+                  onMouseLeave={() => setShowObjectives(false)}
+                  onClick={() => onActionClick?.('viewObjectives')}
+                >
+                  <Target className="h-4 w-4 mr-2" />
+                  Class Objectives
+                  <Eye className="h-3 w-3 ml-1 opacity-60" />
+                </Button>
+
+                {/* Floating Objectives Card */}
+                {showObjectives && data.objectives && data.objectives.length > 0 && (
+                  <Card 
+                    className="absolute top-full left-0 mt-2 w-80 z-50 shadow-xl border-2 border-blue-200 bg-white"
+                    onMouseEnter={() => setShowObjectives(true)}
+                    onMouseLeave={() => setShowObjectives(false)}
+                  >
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-lg flex items-center gap-2 text-blue-800">
+                        <Target className="h-5 w-5" />
+                        Learning Objectives
+                        <Badge variant="secondary" className="ml-auto">
+                          {data.objectives.filter(obj => obj.completed).length}/{data.objectives.length}
+                        </Badge>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3 max-h-64 overflow-y-auto">
+                      {data.objectives.map((objective, index) => (
+                        <div
+                          key={objective.id}
+                          className={cn(
+                            "p-3 rounded-lg border-l-4 transition-all duration-200",
+                            getPriorityColor(objective.priority),
+                            objective.completed ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200'
+                          )}
+                        >
+                          <div className="flex items-start gap-3">
+                            <div className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-100 text-blue-800 text-xs font-bold flex-shrink-0">
+                              {index + 1}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className={cn(
+                                "text-sm font-medium mb-1",
+                                objective.completed ? 'text-green-800 line-through' : 'text-gray-900'
+                              )}>
+                                {objective.text}
+                              </p>
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <Badge 
+                                  variant="outline" 
+                                  className={cn("text-xs", getCategoryColor(objective.category))}
+                                >
+                                  {objective.category}
+                                </Badge>
+                                {objective.priority === 'high' && (
+                                  <Badge variant="destructive" className="text-xs">
+                                    High Priority
+                                  </Badge>
+                                )}
+                                {objective.completed && (
+                                  <Badge variant="default" className="text-xs bg-green-600">
+                                    ✓ Completed
+                                  </Badge>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                      
+                      {/* Summary */}
+                      <div className="mt-4 pt-3 border-t border-gray-200">
+                        <div className="grid grid-cols-2 gap-4 text-xs">
+                          <div className="text-center">
+                            <p className="text-gray-500">Completed</p>
+                            <p className="font-bold text-green-600">
+                              {data.objectives.filter(obj => obj.completed).length}
+                            </p>
+                          </div>
+                          <div className="text-center">
+                            <p className="text-gray-500">Remaining</p>
+                            <p className="font-bold text-blue-600">
+                              {data.objectives.filter(obj => !obj.completed).length}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+
+              {/* Other Quick Actions */}
               {data.urgentActions.map((action) => (
                 <Button
                   key={action.id}

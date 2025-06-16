@@ -128,6 +128,10 @@ const EnhancedClassDetailPage: React.FC<EnhancedClassDetailPageProps> = ({
         // Open student enrollment
         console.log('Opening student enrollment interface');
         break;
+      case 'viewObjectives':
+        // Handle class objectives view - could show modal or navigate to section
+        console.log('Viewing class objectives for:', classData?.title);
+        break;
       case 'duplicateClass':
         // Duplicate class functionality
         console.log('Duplicating class with ID:', classData?.id);
