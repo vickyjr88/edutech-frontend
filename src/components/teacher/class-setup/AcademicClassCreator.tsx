@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -33,7 +33,8 @@ import {
   Zap,
   Star,
   Hash,
-  Loader2
+  Loader2,
+  Eye
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -52,6 +53,7 @@ import { ClassFormValues, CohortData, classSchema, Curriculum, CurriculumLevel, 
 import { useAuth } from '@/contexts/AuthContext';
 import { LessonFormRedesigned } from './lesson-plans/LessonFormRedesigned';
 import { platformService } from '@/integrations/api/services/platform.service';
+import { fileUploadService } from '@/integrations/api/services/file-upload.service';
 import { AIDescriptionButton } from '@/components/ui/ai-description-button';
 import { DescriptionContext } from '@/services/aiDescriptionService';
 import { toast } from 'sonner';
@@ -72,6 +74,7 @@ interface StepConfig {
   component: React.ComponentType<any>;
 }
 
+
 // Step Components
 const ClassFoundationStep = ({ form, onNext, isSaving, curricula, loadingCurricula }: any) => {
   const [materials, setMaterials] = useState(form.watch('materials') || []);
@@ -81,6 +84,9 @@ const ClassFoundationStep = ({ form, onNext, isSaving, curricula, loadingCurricu
   const [curriculumLevels, setCurriculumLevels] = useState<CurriculumLevel[]>([]);
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [selectedCurriculum, setSelectedCurriculum] = useState<Curriculum | null>(null);
+  
+  // Floating objectives card state
+  const [showObjectivesCard, setShowObjectivesCard] = useState(false);
   
   // Accordion state for subjects
   const [subjectsAccordionOpen, setSubjectsAccordionOpen] = useState<string>('subjects');
@@ -164,6 +170,100 @@ const ClassFoundationStep = ({ form, onNext, isSaving, curricula, loadingCurricu
   
   // File upload states
   const [uploadingFiles, setUploadingFiles] = useState<{[key: string]: boolean}>({});
+  
+  // Handle extracted data from course outline upload
+  const handleDataExtracted = (extractedData: any) => {
+    // Populate form fields with extracted data
+    if (extractedData.title) {
+      form.setValue('title', extractedData.title);
+    }
+    
+    if (extractedData.description) {
+      form.setValue('description', extractedData.description);
+    }
+    
+    if (extractedData.objectives && extractedData.objectives.length > 0) {
+      // Convert objectives to the format expected by the component
+      const formattedObjectives = extractedData.objectives.map((obj: any, index: number) => ({
+        id: Date.now() + index,
+        text: obj.text || obj.objective || obj
+      }));
+      setObjectives(formattedObjectives);
+      updateObjectivesInForm(formattedObjectives);
+    }
+    
+    if (extractedData.materials && extractedData.materials.length > 0) {
+      const formattedMaterials = extractedData.materials.map((material: any, index: number) => ({
+        id: (Date.now() + index).toString(),
+        name: material.name || material,
+        description: material.description || '',
+        type: 'required' as const,
+        link: material.link || '',
+        file: '',
+        cost: material.cost || ''
+      }));
+      setMaterials(formattedMaterials);
+      form.setValue('materials', formattedMaterials);
+    }
+    
+    if (extractedData.technicalRequirements && extractedData.technicalRequirements.length > 0) {
+      const requirementsString = extractedData.technicalRequirements
+        .map((req: any) => req.requirement || req)
+        .join('\n');
+      form.setValue('technicalRequirements', requirementsString);
+    }
+    
+    // Set curriculum if found in curricula data
+    if (extractedData.curriculum) {
+      const matchingCurriculum = curricula.find(c => 
+        c.name.toLowerCase().includes(extractedData.curriculum.toLowerCase()) ||
+        c.code.toLowerCase().includes(extractedData.curriculum.toLowerCase())
+      );
+      if (matchingCurriculum) {
+        form.setValue('curriculum', matchingCurriculum._id);
+        setSelectedCurriculum(matchingCurriculum);
+        setCurriculumLevelsFromData(matchingCurriculum._id);
+      }
+    }
+    
+    // Set grade level if found
+    if (extractedData.gradeLevel && selectedCurriculum) {
+      const matchingLevel = curriculumLevels.find(level => 
+        level.name.toLowerCase().includes(extractedData.gradeLevel.toLowerCase()) ||
+        level.gradeRange.toLowerCase().includes(extractedData.gradeLevel.toLowerCase())
+      );
+      if (matchingLevel) {
+        form.setValue('curriculumLevel', matchingLevel.code);
+        setSubjectsFromData(selectedCurriculum._id, matchingLevel.code);
+      }
+    }
+    
+    // Update number of lessons based on extracted lesson plans
+    if (extractedData.lessonPlans && extractedData.lessonPlans.length > 0) {
+      form.setValue('numberOfLessons', extractedData.lessonPlans.length);
+      
+      // Also populate lesson plans in the form
+      const formattedLessonPlans = extractedData.lessonPlans.map((lesson: any, index: number) => ({
+        id: (Date.now() + index).toString(),
+        title: lesson.title || `Lesson ${index + 1}`,
+        description: lesson.description || lesson.summary || '',
+        duration: lesson.duration || 60,
+        lessonNumber: lesson.lessonNumber || index + 1,
+        durationInMinutes: lesson.duration || 60,
+        summary: lesson.summary || lesson.description || '',
+        objectives: lesson.objectives || [],
+        activities: lesson.activities || [],
+        prerequisites: lesson.prerequisites || '',
+        homework: lesson.homework || '',
+        assessmentCriteria: lesson.assessmentCriteria || '',
+        tags: lesson.tags || [],
+        requirements: lesson.requirements || { videos: [], materials: [] }
+      }));
+      form.setValue('lessonPlans', formattedLessonPlans);
+    }
+    
+    toast.success('Course outline data has been extracted and populated in the form!');
+  };
 
 
   // Set curriculum levels when curriculum changes (no API call needed)
@@ -342,18 +442,27 @@ const ClassFoundationStep = ({ form, onNext, isSaving, curricula, loadingCurricu
     setUploadingFiles(prev => ({ ...prev, [fileType]: true }));
     
     try {
-      // For now, we'll just store the file name as a placeholder
-      // In a real implementation, you'd upload to your file storage service
       const file = files[0];
       const fileName = file.name;
       form.setValue(fileType, fileName);
       
-      // Simulate upload delay
-      setTimeout(() => {
-        setUploadingFiles(prev => ({ ...prev, [fileType]: false }));
-      }, 1000);
+      // If this is a course outline file, process it for data extraction
+      if (fileType === 'courseOutlineFile') {
+        const { data, error } = await fileUploadService.uploadAndProcessCourseOutline(file);
+        
+        if (error) {
+          toast.error('Failed to process course outline: ' + error.message);
+        } else if (data) {
+          // Handle the extracted data
+          handleDataExtracted(data);
+          toast.success('Course outline processed successfully! Data has been extracted and populated in the form.');
+        }
+      }
+      
+      setUploadingFiles(prev => ({ ...prev, [fileType]: false }));
     } catch (error) {
       console.error('File upload error:', error);
+      toast.error('File upload failed: ' + (error instanceof Error ? error.message : 'Unknown error'));
       setUploadingFiles(prev => ({ ...prev, [fileType]: false }));
     }
   };
@@ -615,7 +724,7 @@ const ClassFoundationStep = ({ form, onNext, isSaving, curricula, loadingCurricu
                     </div>
                   ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-                      {curricula.map((curriculum) => {
+                      {curricula.map((curriculum: Curriculum) => {
                         const styling = getCurriculumStyling(curriculum.code);
                         const isSelected = field.value === curriculum._id;
                         
@@ -1115,7 +1224,94 @@ const ClassFoundationStep = ({ form, onNext, isSaving, curricula, loadingCurricu
 
             {/* Learning Objectives */}
             <div>
-              <FormLabel className="text-base font-semibold mb-4 block">Learning Objectives *</FormLabel>
+              <div className="flex items-center justify-between mb-4">
+                <FormLabel className="text-base font-semibold">Learning Objectives *</FormLabel>
+                
+                {/* Class Objectives Preview Button with Floating Card */}
+                {objectives.length > 0 && (
+                  <div className="relative">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="border-purple-300 text-purple-700 hover:bg-purple-50 hover:border-purple-400"
+                      onMouseEnter={() => setShowObjectivesCard(true)}
+                      onMouseLeave={() => setShowObjectivesCard(false)}
+                    >
+                      <Target className="h-4 w-4 mr-2" />
+                      Preview Objectives
+                      <Eye className="h-3 w-3 ml-1 opacity-60" />
+                    </Button>
+
+                    {/* Floating Objectives Card */}
+                    {showObjectivesCard && (
+                      <Card 
+                        className="absolute top-full right-0 mt-2 w-96 z-50 shadow-xl border-2 border-purple-200 bg-white"
+                        onMouseEnter={() => setShowObjectivesCard(true)}
+                        onMouseLeave={() => setShowObjectivesCard(false)}
+                      >
+                        <CardHeader className="pb-3">
+                          <CardTitle className="text-lg flex items-center gap-2 text-purple-800">
+                            <Target className="h-5 w-5" />
+                            Learning Objectives Preview
+                            <Badge variant="secondary" className="ml-auto">
+                              {objectives.filter(obj => obj.text.trim()).length} objectives
+                            </Badge>
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-3 max-h-64 overflow-y-auto">
+                          <p className="text-sm text-purple-700 font-medium">By the end of this class, students will be able to:</p>
+                          
+                          {objectives.filter(obj => obj.text.trim()).map((objective, index) => (
+                            <div
+                              key={objective.id}
+                              className="p-3 rounded-lg border-l-4 border-l-purple-500 bg-purple-50 transition-all duration-200"
+                            >
+                              <div className="flex items-start gap-3">
+                                <div className="flex items-center justify-center w-6 h-6 rounded-full bg-purple-100 text-purple-800 text-xs font-bold flex-shrink-0">
+                                  {index + 1}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm font-medium text-purple-900">
+                                    {objective.text}
+                                  </p>
+                                  <div className="flex items-center gap-2 mt-2">
+                                    <Badge 
+                                      variant="outline" 
+                                      className="text-xs bg-purple-100 text-purple-700 border-purple-300"
+                                    >
+                                      Academic Goal
+                                    </Badge>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                          
+                          {/* Summary */}
+                          <div className="mt-4 pt-3 border-t border-purple-200">
+                            <div className="grid grid-cols-2 gap-4 text-xs">
+                              <div className="text-center">
+                                <p className="text-purple-500">Total Objectives</p>
+                                <p className="font-bold text-purple-700">
+                                  {objectives.filter(obj => obj.text.trim()).length}
+                                </p>
+                              </div>
+                              <div className="text-center">
+                                <p className="text-purple-500">Status</p>
+                                <p className="font-bold text-green-600">
+                                  Ready
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
+                  </div>
+                )}
+              </div>
+              
               <FormDescription className="mb-4">
                 What specific skills or knowledge will students gain? Add one objective at a time.
               </FormDescription>
@@ -2226,7 +2422,7 @@ const AcademicClassCreator: React.FC<AcademicClassCreatorProps> = ({
   initialValues,
   classId
 }) => {
-  const { user } = useAuth();
+  const { } = useAuth();
   const [currentStep, setCurrentStep] = useState(0);
   const [cohorts, setCohorts] = useState<CohortData[]>([]);
   const [createdClassId, setCreatedClassId] = useState<string | null>(classId || null);
@@ -2281,7 +2477,7 @@ const AcademicClassCreator: React.FC<AcademicClassCreatorProps> = ({
       }
     };
     
-    fetchCurricula();
+    void fetchCurricula();
   }, []);
 
   const steps: StepConfig[] = [
@@ -2332,14 +2528,9 @@ const AcademicClassCreator: React.FC<AcademicClassCreatorProps> = ({
           
           // Call the onSubmit function to create the class
           try {
-            const result = await onSubmit(formData);
-            
-            // If onSubmit returns a class ID, store it
-            if (result && typeof result === 'object' && 'id' in result) {
-              setCreatedClassId((result as any).id);
-            } else if (result && typeof result === 'string') {
-              setCreatedClassId(result);
-            }
+            onSubmit(formData);
+            // Note: onSubmit returns void, so we can't get the class ID from it
+            // The classId would need to be passed as a prop or via a different mechanism
           } catch (submitError) {
             console.error('Submit error:', submitError);
           }

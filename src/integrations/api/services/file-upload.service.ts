@@ -166,6 +166,46 @@ class FileUploadService {
   }
 
   /**
+   * Upload and process course outline without creating lesson plans or updating classes
+   */
+  async uploadAndProcessCourseOutline(
+    file: File,
+    onProgress?: (progress: FileUploadProgress) => void
+  ): Promise<{ data?: any; error?: any }> {
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await api.post<any>('/course-outline/upload-and-process', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+        onUploadProgress: (progressEvent) => {
+          if (progressEvent.total && onProgress) {
+            const progress = {
+              loaded: progressEvent.loaded,
+              total: progressEvent.total,
+              percentage: Math.round((progressEvent.loaded * 100) / progressEvent.total)
+            };
+            onProgress(progress);
+          }
+        }
+      });
+
+      return { data: response.data };
+    } catch (error: any) {
+      console.error('Course outline upload error:', error);
+      return { 
+        error: {
+          message: error.response?.data?.message || 'Failed to upload and process course outline',
+          status: error.response?.status,
+          data: error.response?.data
+        }
+      };
+    }
+  }
+
+  /**
    * Format file size for display
    */
   formatFileSize(bytes: number): string {
