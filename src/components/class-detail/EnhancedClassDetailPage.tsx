@@ -191,7 +191,7 @@ const EnhancedClassDetailPage: React.FC<EnhancedClassDetailPageProps> = ({
       ...payload} = lessonPlan;
     classService.addLessonPlan(classData?._id, {
       ...payload,
-      lessonNumber: classData.lessonPlans.length + 1
+      lessonNumber: sequenceNumber ?? classData.lessonPlans.length + 1
     });
   };
 
