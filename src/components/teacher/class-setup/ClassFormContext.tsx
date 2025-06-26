@@ -916,6 +916,8 @@ export const ClassFormProvider = ({
       }
 
       const formValues = form.getValues();
+      const {data: currentClass} = await classService.getById(classId)
+
       if (!formValues.lessonPlans || formValues.lessonPlans.length === 0) {
         return false;
       }
@@ -923,24 +925,21 @@ export const ClassFormProvider = ({
       setIsSubmitting(true);
 
       // Format lesson plans according to the backend DTO requirements
-      const formattedData = {
-        lessonPlans: formValues.lessonPlans
-          .filter(lesson => lesson.title && lesson.description)
-          .map(lesson => ({
-            title: lesson.title || "",
-            description: lesson.description || "",
-            duration: Number(lesson.duration) || 60,
-            resourceFiles: lesson.resources ? 
-              (typeof lesson.resources === 'string' ? 
-                lesson.resources.split(',').map(r => r.trim()) : 
-                Array.isArray(lesson.resources) ? lesson.resources : 
-                [lesson.resources]) :
-              undefined
-          }))
-      };
+      const lessonPlans = formValues.lessonPlans.map((lesson, index) => ({
+          title: lesson.title || "",
+          description: lesson.description || "",
+          duration: Number(lesson.duration) || 60,
+          lessonNumber: currentClass.lessonPlans.length + index + 1,
+          resourceFiles: lesson.resources ? 
+            (typeof lesson.resources === 'string' ? 
+              lesson.resources.split(',').map(r => r.trim()) : 
+              Array.isArray(lesson.resources) ? lesson.resources : 
+              [lesson.resources]) :
+            undefined
+        }));
 
       // Update the class with the lesson plans
-      const { data, error } = await classService.update(classId, formattedData as any);
+      const { data, error } = await classService.bulkAddLessonPlan(classId, lessonPlans as any);
 
       if (error) {
         console.error("Error saving lesson plans:", error);

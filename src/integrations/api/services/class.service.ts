@@ -170,6 +170,10 @@ export const classService = {
         return api.post<ClassDetail>(`/classes/${classId}/lesson-plans`, lessonPlan);
     },
 
+    bulkAddLessonPlan: (classId: string, lessonPlans: LessonPlan[]): Promise<ApiResponse<ClassDetail>> => {
+        return api.post<ClassDetail>(`/classes/${classId}/lesson-plans/bulk`, { lessonPlans });
+    },
+
     updateLessonPlan: (classId: string, lessonIndex: number, lessonPlan: LessonPlan): Promise<ApiResponse<ClassDetail>> => {
         return api.patch<ClassDetail>(`/classes/${classId}/lesson-plans/${lessonIndex}`, lessonPlan);
     },
