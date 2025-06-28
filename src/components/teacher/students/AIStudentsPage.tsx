@@ -6,6 +6,9 @@ import {
   BarChart3, Zap, Target, Sparkles, Mail, Phone,
   BookOpen, CheckCircle, XCircle, Pause, Eye
 } from "lucide-react";
+import { useAuth } from '@/contexts/AuthContext';
+import { useTeacherStudents } from '@/hooks/useTeacherStudents';
+import { useTeacherStats } from '@/hooks/useTeacherStats';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -141,6 +144,15 @@ const AIStudentsPage: React.FC<AIStudentsPageProps> = ({
   onEnrollStudents,
   classes = []
 }) => {
+  const { user } = useAuth();
+  const { studentsData, loading, error } = useTeacherStudents({
+    teacherId: user?.teacherId || '',
+  });
+
+  const { statsData, loading: statsLoading, error: statsError } = useTeacherStats({
+    teacherId: user?.teacherId || '',
+  });
+
   const [selectedClass, setSelectedClass] = useState("All Classes");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedFilter, setSelectedFilter] = useState("All");
@@ -151,17 +163,19 @@ const AIStudentsPage: React.FC<AIStudentsPageProps> = ({
 
   // Generate class data from teacher's actual classes
   const classData = useMemo(() => {
-    const totalStudents = studentsData.length;
+    const totalStudents = studentsData?.students?.length || 0;
     const allClassesItem = { name: "All Classes", count: totalStudents, active: true };
     
     if (classes.length === 0) {
-      // Use fallback data when no classes available
+      // Use enhanced fallback data when no classes available
+      const totalClasses = statsData?.totalClasses || 4;
+      const avgStudentsPerClass = Math.floor(totalStudents / Math.max(totalClasses, 1));
       return [
         allClassesItem,
-        { name: "Math A", count: 32, active: true },
-        { name: "Physics", count: 28, active: true },
-        { name: "Chemistry", count: 35, active: true },
-        { name: "Biology", count: 32, active: true }
+        { name: "Math A", count: avgStudentsPerClass, active: true },
+        { name: "Physics", count: avgStudentsPerClass, active: true },
+        { name: "Chemistry", count: avgStudentsPerClass, active: true },
+        { name: "Biology", count: avgStudentsPerClass, active: true }
       ];
     }
     
@@ -173,32 +187,44 @@ const AIStudentsPage: React.FC<AIStudentsPageProps> = ({
     }));
     
     return [allClassesItem, ...classItems];
-  }, [classes]);
+  }, [classes, studentsData, statsData]);
 
   // Filter students based on selections
   const filteredStudents = useMemo(() => {
-    return studentsData.filter(student => {
+    if (!studentsData?.students) return [];
+    
+    return studentsData.students.filter(student => {
       const matchesSearch = !searchQuery || 
-        student.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        student.email.toLowerCase().includes(searchQuery.toLowerCase());
+        student.name.toLowerCase().includes(searchQuery.toLowerCase());
       
       const matchesFilter = selectedFilter === "All" || 
-        (selectedFilter === "Need Attention" && (student.status === "needs-attention" || student.status === "inactive")) ||
-        (selectedFilter === "High Performers" && student.status === "high-performer") ||
-        (selectedFilter === "Inactive" && student.status === "inactive") ||
-        (selectedFilter === "Recent Activity" && student.lastActive.includes("hour"));
+        (selectedFilter === "Need Attention" && (student.status === "Needs Attention" || student.status === "Inactive")) ||
+        (selectedFilter === "High Performers" && student.status === "Active") ||
+        (selectedFilter === "Inactive" && student.status === "Inactive") ||
+        (selectedFilter === "Recent Activity" && student.lastActivity.includes("hour"));
       
       return matchesSearch && matchesFilter;
     });
-  }, [searchQuery, selectedFilter]);
+  }, [studentsData, searchQuery, selectedFilter]);
 
-  // Calculate metrics
+  // Calculate metrics using real API data from both sources
   const metrics = useMemo(() => {
-    const priorityStudents = studentsData.filter(s => s.status === "needs-attention" || s.status === "inactive").length;
-    const highPerformers = studentsData.filter(s => s.status === "high-performer").length;
-    const inactiveStudents = studentsData.filter(s => s.status === "inactive").length;
-    const avgPerformance = Math.round(studentsData.reduce((sum, s) => sum + (s.performanceGrade || 0), 0) / studentsData.length);
-    const avgEngagement = Math.round(studentsData.reduce((sum, s) => sum + (s.engagementScore || 0), 0) / studentsData.length);
+    if (!studentsData?.performanceSummary) {
+      return {
+        priorityStudents: 0,
+        highPerformers: 0,
+        inactiveStudents: 0,
+        avgPerformance: 0
+      };
+    }
+
+    const priorityStudents = studentsData.performanceSummary.needsAttention;
+    const highPerformers = studentsData.performanceSummary.highPerformers;
+    const inactiveStudents = studentsData.performanceSummary.inactive;
+    const avgPerformance = studentsData.students ? 
+      Math.round(studentsData.students.reduce((sum, s) => sum + (s.attendance.percentage || 0), 0) / studentsData.students.length) : 0;
+    const avgEngagement = studentsData.students ? 
+      Math.round(studentsData.students.reduce((sum, s) => sum + (s.assignments.completionRate || 0), 0) / studentsData.students.length) : 0;
     
     return {
       priorityStudents,
@@ -206,10 +232,13 @@ const AIStudentsPage: React.FC<AIStudentsPageProps> = ({
       inactiveStudents,
       avgPerformance,
       avgEngagement,
-      totalClasses: 4,
-      attendanceRate: 89
+      totalClasses: statsData?.totalClasses || studentsData.totalClasses || 0,
+      attendanceRate: avgPerformance,
+      completionRate: statsData?.completionRate || 0,
+      totalHours: statsData?.totalHoursCompleted || 0,
+      averageRating: statsData?.averageRating || 0
     };
-  }, []);
+  }, [studentsData, statsData]);
 
   const handleStudentSelect = (studentId: string, checked: boolean) => {
     if (checked) {
@@ -221,34 +250,43 @@ const AIStudentsPage: React.FC<AIStudentsPageProps> = ({
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'high-performer': return 'border-l-4 border-l-[#5e6ad2]';
-      case 'needs-attention': return 'border-l-4 border-l-[#f99325]';
-      case 'inactive': return 'border-l-4 border-l-red-500';
+      case 'Active': return 'border-l-4 border-l-[#5e6ad2]';
+      case 'Needs Attention': return 'border-l-4 border-l-[#f99325]';
+      case 'Inactive': return 'border-l-4 border-l-red-500';
       default: return 'border-l-4 border-l-gray-300';
     }
   };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'high-performer': 
-        return <Badge className="bg-[#5e6ad2] hover:bg-[#5e6ad2]/90 text-white">High Performer</Badge>;
-      case 'needs-attention': 
+      case 'Active': 
+        return <Badge className="bg-[#5e6ad2] hover:bg-[#5e6ad2]/90 text-white">Active</Badge>;
+      case 'Needs Attention': 
         return <Badge className="bg-[#f99325] hover:bg-[#f99325]/90 text-white">Needs Attention</Badge>;
-      case 'inactive': 
+      case 'Inactive': 
         return <Badge className="bg-red-500 hover:bg-red-500/90 text-white">Inactive</Badge>;
       default: 
-        return <Badge variant="outline">Active</Badge>;
+        return <Badge variant="outline">{status}</Badge>;
     }
   };
 
   // Convert student data for messaging component
   const messagingStudents = useMemo(() => {
-    return studentsData.map(student => ({
-      ...student,
+    if (!studentsData?.students) return [];
+    
+    return studentsData.students.map(student => ({
+      id: student.studentId,
+      name: student.name,
+      email: `${student.name.toLowerCase().replace(' ', '.')}@example.com`, // Mock email for now
+      subjects: student.subjects.map(s => s.name),
+      attendance: student.attendance.percentage,
+      assignments: `${student.assignments.completed}/${student.assignments.total}`,
+      status: student.status.toLowerCase().replace(' ', '-'),
+      lastActive: student.lastActivity,
       preferredPlatform: 'whatsapp' as const,
       responseRate: Math.floor(Math.random() * 40) + 60
     }));
-  }, []);
+  }, [studentsData]);
 
   const handleSendMessage = (messageData: any) => {
     console.log('Sending message:', messageData);
@@ -256,7 +294,7 @@ const AIStudentsPage: React.FC<AIStudentsPageProps> = ({
   };
 
   const handleMessageStudent = (studentId: string) => {
-    const student = studentsData.find(s => s.id === studentId);
+    const student = studentsData?.students?.find(s => s.studentId === studentId);
     if (student) {
       setSelectedStudents([studentId]);
       setShowMessageComposer(true);
@@ -268,6 +306,28 @@ const AIStudentsPage: React.FC<AIStudentsPageProps> = ({
       setShowMessageComposer(true);
     }
   };
+
+  if (loading || statsLoading) {
+    return (
+      <div className="min-h-screen bg-[#ededf4] p-6 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-gray-600">Loading students data...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || statsError) {
+    return (
+      <div className="min-h-screen bg-[#ededf4] p-6 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-red-600 mb-4">Error loading data: {error || statsError}</div>
+          <Button onClick={() => window.location.reload()}>Retry</Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#ededf4] p-6 space-y-6">
@@ -282,12 +342,12 @@ const AIStudentsPage: React.FC<AIStudentsPageProps> = ({
               Students Command Center
             </h1>
             <p className="text-gray-600 mt-2">
-              Managing 127 students across 4 classes with AI precision
+              Managing {studentsData?.totalStudents || 0} students across {metrics.totalClasses} classes with AI precision
             </p>
           </div>
           <Badge className="bg-gradient-to-r from-[#5e6ad2] to-[#abb4dd] text-white px-4 py-2 text-sm">
             <Brain className="w-4 h-4 mr-2" />
-            8 priority actions • 23 recommendations
+            {metrics.priorityStudents} priority actions • {metrics.highPerformers} high performers
           </Badge>
         </div>
       </div>
@@ -315,7 +375,7 @@ const AIStudentsPage: React.FC<AIStudentsPageProps> = ({
               <div>
                 <p className="text-sm text-gray-600">Class Overview</p>
                 <p className="text-2xl font-bold text-[#5e6ad2]">{metrics.totalClasses}</p>
-                <p className="text-xs text-gray-500 mt-1">{metrics.attendanceRate}% avg attendance</p>
+                <p className="text-xs text-gray-500 mt-1">{metrics.completionRate}% completion rate</p>
               </div>
               <div className="w-12 h-12 bg-[#5e6ad2]/10 rounded-full flex items-center justify-center">
                 <BookOpen className="w-6 h-6 text-[#5e6ad2]" />
@@ -328,12 +388,12 @@ const AIStudentsPage: React.FC<AIStudentsPageProps> = ({
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Performance Trend</p>
-                <p className="text-2xl font-bold text-green-600">{metrics.avgPerformance}%</p>
-                <p className="text-xs text-gray-500 mt-1">Overall performance +2%</p>
+                <p className="text-sm text-gray-600">Teaching Hours</p>
+                <p className="text-2xl font-bold text-green-600">{metrics.totalHours}h</p>
+                <p className="text-xs text-gray-500 mt-1">{metrics.averageRating}⭐ rating</p>
               </div>
               <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-                <TrendingUp className="w-6 h-6 text-green-600" />
+                <Clock className="w-6 h-6 text-green-600" />
               </div>
             </div>
           </CardContent>
@@ -463,28 +523,28 @@ const AIStudentsPage: React.FC<AIStudentsPageProps> = ({
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {filteredStudents.map((student) => (
           <Card 
-            key={student.id} 
+            key={student.studentId} 
             className={`bg-white/70 backdrop-blur-sm border-0 shadow-sm hover:shadow-lg hover:scale-[1.02] transition-all duration-300 ${getStatusColor(student.status)} overflow-hidden group`}
           >
             <CardContent className="p-6">
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-3">
                   <Checkbox
-                    checked={selectedStudents.includes(student.id)}
-                    onCheckedChange={(checked) => handleStudentSelect(student.id, checked as boolean)}
+                    checked={selectedStudents.includes(student.studentId)}
+                    onCheckedChange={(checked) => handleStudentSelect(student.studentId, checked as boolean)}
                     className="border-gray-300"
                   />
                   <Avatar className="w-12 h-12 border-2 border-white shadow-sm">
                     <AvatarFallback className="bg-gradient-to-br from-[#5e6ad2] to-[#abb4dd] text-white font-semibold">
-                      {student.avatar}
+                      {student.name.split(' ').map(n => n[0]).join('').toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
                 </div>
                 <div className="flex items-center gap-1">
                   <div className={`w-2 h-2 rounded-full ${
-                    student.status === 'high-performer' ? 'bg-[#5e6ad2]' :
-                    student.status === 'needs-attention' ? 'bg-[#f99325]' :
-                    student.status === 'inactive' ? 'bg-red-500' : 'bg-green-500'
+                    student.status === 'Active' ? 'bg-[#5e6ad2]' :
+                    student.status === 'Needs Attention' ? 'bg-[#f99325]' :
+                    student.status === 'Inactive' ? 'bg-red-500' : 'bg-green-500'
                   }`} />
                   <Sparkles className="w-4 h-4 text-[#5e6ad2]" />
                 </div>
@@ -493,13 +553,13 @@ const AIStudentsPage: React.FC<AIStudentsPageProps> = ({
               <div className="space-y-3">
                 <div>
                   <h3 className="font-semibold text-gray-900">{student.name}</h3>
-                  <p className="text-sm text-gray-600">{student.email}</p>
+                  <p className="text-sm text-gray-600">{student.name.toLowerCase().replace(' ', '.')}@example.com</p>
                 </div>
 
                 <div className="flex flex-wrap gap-1">
-                  {student.subjects.map((subject) => (
-                    <Badge key={subject} variant="outline" className="text-xs bg-white/50">
-                      {subject}
+                  {student.subjects.map((subject, index) => (
+                    <Badge key={index} variant="outline" className="text-xs bg-white/50">
+                      {subject.name}
                     </Badge>
                   ))}
                 </div>
@@ -507,24 +567,24 @@ const AIStudentsPage: React.FC<AIStudentsPageProps> = ({
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Attendance</span>
-                    <span className="font-medium">{student.attendance}%</span>
+                    <span className="font-medium">{student.attendance.percentage}%</span>
                   </div>
-                  <Progress value={student.attendance} className="h-1.5 bg-gray-100">
+                  <Progress value={student.attendance.percentage} className="h-1.5 bg-gray-100">
                     <div 
                       className="h-full bg-gradient-to-r from-[#5e6ad2] to-[#abb4dd] transition-all duration-300"
-                      style={{ width: `${student.attendance}%` }}
+                      style={{ width: `${student.attendance.percentage}%` }}
                     />
                   </Progress>
                 </div>
 
                 <div className="flex justify-between items-center text-sm">
                   <span className="text-gray-600">Assignments</span>
-                  <span className="font-medium">{student.assignments}</span>
+                  <span className="font-medium">{student.assignments.completed}/{student.assignments.total}</span>
                 </div>
 
                 <div className="flex justify-between items-center">
                   {getStatusBadge(student.status)}
-                  <span className="text-xs text-gray-500">{student.lastActive}</span>
+                  <span className="text-xs text-gray-500">{student.lastActivity}</span>
                 </div>
 
                 {student.aiInsights && (
@@ -534,12 +594,21 @@ const AIStudentsPage: React.FC<AIStudentsPageProps> = ({
                       <span className="text-xs font-medium text-[#5e6ad2]">AI Insights</span>
                     </div>
                     <ul className="text-xs text-gray-600 space-y-1">
-                      {student.aiInsights.slice(0, 2).map((insight, index) => (
-                        <li key={index} className="flex items-start gap-2">
-                          <div className="w-1 h-1 bg-[#5e6ad2] rounded-full mt-2 flex-shrink-0" />
-                          {insight}
-                        </li>
-                      ))}
+                      {(() => {
+                        // Handle both old format (array) and new format (object with insights array)
+                        let insights = [];
+                        if (Array.isArray(student.aiInsights)) {
+                          insights = student.aiInsights;
+                        } else if (student.aiInsights?.insights) {
+                          insights = student.aiInsights.insights;
+                        }
+                        return insights.slice(0, 2).map((insight, index) => (
+                          <li key={index} className="flex items-start gap-2">
+                            <div className="w-1 h-1 bg-[#5e6ad2] rounded-full mt-2 flex-shrink-0" />
+                            {insight}
+                          </li>
+                        ));
+                      })()}
                     </ul>
                   </div>
                 )}
@@ -549,7 +618,7 @@ const AIStudentsPage: React.FC<AIStudentsPageProps> = ({
                     size="sm" 
                     variant="ghost" 
                     className="flex-1 text-[#5e6ad2] hover:bg-[#5e6ad2]/10"
-                    onClick={() => onViewProfile && onViewProfile(student.id)}
+                    onClick={() => onViewProfile && onViewProfile(student.studentId)}
                   >
                     <Eye className="w-4 h-4 mr-1" />
                     View
@@ -558,7 +627,7 @@ const AIStudentsPage: React.FC<AIStudentsPageProps> = ({
                     size="sm" 
                     variant="ghost" 
                     className="flex-1 text-[#f99325] hover:bg-[#f99325]/10"
-                    onClick={() => handleMessageStudent(student.id)}
+                    onClick={() => handleMessageStudent(student.studentId)}
                   >
                     <MessageCircle className="w-4 h-4 mr-1" />
                     Message

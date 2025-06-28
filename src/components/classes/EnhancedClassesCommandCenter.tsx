@@ -417,7 +417,7 @@ const EnhancedClassesCommandCenter: React.FC<EnhancedClassesCommandCenterProps> 
         <Tabs defaultValue="classes" className="w-full">
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="classes">My Classes</TabsTrigger>
-            <TabsTrigger value="intelligence">Intelligence</TabsTrigger>
+            {/*<TabsTrigger value="intelligence">Intelligence</TabsTrigger>*/}
             <TabsTrigger value="planning">Lesson Planning</TabsTrigger>
             <TabsTrigger value="objectives">Objectives</TabsTrigger>
           </TabsList>
@@ -426,14 +426,14 @@ const EnhancedClassesCommandCenter: React.FC<EnhancedClassesCommandCenterProps> 
             {renderCommandCenterView()}
           </TabsContent>
 
-          <TabsContent value="intelligence" className="mt-6">
-            {analytics && (
-              <TeachingIntelligenceDashboard 
-                classes={enhancedClasses}
-                analytics={analytics}
-              />
-            )}
-          </TabsContent>
+          {/*<TabsContent value="intelligence" className="mt-6">*/}
+          {/*  {analytics && (*/}
+          {/*    <TeachingIntelligenceDashboard */}
+          {/*      classes={enhancedClasses}*/}
+          {/*      analytics={analytics}*/}
+          {/*    />*/}
+          {/*  )}*/}
+          {/*</TabsContent>*/}
 
           <TabsContent value="planning" className="mt-6">
             <LessonPlanningHub 

@@ -464,13 +464,28 @@ export const teacherService = {
         return api.get<any[]>(`/teachers/${teacherId}/students`);
     },
 
-    getTeacherStats: async (teacherId: string): Promise<ApiResponse<{
-        totalStudents: number;
-        totalClasses: number;
-        totalHours: number;
-        averageRating: number;
+    getTeacherStudentsWithStats: async (teacherId: string): Promise<ApiResponse<any>> => {
+        return api.get<any>(`/classes/teachers/${teacherId}/students`);
+    },
+
+    getTeacherStats: async (teacherId: string): Promise<ApiResponse<any>> => {
+        return api.get<any>(`/classes/teachers/${teacherId}/stats`);
+    },
+
+    getTeacherUpcomingSessions: async (teacherId: string): Promise<ApiResponse<any[]>> => {
+        return api.get<any[]>(`/teachers/${teacherId}/upcoming-sessions`);
+    },
+
+    getTeacherDashboard: async (teacherId: string, params?: {
+        limit?: number;
+        days?: number;
+    }): Promise<ApiResponse<{
+        stats: any;
+        upcomingSessions: any[];
+        recentActivity: any[];
+        classPerformance: any[];
     }>> => {
-        return api.get<any>(`/teachers/${teacherId}/stats`);
+        return api.get<any>(`/teachers/${teacherId}/dashboard`, { params });
     },
     getTeacherAcademicSubjects: (teacherId: string): Promise<ApiResponse<any[]>> => {
         return api.get<any[]>(`/teachers/${teacherId}/subjects?isAcademic=true`);

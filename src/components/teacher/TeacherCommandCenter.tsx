@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
-  Activity,
+  Activity as ActivityIcon,
   Calendar,
   Clock,
   DollarSign,
@@ -31,6 +31,7 @@ import {
   Upload,
   CheckCircle,
   AlertCircle,
+  XCircle,
   Timer,
   Mic,
   MicOff,
@@ -39,6 +40,11 @@ import {
   TrendingDown
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTeacherRecentActivity } from '@/hooks/useTeacherRecentActivity';
+import { useTeacherStudents } from '@/hooks/useTeacherStudents';
+import { useTeacherStats } from '@/hooks/useTeacherStats';
+import { useTeacherUpcomingSessions } from '@/hooks/useTeacherUpcomingSessions';
+import { Activity, ActivityType, ActivityPriority } from '@/types/activity';
 
 // Mock data for demonstration
 const mockTeacherData = {
@@ -112,12 +118,55 @@ const mockTeacherData = {
   }
 };
 
+// Helper function to format time left
+const formatTimeLeft = (minutes: number): string => {
+  if (minutes < 60) {
+    return `${minutes}m`;
+  } else if (minutes < 1440) { // less than 24 hours
+    const hours = Math.floor(minutes / 60);
+    const remainingMinutes = minutes % 60;
+    return remainingMinutes > 0 ? `${hours}h ${remainingMinutes}m` : `${hours}h`;
+  } else {
+    const days = Math.floor(minutes / 1440);
+    const remainingHours = Math.floor((minutes % 1440) / 60);
+    return remainingHours > 0 ? `${days}d ${remainingHours}h` : `${days}d`;
+  }
+};
+
+// Helper function to format start time
+const formatStartTime = (isoString: string): string => {
+  const date = new Date(isoString);
+  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+};
+
 const TeacherCommandCenter: React.FC = () => {
   const { user } = useAuth();
   const [isLive, setIsLive] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [liveStudents, setLiveStudents] = useState(0);
   const [classProgress, setClassProgress] = useState(0);
+  
+  // Fetch real dashboard data
+  const { activities, dashboardData, loading, error, refetch } = useTeacherRecentActivity({
+    teacherId: user?.teacherId || '',
+    limit: 10,
+    days: 7
+  });
+
+  // Fetch real students data
+  const { studentsData, loading: studentsLoading, error: studentsError, refetch: refetchStudents } = useTeacherStudents({
+    teacherId: user?.teacherId || '',
+  });
+
+  // Fetch real stats data
+  const { statsData, loading: statsLoading, error: statsError, refetch: refetchStats } = useTeacherStats({
+    teacherId: user?.teacherId || '',
+  });
+
+  // Fetch upcoming sessions
+  const { upcomingSessions, loading: sessionsLoading, error: sessionsError, refetch: refetchSessions } = useTeacherUpcomingSessions({
+    teacherId: user?.teacherId || '',
+  });
 
   useEffect(() => {
     // Update time every minute
@@ -157,16 +206,22 @@ const TeacherCommandCenter: React.FC = () => {
           <div className="flex items-center space-x-4 text-sm text-gray-600">
             <div className="flex items-center space-x-1">
               <Users className="w-4 h-4" />
-              <span>{mockTeacherData.totalStudents} students</span>
+              <span>{studentsData?.totalStudents || 0} students</span>
             </div>
             <div className="flex items-center space-x-1">
-              <DollarSign className="w-4 h-4" />
-              <span>${mockTeacherData.weekEarnings}</span>
+              <BookOpen className="w-4 h-4" />
+              <span>{statsData?.totalClasses || 0} classes</span>
             </div>
             <div className="flex items-center space-x-1">
               <Clock className="w-4 h-4" />
-              <span>Next: {mockTeacherData.nextClass.time}</span>
+              <span>{statsData?.totalHoursCompleted || 0}h completed</span>
             </div>
+            {statsData?.nextUpcomingClassSession && (
+              <div className="flex items-center space-x-1">
+                <Calendar className="w-4 h-4" />
+                <span>Next: {formatTimeLeft(statsData.nextUpcomingClassSession.timeLeft)}</span>
+              </div>
+            )}
           </div>
           
           <div className="flex items-center space-x-3">
@@ -179,7 +234,7 @@ const TeacherCommandCenter: React.FC = () => {
               <AvatarFallback>SJ</AvatarFallback>
             </Avatar>
             <div className="text-sm">
-              <div className="font-medium">{mockTeacherData.name}</div>
+              <div className="font-medium">{studentsData?.teacherName || user?.fullName || 'Teacher'}</div>
             </div>
           </div>
         </div>
@@ -245,87 +300,167 @@ const TeacherCommandCenter: React.FC = () => {
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-xl font-bold text-blue-900">
-                {mockTeacherData.nextClass.subject} starts in {mockTeacherData.nextClass.time}
+                {statsData?.nextUpcomingClassSession?.title || 'No upcoming class'} 
+                {statsData?.nextUpcomingClassSession && ` starts in ${formatTimeLeft(statsData.nextUpcomingClassSession.timeLeft)}`}
               </h2>
-              <p className="text-blue-700">{mockTeacherData.nextClass.students} students enrolled</p>
+              <p className="text-blue-700">
+                {statsData?.nextUpcomingClassSession 
+                  ? `${statsData.nextUpcomingClassSession.enrolledStudents} students enrolled`
+                  : 'Schedule your next class to see upcoming sessions'
+                }
+              </p>
             </div>
             <div className="flex space-x-2">
-              <Button 
-                size="sm" 
-                onClick={() => {
-                  setIsLive(true);
-                  setLiveStudents(15);
-                  setClassProgress(5);
-                }}
-              >
-                <PlayCircle className="w-4 h-4 mr-1" />
-                Start Early
-              </Button>
+              {statsData?.nextUpcomingClassSession ? (
+                <Button 
+                  size="sm" 
+                  onClick={() => {
+                    setIsLive(true);
+                    setLiveStudents(15);
+                    setClassProgress(5);
+                  }}
+                >
+                  <PlayCircle className="w-4 h-4 mr-1" />
+                  Start Early
+                </Button>
+              ) : (
+                <Button size="sm" variant="outline" disabled>
+                  <Calendar className="w-4 h-4 mr-1" />
+                  No Class Scheduled
+                </Button>
+              )}
             </div>
           </div>
           
-          <div className="mt-4 flex items-center space-x-4">
-            <div className="flex items-center space-x-2">
-              <CheckCircle className="w-5 h-5 text-green-500" />
-              <span className="text-sm text-blue-700">Materials Ready</span>
+          {statsData?.nextUpcomingClassSession && (
+            <div className="mt-4 space-y-3">
+              {/* Overall Readiness Progress */}
+              <div className="bg-white/20 rounded-lg p-3">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-sm font-medium text-blue-900">Class Readiness</span>
+                  <span className="text-sm font-bold text-blue-900">
+                    {statsData.nextUpcomingClassSession.readiness?.overallReadiness || 0}%
+                  </span>
+                </div>
+                <Progress 
+                  value={statsData.nextUpcomingClassSession.readiness?.overallReadiness || 0} 
+                  className="h-2"
+                />
+              </div>
+              
+              {/* Readiness Status Items */}
+              <div className="grid grid-cols-2 gap-2">
+                <div className="flex items-center space-x-2">
+                  {statsData.nextUpcomingClassSession.readiness?.lessonPlanReady ? (
+                    <CheckCircle className="w-4 h-4 text-green-500" />
+                  ) : (
+                    <XCircle className="w-4 h-4 text-red-500" />
+                  )}
+                  <span className={`text-xs ${statsData.nextUpcomingClassSession.readiness?.lessonPlanReady ? 'text-green-700' : 'text-red-700'}`}>
+                    Lesson Plan
+                  </span>
+                </div>
+                
+                <div className="flex items-center space-x-2">
+                  {statsData.nextUpcomingClassSession.readiness?.materialsReady ? (
+                    <CheckCircle className="w-4 h-4 text-green-500" />
+                  ) : (
+                    <XCircle className="w-4 h-4 text-red-500" />
+                  )}
+                  <span className={`text-xs ${statsData.nextUpcomingClassSession.readiness?.materialsReady ? 'text-green-700' : 'text-red-700'}`}>
+                    Materials
+                  </span>
+                </div>
+                
+                <div className="flex items-center space-x-2">
+                  {statsData.nextUpcomingClassSession.readiness?.zoomSetup ? (
+                    <CheckCircle className="w-4 h-4 text-green-500" />
+                  ) : (
+                    <XCircle className="w-4 h-4 text-red-500" />
+                  )}
+                  <span className={`text-xs ${statsData.nextUpcomingClassSession.readiness?.zoomSetup ? 'text-green-700' : 'text-red-700'}`}>
+                    Zoom Setup
+                  </span>
+                </div>
+                
+                <div className="flex items-center space-x-2">
+                  {statsData.nextUpcomingClassSession.readiness?.studentsNotified ? (
+                    <CheckCircle className="w-4 h-4 text-green-500" />
+                  ) : (
+                    <XCircle className="w-4 h-4 text-red-500" />
+                  )}
+                  <span className={`text-xs ${statsData.nextUpcomingClassSession.readiness?.studentsNotified ? 'text-green-700' : 'text-red-700'}`}>
+                    Students Notified
+                  </span>
+                </div>
+              </div>
             </div>
-            <div className="flex items-center space-x-2">
-              <CheckCircle className="w-5 h-5 text-green-500" />
-              <span className="text-sm text-blue-700">Room Setup</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <CheckCircle className="w-5 h-5 text-green-500" />
-              <span className="text-sm text-blue-700">Reminder Sent</span>
-            </div>
-          </div>
+          )}
         </CardContent>
       </Card>
     );
   };
 
-  const TodaysOverview = () => (
+  const UpcomingSessionsOverview = () => (
     <div className="space-y-6">
-      {/* Class Timeline */}
+      {/* Upcoming Sessions Timeline */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
-            <Calendar className="w-5 h-5" />
-            <span>Today's Schedule</span>
+          <CardTitle className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <Calendar className="w-5 h-5" />
+              <span>Upcoming Schedule</span>
+            </div>
+            {sessionsLoading && <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />}
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-3">
-            {mockTeacherData.todayClasses.map((classItem) => (
-              <div key={classItem.id} className="flex items-center justify-between p-3 rounded-lg border">
-                <div className="flex items-center space-x-3">
-                  <div className={`w-3 h-3 rounded-full ${
-                    classItem.status === 'completed' ? 'bg-green-500' :
-                    classItem.status === 'upcoming' ? 'bg-blue-500' : 'bg-gray-300'
-                  }`}></div>
-                  <div>
-                    <div className="font-medium">{classItem.subject}</div>
-                    <div className="text-sm text-gray-600">
-                      {classItem.time} • {classItem.duration} • {classItem.students} students
+          {sessionsError ? (
+            <div className="text-red-600 text-sm p-2 bg-red-50 rounded">
+              Error loading sessions: {sessionsError}
+              <Button variant="outline" size="sm" onClick={refetchSessions} className="ml-2">
+                Retry
+              </Button>
+            </div>
+          ) : upcomingSessions.length === 0 ? (
+            <div className="text-center py-6 text-gray-500">
+              <Calendar className="w-12 h-12 mx-auto mb-2 text-gray-300" />
+              <p>No upcoming sessions scheduled</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {upcomingSessions.map((session) => (
+                <div key={session.classId} className="flex items-center justify-between p-3 rounded-lg border">
+                  <div className="flex items-center space-x-3">
+                    <div className={`w-3 h-3 rounded-full ${
+                      session.readiness.overallReadiness >= 80 ? 'bg-green-500' :
+                      session.readiness.overallReadiness >= 50 ? 'bg-yellow-500' : 'bg-red-500'
+                    }`}></div>
+                    <div>
+                      <div className="font-medium">{session.title}</div>
+                      <div className="text-sm text-gray-600">
+                        {formatStartTime(session.startTime)} • {session.duration}min • {session.enrolledStudents} students
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        {session.cohortName} • starts in {formatTimeLeft(session.timeLeft)}
+                      </div>
                     </div>
                   </div>
-                </div>
-                <div className="flex items-center space-x-2">
-                  {classItem.status === 'completed' && (
-                    <Badge variant="secondary">
-                      <Star className="w-3 h-3 mr-1" />
-                      {classItem.satisfaction}
+                  <div className="flex items-center space-x-2">
+                    <Badge variant={session.readiness.overallReadiness >= 80 ? "default" : session.readiness.overallReadiness >= 50 ? "secondary" : "destructive"}>
+                      {session.readiness.overallReadiness}% ready
                     </Badge>
-                  )}
-                  {classItem.status === 'upcoming' && !classItem.materialsReady && (
-                    <Badge variant="destructive">
-                      <AlertCircle className="w-3 h-3 mr-1" />
-                      Materials
-                    </Badge>
-                  )}
+                    {session.readiness.overallReadiness < 80 && (
+                      <Badge variant="outline" className="text-orange-600">
+                        <AlertCircle className="w-3 h-3 mr-1" />
+                        Needs prep
+                      </Badge>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -335,35 +470,91 @@ const TeacherCommandCenter: React.FC = () => {
           <CardTitle className="flex items-center space-x-2">
             <UserCheck className="w-5 h-5" />
             <span>Student Activity</span>
+            {(loading || studentsLoading || statsLoading) && <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin ml-2" />}
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Next class check-ins</span>
-              <span className="font-medium">
-                {mockTeacherData.studentActivity.checkedIn}/{mockTeacherData.studentActivity.total}
-              </span>
+          {error ? (
+            <div className="text-red-600 text-sm p-2 bg-red-50 rounded">
+              Error loading activity: {error}
+              <Button variant="outline" size="sm" onClick={refetch} className="ml-2">
+                Retry
+              </Button>
             </div>
-            
-            <div>
-              <h4 className="font-medium text-sm mb-2">Recent Achievements</h4>
-              {mockTeacherData.studentActivity.recentAchievements.map((achievement, index) => (
-                <div key={index} className="text-sm text-green-700 mb-1">
-                  🎉 {achievement.student}: {achievement.achievement}
+          ) : (
+            <div className="space-y-4">
+              {/* Performance Summary */}
+              {studentsData?.performanceSummary && (
+                <div>
+                  <h4 className="font-medium text-sm mb-3">Student Performance Summary</h4>
+                  <div className="grid grid-cols-2 gap-3 mb-4">
+                    <div className="text-center p-2 bg-green-50 rounded">
+                      <div className="text-lg font-bold text-green-700">{studentsData.performanceSummary.highPerformers}</div>
+                      <div className="text-xs text-green-600">High Performers</div>
+                    </div>
+                    <div className="text-center p-2 bg-blue-50 rounded">
+                      <div className="text-lg font-bold text-blue-700">{studentsData.performanceSummary.active}</div>
+                      <div className="text-xs text-blue-600">Active</div>
+                    </div>
+                    <div className="text-center p-2 bg-orange-50 rounded">
+                      <div className="text-lg font-bold text-orange-700">{studentsData.performanceSummary.needsAttention}</div>
+                      <div className="text-xs text-orange-600">Needs Attention</div>
+                    </div>
+                    <div className="text-center p-2 bg-gray-50 rounded">
+                      <div className="text-lg font-bold text-gray-700">{studentsData.performanceSummary.inactive}</div>
+                      <div className="text-xs text-gray-600">Inactive</div>
+                    </div>
+                  </div>
                 </div>
-              ))}
-            </div>
-            
-            <div>
-              <h4 className="font-medium text-sm mb-2">Needs Attention</h4>
-              {mockTeacherData.studentActivity.needsAttention.map((item, index) => (
-                <div key={index} className="text-sm text-orange-700 mb-1">
-                  ⚠️ {item.student}: {item.issue}
+              )}
+
+              {studentsError && (
+                <div className="text-red-600 text-sm p-2 bg-red-50 rounded">
+                  Error loading students: {studentsError}
+                  <Button variant="outline" size="sm" onClick={refetchStudents} className="ml-2">
+                    Retry
+                  </Button>
                 </div>
-              ))}
+              )}
+
+              {statsError && (
+                <div className="text-red-600 text-sm p-2 bg-red-50 rounded">
+                  Error loading stats: {statsError}
+                  <Button variant="outline" size="sm" onClick={refetchStats} className="ml-2">
+                    Retry
+                  </Button>
+                </div>
+              )}
+
+              {statsData?.nextUpcomingClassSession && (
+                <div className="p-3 bg-blue-50 rounded-lg">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium text-blue-900">Next Class</span>
+                    <span className="text-xs text-blue-600">
+                      {formatTimeLeft(statsData.nextUpcomingClassSession.timeLeft)} left
+                    </span>
+                  </div>
+                  <div className="text-sm text-blue-700">{statsData.nextUpcomingClassSession.title}</div>
+                  <div className="text-xs text-blue-600 mt-1">
+                    {statsData.nextUpcomingClassSession.cohortName} • {statsData.nextUpcomingClassSession.enrolledStudents} students
+                  </div>
+                </div>
+              )}
+              
+              <div>
+                <h4 className="font-medium text-sm mb-2">Recent Activity</h4>
+                {activities.length === 0 ? (
+                  <p className="text-sm text-gray-500">No recent activity</p>
+                ) : (
+                  <div className="space-y-2 max-h-48 overflow-y-auto">
+                    {activities.map((activity, index) => (
+                      <ActivityItem key={index} activity={activity} />
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
+          )}
         </CardContent>
       </Card>
 
@@ -407,21 +598,29 @@ const TeacherCommandCenter: React.FC = () => {
         <CardContent>
           <div className="grid grid-cols-2 gap-4 mb-4">
             <div className="text-center">
-              <div className="text-3xl font-bold text-orange-500">{mockTeacherData.teachingStreak}</div>
-              <div className="text-sm text-gray-600">Day Streak 🔥</div>
+              <div className="text-3xl font-bold text-orange-500">{statsData?.activeCohorts || 0}</div>
+              <div className="text-sm text-gray-600">Active Cohorts</div>
             </div>
             <div className="text-center">
-              <div className="text-3xl font-bold text-green-600">{mockTeacherData.rating}</div>
-              <div className="text-sm text-gray-600">Satisfaction ⭐</div>
+              <div className="text-3xl font-bold text-green-600">{statsData?.averageRating || 0}</div>
+              <div className="text-sm text-gray-600">Average Rating ⭐</div>
             </div>
           </div>
           
           <div className="space-y-2">
             <div className="flex justify-between">
-              <span className="text-sm">Engagement Rate</span>
-              <span className="text-sm font-medium">{mockTeacherData.performance.engagement}%</span>
+              <span className="text-sm">Completion Rate</span>
+              <span className="text-sm font-medium">{statsData?.completionRate || 0}%</span>
             </div>
-            <Progress value={mockTeacherData.performance.engagement} className="h-2" />
+            <Progress value={statsData?.completionRate || 0} className="h-2" />
+          </div>
+          
+          <div className="space-y-2 mt-3">
+            <div className="flex justify-between">
+              <span className="text-sm">Hours Progress</span>
+              <span className="text-sm font-medium">{statsData?.totalHoursCompleted || 0}/{statsData?.totalHoursScheduled || 0}h</span>
+            </div>
+            <Progress value={statsData ? (statsData.totalHoursCompleted / Math.max(statsData.totalHoursScheduled, 1)) * 100 : 0} className="h-2" />
           </div>
         </CardContent>
       </Card>
@@ -547,7 +746,7 @@ const TeacherCommandCenter: React.FC = () => {
         
         <div className="grid grid-cols-5 gap-6">
           <div className="col-span-2">
-            <TodaysOverview />
+            <UpcomingSessionsOverview />
           </div>
           <div className="col-span-3">
             <PerformanceInsights />
@@ -556,6 +755,102 @@ const TeacherCommandCenter: React.FC = () => {
       </div>
       
       <QuickActionsHub />
+    </div>
+  );
+};
+
+// Activity Item Component
+interface ActivityItemProps {
+  activity: Activity;
+}
+
+const ActivityItem: React.FC<ActivityItemProps> = ({ activity }) => {
+  const getActivityIcon = (type: ActivityType) => {
+    switch (type) {
+      case 'new_enrollment':
+        return '👋';
+      case 'progress_update':
+        return '📈';
+      case 'completion':
+        return '🎉';
+      case 'needs_attention':
+        return '⚠️';
+      case 'upcoming_session':
+        return '📅';
+      default:
+        return '📝';
+    }
+  };
+
+  const getPriorityColor = (priority: ActivityPriority) => {
+    switch (priority) {
+      case 'high':
+        return 'text-red-600';
+      case 'medium':
+        return 'text-orange-600';
+      case 'low':
+        return 'text-blue-600';
+      default:
+        return 'text-gray-600';
+    }
+  };
+
+  const formatTimestamp = (timestamp: Date) => {
+    const now = new Date();
+    const diff = now.getTime() - timestamp.getTime();
+    const minutes = Math.floor(diff / (1000 * 60));
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+
+    if (minutes < 60) {
+      return `${minutes}m ago`;
+    } else if (hours < 24) {
+      return `${hours}h ago`;
+    } else {
+      return `${days}d ago`;
+    }
+  };
+
+  return (
+    <div className={`text-sm p-2 rounded-md border-l-4 ${
+      activity.priority === 'high' ? 'border-red-500 bg-red-50' :
+      activity.priority === 'medium' ? 'border-orange-500 bg-orange-50' :
+      'border-blue-500 bg-blue-50'
+    }`}>
+      <div className="flex items-start justify-between">
+        <div className="flex-1">
+          <div className="flex items-center space-x-2">
+            <span>{getActivityIcon(activity.type)}</span>
+            <span className={`font-medium ${getPriorityColor(activity.priority)}`}>
+              {activity.description}
+            </span>
+          </div>
+          {activity.studentName && (
+            <div className="text-xs text-gray-500 mt-1">
+              Student: {activity.studentName}
+              {activity.classTitle && ` • ${activity.classTitle}`}
+            </div>
+          )}
+          {activity.actionRequired && (
+            <div className="text-xs text-gray-700 mt-1 font-medium">
+              Action: {activity.actionRequired}
+            </div>
+          )}
+          {activity.details && (
+            <div className="text-xs text-gray-500 mt-1">
+              {activity.details.attendanceRatio !== undefined && (
+                <span>Attendance: {activity.details.attendanceRatio}% • </span>
+              )}
+              {activity.details.progressRatio !== undefined && (
+                <span>Progress: {activity.details.progressRatio}%</span>
+              )}
+            </div>
+          )}
+        </div>
+        <span className="text-xs text-gray-400 ml-2">
+          {formatTimestamp(activity.timestamp)}
+        </span>
+      </div>
     </div>
   );
 };
