@@ -1,6 +1,81 @@
 // Enhanced Class Types for Command Center
 import { Class, ClassDetail } from '@/integrations/api/services/class.service';
 
+// Teacher Summary API Response Types
+export interface TeacherSummaryResponse {
+  teacherId: string;
+  classes: TeacherClassSummary[];
+  totalClasses: number;
+  totalStudents: number;
+  analytics: TeacherAnalytics;
+}
+
+export interface TeacherClassSummary {
+  classId: string;
+  title: string;
+  subject: string;
+  type: string;
+  enrolledStudents: number;
+  maxCapacity: number;
+  activeCohorts: number;
+  progressPercentage: number;
+  averageEngagement: number;
+  rating: number;
+  isPublished: boolean;
+  nextSession?: NextSessionInfo;
+  classState: 'prep' | 'ready' | 'in-progress' | 'completed';
+}
+
+export interface NextSessionInfo {
+  classId: string;
+  title: string;
+  description: string;
+  lessonNumber: number;
+  cohortName: string;
+  startTime: string;
+  duration: number;
+  timeLeft: number;
+  enrolledStudents: number;
+  readiness: {
+    overallReadiness: number;
+  };
+}
+
+export interface TeacherAnalytics {
+  overallPerformance: OverallPerformance;
+  trends: PerformanceTrends;
+  insights: string[];
+  recentActivity: RecentActivity;
+  classHealthScore: number;
+}
+
+export interface OverallPerformance {
+  averageEngagement: number;
+  averageProgress: number;
+  averageAttendance: number;
+  studentDistribution: StudentDistribution;
+}
+
+export interface StudentDistribution {
+  highPerformers: number;
+  active: number;
+  needsAttention: number;
+  inactive: number;
+}
+
+export interface PerformanceTrends {
+  engagementTrend: 'improving' | 'declining' | 'stable';
+  attendanceTrend: 'improving' | 'declining' | 'stable';
+  completionTrend: 'improving' | 'declining' | 'stable';
+}
+
+export interface RecentActivity {
+  newEnrollments: number;
+  completedAssignments: number;
+  upcomingSessions: number;
+  activeStudentsThisWeek: number;
+}
+
 // Enhanced class interface that extends the existing API class
 export interface EnhancedClass extends Class {
   // Computed enhancements

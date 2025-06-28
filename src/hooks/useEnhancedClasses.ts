@@ -4,7 +4,9 @@ import {
   EnhancedClass, 
   TeachingAnalytics, 
   CrossClassSynergy,
-  DashboardSettings 
+  DashboardSettings,
+  TeacherClassSummary,
+  TeacherSummaryResponse
 } from '@/types/enhanced-classes';
 import { 
   enhanceClassesData, 
@@ -13,23 +15,112 @@ import {
   saveEnhancedData,
   loadEnhancedData
 } from '@/utils/mockEnhancements';
+import { useTeacherSummary } from './useTeacherSummary';
 
 interface UseEnhancedClassesOptions {
   enablePersistence?: boolean;
   refreshInterval?: number; // in milliseconds
+  useRealData?: boolean; // Toggle between real API data and mock data
+  teacherId?: string; // Required when useRealData is true
 }
 
 export const useEnhancedClasses = (
   classes: Class[], 
   options: UseEnhancedClassesOptions = {}
 ) => {
-  const { enablePersistence = true, refreshInterval = 60000 } = options;
+  const { enablePersistence = true, refreshInterval = 60000, useRealData = false, teacherId } = options;
+  
+  // Fetch real teacher summary data when enabled
+  const { 
+    summaryData, 
+    loading: summaryLoading, 
+    error: summaryError 
+  } = useTeacherSummary({
+    teacherId: teacherId || '',
+    refreshInterval: useRealData ? refreshInterval : 0 // Only refresh if using real data
+  });
   
   const [enhancedClasses, setEnhancedClasses] = useState<EnhancedClass[]>([]);
   const [analytics, setAnalytics] = useState<TeachingAnalytics | null>(null);
   const [synergies, setSynergies] = useState<CrossClassSynergy[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+
+  // Helper function to convert TeacherClassSummary to EnhancedClass format
+  const convertSummaryToEnhanced = (summaryClasses: TeacherClassSummary[]): EnhancedClass[] => {
+    return summaryClasses.map(summary => ({
+      // Base class properties
+      _id: summary.classId,
+      id: summary.classId,
+      title: summary.title,
+      subject: summary.subject,
+      type: summary.type,
+      gradeLevel: '',
+      teacher: { _id: teacherId || '', name: '' },
+      rating: summary.rating,
+      totalReviews: 0,
+      discount: 0,
+      isFeatured: false,
+      status: summary.isPublished ? 'published' : 'draft',
+      createdAt: '',
+      updatedAt: '',
+      
+      // Enhanced properties mapped from summary
+      nextLesson: summary.nextSession ? {
+        lessonNumber: summary.nextSession.lessonNumber,
+        topic: summary.nextSession.title,
+        scheduledDate: new Date(summary.nextSession.startTime),
+        duration: summary.nextSession.duration,
+        preparationStatus: summary.nextSession.readiness.overallReadiness >= 80 ? 'ready' : 
+                         summary.nextSession.readiness.overallReadiness >= 50 ? 'needs-prep' : 'critical',
+        studentsNeedingHelp: 0,
+        materialsReady: summary.nextSession.readiness.overallReadiness >= 80,
+        description: summary.nextSession.description,
+        objectives: []
+      } : undefined,
+      
+      momentum: {
+        engagementTrend: 'stable' as const,
+        streakDays: 0,
+        overallScore: Math.round(summary.averageEngagement || 0),
+        attendanceRate: 0,
+        participationRate: Math.round(summary.averageEngagement || 0),
+        completionRate: Math.round(summary.progressPercentage || 0)
+      },
+      
+      preparationStatus: summary.classState === 'ready' ? 'ready' : 
+                        summary.classState === 'prep' ? 'needs-prep' : 'critical',
+      
+      studentInsights: {
+        totalStudents: summary.enrolledStudents,
+        activeStudents: summary.enrolledStudents,
+        strugglingStudents: 0,
+        excellingStudents: 0,
+        engagementLevel: summary.averageEngagement >= 80 ? 'high' : 
+                        summary.averageEngagement >= 60 ? 'medium' : 'low',
+        averagePerformance: Math.round(summary.averageEngagement || 0),
+        recentActivity: []
+      },
+      
+      performanceMetrics: {
+        lessonCompletionRate: Math.round(summary.progressPercentage || 0),
+        averageAttendance: 0,
+        studentSatisfaction: summary.rating,
+        teachingEffectiveness: Math.round(summary.averageEngagement || 0),
+        improvementTrend: 'stable' as const,
+        weeklyProgress: []
+      },
+      
+      objectives: [],
+      alerts: [],
+      
+      // Enrollment data
+      enrollment: {
+        current: summary.enrolledStudents,
+        capacity: summary.maxCapacity
+      }
+    }));
+  };
 
   // Settings for dashboard customization
   const [dashboardSettings, setDashboardSettings] = useState<DashboardSettings>({
@@ -66,8 +157,34 @@ export const useEnhancedClasses = (
     }
   }, [dashboardSettings, enablePersistence]);
 
-  // Enhance classes data when base classes change
+  // Enhance classes data when base classes change or summary data is available
   useEffect(() => {
+    // Handle the case when using real data
+    if (useRealData && teacherId) {
+      if (summaryData && summaryData.classes.length > 0) {
+        setIsLoading(true);
+        try {
+          const enhanced = convertSummaryToEnhanced(summaryData.classes);
+          setEnhancedClasses(enhanced);
+          setAnalytics(generateTeachingAnalytics(enhanced));
+          setSynergies(generateCrossClassSynergies(enhanced));
+          setLastUpdated(new Date());
+        } catch (error) {
+          console.error('Failed to process teacher summary data:', error);
+        } finally {
+          setIsLoading(false);
+        }
+      } else if (!summaryLoading) {
+        // No summary data available
+        setEnhancedClasses([]);
+        setAnalytics(null);
+        setSynergies([]);
+        setIsLoading(false);
+      }
+      return;
+    }
+
+    // Fallback to mock data enhancement
     if (classes.length === 0) {
       setEnhancedClasses([]);
       setAnalytics(null);
@@ -114,7 +231,7 @@ export const useEnhancedClasses = (
     } finally {
       setIsLoading(false);
     }
-  }, [classes, enablePersistence]);
+  }, [classes, enablePersistence, useRealData, teacherId, summaryData, summaryLoading]);
 
   // Periodic refresh of dynamic data
   useEffect(() => {
@@ -314,8 +431,9 @@ export const useEnhancedClasses = (
     dashboardSettings,
     
     // State
-    isLoading,
+    isLoading: isLoading || (useRealData && summaryLoading),
     lastUpdated,
+    error: useRealData ? summaryError : null,
     
     // Utilities
     getFilteredClasses,

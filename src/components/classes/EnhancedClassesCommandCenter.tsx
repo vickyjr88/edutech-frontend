@@ -37,11 +37,8 @@ import TeachingIntelligenceDashboard from './TeachingIntelligenceDashboard';
 // Types and utilities
 import { Class } from '@/integrations/api/services/class.service';
 import { EnhancedClass, DashboardSettings, TeachingAnalytics } from '@/types/enhanced-classes';
-import { 
-  enhanceClassesData, 
-  generateTeachingAnalytics,
-  generateCrossClassSynergies 
-} from '@/utils/mockEnhancements';
+import { useEnhancedClasses } from '@/hooks/useEnhancedClasses';
+import { useTeacherId } from '@/hooks/useTeacherId';
 
 // Existing components for fallback
 import RecommendedClasses from '../teacher/RecommendedClasses';
@@ -73,30 +70,25 @@ const EnhancedClassesCommandCenter: React.FC<EnhancedClassesCommandCenterProps> 
 }) => {
   const [activeClassTab, setActiveClassTab] = useState<ClassStatus>('published');
   const [viewMode, setViewMode] = useState<ViewMode>('command-center');
-  const [enhancedClasses, setEnhancedClasses] = useState<EnhancedClass[]>([]);
-  const [analytics, setAnalytics] = useState<TeachingAnalytics | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [dashboardSettings, setDashboardSettings] = useState<DashboardSettings>({
-    layout: 'grid',
-    sortBy: 'momentum',
-    sortDirection: 'desc',
-    filters: {
-      status: [],
-      performance: [],
-      needsAttention: false
-    },
-    cardSize: 'normal',
-    showPreview: true
-  });
 
-  // Enhanced data generation
-  useEffect(() => {
-    if (classes.length > 0) {
-      const enhanced = enhanceClassesData(classes);
-      setEnhancedClasses(enhanced);
-      setAnalytics(generateTeachingAnalytics(enhanced));
-    }
-  }, [classes]);
+  // Get teacher ID for real data fetching
+  const { teacherId, loading: teacherIdLoading } = useTeacherId();
+
+  // Use enhanced classes hook with real data when teacher ID is available
+  const {
+    enhancedClasses,
+    analytics,
+    dashboardSettings,
+    isLoading: enhancedLoading,
+    error: enhancedError,
+    updateDashboardSettings
+  } = useEnhancedClasses(classes, {
+    useRealData: !!teacherId, // Use real data when teacher ID is available
+    teacherId: teacherId || undefined,
+    enablePersistence: true,
+    refreshInterval: 60000 // Refresh every minute
+  });
 
   // Categorize classes by status
   const categorizeClasses = () => {
@@ -276,11 +268,29 @@ const EnhancedClassesCommandCenter: React.FC<EnhancedClassesCommandCenterProps> 
   );
 
   const renderEnhancedClassGrid = (classes: EnhancedClass[]) => {
-    if (isLoading) {
+    const isLoadingData = isLoading || enhancedLoading || teacherIdLoading;
+    
+    if (isLoadingData) {
       return (
         <div className="flex items-center justify-center py-12">
           <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
-          <span className="ml-2 text-gray-600">Loading your classes...</span>
+          <span className="ml-2 text-gray-600">
+            {teacherIdLoading ? 'Getting your profile...' : 
+             enhancedLoading ? 'Loading enhanced class data...' : 
+             'Loading your classes...'}
+          </span>
+        </div>
+      );
+    }
+
+    // Show error state if there's an API error
+    if (enhancedError) {
+      return (
+        <div className="flex items-center justify-center py-12">
+          <AlertCircle className="h-8 w-8 text-red-400" />
+          <span className="ml-2 text-red-600">
+            Failed to load class data: {enhancedError}
+          </span>
         </div>
       );
     }
@@ -297,7 +307,7 @@ const EnhancedClassesCommandCenter: React.FC<EnhancedClassesCommandCenterProps> 
       }`}>
         {classes.map(classData => (
           <EnhancedClassCard
-            key={classData.id}
+            key={classData._id}
             classData={classData}
             onViewClass={(cls) => handleCardAction('view', cls)}
             onEditClass={(cls) => handleCardAction('edit', cls)}

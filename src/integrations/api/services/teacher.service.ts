@@ -8,6 +8,7 @@ import {
     ExperienceItem, LanguageItem, MethodologyItem, StrategyItem, TechnicalSkillItem
 } from "@/components/teacher/professional-profile";
 import {formatDateForDatabase} from "@/components/teacher/professional-profile/utils/educationUtils.ts";
+import type { TeacherSummaryResponse } from '@/types/enhanced-classes';
 
 export interface BaseEntity {
     _id: string;
@@ -486,6 +487,10 @@ export const teacherService = {
         classPerformance: any[];
     }>> => {
         return api.get<any>(`/teachers/${teacherId}/dashboard`, { params });
+    },
+
+    getTeacherSummary: async (teacherId: string): Promise<ApiResponse<TeacherSummaryResponse>> => {
+        return api.get<TeacherSummaryResponse>(`/classes/teachers/${teacherId}/summary`);
     },
     getTeacherAcademicSubjects: (teacherId: string): Promise<ApiResponse<any[]>> => {
         return api.get<any[]>(`/teachers/${teacherId}/subjects?isAcademic=true`);
