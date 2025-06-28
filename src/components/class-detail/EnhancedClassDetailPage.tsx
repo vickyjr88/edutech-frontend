@@ -34,6 +34,7 @@ import LessonPlanCreatorModal from './LessonPlanCreatorModal';
 import { ClassDetailContext, TeachingMode } from '@/types/class-detail';
 import { enhanceClassDetailData } from '@/utils/classDetailEnhancements';
 import { cn } from '@/lib/utils';
+import { classService } from '@/integrations/api';
 
 interface EnhancedClassDetailPageProps {
   classData: any; // Raw class data from API
@@ -184,6 +185,18 @@ const EnhancedClassDetailPage: React.FC<EnhancedClassDetailPageProps> = ({
     // For now, we'll just refresh the data to show the new lesson in the timeline
     setRefreshKey(prev => prev + 1);
     setIsLessonModalOpen(false);
+    const {id,
+      sequenceNumber, 
+      teachingNotes,
+      difficultyLevel,
+      starterActivity,
+      plenaryActivity,
+      isCompleted,
+      ...payload} = lessonPlan;
+    classService.addLessonPlan(classData?._id, {
+      ...payload,
+      lessonNumber: sequenceNumber ?? classData.lessonPlans.length + 1
+    });
   };
 
   const getModeDescription = (mode: TeachingMode) => {
