@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -141,6 +142,7 @@ const formatStartTime = (isoString: string): string => {
 
 const TeacherCommandCenter: React.FC = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [isLive, setIsLive] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [liveStudents, setLiveStudents] = useState(0);
@@ -723,19 +725,62 @@ const TeacherCommandCenter: React.FC = () => {
     </div>
   );
 
-  const QuickActionsHub = () => (
-    <div className="fixed bottom-6 right-6 flex space-x-3">
-      <Button className="rounded-full w-12 h-12 shadow-lg" title="Create New Class">
-        <Plus className="w-5 h-5" />
-      </Button>
-      <Button variant="outline" className="rounded-full w-12 h-12 shadow-lg" title="Message Students">
-        <MessageCircle className="w-5 h-5" />
-      </Button>
-      <Button variant="outline" className="rounded-full w-12 h-12 shadow-lg" title="View Analytics">
-        <BarChart3 className="w-5 h-5" />
-      </Button>
-    </div>
-  );
+  // Navigation handlers for floating action buttons
+  const handleCreateNewClass = () => {
+    navigate('/teacher-class-setup');
+  };
+
+  const handleMessageStudents = () => {
+    navigate('/teacher-dashboard/students');
+  };
+
+  const handleViewAnalytics = () => {
+    // Navigate to a dedicated analytics page or expand current view
+    // For now, we'll navigate to the students page which has analytics
+    navigate('/teacher-dashboard/students');
+  };
+
+  const QuickActionsHub = () => {
+    const needsAttentionCount = studentsData?.performanceSummary?.needsAttention || 0;
+    
+    return (
+      <div className="fixed bottom-6 right-6 flex space-x-3 z-50">
+        <Button 
+          className="rounded-full w-12 h-12 shadow-lg hover:scale-110 transition-all duration-200 bg-gradient-to-r from-[#5e6ad2] to-[#abb4dd] hover:from-[#5e6ad2]/90 hover:to-[#abb4dd]/90" 
+          title="Create New Class - Start building your next course"
+          onClick={handleCreateNewClass}
+          aria-label="Create new class"
+        >
+          <Plus className="w-5 h-5 text-white" />
+        </Button>
+        
+        <Button 
+          variant="outline" 
+          className="rounded-full w-12 h-12 shadow-lg hover:scale-110 transition-all duration-200 relative bg-white/90 backdrop-blur-sm border-[#5e6ad2]/20 hover:border-[#5e6ad2] hover:bg-[#5e6ad2]/5" 
+          title={`Message Students - ${studentsData?.totalStudents || 0} students${needsAttentionCount > 0 ? `, ${needsAttentionCount} need attention` : ''}`}
+          onClick={handleMessageStudents}
+          aria-label={`Message students${needsAttentionCount > 0 ? ` (${needsAttentionCount} need attention)` : ''}`}
+        >
+          <MessageCircle className="w-5 h-5 text-[#5e6ad2]" />
+          {needsAttentionCount > 0 && (
+            <div className="absolute -top-1 -right-1 w-5 h-5 bg-[#f99325] text-white text-xs rounded-full flex items-center justify-center font-bold">
+              {needsAttentionCount > 9 ? '9+' : needsAttentionCount}
+            </div>
+          )}
+        </Button>
+        
+        <Button 
+          variant="outline" 
+          className="rounded-full w-12 h-12 shadow-lg hover:scale-110 transition-all duration-200 bg-white/90 backdrop-blur-sm border-[#5e6ad2]/20 hover:border-[#5e6ad2] hover:bg-[#5e6ad2]/5" 
+          title={`View Analytics - Track your teaching performance (${statsData?.averageRating || 0}⭐ rating)`}
+          onClick={handleViewAnalytics}
+          aria-label="View detailed analytics and performance metrics"
+        >
+          <BarChart3 className="w-5 h-5 text-[#5e6ad2]" />
+        </Button>
+      </div>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
