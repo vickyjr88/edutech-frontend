@@ -18,7 +18,8 @@ import {
   MoreHorizontal,
   Wand2,
   Copy,
-  Archive
+  Archive,
+  Sparkles
 } from 'lucide-react';
 
 // Enhanced components
@@ -35,6 +36,10 @@ import { ClassDetailContext, TeachingMode } from '@/types/class-detail';
 import { enhanceClassDetailData } from '@/utils/classDetailEnhancements';
 import { cn } from '@/lib/utils';
 import { classService } from '@/integrations/api';
+import { useTeacherId } from '@/hooks/useTeacherId';
+import { useTeacherSummary } from '@/hooks/useTeacherSummary';
+import { useTeacherStudents } from '@/hooks/useTeacherStudents';
+import { TeacherClassSummary } from '@/types/enhanced-classes';
 
 interface EnhancedClassDetailPageProps {
   classData: any; // Raw class data from API
@@ -52,11 +57,34 @@ const EnhancedClassDetailPage: React.FC<EnhancedClassDetailPageProps> = ({
   const [showEditMenu, setShowEditMenu] = useState(false);
   const [isLessonModalOpen, setIsLessonModalOpen] = useState(false);
 
+  // Get teacher data for enhanced analytics
+  const { teacherId, loading: teacherIdLoading } = useTeacherId();
+  const { summaryData, loading: summaryLoading } = useTeacherSummary({ 
+    teacherId: teacherId || '', 
+    refreshInterval: 60000 
+  });
+  const { studentsData, loading: studentsLoading } = useTeacherStudents({
+    teacherId: teacherId || '',
+    refreshInterval: 60000
+  });
+  
+  // Find the current class in the teacher summary data
+  const currentClassSummary = summaryData?.classes?.find(
+    (cls: TeacherClassSummary) => cls.classId === classData?._id || cls.classId === classData?.id
+  );
+
   // Initialize enhanced context
   useEffect(() => {
+    if (teacherIdLoading || summaryLoading || studentsLoading) return;
+    
     setIsLoading(true);
     try {
-      const enhancedContext = enhanceClassDetailData(classData);
+      // Pass class data, teacher summary data, and students data to enhancement function
+      const enhancedContext = enhanceClassDetailData(classData, {
+        teacherSummary: summaryData,
+        currentClassSummary: currentClassSummary,
+        studentsData: studentsData
+      });
       setContext(enhancedContext);
       
       // Set initial tab based on mode
@@ -70,7 +98,7 @@ const EnhancedClassDetailPage: React.FC<EnhancedClassDetailPageProps> = ({
     } finally {
       setIsLoading(false);
     }
-  }, [classData, refreshKey]);
+  }, [classData, refreshKey, summaryData, currentClassSummary, studentsData, teacherIdLoading, summaryLoading, studentsLoading]);
 
   // Auto-refresh during live teaching
   useEffect(() => {
@@ -201,11 +229,11 @@ const EnhancedClassDetailPage: React.FC<EnhancedClassDetailPageProps> = ({
 
   const getModeDescription = (mode: TeachingMode) => {
     switch (mode) {
-      case 'prep': return 'Preparation & Planning Phase';
-      case 'ready': return 'Final Readiness Checks';
-      case 'teaching': return 'Live Teaching Session';
-      case 'reflect': return 'Post-Session Reflection';
-      default: return 'Teaching Mode';
+      case 'prep': return 'Class Preparation - Lesson planning & material organization';
+      case 'ready': return 'Final Checks - Pre-class readiness verification';
+      case 'teaching': return 'Live Session - Active teaching with real-time insights';
+      case 'reflect': return 'Session Review - Performance analysis & next steps';
+      default: return 'Teaching Assistant Mode';
     }
   };
 
@@ -219,7 +247,7 @@ const EnhancedClassDetailPage: React.FC<EnhancedClassDetailPageProps> = ({
     }
   };
 
-  if (isLoading || !context) {
+  if (isLoading || !context || teacherIdLoading || summaryLoading || studentsLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -243,7 +271,11 @@ const EnhancedClassDetailPage: React.FC<EnhancedClassDetailPageProps> = ({
                 </Button>
               )}
               <div>
-                <h1 className="text-xl font-semibold text-gray-900">Class Command Center</h1>
+                <div className="flex items-center gap-2">
+                  <Brain className="h-5 w-5 text-blue-600" />
+                  <h1 className="text-xl font-semibold text-gray-900">Class Command Center</h1>
+                  <Sparkles className="h-4 w-4 text-yellow-500" />
+                </div>
                 <div className="flex items-center gap-2 mt-1">
                   <Badge className={cn("border", getModeColor(context.currentMode))}>
                     {getModeDescription(context.currentMode)}
@@ -416,27 +448,27 @@ const EnhancedClassDetailPage: React.FC<EnhancedClassDetailPageProps> = ({
 
       {/* Live Teaching Mode Footer */}
       {context.currentMode === 'teaching' && (
-        <div className="fixed bottom-0 left-0 right-0 bg-red-600 text-white p-4 shadow-lg">
+        <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-r from-red-600 to-red-700 text-white p-4 shadow-xl border-t border-red-500">
           <div className="max-w-7xl mx-auto flex items-center justify-between">
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-red-300 rounded-full animate-pulse" />
-                <span className="font-medium">LIVE SESSION</span>
+                <div className="w-3 h-3 bg-white rounded-full animate-pulse" />
+                <span className="font-semibold">🎯 LIVE SESSION ACTIVE</span>
               </div>
-              <span className="text-red-100">
-                Session time: {Math.floor(Math.random() * 30) + 10} minutes
+              <span className="text-red-100 bg-red-500/30 px-2 py-1 rounded">
+                Teaching Mode - Real-time Analytics Enabled
               </span>
             </div>
             
             <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" className="text-red-600 border-red-200 bg-white">
-                Quick Poll
+              <Button variant="outline" size="sm" className="text-red-600 border-red-200 bg-white hover:bg-red-50">
+                📊 Quick Poll
               </Button>
-              <Button variant="outline" size="sm" className="text-red-600 border-red-200 bg-white">
-                Breakout Rooms
+              <Button variant="outline" size="sm" className="text-red-600 border-red-200 bg-white hover:bg-red-50">
+                👥 Breakout Rooms
               </Button>
-              <Button variant="outline" size="sm" className="text-red-600 border-red-200 bg-white">
-                End Session
+              <Button variant="outline" size="sm" className="text-red-600 border-red-200 bg-white hover:bg-red-50">
+                ⏹️ End Session
               </Button>
             </div>
           </div>

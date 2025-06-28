@@ -9,6 +9,7 @@ import {
 } from "@/components/teacher/professional-profile";
 import {formatDateForDatabase} from "@/components/teacher/professional-profile/utils/educationUtils.ts";
 import type { TeacherSummaryResponse } from '@/types/enhanced-classes';
+import type { TeacherStudentsData } from '@/types/activity';
 
 export interface BaseEntity {
     _id: string;
@@ -465,8 +466,8 @@ export const teacherService = {
         return api.get<any[]>(`/teachers/${teacherId}/students`);
     },
 
-    getTeacherStudentsWithStats: async (teacherId: string): Promise<ApiResponse<any>> => {
-        return api.get<any>(`/classes/teachers/${teacherId}/students`);
+    getTeacherStudentsWithStats: async (teacherId: string): Promise<ApiResponse<TeacherStudentsData>> => {
+        return api.get<TeacherStudentsData>(`/classes/teachers/${teacherId}/students`);
     },
 
     getTeacherStats: async (teacherId: string): Promise<ApiResponse<any>> => {

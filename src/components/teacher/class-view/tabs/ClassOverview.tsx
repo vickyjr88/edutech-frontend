@@ -1,14 +1,16 @@
-import { Backpack, CalendarDays, Layers, BookOpen, Users, Clock, GraduationCap } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Backpack, CalendarDays, Layers, BookOpen, Users, Clock, GraduationCap, Target, TrendingUp } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { ClassData } from "../TeacherClassView";
 import { Badge } from "@/components/ui/badge";
+import { TeacherClassSummary } from "@/types/enhanced-classes";
 
 interface ClassOverviewProps {
   classData: ClassData;
+  currentClassSummary?: TeacherClassSummary;
 }
 
-const ClassOverview = ({ classData }: ClassOverviewProps) => {
+const ClassOverview = ({ classData, currentClassSummary }: ClassOverviewProps) => {
   // Extract subject name from the API subject code (if possible)
   const getSubjectName = (subjectCode: string) => {
     // Subject codes like "cbc_junior-secondary_8" have a structure we can parse
@@ -100,8 +102,68 @@ const ClassOverview = ({ classData }: ClassOverviewProps) => {
 
   return (
     <div className="space-y-8">
+      {/* Next Session Info */}
+      {currentClassSummary?.nextSession && (
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <Clock className="h-5 w-5 text-blue-600" />
+              <span>Next Session</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-3">
+                <div>
+                  <h4 className="font-semibold text-lg">
+                    Lesson {currentClassSummary.nextSession.lessonNumber}: {currentClassSummary.nextSession.title}
+                  </h4>
+                  <p className="text-gray-600 mt-1">{currentClassSummary.nextSession.description}</p>
+                </div>
+                <div className="flex items-center space-x-4 text-sm text-gray-500">
+                  <span>{new Date(currentClassSummary.nextSession.startTime).toLocaleDateString()}</span>
+                  <span>{new Date(currentClassSummary.nextSession.startTime).toLocaleTimeString()}</span>
+                  <span>{currentClassSummary.nextSession.duration} minutes</span>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="text-center p-3 bg-blue-50 rounded-lg">
+                  <div className="flex items-center justify-center mb-1">
+                    <Users className="h-4 w-4 text-blue-600 mr-1" />
+                  </div>
+                  <div className="text-sm text-gray-500">Students</div>
+                  <div className="font-semibold text-blue-600">{currentClassSummary.nextSession.enrolledStudents}</div>
+                </div>
+                
+                <div className="text-center p-3 bg-green-50 rounded-lg">
+                  <div className="flex items-center justify-center mb-1">
+                    <Target className="h-4 w-4 text-green-600 mr-1" />
+                  </div>
+                  <div className="text-sm text-gray-500">Readiness</div>
+                  <div className="font-semibold text-green-600">
+                    {Math.round(currentClassSummary.nextSession.readiness?.overallReadiness || 0)}%
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="mt-4 flex items-center justify-between">
+              <Badge variant="outline" className="bg-purple-50 text-purple-700">
+                {currentClassSummary.nextSession.cohortName}
+              </Badge>
+              {currentClassSummary.nextSession.timeLeft < 60 && (
+                <Badge variant="destructive">
+                  Starting soon
+                </Badge>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+      
       {/* Stats cards row */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-4">
@@ -124,7 +186,12 @@ const ClassOverview = ({ classData }: ClassOverviewProps) => {
               </div>
               <div>
                 <p className="text-sm font-medium text-gray-500">Enrollment</p>
-                <p className="text-lg font-semibold">{classData.enrollmentCount} Students</p>
+                <p className="text-lg font-semibold">
+                  {currentClassSummary?.enrolledStudents || classData.enrollmentCount} Students
+                  {currentClassSummary?.maxCapacity && (
+                    <span className="text-sm text-gray-500 ml-1">/ {currentClassSummary.maxCapacity}</span>
+                  )}
+                </p>
               </div>
             </div>
           </CardContent>
@@ -134,11 +201,29 @@ const ClassOverview = ({ classData }: ClassOverviewProps) => {
           <CardContent className="pt-6">
             <div className="flex items-center gap-4">
               <div className="bg-purple-100 rounded-lg p-3">
-                <CalendarDays className="h-6 w-6 text-purple-600" />
+                <TrendingUp className="h-6 w-6 text-purple-600" />
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-500">Schedule</p>
-                <p className="text-lg font-semibold">{classData.scheduleInfo}</p>
+                <p className="text-sm font-medium text-gray-500">Progress</p>
+                <p className="text-lg font-semibold">
+                  {currentClassSummary?.progressPercentage || 0}%
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-4">
+              <div className="bg-orange-100 rounded-lg p-3">
+                <Target className="h-6 w-6 text-orange-600" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-500">Engagement</p>
+                <p className="text-lg font-semibold">
+                  {Math.round(currentClassSummary?.averageEngagement || 0)}%
+                </p>
               </div>
             </div>
           </CardContent>

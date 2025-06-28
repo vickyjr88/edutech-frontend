@@ -44,7 +44,99 @@ export function calculatePreparationScore(
   return baseScore;
 }
 
-// Generate mock student insights with Zoom behavior
+// Transform API student data to StudentInsight format
+export function transformStudentsToInsights(students: any[], classData?: any): StudentInsight[] {
+  if (!students || students.length === 0) {
+    return generateStudentInsights(classData || {});
+  }
+
+  return students.map((student, index) => {
+    // Map API status to StudentInsight status
+    const getStudentStatus = (apiStatus: string, attendance: any, assignments: any): any => {
+      const attendancePercentage = attendance?.percentage || 0;
+      const assignmentCompletion = assignments?.completionRate || 0;
+      
+      if (apiStatus === 'Inactive' || attendancePercentage < 30) return 'struggling';
+      if (attendancePercentage >= 80 && assignmentCompletion >= 80) return 'thriving';
+      if (attendancePercentage >= 60 && assignmentCompletion >= 60) return 'steady';
+      return 'breakthrough';
+    };
+
+    // Generate intelligent defaults for Zoom behavior based on attendance and activity
+    const generateZoomBehaviorFromData = (student: any) => {
+      const attendanceRate = student.attendance?.percentage || 0;
+      const assignmentRate = student.assignments?.completionRate || 0;
+      const isActive = student.status !== 'Inactive';
+      
+      // High performers tend to be more active in Zoom
+      const participationLevel = (attendanceRate + assignmentRate) / 2;
+      
+      return {
+        typicalParticipation: participationLevel >= 70 ? 'active-speaker' : 
+                             participationLevel >= 40 ? 'chat-focused' : 'observer',
+        techReliability: attendanceRate >= 70 ? 'excellent' : 
+                        attendanceRate >= 40 ? 'good' : 'needs-support',
+        preferredInteraction: participationLevel >= 60 ? 'verbal' : 'chat',
+        averageConnectionTime: Math.max(2, Math.floor(participationLevel / 10) + 3),
+        cameraUsage: Math.max(30, Math.floor(participationLevel * 0.8 + 20)),
+        micUsage: Math.max(15, Math.floor(participationLevel * 0.5 + 15)),
+        chatActivity: Math.floor(participationLevel / 15) + 2,
+        breakoutPreference: participationLevel >= 60 ? 'enjoys' : 
+                           participationLevel >= 30 ? 'neutral' : 'struggles'
+      } as any;
+    };
+
+    // Generate learning pattern based on AI insights and performance
+    const generateLearningPattern = (student: any) => {
+      const insights = student.aiInsights?.insights || [];
+      const hasProgressingWell = insights.some((insight: string) => 
+        insight.toLowerCase().includes('progress') || insight.toLowerCase().includes('well')
+      );
+      
+      return {
+        bestTimeOfDay: ['morning', 'afternoon', 'evening'][index % 3],
+        preferredStyle: ['visual', 'auditory', 'kinesthetic'][index % 3],
+        attentionSpan: student.attendance?.percentage >= 70 ? 
+          Math.floor(Math.random() * 15) + 25 : Math.floor(Math.random() * 10) + 15,
+        zoomEngagement: student.attendance?.percentage >= 70 ? 'high' : 
+                       student.attendance?.percentage >= 40 ? 'medium' : 'variable',
+        conceptRetention: Math.max(40, student.assignments?.completionRate || 0 + Math.random() * 20),
+        participationTrend: hasProgressingWell ? 'increasing' : 
+                           student.status === 'Inactive' ? 'decreasing' : 'stable'
+      } as any;
+    };
+
+    const status = getStudentStatus(student.status, student.attendance, student.assignments);
+    const needsAttention = status === 'struggling' || student.status === 'Inactive' || 
+                          student.attendance?.percentage < 50;
+
+    return {
+      id: student.studentId,
+      name: student.name,
+      currentStatus: status,
+      needsAttention,
+      zoomBehavior: generateZoomBehaviorFromData(student),
+      learningPattern: generateLearningPattern(student),
+      recentProgress: {
+        conceptsMastered: student.aiInsights?.strengths || [],
+        strugglingWith: student.aiInsights?.improvements || [],
+        nextChallenge: student.enrolledClasses?.[0]?.title || 'Continue learning',
+        lastAssignmentScore: Math.max(0, (student.assignments?.completionRate || 0) + Math.random() * 20),
+        improvementAreas: student.aiInsights?.improvements || [],
+        achievements: student.aiInsights?.strengths || []
+      },
+      suggestions: student.aiInsights?.insights || ['Monitor student progress closely'],
+      lastActive: new Date(student.lastActivityTimestamp || Date.now() - 86400000), // 1 day ago default
+      techSupport: {
+        needsHelp: student.attendance?.percentage < 30,
+        issues: student.attendance?.percentage < 30 ? ['Connection issues', 'Technical difficulties'] : [],
+        lastHelpDate: student.attendance?.percentage < 30 ? new Date(Date.now() - 604800000) : undefined // 1 week ago
+      }
+    };
+  });
+}
+
+// Generate mock student insights with Zoom behavior (fallback)
 export function generateStudentInsights(classData: any): StudentInsight[] {
   const studentNames = [
     'Sarah Chen', 'Marcus Johnson', 'Maya Patel', 'James Wilson', 
@@ -510,7 +602,11 @@ function generateZoomTeachingTips(status: string, studentName: string): string[]
 }
 
 // Main enhancement function
-export function enhanceClassDetailData(classData: any): ClassDetailContext {
+export function enhanceClassDetailData(classData: any, enhancementData?: {
+  teacherSummary?: any;
+  currentClassSummary?: any;
+  studentsData?: any;
+}): ClassDetailContext {
   const timeToClass = getTimeToNextClass(classData);
   const isLive = false; // This would come from actual Zoom integration
   const currentMode = getCurrentTeachingMode(timeToClass, isLive);
@@ -518,24 +614,28 @@ export function enhanceClassDetailData(classData: any): ClassDetailContext {
   const prepChecklists = generatePrepChecklists(classData);
   const preparationScore = calculatePreparationScore(classData, prepChecklists);
   
+  // Use real teacher summary data for next session if available
+  const currentClassSummary = enhancementData?.currentClassSummary;
   const nextSession: NextSession = {
-    timeUntil: timeToClass,
-    lessonTopic: 'Quadratic Equations and Real-World Applications',
-    studentsExpected: classData.enrollment?.current || 8,
-    zoomRoomId: '123-456-789',
-    materialsPrepared: preparationScore > 80,
-    startTime: new Date(Date.now() + timeToClass * 60 * 1000),
-    duration: 60
+    timeUntil: currentClassSummary?.nextSession?.timeLeft || timeToClass,
+    lessonTopic: currentClassSummary?.nextSession?.title || 'Upcoming Lesson',
+    studentsExpected: currentClassSummary?.nextSession?.enrolledStudents || classData.enrollment?.current || 8,
+    zoomRoomId: '123-456-789', // This would come from Zoom integration
+    materialsPrepared: (currentClassSummary?.nextSession?.readiness?.overallReadiness || preparationScore) > 80,
+    startTime: currentClassSummary?.nextSession ? new Date(currentClassSummary.nextSession.startTime) : new Date(Date.now() + timeToClass * 60 * 1000),
+    duration: currentClassSummary?.nextSession?.duration || 60
   };
   
+  // Use real teacher summary analytics for teaching momentum
+  const teacherAnalytics = enhancementData?.teacherSummary?.analytics;
   const teachingMomentum: TeachingMomentum = {
-    streak: Math.floor(Math.random() * 15) + 5,
-    lastRating: Math.floor(Math.random() * 2) + 4, // 4-5 stars
-    trend: ['improving', 'stable', 'needs-attention'][Math.floor(Math.random() * 3)] as any,
+    streak: Math.floor(Math.random() * 15) + 5, // This would need specific streak data from API
+    lastRating: currentClassSummary?.rating || Math.floor(Math.random() * 2) + 4,
+    trend: teacherAnalytics?.trends?.engagementTrend || 'stable',
     weeklyProgress: {
-      lessonsDelivered: Math.floor(Math.random() * 8) + 3,
-      avgRating: 4.2 + Math.random() * 0.6,
-      studentsEngaged: Math.floor(Math.random() * 20) + 30
+      lessonsDelivered: teacherAnalytics?.recentActivity?.upcomingSessions || Math.floor(Math.random() * 8) + 3,
+      avgRating: teacherAnalytics?.overallPerformance?.averageProgress ? (teacherAnalytics.overallPerformance.averageProgress / 20) : 4.2 + Math.random() * 0.6,
+      studentsEngaged: teacherAnalytics?.recentActivity?.activeStudentsThisWeek || Math.floor(Math.random() * 20) + 30
     }
   };
   
@@ -550,13 +650,18 @@ export function enhanceClassDetailData(classData: any): ClassDetailContext {
     currentMode
   };
   
+  // Use real student data when available
+  const studentInsights = enhancementData?.studentsData?.students 
+    ? transformStudentsToInsights(enhancementData.studentsData.students, classData)
+    : generateStudentInsights(classData);
+
   return {
     currentMode,
     timeToClass,
     isLive,
     classData,
     header,
-    studentInsights: generateStudentInsights(classData),
+    studentInsights,
     sidebarWidgets: generateSidebarWidgets(currentMode, classData),
     teachingEffectiveness: generateTeachingEffectiveness(),
     prepChecklist: prepChecklists,

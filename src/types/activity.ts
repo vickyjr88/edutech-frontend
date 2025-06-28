@@ -91,10 +91,23 @@ export interface StudentSubject {
   color: string;
 }
 
+export interface EnrolledClass {
+  classId: string;
+  title: string;
+  subject: string;
+  curriculum: string;
+  curriculumLevel: string;
+  gradeLevel: string;
+  ageRange: string;
+  type: string;
+  color: string;
+}
+
 export interface Student {
   studentId: string;
   name: string;
   subjects: StudentSubject[];
+  enrolledClasses: EnrolledClass[];
   attendance: StudentAttendance;
   assignments: StudentAssignments;
   status: string;

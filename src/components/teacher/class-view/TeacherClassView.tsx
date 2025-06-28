@@ -11,6 +11,9 @@ import ClassStats from "./sidebar/ClassStats";
 import QuickActions from "./sidebar/QuickActions";
 import UpcomingSessions from "./sidebar/UpcomingSessions";
 import { classService } from "@/integrations/api/services/class.service";
+import { useTeacherId } from "@/hooks/useTeacherId";
+import { useTeacherSummary } from "@/hooks/useTeacherSummary";
+import { TeacherClassSummary } from "@/types/enhanced-classes";
 
 // Types for class data
 export interface ClassData {
@@ -133,6 +136,18 @@ const TeacherClassView = ({ classId }: TeacherClassViewProps) => {
   const [isLoading, setIsLoading] = useState(true);
   const [isPublished, setIsPublished] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // Get teacher data for enhanced analytics
+  const { teacherId, loading: teacherIdLoading, error: teacherIdError } = useTeacherId();
+  const { summaryData, loading: summaryLoading } = useTeacherSummary({ 
+    teacherId: teacherId || '', 
+    refreshInterval: 60000 
+  });
+  
+  // Find the current class in the teacher summary data
+  const currentClassSummary = summaryData?.classes?.find(
+    (cls: TeacherClassSummary) => cls.classId === classId
+  );
   
   useEffect(() => {
     if (classId) {
@@ -394,7 +409,7 @@ const TeacherClassView = ({ classId }: TeacherClassViewProps) => {
   };
 
   // Show loading state
-  if (isLoading) {
+  if (isLoading || teacherIdLoading) {
     return (
       <div className="container mx-auto px-4 py-8 flex justify-center">
         <p>Loading class data...</p>
@@ -490,7 +505,7 @@ const TeacherClassView = ({ classId }: TeacherClassViewProps) => {
               </TabsList>
               
               <TabsContent value="overview">
-                <ClassOverview classData={classData} />
+                <ClassOverview classData={classData} currentClassSummary={currentClassSummary} />
               </TabsContent>
               
               <TabsContent value="lesson-plans">
@@ -513,9 +528,17 @@ const TeacherClassView = ({ classId }: TeacherClassViewProps) => {
           
           {/* Sidebar */}
           <div className="lg:col-span-1 space-y-6">
-            <ClassStats stats={classData.stats} />
+            <ClassStats 
+              stats={classData.stats} 
+              currentClassSummary={currentClassSummary}
+              analytics={summaryData?.analytics}
+            />
             <QuickActions />
-            <UpcomingSessions cohorts={classData.cohorts} />
+            <UpcomingSessions 
+              cohorts={classData.cohorts}
+              teacherSummaryData={summaryData}
+              currentClassId={classId}
+            />
           </div>
         </div>
       </div>

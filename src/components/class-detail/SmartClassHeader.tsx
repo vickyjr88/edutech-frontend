@@ -24,7 +24,12 @@ import {
   BookOpen,
   UserPlus,
   Target,
-  Eye
+  Eye,
+  Brain,
+  Sparkles,
+  ClipboardList,
+  Activity,
+  BarChart3
 } from 'lucide-react';
 import { SmartClassHeader as SmartClassHeaderType, TeachingMode, PreparationStatus } from '@/types/class-detail';
 import { cn } from '@/lib/utils';
@@ -123,27 +128,35 @@ const SmartClassHeader: React.FC<SmartClassHeaderProps> = ({
     switch (mode) {
       case 'prep':
         return {
-          label: 'Preparation Mode',
+          label: 'Class Preparation',
           color: 'bg-blue-500',
-          description: 'Planning and preparing for class'
+          description: 'Lesson planning & material organization',
+          icon: ClipboardList,
+          emoji: '📋'
         };
       case 'ready':
         return {
-          label: 'Ready Mode',
+          label: 'Final Checks',
           color: 'bg-green-500',
-          description: 'Final checks before class'
+          description: 'Pre-class readiness verification',
+          icon: CheckCircle2,
+          emoji: '✅'
         };
       case 'teaching':
         return {
-          label: 'Live Teaching',
+          label: 'Live Session',
           color: 'bg-red-500',
-          description: 'Class is in session'
+          description: 'Active teaching with real-time insights',
+          icon: Activity,
+          emoji: '🎯'
         };
       case 'reflect':
         return {
-          label: 'Reflection Mode',
+          label: 'Session Review',
           color: 'bg-purple-500',
-          description: 'Post-class review and planning'
+          description: 'Performance analysis & next steps',
+          icon: BarChart3,
+          emoji: '📊'
         };
     }
   };
@@ -422,23 +435,50 @@ const SmartClassHeader: React.FC<SmartClassHeaderProps> = ({
           </div>
         </div>
 
-        {/* Mode Switch Controls (for demo/testing) */}
+        {/* Teaching Assistant Mode Controls */}
         {onModeChange && (
-          <div className="mt-6 pt-4 border-t border-gray-200">
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-600">Demo Mode:</span>
-              <div className="flex gap-1">
-                {(['prep', 'ready', 'teaching', 'reflect'] as TeachingMode[]).map((mode) => (
-                  <Button
-                    key={mode}
-                    variant={data.currentMode === mode ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => onModeChange(mode)}
-                    className="text-xs"
-                  >
-                    {mode}
-                  </Button>
-                ))}
+          <div className="mt-6 pt-4 border-t border-gray-100">
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <Brain className="h-4 w-4 text-blue-600" />
+                <span className="text-sm font-medium text-gray-700">Teaching Assistant</span>
+                <Sparkles className="h-3 w-3 text-yellow-500" />
+              </div>
+              
+              <div className="grid grid-cols-2 gap-2">
+                {(['prep', 'ready', 'teaching', 'reflect'] as TeachingMode[]).map((mode) => {
+                  const config = getModeConfig(mode);
+                  const isActive = data.currentMode === mode;
+                  const IconComponent = config.icon;
+                  
+                  return (
+                    <Button
+                      key={mode}
+                      variant={isActive ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => onModeChange(mode)}
+                      className={cn(
+                        "flex items-center gap-2 text-xs h-auto py-2 px-3 justify-start",
+                        isActive && "bg-blue-600 hover:bg-blue-700"
+                      )}
+                    >
+                      <span className="text-sm">{config.emoji}</span>
+                      <div className="flex flex-col items-start">
+                        <span className="font-medium">{config.label}</span>
+                        <span className={cn(
+                          "text-xs opacity-75",
+                          isActive ? "text-blue-100" : "text-gray-500"
+                        )}>
+                          {config.description}
+                        </span>
+                      </div>
+                    </Button>
+                  );
+                })}
+              </div>
+              
+              <div className="text-xs text-gray-500 bg-gray-50 px-3 py-2 rounded">
+                💡 <strong>Smart Mode:</strong> Automatically adapts based on session timing and context
               </div>
             </div>
           </div>
