@@ -12,6 +12,8 @@ import type { TeacherSummaryResponse } from '@/types/enhanced-classes';
 import type { TeacherStudentsData } from '@/types/activity';
 import type { TeacherBalance, TeacherTransaction, TeacherTransactionsQuery } from '../types/teacher-transactions.types';
 import type { Bank, TeacherBankAccount, AddBankAccountRequest, UpdateBankAccountRequest } from '../types/bank-accounts.types';
+import type { TeacherPayoutPreferences, PayoutRecommendation, PayoutAnalytics, UpdatePayoutPreferencesRequest, TeacherTier } from '../types/teacher-payout-preferences.types';
+import { mapToBackendFormat, mapFromBackendFormat } from '../types/teacher-payout-preferences.types';
 
 export interface BaseEntity {
     _id: string;
@@ -904,6 +906,35 @@ export const teacherService = {
     setPrimaryBankAccount: (accountId: string): Promise<ApiResponse<TeacherBankAccount>> => {
         return api.post<TeacherBankAccount>('/teacher/bank-accounts/set-primary', {
             bankAccountId: accountId
+        });
+    },
+
+    // Payout Preferences Management
+    getPayoutPreferences: (teacherId): Promise<ApiResponse<TeacherPayoutPreferences>> => {
+        return api.get<TeacherPayoutPreferences>(`/teachers/${teacherId}/payout-preferences`);
+    },
+
+    updatePayoutPreferences: (teacherId,data: UpdatePayoutPreferencesRequest): Promise<ApiResponse<TeacherPayoutPreferences>> => {
+        // Transform frontend data to backend format
+        const backendData = mapToBackendFormat(data);
+        return api.patch<TeacherPayoutPreferences>(`/teachers/${teacherId}/payout-preferences`, backendData);
+    },
+
+    getPayoutRecommendations: (): Promise<ApiResponse<PayoutRecommendation[]>> => {
+        return api.get<PayoutRecommendation[]>('/teacher/payout-recommendations');
+    },
+
+    getPayoutAnalytics: (params?: { timeframe?: string }): Promise<ApiResponse<PayoutAnalytics>> => {
+        return api.get<PayoutAnalytics>('/teacher/payout-analytics', { params });
+    },
+
+    getTeacherTier: (): Promise<ApiResponse<TeacherTier>> => {
+        return api.get<TeacherTier>('/teacher/tier');
+    },
+
+    requestInstantPayout: (amount?: number): Promise<ApiResponse<{ success: boolean; transactionId: string; processingTime: string }>> => {
+        return api.post<{ success: boolean; transactionId: string; processingTime: string }>('/teacher/instant-payout', {
+            amount
         });
     },
 };

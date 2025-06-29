@@ -13,3 +13,15 @@ export { enrollmentService } from './services/enrollment.service';
 // Types
 export type { TeacherBalance, TeacherTransaction, TeacherTransactionsQuery } from './types/teacher-transactions.types';
 export type { Bank, TeacherBankAccount, AddBankAccountRequest, UpdateBankAccountRequest } from './types/bank-accounts.types';
+export type { 
+  TeacherPayoutPreferences, 
+  PayoutFrequency, 
+  PayoutRule, 
+  TeacherTier, 
+  PayoutRecommendation, 
+  PayoutAnalytics, 
+  UpdatePayoutPreferencesRequest,
+  BackendPayoutPreferencesRequest
+} from './types/teacher-payout-preferences.types';
+export { PAYOUT_FREQUENCIES } from './types/teacher-payout-preferences.types';
+export { mapToBackendFormat, mapFromBackendFormat } from './types/teacher-payout-preferences.types';

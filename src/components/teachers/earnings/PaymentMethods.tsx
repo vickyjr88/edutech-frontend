@@ -39,6 +39,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Toggle } from "@/components/ui/toggle";
 import { useSupportedBanks } from "@/hooks/useSupportedBanks";
 import { useTeacherBankAccounts } from "@/hooks/useTeacherBankAccounts";
+import SuperTeacherPayoutPreferences from "./SuperTeacherPayoutPreferences";
 import type { TeacherBankAccount, AddBankAccountRequest } from "@/integrations/api";
 
 interface PaymentMethodCardProps {
@@ -387,66 +388,8 @@ const PaymentMethods = () => {
         </CardContent>
       </Card>
       
-      <Card className="shadow-sm">
-        <CardHeader className="pb-2">
-          <CardTitle>Payout Preferences</CardTitle>
-          <CardDescription>
-            Configure how and when you receive your earnings
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-5">
-          <div className="space-y-3">
-            <Label htmlFor="payout-frequency">Payout Frequency</Label>
-            <Select defaultValue="monthly">
-              <SelectTrigger id="payout-frequency" className="w-full sm:w-80">
-                <SelectValue placeholder="Select frequency" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="weekly">Weekly (every Monday)</SelectItem>
-                <SelectItem value="biweekly">Bi-weekly (every other Monday)</SelectItem>
-                <SelectItem value="monthly">Monthly (1st of each month)</SelectItem>
-                <SelectItem value="manual">Manual (request payouts)</SelectItem>
-              </SelectContent>
-            </Select>
-            <p className="text-xs text-gray-500">
-              How often would you like your earnings to be transferred to your bank account
-            </p>
-          </div>
-          
-          <div className="space-y-3">
-            <Label htmlFor="minimum-payout">Minimum Payout Amount</Label>
-            <div className="flex">
-              <span className="flex items-center border border-r-0 rounded-l-md px-3 bg-gray-50 text-gray-500">$</span>
-              <Input
-                id="minimum-payout"
-                type="number"
-                defaultValue="50"
-                className="rounded-l-none w-32"
-                min={1}
-              />
-            </div>
-            <p className="text-xs text-gray-500">
-              We'll hold your earnings until they reach this amount
-            </p>
-          </div>
-          
-          <div className="space-y-3 pt-2">
-            <div className="flex items-center justify-between">
-              <div>
-                <Label className="block mb-1">Automatic Payouts</Label>
-                <p className="text-xs text-gray-500">
-                  Automatically transfer earnings to your default payment method
-                </p>
-              </div>
-              <Toggle defaultPressed />
-            </div>
-          </div>
-          
-          <div className="pt-4 border-t mt-4">
-            <Button>Save Preferences</Button>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Super Teacher Payout Preferences */}
+      <SuperTeacherPayoutPreferences />
       
       <Card className="shadow-sm">
         <CardHeader className="pb-2">
