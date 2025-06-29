@@ -391,46 +391,46 @@ const PaymentMethods = () => {
       {/* Super Teacher Payout Preferences */}
       <SuperTeacherPayoutPreferences />
       
-      <Card className="shadow-sm">
-        <CardHeader className="pb-2">
-          <CardTitle>Tax Information</CardTitle>
-          <CardDescription>
-            Manage your tax documents and reporting settings
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-5">
-          <Alert className="bg-yellow-50 border-yellow-200 text-yellow-800">
-            <AlertCircle className="h-4 w-4 text-yellow-600" />
-            <AlertTitle>Tax information required</AlertTitle>
-            <AlertDescription>
-              Please submit your tax information to ensure proper reporting and avoid payment holds.
-            </AlertDescription>
-          </Alert>
-          
-          <div className="space-y-3">
-            <h3 className="text-sm font-medium">Tax Form Status</h3>
-            <div className="bg-gray-50 border rounded-md p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium">W-9 Form</p>
-                  <p className="text-sm text-gray-500 mt-1">Required for U.S. taxpayers</p>
-                </div>
-                <Button>Submit Form</Button>
-              </div>
-            </div>
-          </div>
-          
-          <div className="space-y-3">
-            <h3 className="text-sm font-medium">Tax Documents</h3>
-            <p className="text-sm text-gray-500">
-              Your annual tax documents will be available here in January for the previous year.
-            </p>
-            <div className="bg-gray-50 border rounded-md p-4 text-center text-gray-500">
-              <p>No tax documents available yet</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      {/*<Card className="shadow-sm">*/}
+      {/*  <CardHeader className="pb-2">*/}
+      {/*    <CardTitle>Tax Information</CardTitle>*/}
+      {/*    <CardDescription>*/}
+      {/*      Manage your tax documents and reporting settings*/}
+      {/*    </CardDescription>*/}
+      {/*  </CardHeader>*/}
+      {/*  <CardContent className="space-y-5">*/}
+      {/*    <Alert className="bg-yellow-50 border-yellow-200 text-yellow-800">*/}
+      {/*      <AlertCircle className="h-4 w-4 text-yellow-600" />*/}
+      {/*      <AlertTitle>Tax information required</AlertTitle>*/}
+      {/*      <AlertDescription>*/}
+      {/*        Please submit your tax information to ensure proper reporting and avoid payment holds.*/}
+      {/*      </AlertDescription>*/}
+      {/*    </Alert>*/}
+      {/*    */}
+      {/*    <div className="space-y-3">*/}
+      {/*      <h3 className="text-sm font-medium">Tax Form Status</h3>*/}
+      {/*      <div className="bg-gray-50 border rounded-md p-4">*/}
+      {/*        <div className="flex items-center justify-between">*/}
+      {/*          <div>*/}
+      {/*            <p className="font-medium">W-9 Form</p>*/}
+      {/*            <p className="text-sm text-gray-500 mt-1">Required for U.S. taxpayers</p>*/}
+      {/*          </div>*/}
+      {/*          <Button>Submit Form</Button>*/}
+      {/*        </div>*/}
+      {/*      </div>*/}
+      {/*    </div>*/}
+      {/*    */}
+      {/*    <div className="space-y-3">*/}
+      {/*      <h3 className="text-sm font-medium">Tax Documents</h3>*/}
+      {/*      <p className="text-sm text-gray-500">*/}
+      {/*        Your annual tax documents will be available here in January for the previous year.*/}
+      {/*      </p>*/}
+      {/*      <div className="bg-gray-50 border rounded-md p-4 text-center text-gray-500">*/}
+      {/*        <p>No tax documents available yet</p>*/}
+      {/*      </div>*/}
+      {/*    </div>*/}
+      {/*  </CardContent>*/}
+      {/*</Card>*/}
       
       {/* Add/Edit Bank Account Dialog */}
       <Dialog open={showAddBankModal} onOpenChange={setShowAddBankModal}>
@@ -485,7 +485,7 @@ const PaymentMethods = () => {
               <div className="relative">
                 <Input
                   id="account-number"
-                  type="password"
+                  type="text"
                   value={accountNumber}
                   onChange={(e) => setAccountNumber(e.target.value.replace(/\D/g, ''))}
                   placeholder={editingAccount ? "••••••••" : "Enter account number"}
@@ -500,7 +500,7 @@ const PaymentMethods = () => {
               <div className="relative">
                 <Input
                   id="confirm-account-number"
-                  type="password"
+                  type="text"
                   value={confirmAccountNumber}
                   onChange={(e) => setConfirmAccountNumber(e.target.value.replace(/\D/g, ''))}
                   placeholder={editingAccount ? "••••••••" : "Re-enter account number"}

@@ -5,13 +5,15 @@ import type {
   PayoutRecommendation, 
   PayoutAnalytics, 
   UpdatePayoutPreferencesRequest,
-  TeacherTier 
+  TeacherTier,
+  ApiPayoutPreferencesResponse,
+  ApiUpdatePayoutPreferencesRequest
 } from '@/integrations/api';
 import {useAuth} from "@/contexts/AuthContext.tsx";
 
 interface UseTeacherPayoutPreferencesReturn {
   // Core data
-  preferences: TeacherPayoutPreferences | null;
+  preferences: ApiPayoutPreferencesResponse | null;
   recommendations: PayoutRecommendation[];
   analytics: PayoutAnalytics | null;
   teacherTier: TeacherTier | null;
@@ -27,7 +29,7 @@ interface UseTeacherPayoutPreferencesReturn {
   error: string | null;
   
   // Actions
-  updatePreferences: (data: UpdatePayoutPreferencesRequest) => Promise<TeacherPayoutPreferences | null>;
+  updatePreferences: (data: ApiUpdatePayoutPreferencesRequest) => Promise<ApiPayoutPreferencesResponse | null>;
   refreshPreferences: () => void;
   refreshRecommendations: () => void;
   refreshAnalytics: () => void;
@@ -37,7 +39,7 @@ interface UseTeacherPayoutPreferencesReturn {
 export const useTeacherPayoutPreferences = (): UseTeacherPayoutPreferencesReturn => {
   // State
   const { user } = useAuth();
-  const [preferences, setPreferences] = useState<TeacherPayoutPreferences | null>(null);
+  const [preferences, setPreferences] = useState<ApiPayoutPreferencesResponse | null>(null);
   const [recommendations, setRecommendations] = useState<PayoutRecommendation[]>([]);
   const [analytics, setAnalytics] = useState<PayoutAnalytics | null>(null);
   const [teacherTier, setTeacherTier] = useState<TeacherTier | null>(null);
@@ -54,6 +56,11 @@ export const useTeacherPayoutPreferences = (): UseTeacherPayoutPreferencesReturn
 
   // Fetch payout preferences
   const fetchPreferences = useCallback(async () => {
+    if (!user?.teacherId) {
+      setIsLoading(false);
+      return;
+    }
+
     try {
       setIsLoading(true);
       setError(null);
@@ -76,7 +83,7 @@ export const useTeacherPayoutPreferences = (): UseTeacherPayoutPreferencesReturn
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [user?.teacherId]);
 
   // Fetch recommendations
   const fetchRecommendations = useCallback(async () => {
@@ -115,12 +122,17 @@ export const useTeacherPayoutPreferences = (): UseTeacherPayoutPreferencesReturn
   }, []);
 
   // Update preferences
-  const updatePreferences = async (data: UpdatePayoutPreferencesRequest): Promise<TeacherPayoutPreferences | null> => {
+  const updatePreferences = async (data: ApiUpdatePayoutPreferencesRequest): Promise<ApiPayoutPreferencesResponse | null> => {
+    if (!user?.teacherId) {
+      setError('User not authenticated');
+      return null;
+    }
+
     try {
       setIsUpdating(true);
       setError(null);
       
-      const response = await teacherService.updatePayoutPreferences(user.teacherId,data);
+      const response = await teacherService.updatePayoutPreferences(user.teacherId, data);
       if (response.data) {
         setPreferences(response.data);
         

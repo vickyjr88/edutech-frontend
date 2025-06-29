@@ -14,6 +14,9 @@ import type { TeacherBalance, TeacherTransaction, TeacherTransactionsQuery } fro
 import type { Bank, TeacherBankAccount, AddBankAccountRequest, UpdateBankAccountRequest } from '../types/bank-accounts.types';
 import type { TeacherPayoutPreferences, PayoutRecommendation, PayoutAnalytics, UpdatePayoutPreferencesRequest, TeacherTier } from '../types/teacher-payout-preferences.types';
 import { mapToBackendFormat, mapFromBackendFormat } from '../types/teacher-payout-preferences.types';
+import type { TeacherRevenueSummaryResponse, RevenueSummaryRequestParams } from '../types/teacher-revenue-summary.types';
+import type { PrimaryBankAccount } from '../types/primary-bank-account.types';
+import type { ApiPayoutPreferencesResponse, ApiUpdatePayoutPreferencesRequest } from '../types/api-payout-preferences.types';
 
 export interface BaseEntity {
     _id: string;
@@ -910,14 +913,12 @@ export const teacherService = {
     },
 
     // Payout Preferences Management
-    getPayoutPreferences: (teacherId): Promise<ApiResponse<TeacherPayoutPreferences>> => {
-        return api.get<TeacherPayoutPreferences>(`/teachers/${teacherId}/payout-preferences`);
+    getPayoutPreferences: (teacherId): Promise<ApiResponse<ApiPayoutPreferencesResponse>> => {
+        return api.get<ApiPayoutPreferencesResponse>(`/teachers/${teacherId}/payout-preferences`);
     },
 
-    updatePayoutPreferences: (teacherId,data: UpdatePayoutPreferencesRequest): Promise<ApiResponse<TeacherPayoutPreferences>> => {
-        // Transform frontend data to backend format
-        const backendData = mapToBackendFormat(data);
-        return api.patch<TeacherPayoutPreferences>(`/teachers/${teacherId}/payout-preferences`, backendData);
+    updatePayoutPreferences: (teacherId, data: ApiUpdatePayoutPreferencesRequest): Promise<ApiResponse<ApiPayoutPreferencesResponse>> => {
+        return api.patch<ApiPayoutPreferencesResponse>(`/teachers/${teacherId}/payout-preferences`, data);
     },
 
     getPayoutRecommendations: (): Promise<ApiResponse<PayoutRecommendation[]>> => {
@@ -936,5 +937,15 @@ export const teacherService = {
         return api.post<{ success: boolean; transactionId: string; processingTime: string }>('/teacher/instant-payout', {
             amount
         });
+    },
+
+    // Revenue Summary
+    getRevenueSummary: (params?: RevenueSummaryRequestParams): Promise<ApiResponse<TeacherRevenueSummaryResponse>> => {
+        return api.get<TeacherRevenueSummaryResponse>('/teacher-transactions/revenue-summary', { params });
+    },
+
+    // Primary Bank Account
+    getPrimaryBankAccount: (): Promise<ApiResponse<PrimaryBankAccount>> => {
+        return api.get<PrimaryBankAccount>('/teacher/bank-accounts/primary');
     },
 };

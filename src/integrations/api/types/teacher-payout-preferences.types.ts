@@ -95,9 +95,10 @@ export interface UpdatePayoutPreferencesRequest {
   advancedRules?: PayoutRule[];
 }
 
-// Backend API format (simplified)
+// Backend API format (with payoutDay)
 export interface BackendPayoutPreferencesRequest {
   period: "weekly" | "biweekly" | "monthly" | "daily" | "instant";
+  payoutDay: number;
   minimumPayoutAmount: number;
   autoPayoutEnabled: boolean;
 }
@@ -106,6 +107,7 @@ export interface BackendPayoutPreferencesRequest {
 export const mapToBackendFormat = (frontendData: UpdatePayoutPreferencesRequest): BackendPayoutPreferencesRequest => {
   return {
     period: frontendData.frequency?.type || "weekly",
+    payoutDay: frontendData.preferredPayoutDay || 1,
     minimumPayoutAmount: frontendData.minimumAmount || 50,
     autoPayoutEnabled: frontendData.automaticPayouts !== false
   };
@@ -143,7 +145,8 @@ export const mapFromBackendFormat = (backendData: BackendPayoutPreferencesReques
   return {
     frequency: frequencyMap[backendData.period] || frequencyMap.weekly,
     minimumAmount: backendData.minimumPayoutAmount,
-    automaticPayouts: backendData.autoPayoutEnabled
+    automaticPayouts: backendData.autoPayoutEnabled,
+    preferredPayoutDay: backendData.payoutDay
   };
 };
 

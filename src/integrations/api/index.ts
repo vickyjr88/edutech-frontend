@@ -25,3 +25,16 @@ export type {
 } from './types/teacher-payout-preferences.types';
 export { PAYOUT_FREQUENCIES } from './types/teacher-payout-preferences.types';
 export { mapToBackendFormat, mapFromBackendFormat } from './types/teacher-payout-preferences.types';
+export type { 
+  TeacherRevenueSummaryResponse, 
+  RevenuePeriod, 
+  RevenueSummary, 
+  RevenueSummaryRequestParams 
+} from './types/teacher-revenue-summary.types';
+export type { 
+  PrimaryBankAccount 
+} from './types/primary-bank-account.types';
+export type { 
+  ApiPayoutPreferencesResponse, 
+  ApiUpdatePayoutPreferencesRequest 
+} from './types/api-payout-preferences.types';
