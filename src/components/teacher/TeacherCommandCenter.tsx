@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -134,6 +134,35 @@ const formatTimeLeft = (minutes: number): string => {
   }
 };
 
+// Helper function to check if early start is allowed (within 15 minutes of scheduled time)
+const canStartEarly = (timeLeftInMinutes: number): boolean => {
+  return timeLeftInMinutes <= 15 && timeLeftInMinutes > 0;
+};
+
+// Helper function to check minimum readiness requirements
+const hasMinimumReadiness = (readiness: any): boolean => {
+  if (!readiness) return false;
+  return readiness.overallReadiness >= 70 && 
+         readiness.lessonPlanReady && 
+         readiness.materialsReady;
+};
+
+// Helper function to get readiness status message
+const getReadinessMessage = (readiness: any): string => {
+  if (!readiness) return 'Readiness data not available';
+  
+  const missing = [];
+  if (!readiness.lessonPlanReady) missing.push('lesson plan');
+  if (!readiness.materialsReady) missing.push('materials');
+  if (!readiness.zoomSetup) missing.push('Zoom setup');
+  
+  if (missing.length === 0) {
+    return 'All requirements met';
+  }
+  
+  return `Missing: ${missing.join(', ')}`;
+};
+
 // Helper function to format start time
 const formatStartTime = (isoString: string): string => {
   const date = new Date(isoString);
@@ -147,6 +176,8 @@ const TeacherCommandCenter: React.FC = () => {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [liveStudents, setLiveStudents] = useState(0);
   const [classProgress, setClassProgress] = useState(0);
+  const [isStartingEarly, setIsStartingEarly] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
   
   // Fetch real dashboard data
   const { activities, dashboardData, loading, error, refetch } = useTeacherRecentActivity({
@@ -190,6 +221,50 @@ const TeacherCommandCenter: React.FC = () => {
 
     return () => clearInterval(timer);
   }, [isLive]);
+
+  // API call to start class early
+  const handleStartEarly = useCallback(async () => {
+    if (!statsData?.nextUpcomingClassSession) return;
+    
+    const session = statsData.nextUpcomingClassSession;
+    setIsStartingEarly(true);
+    
+    try {
+      const response = await fetch(`/api/classes/${session.classId}/${session.sessionId}/start-early`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${user?.token}` // Assuming token is available
+        },
+        body: JSON.stringify({
+          teacherId: user?.teacherId,
+          sessionId: session.sessionId,
+          classId: session.classId
+        })
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to start class early');
+      }
+      
+      const result = await response.json();
+      
+      // Update local state with real session data
+      setIsLive(true);
+      setLiveStudents(session.enrolledStudents || 0);
+      setClassProgress(0); // Start fresh
+      setShowConfirmModal(false);
+      
+      // TODO: Show success notification
+      console.log('Class started early successfully:', result);
+      
+    } catch (error) {
+      console.error('Error starting class early:', error);
+      // TODO: Show error notification
+    } finally {
+      setIsStartingEarly(false);
+    }
+  }, [statsData?.nextUpcomingClassSession, user]);
 
   const HeaderCommandBar = () => (
     <div className="bg-white border-b border-gray-200 px-6 py-4">
@@ -246,13 +321,18 @@ const TeacherCommandCenter: React.FC = () => {
 
   const LiveTeachingStatus = () => {
     if (isLive) {
+      const currentSession = statsData?.nextUpcomingClassSession;
       return (
         <Card className="border-red-200 bg-red-50">
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h2 className="text-xl font-bold text-red-900">Teaching Physics Year 10</h2>
-                <p className="text-red-700">{liveStudents} students • {100 - classProgress} min remaining</p>
+                <h2 className="text-xl font-bold text-red-900">
+                  Teaching {currentSession?.title || 'Live Class'}
+                </h2>
+                <p className="text-red-700">
+                  {liveStudents} students • {currentSession?.duration || 60} min session
+                </p>
               </div>
               <div className="flex space-x-2">
                 <Button size="sm" variant="outline">
@@ -314,17 +394,43 @@ const TeacherCommandCenter: React.FC = () => {
             </div>
             <div className="flex space-x-2">
               {statsData?.nextUpcomingClassSession ? (
-                <Button 
-                  size="sm" 
-                  onClick={() => {
-                    setIsLive(true);
-                    setLiveStudents(15);
-                    setClassProgress(5);
-                  }}
-                >
-                  <PlayCircle className="w-4 h-4 mr-1" />
-                  Start Early
-                </Button>
+                (() => {
+                  const session = statsData.nextUpcomingClassSession;
+                  const canStart = canStartEarly(session.timeLeft);
+                  const hasReadiness = hasMinimumReadiness(session.readiness);
+                  const isReady = canStart && hasReadiness;
+                  
+                  return (
+                    <div className="flex flex-col space-y-1">
+                      <Button 
+                        size="sm" 
+                        onClick={() => setShowConfirmModal(true)}
+                        disabled={!isReady || isStartingEarly}
+                        title={!canStart ? `Can only start early within 15 minutes (${session.timeLeft}m left)` : 
+                               !hasReadiness ? getReadinessMessage(session.readiness) :
+                               'Start class early and notify students'}
+                      >
+                        {isStartingEarly ? (
+                          <>
+                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-1" />
+                            Starting...
+                          </>
+                        ) : (
+                          <>
+                            <PlayCircle className="w-4 h-4 mr-1" />
+                            Start Early
+                          </>
+                        )}
+                      </Button>
+                      {!isReady && (
+                        <div className="text-xs text-gray-600">
+                          {!canStart && `Available in ${session.timeLeft - 15}m`}
+                          {canStart && !hasReadiness && `${session.readiness?.overallReadiness || 0}% ready`}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()
               ) : (
                 <Button size="sm" variant="outline" disabled>
                   <Calendar className="w-4 h-4 mr-1" />
@@ -782,6 +888,98 @@ const TeacherCommandCenter: React.FC = () => {
     );
   };
 
+  // Confirmation Modal Component
+  const ConfirmStartEarlyModal = () => {
+    if (!showConfirmModal || !statsData?.nextUpcomingClassSession) return null;
+    
+    const session = statsData.nextUpcomingClassSession;
+    
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+          <h3 className="text-lg font-semibold mb-4">Start Class Early?</h3>
+          
+          <div className="space-y-3 mb-6">
+            <div className="flex justify-between">
+              <span className="text-sm text-gray-600">Class:</span>
+              <span className="text-sm font-medium">{session.title}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm text-gray-600">Enrolled Students:</span>
+              <span className="text-sm font-medium">{session.enrolledStudents}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm text-gray-600">Scheduled Time:</span>
+              <span className="text-sm font-medium">in {formatTimeLeft(session.timeLeft)}</span>
+            </div>
+          </div>
+          
+          {/* Readiness Checklist */}
+          <div className="mb-6">
+            <h4 className="text-sm font-medium mb-2">Readiness Checklist:</h4>
+            <div className="space-y-1">
+              <div className="flex items-center space-x-2">
+                {session.readiness?.lessonPlanReady ? (
+                  <CheckCircle className="w-4 h-4 text-green-500" />
+                ) : (
+                  <XCircle className="w-4 h-4 text-red-500" />
+                )}
+                <span className="text-xs">Lesson Plan Ready</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                {session.readiness?.materialsReady ? (
+                  <CheckCircle className="w-4 h-4 text-green-500" />
+                ) : (
+                  <XCircle className="w-4 h-4 text-red-500" />
+                )}
+                <span className="text-xs">Materials Ready</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                {session.readiness?.zoomSetup ? (
+                  <CheckCircle className="w-4 h-4 text-green-500" />
+                ) : (
+                  <XCircle className="w-4 h-4 text-red-500" />
+                )}
+                <span className="text-xs">Zoom Setup Complete</span>
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-blue-50 p-3 rounded-lg mb-6">
+            <p className="text-sm text-blue-800">
+              💬 Starting early will automatically notify all enrolled students via push notification.
+            </p>
+          </div>
+          
+          <div className="flex space-x-3">
+            <Button 
+              variant="outline" 
+              className="flex-1"
+              onClick={() => setShowConfirmModal(false)}
+              disabled={isStartingEarly}
+            >
+              Cancel
+            </Button>
+            <Button 
+              className="flex-1"
+              onClick={handleStartEarly}
+              disabled={isStartingEarly}
+            >
+              {isStartingEarly ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                  Starting...
+                </>
+              ) : (
+                <>Start Early</>
+              )}
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <HeaderCommandBar />
@@ -800,6 +998,7 @@ const TeacherCommandCenter: React.FC = () => {
       </div>
       
       <QuickActionsHub />
+      <ConfirmStartEarlyModal />
     </div>
   );
 };
