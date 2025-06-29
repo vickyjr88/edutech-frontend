@@ -28,6 +28,10 @@ import { GoogleCalendarDashboard } from "@/components/teacher/google-calendar";
 import { useAuth } from "@/contexts/AuthContext";
 import {teacherService} from "@/integrations/api/services/teacher.service.ts";
 import {classService} from "@/integrations/api/services/class.service.ts";
+import { useTeacherUpcomingSessions } from "@/hooks/useTeacherUpcomingSessions";
+import { useTeacherSummary } from "@/hooks/useTeacherSummary";
+import { UpcomingSession } from "@/types/activity";
+import { TeacherSummaryResponse } from "@/types/enhanced-classes";
 
 interface TeacherProfileData {
   contact: {
@@ -59,6 +63,57 @@ interface TeacherProfileData {
     institution: string;
   };
 }
+
+// Helper functions for schedule
+const getWeekDays = (date: Date = new Date()) => {
+  const startOfWeek = new Date(date);
+  const day = startOfWeek.getDay();
+  const diff = startOfWeek.getDate() - day;
+  startOfWeek.setDate(diff);
+  
+  const days = [];
+  for (let i = 0; i < 7; i++) {
+    const currentDay = new Date(startOfWeek);
+    currentDay.setDate(startOfWeek.getDate() + i);
+    days.push(currentDay);
+  }
+  return days;
+};
+
+const formatTime = (dateStr: string) => {
+  const date = new Date(dateStr);
+  return date.toLocaleTimeString('en-US', { 
+    hour: 'numeric', 
+    minute: '2-digit', 
+    hour12: true 
+  });
+};
+
+const getSessionPosition = (startTime: string, duration: number) => {
+  const startHour = new Date(startTime).getHours();
+  const startMinute = new Date(startTime).getMinutes();
+  
+  // Calculate position based on 9am start (index 0)
+  const baseHour = 9;
+  const hourOffset = startHour - baseHour;
+  const minuteOffset = startMinute / 60;
+  
+  const top = (hourOffset + minuteOffset) * 55; // 55px per hour
+  const height = (duration / 60) * 55; // duration in minutes
+  
+  return { top, height };
+};
+
+const getSessionColor = (index: number) => {
+  const colors = [
+    { bg: 'bg-blue-100', border: 'border-blue-200', text: 'text-blue-800', subtext: 'text-blue-700' },
+    { bg: 'bg-purple-100', border: 'border-purple-200', text: 'text-purple-800', subtext: 'text-purple-700' },
+    { bg: 'bg-green-100', border: 'border-green-200', text: 'text-green-800', subtext: 'text-green-700' },
+    { bg: 'bg-amber-100', border: 'border-amber-200', text: 'text-amber-800', subtext: 'text-amber-700' },
+    { bg: 'bg-pink-100', border: 'border-pink-200', text: 'text-pink-800', subtext: 'text-pink-700' },
+  ];
+  return colors[index % colors.length];
+};
 
 const TeacherDashboard = () => {
   const navigate = useNavigate();
@@ -121,6 +176,25 @@ const TeacherDashboard = () => {
   const [selectedClass, setSelectedClass] = useState<any>(null);
   const [activeClassTab, setActiveClassTab] = useState("basic");
   const [showEnrollStudents, setShowEnrollStudents] = useState(location.pathname.includes('/teacher-dashboard/students') && location.search.includes('enroll=true'));
+  const [currentWeek, setCurrentWeek] = useState(new Date());
+
+  // Teacher data hooks for schedule
+  const { upcomingSessions, loading: sessionsLoading, error: sessionsError, refetch: refetchSessions } = useTeacherUpcomingSessions({
+    teacherId: user?.teacherId || '',
+  });
+  
+  const { summaryData, loading: summaryLoading, error: summaryError, refetch: refetchSummary } = useTeacherSummary({
+    teacherId: user?.teacherId || '',
+  });
+
+  // Prepare schedule data
+  const weekDays = getWeekDays(currentWeek);
+  const weekSessions = upcomingSessions.filter(session => {
+    const sessionDate = new Date(session.startTime);
+    return weekDays.some(day => 
+      day.toDateString() === sessionDate.toDateString()
+    );
+  });
 
   // Update the active tab when URL changes
   useEffect(() => {
@@ -1393,6 +1467,46 @@ const TeacherDashboard = () => {
                 />
               ) : (
                 <div className="space-y-6">
+                  {/* Loading State */}
+                  {(sessionsLoading || summaryLoading) && (
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                      <div className="flex items-center space-x-3">
+                        <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
+                        <div>
+                          <p className="text-sm font-medium text-blue-800">Loading your schedule data...</p>
+                          <p className="text-xs text-blue-600">Fetching upcoming sessions and insights</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Error State */}
+                  {(sessionsError || summaryError) && (
+                    <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                      <div className="flex items-center space-x-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-red-600">
+                          <circle cx="12" cy="12" r="10"></circle>
+                          <line x1="15" y1="9" x2="9" y2="15"></line>
+                          <line x1="9" y1="9" x2="15" y2="15"></line>
+                        </svg>
+                        <div>
+                          <p className="text-sm font-medium text-red-800">Unable to load schedule data</p>
+                          <p className="text-xs text-red-600">{sessionsError || summaryError}</p>
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            className="mt-2 h-7 text-xs border-red-300 text-red-700 hover:bg-red-50"
+                            onClick={() => {
+                              refetchSessions();
+                              refetchSummary();
+                            }}
+                          >
+                            Retry
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                   <div className="flex flex-col lg:flex-row gap-6">
                     {/* Main calendar section */}
                     <div className="lg:w-2/3">
@@ -1426,34 +1540,63 @@ const TeacherDashboard = () => {
                               {/* Week navigation */}
                               <div className="flex items-center justify-between px-4 py-2 bg-gray-50 border-b">
                                 <div className="flex items-center space-x-2">
-                                  <Button variant="ghost" size="icon" className="h-8 w-8">
+                                  <Button 
+                                    variant="ghost" 
+                                    size="icon" 
+                                    className="h-8 w-8"
+                                    onClick={() => {
+                                      const newWeek = new Date(currentWeek);
+                                      newWeek.setDate(currentWeek.getDate() - 7);
+                                      setCurrentWeek(newWeek);
+                                    }}
+                                  >
                                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-600">
                                       <path d="m15 18-6-6 6-6"/>
                                     </svg>
                                   </Button>
-                                  <Button variant="ghost" size="sm" className="h-8 text-xs">
+                                  <Button 
+                                    variant="ghost" 
+                                    size="sm" 
+                                    className="h-8 text-xs"
+                                    onClick={() => setCurrentWeek(new Date())}
+                                  >
                                     Today
                                   </Button>
-                                  <Button variant="ghost" size="icon" className="h-8 w-8">
+                                  <Button 
+                                    variant="ghost" 
+                                    size="icon" 
+                                    className="h-8 w-8"
+                                    onClick={() => {
+                                      const newWeek = new Date(currentWeek);
+                                      newWeek.setDate(currentWeek.getDate() + 7);
+                                      setCurrentWeek(newWeek);
+                                    }}
+                                  >
                                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-600">
                                       <path d="m9 18 6-6-6-6"/>
                                     </svg>
                                   </Button>
                                 </div>
-                                <h3 className="text-sm font-medium">May 19 - May 25, 2024</h3>
+                                <h3 className="text-sm font-medium">
+                                  {weekDays[0].toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - {weekDays[6].toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                </h3>
                                 <div></div>
                               </div>
                               
                               {/* Days of the week */}
                               <div className="grid grid-cols-7 text-center border-b bg-gray-50">
-                                {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, i) => (
-                                  <div key={i} className="py-2 text-xs font-medium">
-                                    <div>{day}</div>
-                                    <div className={`text-sm mt-1 ${i === 2 ? "h-6 w-6 rounded-full bg-sky-600 text-white flex items-center justify-center mx-auto" : ""}`}>
-                                      {i + 19}
+                                {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, i) => {
+                                  const currentDay = weekDays[i];
+                                  const isToday = currentDay.toDateString() === new Date().toDateString();
+                                  return (
+                                    <div key={i} className="py-2 text-xs font-medium">
+                                      <div>{day}</div>
+                                      <div className={`text-sm mt-1 ${isToday ? "h-6 w-6 rounded-full bg-sky-600 text-white flex items-center justify-center mx-auto" : ""}`}>
+                                        {currentDay.getDate()}
+                                      </div>
                                     </div>
-                                  </div>
-                                ))}
+                                  );
+                                })}
                               </div>
                               
                               {/* Time slots */}
@@ -1471,40 +1614,53 @@ const TeacherDashboard = () => {
                                 
                                 {/* Week grid */}
                                 <div className="absolute top-0 left-8 right-0 h-full grid grid-cols-7 gap-0">
-                                  {/* Sample day columns */}
-                                  {Array(7).fill(0).map((_, dayIndex) => (
-                                    <div key={dayIndex} className="relative border-l first:border-l-0 h-full">
-                                      {/* Sample events */}
-                                      {dayIndex === 2 && (
-                                        <div className="absolute top-0 left-1 right-1 h-[120px] mt-2 rounded-md bg-blue-100 border border-blue-200 p-2 overflow-hidden">
-                                          <div className="text-xs font-medium text-blue-800">Math Class</div>
-                                          <div className="text-xs text-blue-700">9:00am - 10:00am</div>
-                                          <div className="text-xs text-blue-600 mt-1">Grade 7</div>
-                                        </div>
-                                      )}
-                                      {dayIndex === 2 && (
-                                        <div className="absolute top-[240px] left-1 right-1 h-[120px] rounded-md bg-purple-100 border border-purple-200 p-2 overflow-hidden">
-                                          <div className="text-xs font-medium text-purple-800">Science Lab</div>
-                                          <div className="text-xs text-purple-700">1:00pm - 2:00pm</div>
-                                          <div className="text-xs text-purple-600 mt-1">Grade 5</div>
-                                        </div>
-                                      )}
-                                      {dayIndex === 4 && (
-                                        <div className="absolute top-[120px] left-1 right-1 h-[120px] rounded-md bg-green-100 border border-green-200 p-2 overflow-hidden">
-                                          <div className="text-xs font-medium text-green-800">English Literature</div>
-                                          <div className="text-xs text-green-700">11:00am - 12:00pm</div>
-                                          <div className="text-xs text-green-600 mt-1">Grade 8</div>
-                                        </div>
-                                      )}
-                                      {dayIndex === 5 && (
-                                        <div className="absolute top-[360px] left-1 right-1 h-[120px] rounded-md bg-amber-100 border border-amber-200 p-2 overflow-hidden">
-                                          <div className="text-xs font-medium text-amber-800">Art Class</div>
-                                          <div className="text-xs text-amber-700">3:00pm - 4:00pm</div>
-                                          <div className="text-xs text-amber-600 mt-1">Grade 6</div>
-                                        </div>
-                                      )}
-                                    </div>
-                                  ))}
+                                  {/* Day columns with real sessions */}
+                                  {weekDays.map((day, dayIndex) => {
+                                    const daySessions = weekSessions.filter(session => 
+                                      new Date(session.startTime).toDateString() === day.toDateString()
+                                    );
+                                    
+                                    return (
+                                      <div key={dayIndex} className="relative border-l first:border-l-0 h-full">
+                                        {/* Real session events */}
+                                        {daySessions.map((session, sessionIndex) => {
+                                          const { top, height } = getSessionPosition(session.startTime, session.duration);
+                                          const colors = getSessionColor(sessionIndex);
+                                          const startTime = formatTime(session.startTime);
+                                          const endTime = formatTime(new Date(new Date(session.startTime).getTime() + session.duration * 60000).toISOString());
+                                          
+                                          return (
+                                            <div 
+                                              key={session.classId} 
+                                              className={`absolute left-1 right-1 rounded-md ${colors.bg} border ${colors.border} p-2 overflow-hidden cursor-pointer hover:shadow-sm transition-shadow`}
+                                              style={{ top: `${Math.max(0, top)}px`, height: `${Math.max(60, height)}px` }}
+                                              onClick={() => {
+                                                // Navigate to class view
+                                                navigate(`/teacher-dashboard/classes?id=${session.classId}`);
+                                              }}
+                                            >
+                                              <div className={`text-xs font-medium ${colors.text} truncate`}>{session.title}</div>
+                                              <div className={`text-xs ${colors.subtext}`}>{startTime} - {endTime}</div>
+                                              <div className={`text-xs ${colors.subtext} mt-1 truncate`}>{session.cohortName}</div>
+                                              <div className={`text-xs ${colors.subtext} truncate`}>{session.enrolledStudents} students</div>
+                                              {session.readiness && (
+                                                <div className={`text-xs ${colors.subtext} mt-1`}>
+                                                  Ready: {Math.round(session.readiness.overallReadiness || 0)}%
+                                                </div>
+                                              )}
+                                            </div>
+                                          );
+                                        })}
+                                        
+                                        {/* Show loading state */}
+                                        {sessionsLoading && dayIndex === 0 && (
+                                          <div className="absolute top-2 left-1 right-1 h-16 rounded-md bg-gray-100 border border-gray-200 p-2 flex items-center justify-center">
+                                            <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
+                                          </div>
+                                        )}
+                                      </div>
+                                    );
+                                  })}
                                 </div>
                               </div>
                             </div>
@@ -1536,10 +1692,12 @@ const TeacherDashboard = () => {
                           <div>
                             <Label htmlFor="class">Class</Label>
                             <select className="w-full mt-1 rounded-md border border-gray-300 px-3 py-2 text-sm">
-                              <option>Math Grade 7</option>
-                              <option>Science Grade 5</option>
-                              <option>English Grade 8</option>
-                              <option>Art Grade 6</option>
+                              <option value="">Select a class</option>
+                              {classes.map((cls: any) => (
+                                <option key={cls._id || cls.id} value={cls._id || cls.id}>
+                                  {cls.title}
+                                </option>
+                              ))}
                             </select>
                           </div>
                           <div>
@@ -1611,89 +1769,274 @@ const TeacherDashboard = () => {
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-3">
-                        <div className="bg-blue-50 rounded-lg overflow-hidden border border-blue-100">
-                          <div className="p-3">
-                            <div className="flex items-center justify-between">
-                              <h4 className="font-medium text-blue-800">Math Class</h4>
-                              <div className="text-xs px-2 py-1 bg-blue-100 rounded-full text-blue-700">Today</div>
-                            </div>
-                            <div className="flex items-start mt-1">
-                              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1 text-blue-700 mt-0.5">
-                                <circle cx="12" cy="12" r="10"></circle>
-                                <path d="M12 6v6l4 2"></path>
-                              </svg>
-                              <div className="text-sm text-blue-700">9:00am - 10:00am</div>
-                            </div>
-                            <div className="flex items-start mt-1">
-                              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1 text-blue-700 mt-0.5">
-                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                                <circle cx="12" cy="10" r="3"></circle>
-                              </svg>
-                              <div className="text-sm text-blue-700">Room 203, Main Building</div>
-                            </div>
-                            <div className="flex items-start mt-1">
-                              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1 text-blue-700 mt-0.5">
-                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                                <circle cx="9" cy="7" r="4"></circle>
-                                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-                              </svg>
-                              <div className="text-sm text-blue-700">12 students</div>
-                            </div>
+                        {sessionsLoading ? (
+                          <div className="flex items-center justify-center py-8">
+                            <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+                            <span className="ml-2 text-sm text-gray-500">Loading sessions...</span>
                           </div>
-                          <div className="flex items-center justify-end bg-blue-100 px-3 py-2 text-xs">
-                            <Button size="sm" variant="ghost" className="h-7 text-xs">Edit</Button>
-                            <Button size="sm" variant="ghost" className="h-7 text-xs">Cancel</Button>
-                            <Button size="sm" className="h-7 bg-blue-600 hover:bg-blue-700 text-xs">Start Class</Button>
+                        ) : upcomingSessions.length === 0 ? (
+                          <div className="text-center py-8">
+                            <Calendar className="w-12 h-12 text-gray-300 mx-auto mb-2" />
+                            <p className="text-gray-500 text-sm">No upcoming sessions</p>
+                            <p className="text-gray-400 text-xs mt-1">Schedule a class to get started</p>
                           </div>
-                        </div>
+                        ) : (
+                          upcomingSessions.slice(0, 3).map((session, index) => {
+                            const colors = getSessionColor(index);
+                            const startTime = formatTime(session.startTime);
+                            const endTime = formatTime(new Date(new Date(session.startTime).getTime() + session.duration * 60000).toISOString());
+                            const sessionDate = new Date(session.startTime);
+                            const isToday = sessionDate.toDateString() === new Date().toDateString();
+                            const isTomorrow = sessionDate.toDateString() === new Date(Date.now() + 24 * 60 * 60 * 1000).toDateString();
+                            const timeLeft = Math.max(0, sessionDate.getTime() - Date.now());
+                            const hoursLeft = Math.floor(timeLeft / (1000 * 60 * 60));
+                            const minutesLeft = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+                            
+                            let timeLabel = 'Upcoming';
+                            if (isToday) {
+                              if (hoursLeft < 1) {
+                                timeLabel = minutesLeft > 0 ? `${minutesLeft}m` : 'Starting soon';
+                              } else {
+                                timeLabel = `${hoursLeft}h ${minutesLeft}m`;
+                              }
+                            } else if (isTomorrow) {
+                              timeLabel = 'Tomorrow';
+                            } else {
+                              timeLabel = sessionDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+                            }
+                            
+                            return (
+                              <div key={session.classId} className={`${colors.bg} rounded-lg overflow-hidden border ${colors.border}`}>
+                                <div className="p-3">
+                                  <div className="flex items-center justify-between">
+                                    <h4 className={`font-medium ${colors.text} truncate`}>{session.title}</h4>
+                                    <div className={`text-xs px-2 py-1 ${colors.bg.replace('100', '200')} rounded-full ${colors.subtext}`}>{timeLabel}</div>
+                                  </div>
+                                  <div className="flex items-start mt-1">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`mr-1 ${colors.subtext} mt-0.5`}>
+                                      <circle cx="12" cy="12" r="10"></circle>
+                                      <path d="M12 6v6l4 2"></path>
+                                    </svg>
+                                    <div className={`text-sm ${colors.subtext}`}>{startTime} - {endTime}</div>
+                                  </div>
+                                  <div className="flex items-start mt-1">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`mr-1 ${colors.subtext} mt-0.5`}>
+                                      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                                      <circle cx="12" cy="10" r="3"></circle>
+                                    </svg>
+                                    <div className={`text-sm ${colors.subtext} truncate`}>{session.cohortName}</div>
+                                  </div>
+                                  <div className="flex items-start mt-1">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`mr-1 ${colors.subtext} mt-0.5`}>
+                                      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                      <circle cx="9" cy="7" r="4"></circle>
+                                      <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                                      <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                                    </svg>
+                                    <div className={`text-sm ${colors.subtext}`}>{session.enrolledStudents} students</div>
+                                  </div>
+                                  {session.readiness && (
+                                    <div className="flex items-start mt-1">
+                                      <CheckCircle2 className={`w-3.5 h-3.5 mr-1 ${colors.subtext} mt-0.5`} />
+                                      <div className={`text-sm ${colors.subtext}`}>Ready: {Math.round(session.readiness.overallReadiness || 0)}%</div>
+                                    </div>
+                                  )}
+                                </div>
+                                <div className={`flex items-center justify-end ${colors.bg.replace('100', '200')} px-3 py-2 text-xs`}>
+                                  <Button 
+                                    size="sm" 
+                                    variant="ghost" 
+                                    className="h-7 text-xs"
+                                    onClick={() => navigate(`/teacher-dashboard/classes?id=${session.classId}`)}
+                                  >
+                                    View
+                                  </Button>
+                                  {session.readiness && session.readiness.overallReadiness > 80 && (
+                                    <Button 
+                                      size="sm" 
+                                      className={`h-7 text-xs ml-2 ${colors.text.includes('blue') ? 'bg-blue-600 hover:bg-blue-700' : colors.text.includes('purple') ? 'bg-purple-600 hover:bg-purple-700' : colors.text.includes('green') ? 'bg-green-600 hover:bg-green-700' : 'bg-amber-600 hover:bg-amber-700'}`}
+                                      onClick={() => {
+                                        // Start class logic would go here
+                                        toast({ title: "Starting class", description: `Starting ${session.title}` });
+                                      }}
+                                    >
+                                      {hoursLeft < 1 ? 'Start Class' : 'Prepare'}
+                                    </Button>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })
+                        )}
                         
-                        <div className="bg-purple-50 rounded-lg overflow-hidden border border-purple-100">
-                          <div className="p-3">
-                            <div className="flex items-center justify-between">
-                              <h4 className="font-medium text-purple-800">Science Lab</h4>
-                              <div className="text-xs px-2 py-1 bg-purple-100 rounded-full text-purple-700">Today</div>
-                            </div>
-                            <div className="flex items-start mt-1">
-                              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1 text-purple-700 mt-0.5">
-                                <circle cx="12" cy="12" r="10"></circle>
-                                <path d="M12 6v6l4 2"></path>
-                              </svg>
-                              <div className="text-sm text-purple-700">1:00pm - 2:00pm</div>
-                            </div>
-                            <div className="flex items-start mt-1">
-                              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1 text-purple-700 mt-0.5">
-                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                                <circle cx="12" cy="10" r="3"></circle>
-                              </svg>
-                              <div className="text-sm text-purple-700">Science Lab 4</div>
-                            </div>
-                            <div className="flex items-start mt-1">
-                              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1 text-purple-700 mt-0.5">
-                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                                <circle cx="9" cy="7" r="4"></circle>
-                                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-                              </svg>
-                              <div className="text-sm text-purple-700">8 students</div>
-                            </div>
+                        {upcomingSessions.length > 3 && (
+                          <div className="pt-2 flex justify-center">
+                            <Button 
+                              variant="link" 
+                              className="text-emerald-600"
+                              onClick={() => setActiveTab('schedule')}
+                            >
+                              View all {upcomingSessions.length} upcoming sessions
+                            </Button>
                           </div>
-                          <div className="flex items-center justify-end bg-purple-100 px-3 py-2 text-xs">
-                            <Button size="sm" variant="ghost" className="h-7 text-xs">Edit</Button>
-                            <Button size="sm" variant="ghost" className="h-7 text-xs">Cancel</Button>
-                            <Button size="sm" className="h-7 bg-purple-600 hover:bg-purple-700 text-xs">Prepare Lab</Button>
-                          </div>
-                        </div>
-                        
-                        <div className="pt-2 flex justify-center">
-                          <Button variant="link" className="text-emerald-600">
-                            View all upcoming classes
-                          </Button>
-                        </div>
+                        )}
                       </div>
                     </CardContent>
                   </Card>
                 </div>
+              </div>
+              
+              {/* Schedule Insights & Critical Path */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Teaching Insights */}
+                <Card className="border-t-4 border-t-emerald-500">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-lg flex items-center text-gray-800">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 text-emerald-600">
+                        <path d="M9 11H5a2 2 0 0 0-2 2v7c0 2 1 3 3 3h10c2 0 3-1 3-3v-7a2 2 0 0 0-2-2h-4"></path>
+                        <path d="M8 7V6a2 2 0 1 1 4 0v1"></path>
+                        <path d="M9 17v-7h6v7"></path>
+                        <path d="M8 17h8"></path>
+                      </svg>
+                      Smart Insights
+                    </CardTitle>
+                    <CardDescription>
+                      AI-powered recommendations for your schedule
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {summaryData?.analytics?.insights?.slice(0, 3).map((insight, index) => (
+                        <div key={index} className="flex items-start space-x-3 p-3 bg-emerald-50 rounded-lg border border-emerald-100">
+                          <div className="w-2 h-2 bg-emerald-500 rounded-full mt-2 flex-shrink-0"></div>
+                          <div className="flex-1">
+                            <p className="text-sm text-emerald-800">{insight}</p>
+                          </div>
+                        </div>
+                      )) || (
+                        <div className="text-center py-4">
+                          <p className="text-gray-500 text-sm">Insights will appear as you teach more classes</p>
+                        </div>
+                      )}
+                      
+                      {/* Preparation Recommendations */}
+                      <div className="border-t pt-4">
+                        <h4 className="text-sm font-medium text-gray-800 mb-2">Preparation Recommendations</h4>
+                        <div className="space-y-2">
+                          {upcomingSessions.slice(0, 2).map((session, index) => {
+                            const readiness = session.readiness?.overallReadiness || 0;
+                            let recommendation = '';
+                            let color = 'text-green-600';
+                            
+                            if (readiness < 50) {
+                              recommendation = 'Review lesson materials and prepare activities';
+                              color = 'text-red-600';
+                            } else if (readiness < 80) {
+                              recommendation = 'Check tech setup and review student progress';
+                              color = 'text-amber-600';
+                            } else {
+                              recommendation = 'All set! Consider bonus activities';
+                              color = 'text-green-600';
+                            }
+                            
+                            return (
+                              <div key={session.classId} className="text-xs">
+                                <span className="font-medium text-gray-700">{session.title}:</span>
+                                <span className={`ml-1 ${color}`}>{recommendation}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                {/* Critical Path */}
+                <Card className="border-t-4 border-t-purple-500">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-lg flex items-center text-gray-800">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 text-purple-600">
+                        <path d="M12 20h9"></path>
+                        <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path>
+                        <path d="M12 20h9"></path>
+                      </svg>
+                      Critical Path
+                    </CardTitle>
+                    <CardDescription>
+                      Key actions to stay ahead and deliver excellence
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      {/* Critical Actions */}
+                      <div className="bg-purple-50 rounded-lg p-3 border border-purple-100">
+                        <div className="flex items-center justify-between mb-2">
+                          <h4 className="text-sm font-medium text-purple-800">Next 24 Hours</h4>
+                          <div className="text-xs text-purple-600 bg-purple-100 px-2 py-1 rounded">
+                            {upcomingSessions.filter(s => new Date(s.startTime).getTime() - Date.now() < 24 * 60 * 60 * 1000).length} sessions
+                          </div>
+                        </div>
+                        <div className="space-y-1 text-xs text-purple-700">
+                          {upcomingSessions
+                            .filter(s => new Date(s.startTime).getTime() - Date.now() < 24 * 60 * 60 * 1000)
+                            .slice(0, 3)
+                            .map((session, index) => (
+                              <div key={session.classId} className="flex items-center justify-between">
+                                <span>{session.title}</span>
+                                <span className={`px-1 rounded text-xs ${
+                                  (session.readiness?.overallReadiness || 0) > 80 
+                                    ? 'bg-green-100 text-green-600' 
+                                    : (session.readiness?.overallReadiness || 0) > 50 
+                                    ? 'bg-amber-100 text-amber-600' 
+                                    : 'bg-red-100 text-red-600'
+                                }`}>
+                                  {Math.round(session.readiness?.overallReadiness || 0)}%
+                                </span>
+                              </div>
+                            ))
+                          }
+                        </div>
+                      </div>
+                      
+                      {/* Weekly Goals */}
+                      <div className="bg-blue-50 rounded-lg p-3 border border-blue-100">
+                        <h4 className="text-sm font-medium text-blue-800 mb-2">Weekly Goals</h4>
+                        <div className="space-y-1 text-xs text-blue-700">
+                          <div className="flex items-center justify-between">
+                            <span>• Content delivery excellence</span>
+                            <CheckCircle2 className="w-3 h-3 text-green-500" />
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span>• Student engagement optimization</span>
+                            <div className="w-3 h-3 border border-blue-300 rounded-full"></div>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span>• Research & preparation buffer</span>
+                            <div className="w-3 h-3 border border-blue-300 rounded-full"></div>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Performance Metrics */}
+                      {summaryData?.analytics && (
+                        <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
+                          <h4 className="text-sm font-medium text-gray-800 mb-2">Performance Metrics</h4>
+                          <div className="grid grid-cols-2 gap-3 text-xs">
+                            <div className="text-center">
+                              <div className="text-lg font-bold text-gray-800">{summaryData.analytics.overallPerformance?.averageEngagement || 0}%</div>
+                              <div className="text-gray-600">Engagement</div>
+                            </div>
+                            <div className="text-center">
+                              <div className="text-lg font-bold text-gray-800">{summaryData.analytics.classHealthScore || 0}%</div>
+                              <div className="text-gray-600">Health Score</div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
               
               {/* Recurring schedules */}
