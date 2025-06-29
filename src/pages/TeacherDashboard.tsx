@@ -1074,10 +1074,10 @@ const TeacherDashboard = () => {
         <header className="bg-white shadow">
           <div className="px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
             <h1 className="text-xl font-semibold text-gray-900">
-              {activeTab === "dashboard" ? "Dashboard" :
-               activeTab === "classes" ? (showCreateClassForm ? "Create New Class" : "My Classes") :
+              {activeTab === "dashboard" ? "" :
+               activeTab === "classes" ? (showCreateClassForm ? "Create New Class" : "") :
                activeTab === "viewClass" ? "Class Details" :
-               activeTab === "students" ? "Students" :
+               activeTab === "students" ? "" :
                activeTab === "enrollment" ? "Enroll Students" :
                activeTab === "schedule" ? "Schedule" : 
                isEditing ? "Update Your Profile" : 

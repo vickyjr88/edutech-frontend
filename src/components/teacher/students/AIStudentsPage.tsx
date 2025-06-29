@@ -9,6 +9,7 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import { useTeacherStudents } from '@/hooks/useTeacherStudents';
 import { useTeacherStats } from '@/hooks/useTeacherStats';
+import { useTeacherSummary } from '@/hooks/useTeacherSummary';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -27,6 +28,7 @@ import { Progress } from "@/components/ui/progress";
 import { Checkbox } from "@/components/ui/checkbox";
 import { SmartMessageComposer } from "../messaging/SmartMessageComposer";
 import { MessageAnalyticsDashboard } from "../messaging/MessageAnalyticsDashboard";
+import InviteStudentModal from "./InviteStudentModal";
 
 // Types
 interface Student {
@@ -136,13 +138,11 @@ const studentsData: Student[] = [
 interface AIStudentsPageProps {
   onViewProfile?: (studentId: string) => void;
   onEnrollStudents?: () => void;
-  classes?: any[]; // Teacher's classes from API
 }
 
 const AIStudentsPage: React.FC<AIStudentsPageProps> = ({ 
   onViewProfile, 
-  onEnrollStudents,
-  classes = []
+  onEnrollStudents
 }) => {
   const { user } = useAuth();
   const { studentsData, loading, error } = useTeacherStudents({
@@ -153,6 +153,10 @@ const AIStudentsPage: React.FC<AIStudentsPageProps> = ({
     teacherId: user?.teacherId || '',
   });
 
+  const { summaryData, loading: summaryLoading, error: summaryError } = useTeacherSummary({
+    teacherId: user?.teacherId || '',
+  });
+
   const [selectedClass, setSelectedClass] = useState("All Classes");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedFilter, setSelectedFilter] = useState("All");
@@ -160,34 +164,50 @@ const AIStudentsPage: React.FC<AIStudentsPageProps> = ({
   const [showAIAssistant, setShowAIAssistant] = useState(false);
   const [showMessageComposer, setShowMessageComposer] = useState(false);
   const [showAnalyticsDashboard, setShowAnalyticsDashboard] = useState(false);
+  const [showInviteModal, setShowInviteModal] = useState(false);
 
-  // Generate class data from teacher's actual classes
-  const classData = useMemo(() => {
+  // Generate enhanced class data from teacher summary
+  const { classData, enrichedClasses } = useMemo(() => {
     const totalStudents = studentsData?.students?.length || 0;
     const allClassesItem = { name: "All Classes", count: totalStudents, active: true };
     
-    if (classes.length === 0) {
+    if (!summaryData?.classes || summaryData.classes.length === 0) {
       // Use enhanced fallback data when no classes available
       const totalClasses = statsData?.totalClasses || 4;
       const avgStudentsPerClass = Math.floor(totalStudents / Math.max(totalClasses, 1));
-      return [
-        allClassesItem,
-        { name: "Math A", count: avgStudentsPerClass, active: true },
-        { name: "Physics", count: avgStudentsPerClass, active: true },
-        { name: "Chemistry", count: avgStudentsPerClass, active: true },
-        { name: "Biology", count: avgStudentsPerClass, active: true }
-      ];
+      return {
+        classData: [
+          allClassesItem,
+          { name: "Math A", count: avgStudentsPerClass, active: true },
+          { name: "Physics", count: avgStudentsPerClass, active: true },
+          { name: "Chemistry", count: avgStudentsPerClass, active: true },
+          { name: "Biology", count: avgStudentsPerClass, active: true }
+        ],
+        enrichedClasses: []
+      };
     }
     
-    // Generate class tabs from actual teacher classes
-    const classItems = classes.map(classItem => ({
-      name: classItem.title || classItem.name || "Unnamed Class",
-      count: Math.floor(Math.random() * 40) + 10, // Mock student count for now
-      active: true
+    // Generate enhanced class data from teacher summary
+    const classItems = summaryData.classes.map(classItem => ({
+      name: classItem.title,
+      count: classItem.enrolledStudents,
+      active: classItem.isPublished,
+      classId: classItem.classId,
+      subject: classItem.subject,
+      type: classItem.type,
+      activeCohorts: classItem.activeCohorts,
+      progressPercentage: classItem.progressPercentage,
+      averageEngagement: classItem.averageEngagement,
+      rating: classItem.rating,
+      nextSession: classItem.nextSession,
+      classState: classItem.classState
     }));
     
-    return [allClassesItem, ...classItems];
-  }, [classes, studentsData, statsData]);
+    return {
+      classData: [allClassesItem, ...classItems],
+      enrichedClasses: summaryData.classes
+    };
+  }, [summaryData, studentsData, statsData]);
 
   // Filter students based on selections
   const filteredStudents = useMemo(() => {
@@ -307,7 +327,15 @@ const AIStudentsPage: React.FC<AIStudentsPageProps> = ({
     }
   };
 
-  if (loading || statsLoading) {
+  const handleInviteSuccess = (response: any) => {
+    // Handle successful invitation
+    console.log('Student invited successfully:', response);
+    // You could refresh the students data here or show a success message
+    // For now, we'll just close the modal
+    setShowInviteModal(false);
+  };
+
+  if (loading || statsLoading || summaryLoading) {
     return (
       <div className="min-h-screen bg-[#ededf4] p-6 flex items-center justify-center">
         <div className="text-center">
@@ -318,11 +346,11 @@ const AIStudentsPage: React.FC<AIStudentsPageProps> = ({
     );
   }
 
-  if (error || statsError) {
+  if (error || statsError || summaryError) {
     return (
       <div className="min-h-screen bg-[#ededf4] p-6 flex items-center justify-center">
         <div className="text-center">
-          <div className="text-red-600 mb-4">Error loading data: {error || statsError}</div>
+          <div className="text-red-600 mb-4">Error loading data: {error || statsError || summaryError}</div>
           <Button onClick={() => window.location.reload()}>Retry</Button>
         </div>
       </div>
@@ -656,7 +684,10 @@ const AIStudentsPage: React.FC<AIStudentsPageProps> = ({
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 gap-3">
-              <Button className="bg-[#5e6ad2] hover:bg-[#5e6ad2]/90 text-white">
+              <Button 
+                className="bg-[#5e6ad2] hover:bg-[#5e6ad2]/90 text-white"
+                onClick={() => setShowInviteModal(true)}
+              >
                 <Mail className="w-4 h-4 mr-2" />
                 Send Invitations
               </Button>
@@ -800,6 +831,14 @@ const AIStudentsPage: React.FC<AIStudentsPageProps> = ({
       <MessageAnalyticsDashboard
         isOpen={showAnalyticsDashboard}
         onClose={() => setShowAnalyticsDashboard(false)}
+      />
+
+      {/* Invite Student Modal */}
+      <InviteStudentModal
+        isOpen={showInviteModal}
+        onClose={() => setShowInviteModal(false)}
+        classes={enrichedClasses}
+        onInviteSuccess={handleInviteSuccess}
       />
     </div>
   );

@@ -162,6 +162,57 @@ export interface ClassRecommendation {
     updatedAt: string;
 }
 
+export interface StudentInviteRequest {
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone: string;
+    customMessage: string;
+    cohortId: string;
+}
+
+export interface StudentInviteResponse {
+    class: string;
+    cohort: string;
+    inviteeEmail: string;
+    inviteeFirstName: string;
+    inviteeLastName: string;
+    status: string;
+    invitationMethod: string;
+    invitationMessage: string;
+    invitationCode: string;
+    isPaid: boolean;
+    attendanceCount: number;
+    progress: number;
+    lessonsCompleted: number;
+    totalLessons: number;
+    friendsCount: number;
+    totalLearningHours: number;
+    homeworkCompletionRate: number;
+    hasHomeworkDue: boolean;
+    overallEngagement: number;
+    engagementLevel: string;
+    cameraShy: boolean;
+    cameraUsage: number;
+    connectionQuality: string;
+    typicalConnection: string;
+    micUsage: number;
+    chatActivity: number;
+    breakoutRoomBehavior: string;
+    bestLearningTime: string;
+    learningStyle: string;
+    attentionSpan: number;
+    retentionRate: number;
+    masteredTopics: string[];
+    strugglingTopics: string[];
+    teachingRecommendations: string[];
+    _id: string;
+    lessonProgress: any[];
+    createdAt: string;
+    updatedAt: string;
+    __v: number;
+}
+
 //Define certification endpoints
 export const teacherService = {
     // Teacher Profile CRUD
@@ -811,5 +862,10 @@ export const teacherService = {
         return api.post<any>('/teacher/custom-class/generate', {
             prompt
         });
+    },
+
+    // Invite student to class
+    inviteStudentToClass: (teacherId: string, inviteData: StudentInviteRequest): Promise<ApiResponse<StudentInviteResponse[]>> => {
+        return api.post<StudentInviteResponse[]>(`/classes/teachers/${teacherId}/students`, inviteData);
     },
 };

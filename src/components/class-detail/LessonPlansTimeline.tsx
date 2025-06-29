@@ -23,10 +23,28 @@ import {
   TimerIcon,
   User,
   Edit,
-  Plus
+  Plus,
+  Brain,
+  TrendingUp,
+  Shield,
+  Lightbulb
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format, addDays, isAfter, isBefore, isToday } from 'date-fns';
+
+interface ReadinessAnalysis {
+  score: number; // 0-100
+  level: 'excellent' | 'good' | 'needs-improvement' | 'not-ready';
+  factors: {
+    hasObjectives: boolean;
+    hasActivities: boolean;
+    hasResources: boolean;
+    hasDescription: boolean;
+    descriptionQuality: number; // 0-100
+    contentCompleteness: number; // 0-100
+  };
+  suggestions: string[];
+}
 
 interface LessonPlan {
   id: string;
@@ -44,6 +62,7 @@ interface LessonPlan {
   teachingNotes?: string;
   difficultyLevel?: 'beginner' | 'intermediate' | 'advanced';
   estimatedPreparationTime?: number; // in minutes
+  readinessAnalysis?: ReadinessAnalysis;
 }
 
 interface LessonPlansTimelineProps {
@@ -66,6 +85,74 @@ const LessonPlansTimeline: React.FC<LessonPlansTimelineProps> = ({
   onAddLesson
 }) => {
   const [expandedLesson, setExpandedLesson] = useState<string | null>(null);
+
+  // Calculate smart readiness analysis for a lesson
+  const calculateReadinessAnalysis = (lesson: LessonPlan): ReadinessAnalysis => {
+    if (lesson.readinessAnalysis) {
+      return lesson.readinessAnalysis;
+    }
+
+    // Handle both string arrays and object arrays for objectives/activities
+    const validObjectives = lesson.objectives?.filter(obj => {
+      const text = getObjectiveText(obj);
+      return text && text !== 'Objective not specified' && text.trim().length > 0;
+    }) || [];
+    
+    const validActivities = lesson.activities?.filter(activity => {
+      const text = getActivityText(activity);
+      return text && text !== 'Activity not specified' && text.trim().length > 0;
+    }) || [];
+
+    const factors = {
+      hasObjectives: validObjectives.length > 0,
+      hasActivities: validActivities.length > 0,
+      hasResources: !!(lesson.resourceFiles?.length > 0 || lesson.resourceLinks?.length > 0),
+      hasDescription: !!(lesson.description && lesson.description.length > 20),
+      descriptionQuality: lesson.description ? Math.min(100, lesson.description.length * 2) : 0,
+      contentCompleteness: 0
+    };
+
+    // Calculate content completeness score
+    const completenessFactors = [
+      factors.hasObjectives ? 25 : 0,
+      factors.hasActivities ? 25 : 0,
+      factors.hasResources ? 25 : 0,
+      factors.hasDescription ? 25 : 0
+    ];
+    factors.contentCompleteness = completenessFactors.reduce((sum, score) => sum + score, 0);
+
+    // Calculate overall readiness score
+    const baseScore = factors.contentCompleteness;
+    const qualityBonus = factors.descriptionQuality > 80 ? 10 : factors.descriptionQuality > 50 ? 5 : 0;
+    const preparationBonus = lesson.estimatedPreparationTime ? 5 : 0;
+    const notesBonus = lesson.teachingNotes ? 5 : 0;
+    
+    const score = Math.min(100, baseScore + qualityBonus + preparationBonus + notesBonus);
+
+    // Determine readiness level
+    let level: ReadinessAnalysis['level'];
+    if (score >= 90) level = 'excellent';
+    else if (score >= 70) level = 'good';
+    else if (score >= 50) level = 'needs-improvement';
+    else level = 'not-ready';
+
+    // Generate smart suggestions
+    const suggestions: string[] = [];
+    if (!factors.hasObjectives) suggestions.push('Add clear learning objectives');
+    if (!factors.hasActivities) suggestions.push('Define engaging classroom activities');
+    if (!factors.hasResources) suggestions.push('Include supporting resources or materials');
+    if (!factors.hasDescription) suggestions.push('Write a detailed lesson description');
+    if (factors.descriptionQuality < 50) suggestions.push('Expand the lesson description for clarity');
+    if (!lesson.estimatedPreparationTime) suggestions.push('Estimate preparation time needed');
+    if (!lesson.teachingNotes) suggestions.push('Add personal teaching notes or tips');
+
+    return {
+      score,
+      level,
+      factors,
+      suggestions
+    };
+  };
 
   // Calculate lesson status based on sequence and completion
   const getLessonStatus = (lesson: LessonPlan, index: number): 'completed' | 'current' | 'upcoming' => {
@@ -132,8 +219,68 @@ const LessonPlansTimeline: React.FC<LessonPlansTimelineProps> = ({
     }
   };
 
+  // Get readiness level styling
+  const getReadinessConfig = (level: ReadinessAnalysis['level']) => {
+    switch (level) {
+      case 'excellent':
+        return { 
+          color: 'text-green-600', 
+          bg: 'bg-green-100', 
+          label: 'Excellent', 
+          icon: Shield,
+          scoreColor: 'text-green-700'
+        };
+      case 'good':
+        return { 
+          color: 'text-blue-600', 
+          bg: 'bg-blue-100', 
+          label: 'Good', 
+          icon: TrendingUp,
+          scoreColor: 'text-blue-700'
+        };
+      case 'needs-improvement':
+        return { 
+          color: 'text-kidato-orange', 
+          bg: 'bg-kidato-orange/10', 
+          label: 'Needs Work', 
+          icon: Brain,
+          scoreColor: 'text-kidato-orange'
+        };
+      case 'not-ready':
+        return { 
+          color: 'text-red-600', 
+          bg: 'bg-red-100', 
+          label: 'Not Ready', 
+          icon: AlertCircle,
+          scoreColor: 'text-red-700'
+        };
+    }
+  };
+
   const toggleExpanded = (lessonId: string) => {
     setExpandedLesson(expandedLesson === lessonId ? null : lessonId);
+  };
+
+  // Utility function to safely extract objective text from objects or strings
+  const getObjectiveText = (objective: string | { objective: string; isCompleted?: boolean; _id?: string } | any): string => {
+    if (typeof objective === 'string') {
+      return objective;
+    }
+    if (objective && typeof objective === 'object' && objective.objective) {
+      return objective.objective;
+    }
+    return 'Objective not specified';
+  };
+
+  // Utility function to safely extract activity text from objects or strings
+  const getActivityText = (activity: string | { activity?: string; name?: string; description?: string; _id?: string } | any): string => {
+    if (typeof activity === 'string') {
+      return activity;
+    }
+    if (activity && typeof activity === 'object') {
+      return activity.activity || activity.name || activity.description || 'Activity not specified';
+    }
+    return 'Activity not specified';
   };
 
   return (
@@ -197,6 +344,8 @@ const LessonPlansTimeline: React.FC<LessonPlansTimelineProps> = ({
           const difficultyConfig = getDifficultyConfig(lesson.difficultyLevel);
           const estimatedDate = getEstimatedDate(index);
           const isExpanded = expandedLesson === lesson.id;
+          const readinessAnalysis = calculateReadinessAnalysis(lesson);
+          const readinessConfig = getReadinessConfig(readinessAnalysis.level);
 
           return (
             <Card key={lesson.id} className={cn("transition-all duration-200", statusConfig.cardClass)}>
@@ -226,11 +375,32 @@ const LessonPlansTimeline: React.FC<LessonPlansTimelineProps> = ({
                           <h3 className="font-semibold text-kidato-gray-900 text-lg">
                             {lesson.title}
                           </h3>
-                          <div className="flex items-center gap-3 mt-1">
+                          
+                          {/* Lesson Description */}
+                          {lesson.description && (
+                            <p className="text-kidato-gray-600 text-sm mt-1 line-clamp-2">
+                              {lesson.description}
+                            </p>
+                          )}
+                          
+                          <div className="flex items-center gap-3 mt-2">
                             <Badge className={statusConfig.badgeClass}>
                               {statusConfig.icon}
                               <span className="ml-1">{statusConfig.badgeText}</span>
                             </Badge>
+                            
+                            {/* Readiness Badge */}
+                            <Badge 
+                              variant="outline" 
+                              className={cn(readinessConfig.color, readinessConfig.bg, "gap-1")}
+                            >
+                              <readinessConfig.icon className="h-3 w-3" />
+                              <span>{readinessConfig.label}</span>
+                              <span className={cn("font-mono text-xs", readinessConfig.scoreColor)}>
+                                {readinessAnalysis.score}%
+                              </span>
+                            </Badge>
+                            
                             <div className="flex items-center text-kidato-gray-600 text-sm">
                               <Clock className="h-4 w-4 mr-1" />
                               {lesson.duration} min
@@ -287,6 +457,67 @@ const LessonPlansTimeline: React.FC<LessonPlansTimelineProps> = ({
                 {/* Expanded Content */}
                 {isExpanded && (
                   <div className="px-6 pb-6 border-t border-kidato-gray-100">
+                    {/* Readiness Analysis Section */}
+                    <div className="mt-6 p-4 bg-gradient-to-r from-kidato-spindle/10 to-kidato-indigo/10 rounded-lg">
+                      <h4 className="font-medium text-kidato-gray-900 mb-3 flex items-center">
+                        <Brain className="h-4 w-4 mr-2 text-kidato-indigo" />
+                        Smart Readiness Analysis
+                        <Badge 
+                          variant="outline" 
+                          className={cn(readinessConfig.color, readinessConfig.bg, "ml-3")}
+                        >
+                          <readinessConfig.icon className="h-3 w-3 mr-1" />
+                          {readinessAnalysis.score}% {readinessConfig.label}
+                        </Badge>
+                      </h4>
+                      
+                      {/* Readiness Factors */}
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+                        <div className={cn("text-center p-2 rounded", 
+                          readinessAnalysis.factors.hasObjectives ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-600")}>
+                          <Target className="h-4 w-4 mx-auto mb-1" />
+                          <div className="text-xs font-medium">Objectives</div>
+                          <div className="text-xs">{readinessAnalysis.factors.hasObjectives ? '✓' : '○'}</div>
+                        </div>
+                        <div className={cn("text-center p-2 rounded", 
+                          readinessAnalysis.factors.hasActivities ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-600")}>
+                          <Users className="h-4 w-4 mx-auto mb-1" />
+                          <div className="text-xs font-medium">Activities</div>
+                          <div className="text-xs">{readinessAnalysis.factors.hasActivities ? '✓' : '○'}</div>
+                        </div>
+                        <div className={cn("text-center p-2 rounded", 
+                          readinessAnalysis.factors.hasResources ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-600")}>
+                          <FileText className="h-4 w-4 mx-auto mb-1" />
+                          <div className="text-xs font-medium">Resources</div>
+                          <div className="text-xs">{readinessAnalysis.factors.hasResources ? '✓' : '○'}</div>
+                        </div>
+                        <div className={cn("text-center p-2 rounded", 
+                          readinessAnalysis.factors.hasDescription ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-600")}>
+                          <BookOpen className="h-4 w-4 mx-auto mb-1" />
+                          <div className="text-xs font-medium">Description</div>
+                          <div className="text-xs">{readinessAnalysis.factors.hasDescription ? '✓' : '○'}</div>
+                        </div>
+                      </div>
+                      
+                      {/* Smart Suggestions */}
+                      {readinessAnalysis.suggestions.length > 0 && (
+                        <div className="mt-4">
+                          <h5 className="text-sm font-medium text-kidato-gray-800 mb-2 flex items-center">
+                            <Lightbulb className="h-3 w-3 mr-1 text-kidato-orange" />
+                            Smart Suggestions
+                          </h5>
+                          <ul className="space-y-1">
+                            {readinessAnalysis.suggestions.map((suggestion, idx) => (
+                              <li key={idx} className="text-sm text-kidato-gray-700 flex items-start gap-2">
+                                <div className="w-1.5 h-1.5 rounded-full bg-kidato-orange flex-shrink-0 mt-2"></div>
+                                {suggestion}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
                       {/* Left Column */}
                       <div className="space-y-4">
@@ -303,7 +534,7 @@ const LessonPlansTimeline: React.FC<LessonPlansTimelineProps> = ({
                                   <div className="w-5 h-5 rounded-full bg-kidato-indigo/10 flex items-center justify-center text-kidato-indigo text-xs font-medium flex-shrink-0 mt-0.5">
                                     {idx + 1}
                                   </div>
-                                  <span className="text-kidato-gray-700">{objective}</span>
+                                  <span className="text-kidato-gray-700">{getObjectiveText(objective)}</span>
                                 </li>
                               ))}
                             </ul>
@@ -323,7 +554,7 @@ const LessonPlansTimeline: React.FC<LessonPlansTimelineProps> = ({
                                   <div className="w-5 h-5 rounded-full bg-kidato-orange/10 flex items-center justify-center text-kidato-orange text-xs font-medium flex-shrink-0 mt-0.5">
                                     {idx + 1}
                                   </div>
-                                  <span className="text-kidato-gray-700">{activity}</span>
+                                  <span className="text-kidato-gray-700">{getActivityText(activity)}</span>
                                 </li>
                               ))}
                             </ul>
