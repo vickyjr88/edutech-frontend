@@ -1099,14 +1099,13 @@ const TeacherDashboard = () => {
             <Calendar className="mr-3 h-5 w-5" />
             Schedule
           </Link>
-          {/* Only show Earnings if teacher has classes with enrollments */}
+          {/* Only show Earnings if teacher has classes with enrolled students */}
           {(() => {
-            const hasEnrollments = classes.some(classItem => {
-              const currentEnrollment = classItem.enrollment?.current || 0;
-              return currentEnrollment > 0;
-            });
+            const hasEnrolledStudents = summaryData?.classes?.some(classItem => {
+              return (classItem.enrolledStudents || 0) > 0;
+            }) || false;
             
-            return hasEnrollments && (
+            return hasEnrolledStudents && (
               <Link 
                 to="/teacher-earnings"
                 className={`flex items-center px-4 py-3 text-sm font-medium rounded-md w-full text-left ${

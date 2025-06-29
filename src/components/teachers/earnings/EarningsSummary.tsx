@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,10 @@ import {
   Clock,
   DownloadCloud
 } from "lucide-react";
+import { useTeacherBalance } from '@/hooks/useTeacherBalance';
+import { useTeacherSummary } from '@/hooks/useTeacherSummary';
+import { teacherService } from '@/integrations/api';
+import { useAuth } from '@/contexts/AuthContext';
 
 // This would typically come from your API
 const mockEarningsData = {
@@ -39,6 +43,68 @@ const mockEarningsData = {
 
 const EarningsSummary = () => {
   const [timeframe, setTimeframe] = useState("6m");
+  const { user } = useAuth();
+  const { balance, isLoading: balanceLoading } = useTeacherBalance();
+  const { summaryData, loading: summaryLoading } = useTeacherSummary({
+    teacherId: user?.teacherId || '',
+  });
+  const [transactions, setTransactions] = useState([]);
+  const [transactionsLoading, setTransactionsLoading] = useState(true);
+
+  // Fetch transactions on component mount
+  useEffect(() => {
+    const fetchTransactions = async () => {
+      try {
+        const response = await teacherService.getAllTransactions({ limit: 4 });
+        if (response.data) {
+          setTransactions(response.data);
+        }
+      } catch (error) {
+        console.error('Error fetching transactions:', error);
+      } finally {
+        setTransactionsLoading(false);
+      }
+    };
+    fetchTransactions();
+  }, []);
+
+  // Calculate earnings from summary data
+  const calculateEarningsFromSummary = () => {
+    if (!summaryData) return { totalStudents: 0, activeClasses: 0 };
+    
+    const totalStudents = summaryData.classes.reduce((total, classItem) => {
+      return total + (classItem.enrolledStudents || 0);
+    }, 0);
+    
+    const activeClasses = summaryData.classes.filter(classItem => 
+      classItem.enrolledStudents > 0
+    ).length;
+    
+    return { totalStudents, activeClasses };
+  };
+
+  const { totalStudents, activeClasses } = calculateEarningsFromSummary();
+  const isLoading = balanceLoading || summaryLoading || transactionsLoading;
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[1, 2, 3, 4].map((i) => (
+            <Card key={i} className="bg-white shadow-sm">
+              <CardContent className="p-6">
+                <div className="animate-pulse">
+                  <div className="h-4 bg-gray-200 rounded w-20 mb-2"></div>
+                  <div className="h-8 bg-gray-200 rounded w-24 mb-2"></div>
+                  <div className="h-3 bg-gray-200 rounded w-32"></div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  }
   
   return (
     <div className="space-y-6">
@@ -49,7 +115,7 @@ const EarningsSummary = () => {
             <div className="flex justify-between items-start">
               <div>
                 <p className="text-sm font-medium text-gray-500">Total Earnings</p>
-                <h3 className="text-2xl font-bold mt-1">${mockEarningsData.totalEarnings.toFixed(2)}</h3>
+                <h3 className="text-2xl font-bold mt-1">${balance?.totalEarnings?.toFixed(2) || '0.00'}</h3>
                 <p className="text-xs text-gray-500 mt-1">Lifetime earnings</p>
               </div>
               <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
@@ -64,7 +130,7 @@ const EarningsSummary = () => {
             <div className="flex justify-between items-start">
               <div>
                 <p className="text-sm font-medium text-gray-500">Available for Payout</p>
-                <h3 className="text-2xl font-bold mt-1">${mockEarningsData.availableBalance.toFixed(2)}</h3>
+                <h3 className="text-2xl font-bold mt-1">${balance?.currentBalance?.toFixed(2) || '0.00'}</h3>
                 <p className="text-xs text-green-600 mt-1">Ready to withdraw</p>
               </div>
               <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
@@ -79,7 +145,7 @@ const EarningsSummary = () => {
             <div className="flex justify-between items-start">
               <div>
                 <p className="text-sm font-medium text-gray-500">Students</p>
-                <h3 className="text-2xl font-bold mt-1">{mockEarningsData.studentsCount}</h3>
+                <h3 className="text-2xl font-bold mt-1">{totalStudents}</h3>
                 <p className="text-xs text-gray-500 mt-1">Total enrolled students</p>
               </div>
               <div className="h-10 w-10 rounded-full bg-purple-100 flex items-center justify-center">
@@ -94,7 +160,7 @@ const EarningsSummary = () => {
             <div className="flex justify-between items-start">
               <div>
                 <p className="text-sm font-medium text-gray-500">Active Classes</p>
-                <h3 className="text-2xl font-bold mt-1">{mockEarningsData.classesCount}</h3>
+                <h3 className="text-2xl font-bold mt-1">{activeClasses}</h3>
                 <p className="text-xs text-gray-500 mt-1">Revenue-generating classes</p>
               </div>
               <div className="h-10 w-10 rounded-full bg-amber-100 flex items-center justify-center">
@@ -189,10 +255,10 @@ const EarningsSummary = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y">
-                  {mockEarningsData.recentTransactions.slice(0, 4).map((transaction) => (
-                    <tr key={transaction.id}>
+                  {transactions.length > 0 ? transactions.map((transaction) => (
+                    <tr key={transaction._id}>
                       <td className="py-3">
-                        {new Date(transaction.date).toLocaleDateString(undefined, {
+                        {new Date(transaction.createdAt).toLocaleDateString(undefined, {
                           month: 'short',
                           day: 'numeric',
                           year: 'numeric'
@@ -200,9 +266,9 @@ const EarningsSummary = () => {
                       </td>
                       <td className="py-3">{transaction.description}</td>
                       <td className={`py-3 text-right font-medium ${
-                        transaction.amount > 0 ? 'text-green-600' : 'text-gray-600'
+                        transaction.transactionType === 'earning' ? 'text-green-600' : 'text-gray-600'
                       }`}>
-                        {transaction.amount > 0 ? '+' : ''}${Math.abs(transaction.amount).toFixed(2)}
+                        {transaction.transactionType === 'earning' ? '+' : ''}${transaction.amount.toFixed(2)}
                       </td>
                       <td className="py-3 text-right">
                         <span className={`px-2 py-1 rounded-full text-xs ${
@@ -214,7 +280,13 @@ const EarningsSummary = () => {
                         </span>
                       </td>
                     </tr>
-                  ))}
+                  )) : (
+                    <tr>
+                      <td colSpan={4} className="py-8 text-center text-gray-500">
+                        No transactions found
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>

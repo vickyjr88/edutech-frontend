@@ -10,6 +10,8 @@ import {
 import {formatDateForDatabase} from "@/components/teacher/professional-profile/utils/educationUtils.ts";
 import type { TeacherSummaryResponse } from '@/types/enhanced-classes';
 import type { TeacherStudentsData } from '@/types/activity';
+import type { TeacherBalance, TeacherTransaction, TeacherTransactionsQuery } from '../types/teacher-transactions.types';
+import type { Bank, TeacherBankAccount, AddBankAccountRequest, UpdateBankAccountRequest } from '../types/bank-accounts.types';
 
 export interface BaseEntity {
     _id: string;
@@ -867,5 +869,41 @@ export const teacherService = {
     // Invite student to class
     inviteStudentToClass: (teacherId: string, inviteData: StudentInviteRequest): Promise<ApiResponse<StudentInviteResponse[]>> => {
         return api.post<StudentInviteResponse[]>(`/classes/teachers/${teacherId}/students`, inviteData);
+    },
+
+    // Teacher Transactions
+    getTeacherBalance: (): Promise<ApiResponse<TeacherBalance>> => {
+        return api.get<TeacherBalance>('/teacher-transactions/teacher-balance');
+    },
+
+    getAllTransactions: (params?: TeacherTransactionsQuery): Promise<ApiResponse<TeacherTransaction[]>> => {
+        return api.get<TeacherTransaction[]>('/teacher-transactions/all-transactions', { params });
+    },
+
+    // Bank Account Management
+    getSupportedBanks: (): Promise<ApiResponse<Bank[]>> => {
+        return api.get<Bank[]>('/banks');
+    },
+
+    getTeacherBankAccounts: (): Promise<ApiResponse<TeacherBankAccount[]>> => {
+        return api.get<TeacherBankAccount[]>('/teacher/bank-accounts/active');
+    },
+
+    addBankAccount: (data: AddBankAccountRequest): Promise<ApiResponse<TeacherBankAccount>> => {
+        return api.post<TeacherBankAccount>('/teacher/bank-accounts', data);
+    },
+
+    updateBankAccount: (accountId: string, data: UpdateBankAccountRequest): Promise<ApiResponse<TeacherBankAccount>> => {
+        return api.patch<TeacherBankAccount>(`/teacher/bank-accounts/${accountId}`, data);
+    },
+
+    deleteBankAccount: (accountId: string): Promise<ApiResponse<{ success: boolean }>> => {
+        return api.delete<{ success: boolean }>(`/teacher/bank-accounts/${accountId}`);
+    },
+
+    setPrimaryBankAccount: (accountId: string): Promise<ApiResponse<TeacherBankAccount>> => {
+        return api.post<TeacherBankAccount>('/teacher/bank-accounts/set-primary', {
+            bankAccountId: accountId
+        });
     },
 };

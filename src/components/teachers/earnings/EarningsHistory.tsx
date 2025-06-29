@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -22,110 +22,9 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
+import { useTeacherTransactions } from "@/hooks/useTeacherTransactions";
+import type { TeacherTransactionsQuery } from "@/integrations/api";
 
-// This would typically come from your API
-const mockTransactions = [
-  { 
-    id: 1, 
-    date: "2023-06-28", 
-    type: "earnings", 
-    description: "Math Fundamentals - June 2023", 
-    amount: 450.00, 
-    status: "completed",
-    student: "Sarah Johnson",
-    class: "Math Fundamentals"
-  },
-  { 
-    id: 2, 
-    date: "2023-06-25", 
-    type: "payout", 
-    description: "Monthly payout to Chase Bank •••• 4231", 
-    amount: -950.75, 
-    status: "completed",
-    student: null,
-    class: null
-  },
-  { 
-    id: 3, 
-    date: "2023-06-15", 
-    type: "earnings", 
-    description: "Science Explorer - June 2023", 
-    amount: 375.50, 
-    status: "completed",
-    student: "James Wilson",
-    class: "Science Explorer"
-  },
-  { 
-    id: 4, 
-    date: "2023-06-12", 
-    type: "earnings", 
-    description: "English Literature - June 2023", 
-    amount: 325.25, 
-    status: "completed",
-    student: "Emily Martinez",
-    class: "English Literature"
-  },
-  { 
-    id: 5, 
-    date: "2023-06-10", 
-    type: "refund", 
-    description: "Refund for canceled class - History 101", 
-    amount: -125.00, 
-    status: "completed",
-    student: "Daniel Brown",
-    class: "History 101"
-  },
-  { 
-    id: 6, 
-    date: "2023-06-05", 
-    type: "earnings", 
-    description: "Computer Science Basics - June 2023", 
-    amount: 400.00, 
-    status: "completed",
-    student: "Sophia Lee",
-    class: "Computer Science Basics"
-  },
-  { 
-    id: 7, 
-    date: "2023-06-02", 
-    type: "earnings", 
-    description: "Advanced Math - June 2023", 
-    amount: 500.00, 
-    status: "pending",
-    student: "Noah Garcia",
-    class: "Advanced Math"
-  },
-  { 
-    id: 8, 
-    date: "2023-05-30", 
-    type: "fee", 
-    description: "Platform service fee", 
-    amount: -85.00, 
-    status: "completed",
-    student: null,
-    class: null
-  },
-  { 
-    id: 9, 
-    date: "2023-05-28", 
-    type: "earnings", 
-    description: "Physics 101 - May 2023", 
-    amount: 425.00, 
-    status: "completed",
-    student: "Olivia Smith",
-    class: "Physics 101"
-  },
-  { 
-    id: 10, 
-    date: "2023-05-25", 
-    type: "payout", 
-    description: "Monthly payout to Chase Bank •••• 4231", 
-    amount: -1250.50, 
-    status: "completed",
-    student: null,
-    class: null
-  }
-];
 
 const EarningsHistory = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -133,46 +32,87 @@ const EarningsHistory = () => {
   const [typeFilter, setTypeFilter] = useState("all");
   const [dateFilter, setDateFilter] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5;
-  
-  // Filter transactions based on search term and filters
-  const filteredTransactions = mockTransactions.filter(transaction => {
-    // Search filter
-    const searchMatch = 
-      searchTerm === "" || 
-      transaction.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (transaction.student && transaction.student.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (transaction.class && transaction.class.toLowerCase().includes(searchTerm.toLowerCase()));
+  const itemsPerPage = 10;
+
+  // Build API query parameters
+  const queryParams: TeacherTransactionsQuery = useMemo(() => {
+    const params: TeacherTransactionsQuery = {
+      page: currentPage,
+      limit: itemsPerPage,
+    };
+
+    if (statusFilter !== "all") {
+      params.status = statusFilter as any;
+    }
+
+    if (typeFilter !== "all") {
+      // Map UI filter values to API values
+      const typeMapping: Record<string, string> = {
+        'earnings': 'earning',
+        'payout': 'payout', 
+        'refund': 'refund',
+        'fee': 'payout' // Fees might be categorized as payouts in API
+      };
+      params.transactionType = typeMapping[typeFilter] as any;
+    }
+
+    // Date filtering - implement based on dateFilter selection
+    if (dateFilter !== "all") {
+      const now = new Date();
+      let startDate: Date | null = null;
+
+      switch (dateFilter) {
+        case "last30":
+          startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+          break;
+        case "last90":
+          startDate = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+          break;
+        case "last365":
+          startDate = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
+          break;
+      }
+
+      if (startDate) {
+        params.startDate = startDate.toISOString().split('T')[0];
+        params.endDate = now.toISOString().split('T')[0];
+      }
+    }
+
+    return params;
+  }, [currentPage, statusFilter, typeFilter, dateFilter]);
+
+  // Fetch transactions using the hook
+  const { transactions, isLoading, error, refetch } = useTeacherTransactions(queryParams);
+
+  // Client-side search filtering (since API might not support search)
+  const filteredTransactions = useMemo(() => {
+    if (!searchTerm) return transactions;
     
-    // Status filter
-    const statusMatch = 
-      statusFilter === "all" || 
-      transaction.status === statusFilter;
-    
-    // Type filter
-    const typeMatch = 
-      typeFilter === "all" || 
-      transaction.type === typeFilter;
-    
-    // Date filter - simplified for demo
-    const dateMatch = true; // In a real app, you'd implement proper date filtering
-    
-    return searchMatch && statusMatch && typeMatch && dateMatch;
-  });
-  
-  // Calculate pagination
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = filteredTransactions.slice(indexOfFirstItem, indexOfLastItem);
+    return transactions.filter(transaction => {
+      const searchLower = searchTerm.toLowerCase();
+      return (
+        transaction.description.toLowerCase().includes(searchLower) ||
+        transaction.enrollments.some(enrollment => 
+          enrollment.student.user.fullName.toLowerCase().includes(searchLower) ||
+          enrollment.class.title.toLowerCase().includes(searchLower)
+        )
+      );
+    });
+  }, [transactions, searchTerm]);
+
   const totalPages = Math.ceil(filteredTransactions.length / itemsPerPage);
+  const currentItems = filteredTransactions;
 
   const getStatusIcon = (status: string) => {
     switch (status) {
       case "completed":
         return <CheckCircle2 className="h-4 w-4 text-green-500" />;
       case "pending":
+      case "processing":
         return <Clock className="h-4 w-4 text-amber-500" />;
       case "failed":
+      case "cancelled":
         return <XCircle className="h-4 w-4 text-red-500" />;
       default:
         return <AlertCircle className="h-4 w-4 text-gray-500" />;
@@ -184,8 +124,10 @@ const EarningsHistory = () => {
       case "completed":
         return "bg-green-100 text-green-800";
       case "pending":
+      case "processing":
         return "bg-amber-100 text-amber-800";
       case "failed":
+      case "cancelled":
         return "bg-red-100 text-red-800";
       default:
         return "bg-gray-100 text-gray-800";
@@ -194,14 +136,12 @@ const EarningsHistory = () => {
   
   const getTypeColor = (type: string) => {
     switch (type) {
-      case "earnings":
+      case "earning":
         return "bg-blue-100 text-blue-800";
       case "payout":
         return "bg-purple-100 text-purple-800";
       case "refund":
         return "bg-red-100 text-red-800";
-      case "fee":
-        return "bg-gray-100 text-gray-800";
       default:
         return "bg-gray-100 text-gray-800";
     }
@@ -240,7 +180,9 @@ const EarningsHistory = () => {
                 <SelectItem value="all">All Statuses</SelectItem>
                 <SelectItem value="completed">Completed</SelectItem>
                 <SelectItem value="pending">Pending</SelectItem>
+                <SelectItem value="processing">Processing</SelectItem>
                 <SelectItem value="failed">Failed</SelectItem>
+                <SelectItem value="cancelled">Cancelled</SelectItem>
               </SelectContent>
             </Select>
             
@@ -256,7 +198,6 @@ const EarningsHistory = () => {
                 <SelectItem value="earnings">Earnings</SelectItem>
                 <SelectItem value="payout">Payouts</SelectItem>
                 <SelectItem value="refund">Refunds</SelectItem>
-                <SelectItem value="fee">Fees</SelectItem>
               </SelectContent>
             </Select>
             
@@ -276,8 +217,14 @@ const EarningsHistory = () => {
               </SelectContent>
             </Select>
             
-            <Button variant="outline" size="icon" className="h-10 w-10">
-              <RefreshCcw className="h-4 w-4" />
+            <Button 
+              variant="outline" 
+              size="icon" 
+              className="h-10 w-10"
+              onClick={refetch}
+              disabled={isLoading}
+            >
+              <RefreshCcw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
             </Button>
             
             <Button variant="outline" size="sm" className="ml-auto">
@@ -299,72 +246,124 @@ const EarningsHistory = () => {
                 </tr>
               </thead>
               <tbody className="divide-y">
-                {currentItems.map((transaction) => (
-                  <tr key={transaction.id} className="hover:bg-gray-50">
-                    <td className="py-3 px-4">
-                      {new Date(transaction.date).toLocaleDateString(undefined, {
-                        month: 'short',
-                        day: 'numeric',
-                        year: 'numeric'
-                      })}
-                    </td>
-                    <td className="py-3 px-4">
-                      <div className="font-medium">{transaction.description}</div>
-                      {transaction.student && (
-                        <div className="text-xs text-gray-500">Student: {transaction.student}</div>
-                      )}
-                    </td>
-                    <td className="py-3 px-4">
-                      <Badge variant="secondary" className={getTypeColor(transaction.type)}>
-                        {transaction.type.charAt(0).toUpperCase() + transaction.type.slice(1)}
-                      </Badge>
-                    </td>
-                    <td className="py-3 px-4">
-                      <div className="flex items-center">
-                        {getStatusIcon(transaction.status)}
-                        <span className={`ml-1.5 px-2 py-0.5 rounded-full text-xs ${getStatusColor(transaction.status)}`}>
-                          {transaction.status.charAt(0).toUpperCase() + transaction.status.slice(1)}
-                        </span>
-                      </div>
-                    </td>
-                    <td className={`py-3 px-4 text-right font-medium ${
-                      transaction.amount > 0 ? 'text-green-600' : 'text-gray-600'
-                    }`}>
-                      {transaction.amount > 0 ? '+' : ''}${Math.abs(transaction.amount).toFixed(2)}
-                    </td>
-                  </tr>
-                ))}
+                {isLoading ? (
+                  Array.from({ length: 5 }).map((_, index) => (
+                    <tr key={index} className="animate-pulse">
+                      <td className="py-3 px-4">
+                        <div className="h-4 bg-gray-200 rounded w-20"></div>
+                      </td>
+                      <td className="py-3 px-4">
+                        <div className="h-4 bg-gray-200 rounded w-40 mb-1"></div>
+                        <div className="h-3 bg-gray-200 rounded w-24"></div>
+                      </td>
+                      <td className="py-3 px-4">
+                        <div className="h-6 bg-gray-200 rounded w-16"></div>
+                      </td>
+                      <td className="py-3 px-4">
+                        <div className="h-6 bg-gray-200 rounded w-20"></div>
+                      </td>
+                      <td className="py-3 px-4">
+                        <div className="h-4 bg-gray-200 rounded w-16 ml-auto"></div>
+                      </td>
+                    </tr>
+                  ))
+                ) : currentItems.length > 0 ? (
+                  currentItems.map((transaction) => (
+                    <tr key={transaction._id} className="hover:bg-gray-50">
+                      <td className="py-3 px-4">
+                        {new Date(transaction.createdAt).toLocaleDateString(undefined, {
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric'
+                        })}
+                      </td>
+                      <td className="py-3 px-4">
+                        <div className="font-medium">{transaction.description}</div>
+                        {transaction.enrollments.length > 0 && (
+                          <div className="text-xs text-gray-500">
+                            Student: {transaction.enrollments[0].student.user.fullName}
+                            {transaction.enrollments.length > 1 && ` (+${transaction.enrollments.length - 1} more)`}
+                          </div>
+                        )}
+                        {transaction.enrollments.length > 0 && (
+                          <div className="text-xs text-gray-500">
+                            Class: {transaction.enrollments[0].class.title}
+                          </div>
+                        )}
+                      </td>
+                      <td className="py-3 px-4">
+                        <Badge variant="secondary" className={getTypeColor(transaction.transactionType)}>
+                          {transaction.transactionType.charAt(0).toUpperCase() + transaction.transactionType.slice(1)}
+                        </Badge>
+                      </td>
+                      <td className="py-3 px-4">
+                        <div className="flex items-center">
+                          {getStatusIcon(transaction.status)}
+                          <span className={`ml-1.5 px-2 py-0.5 rounded-full text-xs ${getStatusColor(transaction.status)}`}>
+                            {transaction.status.charAt(0).toUpperCase() + transaction.status.slice(1)}
+                          </span>
+                        </div>
+                      </td>
+                      <td className={`py-3 px-4 text-right font-medium ${
+                        transaction.transactionType === 'earning' ? 'text-green-600' : 'text-gray-600'
+                      }`}>
+                        {transaction.transactionType === 'earning' ? '+' : ''}${transaction.amount.toFixed(2)}
+                      </td>
+                    </tr>
+                  ))
+                ) : null}
               </tbody>
             </table>
           </div>
           
+          {/* Error state */}
+          {error && (
+            <div className="text-center py-12">
+              <XCircle className="h-12 w-12 text-red-300 mx-auto mb-3" />
+              <h3 className="text-lg font-medium text-gray-900 mb-1">Error Loading Transactions</h3>
+              <p className="text-sm text-gray-500 mb-4 max-w-md mx-auto">
+                {error}
+              </p>
+              <Button variant="outline" onClick={refetch}>
+                Try Again
+              </Button>
+            </div>
+          )}
+
           {/* Empty state */}
-          {currentItems.length === 0 && (
+          {!isLoading && !error && currentItems.length === 0 && (
             <div className="text-center py-12">
               <Search className="h-12 w-12 text-gray-300 mx-auto mb-3" />
               <h3 className="text-lg font-medium text-gray-900 mb-1">No Transactions Found</h3>
               <p className="text-sm text-gray-500 mb-4 max-w-md mx-auto">
-                We couldn't find any transactions matching your current filters. Try changing your search or filters to see more results.
+                {searchTerm || statusFilter !== 'all' || typeFilter !== 'all' || dateFilter !== 'all'
+                  ? "We couldn't find any transactions matching your current filters. Try changing your search or filters to see more results."
+                  : "You haven't made any transactions yet. Start teaching to see your earnings here!"
+                }
               </p>
-              <Button 
-                variant="outline" 
-                onClick={() => {
-                  setSearchTerm("");
-                  setStatusFilter("all");
-                  setTypeFilter("all");
-                  setDateFilter("all");
-                }}
-              >
-                Clear All Filters
-              </Button>
+              {(searchTerm || statusFilter !== 'all' || typeFilter !== 'all' || dateFilter !== 'all') && (
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    setSearchTerm("");
+                    setStatusFilter("all");
+                    setTypeFilter("all");
+                    setDateFilter("all");
+                    setCurrentPage(1);
+                  }}
+                >
+                  Clear All Filters
+                </Button>
+              )}
             </div>
           )}
           
           {/* Pagination */}
-          {filteredTransactions.length > 0 && (
+          {!isLoading && !error && filteredTransactions.length > 0 && (
             <div className="flex items-center justify-between mt-6">
               <div className="text-sm text-gray-500">
-                Showing {indexOfFirstItem + 1}-{Math.min(indexOfLastItem, filteredTransactions.length)} of {filteredTransactions.length} transactions
+                Showing {filteredTransactions.length} transactions
+                {searchTerm && ` matching "${searchTerm}"`}
               </div>
               <Pagination>
                 <PaginationContent>

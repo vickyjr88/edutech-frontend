@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import FinancialOverviewCard from '@/components/teachers/FinancialOverviewCard';
 import {
   Activity as ActivityIcon,
   Calendar,
@@ -45,6 +46,7 @@ import { useTeacherRecentActivity } from '@/hooks/useTeacherRecentActivity';
 import { useTeacherStudents } from '@/hooks/useTeacherStudents';
 import { useTeacherStats } from '@/hooks/useTeacherStats';
 import { useTeacherUpcomingSessions } from '@/hooks/useTeacherUpcomingSessions';
+import { useTeacherSummary } from '@/hooks/useTeacherSummary';
 import { Activity, ActivityType, ActivityPriority } from '@/types/activity';
 
 // Mock data for demonstration
@@ -198,6 +200,11 @@ const TeacherCommandCenter: React.FC = () => {
 
   // Fetch upcoming sessions
   const { upcomingSessions, loading: sessionsLoading, error: sessionsError, refetch: refetchSessions } = useTeacherUpcomingSessions({
+    teacherId: user?.teacherId || '',
+  });
+
+  // Fetch teacher summary data
+  const { summaryData, loading: summaryLoading } = useTeacherSummary({
     teacherId: user?.teacherId || '',
   });
 
@@ -734,34 +741,7 @@ const TeacherCommandCenter: React.FC = () => {
       </Card>
 
       {/* Financial Dashboard */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
-            <DollarSign className="w-5 h-5" />
-            <span>Financial Overview</span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="mb-4">
-            <div className="text-3xl font-bold">${mockTeacherData.performance.weekRevenue}</div>
-            <div className="flex items-center space-x-1 text-sm">
-              <TrendingUp className="w-4 h-4 text-green-500" />
-              <span className="text-green-600">+{mockTeacherData.performance.revenueGrowth}% this week</span>
-            </div>
-          </div>
-          
-          <div className="space-y-2 text-sm">
-            <div className="flex justify-between">
-              <span>5 trials scheduled</span>
-              <span className="text-green-600">$400 potential</span>
-            </div>
-            <div className="flex justify-between">
-              <span>12 inquiries pending</span>
-              <span className="text-blue-600">$960 potential</span>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <FinancialOverviewCard summaryData={summaryData} />
 
       {/* Smart Insights */}
       <Card>

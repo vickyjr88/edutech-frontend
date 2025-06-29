@@ -9,3 +9,7 @@ export { googleCalendarService } from './services/google-calendar.service';
 export { cvService } from './services/cv.service';
 export { smsService } from './services/sms.service';
 export { enrollmentService } from './services/enrollment.service';
+
+// Types
+export type { TeacherBalance, TeacherTransaction, TeacherTransactionsQuery } from './types/teacher-transactions.types';
+export type { Bank, TeacherBankAccount, AddBankAccountRequest, UpdateBankAccountRequest } from './types/bank-accounts.types';

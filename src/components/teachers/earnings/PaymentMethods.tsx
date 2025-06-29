@@ -20,7 +20,11 @@ import {
   X, 
   AlertCircle,
   Shield,
-  LockKeyhole
+  LockKeyhole,
+  Loader2,
+  Clock,
+  CheckCircle2,
+  XCircle
 } from "lucide-react";
 import {
   Dialog,
@@ -33,96 +37,111 @@ import {
 } from "@/components/ui/dialog";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Toggle } from "@/components/ui/toggle";
-
-// Mock payment methods
-const mockPaymentMethods = [
-  {
-    id: 1,
-    type: "bank",
-    name: "Chase Bank",
-    details: { 
-      accountNumber: "****4231",
-      routingNumber: "322271627",
-      accountType: "checking",
-      bankName: "Chase Bank"
-    },
-    isDefault: true,
-    last4: "4231"
-  },
-  {
-    id: 2,
-    type: "bank",
-    name: "Bank of America",
-    details: { 
-      accountNumber: "****7890",
-      routingNumber: "123456789",
-      accountType: "savings",
-      bankName: "Bank of America"
-    },
-    isDefault: false,
-    last4: "7890"
-  }
-];
+import { useSupportedBanks } from "@/hooks/useSupportedBanks";
+import { useTeacherBankAccounts } from "@/hooks/useTeacherBankAccounts";
+import type { TeacherBankAccount, AddBankAccountRequest } from "@/integrations/api";
 
 interface PaymentMethodCardProps {
-  method: typeof mockPaymentMethods[0];
-  onSetDefault: (id: number) => void;
-  onEdit: (method: typeof mockPaymentMethods[0]) => void;
-  onDelete: (id: number) => void;
+  account: TeacherBankAccount;
+  onSetDefault: (accountId: string) => void;
+  onEdit: (account: TeacherBankAccount) => void;
+  onDelete: (accountId: string) => void;
+  isSubmitting: boolean;
 }
 
-const PaymentMethodCard = ({ method, onSetDefault, onEdit, onDelete }: PaymentMethodCardProps) => {
+const getVerificationStatusIcon = (status: string) => {
+  switch (status) {
+    case 'verified':
+      return <CheckCircle2 className="h-4 w-4 text-green-500" />;
+    case 'pending':
+      return <Clock className="h-4 w-4 text-amber-500" />;
+    case 'failed':
+    case 'rejected':
+      return <XCircle className="h-4 w-4 text-red-500" />;
+    default:
+      return <AlertCircle className="h-4 w-4 text-gray-500" />;
+  }
+};
+
+const getVerificationStatusColor = (status: string) => {
+  switch (status) {
+    case 'verified':
+      return 'bg-green-100 text-green-800';
+    case 'pending':
+      return 'bg-amber-100 text-amber-800';
+    case 'failed':
+    case 'rejected':
+      return 'bg-red-100 text-red-800';
+    default:
+      return 'bg-gray-100 text-gray-800';
+  }
+};
+
+const PaymentMethodCard = ({ account, onSetDefault, onEdit, onDelete, isSubmitting }: PaymentMethodCardProps) => {
+  const last4 = account.maskedAccountNumber.slice(-4);
+  
   return (
-    <Card className={`shadow-sm relative ${method.isDefault ? 'border-blue-200' : ''}`}>
-      {method.isDefault && (
+    <Card className={`shadow-sm relative ${account.isPrimary ? 'border-blue-200' : ''}`}>
+      {account.isPrimary && (
         <div className="absolute top-0 right-0 mt-4 mr-4">
           <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
-            Default
+            Primary
           </span>
         </div>
       )}
       <CardContent className="p-6">
         <div className="flex items-start">
-          {method.type === "bank" ? (
-            <div className="h-10 w-10 rounded-md bg-blue-100 flex items-center justify-center mr-4">
-              <Building2 className="h-5 w-5 text-blue-600" />
-            </div>
-          ) : (
-            <div className="h-10 w-10 rounded-md bg-purple-100 flex items-center justify-center mr-4">
-              <CreditCard className="h-5 w-5 text-purple-600" />
-            </div>
-          )}
+          <div className="h-10 w-10 rounded-md bg-blue-100 flex items-center justify-center mr-4">
+            <Building2 className="h-5 w-5 text-blue-600" />
+          </div>
           
           <div className="flex-1">
-            <h3 className="text-base font-medium">{method.name}</h3>
+            <h3 className="text-base font-medium">{account.bank.bankName}</h3>
             <p className="text-sm text-gray-500">
-              {method.type === "bank" ? "Bank Account" : "Credit Card"} ending in {method.last4}
+              Bank Account ending in {last4}
             </p>
             
-            {method.type === "bank" && (
-              <div className="mt-2">
-                <div className="text-xs text-gray-500">Account Type</div>
-                <div className="text-sm capitalize">{method.details.accountType}</div>
+            <div className="mt-2 space-y-1">
+              <div>
+                <span className="text-xs text-gray-500">Account Type: </span>
+                <span className="text-sm capitalize">{account.accountType}</span>
               </div>
-            )}
+              <div>
+                <span className="text-xs text-gray-500">Account Holder: </span>
+                <span className="text-sm">{account.accountHolderName}</span>
+              </div>
+              <div className="flex items-center space-x-2 mt-2">
+                {getVerificationStatusIcon(account.verificationStatus)}
+                <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getVerificationStatusColor(account.verificationStatus)}`}>
+                  {account.verificationStatus.charAt(0).toUpperCase() + account.verificationStatus.slice(1)}
+                </span>
+              </div>
+              {(account.successfulTransactions > 0 || account.failedTransactions > 0) && (
+                <div className="text-xs text-gray-500 mt-1">
+                  {account.successfulTransactions} successful, {account.failedTransactions} failed transactions
+                </div>
+              )}
+            </div>
           </div>
         </div>
         
         <div className="mt-4 pt-4 border-t flex justify-end gap-2">
-          {!method.isDefault && (
+          {!account.isPrimary && (
             <Button 
               variant="outline" 
               size="sm" 
-              onClick={() => onSetDefault(method.id)}
+              onClick={() => onSetDefault(account._id)}
+              disabled={isSubmitting}
             >
-              <Check className="h-4 w-4 mr-1" />
-              Set as Default
+              {isSubmitting ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Check className="h-4 w-4 mr-1" />}
+              Set as Primary
             </Button>
           )}
           <Button 
             variant="outline" 
             size="sm"
-            onClick={() => onEdit(method)}
+            onClick={() => onEdit(account)}
+            disabled={isSubmitting}
           >
             <Edit className="h-4 w-4 mr-1" />
             Edit
@@ -131,7 +150,8 @@ const PaymentMethodCard = ({ method, onSetDefault, onEdit, onDelete }: PaymentMe
             variant="outline" 
             size="sm"
             className="text-red-600 hover:text-red-700"
-            onClick={() => onDelete(method.id)}
+            onClick={() => onDelete(account._id)}
+            disabled={isSubmitting}
           >
             <Trash2 className="h-4 w-4 mr-1" />
             Delete
@@ -143,15 +163,28 @@ const PaymentMethodCard = ({ method, onSetDefault, onEdit, onDelete }: PaymentMe
 };
 
 const PaymentMethods = () => {
-  const [paymentMethods, setPaymentMethods] = useState(mockPaymentMethods);
+  // API hooks
+  const { banks, isLoading: banksLoading } = useSupportedBanks();
+  const { 
+    bankAccounts, 
+    isLoading: accountsLoading, 
+    error: accountsError,
+    refetch,
+    addBankAccount,
+    updateBankAccount,
+    deleteBankAccount,
+    setPrimaryAccount,
+    isSubmitting 
+  } = useTeacherBankAccounts();
+
+  // Modal and form state
   const [showAddBankModal, setShowAddBankModal] = useState(false);
-  const [editingMethod, setEditingMethod] = useState<typeof mockPaymentMethods[0] | null>(null);
-  const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
+  const [editingAccount, setEditingAccount] = useState<TeacherBankAccount | null>(null);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   
   // Form state for adding/editing bank account
-  const [bankName, setBankName] = useState("");
-  const [accountType, setAccountType] = useState("checking");
-  const [routingNumber, setRoutingNumber] = useState("");
+  const [selectedBankId, setSelectedBankId] = useState("");
+  const [accountType, setAccountType] = useState<'current' | 'savings' | 'business'>("current");
   const [accountNumber, setAccountNumber] = useState("");
   const [confirmAccountNumber, setConfirmAccountNumber] = useState("");
   const [accountName, setAccountName] = useState("");
@@ -159,60 +192,74 @@ const PaymentMethods = () => {
   
   // Reset form fields when dialog opens/closes
   const resetForm = () => {
-    setBankName("");
-    setAccountType("checking");
-    setRoutingNumber("");
+    setSelectedBankId("");
+    setAccountType("current");
     setAccountNumber("");
     setConfirmAccountNumber("");
     setAccountName("");
     setMakeDefault(false);
-    setEditingMethod(null);
+    setEditingAccount(null);
   };
   
   // Populate form with existing data when editing
-  const populateForm = (method: typeof mockPaymentMethods[0]) => {
-    if (method.type === "bank") {
-      setBankName(method.details.bankName);
-      setAccountType(method.details.accountType);
-      setRoutingNumber(method.details.routingNumber);
-      // Don't set account number for security reasons in a real app
-      setAccountName(method.name);
-      setMakeDefault(method.isDefault);
-    }
+  const populateForm = (account: TeacherBankAccount) => {
+    setSelectedBankId(account.bank._id);
+    setAccountType(account.accountType);
+    // Don't set account number for security reasons
+    setAccountName(account.accountHolderName);
+    setMakeDefault(account.isPrimary);
   };
   
   // Handle setting a method as default
-  const handleSetDefault = (id: number) => {
-    setPaymentMethods(paymentMethods.map(method => ({
-      ...method,
-      isDefault: method.id === id
-    })));
+  const handleSetDefault = async (accountId: string) => {
+    const result = await setPrimaryAccount(accountId);
+    if (result) {
+      // Local state is updated by the hook
+    }
   };
   
   // Handle editing a payment method
-  const handleEdit = (method: typeof mockPaymentMethods[0]) => {
-    setEditingMethod(method);
-    populateForm(method);
+  const handleEdit = (account: TeacherBankAccount) => {
+    setEditingAccount(account);
+    populateForm(account);
     setShowAddBankModal(true);
   };
   
   // Handle deleting a payment method
-  const handleDelete = (id: number) => {
-    setDeleteConfirmId(id);
+  const handleDelete = (accountId: string) => {
+    setDeleteConfirmId(accountId);
   };
   
   // Confirm deletion of payment method
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (deleteConfirmId) {
-      setPaymentMethods(paymentMethods.filter(method => method.id !== deleteConfirmId));
-      setDeleteConfirmId(null);
+      try {
+        const success = await deleteBankAccount(deleteConfirmId);
+        // Always close the modal regardless of API response
+        setDeleteConfirmId(null);
+        
+        if (success) {
+          // Extra safety: refresh bank accounts to ensure UI consistency
+          // Small delay to ensure state is clean before refresh
+          setTimeout(() => {
+            refetch();
+          }, 100);
+        } else {
+          // Error is already handled by the hook, just ensure modal closes
+          console.log('Delete operation completed with errors - check error state');
+        }
+      } catch (error) {
+        // Always close modal even on unexpected errors
+        setDeleteConfirmId(null);
+        console.error('Unexpected error during deletion:', error);
+      }
     }
   };
   
   // Save new or edited bank account
-  const handleSaveBank = () => {
+  const handleSaveBank = async () => {
     // Validate form fields
-    if (!bankName || !routingNumber || !accountNumber || !accountName) {
+    if (!selectedBankId || !accountNumber || !accountName) {
       // Show validation error in a real app
       return;
     }
@@ -222,62 +269,38 @@ const PaymentMethods = () => {
       return;
     }
     
-    if (editingMethod) {
-      // Update existing method
-      setPaymentMethods(paymentMethods.map(method => {
-        if (method.id === editingMethod.id) {
-          return {
-            ...method,
-            name: accountName,
-            details: {
-              ...method.details,
-              bankName: bankName,
-              accountType: accountType,
-              routingNumber: routingNumber,
-              // In a real app, you would not update the account number unless it was changed
-            },
-            isDefault: makeDefault ? true : method.isDefault
-          };
-        }
-        
-        // If setting this method as default, set other methods to not default
-        if (makeDefault && method.id !== editingMethod.id) {
-          return {
-            ...method,
-            isDefault: false
-          };
-        }
-        
-        return method;
-      }));
-    } else {
-      // Add new method
-      const last4 = accountNumber.slice(-4);
-      const newMethod = {
-        id: Date.now(),
-        type: "bank" as const,
-        name: accountName,
-        details: {
-          accountNumber: `****${last4}`,
-          routingNumber,
-          accountType,
-          bankName
-        },
-        isDefault: makeDefault || paymentMethods.length === 0,
-        last4
+    if (editingAccount) {
+      // Update existing account
+      const updateData: UpdateBankAccountRequest = {
+        accountHolderName: accountName,
+        // Only update account type if changed
+        ...(accountType !== editingAccount.accountType && { accountType }),
+        // Only update bank if changed
+        ...(selectedBankId !== editingAccount.bank._id && { bank: selectedBankId }),
+        // Only update account number if provided (for security)
+        ...(accountNumber && { accountNumber })
       };
       
-      // If setting the new method as default, update other methods
-      if (makeDefault || paymentMethods.length === 0) {
-        setPaymentMethods([
-          ...paymentMethods.map(method => ({
-            ...method,
-            isDefault: false
-          })),
-          newMethod
-        ]);
-      } else {
-        setPaymentMethods([...paymentMethods, newMethod]);
+      const result = await updateBankAccount(editingAccount._id, updateData);
+      if (result) {
+        // If making this the default, set it as primary
+        if (makeDefault && !editingAccount.isPrimary) {
+          await setPrimaryAccount(editingAccount._id);
+        }
+      }
+    } else {
+      // Add new account
+      const newAccountData: AddBankAccountRequest = {
+        bank: selectedBankId,
+        accountType,
+        accountNumber,
+        accountHolderName: accountName,
+        isPrimary: makeDefault || bankAccounts.length === 0
+      };
+      
+      const result = await addBankAccount(newAccountData);
+      if (result) {
+        // Hook will refresh the data automatically
       }
     }
     
@@ -304,15 +327,35 @@ const PaymentMethods = () => {
           </Alert>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {paymentMethods.map((method) => (
-              <PaymentMethodCard
-                key={method.id}
-                method={method}
-                onSetDefault={handleSetDefault}
-                onEdit={handleEdit}
-                onDelete={handleDelete}
-              />
-            ))}
+            {accountsLoading ? (
+              <div className="col-span-full flex items-center justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin mr-2" />
+                <span>Loading payment methods...</span>
+              </div>
+            ) : accountsError ? (
+              <div className="col-span-full">
+                <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertTitle>Error</AlertTitle>
+                  <AlertDescription>{accountsError}</AlertDescription>
+                </Alert>
+              </div>
+            ) : bankAccounts.length === 0 ? (
+              <div className="col-span-full text-center py-8 text-gray-500">
+                No payment methods added yet
+              </div>
+            ) : (
+              bankAccounts.map((account) => (
+                <PaymentMethodCard
+                  key={account._id}
+                  account={account}
+                  onSetDefault={handleSetDefault}
+                  onEdit={handleEdit}
+                  onDelete={handleDelete}
+                  isSubmitting={isSubmitting}
+                />
+              ))
+            )}
             
             <Card className="shadow-sm border-dashed h-full flex items-center justify-center">
               <CardContent className="text-center py-8">
@@ -450,7 +493,7 @@ const PaymentMethods = () => {
       <Dialog open={showAddBankModal} onOpenChange={setShowAddBankModal}>
         <DialogContent className="sm:max-w-[525px]">
           <DialogHeader>
-            <DialogTitle>{editingMethod ? "Edit Bank Account" : "Add Bank Account"}</DialogTitle>
+            <DialogTitle>{editingAccount ? "Edit Bank Account" : "Add Bank Account"}</DialogTitle>
             <DialogDescription>
               Connect your bank account to receive your earnings
             </DialogDescription>
@@ -458,13 +501,22 @@ const PaymentMethods = () => {
           
           <div className="space-y-4 py-2">
             <div className="space-y-2">
-              <Label htmlFor="bank-name">Bank Name</Label>
-              <Input
-                id="bank-name"
-                value={bankName}
-                onChange={(e) => setBankName(e.target.value)}
-                placeholder="e.g. Chase, Bank of America"
-              />
+              <Label htmlFor="bank-select">Bank</Label>
+              <Select
+                value={selectedBankId}
+                onValueChange={setSelectedBankId}
+              >
+                <SelectTrigger id="bank-select">
+                  <SelectValue placeholder={banksLoading ? "Loading banks..." : "Select your bank"} />
+                </SelectTrigger>
+                <SelectContent>
+                  {banks.map((bank) => (
+                    <SelectItem key={bank._id} value={bank._id}>
+                      {bank.bankName}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             
             <div className="space-y-2">
@@ -477,30 +529,13 @@ const PaymentMethods = () => {
                   <SelectValue placeholder="Select account type" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="checking">Checking</SelectItem>
+                  <SelectItem value="current">Current</SelectItem>
                   <SelectItem value="savings">Savings</SelectItem>
                   <SelectItem value="business">Business</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             
-            <div className="space-y-2">
-              <Label htmlFor="routing-number">Routing Number</Label>
-              <div className="relative">
-                <Input
-                  id="routing-number"
-                  value={routingNumber}
-                  onChange={(e) => setRoutingNumber(e.target.value.replace(/\D/g, '').slice(0, 9))}
-                  placeholder="9 digits"
-                  maxLength={9}
-                  className="pr-10"
-                />
-                <LockKeyhole className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-              </div>
-              <p className="text-xs text-gray-500">
-                The 9-digit routing number for your bank
-              </p>
-            </div>
             
             <div className="space-y-2">
               <Label htmlFor="account-number">Account Number</Label>
@@ -510,7 +545,7 @@ const PaymentMethods = () => {
                   type="password"
                   value={accountNumber}
                   onChange={(e) => setAccountNumber(e.target.value.replace(/\D/g, ''))}
-                  placeholder={editingMethod ? "••••••••" : "Enter account number"}
+                  placeholder={editingAccount ? "••••••••" : "Enter account number"}
                   className="pr-10"
                 />
                 <LockKeyhole className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -525,7 +560,7 @@ const PaymentMethods = () => {
                   type="password"
                   value={confirmAccountNumber}
                   onChange={(e) => setConfirmAccountNumber(e.target.value.replace(/\D/g, ''))}
-                  placeholder={editingMethod ? "••••••••" : "Re-enter account number"}
+                  placeholder={editingAccount ? "••••••••" : "Re-enter account number"}
                   className="pr-10"
                 />
                 <LockKeyhole className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -574,8 +609,11 @@ const PaymentMethods = () => {
             >
               Cancel
             </Button>
-            <Button onClick={handleSaveBank}>
-              {editingMethod ? "Update Account" : "Save Account"}
+            <Button onClick={handleSaveBank} disabled={isSubmitting}>
+              {isSubmitting ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : null}
+              {editingAccount ? "Update Account" : "Save Account"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -611,8 +649,16 @@ const PaymentMethods = () => {
             <Button
               variant="destructive"
               onClick={confirmDelete}
+              disabled={isSubmitting}
             >
-              Yes, Remove
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Removing...
+                </>
+              ) : (
+                "Yes, Remove"
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>

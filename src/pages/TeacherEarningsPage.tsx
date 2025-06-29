@@ -47,10 +47,10 @@ const TeacherEarningsPage = () => {
             <CreditCard className="h-4 w-4" />
             Payment Methods
           </TabsTrigger>
-          <TabsTrigger value="insights" className="flex items-center gap-2">
-            <TrendingUp className="h-4 w-4" />
-            Earnings Insights
-          </TabsTrigger>
+          {/*<TabsTrigger value="insights" className="flex items-center gap-2">*/}
+          {/*  <TrendingUp className="h-4 w-4" />*/}
+          {/*  Earnings Insights*/}
+          {/*</TabsTrigger>*/}
         </TabsList>
         
         <TabsContent value="overview" className="space-y-6">
@@ -65,9 +65,9 @@ const TeacherEarningsPage = () => {
           <PaymentMethods />
         </TabsContent>
         
-        <TabsContent value="insights" className="space-y-6">
-          <EarningsInsights />
-        </TabsContent>
+        {/*<TabsContent value="insights" className="space-y-6">*/}
+        {/*  <EarningsInsights />*/}
+        {/*</TabsContent>*/}
       </Tabs>
     </div>
   );

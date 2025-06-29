@@ -19,8 +19,11 @@ import {
   BookOpen,
   DollarSign,
   PieChart,
-  Download
+  Download,
+  Loader2
 } from "lucide-react";
+import { useTeacherAnalytics } from "@/hooks/useTeacherAnalytics";
+import { useTeacherBalance } from "@/hooks/useTeacherBalance";
 
 // Mock insights data
 const mockInsightsData = {
@@ -179,6 +182,53 @@ const TypeIcon = ({ type }: { type: string }) => {
 
 const EarningsInsights = () => {
   const [activeTab, setActiveTab] = useState("opportunities");
+  const { analytics, isLoading, error } = useTeacherAnalytics();
+  const { balance, isLoading: balanceLoading } = useTeacherBalance();
+
+  if (isLoading || balanceLoading) {
+    return (
+      <div className="space-y-6">
+        {[1, 2, 3].map((i) => (
+          <Card key={i} className="shadow-sm">
+            <CardContent className="p-6">
+              <div className="animate-pulse">
+                <div className="h-6 bg-gray-200 rounded w-32 mb-4"></div>
+                <div className="space-y-3">
+                  <div className="h-4 bg-gray-200 rounded"></div>
+                  <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                  <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <Card className="shadow-sm">
+          <CardContent className="p-6 text-center">
+            <div className="text-red-600">Error loading insights: {error}</div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (!analytics) {
+    return (
+      <div className="space-y-6">
+        <Card className="shadow-sm">
+          <CardContent className="p-6 text-center">
+            <div className="text-gray-500">No data available for insights</div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
   
   return (
     <div className="space-y-6">
@@ -196,21 +246,21 @@ const EarningsInsights = () => {
         <CardContent>
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <div className="font-medium">${mockInsightsData.earningsGoal.current.toFixed(2)}</div>
+              <div className="font-medium">${analytics.totalEarnings.toFixed(2)}</div>
               <div className="text-right">
                 <span className="text-sm text-gray-500">of </span>
-                <span className="font-medium">${mockInsightsData.earningsGoal.target.toFixed(2)}</span>
+                <span className="font-medium">$10,000</span>
               </div>
             </div>
             
             <Progress
-              value={mockInsightsData.earningsGoal.progress}
+              value={(analytics.totalEarnings / 10000) * 100}
               className="h-3"
             />
             
             <div className="flex justify-between text-sm text-gray-500">
-              <div>{mockInsightsData.earningsGoal.progress}% complete</div>
-              <div>${(mockInsightsData.earningsGoal.target - mockInsightsData.earningsGoal.current).toFixed(2)} to go</div>
+              <div>{((analytics.totalEarnings / 10000) * 100).toFixed(1)}% complete</div>
+              <div>${(10000 - analytics.totalEarnings).toFixed(2)} to go</div>
             </div>
             
             <div className="pt-2">
@@ -245,7 +295,7 @@ const EarningsInsights = () => {
                   5%
                 </div>
               </div>
-              <div className="text-2xl font-semibold">${mockInsightsData.metrics.averageClassPrice}</div>
+              <div className="text-2xl font-semibold">${analytics.averageClassPrice}</div>
               <div className="text-xs text-gray-500">Platform average: $110</div>
             </div>
             
@@ -255,12 +305,13 @@ const EarningsInsights = () => {
                   <Users className="h-4 w-4 mr-1 text-blue-500" />
                   Students per Class
                 </div>
-                <div className="flex items-center text-amber-600 text-xs font-medium">
-                  <ArrowDown className="h-3 w-3 mr-0.5" />
-                  2%
+                <div className="flex items-center text-green-600 text-xs font-medium">
+                  <ArrowUp className="h-3 w-3 mr-0.5" />
+                  {analytics.studentsPerClass >= 10 ? '+' : ''}
+                  {((analytics.studentsPerClass - 10) / 10 * 100).toFixed(0)}%
                 </div>
               </div>
-              <div className="text-2xl font-semibold">{mockInsightsData.metrics.studentsPerClass}</div>
+              <div className="text-2xl font-semibold">{analytics.studentsPerClass}</div>
               <div className="text-xs text-gray-500">Platform average: 10</div>
             </div>
             
@@ -272,10 +323,10 @@ const EarningsInsights = () => {
                 </div>
                 <div className="flex items-center text-green-600 text-xs font-medium">
                   <ArrowUp className="h-3 w-3 mr-0.5" />
-                  3%
+                  {((analytics.studentRetentionRate - 70) / 70 * 100).toFixed(0)}%
                 </div>
               </div>
-              <div className="text-2xl font-semibold">{mockInsightsData.metrics.studentRetentionRate}%</div>
+              <div className="text-2xl font-semibold">{analytics.studentRetentionRate}%</div>
               <div className="text-xs text-gray-500">Platform average: 70%</div>
             </div>
             
@@ -283,15 +334,15 @@ const EarningsInsights = () => {
               <div className="flex justify-between items-center">
                 <div className="text-sm font-medium text-gray-500 flex items-center">
                   <Calendar className="h-4 w-4 mr-1 text-indigo-500" />
-                  Classes per Month
+                  Active Classes
                 </div>
-                <div className="flex items-center text-green-600 text-xs font-medium">
+                <div className="flex items-center text-blue-600 text-xs font-medium">
                   <ArrowUp className="h-3 w-3 mr-0.5" />
-                  8%
+                  Current
                 </div>
               </div>
-              <div className="text-2xl font-semibold">{mockInsightsData.metrics.classesPerMonth}</div>
-              <div className="text-xs text-gray-500">Platform average: 16</div>
+              <div className="text-2xl font-semibold">{analytics.activeClasses}</div>
+              <div className="text-xs text-gray-500">With enrolled students</div>
             </div>
             
             <div className="space-y-2">
@@ -302,10 +353,10 @@ const EarningsInsights = () => {
                 </div>
                 <div className="flex items-center text-green-600 text-xs font-medium">
                   <ArrowUp className="h-3 w-3 mr-0.5" />
-                  0.2
+                  Great
                 </div>
               </div>
-              <div className="text-2xl font-semibold">{mockInsightsData.metrics.averageReview}</div>
+              <div className="text-2xl font-semibold">{analytics.averageReview.toFixed(1)}</div>
               <div className="text-xs text-gray-500">Platform average: 4.5</div>
             </div>
             
@@ -313,15 +364,15 @@ const EarningsInsights = () => {
               <div className="flex justify-between items-center">
                 <div className="text-sm font-medium text-gray-500 flex items-center">
                   <Award className="h-4 w-4 mr-1 text-teal-500" />
-                  Repeat Booking Rate
+                  Total Students
                 </div>
-                <div className="flex items-center text-amber-600 text-xs font-medium">
-                  <ArrowDown className="h-3 w-3 mr-0.5" />
-                  1%
+                <div className="flex items-center text-green-600 text-xs font-medium">
+                  <ArrowUp className="h-3 w-3 mr-0.5" />
+                  Active
                 </div>
               </div>
-              <div className="text-2xl font-semibold">{mockInsightsData.metrics.repeatBookingRate}%</div>
-              <div className="text-xs text-gray-500">Platform average: 65%</div>
+              <div className="text-2xl font-semibold">{analytics.totalStudents}</div>
+              <div className="text-xs text-gray-500">Enrolled students</div>
             </div>
           </div>
         </CardContent>
@@ -398,42 +449,48 @@ const EarningsInsights = () => {
               <div>
                 <h3 className="text-sm font-medium mb-4">Revenue by Subject</h3>
                 <div className="space-y-3">
-                  {mockInsightsData.revenueBreakdown.bySubject.map((item, index) => (
-                    <div key={index}>
-                      <div className="flex justify-between text-sm mb-1">
-                        <span>{item.name}</span>
-                        <span className="font-medium">{item.percentage}%</span>
+                  {analytics.revenueBreakdown.bySubject.length > 0 ? (
+                    analytics.revenueBreakdown.bySubject.map((item, index) => (
+                      <div key={index}>
+                        <div className="flex justify-between text-sm mb-1">
+                          <span>{item.name}</span>
+                          <span className="font-medium">{item.percentage.toFixed(1)}% (${item.amount.toFixed(0)})</span>
+                        </div>
+                        <Progress
+                          value={item.percentage}
+                          className="h-2"
+                          style={{
+                            background: '#e5e7eb',
+                            ['--tw-progress-fill' as any]: `hsl(${210 + index * 30}, 80%, 60%)`
+                          }}
+                        />
                       </div>
-                      <Progress
-                        value={item.percentage}
-                        className="h-2"
-                        // Use different colors for each bar
-                        style={{
-                          background: '#e5e7eb',
-                          ['--tw-progress-fill' as any]: `hsl(${210 + index * 30}, 80%, 60%)`
-                        }}
-                      />
+                    ))
+                  ) : (
+                    <div className="text-sm text-gray-500 text-center py-4">
+                      No subject data available yet
                     </div>
-                  ))}
+                  )}
                 </div>
-                <p className="text-xs text-gray-500 mt-3">
-                  Mathematics is your highest earning subject. Consider expanding your offerings in this area.
-                </p>
+                {analytics.revenueBreakdown.bySubject.length > 0 && (
+                  <p className="text-xs text-gray-500 mt-3">
+                    {analytics.revenueBreakdown.bySubject[0]?.name} is your highest earning subject. Consider expanding your offerings in this area.
+                  </p>
+                )}
               </div>
               
               <div>
                 <h3 className="text-sm font-medium mb-4">Revenue by Class Type</h3>
                 <div className="space-y-3">
-                  {mockInsightsData.revenueBreakdown.byClassType.map((item, index) => (
+                  {analytics.revenueBreakdown.byClassType.map((item, index) => (
                     <div key={index}>
                       <div className="flex justify-between text-sm mb-1">
                         <span>{item.name}</span>
-                        <span className="font-medium">{item.percentage}%</span>
+                        <span className="font-medium">{item.percentage}% (${item.amount.toFixed(0)})</span>
                       </div>
                       <Progress
                         value={item.percentage}
                         className="h-2"
-                        // Use different colors for each bar
                         style={{
                           background: '#e5e7eb',
                           ['--tw-progress-fill' as any]: `hsl(${120 + index * 60}, 70%, 50%)`
@@ -443,23 +500,22 @@ const EarningsInsights = () => {
                   ))}
                 </div>
                 <p className="text-xs text-gray-500 mt-3">
-                  Private tutoring has the highest per-hour rate. Consider increasing your availability for private sessions.
+                  {analytics.revenueBreakdown.byClassType[0]?.name} generates the most revenue. Consider optimizing this class type.
                 </p>
               </div>
               
               <div>
                 <h3 className="text-sm font-medium mb-4">Revenue by Student Level</h3>
                 <div className="space-y-3">
-                  {mockInsightsData.revenueBreakdown.byStudentLevel.map((item, index) => (
+                  {analytics.revenueBreakdown.byStudentLevel.map((item, index) => (
                     <div key={index}>
                       <div className="flex justify-between text-sm mb-1">
                         <span>{item.name}</span>
-                        <span className="font-medium">{item.percentage}%</span>
+                        <span className="font-medium">{item.percentage}% (${item.amount.toFixed(0)})</span>
                       </div>
                       <Progress
                         value={item.percentage}
                         className="h-2"
-                        // Use different colors for each bar
                         style={{
                           background: '#e5e7eb',
                           ['--tw-progress-fill' as any]: `hsl(${280 + index * 40}, 70%, 60%)`
@@ -469,7 +525,7 @@ const EarningsInsights = () => {
                   ))}
                 </div>
                 <p className="text-xs text-gray-500 mt-3">
-                  Advanced level classes have the lowest enrollment but higher per-student revenue. Consider creating more advanced offerings.
+                  {analytics.revenueBreakdown.byStudentLevel[2]?.name} level classes may have higher per-student rates. Consider creating more advanced offerings.
                 </p>
               </div>
               
