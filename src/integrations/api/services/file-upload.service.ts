@@ -176,7 +176,7 @@ class FileUploadService {
       const formData = new FormData();
       formData.append('file', file);
 
-      const response = await api.post<any>('/course-outline/upload-and-process', formData, {
+      const response = await api.post<any>('/classes/course-outline/upload-and-process', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
