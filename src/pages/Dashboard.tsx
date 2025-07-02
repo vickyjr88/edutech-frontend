@@ -60,17 +60,17 @@ const Dashboard = () => {
               </div>
             </div>
             
-            <div className="mt-6">
-              <LearningProgress onEditGoal={handleEditGoal} />
-            </div>
+            {/*<div className="mt-6">*/}
+            {/*  <LearningProgress onEditGoal={handleEditGoal} />*/}
+            {/*</div>*/}
             
-            <div className="flex justify-center mt-8 mb-4">
-              <div className="inline-flex items-center gap-2 bg-blue-50 px-4 py-2 rounded-full text-blue-600 text-sm">
-                <Rocket className="h-4 w-4" />
-                <span>Ready for more learning adventures!</span>
-                <Sparkles className="h-4 w-4" />
-              </div>
-            </div>
+            {/*<div className="flex justify-center mt-8 mb-4">*/}
+            {/*  <div className="inline-flex items-center gap-2 bg-blue-50 px-4 py-2 rounded-full text-blue-600 text-sm">*/}
+            {/*    <Rocket className="h-4 w-4" />*/}
+            {/*    <span>Ready for more learning adventures!</span>*/}
+            {/*    <Sparkles className="h-4 w-4" />*/}
+            {/*  </div>*/}
+            {/*</div>*/}
           </div>
         </main>
       </div>

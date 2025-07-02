@@ -49,7 +49,7 @@ const StudentSidebar = () => {
           {isActive("/student-dashboard") && <Sparkles className="ml-auto h-4 w-4 text-yellow-400" />}
         </Link>
         
-        <h3 className="px-4 mt-5 text-xs font-semibold uppercase text-gray-500 mb-2">LEARNING</h3>
+        {/*<h3 className="px-4 mt-5 text-xs font-semibold uppercase text-gray-500 mb-2">LEARNING</h3>*/}
         <Link 
           to="/courses" 
           className={`flex items-center px-4 py-3 text-sm font-medium rounded-xl ${
@@ -59,7 +59,7 @@ const StudentSidebar = () => {
           } transition-all relative`}
         >
           <Book className="mr-3 h-5 w-5" />
-          My Courses
+          My Classes
           {isActive("/courses") && <Sparkles className="ml-auto h-4 w-4 text-yellow-400" />}
           {!isActive("/courses") && hasNewMatches && (
             <span className="absolute right-3 flex h-2 w-2">
@@ -68,54 +68,54 @@ const StudentSidebar = () => {
             </span>
           )}
         </Link>
-        <Link 
-          to="/group-work" 
-          className={`flex items-center px-4 py-3 text-sm font-medium rounded-xl ${
-            isActive("/group-work") 
-              ? "bg-gradient-to-r from-kidato-light-blue to-blue-100 text-kidato-purple shadow-sm" 
-              : "text-gray-700 hover:bg-blue-50"
-          } transition-all relative`}
-        >
-          <Users className="mr-3 h-5 w-5" />
-          Group Work
-          {isActive("/group-work") && <Sparkles className="ml-auto h-4 w-4 text-yellow-400" />}
-          {!isActive("/group-work") && hasGroupInvites && (
-            <div className="ml-auto flex items-center">
-              <BellDot className="h-4 w-4 text-blue-600" />
-            </div>
-          )}
-        </Link>
-        <Link 
-          to="/achievements" 
-          className={`flex items-center px-4 py-3 text-sm font-medium rounded-xl ${
-            isActive("/achievements") 
-              ? "bg-gradient-to-r from-kidato-light-blue to-blue-100 text-kidato-purple shadow-sm" 
-              : "text-gray-700 hover:bg-blue-50"
-          } transition-all`}
-        >
-          <Award className="mr-3 h-5 w-5" />
-          Achievements
-          {isActive("/achievements") && <Sparkles className="ml-auto h-4 w-4 text-yellow-400" />}
-        </Link>
+        {/*<Link */}
+        {/*  to="/group-work" */}
+        {/*  className={`flex items-center px-4 py-3 text-sm font-medium rounded-xl ${*/}
+        {/*    isActive("/group-work") */}
+        {/*      ? "bg-gradient-to-r from-kidato-light-blue to-blue-100 text-kidato-purple shadow-sm" */}
+        {/*      : "text-gray-700 hover:bg-blue-50"*/}
+        {/*  } transition-all relative`}*/}
+        {/*>*/}
+        {/*  <Users className="mr-3 h-5 w-5" />*/}
+        {/*  Group Work*/}
+        {/*  {isActive("/group-work") && <Sparkles className="ml-auto h-4 w-4 text-yellow-400" />}*/}
+        {/*  {!isActive("/group-work") && hasGroupInvites && (*/}
+        {/*    <div className="ml-auto flex items-center">*/}
+        {/*      <BellDot className="h-4 w-4 text-blue-600" />*/}
+        {/*    </div>*/}
+        {/*  )}*/}
+        {/*</Link>*/}
+        {/*<Link */}
+        {/*  to="/achievements" */}
+        {/*  className={`flex items-center px-4 py-3 text-sm font-medium rounded-xl ${*/}
+        {/*    isActive("/achievements") */}
+        {/*      ? "bg-gradient-to-r from-kidato-light-blue to-blue-100 text-kidato-purple shadow-sm" */}
+        {/*      : "text-gray-700 hover:bg-blue-50"*/}
+        {/*  } transition-all`}*/}
+        {/*>*/}
+        {/*  <Award className="mr-3 h-5 w-5" />*/}
+        {/*  Achievements*/}
+        {/*  {isActive("/achievements") && <Sparkles className="ml-auto h-4 w-4 text-yellow-400" />}*/}
+        {/*</Link>*/}
         
-        <h3 className="px-4 mt-5 text-xs font-semibold uppercase text-gray-500 mb-2">COMMUNICATION</h3>
-        <Link 
-          to="/messaging" 
-          className={`flex items-center px-4 py-3 text-sm font-medium rounded-xl ${
-            isActive("/messaging") 
-              ? "bg-gradient-to-r from-kidato-light-blue to-blue-100 text-kidato-purple shadow-sm" 
-              : "text-gray-700 hover:bg-blue-50"
-          } transition-all relative`}
-        >
-          <MessageSquare className="mr-3 h-5 w-5" />
-          Messages
-          {isActive("/messaging") && <Sparkles className="ml-auto h-4 w-4 text-yellow-400" />}
-          {!isActive("/messaging") && hasUnreadMessages && (
-            <span className="ml-auto bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">
-              3
-            </span>
-          )}
-        </Link>
+        {/*<h3 className="px-4 mt-5 text-xs font-semibold uppercase text-gray-500 mb-2">COMMUNICATION</h3>*/}
+        {/*<Link */}
+        {/*  to="/messaging" */}
+        {/*  className={`flex items-center px-4 py-3 text-sm font-medium rounded-xl ${*/}
+        {/*    isActive("/messaging") */}
+        {/*      ? "bg-gradient-to-r from-kidato-light-blue to-blue-100 text-kidato-purple shadow-sm" */}
+        {/*      : "text-gray-700 hover:bg-blue-50"*/}
+        {/*  } transition-all relative`}*/}
+        {/*>*/}
+        {/*  <MessageSquare className="mr-3 h-5 w-5" />*/}
+        {/*  Messages*/}
+        {/*  {isActive("/messaging") && <Sparkles className="ml-auto h-4 w-4 text-yellow-400" />}*/}
+        {/*  {!isActive("/messaging") && hasUnreadMessages && (*/}
+        {/*    <span className="ml-auto bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">*/}
+        {/*      3*/}
+        {/*    </span>*/}
+        {/*  )}*/}
+        {/*</Link>*/}
         <Link 
           to="/schedule" 
           className={`flex items-center px-4 py-3 text-sm font-medium rounded-xl ${
@@ -127,20 +127,6 @@ const StudentSidebar = () => {
           <Calendar className="mr-3 h-5 w-5" />
           Schedule
           {isActive("/schedule") && <Sparkles className="ml-auto h-4 w-4 text-yellow-400" />}
-        </Link>
-        
-        <h3 className="px-4 mt-5 text-xs font-semibold uppercase text-gray-500 mb-2">ACCOUNT</h3>
-        <Link 
-          to="/profile" 
-          className={`flex items-center px-4 py-3 text-sm font-medium rounded-xl ${
-            isActive("/profile") 
-              ? "bg-gradient-to-r from-kidato-light-blue to-blue-100 text-kidato-purple shadow-sm" 
-              : "text-gray-700 hover:bg-blue-50"
-          } transition-all`}
-        >
-          <User className="mr-3 h-5 w-5" />
-          Profile
-          {isActive("/profile") && <Sparkles className="ml-auto h-4 w-4 text-yellow-400" />}
         </Link>
       </nav>
       

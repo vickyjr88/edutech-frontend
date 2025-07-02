@@ -119,10 +119,10 @@ export const useGetPopularClasses = () => {
   });
 };
 
-export const useGetRecommendedClasses = (userId: string) => {
+export const useGetRecommendedClasses = (studentId: string) => {
   return useQuery({
-    queryKey: ['recommendedClasses', userId],
-    queryFn: () => classService.getRecommended(userId),
+    queryKey: ['recommendedClasses', studentId],
+    queryFn: () => classService.getRecommended(studentId),
   });
 };
 

@@ -17,9 +17,9 @@ import { useGetCompletedClassesForStudent, useGetCurrentClassesForStudent, useGe
 const Courses = () => {
   const [filterOpen, setFilterOpen] = useState(false);
   const { user } = useAuth();
-  const { data: response, isLoading } = useGetRecommendedClasses(user.id);
-  const { data: enrolledClassesResponse, isLoading: enrolledClassesLoading } = useGetCurrentClassesForStudent(user.id);
-  const { data: completedClassesResponse, isLoading: completedClassesLoading } = useGetCompletedClassesForStudent(user.id);
+  const { data: response, isLoading } = useGetRecommendedClasses(user.studentId);
+  const { data: enrolledClassesResponse, isLoading: enrolledClassesLoading } = useGetCurrentClassesForStudent(user.studentId);
+  const { data: completedClassesResponse, isLoading: completedClassesLoading } = useGetCompletedClassesForStudent(user.studentId);
   const recommendedClasses = response?.data ?? [];
   const enrolledClasses = enrolledClassesResponse?.data ?? [];
   const completedClasses = completedClassesResponse?.data ?? [];
