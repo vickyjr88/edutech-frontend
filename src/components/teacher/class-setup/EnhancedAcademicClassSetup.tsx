@@ -284,7 +284,7 @@ const EnhancedAcademicClassSetupContent: React.FC = () => {
     loadClassData();
   }, [urlClassId, navigate]);
 
-  const handleClassComplete = (classData: ClassFormValues, completedId: string) => {
+  const handleClassComplete = (classData: ClassFormValues, completedId?: string) => {
     setCompletedClassData(classData);
     setCompletedClassId(completedId);
     setShowCompletionModal(true);
