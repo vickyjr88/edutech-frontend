@@ -24,15 +24,19 @@ export default function CurrentClasses() {
     classesToDisplay, 
     bookmarkedClasses, 
     getMinutesSinceStart, 
-    toggleBookmark 
+    toggleBookmark,
+    isLoading,
+    todaysLessons
   } = useClassesData();
+  
+  const title = todaysLessons.length > 0 ? "Today's Lessons" : "Upcoming Lessons";
   
   return (
     <Card className="border-2 border-blue-100 rounded-xl overflow-hidden shadow-md transform transition-all hover:shadow-lg">
       <CardHeader className="flex flex-row items-center justify-between pb-2 bg-gradient-to-r from-blue-50 to-purple-50">
         <CardTitle className="text-lg font-bold flex items-center">
           <BookOpen className="mr-2 h-5 w-5 text-kidato-purple" />
-          Today's Lessons
+          {title}
         </CardTitle>
         <Button variant="ghost" size="sm" asChild className="px-4">
           <Link to="/courses" className="text-kidato-purple hover:text-kidato-purple/90 text-sm flex items-center">
@@ -43,7 +47,11 @@ export default function CurrentClasses() {
       </CardHeader>
       <CardContent className="pt-4">
         <div className="space-y-4">
-          {classesToDisplay.length > 0 ? (
+          {isLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-kidato-purple"></div>
+            </div>
+          ) : classesToDisplay.length > 0 ? (
             classesToDisplay.map((classItem, index) => {
               const isCurrentClass = classItem.sessionTime <= new Date();
               const minutesSinceStart = isCurrentClass ? getMinutesSinceStart(classItem.sessionTime) : null;

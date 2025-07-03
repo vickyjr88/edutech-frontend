@@ -1,14 +1,20 @@
 
 import { useState, useEffect, useCallback } from "react";
-import { initializeSessionTimes } from "./mockClassData";
 import { useToast } from "@/hooks/use-toast";
 import { showClassReminder } from "./LiveClassAlert";
+import { useAuth } from "@/contexts/AuthContext";
+import { useTodaysLessons, useUpcomingSessions } from "@/hooks/use-student-service";
 
 export function useClassesData() {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [bookmarkedClasses, setBookmarkedClasses] = useState<string[]>([]);
   const [lastReminderTime, setLastReminderTime] = useState(0);
   const { toast } = useToast();
+  const { user } = useAuth();
+  
+  // Fetch today's lessons and upcoming sessions
+  const { data: todaysLessonsResponse, isLoading: todaysLessonsLoading } = useTodaysLessons(user?.studentId || '');
+  const { data: upcomingSessionsResponse, isLoading: upcomingSessionsLoading } = useUpcomingSessions(user?.studentId || '');
   
   useEffect(() => {
     // Update current time every minute
@@ -19,13 +25,52 @@ export function useClassesData() {
     return () => clearInterval(timer);
   }, []);
   
-  const allClasses = initializeSessionTimes(currentTime);
+  // Transform API data to match expected format
+  const todaysLessons = todaysLessonsResponse?.data?.lessons || [];
+  const upcomingSessions = upcomingSessionsResponse?.data || [];
   
-  const sortedClasses = [...allClasses].sort((a, b) => 
+  // Transform today's lessons to match existing interface
+  const transformedTodaysLessons = todaysLessons.map(lesson => ({
+    id: lesson?.id || '',
+    title: lesson?.title || 'Untitled Lesson',
+    subject: lesson?.subject || 'General',
+    teacher: lesson?.teacher?.fullName || 'TBA',
+    cohort: lesson?.curriculum || 'Standard',
+    sessionTime: new Date(lesson?.sessionInfo?.when || Date.now()),
+    isLiveNow: lesson?.isLiveNow || false
+  }));
+  
+  // Transform upcoming sessions to match existing interface
+  const transformedUpcomingSessions = upcomingSessions.map(session => ({
+    id: session?.classId || '',
+    title: session?.title || 'Upcoming Session',
+    subject: session?.subject || 'General',
+    teacher: session?.teacherName || 'TBA',
+    teacherImage: session?.profileImage || '/api/placeholder/80/80',
+    cohort: session?.cohortName || 'Standard',
+    sessionTime: new Date(session?.startTime || Date.now()),
+    isLiveNow: false,
+    classType: session?.sessionType === 'academic' ? 'Academic' : 'General',
+    grade: 'Junior High', // Default grade - this should come from student profile
+    curriculum: session?.cohortName || 'Standard',
+    nextTopic: session?.nextLesson || 'To be announced',
+    students: session?.studentsEnrolled || 0,
+    nextSession: new Date(session?.startTime || Date.now()).toLocaleString(),
+    progress: session?.progress || 0,
+    totalLessonsCompleted: Math.floor(((session?.progress || 0) / 100) * (session?.lessonsRemaining || 1)),
+    totalLessons: session?.lessonsRemaining || 1,
+    homeworkDue: null,
+    color: 'bg-gradient-to-br from-blue-50 to-purple-50',
+    iconBg: 'bg-blue-100 text-blue-600'
+  }));
+  
+  // Combine and sort all classes
+  const allClasses = [...transformedTodaysLessons, ...transformedUpcomingSessions];
+  const sortedClasses = allClasses.sort((a, b) => 
     a.sessionTime.getTime() - b.sessionTime.getTime()
   );
 
-  // Define currentClass before it's used in any other function
+  // Define currentClass - a class that's currently live
   const currentClass = sortedClasses.find(cls => {
     const now = currentTime.getTime();
     const classTime = cls.sessionTime.getTime();
@@ -33,11 +78,13 @@ export function useClassesData() {
     return timeDiffMinutes >= 0 && timeDiffMinutes < 60;
   });
 
+  // Get upcoming classes (not current)
   const upcomingClasses = sortedClasses
     .filter(cls => cls.sessionTime > currentTime)
     .filter(cls => !currentClass || cls.id !== currentClass.id)
     .slice(0, currentClass ? 2 : 3);
 
+  // Classes to display: current class first, then upcoming
   const classesToDisplay = currentClass 
     ? [currentClass, ...upcomingClasses] 
     : upcomingClasses;
@@ -98,6 +145,8 @@ export function useClassesData() {
     bookmarkedClasses,
     getMinutesSinceStart,
     toggleBookmark,
-    handleJoinClass
+    handleJoinClass,
+    isLoading: todaysLessonsLoading || upcomingSessionsLoading,
+    todaysLessons
   };
 }

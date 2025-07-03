@@ -31,6 +31,13 @@ export const useJoinClass = (studentId: string) => {
   });
 };
 
+export const useUpcomingSessions = (studentId: string) => {
+  return useQuery({
+    queryKey: ['upcomingSessions', studentId],
+    queryFn: () => studentService.getUpcomingSessions(studentId),
+  });
+};
+
 export const useUpdateStudentProfile = (studentId: string) => {
   return useMutation({
     mutationFn: (data: any) => studentService.updateProfile(studentId, data),

@@ -77,6 +77,23 @@ export interface TodaysLesson {
     };
 }
 
+export interface UpcomingSession {
+    classId: string;
+    title: string;
+    subject: string;
+    teacherName: string;
+    profileImage: string;
+    cohortName: string;
+    startTime: string;
+    duration: number;
+    timeLeft: number;
+    progress: number;
+    sessionType: string;
+    nextLesson: string;
+    lessonsRemaining: number;
+    studentsEnrolled: number;
+}
+
 export const studentService = {
     getProfile: (studentId: string): Promise<ApiResponse<Student>> => {
         return api.get<Student>(`/students/users/${studentId}/profile`);
@@ -92,6 +109,10 @@ export const studentService = {
 
     joinClass: (studentId: string, classId: string): Promise<ApiResponse<{ success: boolean; sessionUrl: string }>> => {
         return api.post<{ success: boolean; sessionUrl: string }>(`/students/${studentId}/join-class/${classId}`, {});
+    },
+
+    getUpcomingSessions: (studentId: string): Promise<ApiResponse<UpcomingSession[]>> => {
+        return api.get<UpcomingSession[]>(`/students/${studentId}/upcoming-sessions`);
     },
 
     updateProfile: (studentId: string, data: Partial<Student>): Promise<ApiResponse<Student>> => {
