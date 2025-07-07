@@ -30,6 +30,7 @@ import EnhancedStudentInsights from './EnhancedStudentInsights';
 import PredictiveAnalytics from './PredictiveAnalytics';
 import LessonPlansTimeline from './LessonPlansTimeline';
 import LessonPlanCreatorModal from './LessonPlanCreatorModal';
+import LessonPlanEditDialog from './LessonPlanEditDialog';
 
 // Types and utilities
 import { ClassDetailContext, TeachingMode } from '@/types/class-detail';
@@ -56,6 +57,8 @@ const EnhancedClassDetailPage: React.FC<EnhancedClassDetailPageProps> = ({
   const [refreshKey, setRefreshKey] = useState(0);
   const [showEditMenu, setShowEditMenu] = useState(false);
   const [isLessonModalOpen, setIsLessonModalOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editingLesson, setEditingLesson] = useState<any>(null);
 
   // Get teacher data for enhanced analytics
   const { teacherId, loading: teacherIdLoading } = useTeacherId();
@@ -172,6 +175,8 @@ const EnhancedClassDetailPage: React.FC<EnhancedClassDetailPageProps> = ({
       case 'editLesson':
         // Edit specific lesson
         console.log('Opening lesson editor for:', data);
+        setEditingLesson(data);
+        setIsEditDialogOpen(true);
         break;
       case 'markLessonComplete':
         // Mark lesson as complete
@@ -225,6 +230,32 @@ const EnhancedClassDetailPage: React.FC<EnhancedClassDetailPageProps> = ({
       ...payload,
       lessonNumber: sequenceNumber ?? classData.lessonPlans.length + 1
     });
+  };
+
+  const handleSaveEditedLesson = async (lessonData: any) => {
+    console.log('Saving edited lesson:', lessonData);
+    try {
+      // Here you would call an API to update the lesson plan
+      // For now, we'll just simulate the save and refresh the data
+      
+      // Example API call (uncomment and modify as needed):
+      // await classService.updateLessonPlan(classData?._id, editingLesson.id, lessonData);
+      
+      // Close the dialog and refresh the timeline
+      setIsEditDialogOpen(false);
+      setEditingLesson(null);
+      setRefreshKey(prev => prev + 1);
+      
+      console.log('Lesson updated successfully');
+    } catch (error) {
+      console.error('Failed to save lesson:', error);
+      // You might want to show an error toast here
+    }
+  };
+
+  const handleCloseEditDialog = () => {
+    setIsEditDialogOpen(false);
+    setEditingLesson(null);
   };
 
   const getModeDescription = (mode: TeachingMode) => {
@@ -524,18 +555,6 @@ const EnhancedClassDetailPage: React.FC<EnhancedClassDetailPageProps> = ({
                   size="sm"
                   className="w-full justify-start gap-3"
                   onClick={() => {
-                    handleActionClick('duplicateClass');
-                    setShowEditMenu(false);
-                  }}
-                >
-                  <Copy className="h-4 w-4" />
-                  Duplicate Class
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="w-full justify-start gap-3"
-                  onClick={() => {
                     handleActionClick('aiOptimize');
                     setShowEditMenu(false);
                   }}
@@ -575,6 +594,16 @@ const EnhancedClassDetailPage: React.FC<EnhancedClassDetailPageProps> = ({
         onOpenChange={setIsLessonModalOpen}
         onSave={handleSaveLessonPlan}
         nextSequenceNumber={(classData?.lessonPlans?.length || 0) + 1}
+      />
+
+      {/* Lesson Plan Edit Dialog */}
+      <LessonPlanEditDialog
+        open={isEditDialogOpen}
+        onOpenChange={handleCloseEditDialog}
+        lessonPlan={editingLesson}
+        onSave={handleSaveEditedLesson}
+        mode="edit"
+        classId={classData?._id}
       />
     </div>
   );

@@ -927,7 +927,7 @@ const LessonPlansTimeline: React.FC<LessonPlansTimelineProps> = ({
                                       {activity.duration} min
                                     </Badge>
                                     <Badge variant="outline" className="text-xs capitalize">
-                                      {activity.activityType.replace('_', ' ')}
+                                      {(activity.activityType || 'unknown').replace(/_/g, ' ')}
                                     </Badge>
                                   </div>
                                   <p className="text-sm text-kidato-gray-700 mb-2">{activity.description}</p>
@@ -1021,7 +1021,7 @@ const LessonPlansTimeline: React.FC<LessonPlansTimelineProps> = ({
                                       {req.isRequired ? 'Required' : 'Optional'}
                                     </Badge>
                                     <Badge variant="outline" className="text-xs capitalize">
-                                      {req.type.replace('_', ' ')}
+                                      {(req.type || 'unknown').replace(/_/g, ' ')}
                                     </Badge>
                                   </div>
                                   <p className="text-sm text-kidato-gray-700 mb-2">{req.description}</p>

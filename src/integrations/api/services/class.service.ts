@@ -175,7 +175,12 @@ export const classService = {
     },
 
     updateLessonPlan: (classId: string, lessonIndex: number, lessonPlan: LessonPlan): Promise<ApiResponse<ClassDetail>> => {
+
         return api.patch<ClassDetail>(`/classes/${classId}/lesson-plans/${lessonIndex}`, lessonPlan);
+    },
+
+    updateLessonPlanById: (classId: string, lessonPlanId: string, lessonPlan: any): Promise<ApiResponse<ClassDetail>> => {
+        return api.patch<ClassDetail>(`/classes/${classId}/lesson-plans/${lessonPlanId}`, lessonPlan);
     },
 
     removeLessonPlan: (classId: string, lessonIndex: number): Promise<ApiResponse<never>> => {
