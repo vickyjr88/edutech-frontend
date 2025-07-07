@@ -13,6 +13,9 @@ import {
   getFormMetadata
 } from "./utils/storageUtils";
 import { getApiRepeatPatternValue, getLocalRepeatPatternValue } from "./utils/repeatPatternUtils";
+import { ExtractedCourseData } from "@/types/course-data";
+import { mapCourseDataToFormValues } from "@/utils/courseDataMapper";
+import { toast } from "sonner";
 
 interface ClassFormContextType {
   form: UseFormReturn<ClassFormValues>;
@@ -32,6 +35,7 @@ interface ClassFormContextType {
   hasUnsavedChanges: boolean;
   isLoadingFromStorage: boolean;
   draftExists: boolean;
+  courseDataImported: boolean;
 
   // Helper methods
   addCohort: () => void;
@@ -79,6 +83,9 @@ interface ClassFormContextType {
   // Save basic info and continue
   saveBasicInfoAndContinue: () => Promise<void>;
 
+  // Course data import
+  importCourseData: (extractedData: ExtractedCourseData) => void;
+
   // Form submission
   onSubmit: (data: ClassFormValues) => void;
 };
@@ -100,6 +107,8 @@ interface ClassFormProviderProps {
   initialCohorts?: any[];
   initialTeamMembers?: any[];
   enableStorageLoading?: boolean;
+  extractedCourseData?: ExtractedCourseData;
+  onCourseDataImported?: () => void;
 }
 
 export const ClassFormProvider = ({
@@ -108,7 +117,9 @@ export const ClassFormProvider = ({
   initialValues,
   initialCohorts = [],
   initialTeamMembers = [],
-  enableStorageLoading = true
+  enableStorageLoading = true,
+  extractedCourseData,
+  onCourseDataImported
 }: ClassFormProviderProps) => {
   console.log("ClassFormProvider received initialCohorts:", initialCohorts);
   console.log("ClassFormProvider received initialTeamMembers:", initialTeamMembers);
@@ -138,6 +149,7 @@ export const ClassFormProvider = ({
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isLoadingFromStorage, setIsLoadingFromStorage] = useState(false);
   const [draftExists, setDraftExists] = useState(false);
+  const [courseDataImported, setCourseDataImported] = useState(false);
 
   // Removed log for cleaner initialization
 
@@ -324,6 +336,13 @@ export const ClassFormProvider = ({
     return () => subscription.unsubscribe();
   }, [form]);
 
+  // Handle course data import when extractedCourseData is provided
+  useEffect(() => {
+    if (extractedCourseData) {
+      importCourseData(extractedCourseData);
+    }
+  }, [extractedCourseData]);
+
   // Auto-save when values change, but only if not a new form or if explicitly enabled
   useEffect(() => {
     // Only auto-save if we have either an existing class ID or explicit user interaction has occurred
@@ -340,6 +359,52 @@ export const ClassFormProvider = ({
 
   const handleNavigateTab = (tab: string) => {
     setActiveTab(tab);
+  };
+
+  // Import course data and populate the form
+  const importCourseData = (extractedData: ExtractedCourseData) => {
+    try {
+      // Transform the extracted course data to form values
+      const mappedFormValues = mapCourseDataToFormValues(extractedData);
+      
+      // Reset the form with the mapped values
+      form.reset({
+        ...form.getValues(),
+        ...mappedFormValues
+      });
+      
+      // Update materials array if available
+      if (mappedFormValues.materials) {
+        // This will be handled by the form reset above
+      }
+      
+      // Update resource links if available
+      if (mappedFormValues.resourceLinks) {
+        // This will be handled by the form reset above
+      }
+      
+      // Show success notification
+      toast.success('Course outline imported successfully!', {
+        description: `${extractedData.lessonPlans.length} lesson plans and ${extractedData.objectives.length} objectives have been imported.`
+      });
+      
+      // Set imported state
+      setCourseDataImported(true);
+      
+      // Call callback if provided
+      onCourseDataImported?.();
+      
+      // Save the updated form state
+      setTimeout(() => {
+        saveCurrentFormState();
+      }, 100);
+      
+    } catch (error) {
+      console.error('Error importing course data:', error);
+      toast.error('Failed to import course outline', {
+        description: 'There was an error processing the course data. Please try again.'
+      });
+    }
   };
 
   const saveBasicInfoAndContinue = async () => {
@@ -983,6 +1048,7 @@ export const ClassFormProvider = ({
     hasUnsavedChanges,
     isLoadingFromStorage,
     draftExists,
+    courseDataImported,
 
     addCohort,
     removeCohort,
@@ -1018,6 +1084,9 @@ export const ClassFormProvider = ({
     discardDraft,
 
     saveBasicInfoAndContinue,
+
+    // Course data import
+    importCourseData,
 
     // Wrap onSubmit to format data properly for backend
     onSubmit: (data: ClassFormValues) => {

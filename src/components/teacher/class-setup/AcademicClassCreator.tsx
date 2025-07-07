@@ -59,11 +59,15 @@ import { DescriptionContext } from '@/services/aiDescriptionService';
 import { toast } from 'sonner';
 import CohortFormDialog from './cohort-form/CohortFormDialog';
 import ClassPreviewPage from './ClassPreviewPage';
+import { ExtractedCourseData } from '@/types/course-data';
+import { mapCourseDataToFormValues } from '@/utils/courseDataMapper';
 
 interface AcademicClassCreatorProps {
   onSubmit: (data: ClassFormValues) => void;
   initialValues?: Partial<ClassFormValues>;
   classId?: string;
+  extractedCourseData?: ExtractedCourseData;
+  onCourseDataImported?: () => void;
 }
 
 interface StepConfig {
@@ -91,6 +95,48 @@ const ClassFoundationStep = ({ form, onNext, isSaving, curricula, loadingCurricu
   // Accordion state for subjects
   const [subjectsAccordionOpen, setSubjectsAccordionOpen] = useState<string>('subjects');
   const selectedSubject = form.watch('subject');
+
+  // AI processing states
+  const [isProcessingCourseOutline, setIsProcessingCourseOutline] = useState(false);
+  const [extractedCourseData, setExtractedCourseData] = useState<ExtractedCourseData | null>(null);
+  const [showExtractedData, setShowExtractedData] = useState(false);
+  const [processingError, setProcessingError] = useState<string | null>(null);
+
+  // Course import handler
+  const handleCourseImport = (extractedData: ExtractedCourseData) => {
+    try {
+      // Transform extracted data to form values
+      const formValues = mapCourseDataToFormValues(extractedData);
+      
+      // Update form with extracted data
+      form.reset({
+        ...form.getValues(),
+        ...formValues
+      });
+      
+      // Show success message
+      toast.success('Course outline imported successfully!', {
+        description: `Imported ${extractedData.lessonPlans.length} lessons and ${extractedData.objectives.length} objectives.`
+      });
+      
+      // Update materials and resource links if they exist
+      if (formValues.materials) {
+        setMaterials(formValues.materials);
+      }
+      if (formValues.resourceLinks) {
+        setResourceLinks(formValues.resourceLinks);
+      }
+      
+      // Hide extracted data preview after import
+      setShowExtractedData(false);
+      
+    } catch (error) {
+      console.error('Error importing course data:', error);
+      toast.error('Failed to import course outline', {
+        description: 'There was an error processing the course data. Please try again.'
+      });
+    }
+  };
 
   // Curriculum styling with Kidato brand colors using proper Tailwind classes
   const getCurriculumStyling = (curriculumCode: string) => {
@@ -448,21 +494,48 @@ const ClassFoundationStep = ({ form, onNext, isSaving, curricula, loadingCurricu
       
       // If this is a course outline file, process it for data extraction
       if (fileType === 'courseOutlineFile') {
+        // Set AI processing state
+        setIsProcessingCourseOutline(true);
+        setProcessingError(null);
+        
+        // Show processing toast with AI context
+        toast.info('🤖 AI is analyzing your course outline...', {
+          description: 'Extracting lessons, objectives, and materials for you.',
+          duration: 5000
+        });
+        
         const { data, error } = await fileUploadService.uploadAndProcessCourseOutline(file);
         
         if (error) {
-          toast.error('Failed to process course outline: ' + error.message);
+          setProcessingError(error.message);
+          toast.error('Failed to process course outline', {
+            description: error.message
+          });
         } else if (data) {
+          // Store extracted data for preview
+          setExtractedCourseData(data);
+          setShowExtractedData(true);
+          
           // Handle the extracted data
           handleDataExtracted(data);
-          toast.success('Course outline processed successfully! Data has been extracted and populated in the form.');
+          
+          toast.success('🎉 Course outline processed successfully!', {
+            description: `AI found ${data.lessonPlans?.length || 0} lessons and ${data.objectives?.length || 0} objectives.`
+          });
         }
+        
+        setIsProcessingCourseOutline(false);
       }
       
       setUploadingFiles(prev => ({ ...prev, [fileType]: false }));
     } catch (error) {
       console.error('File upload error:', error);
-      toast.error('File upload failed: ' + (error instanceof Error ? error.message : 'Unknown error'));
+      setIsProcessingCourseOutline(false);
+      setProcessingError(error instanceof Error ? error.message : 'Unknown error');
+      
+      toast.error('File upload failed', {
+        description: error instanceof Error ? error.message : 'Unknown error'
+      });
       setUploadingFiles(prev => ({ ...prev, [fileType]: false }));
     }
   };
@@ -507,7 +580,7 @@ const ClassFoundationStep = ({ form, onNext, isSaving, curricula, loadingCurricu
               <FileText className="h-5 w-5 text-green-600" />
               Course Documents
             </CardTitle>
-            <CardDescription>Upload your course outline first - we'll use it to help generate your class details (Course Outline is required)</CardDescription>
+            <CardDescription>Upload your course outline first - AI will automatically extract lessons, objectives, and materials to populate your class details (Course Outline is required)</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6 pt-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -553,6 +626,61 @@ const ClassFoundationStep = ({ form, onNext, isSaving, curricula, loadingCurricu
                           <p className="text-sm text-red-700">⚠ Course outline document is required</p>
                         </div>
                       )}
+                      
+                      {/* AI Processing Indicator */}
+                      {isProcessingCourseOutline && (
+                        <div className="mt-2 p-3 bg-blue-50 rounded border border-blue-200">
+                          <div className="flex items-center gap-2">
+                            <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
+                            <div>
+                              <p className="text-sm font-medium text-blue-700">🤖 AI is analyzing your course outline...</p>
+                              <p className="text-xs text-blue-600">Extracting lessons, objectives, and materials for you</p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Processing Error */}
+                      {processingError && !isProcessingCourseOutline && (
+                        <div className="mt-2 p-3 bg-red-50 rounded border border-red-200">
+                          <div className="flex items-center gap-2">
+                            <AlertCircle className="h-4 w-4 text-red-600" />
+                            <div>
+                              <p className="text-sm font-medium text-red-700">AI Processing Failed</p>
+                              <p className="text-xs text-red-600">{processingError}</p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Extracted Data Preview */}
+                      {extractedCourseData && showExtractedData && !isProcessingCourseOutline && (
+                        <div className="mt-2 p-3 bg-green-50 rounded border border-green-200">
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                              <Sparkles className="h-4 w-4 text-green-600" />
+                              <p className="text-sm font-medium text-green-700">🎉 AI extracted course data successfully!</p>
+                            </div>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setShowExtractedData(false)}
+                              className="text-green-600 hover:text-green-700 hover:bg-green-100 h-6 w-6 p-0"
+                            >
+                              <X className="h-3 w-3" />
+                            </Button>
+                          </div>
+                          <div className="grid grid-cols-2 gap-2 text-xs text-green-600">
+                            <div>📚 {extractedCourseData.lessonPlans?.length || 0} lessons found</div>
+                            <div>🎯 {extractedCourseData.objectives?.length || 0} objectives found</div>
+                            <div>📦 {extractedCourseData.materials?.length || 0} materials found</div>
+                            <div>⚙️ {extractedCourseData.technicalRequirements?.length || 0} tech requirements</div>
+                          </div>
+                          <p className="text-xs text-green-600 mt-2">Form has been auto-populated with extracted data!</p>
+                        </div>
+                      )}
+                      
                       <FormMessage />
                     </FormItem>
                   )}
@@ -2420,7 +2548,9 @@ const ReviewPublishStep = ({ form, cohorts, onSubmit, onPrev }: any) => {
 const AcademicClassCreator: React.FC<AcademicClassCreatorProps> = ({
   onSubmit,
   initialValues,
-  classId
+  classId,
+  extractedCourseData,
+  onCourseDataImported
 }) => {
   const { } = useAuth();
   const [currentStep, setCurrentStep] = useState(0);
@@ -2429,6 +2559,7 @@ const AcademicClassCreator: React.FC<AcademicClassCreatorProps> = ({
   const [isSaving, setIsSaving] = useState(false);
   const [curricula, setCurricula] = useState<Curriculum[]>([]);
   const [loadingCurricula, setLoadingCurricula] = useState(true);
+  const [courseDataImported, setCourseDataImported] = useState(false);
 
   const form = useForm<ClassFormValues>({
     resolver: zodResolver(classSchema),
@@ -2460,6 +2591,39 @@ const AcademicClassCreator: React.FC<AcademicClassCreatorProps> = ({
       ...initialValues
     }
   });
+
+  // Handle course data import when extractedCourseData is provided
+  useEffect(() => {
+    if (extractedCourseData) {
+      try {
+        // Transform the extracted course data to form values
+        const mappedFormValues = mapCourseDataToFormValues(extractedCourseData);
+        
+        // Reset the form with the mapped values
+        form.reset({
+          ...form.getValues(),
+          ...mappedFormValues
+        });
+        
+        // Show success notification
+        toast.success('Course outline imported successfully!', {
+          description: `${extractedCourseData.lessonPlans.length} lesson plans and ${extractedCourseData.objectives.length} objectives have been imported.`
+        });
+        
+        // Set imported state
+        setCourseDataImported(true);
+        
+        // Call callback if provided
+        onCourseDataImported?.();
+        
+      } catch (error) {
+        console.error('Error importing course data:', error);
+        toast.error('Failed to import course outline', {
+          description: 'There was an error processing the course data. Please try again.'
+        });
+      }
+    }
+  }, [extractedCourseData, form, onCourseDataImported]);
 
   // Fetch curricula data
   useEffect(() => {
@@ -2564,7 +2728,15 @@ const AcademicClassCreator: React.FC<AcademicClassCreatorProps> = ({
         <div className="container mx-auto px-4 py-4">
           <div className="max-w-4xl mx-auto">
             <div className="flex items-center justify-between mb-4">
-              <h1 className="text-lg font-semibold text-gray-900">Create Academic Class</h1>
+              <div className="flex items-center gap-3">
+                <h1 className="text-lg font-semibold text-gray-900">Create Academic Class</h1>
+                {courseDataImported && (
+                  <Badge className="bg-green-100 text-green-800 border-green-200">
+                    <CheckCircle className="h-3 w-3 mr-1" />
+                    Course Outline Imported
+                  </Badge>
+                )}
+              </div>
               <div className="text-sm text-gray-600">
                 Step {currentStep + 1} of {steps.length}
               </div>

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -162,6 +162,9 @@ interface LessonFormProps {
   onRemove: () => void;
   isRemovable: boolean;
   lessonNumber: number;
+  isImported?: boolean;
+  importSource?: string;
+  importedAt?: Date;
 }
 
 export const LessonFormRedesigned = ({
@@ -169,7 +172,10 @@ export const LessonFormRedesigned = ({
   onUpdate,
   onRemove,
   isRemovable,
-  lessonNumber
+  lessonNumber,
+  isImported = false,
+  importSource,
+  importedAt
 }: LessonFormProps) => {
   const [newObjective, setNewObjective] = useState<string>("");
   const [newTag, setNewTag] = useState<string>("");
@@ -196,6 +202,16 @@ export const LessonFormRedesigned = ({
   };
 
   const completionStatus = getSectionCompletionStatus();
+
+  // Handle dynamic lesson prop updates (important for imported course data)
+  useEffect(() => {
+    // This effect ensures the component updates when lesson prop changes
+    // Particularly useful when lesson data is imported from course outlines
+    if (lesson && isImported) {
+      // Component will re-render with new lesson data
+      // All form fields will update automatically due to controlled component pattern
+    }
+  }, [lesson, isImported]);
 
   // Objective management
   const addObjective = () => {
@@ -556,7 +572,15 @@ export const LessonFormRedesigned = ({
             <div className="flex items-center justify-center w-10 h-10 bg-blue-100 rounded-full">
               <BookOpen className="h-5 w-5 text-blue-600" />
             </div>
-            Lesson {lessonNumber}
+            <div className="flex items-center gap-2">
+              <span>Lesson {lessonNumber}</span>
+              {isImported && (
+                <Badge className="bg-green-100 text-green-800 border-green-200 text-xs">
+                  <Sparkles className="h-3 w-3 mr-1" />
+                  Imported from Course Outline
+                </Badge>
+              )}
+            </div>
           </CardTitle>
           {isRemovable && (
             <Button 
