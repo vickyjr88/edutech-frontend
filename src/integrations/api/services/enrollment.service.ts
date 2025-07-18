@@ -73,9 +73,19 @@ export const enrollmentService = {
     return api.get<Enrollment[]>(`/enrollments/class/${classId}`);
   },
 
+  // Get current enrollments by student
+  getStudentCurrentEnrollments: (studentId: string): Promise<ApiResponse<Enrollment[]>> => {
+    return api.get<Enrollment[]>(`/students/enrollments/student/${studentId}/current`);
+  },
+
+  // Get enrollments pending payment by student
+  getStudentPendingEnrollments: (studentId: string): Promise<ApiResponse<Enrollment[]>> => {
+    return api.get<Enrollment[]>(`/students/enrollments/student/${studentId}/pending`);
+  },
+
   // Self enroll to a class
   selfEnroll: (data: SelfEnrollmentRequest): Promise<ApiResponse<Enrollment>> => {
-    return api.post<Enrollment>('/enrollments/self-enroll', data);
+    return api.post<Enrollment>('/students/self-enroll', data);
   },
 
   // Update an enrollment status
