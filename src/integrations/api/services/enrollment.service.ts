@@ -1,22 +1,30 @@
 import { api, ApiResponse } from '../client';
 
-export interface Enrollment {
+interface Course {
   id: string;
-  userId: string;
-  classId: string;
-  status: 'PENDING' | 'ACTIVE' | 'COMPLETED' | 'CANCELLED';
-  enrolledDate: string;
-  completedDate?: string;
-  cancelledDate?: string;
-  paymentStatus: 'PENDING' | 'PAID' | 'FAILED';
-  paymentMethod?: string;
-  paymentId?: string;
-  paymentAmount?: number;
-  paymentCurrency?: string;
-  paymentDate?: string;
-  notes?: string;
-  createdAt: string;
-  updatedAt: string;
+  title: string;
+  subject: string;
+  rating: number;
+}
+
+interface NextClass {
+  date: string;
+  time: string;
+}
+
+interface Participants {
+  current: number;
+  maximum: number;
+}
+
+export interface Enrollment {
+  enrollmentId: string;
+  course: Course;
+  progress: number;
+  nextClass: NextClass;
+  enrollmentDeadline: string; // ISO date string
+  participants: Participants;
+  price: number;
 }
 
 export interface SelfEnrollmentRequest {
