@@ -13,7 +13,7 @@ import { EditProfileForm } from "@/components/dashboard/EditProfileForm";
 
 const Profile = () => {
   const { user } = useAuth();
-  const { data: response } = useGetProfileById(user.id);
+  const { data: response, refetch } = useGetProfileById(user.id);
   const profile = response?.data;
   const fullName = user.fullName;
   
@@ -54,7 +54,7 @@ const Profile = () => {
                       {nameInitials}
                     </div>
                     <h2 className="text-xl font-bold">{user.fullName}</h2>
-                    <p className="text-gray-500">{profile?.grade} Student</p>
+                    <p className="text-gray-500">{profile?.grade ? `Grade ${profile.grade} Student` : "Student"}</p>
                     <Button
                       variant="outline"
                       size="sm"
@@ -70,7 +70,10 @@ const Profile = () => {
                   {isEditing ? (
                     <EditProfileForm
                       profile={profile}
-                      onClose={() => setIsEditing(false)}
+                      onClose={() => {
+                        setIsEditing(false)
+                        refetch()
+                      }}
                     />
                   ) : (
                   <>

@@ -1,22 +1,30 @@
 import { api, ApiResponse } from '../client';
 
-export interface Enrollment {
+interface Course {
   id: string;
-  userId: string;
-  classId: string;
-  status: 'PENDING' | 'ACTIVE' | 'COMPLETED' | 'CANCELLED';
-  enrolledDate: string;
-  completedDate?: string;
-  cancelledDate?: string;
-  paymentStatus: 'PENDING' | 'PAID' | 'FAILED';
-  paymentMethod?: string;
-  paymentId?: string;
-  paymentAmount?: number;
-  paymentCurrency?: string;
-  paymentDate?: string;
-  notes?: string;
-  createdAt: string;
-  updatedAt: string;
+  title: string;
+  subject: string;
+  rating: number;
+}
+
+interface NextClass {
+  date: string;
+  time: string;
+}
+
+interface Participants {
+  current: number;
+  maximum: number;
+}
+
+export interface Enrollment {
+  enrollmentId: string;
+  course: Course;
+  progress: number;
+  nextClass: NextClass;
+  enrollmentDeadline: string; // ISO date string
+  participants: Participants;
+  price: number;
 }
 
 export interface SelfEnrollmentRequest {
@@ -73,9 +81,19 @@ export const enrollmentService = {
     return api.get<Enrollment[]>(`/enrollments/class/${classId}`);
   },
 
+  // Get current enrollments by student
+  getStudentCurrentEnrollments: (studentId: string): Promise<ApiResponse<Enrollment[]>> => {
+    return api.get<Enrollment[]>(`/students/enrollments/student/${studentId}/current`);
+  },
+
+  // Get enrollments pending payment by student
+  getStudentPendingEnrollments: (studentId: string): Promise<ApiResponse<Enrollment[]>> => {
+    return api.get<Enrollment[]>(`/students/enrollments/student/${studentId}/pending`);
+  },
+
   // Self enroll to a class
   selfEnroll: (data: SelfEnrollmentRequest): Promise<ApiResponse<Enrollment>> => {
-    return api.post<Enrollment>('/enrollments/self-enroll', data);
+    return api.post<Enrollment>('/students/self-enroll', data);
   },
 
   // Update an enrollment status

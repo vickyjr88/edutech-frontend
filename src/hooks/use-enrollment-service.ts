@@ -5,6 +5,8 @@ const queryClient = new QueryClient();
 // Enrollment Query Keys
 const enrollmentQueryKeys = {
   studentEnrollments: (studentId: string) => ['enrollments', 'student', studentId],
+  studentCurrentEnrollments: (studentId: string) => ['enrollments', 'student', studentId, 'current'],
+  studentPendingEnrollments: (studentId: string) => ['enrollments', 'student', studentId, 'pending'],
   classEnrollments: (classId: string) => ['enrollments', 'class', classId],
   enrollment: (enrollmentId: string) => ['enrollments', enrollmentId]
 } as const;
@@ -14,6 +16,26 @@ export const useGetStudentEnrollments = (studentId: string) => {
   return useQuery({
     queryKey: enrollmentQueryKeys.studentEnrollments(studentId),
     queryFn: () => enrollmentService.getStudentEnrollments(studentId),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    retry: 2
+  });
+};
+
+// Get Student Current Enrollments
+export const useGetStudentCurrentEnrollments = (studentId: string) => {
+  return useQuery({
+    queryKey: enrollmentQueryKeys.studentCurrentEnrollments(studentId),
+    queryFn: () => enrollmentService.getStudentCurrentEnrollments(studentId),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    retry: 2
+  });
+};
+
+// Get Student Pending Enrollments
+export const useGetStudentPendingEnrollments = (studentId: string) => {
+  return useQuery({
+    queryKey: enrollmentQueryKeys.studentPendingEnrollments(studentId),
+    queryFn: () => enrollmentService.getStudentPendingEnrollments(studentId),
     staleTime: 5 * 60 * 1000, // 5 minutes
     retry: 2
   });
