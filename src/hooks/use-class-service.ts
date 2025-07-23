@@ -72,6 +72,13 @@ export const useUnpublishClass = (classId: string) => {
 };
 
 // Lesson Plan Hooks
+export const useGetLessonPlans = (classId: string) => {
+  return useQuery({
+    queryKey: ['lessonPlans', classId],
+    queryFn: () => classService.getLessonPlans(classId),
+  });
+};
+
 export const useAddLessonPlan = (classId: string) => {
   return useMutation({
     mutationFn: (lessonPlan: any) => classService.addLessonPlan(classId, lessonPlan),
