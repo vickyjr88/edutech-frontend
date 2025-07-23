@@ -67,24 +67,10 @@ interface EnrollmentTableProps {
     return initials[index % initials.length];
   };
 
-  // Render appropriate icon based on activity type
-  const getActivityIcon = (type: 'assignment' | 'group' | 'quiz') => {
-    switch (type) {
-      case 'assignment':
-        return <FileText className="h-4 w-4 text-blue-500" />;
-      case 'group':
-        return <Users className="h-4 w-4 text-purple-500" />;
-      case 'quiz':
-        return <BookMarked className="h-4 w-4 text-amber-500" />;
-      default:
-        return <FileText className="h-4 w-4 text-blue-500" />;
-    }
-  };
-
 const EnrollmentTable = ({ enrollments }: EnrollmentTableProps) => {
 
   return (
-    <Card>
+    <Card className="mb-8">
       <CardHeader className="pb-2">
         <CardTitle className="text-lg font-medium flex items-center">
           <BookLock className="mr-2 h-5 w-5 text-blue-500" />
@@ -153,7 +139,7 @@ const EnrollmentTableRow = ({ enrollment }: { enrollment: Enrollment }) => {
       <TableCell>
         <div className="flex items-center">
           <Clock className="h-3.5 w-3.5 text-gray-400 mr-1" />
-          <span className="text-sm">{`${enrollment.nextClass.date}, ${enrollment.nextClass.time}`}</span>
+          <span className="text-sm">{`${formatDate(enrollment.nextClass.date, 'MMMM d, yyyy')}, ${enrollment.nextClass.time}`}</span>
         </div>
       </TableCell>
       <TableCell>
