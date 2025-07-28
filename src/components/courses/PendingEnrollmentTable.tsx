@@ -27,8 +27,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Link } from "react-router-dom";
+import { useState } from "react";
 import { formatDate } from "date-fns";
+import CheckoutFlow from "@/components/payments/Checkout";
 
 interface Course {
   id: string;
@@ -68,6 +69,7 @@ interface EnrollmentTableProps {
   };
 
 const EnrollmentTable = ({ enrollments }: EnrollmentTableProps) => {
+  const [selectedEnrollment, setSelectedEnrollment] = useState<Enrollment | null>(null);
 
   return (
     <Card className="mb-8">
@@ -97,18 +99,32 @@ const EnrollmentTable = ({ enrollments }: EnrollmentTableProps) => {
                 return (
                   <EnrollmentTableRow
                     key={enrollment.enrollmentId}
-                    enrollment={enrollment} />
+                    enrollment={enrollment}
+                    onPayNow={(enrollment) => setSelectedEnrollment(enrollment)} />
                 )
               })}
             </TableBody>
           </Table>
         </div>
       </CardContent>
+      {selectedEnrollment && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+            <CheckoutFlow onClose={() => setSelectedEnrollment(null)} enrollment={selectedEnrollment} />
+          </div>
+        </div>
+      )}
     </Card>
   );
 };
 
-const EnrollmentTableRow = ({ enrollment }: { enrollment: Enrollment }) => {
+const EnrollmentTableRow = ({ 
+  enrollment, 
+  onPayNow 
+}: { 
+  enrollment: Enrollment;
+  onPayNow: (enrollment: Enrollment) => void;
+}) => {
   const { course } = enrollment;
   
   return (
@@ -139,18 +155,18 @@ const EnrollmentTableRow = ({ enrollment }: { enrollment: Enrollment }) => {
       <TableCell>
         <div className="flex items-center">
           <Clock className="h-3.5 w-3.5 text-gray-400 mr-1" />
-          <span className="text-sm">{`${formatDate(enrollment.nextClass.date, 'MMMM d, yyyy')}, ${enrollment.nextClass.time}`}</span>
+          <span className="text-sm">{`${formatDate(enrollment?.nextClass?.date, 'MMMM d, yyyy')}, ${enrollment?.nextClass?.time}`}</span>
         </div>
       </TableCell>
       <TableCell>
         <div className="flex items-center">
           <Calendar className="h-3.5 w-3.5 text-gray-400 mr-1" />
-          <span className="text-sm">{formatDate(enrollment.enrollmentDeadline, 'MMMM d, yyyy')}</span>
+          <span className="text-sm">{formatDate(enrollment?.enrollmentDeadline, 'MMMM d, yyyy')}</span>
         </div>
       </TableCell>
       <TableCell>
         <div className="flex items-center">
-          <span className="text-sm font-medium mr-2">{enrollment.participants.current}/{enrollment.participants.maximum}</span>
+          <span className="text-sm font-medium mr-2">{enrollment?.participants?.current}/{enrollment?.participants?.maximum}</span>
           <div className="flex -space-x-2">
             {[...Array(3)].map((_, i) => (
               <Avatar key={i} className="border-2 border-white w-7 h-7 bg-blue-200">
@@ -166,14 +182,13 @@ const EnrollmentTableRow = ({ enrollment }: { enrollment: Enrollment }) => {
         {enrollment.price}
       </TableCell>
       <TableCell className="text-right">
-        <Link to={`/course-progress/${course.id}`}>
-          <Button
-            size="sm"
-            className="bg-indigo-600 hover:bg-indigo-700 h-8"
-          >
-            Pay Now
-          </Button>
-        </Link>
+        <Button
+          size="sm"
+          className="bg-indigo-600 hover:bg-indigo-700 h-8"
+          onClick={() => onPayNow(enrollment)}
+        >
+          Pay Now
+        </Button>
       </TableCell>
     </TableRow>
   );
