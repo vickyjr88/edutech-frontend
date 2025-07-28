@@ -127,12 +127,21 @@ interface LessonPlanData {
   status: LessonStatus;
 }
 
+interface ClassContext {
+  classId: string;
+  className: string;
+  subject: string;
+  gradeLevel?: string;
+  totalStudents?: number;
+}
+
 interface LessonPlanCreatorModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSave: (lessonPlan: Partial<LessonPlanData>) => void;
   initialData?: Partial<LessonPlanData>;
   nextSequenceNumber: number;
+  classContext?: ClassContext;
 }
 
 const LessonPlanCreatorModal: React.FC<LessonPlanCreatorModalProps> = ({
@@ -140,33 +149,41 @@ const LessonPlanCreatorModal: React.FC<LessonPlanCreatorModalProps> = ({
   onOpenChange,
   onSave,
   initialData,
-  nextSequenceNumber
+  nextSequenceNumber,
+  classContext
 }) => {
-  // Initialize lesson plan state
-  const [lessonPlan, setLessonPlan] = useState<Partial<LessonPlanData>>({
-    id: `lesson-${Date.now()}`,
-    title: "",
-    description: "",
-    type: LessonType.LECTURE,
-    duration: 60,
-    sequenceNumber: nextSequenceNumber,
-    objectives: [],
-    activities: [],
-    resourceFiles: [],
-    resourceLinks: [],
-    isCompleted: false,
-    teachingNotes: "",
-    difficultyLevel: 'intermediate',
-    estimatedPreparationTime: 30,
-    starterActivity: "",
-    plenaryActivity: "",
-    assessmentCriteria: "",
-    homework: "",
-    prerequisites: "",
-    tags: [],
-    status: LessonStatus.DRAFT,
-    ...initialData
-  });
+  // Initialize lesson plan state with class context pre-filling
+  const getInitialLessonPlan = () => {
+    const baseTags = classContext ? [classContext.subject] : [];
+    const contextualTitle = classContext ? `${classContext.subject} - ` : "";
+    
+    return {
+      id: `lesson-${Date.now()}`,
+      title: contextualTitle,
+      description: classContext ? `A lesson for ${classContext.className} (${classContext.subject})` : "",
+      type: LessonType.LECTURE,
+      duration: 60,
+      sequenceNumber: nextSequenceNumber,
+      objectives: [],
+      activities: [],
+      resourceFiles: [],
+      resourceLinks: [],
+      isCompleted: false,
+      teachingNotes: classContext ? `Class: ${classContext.className}\nSubject: ${classContext.subject}\nStudents: ${classContext.totalStudents || 'N/A'}` : "",
+      difficultyLevel: 'intermediate' as const,
+      estimatedPreparationTime: 30,
+      starterActivity: "",
+      plenaryActivity: "",
+      assessmentCriteria: "",
+      homework: "",
+      prerequisites: "",
+      tags: baseTags,
+      status: LessonStatus.DRAFT,
+      ...initialData
+    };
+  };
+
+  const [lessonPlan, setLessonPlan] = useState<Partial<LessonPlanData>>(getInitialLessonPlan());
 
   const [newObjective, setNewObjective] = useState("");
   const [newTag, setNewTag] = useState("");
@@ -384,7 +401,11 @@ const LessonPlanCreatorModal: React.FC<LessonPlanCreatorModalProps> = ({
                     Create New Lesson Plan
                   </h1>
                   <p className="text-kidato-gray-600 mt-1">
-                    Build an engaging lesson with clear objectives and activities
+                    {classContext ? (
+                      <>Build an engaging lesson for <span className="font-semibold text-kidato-indigo-700">{classContext.className}</span> ({classContext.subject})</>
+                    ) : (
+                      "Build an engaging lesson with clear objectives and activities"
+                    )}
                   </p>
                 </div>
               </div>
