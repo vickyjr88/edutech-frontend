@@ -6,57 +6,20 @@ import LessonReviewModal from "./LessonReviewModal";
 import JoinClassDialog from "@/components/dashboard/JoinClassDialog";
 import { getMockLessonsData } from "./lessonData";
 import { useToast } from "@/hooks/use-toast";
-
+import { useGetLessonPlans } from "@/hooks/use-class-service";
 interface ProgressLessonsProps {
   courseId?: string;
 }
 
 const ProgressLessons = ({ courseId }: ProgressLessonsProps) => {
-  const [lessons, setLessons] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const {data: lessonsData, isLoading} = useGetLessonPlans(courseId);
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
   const [selectedLesson, setSelectedLesson] = useState<any>(null);
   const [joinClassOpen, setJoinClassOpen] = useState(false);
   const [selectedInProgressLesson, setSelectedInProgressLesson] = useState<any>(null);
   const { toast } = useToast();
-
-  useEffect(() => {
-    // Simulating API call
-    const fetchData = async () => {
-      setLoading(true);
-      // In a real app, this would be an API call using courseId
-      const data = getMockLessonsData();
-      
-      // Add start and end times for testing live lessons
-      const enhancedData = data.map(lesson => {
-        if (lesson.status === "in-progress") {
-          // Generate times for testing - some lessons are happening now
-          const now = new Date();
-          const isLive = Math.random() > 0.5; // 50% chance lesson is live now
-          
-          if (isLive) {
-            const startTime = new Date(now);
-            startTime.setMinutes(now.getMinutes() - Math.floor(Math.random() * 30)); // Started 0-30 mins ago
-            
-            const endTime = new Date(startTime);
-            endTime.setMinutes(startTime.getMinutes() + 60); // 60 min duration
-            
-            return {
-              ...lesson,
-              startTime: startTime.toISOString(),
-              endTime: endTime.toISOString()
-            };
-          }
-        }
-        return lesson;
-      });
-      
-      setLessons(enhancedData);
-      setLoading(false);
-    };
-
-    fetchData();
-  }, [courseId]);
+  const lessonPlans = lessonsData?.data?.data || [];
+  const loading = isLoading;
 
   const handleReviewLesson = (lesson: any) => {
     setSelectedLesson(lesson);
@@ -87,9 +50,9 @@ const ProgressLessons = ({ courseId }: ProgressLessonsProps) => {
     return <div className="text-center py-8">Loading lessons data...</div>;
   }
 
-  const completedLessons = lessons.filter(lesson => lesson.status === "completed");
-  const inProgressLessons = lessons.filter(lesson => lesson.status === "in-progress");
-  const upcomingLessons = lessons.filter(lesson => lesson.status === "upcoming");
+  const completedLessons = lessonPlans?.filter(lesson => lesson.status === "completed");
+  const inProgressLessons = lessonPlans?.filter(lesson => lesson.status === "in-progress");
+  const upcomingLessons = lessonPlans?.filter(lesson => lesson.status === "upcoming");
 
   return (
     <div className="space-y-6">
@@ -98,10 +61,10 @@ const ProgressLessons = ({ courseId }: ProgressLessonsProps) => {
         inProgressLessons={inProgressLessons}
         onContinueLearning={handleContinueLearning}
       />
-      
+
       {/* All Lessons Table */}
       <AllLessonsCard 
-        lessons={lessons}
+        lessons={lessonPlans}
         onReviewLesson={handleReviewLesson}
         onContinueLearning={handleContinueLearning}
       />

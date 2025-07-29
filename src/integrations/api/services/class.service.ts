@@ -166,6 +166,10 @@ export const classService = {
     },
 
     // Lesson plan operations
+    getLessonPlans: (classId: string): Promise<ApiResponse<LessonPlan[]>> => {
+        return api.get<LessonPlan[]>(`/classes/${classId}/lesson-plans`);
+    },
+    
     addLessonPlan: (classId: string, lessonPlan: LessonPlan): Promise<ApiResponse<ClassDetail>> => {
         return api.post<ClassDetail>(`/classes/${classId}/lesson-plans`, lessonPlan);
     },

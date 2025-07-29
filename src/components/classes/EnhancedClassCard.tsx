@@ -17,7 +17,8 @@ import {
   Play,
   Target,
   Zap,
-  Activity
+  Activity,
+  BookOpen
 } from 'lucide-react';
 import { EnhancedClass } from '@/types/enhanced-classes';
 import { cn } from '@/lib/utils';
@@ -28,6 +29,7 @@ interface EnhancedClassCardProps {
   onEditClass?: (classData: EnhancedClass) => void;
   onMessageStudents?: (classData: EnhancedClass) => void;
   onPrepareLesson?: (classData: EnhancedClass) => void;
+  onCreateLessonPlan?: (classData: EnhancedClass) => void;
   variant?: 'compact' | 'normal' | 'detailed';
 }
 
@@ -37,6 +39,7 @@ const EnhancedClassCard: React.FC<EnhancedClassCardProps> = ({
   onEditClass,
   onMessageStudents,
   onPrepareLesson,
+  onCreateLessonPlan,
   variant = 'normal'
 }) => {
   const getPreparationStatusColor = (status: string) => {
@@ -420,6 +423,21 @@ const EnhancedClassCard: React.FC<EnhancedClassCardProps> = ({
             >
               <Play className="h-4 w-4 mr-1" />
               Prep
+            </Button>
+          )}
+
+          {onCreateLessonPlan && (
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                onCreateLessonPlan(classData);
+              }}
+              className="border-blue-200 text-blue-700 hover:bg-blue-50"
+            >
+              <BookOpen className="h-4 w-4 mr-1" />
+              Create Lesson
             </Button>
           )}
           
