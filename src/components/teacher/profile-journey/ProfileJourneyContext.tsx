@@ -758,7 +758,7 @@ export const ProfileJourneyProvider = ({ children }: { children: ReactNode }) =>
 
       // Update local state with the response data if available
       if (result.data && Array.isArray(result.data)) {
-        const updatedAcademicSubjects = result.data
+        const updatedAcademicSubjects:any = result.data
           .filter(subject => subject.isAcademic)
           .map((apiSubject, index) => ({
             ...academicToSave[index] || {},
@@ -766,12 +766,12 @@ export const ProfileJourneyProvider = ({ children }: { children: ReactNode }) =>
             subject: apiSubject.subject || apiSubject.name // API returns 'subject' field
           }));
         
-        const updatedAfterSchoolSubjects = result.data
-          .filter(subject => !subject.isAcademic)
+        const updatedAfterSchoolSubjects: AfterSchoolSubjectItem[] = result.data
+          .filter((subject) => !subject.isAcademic)
           .map((apiSubject, index) => ({
-            ...afterSchoolToSave[index] || {},
+            ...(afterSchoolToSave[index] || {}),
             _id: apiSubject.id || apiSubject._id,
-            subject: apiSubject.subject || apiSubject.name // API returns 'subject' field
+            subject: apiSubject.subject || apiSubject.name, // API returns 'subject' field
           }));
         
         setAcademicSubjects(updatedAcademicSubjects);
@@ -810,6 +810,8 @@ export const ProfileJourneyProvider = ({ children }: { children: ReactNode }) =>
 
       const teacherId = user.teacherId;
       console.log("Saving languages for teacher:", teacherId);
+
+      
       
       // Use provided data or fall back to context state
       const languagesToSave = languagesData || languages;
@@ -819,7 +821,7 @@ export const ProfileJourneyProvider = ({ children }: { children: ReactNode }) =>
       const languagesForAPI = languagesToSave.map(lang => {
         const baseItem = {
           name: lang.name || lang.language || '', // Use name field as per API requirement
-          proficiency: lang.proficiency || '',
+          proficiency: lang.language || '',
           teacherProfile: teacherId
         };
 
@@ -848,7 +850,7 @@ export const ProfileJourneyProvider = ({ children }: { children: ReactNode }) =>
       if (result.data && Array.isArray(result.data)) {
         const updatedLanguages = result.data.map((apiLang, index) => ({
           ...languagesToSave[index],
-          _id: apiLang.id || languagesToSave[index]._id
+          _id: apiLang._id || languagesToSave[index]._id
         }));
         setLanguages(updatedLanguages);
       }
@@ -925,8 +927,8 @@ export const ProfileJourneyProvider = ({ children }: { children: ReactNode }) =>
       if (result.data && Array.isArray(result.data)) {
         const updatedSkills = result.data.map((apiSkill, index) => ({
           ...skillsToSave[index],
-          _id: apiSkill.id || skillsToSave[index]._id,
-          name: apiSkill.skill || apiSkill.name, // API returns 'skill' field, map to 'name'
+          _id: apiSkill._id || skillsToSave[index]._id,
+          name: apiSkill.name || '', // API returns 'skill' field, map to 'name'
           description: apiSkill.description || '',
           level: apiSkill.level || '',
           isCertified: apiSkill.isCertified || false
@@ -1060,7 +1062,7 @@ export const ProfileJourneyProvider = ({ children }: { children: ReactNode }) =>
         };
         
         // Add the intro video URL if it's provided
-        if (data.introVideoUrl) {
+        if (data.introVideoUrl!) {
           apiData.introVideoUrl = data.introVideoUrl;
         }
         // Only make the API call if we have data to update

@@ -1,10 +1,10 @@
 import {teacherService} from "@/integrations/api/services/teacher.service.ts";
 export type TechnicalSkillItem = {
-  _id: string;
-  name: string;
+  _id?: string;
+  name?: string;
   description?: string;
   level?: string;
-  isCertified: boolean;
+  isCertified?: boolean;
 };
 
 // Comprehensive list of technical skills for digital teachers
