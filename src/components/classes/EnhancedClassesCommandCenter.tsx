@@ -33,6 +33,7 @@ import EnhancedClassCard from './EnhancedClassCard';
 import LessonPlanningHub from './LessonPlanningHub';
 import ObjectiveTracker from './ObjectiveTracker';
 import TeachingIntelligenceDashboard from './TeachingIntelligenceDashboard';
+import LessonPlanCreatorModal from '../class-detail/LessonPlanCreatorModal';
 
 // Types and utilities
 import { Class } from '@/integrations/api/services/class.service';
@@ -71,6 +72,8 @@ const EnhancedClassesCommandCenter: React.FC<EnhancedClassesCommandCenterProps> 
   const [activeClassTab, setActiveClassTab] = useState<ClassStatus>('published');
   const [viewMode, setViewMode] = useState<ViewMode>('command-center');
   const [searchTerm, setSearchTerm] = useState('');
+  const [lessonPlanModalOpen, setLessonPlanModalOpen] = useState(false);
+  const [selectedClassForLesson, setSelectedClassForLesson] = useState<EnhancedClass | null>(null);
 
   // Get teacher ID for real data fetching
   const { teacherId, loading: teacherIdLoading } = useTeacherId();
@@ -174,9 +177,24 @@ const EnhancedClassesCommandCenter: React.FC<EnhancedClassesCommandCenterProps> 
       case 'edit':
         console.log('Edit class:', classData.title);
         break;
+      case 'create-lesson':
+        setSelectedClassForLesson(classData);
+        setLessonPlanModalOpen(true);
+        break;
       default:
         break;
     }
+  };
+
+  const handleCreateLessonPlan = (classData: EnhancedClass) => {
+    handleCardAction('create-lesson', classData);
+  };
+
+  const handleLessonPlanSave = (lessonPlan: any) => {
+    console.log('Saving lesson plan:', lessonPlan, 'for class:', selectedClassForLesson?.title);
+    // Here you would typically call an API to save the lesson plan
+    setLessonPlanModalOpen(false);
+    setSelectedClassForLesson(null);
   };
 
   const renderCommandCenterView = () => (
@@ -313,6 +331,7 @@ const EnhancedClassesCommandCenter: React.FC<EnhancedClassesCommandCenterProps> 
             onEditClass={(cls) => handleCardAction('edit', cls)}
             onMessageStudents={(cls) => handleCardAction('message', cls)}
             onPrepareLesson={(cls) => handleCardAction('prepare', cls)}
+            onCreateLessonPlan={handleCreateLessonPlan}
             variant={dashboardSettings.cardSize}
           />
         ))}
@@ -468,6 +487,21 @@ const EnhancedClassesCommandCenter: React.FC<EnhancedClassesCommandCenterProps> 
           {renderCommandCenterView()}
         </div>
       )}
+      
+      {/* Lesson Plan Creator Modal */}
+      <LessonPlanCreatorModal
+        open={lessonPlanModalOpen}
+        onOpenChange={setLessonPlanModalOpen}
+        onSave={handleLessonPlanSave}
+        nextSequenceNumber={1}
+        classContext={selectedClassForLesson ? {
+          classId: selectedClassForLesson._id,
+          className: selectedClassForLesson.title,
+          subject: selectedClassForLesson.subject,
+          gradeLevel: selectedClassForLesson.gradeLevel,
+          totalStudents: selectedClassForLesson.totalStudents
+        } : undefined}
+      />
     </div>
   );
 };

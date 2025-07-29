@@ -13,6 +13,8 @@ import CourseFilters from "@/components/courses/CourseFilters";
 
 import { useAuth } from "@/contexts/AuthContext";
 import { useGetCompletedClassesForStudent, useGetCurrentClassesForStudent, useGetRecommendedClasses } from "@/hooks/use-class-service";
+import { useGetStudentPendingEnrollments } from "@/hooks/use-enrollment-service";
+import PendingEnrollmentTable from "@/components/courses/PendingEnrollmentTable";
 
 const Courses = () => {
   const [filterOpen, setFilterOpen] = useState(false);
@@ -20,12 +22,15 @@ const Courses = () => {
   const { data: response, isLoading } = useGetRecommendedClasses(user.studentId);
   const { data: enrolledClassesResponse, isLoading: enrolledClassesLoading } = useGetCurrentClassesForStudent(user.studentId);
   const { data: completedClassesResponse, isLoading: completedClassesLoading } = useGetCompletedClassesForStudent(user.studentId);
+  // get pending enrollments
+  const { data: pendingEnrollmentsResponse, isLoading: pendingEnrollmentsLoading } = useGetStudentPendingEnrollments(user.studentId);
   const recommendedClasses = response?.data ?? [];
   const enrolledClasses = enrolledClassesResponse?.data ?? [];
   const completedClasses = completedClassesResponse?.data ?? [];
+  const pendingEnrollments = pendingEnrollmentsResponse?.data ?? [];
 
-  console.log({ enrolledClasses, recommendedClasses, user });
-  if (isLoading || enrolledClassesLoading || completedClassesLoading) return (
+  console.log({ enrolledClasses, recommendedClasses, user, pendingEnrollments });
+  if (isLoading || enrolledClassesLoading || completedClassesLoading || pendingEnrollmentsLoading) return (
     <div className="min-h-screen flex items-center justify-center">
       <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-kidato-purple"></div>
     </div>
@@ -77,6 +82,7 @@ const Courses = () => {
               {/* Enrolled Courses Table */}
               <TabsContent value="enrolled">
                 <div className="mb-8">
+                  <PendingEnrollmentTable enrollments={pendingEnrollments} />
                   <EnrolledClassesTable enrolledCourses={enrolledClasses} />
                   <CompletedClassesTable completedCourses={completedClasses} />
                 </div>

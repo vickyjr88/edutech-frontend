@@ -21,7 +21,7 @@ export const EditProfileForm = ({ profile, onClose }: EditProfileFormProps) => {
     aboutMe: profile?.aboutMe || "",
   });
 
-  const updateProfileMutation = useUpdateStudentProfile(user.id);
+  const updateProfileMutation = useUpdateStudentProfile(user.studentId);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -53,6 +53,7 @@ export const EditProfileForm = ({ profile, onClose }: EditProfileFormProps) => {
         <Input
           id="grade"
           name="grade"
+          type="number"
           value={formData.grade}
           onChange={handleChange}
           placeholder="Enter your grade"

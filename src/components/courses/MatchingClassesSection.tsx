@@ -8,7 +8,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { ClassDetail } from "@/integrations/api/services/class.service";
 import { useGetTeacherProfileById } from "@/hooks/use-teacher-service";
 import { describeAvailability, getNextClassTime, getUserInitials } from "@/lib/utils";
-import { useGetClassEnrollments, useSelfEnroll } from "@/hooks/use-enrollment-service";
+import { useSelfEnroll } from "@/hooks/use-enrollment-service";
 import { formatDate } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 interface MatchingClassesSectionProps {
@@ -23,12 +23,10 @@ function courseIsNew(course: ClassDetail) {
 
 const MatchingClassesSection = ({ course }: MatchingClassesSectionProps) => {
   const { data: response, isLoading: loadingTeacher } = useGetTeacherProfileById(course.teacher._id);
-  const { data: enrollmentsResponse, isLoading: loadingEnrollments } = useGetClassEnrollments(course._id);
   const { mutate: enroll } = useSelfEnroll();
   const { toast } = useToast();
   const matchingTeacher = response?.data; // once teacher profile image is included in course.user, we can remove this
-  const enrollments = enrollmentsResponse?.data;
-  const loading = loadingTeacher || loadingEnrollments;
+  const loading = loadingTeacher;
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center">
       <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-kidato-purple"></div>
