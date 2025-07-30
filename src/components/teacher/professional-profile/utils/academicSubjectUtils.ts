@@ -9,6 +9,10 @@ export type AcademicSubjectItem = {
   gradeLevel: string;
   proficiencyLevel: string;
   description?: string;
+  ageRange: "string";
+  gender: "string";
+  religion: "string";
+  isAcademic: true;
   isCertified: boolean;
   resources?: string[]; // URLs to resources related to this subject
 };
@@ -32,6 +36,10 @@ export const useAcademicSubjects = (teacherId: string) => {
         proficiencyLevel: item.proficiencyLevel || item.proficiency_level,
         description: item.description || '',
         isCertified: item.isCertified || item.is_certified || false,
+        ageRange:item.ageRange || '',
+        gender:item.gender || '',
+        religion:item.religion || '',
+        isAcademic:item.isAcademic || false,
         resources: item.resources || item.resourceUrls || []
       }));
     } catch (error) {

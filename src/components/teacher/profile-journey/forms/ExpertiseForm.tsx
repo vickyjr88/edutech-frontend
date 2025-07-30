@@ -13,6 +13,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { TECHNICAL_SKILLS } from '@/components/teacher/professional-profile/utils/technicalSkillUtils';
 import { platformService } from '@/integrations/api/services/platform.service';
 import { Curriculum } from '@/components/teacher/class-setup/types';
+import { AcademicSubjectItem } from '../../professional-profile';
 
 interface ExperienceEntry {
   id: string;
@@ -90,11 +91,11 @@ export const ExpertiseForm = ({ onComplete }: ExpertiseFormProps) => {
   const [experienceEntries, setExperienceEntries] = useState<ExperienceEntry[]>(() => {
     if (experience.length > 0) {
       return experience.map((exp, index) => ({
-        id: exp.id || `exp-${index}`,
+        id: exp._id || `exp-${index}`,
         institution: exp.institution || '',
         position: exp.position || '',
         subjects: exp.subjects?.join(', ') || '',
-        startYear: exp.startYear?.toString() || '',
+        startYear: exp. || '',
         endYear: exp.endYear?.toString() || '',
         description: exp.description || ''
       }));
@@ -113,9 +114,9 @@ export const ExpertiseForm = ({ onComplete }: ExpertiseFormProps) => {
   const [languageEntries, setLanguageEntries] = useState<LanguageEntry[]>(() => {
     if (teachingStyle.languages.length > 0) {
       return teachingStyle.languages.map((lang, index) => ({
-        id: lang.id || `lang-${index}`,
+        id: lang._id || `lang-${index}`,
         name: lang.language || '',
-        proficiency: lang.proficiency || 'Beginner',
+        proficiency: lang || 'Beginner',
         isCertified: lang.isCertified || false
       }));
     }
@@ -444,7 +445,7 @@ export const ExpertiseForm = ({ onComplete }: ExpertiseFormProps) => {
       const validAcademicSubjects = academicSubjectEntries.filter(entry => 
         entry.subject.trim() && entry.curriculum.trim()
       );
-      const academicSubjectsData = validAcademicSubjects.map(entry => ({
+      const academicSubjectsData:any= validAcademicSubjects.map(entry => ({
         _id: entry.id,
         subject: entry.subject.trim(),
         curriculum: entry.curriculum,

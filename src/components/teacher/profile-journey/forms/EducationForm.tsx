@@ -34,7 +34,7 @@ export const EducationForm = ({ onComplete }: EducationFormProps) => {
   const [educationEntries, setEducationEntries] = useState<EducationEntry[]>(() => {
     if (education.length > 0) {
       return education.map((edu, index) => ({
-        id: edu.id || `edu-${index}`,
+        id: edu._id || `edu-${index}`,
         institution: edu.institution || '',
         degree: edu.degree || '',
         fieldOfStudy: edu.fieldOfStudy || '',

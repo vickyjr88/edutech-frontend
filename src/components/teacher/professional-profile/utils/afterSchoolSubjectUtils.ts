@@ -4,12 +4,12 @@ import {teacherService} from "@/integrations/api/services/teacher.service.ts";
 
 export type AfterSchoolSubjectItem = {
   _id: string;
-  subject: string;
-  ageRange: string;
+  subject?: string;
+  ageRange?: string;
   gender?: string;
   religion?: string;
   description?: string;
-  isCertified: boolean;
+  isCertified?: boolean;
   resources?: string[]; // URLs to resources related to this subject
 };
 

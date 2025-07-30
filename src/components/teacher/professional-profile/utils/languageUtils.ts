@@ -1,10 +1,12 @@
 
 import {teacherService} from "@/integrations/api/services/teacher.service.ts";
 export type LanguageItem = {
-  _id: string;
-  name: string;
+  _id?: string;
+  name?: string;
   description?: string;
-  isCertified: boolean;
+  language?: string;
+  proficiency?: string;
+  isCertified?: boolean;
 };
 
 // Predefined list of languages (East, West, and South African + International)
@@ -61,7 +63,8 @@ export const fetchLanguages = async (teacherId): Promise<LanguageItem[]> => {
       _id: item['_id'],
       name: item.name,
       description: item.description || undefined,
-      isCertified: item.isCertified || false
+      isCertified: item.isCertified || false,
+      language:item.language || undefined
     }));
   } catch (error) {
     console.error('Error in fetchLanguages:', error);
