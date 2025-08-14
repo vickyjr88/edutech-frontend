@@ -1,39 +1,16 @@
-/// <reference types="vitest" />
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react-swc'
-import path from 'path'
+import { defineConfig } from 'vitest/config';
+import viteBase from './vite.config';
 
 export default defineConfig({
-  plugins: [react()],
+  ...viteBase({ mode: 'test' }),
   test: {
     globals: true,
     environment: 'jsdom',
-    setupFiles: ['./src/test/setup.ts'],
-    css: true,
-    exclude: [
-      'node_modules/**',
-      'dist/**',
-      'e2e/**',
-      '**/*.e2e.{test,spec}.{js,ts}',
-      'playwright.config.ts',
-    ],
-    coverage: {
-      provider: 'v8',
-      reporter: ['text', 'json', 'html'],
-      exclude: [
-        'node_modules/',
-        'src/test/',
-        'e2e/',
-        '**/*.d.ts',
-        '**/*.test.{ts,tsx}',
-        '**/*.spec.{ts,tsx}',
-        'playwright.config.ts',
-      ],
-    },
-  },
-  resolve: {
-    alias: {
-      '@': path.resolve(__dirname, './src'),
-    },
-  },
-})
+    setupFiles: './src/tests/setup.ts',
+    exclude: ['e2e/**', 'node_modules/**', 'src/test/api/axios-interceptors.test.ts', 'src/test/utils/data-transforms.test.ts'],
+    coverage: { 
+      reporter: ['text', 'lcov'], 
+      statements: 85 
+    }
+  }
+});

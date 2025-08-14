@@ -253,5 +253,6 @@ export const mapLessonPlans = (lessonPlans: ExtractedLessonPlan[]): ClassFormVal
  * Utility function to generate a unique ID
  */
 export const generateId = (): string => {
-  return Math.random().toString(36).substring(2, 15);
+  // Generate a random string and ensure it's long enough before taking a substring
+  return (Math.random().toString(36) + '00000000000000000').substring(2, 15);
 };

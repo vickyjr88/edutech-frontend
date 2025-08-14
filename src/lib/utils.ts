@@ -7,10 +7,13 @@ export function cn(...inputs: ClassValue[]) {
 export function getUserInitials(fullName: string) {
     return fullName
       .trim()
+      .replace(/-/g, ' ')
       .split(" ")
       .map((name) => name.charAt(0).toUpperCase())
       .join("");
 }
+import { format, addWeeks, setDay, setHours, setMinutes, isBefore } from 'date-fns';
+
 export function getNextClassTime(schedule) {
   const daysMap = {
     SUNDAY: 0,
@@ -22,42 +25,36 @@ export function getNextClassTime(schedule) {
     SATURDAY: 6,
   };
 
-  const normalizedSchedule = schedule.daysOfWeek.map(day =>
-    day.trim().toUpperCase()
-  );
+  const now = new Date();
+  const [currentHour, currentMinute] = [now.getHours(), now.getMinutes()];
+  const currentTimeInMinutes = currentHour * 60 + currentMinute;
 
-  const today = new Date();
-  const currentDay = today.getDay();
-  const currentTime = today.getHours() + today.getMinutes() / 60;
+  let soonestClassDate = null;
 
-  let soonestDay = null;
-  let minDaysUntil = 8;
+  for (const day of schedule.daysOfWeek) {
+    const normalizedDay = day.trim().toUpperCase();
+    const dayIndex = daysMap[normalizedDay];
+    const [classHour, classMinute] = schedule.startTime.split(':').map(Number);
+    const classTimeInMinutes = classHour * 60 + classMinute;
 
-  for (const day of normalizedSchedule) {
-    const dayIndex = daysMap[day];
-    let daysUntil = (dayIndex - currentDay + 7) % 7;
+    // Start with a date for the current week, set to the correct day and time
+    let candidateDate = setMinutes(setHours(setDay(now, dayIndex, { weekStartsOn: 0 }), classHour), classMinute);
 
-    if (daysUntil === 0) {
-      const [startHour, startMinute] = schedule.startTime.split(':').map(Number);
-      const classTime = startHour + startMinute / 60;
-
-      if (classTime > currentTime) {
-        soonestDay = day;
-        minDaysUntil = 0;
-        break;
-      } else {
-        daysUntil = 7;
-      }
+    // If the candidateDate is in the past relative to 'now', move it to next week
+    if (isBefore(candidateDate, now)) {
+      candidateDate = addWeeks(candidateDate, 1);
     }
 
-    if (daysUntil < minDaysUntil) {
-      minDaysUntil = daysUntil;
-      soonestDay = day;
+    if (!soonestClassDate || candidateDate < soonestClassDate) {
+      soonestClassDate = candidateDate;
     }
   }
 
-  const formattedDay = soonestDay.charAt(0) + soonestDay.slice(1).toLowerCase();
-  return `${formattedDay}, ${schedule.startTime}`;
+  if (soonestClassDate) {
+    return format(soonestClassDate, 'EEEE, HH:mm');
+  } else {
+    return 'No upcoming classes found.';
+  }
 }
 export function describeAvailability(availability) {
   if (!availability || !availability.days || !availability.times) return "No availability provided.";

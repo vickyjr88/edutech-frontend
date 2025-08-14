@@ -5,18 +5,16 @@ import {teacherService} from "@/integrations/api/services/teacher.service.ts";
 // Format date from YYYY-MM to YYYY-MM-DD for database storage
 export const formatDateForDatabase = (dateString: string): string => {
   if (!dateString) return "";
-  // Ensure the date is in YYYY-MM format first
-  const normalized = dateString.match(/^\d{4}-\d{2}$/) 
-    ? dateString 
-    : (() => {
-        const date = new Date(dateString);
-        return !isNaN(date.getTime()) 
-          ? `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}` 
-          : dateString;
-      })();
-  
-  // Append day "01" to make it a valid date for PostgreSQL
-  return `${normalized}-01`;
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) {
+    return dateString; // Return original string if invalid
+  }
+  // If it's already in YYYY-MM format, just append -01
+  if (dateString.match(/^\d{4}-\d{2}$/)) {
+    return `${dateString}-01`;
+  }
+  // Otherwise, format to YYYY-MM-01
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-01`;
 };
 
 // Save experience record to database
