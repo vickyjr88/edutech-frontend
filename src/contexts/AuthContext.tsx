@@ -1,7 +1,14 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import { User, Session } from "@/integrations/api/types/auth.types";
-import {authService} from "@/integrations/api";
+import { Session } from "@ory/kratos-client";
+import { ory } from "../config/ory";
+
+interface User {
+  id: string;
+  email: string;
+  fullName: string;
+  role: string;
+}
 
 interface AuthContextType {
   user: User | null;
@@ -18,37 +25,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Set up auth state listener FIRST
-    const unsubscribe = authService.onAuthStateChange((newSession) => {
-      setSession(newSession);
-      setUser(newSession?.user ?? null);
-      setIsLoading(false);
-    });
-
-    // THEN check for existing session
-    const currentSession = authService.getSession();
-    setSession(currentSession);
-    setUser(currentSession?.user ?? null);
-
-    // If we have a session, verify it's still valid by getting current user
-    if (currentSession) {
-      authService.getCurrentUser().then(({ data }) => {
-        if (!data) {
-          // Session invalid, clear it
-          setSession(null);
-          setUser(null);
-        }
+    // Check for existing session with Ory
+    const checkSession = async () => {
+      try {
+        const { data: session } = await ory.toSession();
+        setSession(session);
+        setUser({
+          id: session.identity.id,
+          email: session.identity.traits.email,
+          fullName: `${session.identity.traits.name.first} ${session.identity.traits.name.last}`,
+          role: session.identity.traits.role,
+        });
+      } catch (error) {
+        setSession(null);
+        setUser(null);
+      } finally {
         setIsLoading(false);
-      });
-    } else {
-      setIsLoading(false);
-    }
+      }
+    };
 
-    return () => unsubscribe();
+    checkSession();
   }, []);
 
   const signOut = async () => {
-    await authService.logout();
+    try {
+      const { data: logoutFlow } = await ory.createSelfServiceLogoutFlowUrlForBrowsers();
+      window.location.href = logoutFlow.logout_url;
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
   };
 
   return (
