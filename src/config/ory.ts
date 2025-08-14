@@ -1,12 +1,10 @@
-import { Configuration, FrontendApi } from '@ory/kratos-client';
+import { Configuration, FrontendApi } from '@ory/client-fetch';
 
-const kratosUrl = import.meta.env.VITE_KRATOS_PUBLIC_URL || 'http://127.0.0.1:4433';
+const oryUrl = import.meta.env.VITE_ORY_SDK_URL || 'http://localhost:4000';
 
 export const ory = new FrontendApi(
   new Configuration({
-    basePath: kratosUrl,
-    baseOptions: {
-      withCredentials: true,
-    },
+    basePath: oryUrl,
+    credentials: 'include',
   }),
 );

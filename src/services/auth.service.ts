@@ -1,6 +1,42 @@
 import { ory } from '../config/ory';
 import axios from 'axios';
-import { LoginFlow, RegistrationFlow, Session } from '@ory/kratos-client';
+
+// Ory Network interfaces
+interface LoginFlow {
+  id: string;
+  ui: {
+    nodes: any[];
+    action: string;
+    method: string;
+  };
+  expires_at: string;
+}
+
+interface RegistrationFlow {
+  id: string;
+  ui: {
+    nodes: any[];
+    action: string;
+    method: string;
+  };
+  expires_at: string;
+}
+
+interface Session {
+  id: string;
+  identity: {
+    id: string;
+    traits: {
+      email: string;
+      name: {
+        first: string;
+        last: string;
+      };
+      role: string;
+    };
+  };
+  expires_at: string;
+}
 
 interface AuthResponse {
   data?: {
@@ -154,7 +190,7 @@ class AuthService {
 
   async logout() {
     try {
-      const { data } = await ory.createSelfServiceLogoutFlowUrlForBrowsers();
+      const { data } = await ory.createBrowserLogoutFlow();
       window.location.href = data.logout_url;
     } catch (error) {
       console.error('Logout failed:', error);
