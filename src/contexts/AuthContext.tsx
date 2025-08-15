@@ -1,7 +1,7 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode, useRef } from "react";
 import { Session } from "@ory/client-fetch";
-import { ory } from "../config/ory";
+import { authService } from "../services/auth.service";
 
 interface User {
   id: string;
@@ -33,15 +33,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const checkSession = async () => {
       try {
-        const session = await ory.toSession();
-        setSession(session);
-        setUser({
-          id: session.identity.id,
-          email: session.identity.traits.email,
-          fullName: `${session.identity.traits.name.first} ${session.identity.traits.name.last}`,
-          role: session.identity.traits.role,
-        });
+        const session = await authService.getCurrentSession();
+        if (session) {
+          setSession(session);
+          setUser({
+            id: session.identity.id,
+            email: session.identity.traits.email,
+            fullName: `${session.identity.traits.name.first} ${session.identity.traits.name.last}`,
+            role: session.identity.traits.role,
+          });
+        } else {
+          setSession(null);
+          setUser(null);
+        }
       } catch (error) {
+        console.error('Session check failed:', error);
         setSession(null);
         setUser(null);
       } finally {
@@ -54,8 +60,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = async () => {
     try {
-      const logoutFlow = await ory.createBrowserLogoutFlow();
-      window.location.href = logoutFlow.logout_url;
+      await authService.logout();
     } catch (error) {
       console.error('Logout failed:', error);
     }
