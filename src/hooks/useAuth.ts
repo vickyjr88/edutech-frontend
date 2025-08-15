@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Session } from '@ory/kratos-client';
+import { Session } from '@ory/client-fetch';
 import { ory } from '../config/ory';
 
 export function useAuth() {
@@ -10,7 +10,7 @@ export function useAuth() {
   useEffect(() => {
     ory
       .toSession()
-      .then(({ data: session }) => {
+      .then((session) => {
         setSession(session);
         setLoading(false);
       })
@@ -22,7 +22,7 @@ export function useAuth() {
 
   const logout = async () => {
     try {
-      const { data: logoutFlow } = await ory.createSelfServiceLogoutFlowUrlForBrowsers();
+      const logoutFlow= await ory.createBrowserLogoutFlow();
       window.location.href = logoutFlow.logout_url;
     } catch (err) {
       setError(err as Error);

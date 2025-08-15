@@ -5,6 +5,11 @@ const oryUrl = import.meta.env.VITE_ORY_SDK_URL || 'http://localhost:4000';
 export const ory = new FrontendApi(
   new Configuration({
     basePath: oryUrl,
-    credentials: 'include',
+    baseOptions: {
+      withCredentials: true,
+    },
+    headers: {
+      Accept: 'application/json',
+    },
   }),
 );

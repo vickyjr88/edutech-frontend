@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Eye, EyeOff, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { toast } from '@/components/ui/use-toast';
 import { authService } from '@/services/auth.service';
-import { LoginFlow } from '@ory/kratos-client';
+import { LoginFlow } from '@ory/client-fetch';
 
 interface OryLoginFormProps {
   onSuccess?: () => void;
@@ -22,18 +22,24 @@ export const OryLoginForm: React.FC<OryLoginFormProps> = ({ onSuccess, redirectT
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<any>({});
   const [flowError, setFlowError] = useState('');
+  const hasInitialized = useRef(false);
 
   const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
+    if (hasInitialized.current) {
+      return;
+    }
+    hasInitialized.current = true;
     initializeFlow();
   }, []);
 
   const initializeFlow = async () => {
     try {
       setIsLoading(true);
-      const loginFlow = await authService.initializeLoginFlow(redirectTo);
+      // Remove return_to parameter temporarily until allowed URLs are configured
+      const loginFlow = await authService.initializeLoginFlow();
       setFlow(loginFlow);
       setFlowError('');
     } catch (error: any) {

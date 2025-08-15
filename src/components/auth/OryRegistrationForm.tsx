@@ -9,7 +9,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { toast } from '@/components/ui/use-toast';
 import { authService } from '@/services/auth.service';
-import { RegistrationFlow } from '@ory/kratos-client';
+import { RegistrationFlow } from '@ory/client-fetch';
 
 interface OryRegistrationFormProps {
   onSuccess?: () => void;

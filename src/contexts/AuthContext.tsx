@@ -1,6 +1,6 @@
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import { Session } from "@ory/kratos-client";
+import React, { createContext, useContext, useState, useEffect, ReactNode, useRef } from "react";
+import { Session } from "@ory/client-fetch";
 import { ory } from "../config/ory";
 
 interface User {
@@ -23,12 +23,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const hasCheckedSession = useRef(false);
 
   useEffect(() => {
-    // Check for existing session with Ory
+    if (hasCheckedSession.current) {
+      return;
+    }
+    hasCheckedSession.current = true;
+
     const checkSession = async () => {
       try {
-        const { data: session } = await ory.toSession();
+        const session = await ory.toSession();
         setSession(session);
         setUser({
           id: session.identity.id,
@@ -49,7 +54,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = async () => {
     try {
-      const { data: logoutFlow } = await ory.createSelfServiceLogoutFlowUrlForBrowsers();
+      const logoutFlow = await ory.createBrowserLogoutFlow();
       window.location.href = logoutFlow.logout_url;
     } catch (error) {
       console.error('Logout failed:', error);
@@ -70,3 +75,4 @@ export function useAuth() {
   }
   return context;
 }
+

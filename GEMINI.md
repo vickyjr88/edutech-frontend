@@ -17,6 +17,7 @@ This project is a React application built with Vite and TypeScript. It uses Tail
   - `recharts` for charts
   - `date-fns` for date manipulation
   - `lucide-react` for icons
+  - `ory-network` for authentication
 
 ## Project Structure
 

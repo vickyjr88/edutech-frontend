@@ -58,7 +58,8 @@ class AuthService {
 
   async initializeLoginFlow(returnTo?: string): Promise<LoginFlow> {
     try {
-      const { data: flow } = await ory.createNativeLoginFlow({
+      // Use native flows for API-based authentication (better for SPAs)
+      const flow = await ory.createNativeLoginFlow({
         returnTo,
       });
       return flow;
@@ -70,7 +71,8 @@ class AuthService {
 
   async initializeRegistrationFlow(returnTo?: string): Promise<RegistrationFlow> {
     try {
-      const { data: flow } = await ory.createNativeRegistrationFlow({
+      // Use native flows for API-based authentication (better for SPAs)
+      const flow = await ory.createNativeRegistrationFlow({
         returnTo,
       });
       return flow;
@@ -82,7 +84,7 @@ class AuthService {
 
   async submitLoginFlow(flowId: string, values: Record<string, any>) {
     try {
-      const { data } = await ory.updateLoginFlow({
+      const result = await ory.updateLoginFlow({
         flow: flowId,
         updateLoginFlowBody: {
           method: 'password',
@@ -90,7 +92,10 @@ class AuthService {
           password: values.password,
         },
       });
-      return data;
+
+      // After a successful login, get the session information.
+      const session = await ory.toSession();
+      return { session };
     } catch (error: any) {
       console.error('Login flow submission failed:', error);
       // If Ory login fails, fallback to legacy
@@ -125,7 +130,7 @@ class AuthService {
 
   async submitRegistrationFlow(flowId: string, values: Record<string, any>) {
     try {
-      const { data } = await ory.updateRegistrationFlow({
+      const result = await ory.updateRegistrationFlow({
         flow: flowId,
         updateRegistrationFlowBody: {
           method: 'password',
@@ -140,7 +145,10 @@ class AuthService {
           },
         },
       });
-      return data;
+
+      // After a successful registration, get the session information.
+      const session = await ory.toSession();
+      return { session };
     } catch (error: any) {
       console.error('Registration flow submission failed:', error);
       // If Ory registration fails, fallback to legacy
@@ -180,7 +188,7 @@ class AuthService {
 
   async getCurrentSession(): Promise<Session | null> {
     try {
-      const { data: session } = await ory.toSession();
+      const session = await ory.toSession();
       return session;
     } catch (error) {
       console.log('No active session found');
@@ -190,8 +198,8 @@ class AuthService {
 
   async logout() {
     try {
-      const { data } = await ory.createBrowserLogoutFlow();
-      window.location.href = data.logout_url;
+      const logoutFlow = await ory.createBrowserLogoutFlow();
+      window.location.href = logoutFlow.logout_url;
     } catch (error) {
       console.error('Logout failed:', error);
       throw error;
@@ -200,7 +208,7 @@ class AuthService {
 
   async initializeRecoveryFlow(): Promise<any> {
     try {
-      const { data: flow } = await ory.createNativeRecoveryFlow();
+      const flow = await ory.createNativeRecoveryFlow();
       return flow;
     } catch (error) {
       console.error('Failed to initialize recovery flow:', error);
@@ -210,14 +218,14 @@ class AuthService {
 
   async submitRecoveryFlow(flowId: string, email: string) {
     try {
-      const { data } = await ory.updateRecoveryFlow({
+      const result = await ory.updateRecoveryFlow({
         flow: flowId,
         updateRecoveryFlowBody: {
           method: 'link',
           email,
         },
       });
-      return data;
+      return result;
     } catch (error) {
       console.error('Recovery flow submission failed:', error);
       throw error;
@@ -226,7 +234,7 @@ class AuthService {
 
   async initializeVerificationFlow(): Promise<any> {
     try {
-      const { data: flow } = await ory.createNativeVerificationFlow();
+      const flow = await ory.createNativeVerificationFlow();
       return flow;
     } catch (error) {
       console.error('Failed to initialize verification flow:', error);
@@ -236,14 +244,14 @@ class AuthService {
 
   async submitVerificationFlow(flowId: string, email: string) {
     try {
-      const { data } = await ory.updateVerificationFlow({
+      const result = await ory.updateVerificationFlow({
         flow: flowId,
         updateVerificationFlowBody: {
           method: 'link',
           email,
         },
       });
-      return data;
+      return result;
     } catch (error) {
       console.error('Verification flow submission failed:', error);
       throw error;
@@ -252,7 +260,7 @@ class AuthService {
 
   async initializeSettingsFlow(): Promise<any> {
     try {
-      const { data: flow } = await ory.createNativeSettingsFlow();
+      const flow = await ory.createNativeSettingsFlow();
       return flow;
     } catch (error) {
       console.error('Failed to initialize settings flow:', error);
@@ -262,14 +270,14 @@ class AuthService {
 
   async submitSettingsFlow(flowId: string, method: string, values: Record<string, any>) {
     try {
-      const { data } = await ory.updateSettingsFlow({
+      const result = await ory.updateSettingsFlow({
         flow: flowId,
         updateSettingsFlowBody: {
           method,
           ...values,
         },
       });
-      return data;
+      return result;
     } catch (error) {
       console.error('Settings flow submission failed:', error);
       throw error;
@@ -279,7 +287,7 @@ class AuthService {
   // Enhanced login method with better error handling
   async login(credentials: { email: string; password: string }): Promise<AuthResponse> {
     try {
-      // Try Ory first
+      // Try Ory first (without return_to to avoid configuration issues during setup)
       const flow = await this.initializeLoginFlow();
       const result = await this.submitLoginFlow(flow.id, {
         identifier: credentials.email,

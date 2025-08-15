@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { toast } from '@/components/ui/use-toast';
 import { authService } from '@/services/auth.service';
-import { RecoveryFlow } from '@ory/kratos-client';
+import { RecoveryFlow } from '@ory/client-fetch';
 
 interface OryRecoveryFormProps {
   onSuccess?: () => void;
