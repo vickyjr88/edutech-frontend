@@ -1,15 +1,21 @@
-import { ory } from '../config/ory';
+import { ory } from '../lib/ory'; // Import ory from lib/ory
 import axios from 'axios';
+// Removed: import { getOryBaseUrl } from '../lib/ory';
 
-// Ory Network interfaces
+// Ory Network interfaces (these will remain the same)
 interface LoginFlow {
   id: string;
   ui: {
     nodes: any[];
     action: string;
     method: string;
+    messages?: any[];
   };
   expires_at: string;
+  issued_at: string;
+  request_url: string;
+  state: string;
+  type: string;
 }
 
 interface RegistrationFlow {
@@ -18,8 +24,13 @@ interface RegistrationFlow {
     nodes: any[];
     action: string;
     method: string;
+    messages?: any[];
   };
   expires_at: string;
+  issued_at: string;
+  request_url: string;
+  state: string;
+  type: string;
 }
 
 interface Session {
@@ -55,150 +66,156 @@ interface AuthResponse {
 
 class AuthService {
   private readonly baseUrl = import.meta.env.VITE_API_URL;
+  private readonly oryProxyUrl = import.meta.env.VITE_ORY_SDK_URL || 'http://localhost:4000'; // Use this directly
 
   async initializeLoginFlow(returnTo?: string): Promise<LoginFlow> {
     try {
-      // Use native flows for API-based authentication (better for SPAs)
-      const flow = await ory.createNativeLoginFlow({
-        returnTo,
+      const response = await fetch(`${this.oryProxyUrl}/self-service/login/browser`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+        },
+        credentials: 'include',
       });
-      return flow;
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || `Failed to initialize login flow with status ${response.status}`);
+      }
+      return await response.json();
     } catch (error) {
       console.error('Failed to initialize login flow:', error);
+      // This is where you'd typically trigger your fallback to native auth
       throw error;
     }
   }
 
   async initializeRegistrationFlow(returnTo?: string): Promise<RegistrationFlow> {
     try {
-      // Use native flows for API-based authentication (better for SPAs)
-      const flow = await ory.createNativeRegistrationFlow({
-        returnTo,
+      const response = await fetch(`${this.oryProxyUrl}/self-service/registration/browser`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+        },
+        credentials: 'include',
       });
-      return flow;
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || `Failed to initialize registration flow with status ${response.status}`);
+      }
+      return await response.json();
     } catch (error) {
       console.error('Failed to initialize registration flow:', error);
+      // This is where you'd typically trigger your fallback to native auth
       throw error;
     }
   }
 
   async submitLoginFlow(flowId: string, values: Record<string, any>) {
     try {
-      const result = await ory.updateLoginFlow({
-        flow: flowId,
-        updateLoginFlowBody: {
-          method: 'password',
-          identifier: values.identifier || values.email,
-          password: values.password,
+      const response = await fetch(`${this.oryProxyUrl}/self-service/login?flow=${flowId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'Accept': 'application/json',
         },
+        credentials: 'include',
+        body: new URLSearchParams(values).toString(),
       });
 
-      // After a successful login, get the session information.
-      const session = await ory.toSession();
+      const result = await response.json();
+
+      if (!response.ok) {
+        // Ory returns 400 for validation errors, with the updated flow in the body
+        if (response.status === 400 && result.ui) {
+          return result; // Return the flow with errors
+        }
+        throw new Error(result.message || `Login submission failed with status ${response.status}`);
+      }
+
+      // On successful login, Ory sets the session cookie.
+      // We can then fetch the session to confirm.
+      const session = await this.getCurrentSession();
       return { session };
     } catch (error: any) {
       console.error('Login flow submission failed:', error);
-      // If Ory login fails, fallback to legacy
-      if (values.email && values.password) {
-        try {
-          const legacyResponse = await this.loginLegacy(values.email, values.password);
-          return {
-            session: {
-              identity: {
-                id: legacyResponse.user.id,
-                traits: {
-                  email: legacyResponse.user.email,
-                  name: {
-                    first: legacyResponse.user.fullName.split(' ')[0],
-                    last: legacyResponse.user.fullName.split(' ').slice(1).join(' '),
-                  },
-                  role: legacyResponse.user.role,
-                },
-              },
-            },
-            legacy: true,
-            ...legacyResponse,
-          };
-        } catch (legacyError) {
-          console.error('Legacy login also failed:', legacyError);
-          throw error;
-        }
-      }
       throw error;
     }
   }
 
   async submitRegistrationFlow(flowId: string, values: Record<string, any>) {
     try {
-      const result = await ory.updateRegistrationFlow({
-        flow: flowId,
-        updateRegistrationFlowBody: {
-          method: 'password',
-          password: values.password,
-          traits: {
-            email: values['traits.email'] || values.email,
-            name: {
-              first: values['traits.name.first'] || values.fullName?.split(' ')[0] || '',
-              last: values['traits.name.last'] || values.fullName?.split(' ').slice(1).join(' ') || '',
-            },
-            role: values['traits.role'] || values.role || 'student',
-          },
+      const response = await fetch(`${this.oryProxyUrl}/self-service/registration?flow=${flowId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'Accept': 'application/json',
         },
+        credentials: 'include',
+        body: new URLSearchParams(values).toString(),
       });
 
-      // After a successful registration, get the session information.
-      const session = await ory.toSession();
+      const result = await response.json();
+
+      if (!response.ok) {
+        // Ory returns 400 for validation errors, with the updated flow in the body
+        if (response.status === 400 && result.ui) {
+          return result; // Return the flow with errors
+        }
+        throw new Error(result.message || `Registration submission failed with status ${response.status}`);
+      }
+
+      // On successful registration, Ory sets the session cookie.
+      // We can then fetch the session to confirm.
+      const session = await this.getCurrentSession();
       return { session };
     } catch (error: any) {
       console.error('Registration flow submission failed:', error);
-      // If Ory registration fails, fallback to legacy
-      if (values.email && values.password && values.fullName) {
-        try {
-          const legacyResponse = await this.registerLegacy({
-            email: values['traits.email'] || values.email,
-            password: values.password,
-            fullName: values.fullName || `${values['traits.name.first']} ${values['traits.name.last']}`,
-            role: values['traits.role'] || values.role || 'student',
-          });
-          return {
-            session: {
-              identity: {
-                id: legacyResponse.user.id,
-                traits: {
-                  email: legacyResponse.user.email,
-                  name: {
-                    first: legacyResponse.user.fullName.split(' ')[0],
-                    last: legacyResponse.user.fullName.split(' ').slice(1).join(' '),
-                  },
-                  role: legacyResponse.user.role,
-                },
-              },
-            },
-            legacy: true,
-            ...legacyResponse,
-          };
-        } catch (legacyError) {
-          console.error('Legacy registration also failed:', legacyError);
-          throw error;
-        }
-      }
       throw error;
     }
   }
 
   async getCurrentSession(): Promise<Session | null> {
     try {
-      const session = await ory.toSession();
-      return session;
+      const response = await fetch(`${this.oryProxyUrl}/sessions/whoami`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+        },
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        // 401 is expected if no session
+        if (response.status === 401) {
+          return null;
+        }
+        const errorData = await response.json();
+        throw new Error(errorData.message || `Failed to fetch session with status ${response.status}`);
+      }
+      return await response.json();
     } catch (error) {
-      console.log('No active session found');
+      console.error('Error fetching current session:', error);
       return null;
     }
   }
 
   async logout() {
     try {
-      const logoutFlow = await ory.createBrowserLogoutFlow();
+      const response = await fetch(`${this.oryProxyUrl}/self-service/logout/browser`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+        },
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || `Logout flow initialization failed with status ${response.status}`);
+      }
+      const logoutFlow = await response.json();
       window.location.href = logoutFlow.logout_url;
     } catch (error) {
       console.error('Logout failed:', error);
@@ -208,8 +225,18 @@ class AuthService {
 
   async initializeRecoveryFlow(): Promise<any> {
     try {
-      const flow = await ory.createNativeRecoveryFlow();
-      return flow;
+      const response = await fetch(`${this.oryProxyUrl}/self-service/recovery/browser`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+        },
+        credentials: 'include',
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || `Failed to initialize recovery flow with status ${response.status}`);
+      }
+      return await response.json();
     } catch (error) {
       console.error('Failed to initialize recovery flow:', error);
       throw error;
@@ -218,13 +245,23 @@ class AuthService {
 
   async submitRecoveryFlow(flowId: string, email: string) {
     try {
-      const result = await ory.updateRecoveryFlow({
-        flow: flowId,
-        updateRecoveryFlowBody: {
-          method: 'link',
-          email,
+      const response = await fetch(`${this.oryProxyUrl}/self-service/recovery?flow=${flowId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'Accept': 'application/json',
         },
+        credentials: 'include',
+        body: new URLSearchParams({ method: 'link', email }).toString(),
       });
+
+      const result = await response.json();
+      if (!response.ok) {
+        if (response.status === 400 && result.ui) {
+          return result;
+        }
+        throw new Error(result.message || `Recovery submission failed with status ${response.status}`);
+      }
       return result;
     } catch (error) {
       console.error('Recovery flow submission failed:', error);
@@ -234,8 +271,18 @@ class AuthService {
 
   async initializeVerificationFlow(): Promise<any> {
     try {
-      const flow = await ory.createNativeVerificationFlow();
-      return flow;
+      const response = await fetch(`${this.oryProxyUrl}/self-service/verification/browser`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+        },
+        credentials: 'include',
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || `Failed to initialize verification flow with status ${response.status}`);
+      }
+      return await response.json();
     } catch (error) {
       console.error('Failed to initialize verification flow:', error);
       throw error;
@@ -244,13 +291,23 @@ class AuthService {
 
   async submitVerificationFlow(flowId: string, email: string) {
     try {
-      const result = await ory.updateVerificationFlow({
-        flow: flowId,
-        updateVerificationFlowBody: {
-          method: 'link',
-          email,
+      const response = await fetch(`${this.oryProxyUrl}/self-service/verification?flow=${flowId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'Accept': 'application/json',
         },
+        credentials: 'include',
+        body: new URLSearchParams({ method: 'link', email }).toString(),
       });
+
+      const result = await response.json();
+      if (!response.ok) {
+        if (response.status === 400 && result.ui) {
+          return result;
+        }
+        throw new Error(result.message || `Verification submission failed with status ${response.status}`);
+      }
       return result;
     } catch (error) {
       console.error('Verification flow submission failed:', error);
@@ -260,8 +317,18 @@ class AuthService {
 
   async initializeSettingsFlow(): Promise<any> {
     try {
-      const flow = await ory.createNativeSettingsFlow();
-      return flow;
+      const response = await fetch(`${this.oryProxyUrl}/self-service/settings/browser`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+        },
+        credentials: 'include',
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || `Failed to initialize settings flow with status ${response.status}`);
+      }
+      return await response.json();
     } catch (error) {
       console.error('Failed to initialize settings flow:', error);
       throw error;
@@ -270,13 +337,24 @@ class AuthService {
 
   async submitSettingsFlow(flowId: string, method: string, values: Record<string, any>) {
     try {
-      const result = await ory.updateSettingsFlow({
-        flow: flowId,
-        updateSettingsFlowBody: {
-          method,
-          ...values,
+      const body = new URLSearchParams({ method, ...values }).toString();
+      const response = await fetch(`${this.oryProxyUrl}/self-service/settings?flow=${flowId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'Accept': 'application/json',
         },
+        credentials: 'include',
+        body: body,
       });
+
+      const result = await response.json();
+      if (!response.ok) {
+        if (response.status === 400 && result.ui) {
+          return result;
+        }
+        throw new Error(result.message || `Settings submission failed with status ${response.status}`);
+      }
       return result;
     } catch (error) {
       console.error('Settings flow submission failed:', error);
@@ -287,30 +365,26 @@ class AuthService {
   // Enhanced login method with better error handling
   async login(credentials: { email: string; password: string }): Promise<AuthResponse> {
     try {
-      // Try Ory first (without return_to to avoid configuration issues during setup)
       const flow = await this.initializeLoginFlow();
+      const csrfToken = flow.ui.nodes.find(node => node.attributes.name === 'csrf_token')?.attributes.value;
       const result = await this.submitLoginFlow(flow.id, {
         identifier: credentials.email,
         password: credentials.password,
+        csrf_token: csrfToken,
+        method: 'password',
       });
 
-      if (result.session) {
-        return {
-          data: {
-            user: {
-              id: result.session.identity.id,
-              email: result.session.identity.traits.email,
-              fullName: `${result.session.identity.traits.name.first} ${result.session.identity.traits.name.last}`,
-              role: result.session.identity.traits.role,
-            },
-            session: result.session,
-          },
-        };
+      const session = await this.getCurrentSession();
+      if (session) {
+        return { data: { user: { id: session.identity.id, email: session.identity.traits.email, fullName: `${session.identity.traits.name.first} ${session.identity.traits.name.last}`, role: session.identity.traits.role }, session: session } };
       }
 
       throw new Error('No session returned from login');
     } catch (error: any) {
       console.error('Login error:', error);
+      if (error.response?.data?.ui) {
+        return error.response.data;
+      }
       return { error };
     }
   }
@@ -323,33 +397,29 @@ class AuthService {
     role: string;
   }): Promise<AuthResponse> {
     try {
-      // Try Ory first
       const flow = await this.initializeRegistrationFlow();
+      const csrfToken = flow.ui.nodes.find(node => node.attributes.name === 'csrf_token')?.attributes.value;
       const result = await this.submitRegistrationFlow(flow.id, {
         'traits.email': userData.email,
         password: userData.password,
         'traits.name.first': userData.fullName.split(' ')[0],
         'traits.name.last': userData.fullName.split(' ').slice(1).join(' '),
         'traits.role': userData.role,
+        csrf_token: csrfToken,
+        method: 'password',
       });
 
-      if (result.session) {
-        return {
-          data: {
-            user: {
-              id: result.session.identity.id,
-              email: result.session.identity.traits.email,
-              fullName: `${result.session.identity.traits.name.first} ${result.session.identity.traits.name.last}`,
-              role: result.session.identity.traits.role,
-            },
-            session: result.session,
-          },
-        };
+      const session = await this.getCurrentSession();
+      if (session) {
+        return { data: { user: { id: session.identity.id, email: session.identity.traits.email, fullName: `${session.identity.traits.name.first} ${session.identity.traits.name.last}`, role: session.identity.traits.role }, session: session } };
       }
 
       throw new Error('No session returned from registration');
     } catch (error: any) {
       console.error('Registration error:', error);
+      if (error.response?.data?.ui) {
+        return error.response.data;
+      }
       return { error };
     }
   }

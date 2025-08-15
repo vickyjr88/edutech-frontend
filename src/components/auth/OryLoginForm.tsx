@@ -62,9 +62,14 @@ export const OryLoginForm: React.FC<OryLoginFormProps> = ({ onSuccess, redirectT
     setErrors({});
 
     try {
+      // Extract CSRF token from flow
+      const csrfToken = flow.ui.nodes.find(node => node.attributes.name === 'csrf_token')?.attributes.value;
+      
       const result = await authService.submitLoginFlow(flow.id, {
         identifier: email,
         password,
+        csrf_token: csrfToken,
+        method: 'password',
       });
 
       if (result.session || result.legacy) {
