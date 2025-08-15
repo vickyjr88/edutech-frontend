@@ -87,12 +87,15 @@ export const OryRegistrationForm: React.FC<OryRegistrationFormProps> = ({ onSucc
     setErrors({});
 
     try {
+      const csrfToken = flow.ui.nodes.find(node => node.attributes.name === 'csrf_token')?.attributes.value;
       const result = await authService.submitRegistrationFlow(flow.id, {
         'traits.email': formData.email,
         password: formData.password,
         'traits.name.first': formData.firstName,
         'traits.name.last': formData.lastName,
         'traits.role': formData.role,
+        csrf_token: csrfToken,
+        method: 'password',
       });
 
       if (result.session || result.legacy) {
