@@ -72,29 +72,38 @@ export const OryLoginForm: React.FC<OryLoginFormProps> = ({ onSuccess, redirectT
         method: 'password',
       });
 
+      console.log('Login result:', result);
+      console.log('Has session:', !!result.session);
+      console.log('Has legacy:', !!result.legacy);
+
       if (result.session || result.legacy) {
+        console.log('Login successful, showing toast and navigating...');
         toast({
           title: 'Welcome back!',
           description: 'You have successfully logged in.',
         });
-
-        if (onSuccess) {
-          onSuccess();
-        } else {
+        
+        console.log('About to navigate to /dashboard');
+        // Force a hard redirect to bypass React Router navigation issues
+        
+        setTimeout(() => {
           // Handle role-based redirection
           const userRole = result.session?.identity?.traits?.role || result.user?.role;
+
+          console.log('User role:', userRole);
           
           if (userRole === 'teacher') {
-            navigate('/teacher-dashboard');
+            window.location.href = '/teacher-dashboard';
           } else if (userRole === 'student') {
-            navigate('/student-dashboard');
+            window.location.href = '/student-dashboard';
           } else if (userRole === 'parent') {
-            navigate('/parents-dashboard');
+            window.location.href = '/parents-dashboard';
           } else {
-            navigate('/dashboard');
+            window.location.href = '/dashboard';
           }
-        }
+          }, 300);
       } else {
+        console.log('No session found in result:', result);
         throw new Error('Login failed - no session returned');
       }
     } catch (error: any) {
