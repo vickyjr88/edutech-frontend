@@ -55,7 +55,7 @@ const VideoStep = ({ videoUrls, setVideoUrls, photoUrls, setPhotoUrls }: VideoSt
     const fetchTeacherProfile = async () => {
       if (user?.teacherId) {
         try {
-          const { data, error } = await teacherService.getProfileById(user.teacherId);
+          const { data, error } = await teacherService.getProfileById(user.id);
           if (!error && data?.introVideoUrl) {
             setIntroVideoUrl(data.introVideoUrl);
             // If there's already an intro video URL, add it to videoUrls
@@ -91,7 +91,7 @@ const VideoStep = ({ videoUrls, setVideoUrls, photoUrls, setPhotoUrls }: VideoSt
       const selectedVideoUrl = videoUrls[0];
       
       // Update the teacher profile with the intro video URL
-      const { error } = await teacherService.updateProfile(user.teacherId, {
+      const { error } = await teacherService.updateProfile(user.id, {
         introVideoUrl: selectedVideoUrl
       });
 

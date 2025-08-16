@@ -35,7 +35,7 @@ const MethodologiesStep = ({ methodologies, setMethodologies }: MethodologiesSte
     
     setIsLoading(true);
     try {
-      const data = await fetchMethodologyRecords(user.teacherId);
+      const data = await fetchMethodologyRecords(user.id);
       if (data.length > 0) {
         setMethodologies(data);
       }
@@ -86,7 +86,7 @@ const MethodologiesStep = ({ methodologies, setMethodologies }: MethodologiesSte
     try {
       if (isEditing) {
         console.log("Updating methodology with item:", currentItem);
-        const success = await updateMethodologyRecord(user.teacherId, currentItem);
+        const success = await updateMethodologyRecord(user.id, currentItem);
         if (success) {
           setMethodologies(prev => 
             prev.map(m => 
@@ -101,7 +101,7 @@ const MethodologiesStep = ({ methodologies, setMethodologies }: MethodologiesSte
           throw new Error("Failed to update methodology");
         }
       } else {
-        const newMethodology = await saveMethodologyRecord(user.teacherId, currentItem);
+        const newMethodology = await saveMethodologyRecord(user.id, currentItem);
         if (newMethodology) {
           setMethodologies(prev => [newMethodology, ...prev]);
           toast({
@@ -151,7 +151,7 @@ const MethodologiesStep = ({ methodologies, setMethodologies }: MethodologiesSte
     }
 
     try {
-      const success = await deleteMethodologyRecord(user.teacherId,id);
+      const success = await deleteMethodologyRecord(user.id,id);
       if (success) {
         setMethodologies(prev => prev.filter(m => m._id !== id));
         toast({

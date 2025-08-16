@@ -8,6 +8,10 @@ interface User {
   email: string;
   fullName: string;
   role: string;
+  // Add additional fields from Ory identity
+  verified?: boolean;
+  metadata?: any;
+  oryIdentityId?: string;
 }
 
 interface AuthContextType {
@@ -15,15 +19,117 @@ interface AuthContextType {
   session: Session | null;
   isLoading: boolean;
   signOut: () => Promise<void>;
+  updateUserAndTokens: (data: { user: { id: string }; accessToken: string; refreshToken: string }) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<User | null>(() => {
+    // Initialize user from localStorage if available
+    const savedUser = localStorage.getItem('kidato_user');
+    return savedUser ? JSON.parse(savedUser) : null;
+  });
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const hasCheckedSession = useRef(false);
+
+  // Helper function to construct user from session and persist it
+  const constructAndPersistUser = async (session: Session) => {
+    try {
+      // First, try to get or create the backend user
+      const backendUser = await getOrCreateBackendUser(session);
+      
+      const user: User = {
+        id: backendUser?.id || session.identity.id, // Use backend user ID if available, fallback to Ory ID
+        email: session.identity.traits.email,
+        fullName: `${session.identity.traits.name.first} ${session.identity.traits.name.last}`,
+        role: session.identity.traits.role,
+        // Additional Ory-specific fields
+        verified: session.identity.verifiable_addresses?.[0]?.verified || false,
+        metadata: session.identity.metadata_public,
+        oryIdentityId: session.identity.id,
+      };
+      
+      // Persist user to localStorage for faster subsequent loads
+      localStorage.setItem('kidato_user', JSON.stringify(user));
+      localStorage.setItem('kidato_session_id', session.id);
+      
+      setUser(user);
+      setSession(session);
+      
+      return user;
+    } catch (error) {
+      console.error('Failed to construct user with backend mapping:', error);
+      // Fallback to Ory-only user construction
+      const user: User = {
+        id: session.identity.id,
+        email: session.identity.traits.email,
+        fullName: `${session.identity.traits.name.first} ${session.identity.traits.name.last}`,
+        role: session.identity.traits.role,
+        verified: session.identity.verifiable_addresses?.[0]?.verified || false,
+        metadata: session.identity.metadata_public,
+        oryIdentityId: session.identity.id,
+      };
+      
+      localStorage.setItem('kidato_user', JSON.stringify(user));
+      localStorage.setItem('kidato_session_id', session.id);
+      
+      setUser(user);
+      setSession(session);
+      
+      return user;
+    }
+  };
+
+  // Helper function to get or create backend user from Ory session
+  const getOrCreateBackendUser = async (session: Session) => {
+    try {
+      // First, try to find existing user by Ory identity ID
+      const existingUserResponse = await authService.getBackendUserByOryId(session.identity.id);
+      if (existingUserResponse?.user) {
+        if (existingUserResponse.accessToken && existingUserResponse.refreshToken) {
+          updateUserAndTokens(existingUserResponse);
+        }
+        return existingUserResponse.user; // Extract user from auth response
+      }
+
+      // If user doesn't exist, create a new one
+      const newUserResponse = await authService.createBackendUserFromOry(session);
+      if (newUserResponse?.user) {
+        if (newUserResponse.accessToken && newUserResponse.refreshToken) {
+          updateUserAndTokens(newUserResponse);
+        }
+        return newUserResponse.user; // Extract user from auth response
+      }
+
+      return null;
+    } catch (error) {
+      console.error('Error getting/creating backend user:', error);
+      return null;
+    }
+  };
+
+  // Helper function to clear user data
+  const clearUserData = () => {
+    localStorage.removeItem('kidato_user');
+    localStorage.removeItem('kidato_session_id');
+    setUser(null);
+    setSession(null);
+  };
+
+  const updateUserAndTokens = (data: { user: { id: string }; accessToken: string; refreshToken: string }) => {
+    const { user: newUserData, accessToken, refreshToken } = data;
+    const savedUser = localStorage.getItem('kidato_user');
+    if (savedUser) {
+      const user = JSON.parse(savedUser);
+      user.id = newUserData.id;
+      setUser(user);
+      localStorage.setItem('kidato_user', JSON.stringify(user));
+    }
+    localStorage.setItem('kidato_access_token', accessToken);
+    localStorage.setItem('kidato_refresh_token', refreshToken);
+  };
 
   useEffect(() => {
     if (hasCheckedSession.current) {
@@ -35,21 +141,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const session = await authService.getCurrentSession();
         if (session) {
-          setSession(session);
-          setUser({
-            id: session.identity.id,
-            email: session.identity.traits.email,
-            fullName: `${session.identity.traits.name.first} ${session.identity.traits.name.last}`,
-            role: session.identity.traits.role,
-          });
+          console.log('Session found, constructing user:', session);
+          await constructAndPersistUser(session);
         } else {
-          setSession(null);
-          setUser(null);
+          console.log('No session found, clearing user data');
+          clearUserData();
         }
       } catch (error) {
         console.error('Session check failed:', error);
-        setSession(null);
-        setUser(null);
+        clearUserData();
       } finally {
         setIsLoading(false);
       }
@@ -60,14 +160,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = async () => {
     try {
+      clearUserData();
       await authService.logout();
     } catch (error) {
       console.error('Logout failed:', error);
+      // Clear data even if logout fails
+      clearUserData();
     }
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, isLoading, signOut }}>
+    <AuthContext.Provider value={{ user, session, isLoading, signOut, updateUserAndTokens }}>
       {children}
     </AuthContext.Provider>
   );

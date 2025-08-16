@@ -354,7 +354,7 @@ export const PersonalInformationForm = ({ onComplete }: PersonalInformationFormP
 
           // First, try to get teacher ID from user object
           if (user?.teacherId) {
-            teacherId = user.teacherId;
+            teacherId = user.id;
             console.log('Using teacher ID from user object:', teacherId);
           } else {
             // If no teacherId in user, try to get/create teacher profile
@@ -524,7 +524,7 @@ export const PersonalInformationForm = ({ onComplete }: PersonalInformationFormP
       // Get teacher ID
       let teacherId: string;
       if (user?.teacherId) {
-        teacherId = user.teacherId;
+        teacherId = user.id;
       } else if (user?.id) {
         teacherId = user.id; // Fallback to user ID
       } else {
@@ -613,7 +613,7 @@ export const PersonalInformationForm = ({ onComplete }: PersonalInformationFormP
       // Get teacher ID
       let teacherId: string;
       if (user?.teacherId) {
-        teacherId = user.teacherId;
+        teacherId = user.id;
       } else if (user?.id) {
         teacherId = user.id; // Fallback to user ID
       } else {

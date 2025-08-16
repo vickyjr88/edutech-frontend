@@ -70,7 +70,7 @@ const EducationItemComponent = ({
       setIsSaving(true);
       
       // No need to convert dates manually anymore since formatDateForDatabase will handle it
-      await saveEducationRecord(user.teacherId, {
+      await saveEducationRecord(user.id, {
         id: item._id,
         institutionType: item.institutionType as InstitutionType,
         institution: item.institutionName || '',

@@ -66,7 +66,7 @@ export const useTeacherPayoutPreferences = (): UseTeacherPayoutPreferencesReturn
       setError(null);
       
       const [preferencesResponse, tierResponse] = await Promise.all([
-        teacherService.getPayoutPreferences(user.teacherId),
+        teacherService.getPayoutPreferences(user.id),
         teacherService.getTeacherTier()
       ]);
       
@@ -132,7 +132,7 @@ export const useTeacherPayoutPreferences = (): UseTeacherPayoutPreferencesReturn
       setIsUpdating(true);
       setError(null);
       
-      const response = await teacherService.updatePayoutPreferences(user.teacherId, data);
+      const response = await teacherService.updatePayoutPreferences(user.id, data);
       if (response.data) {
         setPreferences(response.data);
         

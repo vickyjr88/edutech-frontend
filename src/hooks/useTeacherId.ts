@@ -21,8 +21,8 @@ export const useTeacherId = (): UseTeacherIdReturn => {
       setLoading(true);
 
       // First try to get teacherId from user object
-      if (user?.teacherId) {
-        setTeacherId(user.teacherId);
+      if (user?.id) {
+        setTeacherId(user.id);
         setLoading(false);
         return;
       }

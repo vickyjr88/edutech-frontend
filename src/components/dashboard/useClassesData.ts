@@ -13,9 +13,9 @@ export function useClassesData() {
   const { user } = useAuth();
   
   // Fetch today's lessons and upcoming sessions
-  const { data: todaysLessonsResponse, isLoading: todaysLessonsLoading } = useTodaysLessons(user?.studentId || '');
-  const { data: upcomingSessionsResponse, isLoading: upcomingSessionsLoading } = useUpcomingSessions(user?.studentId || '');
-  
+  const { data: todaysLessonsResponse, isLoading: todaysLessonsLoading } = useTodaysLessons(user?.id || '');
+  const { data: upcomingSessionsResponse, isLoading: upcomingSessionsLoading } = useUpcomingSessions(user?.id || '');
+
   useEffect(() => {
     // Update current time every minute
     const timer = setInterval(() => {
@@ -23,7 +23,7 @@ export function useClassesData() {
     }, 60000);
     
     return () => clearInterval(timer);
-  }, []);
+  }, []); 
   
   // Transform API data to match expected format
   const todaysLessons = todaysLessonsResponse?.data?.lessons || [];

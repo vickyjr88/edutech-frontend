@@ -116,7 +116,13 @@ class AuthService {
 
     async refreshSession(): Promise<boolean> {
         try {
-            const response = await api.post<AuthResponse>('/auth/refresh-token');
+            const refreshToken = localStorage.getItem('kidato_refresh_token');
+            if (!refreshToken) {
+                this.clearSession();
+                return false;
+            }
+
+            const response = await api.post<AuthResponse>('/auth/refresh-token', { refreshToken });
 
             if (response.data) {
                 this.setSession({
@@ -130,7 +136,8 @@ class AuthService {
 
             return false;
         } catch (error) {
-            this.clearSession();
+            // console.error('Session refresh error:', error);
+            // this.clearSession();
             return false;
         }
     }

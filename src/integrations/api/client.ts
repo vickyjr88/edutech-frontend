@@ -14,6 +14,7 @@ class ApiClient {
         // Create axios instance with base configuration
         this.client = axios.create({
             baseURL: import.meta.env.VITE_API_URL,
+            withCredentials: true, // Include cookies for Ory session
             headers: {
                 'Content-Type': 'application/json'
             },

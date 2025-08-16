@@ -69,7 +69,7 @@ const TechnicalSkillsStep = ({ skills, setSkills }: TechnicalSkillsStepProps) =>
     
     setIsLoading(true);
     try {
-      const loadedSkills = await fetchTechnicalSkills(user.teacherId);
+      const loadedSkills = await fetchTechnicalSkills(user.id);
       setSkills(loadedSkills);
     } catch (error) {
       console.error("Error loading technical skills:", error);
@@ -99,7 +99,7 @@ const TechnicalSkillsStep = ({ skills, setSkills }: TechnicalSkillsStepProps) =>
       
       if (isEditing && currentSkill) {
         // Update existing skill
-        result = await updateTechnicalSkill(user.teacherId ,{
+        result = await updateTechnicalSkill(user.id ,{
           ...data,
           _id: currentSkill._id
         });
@@ -119,7 +119,7 @@ const TechnicalSkillsStep = ({ skills, setSkills }: TechnicalSkillsStepProps) =>
         }
       } else {
         // Create new skill
-        result = await saveTechnicalSkill(user.teacherId, data);
+        result = await saveTechnicalSkill(user.id, data);
         
         if (result.success && result._id) {
           const newSkill = {
@@ -160,7 +160,7 @@ const TechnicalSkillsStep = ({ skills, setSkills }: TechnicalSkillsStepProps) =>
     
     setIsLoading(true);
     try {
-      const result = await deleteTechnicalSkill(user.teacherId,skillId);
+      const result = await deleteTechnicalSkill(user.id,skillId);
       
       if (result.success) {
         setSkills(prev => prev.filter(s => s._id !== skillId));

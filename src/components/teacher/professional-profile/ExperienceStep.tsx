@@ -209,7 +209,7 @@ const ExperienceStep = ({ experience, setExperience }: ExperienceStepProps) => {
       setIsSaving(true);
       
       // No need to convert dates, formatDateForDatabase will handle this now
-      const result = await saveExperienceRecord(user.teacherId, currentItem);
+      const result = await saveExperienceRecord(user.id, currentItem);
       const savedExperience = {
         ...currentItem,
         _id: result[0]?.id || currentItem._id,

@@ -19,11 +19,11 @@ import PendingEnrollmentTable from "@/components/courses/PendingEnrollmentTable"
 const Courses = () => {
   const [filterOpen, setFilterOpen] = useState(false);
   const { user } = useAuth();
-  const { data: response, isLoading } = useGetRecommendedClasses(user.studentId);
-  const { data: enrolledClassesResponse, isLoading: enrolledClassesLoading } = useGetCurrentClassesForStudent(user.studentId);
-  const { data: completedClassesResponse, isLoading: completedClassesLoading } = useGetCompletedClassesForStudent(user.studentId);
+  const { data: response, isLoading } = useGetRecommendedClasses(user.id);
+  const { data: enrolledClassesResponse, isLoading: enrolledClassesLoading } = useGetCurrentClassesForStudent(user.id);
+  const { data: completedClassesResponse, isLoading: completedClassesLoading } = useGetCompletedClassesForStudent(user.id);
   // get pending enrollments
-  const { data: pendingEnrollmentsResponse, isLoading: pendingEnrollmentsLoading } = useGetStudentPendingEnrollments(user.studentId);
+  const { data: pendingEnrollmentsResponse, isLoading: pendingEnrollmentsLoading } = useGetStudentPendingEnrollments(user.id);
   const recommendedClasses = response?.data ?? [];
   const enrolledClasses = enrolledClassesResponse?.data ?? [];
   const completedClasses = completedClassesResponse?.data ?? [];

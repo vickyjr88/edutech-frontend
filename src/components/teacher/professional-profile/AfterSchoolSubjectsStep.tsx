@@ -41,7 +41,7 @@ const AfterSchoolSubjectsStep = ({ subjects, setSubjects, onSubjectsChange }: Af
     addAfterSchoolSubject, 
     updateAfterSchoolSubject, 
     deleteAfterSchoolSubject 
-  } = useAfterSchoolSubjects(user?.id,user.teacherId);
+  } = useAfterSchoolSubjects(user?.id,user.id);
   
   const [isLoading, setIsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
@@ -67,7 +67,7 @@ const AfterSchoolSubjectsStep = ({ subjects, setSubjects, onSubjectsChange }: Af
     setIsLoading(true);
     try {
       if (user?.teacherId) {
-        console.log("Fetching after-school subjects for teacher:", user.teacherId);
+        console.log("Fetching after-school subjects for teacher:", user.id);
         const data = await fetchAfterSchoolSubjects();
         console.log("Received after-school subjects:", data);
         

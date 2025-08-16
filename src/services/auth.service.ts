@@ -1,5 +1,7 @@
 import { ory } from '../lib/ory'; // Import ory from lib/ory
 import axios from 'axios';
+import { api } from '../integrations/api/client';
+
 // Removed: import { getOryBaseUrl } from '../lib/ory';
 
 // Ory Network interfaces (these will remain the same)
@@ -189,14 +191,49 @@ class AuthService {
       if (!response.ok) {
         // 401 is expected if no session
         if (response.status === 401) {
+          console.log('No Ory session found (401)');
           return null;
         }
         const errorData = await response.json();
         throw new Error(errorData.message || `Failed to fetch session with status ${response.status}`);
       }
-      return await response.json();
+      
+      const sessionData = await response.json();
+      console.log('Ory session retrieved successfully:', sessionData);
+      return sessionData;
     } catch (error) {
       console.error('Error fetching current session:', error);
+      
+      // Backward compatibility: If Ory session fails, check legacy session
+      try {
+        console.log('Trying legacy session check...');
+        const legacyUser = localStorage.getItem('kidato_user');
+        const legacyToken = localStorage.getItem('kidato_token');
+        
+        if (legacyUser && legacyToken) {
+          console.log('Found legacy session data');
+          // Convert legacy user to Ory-compatible session format
+          const user = JSON.parse(legacyUser);
+          return {
+            id: 'legacy-session',
+            identity: {
+              id: user.id,
+              traits: {
+                email: user.email,
+                name: {
+                  first: user.fullName.split(' ')[0],
+                  last: user.fullName.split(' ').slice(1).join(' '),
+                },
+                role: user.role,
+              },
+            },
+            legacy: true,
+          } as any;
+        }
+      } catch (legacyError) {
+        console.log('No legacy session found');
+      }
+      
       return null;
     }
   }
@@ -447,6 +484,37 @@ class AuthService {
       const response = await axios.post(`${this.baseUrl}/auth/register`, data);
       return response.data;
     } catch (error) {
+      throw error;
+    }
+  }
+
+  // Backend user management for Ory integration
+  async getBackendUserByOryId(oryIdentityId: string) {
+    try {
+      const response = await api.get(`/users/by-ory-id/${oryIdentityId}`);
+      
+      // If we get tokens, persist them for legacy API compatibility
+      console.log('Response from getBackendUserByOryId:', response.data);
+      
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching backend user by Ory ID:', error);
+      return null;
+    }
+  }
+
+  async createBackendUserFromOry(session: Session) {
+    try {
+      const response = await api.post('/users/from-ory', {
+        oryIdentityId: session.identity.id,
+        email: session.identity.traits.email,
+        fullName: `${session.identity.traits.name.first} ${session.identity.traits.name.last}`,
+        role: session.identity.traits.role,
+      });
+
+      return response.data;
+    } catch (error) {
+      console.error('Error creating backend user from Ory:', error);
       throw error;
     }
   }

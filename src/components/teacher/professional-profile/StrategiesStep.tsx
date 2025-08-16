@@ -35,7 +35,7 @@ const StrategiesStep = ({ strategies, setStrategies }: StrategiesStepProps) => {
     
     setIsLoading(true);
     try {
-      const data = await fetchStrategyRecords(user.teacherId);
+      const data = await fetchStrategyRecords(user.id);
       if (data.length > 0) {
         setStrategies(data);
       }
@@ -88,7 +88,7 @@ const StrategiesStep = ({ strategies, setStrategies }: StrategiesStepProps) => {
     setIsSaving(true);
     try {
       if (isEditing) {
-        const success = await updateStrategyRecord(user.teacherId, currentItem);
+        const success = await updateStrategyRecord(user.id, currentItem);
         if (success) {
           setStrategies(prev => 
             prev.map(s => 
@@ -103,7 +103,7 @@ const StrategiesStep = ({ strategies, setStrategies }: StrategiesStepProps) => {
           throw new Error("Failed to update strategy");
         }
       } else {
-        const newStrategy = await saveStrategyRecord(user.teacherId, currentItem);
+        const newStrategy = await saveStrategyRecord(user.id, currentItem);
         if (newStrategy) {
           setStrategies(prev => [newStrategy, ...prev]);
           toast({
@@ -155,7 +155,7 @@ const StrategiesStep = ({ strategies, setStrategies }: StrategiesStepProps) => {
     }
 
     try {
-      const success = await deleteStrategyRecord(user.teacherId,id);
+      const success = await deleteStrategyRecord(user.id,id);
       if (success) {
         setStrategies(prev => prev.filter(s => s._id !== id));
         toast({

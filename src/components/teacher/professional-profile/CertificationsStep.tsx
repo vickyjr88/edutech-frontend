@@ -91,7 +91,7 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
       if (!user?.teacherId) return;
       
       try {
-        const { data } = await teacherService.getProfileById(user.teacherId);
+        const { data } = await teacherService.getProfileById(user.id);
         if (data) {
           console.log("Profile data for verification documents:", { 
             backgroundCheck: data.backgroundCheckFile, 
@@ -129,7 +129,7 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
     
     setIsLoading(true);
     try {
-      const loadedCertifications = await fetchCertifications(user.teacherId);
+      const loadedCertifications = await fetchCertifications(user.id);
       console.log("Loaded certifications:", loadedCertifications);
       setCertifications(loadedCertifications);
     } catch (error) {
@@ -192,7 +192,7 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
     
     setIsLoading(true);
     try {
-      const result = await deleteCertification(user.teacherId, id);
+      const result = await deleteCertification(user.id, id);
       
       if (result.success) {
         setCertifications(prev => prev.filter(item => item._id !== id));
@@ -289,14 +289,14 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
         if (isNew) {
           // Create new certification
           const { _id, ...newCert } = cert;
-          const result = await saveCertification(user.teacherId, newCert);
+          const result = await saveCertification(user.id, newCert);
           
           if (!result.success) {
             throw new Error(result.error || `Failed to save certification: ${cert.name}`);
           }
         } else {
           // Update existing certification
-          const result = await updateCertification(user.teacherId, cert);
+          const result = await updateCertification(user.id, cert);
           
           if (!result.success) {
             throw new Error(result.error || `Failed to update certification: ${cert.name}`);
@@ -358,10 +358,10 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
       if (isNew) {
         // Create new certification
         const { _id, ...newCert } = cert;
-        result = await saveCertification(user.teacherId, newCert);
+        result = await saveCertification(user.id, newCert);
       } else {
         // Update existing certification
-        result = await updateCertification(user.teacherId, cert);
+        result = await updateCertification(user.id, cert);
       }
       
       if (!result.success) {
@@ -479,7 +479,7 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
       
       // Upload to API
       const response = await teacherService.uploadVerificationFile(
-        user.teacherId,
+        user.id,
         'background_check',
         base64Data
       );
@@ -487,7 +487,7 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
       if (response.data?.fileUrl) {
         setBackgroundCheckUrl(response.data.fileUrl);
         // Update teacher profile with the file URL
-        await teacherService.updateVerificationStatus(user.teacherId, {
+        await teacherService.updateVerificationStatus(user.id, {
           backgroundCheckFile: response.data.fileUrl
         });
         
@@ -552,7 +552,7 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
       
       // Upload to API
       const response = await teacherService.uploadVerificationFile(
-        user.teacherId,
+        user.id,
         'government_id',
         base64Data
       );
@@ -560,7 +560,7 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
       if (response.data?.fileUrl) {
         setGovernmentIdUrl(response.data.fileUrl);
         // Update teacher profile with the file URL
-        await teacherService.updateVerificationStatus(user.teacherId, {
+        await teacherService.updateVerificationStatus(user.id, {
           governmentIdFile: response.data.fileUrl
         });
         
@@ -1318,7 +1318,7 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
                             
                             // Get signed URL for document viewing
                             const signedUrl = await teacherService.getDocumentViewUrl(
-                              user.teacherId,
+                              user.id,
                               'background_check'
                             );
                             
@@ -1420,7 +1420,7 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
                             
                             // Get signed URL for document viewing
                             const signedUrl = await teacherService.getDocumentViewUrl(
-                              user.teacherId,
+                              user.id,
                               'government_id'
                             );
                             
@@ -1515,7 +1515,7 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
                         governmentIdFile: governmentIdUrl || undefined
                       };
                       
-                      await teacherService.updateVerificationStatus(user.teacherId, updates);
+                      await teacherService.updateVerificationStatus(user.id, updates);
                       
                       // Update verification state in parent component
                       if (onCertificationsChange) {

@@ -8,6 +8,7 @@ export const useGetProfileById = (studentId: string) => {
   return useQuery({
     queryKey: ['studentProfile', studentId],
     queryFn: () => studentService.getProfile(studentId),
+    enabled: !!studentId,
   });
 };
 
@@ -15,6 +16,7 @@ export const useDashboardStats = (studentId: string) => {
   return useQuery({
     queryKey: ['dashboardStats', studentId],
     queryFn: () => studentService.getDashboardStats(studentId),
+    enabled: !!studentId,
   });
 };
 
@@ -22,6 +24,7 @@ export const useTodaysLessons = (studentId: string) => {
   return useQuery({
     queryKey: ['todaysLessons', studentId],
     queryFn: () => studentService.getTodaysLessons(studentId),
+    enabled: !!studentId, // This will prevent the query from running if studentId is falsy
   });
 };
 
@@ -35,6 +38,7 @@ export const useUpcomingSessions = (studentId: string) => {
   return useQuery({
     queryKey: ['upcomingSessions', studentId],
     queryFn: () => studentService.getUpcomingSessions(studentId),
+    enabled: !!studentId,
   });
 };
 
