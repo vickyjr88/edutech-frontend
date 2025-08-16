@@ -1,8 +1,18 @@
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { studentService } from '../integrations/api/services/student.service';
 import { QueryClient } from '@tanstack/react-query';
+import { useStudentId } from './useStudentId';
 
 const queryClient = new QueryClient();
+
+export const useGetCurrentStudentProfile = () => {
+  const { studentId } = useStudentId(); // Get the studentId from the custom hook
+  return useQuery({
+    queryKey: ['currentStudentProfile', studentId], // Make query key dependent on studentId
+    queryFn: () => studentService.getProfile(studentId!),
+    enabled: !!studentId, // Only enable the query if studentId is available
+  });
+};
 
 export const useGetProfileById = (studentId: string) => {
   return useQuery({
@@ -12,10 +22,28 @@ export const useGetProfileById = (studentId: string) => {
   });
 };
 
+export const useCurrentDashboardStats = () => {
+  const { studentId } = useStudentId();
+  return useQuery({
+    queryKey: ['currentDashboardStats', studentId],
+    queryFn: () => studentService.getDashboardStats(studentId!),
+    enabled: !!studentId,
+  });
+};
+
 export const useDashboardStats = (studentId: string) => {
   return useQuery({
     queryKey: ['dashboardStats', studentId],
     queryFn: () => studentService.getDashboardStats(studentId),
+    enabled: !!studentId,
+  });
+};
+
+export const useCurrentTodaysLessons = () => {
+  const { studentId } = useStudentId();
+  return useQuery({
+    queryKey: ['currentTodaysLessons', studentId],
+    queryFn: () => studentService.getTodaysLessons(studentId!),
     enabled: !!studentId,
   });
 };
@@ -31,6 +59,15 @@ export const useTodaysLessons = (studentId: string) => {
 export const useJoinClass = (studentId: string) => {
   return useMutation({
     mutationFn: (classId: string) => studentService.joinClass(studentId, classId),
+  });
+};
+
+export const useCurrentUpcomingSessions = () => {
+  const { studentId } = useStudentId();
+  return useQuery({
+    queryKey: ['currentUpcomingSessions', studentId],
+    queryFn: () => studentService.getUpcomingSessions(studentId!),
+    enabled: !!studentId,
   });
 };
 

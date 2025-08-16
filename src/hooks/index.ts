@@ -10,6 +10,8 @@ export { useTeacherStats } from './useTeacherStats';
 export { useTeacherStudents } from './useTeacherStudents';
 export { useTeacherSummary } from './useTeacherSummary';
 export { useTeacherId } from './useTeacherId';
+export { useStudentId } from './useStudentId';
+export { useParentId } from './useParentId';
 export { useTeacherRecentActivity } from './useTeacherRecentActivity';
 export { useTeacherUpcomingSessions } from './useTeacherUpcomingSessions';
 

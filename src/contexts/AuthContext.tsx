@@ -12,6 +12,10 @@ interface User {
   verified?: boolean;
   metadata?: any;
   oryIdentityId?: string;
+  // Role-specific IDs
+  teacherId?: string;
+  studentId?: string;
+  parentId?: string;
 }
 
 interface AuthContextType {
@@ -19,7 +23,7 @@ interface AuthContextType {
   session: Session | null;
   isLoading: boolean;
   signOut: () => Promise<void>;
-  updateUserAndTokens: (data: { user: { id: string }; accessToken: string; refreshToken: string }) => void;
+  updateUserAndTokens: (data: { user: { id: string, teacherId: string, studentId: string,  parentId: string }; accessToken: string; refreshToken: string }) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -49,6 +53,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         verified: session.identity.verifiable_addresses?.[0]?.verified || false,
         metadata: session.identity.metadata_public,
         oryIdentityId: session.identity.id,
+        // Role-specific IDs from backend response
+        teacherId: backendUser?.teacherId,
+        studentId: backendUser?.studentId,
+        parentId: backendUser?.parentId,
       };
       
       // Persist user to localStorage for faster subsequent loads
@@ -70,6 +78,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         verified: session.identity.verifiable_addresses?.[0]?.verified || false,
         metadata: session.identity.metadata_public,
         oryIdentityId: session.identity.id,
+        // Role-specific IDs will be undefined in fallback
+        teacherId: undefined,
+        studentId: undefined,
+        parentId: undefined,
       };
       
       localStorage.setItem('kidato_user', JSON.stringify(user));
@@ -118,12 +130,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setSession(null);
   };
 
-  const updateUserAndTokens = (data: { user: { id: string }; accessToken: string; refreshToken: string }) => {
+  const updateUserAndTokens = (data: { user: any; accessToken: string; refreshToken: string }) => {
     const { user: newUserData, accessToken, refreshToken } = data;
     const savedUser = localStorage.getItem('kidato_user');
     if (savedUser) {
       const user = JSON.parse(savedUser);
+      // Update all user fields including role-specific IDs
       user.id = newUserData.id;
+      user.teacherId = newUserData.teacherId;
+      user.studentId = newUserData.studentId;
+      user.parentId = newUserData.parentId;
       setUser(user);
       localStorage.setItem('kidato_user', JSON.stringify(user));
     }

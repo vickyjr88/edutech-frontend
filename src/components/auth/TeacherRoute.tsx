@@ -15,7 +15,7 @@ interface TeacherRouteProps {
  * @param requireProfileComplete If true, redirect to profile setup if profile is incomplete
  */
 const TeacherRoute = ({ children, requireProfileComplete = true }: TeacherRouteProps) => {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, teacherId } = useAuth();
   const location = useLocation();
   const [isProfileComplete, setIsProfileComplete] = useState<boolean | null>(null);
   const [isCheckingProfile, setIsCheckingProfile] = useState(true);
@@ -23,10 +23,10 @@ const TeacherRoute = ({ children, requireProfileComplete = true }: TeacherRouteP
   useEffect(() => {
     // Check if user is a teacher and get profile status
     const checkTeacherProfile = async () => {
-      if (!isLoading && user && user.role === 'teacher' && user.id) {
+      if (!isLoading && user && user.role === 'teacher' && teacherId) {
         try {
           // Get the teacher profile
-          const { data } = await teacherService.getProfileById(user.id);
+          const { data } = await teacherService.getProfileById(teacherId);
           
           // Check if the profile is complete
           setIsProfileComplete(data?.isProfileComplete || false);

@@ -1,6 +1,7 @@
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { teacherService } from '../integrations/api/services/teacher.service';
 import { QueryClient } from '@tanstack/react-query';
+import { useTeacherId } from './useTeacherId';
 
 const queryClient = new QueryClient();
 
@@ -22,9 +23,11 @@ export const useGetAllTeacherProfiles = () => {
 };
 
 export const useGetCurrentTeacherProfile = () => {
+  const { teacherId } = useTeacherId(); // Get the teacherId from the custom hook
   return useQuery({
-    queryKey: ['currentTeacherProfile'],
+    queryKey: ['currentTeacherProfile', teacherId], // Make query key dependent on teacherId
     queryFn: () => teacherService.getCurrentProfile(),
+    enabled: !!teacherId, // Only enable the query if teacherId is available
   });
 };
 

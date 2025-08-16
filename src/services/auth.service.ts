@@ -58,6 +58,9 @@ interface AuthResponse {
       email: string;
       fullName: string;
       role: string;
+      teacherId?: string;
+      studentId?: string;
+      parentId?: string;
     };
     session?: Session;
     accessToken?: string;
@@ -413,7 +416,24 @@ class AuthService {
 
       const session = await this.getCurrentSession();
       if (session) {
-        return { data: { user: { id: session.identity.id, email: session.identity.traits.email, fullName: `${session.identity.traits.name.first} ${session.identity.traits.name.last}`, role: session.identity.traits.role }, session: session } };
+        // Get backend user to include role-specific IDs
+        const backendUser = await this.getBackendUserByOryId(session.identity.id);
+        return { 
+          data: { 
+            user: { 
+              id: backendUser?.user?.id || session.identity.id, 
+              email: session.identity.traits.email, 
+              fullName: `${session.identity.traits.name.first} ${session.identity.traits.name.last}`, 
+              role: session.identity.traits.role,
+              teacherId: backendUser?.user?.teacherId,
+              studentId: backendUser?.user?.studentId,
+              parentId: backendUser?.user?.parentId,
+            }, 
+            session: session,
+            accessToken: backendUser?.accessToken,
+            refreshToken: backendUser?.refreshToken,
+          } 
+        };
       }
 
       throw new Error('No session returned from login');
@@ -448,7 +468,24 @@ class AuthService {
 
       const session = await this.getCurrentSession();
       if (session) {
-        return { data: { user: { id: session.identity.id, email: session.identity.traits.email, fullName: `${session.identity.traits.name.first} ${session.identity.traits.name.last}`, role: session.identity.traits.role }, session: session } };
+        // Get backend user to include role-specific IDs
+        const backendUser = await this.createBackendUserFromOry(session);
+        return { 
+          data: { 
+            user: { 
+              id: backendUser?.user?.id || session.identity.id, 
+              email: session.identity.traits.email, 
+              fullName: `${session.identity.traits.name.first} ${session.identity.traits.name.last}`, 
+              role: session.identity.traits.role,
+              teacherId: backendUser?.user?.teacherId,
+              studentId: backendUser?.user?.studentId,
+              parentId: backendUser?.user?.parentId,
+            }, 
+            session: session,
+            accessToken: backendUser?.accessToken,
+            refreshToken: backendUser?.refreshToken,
+          } 
+        };
       }
 
       throw new Error('No session returned from registration');

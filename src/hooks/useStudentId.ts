@@ -1,17 +1,17 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { teacherService } from '@/integrations/api/services/teacher.service';
+import { studentService } from '@/integrations/api/services/student.service';
 
-interface UseTeacherIdReturn {
-  teacherId: string | null;
+interface UseStudentIdReturn {
+  studentId: string | null;
   loading: boolean;
   error: string | null;
   refetch: () => void;
 }
 
-export const useTeacherId = (): UseTeacherIdReturn => {
+export const useStudentId = (): UseStudentIdReturn => {
   const { user, isLoading: isAuthLoading } = useAuth();
-  const [teacherId, setTeacherId] = useState<string | null>(null);
+  const [studentId, setStudentId] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -20,60 +20,60 @@ export const useTeacherId = (): UseTeacherIdReturn => {
       return;
     }
 
-    if (user?.teacherId) {
-      // Use teacherId directly from user context
-      setTeacherId(user.teacherId);
+    if (user?.studentId) {
+      // Use studentId directly from user context
+      setStudentId(user.studentId);
       setLoading(false);
       setError(null);
     } else if (user?.id) {
-      // Fallback to API call if teacherId not available in context
-      fetchTeacherProfile();
+      // Fallback to API call if studentId not available in context
+      fetchStudentProfile();
     } else {
-      setTeacherId(null);
+      setStudentId(null);
       setLoading(false);
       setError('No authenticated user or user ID found.');
     }
   }, [user, isAuthLoading]);
 
-  const fetchTeacherProfile = async () => {
+  const fetchStudentProfile = async () => {
     if (!user?.id) return;
     
     setLoading(true);
     setError(null);
     
     try {
-      const response = await teacherService.getProfileByUserId(user.id);
+      const response = await studentService.getProfileByUserId(user.id);
       if (response.data?.id) {
-        setTeacherId(response.data.id);
+        setStudentId(response.data.id);
       } else {
-        setError('Teacher profile not found');
-        setTeacherId(null);
+        setError('Student profile not found');
+        setStudentId(null);
       }
     } catch (err) {
-      setError('Failed to fetch teacher profile');
-      setTeacherId(null);
+      setError('Failed to fetch student profile');
+      setStudentId(null);
     } finally {
       setLoading(false);
     }
   };
 
   const refetch = () => {
-    if (user?.teacherId) {
-      // Use teacherId directly from user context
-      setTeacherId(user.teacherId);
+    if (user?.studentId) {
+      // Use studentId directly from user context
+      setStudentId(user.studentId);
       setLoading(false);
       setError(null);
     } else if (user?.id) {
-      fetchTeacherProfile();
+      fetchStudentProfile();
     } else {
-      setTeacherId(null);
+      setStudentId(null);
       setLoading(false);
       setError('No authenticated user or user ID found.');
     }
   };
 
   return {
-    teacherId,
+    studentId,
     loading,
     error,
     refetch,

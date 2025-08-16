@@ -136,13 +136,13 @@ class AuthService {
 
             return false;
         } catch (error) {
-            // console.error('Session refresh error:', error);
-            // this.clearSession();
+            console.error('Session refresh error:', error);
+            this.clearSession();
             return false;
         }
     }
 
-    async getCurrentUser(): Promise<ApiResponse<User>> {
+    async getCurrentUser(retryCount: number = 0): Promise<ApiResponse<User>> {
         if (!this.getSession()) {
             return {
                 data: null,
@@ -184,12 +184,12 @@ class AuthService {
                 error: { message: 'Invalid response format', status: 500 }
             };
         } catch (error) {
-            if (error.response?.status === 401) {
+            if (error.response?.status === 401 && retryCount < 2) {
                 // Token expired, try to refresh
                 const refreshed = await this.refreshSession();
                 if (refreshed) {
                     // Retry with new token
-                    return await this.getCurrentUser();
+                    return await this.getCurrentUser(retryCount + 1);
                 }
             }
 
@@ -203,7 +203,7 @@ class AuthService {
         }
     }
 
-    async updateUserProfile(userData: UpdateUserData): Promise<ApiResponse<User>> {
+    async updateUserProfile(userData: UpdateUserData, retryCount: number = 0): Promise<ApiResponse<User>> {
         if (!this.getSession()) {
             return {
                 data: null,
@@ -231,14 +231,14 @@ class AuthService {
             
             return response;
         } catch (error) {
-            if (error.response?.status === 401) {
+            if (error.response?.status === 401 && retryCount < 2) {
                 // Token expired, try to refresh
                 const refreshed = await this.refreshSession();
                 if (refreshed) {
                     // Retry with new token
                     const currentUserId = this.session?.user?.id;
                     if (currentUserId) {
-                        return await api.patch<User>(`/users/${currentUserId}`, userData);
+                        return await this.updateUserProfile(userData, retryCount + 1);
                     }
                 }
             }

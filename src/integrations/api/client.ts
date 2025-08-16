@@ -32,17 +32,7 @@ class ApiClient {
         // Add response interceptor to handle errors
         this.client.interceptors.response.use(
             (response) => response,
-            async (error) => {
-                // Try to refresh token if unauthorized
-                if (error.response?.status === 401) {
-                    const refreshed = await authService.refreshSession();
-                    if (refreshed) {
-                        // Retry the original request with the new token
-                        const session = authService.getSession();
-                        error.config.headers.Authorization = `Bearer ${session.token}`;
-                        return this.client.request(error.config);
-                    }
-                }
+            (error) => {
                 return Promise.reject(error);
             }
         );
