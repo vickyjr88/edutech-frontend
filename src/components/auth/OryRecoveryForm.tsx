@@ -53,7 +53,37 @@ export const OryRecoveryForm: React.FC<OryRecoveryFormProps> = ({ onSuccess }) =
     setErrors({});
 
     try {
-      await authService.submitRecoveryFlow(flow.id, email);
+      // Extract CSRF token from flow
+      const csrfToken = flow.ui.nodes.find(node => node.attributes.name === 'csrf_token')?.attributes.value;
+      
+      // Use direct fetch API like login/registration to avoid SDK CSRF issues
+      const response = await fetch(`${authService.oryProxyUrl}/self-service/recovery?flow=${flow.id}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'Accept': 'application/json',
+        },
+        credentials: 'include',
+        body: new URLSearchParams({
+          method: 'link',
+          email: email,
+          csrf_token: csrfToken || ''
+        }).toString(),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        // Ory returns 400 for validation errors, with the updated flow in the body
+        if (response.status === 400 && result.ui) {
+          // Handle the validation errors in the catch block
+          const error = new Error('Validation failed');
+          (error as any).ui = result.ui;
+          (error as any).response = { data: result };
+          throw error;
+        }
+        throw new Error(result.message || `Recovery submission failed with status ${response.status}`);
+      }
       
       setSuccess(true);
       toast({
@@ -67,10 +97,39 @@ export const OryRecoveryForm: React.FC<OryRecoveryFormProps> = ({ onSuccess }) =
     } catch (error: any) {
       console.error('Recovery error:', error);
       
-      // Handle Ory validation errors
-      if (error.response?.data?.ui?.nodes) {
+      // Handle Ory validation errors from response
+      if (error.response?.data?.ui) {
+        const uiData = error.response.data.ui;
+        
+        // Handle field-specific errors
+        if (uiData.nodes) {
+          const fieldErrors: any = {};
+          uiData.nodes.forEach((node: any) => {
+            if (node.messages?.length > 0) {
+              const fieldName = node.attributes?.name;
+              if (fieldName) {
+                fieldErrors[fieldName] = node.messages[0].text;
+              }
+            }
+          });
+          setErrors(fieldErrors);
+        }
+
+        // Handle general flow-level error messages
+        if (uiData.messages?.length > 0) {
+          const errorMessage = uiData.messages.map((msg: any) => msg.text).join('. ');
+          setFlowError(errorMessage);
+        }
+      } 
+      // Handle direct error response (when Ory returns updated flow with errors)
+      else if (error.ui?.messages) {
+        const errorMessage = error.ui.messages.map((msg: any) => msg.text).join('. ');
+        setFlowError(errorMessage);
+      }
+      // Handle field errors from direct error response
+      else if (error.ui?.nodes) {
         const fieldErrors: any = {};
-        error.response.data.ui.nodes.forEach((node: any) => {
+        error.ui.nodes.forEach((node: any) => {
           if (node.messages?.length > 0) {
             const fieldName = node.attributes?.name;
             if (fieldName) {
@@ -80,19 +139,16 @@ export const OryRecoveryForm: React.FC<OryRecoveryFormProps> = ({ onSuccess }) =
         });
         setErrors(fieldErrors);
       }
-
-      // Handle generic error messages
-      if (error.response?.data?.ui?.messages) {
-        const messages = error.response.data.ui.messages;
-        const errorMessage = messages.map((msg: any) => msg.text).join('. ');
-        setFlowError(errorMessage);
-      } else {
+      // Fallback error handling
+      else {
         setFlowError(error.message || 'Password recovery failed. Please try again.');
       }
 
+      // Use the flow error message if available, otherwise use generic message
+      const toastMessage = flowError || error.message || 'Please check your email address and try again.';
       toast({
         title: 'Recovery failed',
-        description: error.message || 'Please check your email address and try again.',
+        description: toastMessage,
         variant: 'destructive',
       });
     } finally {

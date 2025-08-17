@@ -134,7 +134,11 @@ class AuthService {
       if (!response.ok) {
         // Ory returns 400 for validation errors, with the updated flow in the body
         if (response.status === 400 && result.ui) {
-          return result; // Return the flow with errors
+          // Throw error with the UI data so the form can handle it
+          const error = new Error('Validation failed');
+          (error as any).ui = result.ui;
+          (error as any).response = { data: result };
+          throw error;
         }
         throw new Error(result.message || `Login submission failed with status ${response.status}`);
       }
@@ -166,7 +170,11 @@ class AuthService {
       if (!response.ok) {
         // Ory returns 400 for validation errors, with the updated flow in the body
         if (response.status === 400 && result.ui) {
-          return result; // Return the flow with errors
+          // Throw error with the UI data so the form can handle it
+          const error = new Error('Validation failed');
+          (error as any).ui = result.ui;
+          (error as any).response = { data: result };
+          throw error;
         }
         throw new Error(result.message || `Registration submission failed with status ${response.status}`);
       }
@@ -298,7 +306,11 @@ class AuthService {
       const result = await response.json();
       if (!response.ok) {
         if (response.status === 400 && result.ui) {
-          return result;
+          // Throw error with the UI data so the form can handle it
+          const error = new Error('Validation failed');
+          (error as any).ui = result.ui;
+          (error as any).response = { data: result };
+          throw error;
         }
         throw new Error(result.message || `Recovery submission failed with status ${response.status}`);
       }

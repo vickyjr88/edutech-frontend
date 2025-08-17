@@ -234,10 +234,39 @@ export const OryLoginForm: React.FC<OryLoginFormProps> = ({ onSuccess, redirectT
     } catch (error: any) {
       console.error('Login error:', error);
       
-      // Handle Ory validation errors
-      if (error.response?.data?.ui?.nodes) {
+      // Handle Ory validation errors from response
+      if (error.response?.data?.ui) {
+        const uiData = error.response.data.ui;
+        
+        // Handle field-specific errors
+        if (uiData.nodes) {
+          const fieldErrors: any = {};
+          uiData.nodes.forEach((node: any) => {
+            if (node.messages?.length > 0) {
+              const fieldName = node.attributes?.name;
+              if (fieldName) {
+                fieldErrors[fieldName] = node.messages[0].text;
+              }
+            }
+          });
+          setErrors(fieldErrors);
+        }
+
+        // Handle general flow-level error messages
+        if (uiData.messages?.length > 0) {
+          const errorMessage = uiData.messages.map((msg: any) => msg.text).join('. ');
+          setFlowError(errorMessage);
+        }
+      } 
+      // Handle direct error response (when Ory returns updated flow with errors)
+      else if (error.ui?.messages) {
+        const errorMessage = error.ui.messages.map((msg: any) => msg.text).join('. ');
+        setFlowError(errorMessage);
+      }
+      // Handle field errors from direct error response
+      else if (error.ui?.nodes) {
         const fieldErrors: any = {};
-        error.response.data.ui.nodes.forEach((node: any) => {
+        error.ui.nodes.forEach((node: any) => {
           if (node.messages?.length > 0) {
             const fieldName = node.attributes?.name;
             if (fieldName) {
@@ -247,19 +276,16 @@ export const OryLoginForm: React.FC<OryLoginFormProps> = ({ onSuccess, redirectT
         });
         setErrors(fieldErrors);
       }
-
-      // Handle generic error messages
-      if (error.response?.data?.ui?.messages) {
-        const messages = error.response.data.ui.messages;
-        const errorMessage = messages.map((msg: any) => msg.text).join('. ');
-        setFlowError(errorMessage);
-      } else {
+      // Fallback error handling
+      else {
         setFlowError(error.message || 'Login failed. Please check your credentials.');
       }
 
+      // Use the flow error message if available, otherwise use generic message
+      const toastMessage = flowError || error.message || 'Please check your credentials and try again.';
       toast({
         title: 'Login failed',
-        description: error.message || 'Please check your credentials and try again.',
+        description: toastMessage,
         variant: 'destructive',
       });
     } finally {
