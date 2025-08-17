@@ -8,6 +8,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { toast } from '@/components/ui/use-toast';
 import { authService } from '@/services/auth.service';
 import { LoginFlow } from '@ory/client-fetch';
+import { GoogleIcon } from '@/components/ui/icons';
 
 interface OryLoginFormProps {
   onSuccess?: () => void;
@@ -27,6 +28,124 @@ export const OryLoginForm: React.FC<OryLoginFormProps> = ({ onSuccess, redirectT
   const navigate = useNavigate();
   const location = useLocation();
 
+  // Helper function to get OAuth providers from the login flow
+  const getOAuthProviders = () => {
+    if (!flow) return [];
+    // Look for OAuth/OIDC provider nodes in the oidc group
+    return flow.ui.nodes.filter(node => 
+      node.group === 'oidc' && 
+      node.type === 'input' && 
+      node.attributes.type === 'submit'
+    );
+  };
+
+  // Handle OAuth provider login (Google, etc.)
+  const handleOAuthLogin = async (provider: string) => {
+    if (!flow) {
+      setFlowError('Login flow not initialized. Please refresh the page.');
+      return;
+    }
+
+    setIsLoading(true);
+    setErrors({});
+
+    try {
+      // For OAuth providers, we need to find the specific provider node and submit it
+      const providerNode = flow.ui.nodes.find(node => 
+        node.group === 'oidc' && 
+        node.attributes.value === provider
+      );
+
+      if (!providerNode) {
+        // If provider not configured in Ory, try the correct OAuth endpoint structure
+        const googleAuthUrl = `${authService.oryProxyUrl}/self-service/login/browser?flow=${flow.id}&provider=${provider}`;
+        window.location.href = googleAuthUrl;
+        return;
+      }
+
+      // Extract CSRF token from flow
+      const csrfToken = flow.ui.nodes.find(node => node.attributes.name === 'csrf_token')?.attributes.value;
+      
+      // Submit the OAuth login using the provider node's attributes
+      const formData = new URLSearchParams();
+      formData.append('method', 'oidc');
+      formData.append('provider', provider);
+      if (csrfToken) {
+        formData.append('csrf_token', csrfToken);
+      }
+
+      const response = await fetch(`${authService.oryProxyUrl || 'http://localhost:4000'}/self-service/login?flow=${flow.id}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'Accept': 'application/json',
+        },
+        credentials: 'include',
+        body: formData.toString(),
+      });
+
+      const result = await response.json();
+      console.log('OAuth login result:', result);
+
+      // Handle OAuth redirect (this is the normal flow)
+      if (result.redirect_browser_to) {
+        window.location.href = result.redirect_browser_to;
+        return;
+      }
+
+      // If we get a session directly (shouldn't happen with OAuth)
+      if (result.session || result.legacy) {
+        toast({
+          title: 'Welcome back!',
+          description: 'You have successfully logged in with Google.',
+        });
+        
+        setTimeout(() => {
+          const userRole = result.session?.identity?.traits?.role || result.user?.role;
+          if (userRole === 'teacher') {
+            window.location.href = '/teacher-dashboard';
+          } else if (userRole === 'student') {
+            window.location.href = '/student-dashboard';
+          } else if (userRole === 'parent') {
+            window.location.href = '/parents-dashboard';
+          } else {
+            window.location.href = '/dashboard';
+          }
+        }, 300);
+      }
+
+      // Handle flow errors
+      if (result.ui) {
+        const fieldErrors: any = {};
+        result.ui.nodes.forEach((node: any) => {
+          if (node.messages?.length > 0) {
+            const fieldName = node.attributes?.name;
+            if (fieldName) {
+              fieldErrors[fieldName] = node.messages[0].text;
+            }
+          }
+        });
+        setErrors(fieldErrors);
+        
+        if (result.ui.messages) {
+          const messages = result.ui.messages;
+          const errorMessage = messages.map((msg: any) => msg.text).join('. ');
+          setFlowError(errorMessage);
+        }
+      }
+    } catch (error: any) {
+      console.error('OAuth login error:', error);
+      setFlowError(error.message || 'OAuth login failed. Please try again.');
+      toast({
+        title: 'Login failed',
+        description: error.message || 'OAuth login failed. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (hasInitialized.current) {
       return;
@@ -42,6 +161,12 @@ export const OryLoginForm: React.FC<OryLoginFormProps> = ({ onSuccess, redirectT
       const loginFlow = await authService.initializeLoginFlow();
       setFlow(loginFlow);
       setFlowError('');
+      
+      // Debug: Log the flow structure to understand OAuth providers
+      console.log('Login flow UI nodes:', loginFlow.ui.nodes);
+      console.log('Available OAuth providers:', loginFlow.ui.nodes.filter(node => 
+        node.group === 'oidc' || node.attributes.name === 'provider'
+      ));
     } catch (error: any) {
       console.error('Failed to initialize login flow:', error);
       setFlowError('Failed to initialize login. Please try again.');
@@ -242,6 +367,31 @@ export const OryLoginForm: React.FC<OryLoginFormProps> = ({ onSuccess, redirectT
           {isLoading ? 'Logging in...' : 'Log in'}
         </Button>
       </div>
+
+      {/* Google OAuth Login */}
+      {flow && (
+        <>
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-white px-2 text-muted-foreground">Or continue with</span>
+            </div>
+          </div>
+          
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full"
+            onClick={() => handleOAuthLogin('google')}
+            disabled={isLoading}
+          >
+            <GoogleIcon className="mr-2 h-4 w-4" />
+            Continue with Google
+          </Button>
+        </>
+      )}
     </form>
   );
 };

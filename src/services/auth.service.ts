@@ -71,7 +71,7 @@ interface AuthResponse {
 
 class AuthService {
   private readonly baseUrl = import.meta.env.VITE_API_URL;
-  private readonly oryProxyUrl = import.meta.env.VITE_ORY_SDK_URL || 'http://localhost:4000'; // Use this directly
+  public readonly oryProxyUrl = import.meta.env.VITE_ORY_SDK_URL || 'http://localhost:4000'; // Use this directly
 
   async initializeLoginFlow(returnTo?: string): Promise<LoginFlow> {
     try {
