@@ -86,3 +86,11 @@ export const useUpdateStudentProfile = (studentId: string) => {
     },
   });
 };
+
+export const useRecentActivities = (userId: string) => {
+  return useQuery({
+    queryKey: ['recentActivities', userId],
+    queryFn: () => studentService.getRecentActivities(userId!),
+    enabled: !!userId, // Only enable the query if userId is available
+  });
+};
