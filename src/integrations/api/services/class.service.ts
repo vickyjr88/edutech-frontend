@@ -9,7 +9,20 @@ export interface Class {
     gradeLevel: string;
     teacher: {
         _id: string;
-        name: string;
+        name?: string;
+        user?: {
+            _id: string;
+            fullName: string;
+            profileImage?: string;
+            bio?: string;
+        };
+        subjects?: {
+            subject: string;
+            gradeLevel?: string;
+            proficiencyLevel?: string;
+        }[];
+        rating?: number;
+        availability?: any;
     };
     rating: number;
     totalReviews: number;
@@ -71,6 +84,13 @@ export interface ClassDetail extends Class {
     };
     reviews: Review[];
     status?: 'draft' | 'pending_review' | 'archived' | 'published';
+    studentsList?: {
+        _id: string;
+        fullName: string;
+        profileImage?: string;
+        numberOfSharedClasses?: number;
+        shared?: number;
+    }[];
 }
 
 export interface Review {

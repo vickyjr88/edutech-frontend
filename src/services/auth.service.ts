@@ -210,7 +210,6 @@ class AuthService {
       }
       
       const sessionData = await response.json();
-      console.log('Ory session retrieved successfully:', sessionData);
       return sessionData;
     } catch (error) {
       console.error('Error fetching current session:', error);
@@ -543,8 +542,6 @@ class AuthService {
       const response = await api.get(`/users/by-ory-id/${oryIdentityId}`);
       
       // If we get tokens, persist them for legacy API compatibility
-      console.log('Response from getBackendUserByOryId:', response.data);
-      
       return response.data;
     } catch (error) {
       console.error('Error fetching backend user by Ory ID:', error);

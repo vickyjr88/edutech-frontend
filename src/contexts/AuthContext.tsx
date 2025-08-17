@@ -157,8 +157,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const session = await authService.getCurrentSession();
         if (session) {
-          console.log('Session found, constructing user:', session);
-          await constructAndPersistUser(session);
+          // Fix expires_at type mismatch
+          const fixedSession = {
+            ...session,
+            expires_at: typeof session.expires_at === 'string' ? new Date(session.expires_at) : session.expires_at,
+          };
+          await constructAndPersistUser(fixedSession as Session);
         } else {
           console.log('No session found, clearing user data');
           clearUserData();

@@ -6,7 +6,6 @@ import { ArrowRight, MessageSquare, Users, Clock, Calendar, UserRound, Sparkles,
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { ClassDetail } from "@/integrations/api/services/class.service";
-import { useGetTeacherProfileById } from "@/hooks/use-teacher-service";
 import { describeAvailability, getNextClassTime, getUserInitials } from "@/lib/utils";
 import { useSelfEnroll } from "@/hooks/use-enrollment-service";
 import { formatDate } from "date-fns";
@@ -22,16 +21,9 @@ function courseIsNew(course: ClassDetail) {
 }
 
 const MatchingClassesSection = ({ course }: MatchingClassesSectionProps) => {
-  const { data: response, isLoading: loadingTeacher } = useGetTeacherProfileById(course.teacher._id);
   const { mutate: enroll } = useSelfEnroll();
   const { toast } = useToast();
-  const matchingTeacher = response?.data; // once teacher profile image is included in course.user, we can remove this
-  const loading = loadingTeacher;
-  if (loading) return (
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-kidato-purple"></div>
-    </div>
-  )
+  const matchingTeacher = course.teacher; // Use populated teacher data directly from course
   const cohort = course.cohorts?.find((cohort) => cohort.isActive) ?? course.cohorts?.[0];
 
   const nextClassTime = getNextClassTime({
@@ -54,26 +46,26 @@ const MatchingClassesSection = ({ course }: MatchingClassesSectionProps) => {
   return (
     <div className="flex flex-col lg:flex-row gap-6">
       {/* Teacher Card - Now First */}
-      {matchingTeacher && (
+      {matchingTeacher && matchingTeacher.user && (
         <Card className="flex-1 overflow-hidden border border-gray-100 shadow-sm hover:shadow-md transition-shadow bg-gradient-to-br from-blue-50 to-white">
           <CardContent className="p-6">
             <div className="flex items-start gap-4">
               <Avatar className="h-14 w-14 border-2 border-blue-200 bg-blue-100">
                 <AvatarFallback className="text-blue-700 font-medium">
-                  {matchingTeacher.user._signedProfileImage}
+                  {getUserInitials(matchingTeacher.user.fullName)}
                 </AvatarFallback>
               </Avatar>
               <div>
                 <h3 className="text-xl font-bold text-gray-800">{matchingTeacher.user.fullName}</h3>
-                <div className="flex items-center gap-2 mt-1 flex-wrap"> {/* overflow to next line */}
-                  {matchingTeacher.subjects.map((subject, i) => (
+                <div className="flex items-center gap-2 mt-1 flex-wrap">
+                  {matchingTeacher.subjects?.map((subject, i) => (
                     <Badge key={i} variant="secondary" className="bg-blue-100 text-blue-700 hover:bg-blue-200">
                       {subject.subject}
                     </Badge>
                   ))}
                   <div className="flex items-center text-amber-500">
                     <Star className="h-3.5 w-3.5 fill-amber-500 mr-1" />
-                    <span className="font-medium">{matchingTeacher.rating}</span>
+                    <span className="font-medium">{matchingTeacher.rating || course.rating}</span>
                   </div>
                 </div>
               </div>
@@ -83,7 +75,7 @@ const MatchingClassesSection = ({ course }: MatchingClassesSectionProps) => {
 
             <div className="flex items-center text-gray-600 mb-4">
               <Clock className="h-4 w-4 mr-2 text-blue-500" />
-              <span>Available: {describeAvailability(matchingTeacher.availability)}</span>
+              <span>Available: {matchingTeacher.availability ? describeAvailability(matchingTeacher.availability) : 'Contact for availability'}</span>
             </div>
 
             <div className="flex justify-end space-x-2">
@@ -130,7 +122,7 @@ const MatchingClassesSection = ({ course }: MatchingClassesSectionProps) => {
                 </div>
                 <div className="flex items-center text-gray-700">
                   <DollarSign className="h-3.5 w-3.5 text-gray-500 mr-0.5" />
-                  <span>{cohort.price}/class</span>
+                  <span>{cohort?.price || 'Free'}/class</span>
                 </div>
               </div>
             </div>
@@ -144,7 +136,7 @@ const MatchingClassesSection = ({ course }: MatchingClassesSectionProps) => {
           <div className="flex flex-col space-y-3 mb-6">
             <div className="flex items-center text-gray-600">
               <Users className="h-4 w-4 mr-2 text-blue-500" />
-              <span><strong>{course.enrolledStudents}</strong> enrolled / <strong>{cohort.maximumStudents - course.enrolledStudents}</strong> spots remaining</span>
+              <span><strong>{course.enrolledStudents || 0}</strong> enrolled / <strong>{(cohort?.maximumStudents || 0) - (course.enrolledStudents || 0)}</strong> spots remaining</span>
             </div>
             <div className="flex items-center text-gray-600">
               <Clock className="h-4 w-4 mr-2 text-blue-500" />
@@ -165,11 +157,11 @@ const MatchingClassesSection = ({ course }: MatchingClassesSectionProps) => {
               {course.studentsList?.map((student, i) => (
                 <div key={i} className="flex items-center bg-white rounded-full py-1 px-3 border border-blue-100">
                   <Avatar className="h-6 w-6 mr-2">
-                    <AvatarFallback className="bg-blue-100 text-xs text-blue-700">{student.profileImage ?? getUserInitials(student.fullName)}</AvatarFallback>
+                    <AvatarFallback className="bg-blue-100 text-xs text-blue-700">{student.profileImage ? student.profileImage : getUserInitials(student.fullName)}</AvatarFallback>
                   </Avatar>
                   <span className="text-xs">{student.fullName}</span>
                   <Badge variant="outline" className="ml-2 text-[10px] px-1 py-0 h-4 bg-blue-50">
-                    {student.shared || 0} shared {student.shared > 1 ? "classes" : "class"}
+                    {student.shared || student.numberOfSharedClasses || 0} shared {(student.shared || student.numberOfSharedClasses || 0) > 1 ? "classes" : "class"}
                   </Badge>
                 </div>
               ))}
