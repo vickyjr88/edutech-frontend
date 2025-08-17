@@ -162,11 +162,6 @@ export const OryLoginForm: React.FC<OryLoginFormProps> = ({ onSuccess, redirectT
       setFlow(loginFlow);
       setFlowError('');
       
-      // Debug: Log the flow structure to understand OAuth providers
-      console.log('Login flow UI nodes:', loginFlow.ui.nodes);
-      console.log('Available OAuth providers:', loginFlow.ui.nodes.filter(node => 
-        node.group === 'oidc' || node.attributes.name === 'provider'
-      ));
     } catch (error: any) {
       console.error('Failed to initialize login flow:', error);
       setFlowError('Failed to initialize login. Please try again.');

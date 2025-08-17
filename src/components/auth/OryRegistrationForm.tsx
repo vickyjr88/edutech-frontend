@@ -10,6 +10,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { toast } from '@/components/ui/use-toast';
 import { authService } from '@/services/auth.service';
 import { RegistrationFlow } from '@ory/client-fetch';
+import { GoogleIcon } from '@/components/ui/icons';
 
 interface OryRegistrationFormProps {
   onSuccess?: () => void;
@@ -33,6 +34,110 @@ export const OryRegistrationForm: React.FC<OryRegistrationFormProps> = ({ onSucc
 
   const navigate = useNavigate();
 
+  // Helper function to get OAuth providers from the registration flow
+  const getOAuthProviders = () => {
+    if (!flow) return [];
+    return flow.ui.nodes.filter(node => 
+      node.group === 'oidc' && 
+      node.type === 'input' && 
+      node.attributes.type === 'submit'
+    );
+  };
+
+  // Handle OAuth provider registration (Google, etc.)
+  const handleOAuthSignup = async (provider: string) => {
+    if (!flow) {
+      setFlowError('Registration flow not initialized. Please refresh the page.');
+      return;
+    }
+
+    setIsLoading(true);
+    setErrors({});
+
+    try {
+      // Extract CSRF token from flow
+      const csrfToken = flow.ui.nodes.find(node => node.attributes.name === 'csrf_token')?.attributes.value;
+      
+      // Submit the OAuth registration using direct fetch
+      const formData = new URLSearchParams();
+      formData.append('method', 'oidc');
+      formData.append('provider', provider);
+      if (csrfToken) {
+        formData.append('csrf_token', csrfToken);
+      }
+
+      const response = await fetch(`${authService.oryProxyUrl}/self-service/registration?flow=${flow.id}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'Accept': 'application/json',
+        },
+        credentials: 'include',
+        body: formData.toString(),
+      });
+
+      const result = await response.json();
+      console.log('OAuth registration result:', result);
+
+      // Handle OAuth redirect (this is the normal flow)
+      if (result.redirect_browser_to) {
+        window.location.href = result.redirect_browser_to;
+        return;
+      }
+
+      // If we get a session directly
+      if (result.session || result.legacy) {
+        toast({
+          title: 'Account created!',
+          description: 'Your account has been created successfully with Google.',
+        });
+        
+        setTimeout(() => {
+          const userRole = result.session?.identity?.traits?.role || result.user?.role;
+          if (userRole === 'teacher') {
+            window.location.href = '/teacher-profile-setup';
+          } else if (userRole === 'student') {
+            window.location.href = '/student-dashboard';
+          } else if (userRole === 'parent') {
+            window.location.href = '/parents-dashboard';
+          } else {
+            window.location.href = '/dashboard';
+          }
+        }, 300);
+      }
+
+      // Handle flow errors
+      if (result.ui) {
+        const fieldErrors: any = {};
+        result.ui.nodes.forEach((node: any) => {
+          if (node.messages?.length > 0) {
+            const fieldName = node.attributes?.name;
+            if (fieldName) {
+              fieldErrors[fieldName] = node.messages[0].text;
+            }
+          }
+        });
+        setErrors(fieldErrors);
+        
+        if (result.ui.messages) {
+          const messages = result.ui.messages;
+          const errorMessage = messages.map((msg: any) => msg.text).join('. ');
+          setFlowError(errorMessage);
+        }
+      }
+    } catch (error: any) {
+      console.error('OAuth registration error:', error);
+      setFlowError(error.message || 'OAuth registration failed. Please try again.');
+      toast({
+        title: 'Registration failed',
+        description: error.message || 'OAuth registration failed. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
     initializeFlow();
   }, []);
@@ -43,6 +148,7 @@ export const OryRegistrationForm: React.FC<OryRegistrationFormProps> = ({ onSucc
       const registrationFlow = await authService.initializeRegistrationFlow(redirectTo);
       setFlow(registrationFlow);
       setFlowError('');
+      
     } catch (error: any) {
       console.error('Failed to initialize registration flow:', error);
       setFlowError('Failed to initialize registration. Please try again.');
@@ -380,6 +486,52 @@ export const OryRegistrationForm: React.FC<OryRegistrationFormProps> = ({ onSucc
           {isLoading ? 'Creating account...' : 'Sign up'}
         </Button>
       </div>
+
+      {/* Google OAuth Registration */}
+      {flow && (
+        <>
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-white px-2 text-muted-foreground">Or sign up with</span>
+            </div>
+          </div>
+          
+          {getOAuthProviders().length > 0 ? (
+            <div className="space-y-2">
+              {getOAuthProviders().map((provider) => {
+                const providerName = provider.attributes.value;
+                return (
+                  <Button
+                    key={providerName}
+                    type="button"
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => handleOAuthSignup(providerName)}
+                    disabled={isLoading}
+                  >
+                    {providerName.indexOf('google') !== -1 && <GoogleIcon className="mr-2 h-4 w-4" />}
+                    Sign up with {(providerName.charAt(0).toUpperCase() + providerName.slice(1)).split('-')[0]}
+                  </Button>
+                );
+              })}
+            </div>
+          ) : (
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              onClick={() => handleOAuthSignup('google')}
+              disabled={isLoading}
+            >
+              <GoogleIcon className="mr-2 h-4 w-4" />
+              Sign up with Google
+            </Button>
+          )}
+        </>
+      )}
     </form>
   );
 };
