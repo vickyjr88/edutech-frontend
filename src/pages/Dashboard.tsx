@@ -13,9 +13,10 @@ import RecentActivity from "@/components/dashboard/RecentActivity";
 import KidatoMascot from "@/components/dashboard/KidatoMascot";
 import GoalTrackingDialog from "@/components/dashboard/GoalTrackingDialog";
 import { useToast } from "@/components/ui/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Dashboard = () => {
-  const [userName] = useState("John Doe");
+  const { user } = useAuth();
   const [isTrackingOpen, setIsTrackingOpen] = useState(false);
   const [selectedGoal, setSelectedGoal] = useState<any>(null);
   const { toast } = useToast();
@@ -44,7 +45,7 @@ const Dashboard = () => {
       <StudentSidebar />
 
       <div className="flex-1 flex flex-col overflow-y-auto">
-        <StudentDashboardHeader userName={userName} />
+        <StudentDashboardHeader userName={user?.fullName || "Student"} />
 
         <main className="p-4 sm:p-6 flex-1">
           <div className="max-w-7xl mx-auto">

@@ -193,10 +193,9 @@ export const OryLoginForm: React.FC<OryLoginFormProps> = ({ onSuccess, redirectT
       });
 
       console.log('Login result:', result);
-      console.log('Has session:', !!result.session);
-      console.log('Has legacy:', !!result.legacy);
-
-      if (result.session || result.legacy) {
+      console.log('Has session:', !!result.data.session);
+      console.log('Has legacy:', !!result.data.legacy);
+      if (result.data.session || result.data.legacy) {
         console.log('Login successful, showing toast and navigating...');
         toast({
           title: 'Welcome back!',
@@ -208,7 +207,7 @@ export const OryLoginForm: React.FC<OryLoginFormProps> = ({ onSuccess, redirectT
         
         setTimeout(() => {
           // Handle role-based redirection
-          const userRole = result.session?.identity?.traits?.role || result.user?.role;
+          const userRole = result.data.session?.identity?.traits?.role || result.data.user?.role;
 
           console.log('User role:', userRole);
           

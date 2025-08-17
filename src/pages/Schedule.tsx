@@ -13,9 +13,10 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { EventFormDialog } from "@/components/schedule/EventFormDialog";
 import { Toaster } from "@/components/ui/toaster";
 import { toast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Schedule = () => {
-  const [userName] = useState("John Doe");
+  const { user } = useAuth();
   const [view, setView] = useState<"month" | "week" | "day">("day");
   const [showAddEventDialog, setShowAddEventDialog] = useState(false);
   
@@ -41,7 +42,7 @@ const Schedule = () => {
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
         {/* Top Nav */}
-        <StudentDashboardHeader userName={userName} />
+        <StudentDashboardHeader userName={user?.fullName || "Student"} />
 
         {/* Content */}
         <main className="p-4 sm:p-6 flex-1 overflow-y-auto">

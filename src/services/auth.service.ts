@@ -65,6 +65,7 @@ interface AuthResponse {
     session?: Session;
     accessToken?: string;
     refreshToken?: string;
+    legacy?: boolean; // Indicates if this is a legacy login response
   };
   error?: Error;
 }
@@ -117,7 +118,7 @@ class AuthService {
     }
   }
 
-  async submitLoginFlow(flowId: string, values: Record<string, any>) {
+  async submitLoginFlow(flowId: string, values: Record<string, any>): Promise<AuthResponse> { // Changed return type
     try {
       const response = await fetch(`${this.oryProxyUrl}/self-service/login?flow=${flowId}`, {
         method: 'POST',
@@ -134,19 +135,67 @@ class AuthService {
       if (!response.ok) {
         // Ory returns 400 for validation errors, with the updated flow in the body
         if (response.status === 400 && result.ui) {
-          // Throw error with the UI data so the form can handle it
-          const error = new Error('Validation failed');
-          (error as any).ui = result.ui;
-          (error as any).response = { data: result };
-          throw error;
+          console.log('Ory login failed with validation error in submitLoginFlow, attempting legacy login...');
+          try {
+            const legacyResponse = await this.loginLegacy(values.identifier, values.password);
+            // If legacy login is successful, return AuthResponse
+            if (legacyResponse.accessToken && legacyResponse.refreshToken && legacyResponse.user) {
+              localStorage.setItem('kidato_user', JSON.stringify(legacyResponse.user));
+              localStorage.setItem('kidato_access_token', legacyResponse.accessToken);
+              localStorage.setItem('kidato_refresh_token', legacyResponse.refreshToken);
+              return {
+                data: {
+                  user: {
+                    id: legacyResponse.user.id,
+                    email: legacyResponse.user.email,
+                    fullName: legacyResponse.user.fullName,
+                    role: legacyResponse.user.role,
+                    teacherId: legacyResponse.user.teacherId,
+                    studentId: legacyResponse.user.studentId,
+                    parentId: legacyResponse.user.parentId,
+                  },
+                  accessToken: legacyResponse.accessToken,
+                  refreshToken: legacyResponse.refreshToken,
+                  legacy: true
+                }
+              };
+            } else {
+              throw new Error('Legacy login response missing tokens or user data.');
+            }
+          } catch (legacyError: any) {
+            console.error('Legacy login also failed in submitLoginFlow:', legacyError);
+            // Re-throw the original Ory error if legacy also fails
+            const error = new Error('Validation failed');
+            (error as any).ui = result.ui;
+            (error as any).response = { data: result };
+            throw error;
+          }
         }
         throw new Error(result.message || `Login submission failed with status ${response.status}`);
       }
 
-      // On successful login, Ory sets the session cookie.
-      // We can then fetch the session to confirm.
+      // On successful Ory login, fetch session and return AuthResponse
       const session = await this.getCurrentSession();
-      return { session };
+      if (session) {
+        const backendUser = await this.getBackendUserByOryId(session.identity.id);
+        return { 
+          data: { 
+            user: { 
+              id: backendUser?.user?.id || session.identity.id, 
+              email: session.identity.traits.email, 
+              fullName: `${session.identity.traits.name.first} ${session.identity.traits.name.last}`, 
+              role: session.identity.traits.role,
+              teacherId: backendUser?.user?.teacherId,
+              studentId: backendUser?.user?.studentId,
+              parentId: backendUser?.user?.parentId,
+            }, 
+            session: session,
+            accessToken: backendUser?.accessToken,
+            refreshToken: backendUser?.refreshToken,
+          } 
+        };
+      }
+      throw new Error('No session returned from Ory login');
     } catch (error: any) {
       console.error('Login flow submission failed:', error);
       throw error;
@@ -190,6 +239,57 @@ class AuthService {
   }
 
   async getCurrentSession(): Promise<Session | null> {
+    // Check for existing tokens in local storage first
+    const accessToken = localStorage.getItem('kidato_access_token');
+    const refreshToken = localStorage.getItem('kidato_refresh_token');
+    const storedUser = localStorage.getItem('kidato_user');
+
+    if (accessToken && refreshToken && storedUser) {
+      try {
+        const user = JSON.parse(storedUser);
+        // Construct a mock Ory session from local storage data
+        // This assumes the local storage user object has enough info
+        // to mimic an Ory session for the purpose of AuthContext
+        return {
+          id: 'local-session', // A dummy ID for local session
+          active: true,
+          authenticated_at: new Date().toISOString(),
+          expires_at: new Date(Date.now() + 3600 * 1000).toISOString(), // 1 hour from now
+          issued_at: new Date().toISOString(),
+          identity: {
+            id: user.id,
+            schema_id: 'default',
+            schema_url: '',
+            traits: {
+              email: user.email,
+              name: {
+                first: user.fullName.split(' ')[0] || '',
+                last: user.fullName.split(' ').slice(1).join(' ') || '',
+              },
+              role: user.role,
+            },
+            metadata_public: user.metadata || {},
+            verifiable_addresses: [{
+              id: 'email-address',
+              value: user.email,
+              verified: user.verified || false,
+              via: 'email',
+              status: 'completed',
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            }],
+          },
+        } as Session;
+      } catch (e) {
+        console.error('Error parsing stored user from local storage:', e);
+        // Clear corrupted data and proceed to Ory API call
+        localStorage.removeItem('kidato_user');
+        localStorage.removeItem('kidato_access_token');
+        localStorage.removeItem('kidato_refresh_token');
+      }
+    }
+
+    // If no valid tokens in local storage, proceed with Ory API call
     try {
       const response = await fetch(`${this.oryProxyUrl}/sessions/whoami`, {
         method: 'GET',
@@ -212,38 +312,11 @@ class AuthService {
       const sessionData = await response.json();
       return sessionData;
     } catch (error) {
-      console.error('Error fetching current session:', error);
-      
-      // Backward compatibility: If Ory session fails, check legacy session
-      try {
-        console.log('Trying legacy session check...');
-        const legacyUser = localStorage.getItem('kidato_user');
-        const legacyToken = localStorage.getItem('kidato_token');
-        
-        if (legacyUser && legacyToken) {
-          console.log('Found legacy session data');
-          // Convert legacy user to Ory-compatible session format
-          const user = JSON.parse(legacyUser);
-          return {
-            id: 'legacy-session',
-            identity: {
-              id: user.id,
-              traits: {
-                email: user.email,
-                name: {
-                  first: user.fullName.split(' ')[0],
-                  last: user.fullName.split(' ').slice(1).join(' '),
-                },
-                role: user.role,
-              },
-            },
-            legacy: true,
-          } as any;
-        }
-      } catch (legacyError) {
-        console.log('No legacy session found');
-      }
-      
+      console.error('Error fetching current session from Ory:', error);
+      // If Ory session fails, clear any potentially stale local storage data
+      localStorage.removeItem('kidato_user');
+      localStorage.removeItem('kidato_access_token');
+      localStorage.removeItem('kidato_refresh_token');
       return null;
     }
   }
@@ -416,21 +489,25 @@ class AuthService {
   // Enhanced login method with better error handling
   async login(credentials: { email: string; password: string }): Promise<AuthResponse> {
     try {
+      // Attempt Ory login flow
       const flow = await this.initializeLoginFlow();
       const csrfToken = flow.ui.nodes.find(node => node.attributes.name === 'csrf_token')?.attributes.value;
-      const result = await this.submitLoginFlow(flow.id, {
+      
+      // submitLoginFlow now returns AuthResponse directly
+      const authResponse = await this.submitLoginFlow(flow.id, {
         identifier: credentials.email,
         password: credentials.password,
         csrf_token: csrfToken,
         method: 'password',
       });
 
-      const session = await this.getCurrentSession();
-      if (session) {
-        // Get backend user to include role-specific IDs
-        const backendUser = await this.getBackendUserByOryId(session.identity.id);
-        return { 
-          data: { 
+      // If submitLoginFlow returned data (either Ory or legacy success)
+      if (authResponse.data) {
+        // If it's an Ory session, set it
+        if (authResponse.data.session) {
+          const session = authResponse.data.session;
+          const backendUser = await this.getBackendUserByOryId(session.identity.id);
+          this.setSession({ 
             user: { 
               id: backendUser?.user?.id || session.identity.id, 
               email: session.identity.traits.email, 
@@ -440,19 +517,25 @@ class AuthService {
               studentId: backendUser?.user?.studentId,
               parentId: backendUser?.user?.parentId,
             }, 
-            session: session,
-            accessToken: backendUser?.accessToken,
-            refreshToken: backendUser?.refreshToken,
-          } 
-        };
+            token: backendUser?.accessToken || '', // Assuming token is required for session
+            refreshToken: backendUser?.refreshToken || '', // Assuming refreshToken is required
+            expiresAt: this.calculateExpiryTime(24), // Assuming 24 hour token
+          });
+        } else if (authResponse.data.accessToken && authResponse.data.refreshToken && authResponse.data.user) {
+          // If it's a legacy login response, set session based on that
+          this.setSession({
+            user: authResponse.data.user,
+            token: authResponse.data.accessToken,
+            refreshToken: authResponse.data.refreshToken,
+            expiresAt: this.calculateExpiryTime(24),
+          });
+        }
+        return authResponse; // Return the successful AuthResponse
       }
 
-      throw new Error('No session returned from login');
+      throw new Error('Login failed: No session or user data returned.');
     } catch (error: any) {
       console.error('Login error:', error);
-      if (error.response?.data?.ui) {
-        return error.response.data;
-      }
       return { error };
     }
   }
