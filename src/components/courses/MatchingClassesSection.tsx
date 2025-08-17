@@ -10,6 +10,7 @@ import { describeAvailability, getNextClassTime, getUserInitials } from "@/lib/u
 import { useSelfEnroll } from "@/hooks/use-enrollment-service";
 import { formatDate } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
+import { Link } from "react-router-dom";
 interface MatchingClassesSectionProps {
   course: ClassDetail;
 }
@@ -79,7 +80,11 @@ const MatchingClassesSection = ({ course }: MatchingClassesSectionProps) => {
             </div>
 
             <div className="flex justify-end space-x-2">
-              <Button variant="outline">View Profile</Button>
+              <Button variant="outline" asChild>
+                <Link to={`/teacher/${matchingTeacher._id}`}> {/* Add Link here */}
+                  View Profile
+                </Link>
+              </Button>
               <Button className="bg-kidato-purple hover:bg-kidato-dark-blue">
                 Message Teacher
               </Button>

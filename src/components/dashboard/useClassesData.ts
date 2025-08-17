@@ -47,6 +47,7 @@ export function useClassesData() {
     subject: session?.subject || 'General',
     teacher: session?.teacherName || 'TBA',
     teacherImage: session?.profileImage || '/api/placeholder/80/80',
+    teacherId: (session as any)?.teacherId || '', // Add this line - assuming backend will provide it
     cohort: session?.cohortName || 'Standard',
     sessionTime: new Date(session?.startTime || Date.now()),
     isLiveNow: false,
