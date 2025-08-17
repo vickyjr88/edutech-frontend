@@ -389,7 +389,7 @@ export const OryLoginForm: React.FC<OryLoginFormProps> = ({ onSuccess, redirectT
         </Button>
       </div>
 
-      {/* Google OAuth Login */}
+      {/* OAuth Login Options */}
       {flow && (
         <>
           <div className="relative">
@@ -401,16 +401,37 @@ export const OryLoginForm: React.FC<OryLoginFormProps> = ({ onSuccess, redirectT
             </div>
           </div>
           
-          <Button
-            type="button"
-            variant="outline"
-            className="w-full"
-            onClick={() => handleOAuthLogin('google')}
-            disabled={isLoading}
-          >
-            <GoogleIcon className="mr-2 h-4 w-4" />
-            Continue with Google
-          </Button>
+          <div className="space-y-2">
+            {getOAuthProviders().length > 0 ? (
+              getOAuthProviders().map((provider) => {
+                const providerName = provider.attributes.value;
+                return (
+                  <Button
+                    key={providerName}
+                    type="button"
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => handleOAuthLogin(providerName)}
+                    disabled={isLoading}
+                  >
+                    {providerName.indexOf('google') !== -1 && <GoogleIcon className="mr-2 h-4 w-4" />}
+                    Continue with {(providerName.charAt(0).toUpperCase() + providerName.slice(1)).split('-')[0]}
+                  </Button>
+                );
+              })
+            ) : (
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full"
+                onClick={() => handleOAuthLogin('google')}
+                disabled={isLoading}
+              >
+                <GoogleIcon className="mr-2 h-4 w-4" />
+                Continue with Google
+              </Button>
+            )}
+          </div>
         </>
       )}
     </form>
