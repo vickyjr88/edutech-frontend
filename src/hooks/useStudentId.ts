@@ -21,12 +21,10 @@ export const useStudentId = (): UseStudentIdReturn => {
     }
 
     if (user?.studentId) {
-      // Use studentId directly from user context
       setStudentId(user.studentId);
       setLoading(false);
       setError(null);
     } else if (user?.id) {
-      // Fallback to API call if studentId not available in context
       fetchStudentProfile();
     } else {
       setStudentId(null);
@@ -59,7 +57,6 @@ export const useStudentId = (): UseStudentIdReturn => {
 
   const refetch = () => {
     if (user?.studentId) {
-      // Use studentId directly from user context
       setStudentId(user.studentId);
       setLoading(false);
       setError(null);

@@ -22,8 +22,7 @@ export const useGetProfileById = (studentId: string) => {
   });
 };
 
-export const useCurrentDashboardStats = () => {
-  const { studentId } = useStudentId();
+export const useCurrentDashboardStats = (studentId: string) => {
   return useQuery({
     queryKey: ['currentDashboardStats', studentId],
     queryFn: () => studentService.getDashboardStats(studentId!),
