@@ -11,6 +11,8 @@ import { useSelfEnroll } from "@/hooks/use-enrollment-service";
 import { formatDate } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
+import { MessageTeacherDialog } from '@/components/common/MessageTeacherDialog'; // Import the new dialog
+
 interface MatchingClassesSectionProps {
   course: ClassDetail;
 }
@@ -26,6 +28,8 @@ const MatchingClassesSection = ({ course }: MatchingClassesSectionProps) => {
   const { toast } = useToast();
   const matchingTeacher = course.teacher; // Use populated teacher data directly from course
   const cohort = course.cohorts?.find((cohort) => cohort.isActive) ?? course.cohorts?.[0];
+
+  const [showMessageDialog, setShowMessageDialog] = useState(false); // State for dialog visibility
 
   const nextClassTime = getNextClassTime({
     daysOfWeek: cohort?.daysOfWeek,
@@ -81,11 +85,14 @@ const MatchingClassesSection = ({ course }: MatchingClassesSectionProps) => {
 
             <div className="flex justify-end space-x-2">
               <Button variant="outline" asChild>
-                <Link to={`/teacher/${matchingTeacher._id}`}> {/* Add Link here */}
+                <Link to={`/teacher/${matchingTeacher._id}`}>
                   View Profile
                 </Link>
               </Button>
-              <Button className="bg-kidato-purple hover:bg-kidato-dark-blue">
+              <Button
+                className="bg-kidato-purple hover:bg-kidato-dark-blue"
+                onClick={() => setShowMessageDialog(true)} // Wire the button
+              >
                 Message Teacher
               </Button>
             </div>
@@ -180,6 +187,16 @@ const MatchingClassesSection = ({ course }: MatchingClassesSectionProps) => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Message Teacher Dialog */}
+      {matchingTeacher && matchingTeacher._id && matchingTeacher.user && (
+        <MessageTeacherDialog
+          isOpen={showMessageDialog}
+          onOpenChange={setShowMessageDialog}
+          teacherName={matchingTeacher.user.fullName}
+          teacherId={matchingTeacher._id}
+        />
+      )}
     </div>
   );
 };

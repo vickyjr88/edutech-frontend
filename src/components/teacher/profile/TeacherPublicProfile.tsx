@@ -17,6 +17,7 @@ import TeacherAboutSection from './public-profile/TeacherAboutSection';
 import TeacherExperienceSection from './public-profile/TeacherExperienceSection';
 import TeacherClassesSection from './public-profile/TeacherClassesSection';
 import TeacherQualificationsSection from './public-profile/TeacherQualificationsSection';
+import MessageTeacherDialog from './MessageTeacherDialog';
 
 interface TeacherPublicProfileProps {
   teacher: any;
@@ -301,46 +302,13 @@ const TeacherPublicProfile: React.FC<TeacherPublicProfileProps> = ({
             </DialogContent>
           </Dialog>
         )}
-        <Dialog open={showMessageDialog} onOpenChange={setShowMessageDialog}>
-          <DialogContent className="sm:max-w-[500px]">
-            <DialogHeader>
-              <DialogTitle>Send Message to {teacher.name}</DialogTitle>
-            </DialogHeader>
-            
-            <div className="space-y-4 py-4">
-              <div>
-                <label htmlFor="subject" className="block text-sm font-medium mb-1">
-                  Subject
-                </label>
-                <Input 
-                  id="subject" 
-                  placeholder="Enter message subject"
-                  className="w-full"
-                />
-              </div>
-              
-              <div>
-                <label htmlFor="message" className="block text-sm font-medium mb-1">
-                  Message
-                </label>
-                <Textarea
-                  id="message"
-                  placeholder="Type your message here..."
-                  className="w-full min-h-[150px]"
-                />
-              </div>
-              
-              <div className="flex justify-end gap-3 pt-2">
-                <DialogClose asChild>
-                  <Button variant="outline">Cancel</Button>
-                </DialogClose>
-                <Button>
-                  Send Message
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
+        {/* Replaced inline Dialog with MessageTeacherDialog */}
+        <MessageTeacherDialog
+          isOpen={showMessageDialog}
+          onOpenChange={setShowMessageDialog}
+          teacherName={teacher.name}
+          teacherId={teacher._id} // Assuming teacher._id is the teacherId
+        />
         <TeacherBookingDialog 
           isOpen={showBookingDialog} 
           onClose={() => setShowBookingDialog(false)}
