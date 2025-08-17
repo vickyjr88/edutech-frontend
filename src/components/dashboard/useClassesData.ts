@@ -13,8 +13,8 @@ export function useClassesData() {
   const { user } = useAuth();
   
   // Fetch today's lessons and upcoming sessions
-  const { data: todaysLessonsResponse, isLoading: todaysLessonsLoading } = useTodaysLessons(user?.id || '');
-  const { data: upcomingSessionsResponse, isLoading: upcomingSessionsLoading } = useUpcomingSessions(user?.id || '');
+  const { data: todaysLessonsResponse, isLoading: todaysLessonsLoading } = useTodaysLessons(user?.studentId || '');
+  const { data: upcomingSessionsResponse, isLoading: upcomingSessionsLoading } = useUpcomingSessions(user?.studentId || '');
 
   useEffect(() => {
     // Update current time every minute

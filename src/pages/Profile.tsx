@@ -13,7 +13,7 @@ import { EditProfileForm } from "@/components/dashboard/EditProfileForm";
 
 const Profile = () => {
   const { user } = useAuth();
-  const { data: response, refetch } = useGetProfileById(user.id);
+  const { data: response, refetch } = useGetProfileById(user.studentId || user.id);
   const profile = response?.data;
   const fullName = user.fullName;
   
@@ -88,7 +88,7 @@ const Profile = () => {
                       </div>
                       <div className="p-4 bg-blue-50 rounded-lg">
                         <h3 className="font-medium text-gray-700 mb-1">Interests</h3>
-                        <p>{profile?.interests.join(", ")}</p>
+                        <p>{profile?.interests?.join(", ")}</p>
                       </div>
                       <div className="p-4 bg-blue-50 rounded-lg">
                         <h3 className="font-medium text-gray-700 mb-1">Joined</h3>

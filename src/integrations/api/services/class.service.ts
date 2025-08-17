@@ -240,8 +240,8 @@ export const classService = {
         return api.get<Class[]>('/classes/popular');
     },
 
-    getRecommended: (userId: string): Promise<ApiResponse<ClassDetail[]>> => {
-        return api.get<ClassDetail[]>(`/classes/recommended/${userId}`);
+    getRecommended: (studentId: string): Promise<ApiResponse<ClassDetail[]>> => {
+        return api.get<ClassDetail[]>(`/classes/recommended/${studentId}`);
     },
 
     // Student-focused operations

@@ -260,7 +260,7 @@ const InviteStudentModal: React.FC<InviteStudentModalProps> = ({
         };
 
         const { data, error } = await teacherService.inviteStudentToClass(
-          user.id,
+          user.teacherId,
           inviteData
         );
 

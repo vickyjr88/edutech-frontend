@@ -264,7 +264,7 @@ const TeacherDashboard = () => {
     setIsLoading(true);
     try {
 
-      const { data, error } = await teacherService.getProfileById(user.id)
+      const { data, error } = await teacherService.getProfileById(user.teacherId)
       if (error) {
         setHasProfile(false);
         setProfileData(null);
@@ -355,7 +355,7 @@ const TeacherDashboard = () => {
     try {
       if (!user) throw new Error("User not authenticated");
 
-      const { error } = await teacherService.updateProfile(user.id,
+      const { error } = await teacherService.updateProfile(user.teacherId,
      {
           contact: profileData.contact,
           location: profileData.location,
@@ -400,7 +400,7 @@ const TeacherDashboard = () => {
     try {
       if (!user) throw new Error("User not authenticated");
       
-      const { error } = await teacherService.deleteProfile(user.id);
+      const { error } = await teacherService.deleteProfile(user.teacherId);
       if (error) throw error;
       
       toast({
@@ -504,7 +504,7 @@ const TeacherDashboard = () => {
         return;
       }
       
-      const { data, error } = await classService.getTeacherClasses(user.id);
+      const { data, error } = await classService.getTeacherClasses(user.teacherId);
       
       if (error) {
         console.error("Error fetching teacher classes:", error);
@@ -617,7 +617,7 @@ const TeacherDashboard = () => {
     
     setIsLoadingProfile(true);
     try {
-      const { data, error } = await teacherService.getProfileById(user.id);
+      const { data, error } = await teacherService.getProfileById(user.teacherId);
       if (!error && data) {
         setComprehensiveProfile(data);
       }

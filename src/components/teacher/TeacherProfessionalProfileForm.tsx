@@ -180,43 +180,43 @@ const TeacherProfessionalProfileForm = ({
       setIsLoading(true);
       
       // Fetch strategies
-      const { data: strategiesData } = await teacherService.getTeachingStrategies(user.id);
+      const { data: strategiesData } = await teacherService.getTeachingStrategies(user.teacherId);
       if (strategiesData && strategiesData.length > 0) {
         setStrategies(strategiesData);
       }
       
       // Fetch methodologies
-      const { data: methodologiesData } = await teacherService.getTeachingMethology(user.id);
+      const { data: methodologiesData } = await teacherService.getTeachingMethology(user.teacherId);
       if (methodologiesData && methodologiesData.length > 0) {
         setMethodologies(methodologiesData);
       }
       
       // Fetch academic subjects
-      const { data: academicSubjectsData } = await teacherService.getTeacherAcademicSubjects(user.id);
+      const { data: academicSubjectsData } = await teacherService.getTeacherAcademicSubjects(user.teacherId);
       if (academicSubjectsData && academicSubjectsData.length > 0) {
         setAcademicSubjects(academicSubjectsData);
       }
       
       // Fetch after-school subjects
-      const { data: afterSchoolSubjectsData } = await teacherService.getTeacherAfterSchoolSubjects(user.id);
+      const { data: afterSchoolSubjectsData } = await teacherService.getTeacherAfterSchoolSubjects(user.teacherId);
       if (afterSchoolSubjectsData && afterSchoolSubjectsData.length > 0) {
         setAfterSchoolSubjects(afterSchoolSubjectsData);
       }
       
       // Fetch technical skills
-      const { data: skillsData } = await teacherService.getTechnicalSkills(user.id);
+      const { data: skillsData } = await teacherService.getTechnicalSkills(user.teacherId);
       if (skillsData && skillsData.length > 0) {
         setTechnicalSkills(skillsData);
       }
       
       // Fetch languages
-      const { data: languagesData } = await teacherService.getLanguageExpertise(user.id);
+      const { data: languagesData } = await teacherService.getLanguageExpertise(user.teacherId);
       if (languagesData && languagesData.length > 0) {
         setLanguages(languagesData);
       }
       
       // Fetch certifications
-      const { data: certificationsData } = await teacherService.getCertifications(user.id);
+      const { data: certificationsData } = await teacherService.getCertifications(user.teacherId);
       if (certificationsData && certificationsData.length > 0) {
         setCertifications(certificationsData.map(cert => ({ 
           id: cert._id, 
@@ -262,7 +262,7 @@ const TeacherProfessionalProfileForm = ({
       setIsLoading(true);
 
 // Get all education records for this teacher
-      const { data, error } = await teacherService.getTeacherEducation(user.id);
+      const { data, error } = await teacherService.getTeacherEducation(user.teacherId);
 
       if (error) {
         throw error;
@@ -301,7 +301,7 @@ const TeacherProfessionalProfileForm = ({
     try {
       if (!user) return;
       
-      const experienceRecords = await fetchExperienceRecords(user.id);
+      const experienceRecords = await fetchExperienceRecords(user.teacherId);
       
       if (experienceRecords.length > 0) {
         setExperience(experienceRecords);
@@ -492,7 +492,7 @@ const TeacherProfessionalProfileForm = ({
     
     try {
       // Mark the profile as complete
-      const { data, error } = await teacherService.updateProfile(user.id, {
+      const { data, error } = await teacherService.updateProfile(user.teacherId, {
         isProfileComplete: true
       });
       

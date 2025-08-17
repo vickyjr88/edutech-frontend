@@ -44,7 +44,7 @@ const LanguagesStep = ({ languages, setLanguages }: LanguagesStepProps) => {
     
     setIsLoading(true);
     try {
-      const languageItems = await fetchLanguages(user.id);
+      const languageItems = await fetchLanguages(user.teacherId);
       setLanguages(languageItems);
     } catch (error) {
       console.error("Error loading languages:", error);
@@ -89,7 +89,7 @@ const LanguagesStep = ({ languages, setLanguages }: LanguagesStepProps) => {
           isCertified: values.isCertified
         };
 
-        const { success, error } = await updateLanguage(user.id,updatedLanguage);
+        const { success, error } = await updateLanguage(user.teacherId,updatedLanguage);
 
         if (success) {
           setLanguages(prev => prev.map(item => 
@@ -114,7 +114,7 @@ const LanguagesStep = ({ languages, setLanguages }: LanguagesStepProps) => {
           isCertified: values.isCertified
         };
 
-        const { success, _id, error } = await saveLanguage(user.id, newLanguage);
+        const { success, _id, error } = await saveLanguage(user.teacherId, newLanguage);
 
         if (success && _id) {
           newLanguage._id = _id;
@@ -158,7 +158,7 @@ const LanguagesStep = ({ languages, setLanguages }: LanguagesStepProps) => {
 
     setIsLoading(true);
     try {
-      const { success, error } = await deleteLanguage(user.id,id);
+      const { success, error } = await deleteLanguage(user.teacherId,id);
 
       if (success) {
         setLanguages(prev => prev.filter(item => item._id !== id));

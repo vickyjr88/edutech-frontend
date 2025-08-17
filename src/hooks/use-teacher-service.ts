@@ -2,6 +2,7 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { teacherService } from '../integrations/api/services/teacher.service';
 import { QueryClient } from '@tanstack/react-query';
 import { useTeacherId } from './useTeacherId';
+import { useStudentId } from './useStudentId';
 
 const queryClient = new QueryClient();
 
@@ -15,10 +16,19 @@ export const useCreateTeacherProfile = () => {
   });
 };
 
-export const useGetAllTeacherProfiles = () => {
+export const useGetAllTeacherProfiles = (studentId?: string) => {
   return useQuery({
-    queryKey: ['teacherProfiles'],
-    queryFn: () => teacherService.getAllProfiles(),
+    queryKey: ['teacherProfiles', studentId],
+    queryFn: () => teacherService.getAllProfiles(studentId),
+  });
+};
+
+export const useGetTeachersForCurrentStudent = () => {
+  const { studentId } = useStudentId();
+  return useQuery({
+    queryKey: ['teacherProfilesForStudent', studentId],
+    queryFn: () => teacherService.getAllProfiles(studentId),
+    enabled: !!studentId,
   });
 };
 

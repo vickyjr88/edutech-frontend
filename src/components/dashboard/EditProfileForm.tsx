@@ -21,7 +21,7 @@ export const EditProfileForm = ({ profile, onClose }: EditProfileFormProps) => {
     aboutMe: profile?.aboutMe || "",
   });
 
-  const updateProfileMutation = useUpdateStudentProfile(user.id);
+  const updateProfileMutation = useUpdateStudentProfile(user.studentId || user.id);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;

@@ -8,6 +8,7 @@ import { Search, MapPin, BookOpen, Star, Award, GraduationCap, AlertCircle } fro
 import { Badge } from "@/components/ui/badge";
 import { teacherService, TeacherProfile } from "@/integrations/api/services/teacher.service";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface Teacher {
   id: string;
@@ -36,6 +37,7 @@ interface Teacher {
 }
 
 const TeacherProfilesPage = () => {
+  const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
   const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [filteredTeachers, setFilteredTeachers] = useState<Teacher[]>([]);
@@ -47,7 +49,7 @@ const TeacherProfilesPage = () => {
     const fetchTeachers = async () => {
       try {
         setLoading(true);
-        const { data, error } = await teacherService.getAllProfiles();
+        const { data, error } = await teacherService.getAllProfiles(user?.studentId);
         
         if (error) {
           throw new Error(error.message || "Failed to fetch teachers");
@@ -77,7 +79,7 @@ const TeacherProfilesPage = () => {
     };
 
     fetchTeachers();
-  }, []);
+  }, [user?.studentId]);
 
   // Transform API teacher data to our component format
   const transformTeacherData = (apiTeacher: any): Teacher => {

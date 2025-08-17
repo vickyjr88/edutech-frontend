@@ -492,8 +492,8 @@ export const ProfileJourneyProvider = ({ children }: { children: ReactNode }) =>
         }
         
         // Call API to update teacher profile if we have teacher-specific data and a teacherId
-        if (Object.keys(teacherData).length > 0 && user.id) {
-          const teacherResponse = await teacherService.updateProfile(user.id, teacherData);
+        if (Object.keys(teacherData).length > 0 && user.teacherId) {
+          const teacherResponse = await teacherService.updateProfile(user.teacherId, teacherData);
           
           if (teacherResponse.error) {
             console.error("Error updating teacher profile:", teacherResponse.error);
@@ -532,7 +532,7 @@ export const ProfileJourneyProvider = ({ children }: { children: ReactNode }) =>
         return false;
       }
 
-      const teacherId = user.id;
+      const teacherId = user.teacherId;
       console.log("Saving education for teacher:", teacherId);
       console.log("Education items to save:", education);
 
@@ -608,7 +608,7 @@ export const ProfileJourneyProvider = ({ children }: { children: ReactNode }) =>
         return false;
       }
 
-      const teacherId = user.id;
+      const teacherId = user.teacherId;
       console.log("Saving experience for teacher:", teacherId);
       
       // Use provided data or fall back to context state
@@ -691,7 +691,7 @@ export const ProfileJourneyProvider = ({ children }: { children: ReactNode }) =>
         return false;
       }
 
-      const teacherId = user.id;
+      const teacherId = user.teacherId;
       console.log("Saving subjects for teacher:", teacherId);
       
       const academicToSave = academicSubjectsData || academicSubjects;
@@ -808,7 +808,7 @@ export const ProfileJourneyProvider = ({ children }: { children: ReactNode }) =>
         return false;
       }
 
-      const teacherId = user.id;
+      const teacherId = user.teacherId;
       console.log("Saving languages for teacher:", teacherId);
 
       
@@ -885,7 +885,7 @@ export const ProfileJourneyProvider = ({ children }: { children: ReactNode }) =>
         return false;
       }
 
-      const teacherId = user.id;
+      const teacherId = user.teacherId;
       console.log("Saving technical skills for teacher:", teacherId);
       
       // Use provided data or fall back to context state
@@ -976,7 +976,7 @@ export const ProfileJourneyProvider = ({ children }: { children: ReactNode }) =>
         };
         
         // Call API to update profile
-        const { error } = await teacherService.updateProfile(user.id, apiData);
+        const { error } = await teacherService.updateProfile(user.teacherId, apiData);
         
         if (error) {
           console.error("Error updating location info:", error);
@@ -1019,7 +1019,7 @@ export const ProfileJourneyProvider = ({ children }: { children: ReactNode }) =>
         };
         
         // Call API to update profile
-        const { error } = await teacherService.updateProfile(user.id, apiData);
+        const { error } = await teacherService.updateProfile(user.teacherId, apiData);
         
         if (error) {
           console.error("Error updating verification info:", error);
@@ -1068,7 +1068,7 @@ export const ProfileJourneyProvider = ({ children }: { children: ReactNode }) =>
         // Only make the API call if we have data to update
         if (Object.keys(apiData).length > 0) {
           // Call API to update profile
-          const { error } = await teacherService.updateProfile(user.id, apiData);
+          const { error } = await teacherService.updateProfile(user.teacherId, apiData);
           
           if (error) {
             console.error("Error updating platform settings:", error);
@@ -1232,7 +1232,7 @@ export const ProfileJourneyProvider = ({ children }: { children: ReactNode }) =>
       console.log("All steps completed, marking teacher profile as complete");
       
       // Automatically mark the teacher profile as complete
-      teacherService.updateProfile(user.id, {
+      teacherService.updateProfile(user.teacherId, {
         isProfileComplete: true
       }).then(({ error }) => {
         if (error) {
@@ -1266,7 +1266,7 @@ export const ProfileJourneyProvider = ({ children }: { children: ReactNode }) =>
       
       try {
         // Load teacher profile
-        const { data: profileData } = await teacherService.getProfileById(user.id);
+        const { data: profileData } = await teacherService.getProfileById(user.teacherId);
         console.log("Loaded teacher profile:", profileData);
         if (profileData) {
           // User info is nested in the user property
@@ -1588,7 +1588,7 @@ export const ProfileJourneyProvider = ({ children }: { children: ReactNode }) =>
           }
           
           // Only fetch data separately if not included in profile response
-          const teacherId = user.id;
+          const teacherId = user.teacherId;
           
           // Load education if not already loaded
           if (!hasLoadedEducation) {

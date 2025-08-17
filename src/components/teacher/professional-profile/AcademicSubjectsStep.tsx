@@ -67,7 +67,7 @@ const AcademicSubjectsStep = ({ subjects, setSubjects, onSubjectsChange }: Acade
     setIsLoading(true);
     try {
       if (user?.teacherId) {
-        console.log("Fetching academic subjects for teacher:", user.id);
+        console.log("Fetching academic subjects for teacher:", user.teacherId);
         const data = await fetchAcademicSubjects();
         console.log("Received subjects:", data);
         

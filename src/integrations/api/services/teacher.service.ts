@@ -227,8 +227,9 @@ export const teacherService = {
         return api.post<TeacherProfile>('/teachers', data);
     },
 
-    getAllProfiles: (): Promise<ApiResponse<TeacherProfile[]>> => {
-        return api.get<TeacherProfile[]>('/teachers');
+    getAllProfiles: (studentId?: string): Promise<ApiResponse<TeacherProfile[]>> => {
+        const params = studentId ? { studentId } : {};
+        return api.get<TeacherProfile[]>('/teachers', { params });
     },
 
     getCurrentProfile: (): Promise<ApiResponse<TeacherProfile>> => {

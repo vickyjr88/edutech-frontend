@@ -96,7 +96,7 @@ export interface UpcomingSession {
 
 export const studentService = {
     getProfile: (studentId: string): Promise<ApiResponse<Student>> => {
-        return api.get<Student>(`/students/profiles/${studentId}`);
+        return api.get<Student>(`/users/profile`);
     },
 
     getProfileByUserId: (userId: string): Promise<ApiResponse<Student>> => {
