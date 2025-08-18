@@ -1,6 +1,7 @@
 import { ory } from '../lib/ory'; // Import ory from lib/ory
 import axios from 'axios';
 import { api } from '../integrations/api/client';
+import { s } from 'node_modules/framer-motion/dist/types.d-DSjX-LJB';
 
 // Removed: import { getOryBaseUrl } from '../lib/ory';
 
@@ -143,7 +144,7 @@ class AuthService {
               localStorage.setItem('kidato_user', JSON.stringify(legacyResponse.user));
               localStorage.setItem('kidato_access_token', legacyResponse.accessToken);
               localStorage.setItem('kidato_refresh_token', legacyResponse.refreshToken);
-              return {
+              const resp =  {
                 data: {
                   user: {
                     id: legacyResponse.user.id,
@@ -159,6 +160,8 @@ class AuthService {
                   legacy: true
                 }
               };
+              const session = await this.getCurrentSession();
+              return resp;
             } else {
               throw new Error('Legacy login response missing tokens or user data.');
             }
@@ -176,7 +179,9 @@ class AuthService {
 
       // On successful Ory login, fetch session and return AuthResponse
       const session = await this.getCurrentSession();
-      if (session) {
+      const storedUser = localStorage.getItem('kidato_user');
+      const isLegacyUser = storedUser ? JSON.parse(storedUser).legacy : false;
+      if (session && !isLegacyUser) {
         const backendUser = await this.getBackendUserByOryId(session.identity.id);
         return { 
           data: { 
@@ -195,7 +200,7 @@ class AuthService {
           } 
         };
       }
-      throw new Error('No session returned from Ory login');
+      // throw new Error('No session returned from Ory login');
     } catch (error: any) {
       console.error('Login flow submission failed:', error);
       throw error;
@@ -504,7 +509,12 @@ class AuthService {
       // If submitLoginFlow returned data (either Ory or legacy success)
       if (authResponse.data) {
         // If it's an Ory session, set it
-        if (authResponse.data.session) {
+        const kidatoAccessToken = localStorage.getItem('kidato_access_token');
+        const storedUser = localStorage.getItem('kidato_user');
+        const isLegacyUser = storedUser ? JSON.parse(storedUser).legacy : false;
+        console.log('kidatoAccessToken', kidatoAccessToken);
+        console.log('storedUser', storedUser);
+        if (authResponse.data.session && !isLegacyUser) {
           const session = authResponse.data.session;
           const backendUser = await this.getBackendUserByOryId(session.identity.id);
           this.setSession({ 
@@ -622,6 +632,7 @@ class AuthService {
   // Backend user management for Ory integration
   async getBackendUserByOryId(oryIdentityId: string) {
     try {
+      console.log('Fetching backend user by Ory ID:', oryIdentityId);
       const response = await api.get(`/users/by-ory-id/${oryIdentityId}`);
       
       // If we get tokens, persist them for legacy API compatibility

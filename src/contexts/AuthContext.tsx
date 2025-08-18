@@ -162,7 +162,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             ...session,
             expires_at: typeof session.expires_at === 'string' ? new Date(session.expires_at) : session.expires_at,
           };
-          await constructAndPersistUser(fixedSession as Session);
+          const storedUser = localStorage.getItem('kidato_user');
+          const isLegacyUser = storedUser ? JSON.parse(storedUser).legacy : false;
+          if(!isLegacyUser) await constructAndPersistUser(fixedSession as Session);
         } else {
           console.log('No session found, clearing user data');
           clearUserData();

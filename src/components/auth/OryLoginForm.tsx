@@ -100,7 +100,6 @@ export const OryLoginForm: React.FC<OryLoginFormProps> = ({ onSuccess, redirectT
           description: 'You have successfully logged in with Google.',
         });
         
-        setTimeout(() => {
           const userRole = result.session?.identity?.traits?.role || result.user?.role;
           if (userRole === 'teacher') {
             window.location.href = '/teacher-dashboard';
@@ -111,7 +110,6 @@ export const OryLoginForm: React.FC<OryLoginFormProps> = ({ onSuccess, redirectT
           } else {
             window.location.href = '/dashboard';
           }
-        }, 300);
       }
 
       // Handle flow errors
@@ -205,7 +203,6 @@ export const OryLoginForm: React.FC<OryLoginFormProps> = ({ onSuccess, redirectT
         console.log('About to navigate to /dashboard');
         // Force a hard redirect to bypass React Router navigation issues
         
-        setTimeout(() => {
           // Handle role-based redirection
           const userRole = result.data.session?.identity?.traits?.role || result.data.user?.role;
 
@@ -220,7 +217,6 @@ export const OryLoginForm: React.FC<OryLoginFormProps> = ({ onSuccess, redirectT
           } else {
             window.location.href = '/dashboard';
           }
-          }, 300);
       } else {
         console.log('No session found in result:', result);
         throw new Error('Login failed - no session returned');
