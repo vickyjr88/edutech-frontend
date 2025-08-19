@@ -119,7 +119,7 @@ const TeacherDashboard = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
-  const { user, signOut } = useAuth();
+  const { user, signOut, isLoading: authLoading } = useAuth();
   const { show } = useIntercom();
   
   // Parse the active tab from the URL
@@ -178,13 +178,14 @@ const TeacherDashboard = () => {
   const [showEnrollStudents, setShowEnrollStudents] = useState(location.pathname.includes('/teacher-dashboard/students') && location.search.includes('enroll=true'));
   const [currentWeek, setCurrentWeek] = useState(new Date());
 
-  // Teacher data hooks for schedule
+  // Teacher data hooks for schedule - only call when user is loaded and has teacherId
+  const shouldFetchData = !authLoading && !!user?.teacherId;
   const { upcomingSessions, loading: sessionsLoading, error: sessionsError, refetch: refetchSessions } = useTeacherUpcomingSessions({
-    teacherId: user?.teacherId || '',
+    teacherId: shouldFetchData ? user.teacherId : '',
   });
   
   const { summaryData, loading: summaryLoading, error: summaryError, refetch: refetchSummary } = useTeacherSummary({
-    teacherId: user?.teacherId || '',
+    teacherId: shouldFetchData ? user.teacherId : '',
   });
 
   // Prepare schedule data
@@ -226,12 +227,12 @@ const TeacherDashboard = () => {
   }, [classes]);
 
   useEffect(() => {
-    if (user) {
+    if (user && !authLoading) {
       fetchTeacherProfile();
       fetchTeacherClasses();
       fetchComprehensiveProfile();
     }
-  }, [user]);
+  }, [user, authLoading]);
 
   // Handle integration connection success
   useEffect(() => {
@@ -261,6 +262,11 @@ const TeacherDashboard = () => {
   }, [location.search, toast, navigate]);
 
   const fetchTeacherProfile = async () => {
+    if (!user?.teacherId) {
+      setIsLoading(false);
+      return;
+    }
+    
     setIsLoading(true);
     try {
 
@@ -485,8 +491,10 @@ const TeacherDashboard = () => {
   };
 
   const handleClassCreated = (classData: any) => {
-    // Refresh classes from API instead of manually adding to the array
-    fetchTeacherClasses();
+    if (user && !authLoading) {
+      // Refresh classes from API instead of manually adding to the array
+      fetchTeacherClasses();
+    }
     
     toast({
       title: "Class created successfully",
@@ -496,13 +504,14 @@ const TeacherDashboard = () => {
   };
 
   const fetchTeacherClasses = async () => {
+    if (!user?.teacherId) {
+      console.error("No teacher ID available");
+      setIsLoading(false);
+      return;
+    }
+    
     setIsLoading(true);
     try {
-      if (!user?.teacherId) {
-        console.error("No teacher ID available");
-        setIsLoading(false);
-        return;
-      }
       
       const { data, error } = await classService.getTeacherClasses(user.teacherId);
       
@@ -591,9 +600,11 @@ const TeacherDashboard = () => {
         return;
       }
       
-      // Refresh the classes list
-      await fetchTeacherClasses();
-      
+      if (user && !authLoading) {
+        // Refresh the classes list
+        await fetchTeacherClasses();
+      }
+
       toast({
         title: "Class deleted",
         description: `"${className}" has been deleted successfully.`,
@@ -613,7 +624,10 @@ const TeacherDashboard = () => {
 
   // Fetch comprehensive teacher profile data
   const fetchComprehensiveProfile = async () => {
-    if (!user?.teacherId) return;
+    if (!user?.teacherId) {
+      setIsLoadingProfile(false);
+      return;
+    }
     
     setIsLoadingProfile(true);
     try {
@@ -1166,13 +1180,13 @@ const TeacherDashboard = () => {
         </header>
 
         <main className="flex-1 p-6 overflow-y-auto">
-          {isLoading && (
+          {(isLoading || authLoading) && (
             <div className="flex items-center justify-center h-64">
               <p className="text-gray-500">Loading...</p>
             </div>
           )}
 
-          {!isLoading && activeTab === "settings" && isEditing && (
+          {!isLoading && !authLoading && activeTab === "settings" && isEditing && (
             <div className="max-w-3xl mx-auto">
               <TeacherProfileForm
                 onSubmit={handleProfileSubmit}
@@ -1189,7 +1203,7 @@ const TeacherDashboard = () => {
             </div>
           )}
 
-          {!isLoading && activeTab === "settings" && showProfessionalForm && (
+          {!isLoading && !authLoading && activeTab === "settings" && showProfessionalForm && (
             <div className="max-w-4xl mx-auto">
               <TeacherProfessionalProfileForm
                 onComplete={handleProfessionalProfileComplete}
@@ -1198,7 +1212,7 @@ const TeacherDashboard = () => {
             </div>
           )}
 
-          {!isLoading && activeTab === "settings" && showClassSetupForm && (
+          {!isLoading && !authLoading && activeTab === "settings" && showClassSetupForm && (
             <div className="max-w-4xl mx-auto">
               <ClassSetupForm
                 onComplete={handleCompleteClassSetup}
@@ -1207,7 +1221,7 @@ const TeacherDashboard = () => {
             </div>
           )}
 
-          {!isLoading && activeTab === "classes" && showCreateClassForm && (
+          {!isLoading && !authLoading && activeTab === "classes" && showCreateClassForm && (
             <div className="max-w-7xl mx-auto">
               <EnhancedClassSetup
                 onSubmit={handleClassCreated}
@@ -1220,7 +1234,7 @@ const TeacherDashboard = () => {
             </div>
           )}
 
-          {!isLoading && activeTab === "settings" && !isEditing && !showProfessionalForm && !showClassSetupForm && (
+          {!isLoading && !authLoading && activeTab === "settings" && !isEditing && !showProfessionalForm && !showClassSetupForm && (
             <div className="max-w-3xl mx-auto space-y-6">
               <Card>
                 <CardHeader>
@@ -1363,7 +1377,7 @@ const TeacherDashboard = () => {
             </div>
           )}
 
-          {!isLoading && activeTab === "dashboard" && (
+          {!isLoading && !authLoading && activeTab === "dashboard" && (
             <div className="space-y-6">
               {!hasProfile || classes.length === 0 ? (
                 <TeacherOnboardingDashboard
@@ -1404,7 +1418,7 @@ const TeacherDashboard = () => {
             />
           )}
 
-          {!isLoading && activeTab === "students" && !showEnrollStudents && (
+          {!isLoading && !authLoading && activeTab === "students" && !showEnrollStudents && (
             <>
               {classes.length === 0 ? (
                 <TeacherOnboardingDashboard
@@ -1429,7 +1443,7 @@ const TeacherDashboard = () => {
             </>
           )}
 
-          {!isLoading && activeTab === "enrollment" && (
+          {!isLoading && !authLoading && activeTab === "enrollment" && (
             <div className="space-y-6">
               {selectedClass ? (
                 <>
@@ -1449,7 +1463,7 @@ const TeacherDashboard = () => {
             </div>
           )}
 
-          {!isLoading && activeTab === "schedule" && (
+          {!isLoading && !authLoading && activeTab === "schedule" && (
             <>
               {classes.length === 0 ? (
                 <TeacherOnboardingDashboard

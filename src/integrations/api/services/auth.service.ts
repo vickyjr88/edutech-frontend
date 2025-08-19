@@ -59,8 +59,8 @@ class AuthService {
             if (response.data) {
                 this.setSession({
                     user: response.data.user,
-                    token: response.data['accessToken'],
-                    refreshToken: response.data['refreshToken'],
+                    token: response.data.accessToken,
+                    refreshToken: response.data.refreshToken,
                     expiresAt: this.calculateExpiryTime(24) // Assuming 24 hour token
                 });
             }
@@ -127,7 +127,7 @@ class AuthService {
             if (response.data) {
                 this.setSession({
                     user: response.data.user,
-                    token: response.data.token,
+                    token: response.data.accessToken,
                     refreshToken: response.data.refreshToken,
                     expiresAt: this.calculateExpiryTime(24)
                 });
@@ -288,6 +288,14 @@ class AuthService {
             localStorage.setItem(SESSION_KEY, JSON.stringify(session));
             localStorage.setItem(TOKEN_KEY, session.token);
             localStorage.setItem(REFRESH_KEY, session.refreshToken);
+            const user = localStorage.getItem('kidato_user');
+            if (user) {
+                const userObj = JSON.parse(user);
+                userObj.teacherId = session.user.teacherId;
+                userObj.studentId = session.user.studentId;
+                userObj.parentId = session.user.parentId;
+                localStorage.setItem('kidato_user', JSON.stringify(userObj));
+            }
         }
 
         // Notify listeners

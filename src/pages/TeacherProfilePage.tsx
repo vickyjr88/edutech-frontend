@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { teacherService } from "@/integrations/api/services/teacher.service";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 // Transform API teacher data to a format that works with our components
 const transformTeacherData = (apiTeacher: any): any => {
@@ -228,14 +229,14 @@ const transformTeacherData = (apiTeacher: any): any => {
 };
 
 const TeacherProfilePage = () => {
-  const { teacherId } = useParams<{ teacherId: string }>();
+  const { signOut, user } = useAuth();
   const [teacher, setTeacher] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchTeacher = async () => {
-      if (!teacherId) {
+      if (!user?.teacherId) {
         setError("No teacher ID provided");
         setLoading(false);
         return;
@@ -243,7 +244,7 @@ const TeacherProfilePage = () => {
 
       try {
         setLoading(true);
-        const { data, error: apiError } = await teacherService.getProfileById(teacherId);
+        const { data, error: apiError } = await teacherService.getProfileById(user?.teacherId);
         
         if (apiError) {
           throw new Error(apiError.message || "Failed to load teacher profile");
@@ -267,7 +268,7 @@ const TeacherProfilePage = () => {
     };
 
     fetchTeacher();
-  }, [teacherId]);
+  }, [user]);
 
   if (loading) {
     return (

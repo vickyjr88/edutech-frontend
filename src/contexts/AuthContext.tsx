@@ -23,8 +23,7 @@ interface AuthContextType {
   session: Session | null;
   isLoading: boolean;
   signOut: () => Promise<void>;
-  updateUserAndTokens: (data: { user: { id: string, teacherId: string, studentId: string,  parentId: string }; accessToken: string; refreshToken: string }) => void;
-}
+  updateUserAndTokens: (data: { user: { id: string, teacherId: string, studentId: string,  parentId: string }; accessToken: string; refreshToken: string }) => void;}
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -97,6 +96,53 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Helper function to get or create backend user from Ory session
   const getOrCreateBackendUser = async (session: Session) => {
     try {
+      // Check if this is a legacy user session (indicated by stored tokens)
+      const storedAccessToken = localStorage.getItem('kidato_access_token');
+      const storedRefreshToken = localStorage.getItem('kidato_refresh_token');
+      const storedUser = localStorage.getItem('kidato_user');
+      
+      if (storedAccessToken && storedRefreshToken && storedUser) {
+        try {
+          const user = JSON.parse(storedUser);
+          // Try to refresh the legacy tokens to get updated user data with teacherId
+          const refreshResponse = await fetch(`${import.meta.env.VITE_API_URL}/auth/refresh-token`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ refreshToken: storedRefreshToken }),
+          });
+          
+          if (refreshResponse.ok) {
+            const refreshData = await refreshResponse.json();
+            if (refreshData.user && refreshData.accessToken && refreshData.refreshToken) {
+              // Update localStorage with fresh tokens and user data
+              localStorage.setItem('kidato_access_token', refreshData.accessToken);
+              localStorage.setItem('kidato_refresh_token', refreshData.refreshToken);
+              localStorage.setItem('kidato_user', JSON.stringify(refreshData.user));
+              
+              return {
+                id: refreshData.user.id,
+                teacherId: refreshData.user.teacherId,
+                studentId: refreshData.user.studentId,
+                parentId: refreshData.user.parentId,
+              };
+            }
+          }
+          
+          // If refresh fails but we have stored user data, use it
+          return {
+            id: user.id,
+            teacherId: user.teacherId,
+            studentId: user.studentId,  
+            parentId: user.parentId,
+          };
+        } catch (error) {
+          console.error('Error refreshing legacy tokens:', error);
+        }
+      }
+      
+      // For Ory users, use the existing logic
       // First, try to find existing user by Ory identity ID
       const existingUserResponse = await authService.getBackendUserByOryId(session.identity.id);
       if (existingUserResponse?.user) {

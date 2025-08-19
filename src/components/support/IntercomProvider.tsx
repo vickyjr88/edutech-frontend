@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { Intercom } from '@intercom/messenger-js-sdk';
 import { IntercomSettings, IntercomUser, IntercomCompany, IntercomConfig } from './types';
+import { useAuth } from '@/contexts/AuthContext';
+import { getLearniverseUserData, getRoleSpecificSettings } from './IntercomConfig';
 
 interface IntercomContextType {
   isLoaded: boolean;
@@ -21,32 +23,47 @@ const IntercomContext = createContext<IntercomContextType | null>(null);
 interface IntercomProviderProps {
   children: ReactNode;
   config: IntercomConfig;
-  user?: IntercomUser;
-  company?: IntercomCompany;
   autoboot?: boolean;
 }
 
 export const IntercomProvider: React.FC<IntercomProviderProps> = ({
   children,
   config,
-  user,
-  company,
   autoboot = true
 }) => {
   const [isLoaded, setIsLoaded] = useState(false);
+  const { user, isLoading } = useAuth();
 
   useEffect(() => {
     const initializeIntercom = async () => {
+      console.log("From intercom", user)
+      // Don't initialize until auth is complete
+      if (isLoading) {
+        return;
+      }
+
+      // Only initialize for authenticated users (not for public pages)
+      if (!user) {
+        return;
+      }
+
       try {
-        // Initialize Intercom
+        // Get role-specific data from our user object
+        const userRole = user.role as any;
+        const userData = getLearniverseUserData(user, userRole);
+        
+        // Initialize Intercom with authenticated user data
         await Intercom({
           app_id: config.appId,
-          ...user,
-          company,
+          ...userData,
           custom_attributes: {
-            ...user?.custom_attributes,
-            user_role: getUserRole(),
-            platform: 'learniverse'
+            ...userData.custom_attributes,
+            user_role: userRole,
+            platform: 'learniverse',
+            user_id: user.id,
+            teacher_id: user.teacherId,
+            student_id: user.studentId,
+            parent_id: user.parentId
           }
         });
 
@@ -57,42 +74,41 @@ export const IntercomProvider: React.FC<IntercomProviderProps> = ({
           boot();
         }
       } catch (error) {
+        setIsLoaded(false);
         console.error('Failed to initialize Intercom:', error);
       }
     };
 
-    if (config.appId) {
+    if (config.appId && import.meta.env.MODE !== 'development') {
       initializeIntercom();
     }
 
-    // Cleanup on unmount
+    // Cleanup when user logs out or component unmounts
     return () => {
       if (window.Intercom) {
         window.Intercom('shutdown');
+        setIsLoaded(false);
       }
     };
-  }, [config.appId, user, company, autoboot]);
+  }, [config.appId, user, isLoading, autoboot]);
 
-  const getUserRole = (): string => {
-    // This would typically come from your auth context
-    // For now, we'll determine based on URL or user data
-    const path = window.location.pathname;
-    if (path.includes('/teacher')) return 'teacher';
-    if (path.includes('/parent')) return 'parent';
-    if (path.includes('/student')) return 'student';
-    return 'visitor';
-  };
 
   const boot = (settings?: Partial<IntercomSettings>) => {
-    if (window.Intercom) {
+    if (window.Intercom && user) {
+      const userRole = user.role as any;
+      const userData = getLearniverseUserData(user, userRole);
+      
       window.Intercom('boot', {
         app_id: config.appId,
-        ...user,
-        company,
+        ...userData,
         custom_attributes: {
-          ...user?.custom_attributes,
-          user_role: getUserRole(),
-          platform: 'learniverse'
+          ...userData.custom_attributes,
+          user_role: userRole,
+          platform: 'learniverse',
+          user_id: user.id,
+          teacher_id: user.teacherId,
+          student_id: user.studentId,
+          parent_id: user.parentId
         },
         ...settings
       });
@@ -107,14 +123,20 @@ export const IntercomProvider: React.FC<IntercomProviderProps> = ({
   };
 
   const update = (settings?: Partial<IntercomSettings>) => {
-    if (window.Intercom) {
+    if (window.Intercom && user) {
+      const userRole = user.role as any;
+      const userData = getLearniverseUserData(user, userRole);
+      
       window.Intercom('update', {
-        ...user,
-        company,
+        ...userData,
         custom_attributes: {
-          ...user?.custom_attributes,
-          user_role: getUserRole(),
-          platform: 'learniverse'
+          ...userData.custom_attributes,
+          user_role: userRole,
+          platform: 'learniverse',
+          user_id: user.id,
+          teacher_id: user.teacherId,
+          student_id: user.studentId,
+          parent_id: user.parentId
         },
         ...settings
       });

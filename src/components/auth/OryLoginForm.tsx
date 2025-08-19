@@ -94,7 +94,7 @@ export const OryLoginForm: React.FC<OryLoginFormProps> = ({ onSuccess, redirectT
       }
 
       // If we get a session directly (shouldn't happen with OAuth)
-      if (result.session || result.legacy) {
+      if (result.session) {
         toast({
           title: 'Welcome back!',
           description: 'You have successfully logged in with Google.',
