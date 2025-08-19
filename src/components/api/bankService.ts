@@ -2,6 +2,8 @@
  * Bank service functions for fetching bank data from the API
  */
 
+import api from '../../lib/axios';
+
 interface Bank {
   id: string;
   name: string;
@@ -17,19 +19,15 @@ interface Country {
  * @returns Promise with an array of countries
  */
 export async function fetchSupportedCountries(): Promise<Country[]> {
-  const response = await fetch('/api/countries');
-  
-  // Check if response is JSON
-  const contentType = response.headers.get('content-type');
-  if (!contentType || !contentType.includes('application/json')) {
-    throw new Error(`Expected JSON response but got ${contentType}`);
+  try {
+    const response = await api.get('/api/countries');
+    return response.data;
+  } catch (error: any) {
+    if (error.response) {
+      throw new Error(`Error fetching countries: ${error.response.status} ${error.response.statusText}`);
+    }
+    throw new Error('Network error while fetching countries');
   }
-  
-  if (!response.ok) {
-    throw new Error(`Error fetching countries: ${response.status} ${response.statusText}`);
-  }
-  
-  return await response.json();
 }
 
 /**
@@ -42,23 +40,19 @@ export async function fetchBanksForCountry(countryCode: string): Promise<Bank[]>
     return [];
   }
   
-  const response = await fetch(`/api/banks/country/${countryCode}`);
-  
-  // Check if response is JSON
-  const contentType = response.headers.get('content-type');
-  if (!contentType || !contentType.includes('application/json')) {
-    throw new Error(`Expected JSON response but got ${contentType}`);
+  try {
+    const response = await api.get(`/api/banks/country/${countryCode}`);
+    const data = response.data;
+    
+    // Map the API response to our internal format
+    return data.map((bank: any) => ({
+      id: bank._id,
+      name: bank.bankName
+    }));
+  } catch (error: any) {
+    if (error.response) {
+      throw new Error(`Error fetching banks: ${error.response.status} ${error.response.statusText}`);
+    }
+    throw new Error('Network error while fetching banks');
   }
-  
-  if (!response.ok) {
-    throw new Error(`Error fetching banks: ${response.status} ${response.statusText}`);
-  }
-  
-  const data = await response.json();
-  
-  // Map the API response to our internal format
-  return data.map((bank: any) => ({
-    id: bank._id,
-    name: bank.bankName
-  }));
 }

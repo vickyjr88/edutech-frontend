@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import api from '@/lib/axios';
 import FinancialOverviewCard from '@/components/teachers/FinancialOverviewCard';
 import {
   Activity as ActivityIcon,
@@ -237,24 +238,13 @@ const TeacherCommandCenter: React.FC = () => {
     setIsStartingEarly(true);
     
     try {
-      const response = await fetch(`/api/classes/${session.classId}/${session.sessionId}/start-early`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${user?.token}` // Assuming token is available
-        },
-        body: JSON.stringify({
-          teacherId: user?.teacherId,
-          sessionId: session.sessionId,
-          classId: session.classId
-        })
+      const response = await api.post(`/api/classes/${session.classId}/${session.sessionId}/start-early`, {
+        teacherId: user?.teacherId,
+        sessionId: session.sessionId,
+        classId: session.classId
       });
       
-      if (!response.ok) {
-        throw new Error('Failed to start class early');
-      }
-      
-      const result = await response.json();
+      const result = response.data;
       
       // Update local state with real session data
       setIsLive(true);

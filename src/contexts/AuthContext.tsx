@@ -2,6 +2,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode, useRef } from "react";
 import { Session } from "@ory/client-fetch";
 import { authService } from "../services/auth.service";
+import api from "../lib/axios";
 
 interface User {
   id: string;
@@ -23,7 +24,9 @@ interface AuthContextType {
   session: Session | null;
   isLoading: boolean;
   signOut: () => Promise<void>;
-  updateUserAndTokens: (data: { user: { id: string, teacherId: string, studentId: string,  parentId: string }; accessToken: string; refreshToken: string }) => void;}
+  updateUserAndTokens: (data: { user: { id: string, teacherId: string, studentId: string,  parentId: string }; accessToken: string; refreshToken: string }) => void;
+  retryBackendUserFetch: () => Promise<void>;
+}
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -105,16 +108,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         try {
           const user = JSON.parse(storedUser);
           // Try to refresh the legacy tokens to get updated user data with teacherId
-          const refreshResponse = await fetch(`${import.meta.env.VITE_API_URL}/auth/refresh-token`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ refreshToken: storedRefreshToken }),
+          const refreshResponse = await api.post('/auth/refresh-token', {
+            refreshToken: storedRefreshToken
           });
           
-          if (refreshResponse.ok) {
-            const refreshData = await refreshResponse.json();
+          if (refreshResponse.status === 200) {
+            const refreshData = refreshResponse.data;
             if (refreshData.user && refreshData.accessToken && refreshData.refreshToken) {
               // Update localStorage with fresh tokens and user data
               localStorage.setItem('kidato_access_token', refreshData.accessToken);
@@ -237,8 +236,81 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const retryBackendUserFetch = async () => {
+    if (!session && !user) {
+      console.error('No active session or user to retry backend user fetch');
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      console.log('Retrying backend user fetch...');
+      
+      // First, check if this is a role/profile mismatch issue for Ory users
+      if (user && user.oryIdentityId) {
+        const roleProfileMismatch = 
+          (user.role === 'teacher' && user.studentId && !user.teacherId) ||
+          (user.role === 'student' && user.teacherId && !user.studentId) ||
+          (user.role === 'parent' && (user.teacherId || user.studentId) && !user.parentId);
+        
+        if (roleProfileMismatch) {
+          console.log('Detected role/profile mismatch, calling fix endpoint...');
+          try {
+            const fixResponse = await api.post(`/api/v1/users/fix-profile-mismatch/${user.oryIdentityId}`);
+            
+            if (fixResponse.status === 200 || fixResponse.status === 201) {
+              const fixData = fixResponse.data;
+              console.log('Profile mismatch fixed:', fixData);
+              
+              if (fixData.user) {
+                const updatedUser: User = {
+                  ...user,
+                  teacherId: fixData.user.teacherId,
+                  studentId: fixData.user.studentId,
+                  parentId: fixData.user.parentId,
+                };
+                
+                localStorage.setItem('kidato_user', JSON.stringify(updatedUser));
+                setUser(updatedUser);
+                console.log('Successfully fixed profile mismatch:', updatedUser);
+                return;
+              }
+            }
+          } catch (fixError) {
+            console.error('Error fixing profile mismatch:', fixError);
+          }
+        }
+      }
+      
+      // Fallback to regular retry logic for other cases
+      if (session) {
+        const backendUser = await getOrCreateBackendUser(session);
+        
+        if (backendUser) {
+          const updatedUser: User = {
+            ...user!,
+            id: backendUser.id || user!.id,
+            teacherId: backendUser.teacherId,
+            studentId: backendUser.studentId,
+            parentId: backendUser.parentId,
+          };
+          
+          localStorage.setItem('kidato_user', JSON.stringify(updatedUser));
+          setUser(updatedUser);
+          console.log('Successfully updated user with backend data:', updatedUser);
+        } else {
+          console.error('Failed to retry backend user fetch');
+        }
+      }
+    } catch (error) {
+      console.error('Error retrying backend user fetch:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, session, isLoading, signOut, updateUserAndTokens }}>
+    <AuthContext.Provider value={{ user, session, isLoading, signOut, updateUserAndTokens, retryBackendUserFetch }}>
       {children}
     </AuthContext.Provider>
   );
