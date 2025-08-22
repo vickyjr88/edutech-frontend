@@ -20,6 +20,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useGetStudentCurrentEnrollments } from "@/hooks/use-enrollment-service";
+import { useGetStudentAssignmentsByClass, AssignmentType } from "@/hooks/use-assignment-service";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface ProgressQuizzesProps {
   courseId?: string;
@@ -71,35 +74,73 @@ const getMockQuizzesData = () => {
 };
 
 const ProgressQuizzes = ({ courseId }: ProgressQuizzesProps) => {
-  const [quizzes, setQuizzes] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
 
-  useEffect(() => {
-    // Only fetch data if courseId is provided
-    if (!courseId) {
-      setLoading(false);
-      return;
+  // courseId is actually an enrollment ID
+  const { data: enrollmentsData, isLoading: enrollmentLoading, error: enrollmentError } = useGetStudentCurrentEnrollments(user.studentId || "");
+  
+  // Find the specific enrollment by enrollmentId
+  const currentEnrollment = enrollmentsData?.data?.find((enrollment: any) => enrollment.enrollmentId === courseId);
+  const classId = currentEnrollment?.course?.id;
+
+  // Fetch student assignments for the class, filtering for quiz-type only
+  const { data: assignmentsData, isLoading: assignmentsLoading, error: assignmentsError } = useGetStudentAssignmentsByClass(
+    classId || "", 
+    { 
+      sortBy: 'dueDate',
+      sortOrder: 'asc'
     }
-
-    // Simulating API call
-    const fetchData = async () => {
-      setLoading(true);
-      // In a real app, this would be an API call using courseId
-      const data = getMockQuizzesData();
-      setQuizzes(data);
-      setLoading(false);
-    };
-
-    fetchData();
-  }, [courseId]);
+  );
 
   if (!courseId) {
     return <div className="text-center py-8">No course selected</div>;
   }
 
-  if (loading) {
+  if (enrollmentLoading || assignmentsLoading) {
     return <div className="text-center py-8">Loading quizzes data...</div>;
   }
+
+  if (enrollmentError || !currentEnrollment) {
+    return <div className="text-center py-8">Course enrollment not found</div>;
+  }
+
+  if (assignmentsError) {
+    return <div className="text-center py-8">Failed to load quizzes data</div>;
+  }
+
+  // Filter for quiz-type assignments only
+  const quizAssignments = assignmentsData?.data?.filter(sa => sa.assignment.type === AssignmentType.QUIZ) || [];
+  
+  // Convert StudentAssignment[] to quiz format
+  const quizzes = quizAssignments.map(studentAssignment => {
+    const assignment = studentAssignment.assignment;
+    const isCompleted = studentAssignment.submissionStatus === 'Submitted' || studentAssignment.submissionStatus === 'Graded';
+    const isFailed = studentAssignment.grade !== undefined && studentAssignment.grade < assignment.passingGrade;
+    
+    let status = 'upcoming';
+    if (isCompleted && !isFailed) status = 'completed';
+    else if (isCompleted && isFailed) status = 'failed';
+    
+    const grade = studentAssignment.grade !== undefined ? 
+      (studentAssignment.grade >= 90 ? 'A' : 
+       studentAssignment.grade >= 80 ? 'B' : 
+       studentAssignment.grade >= 70 ? 'C' : 
+       studentAssignment.grade >= 60 ? 'D' : 'F') : undefined;
+
+    return {
+      id: studentAssignment._id,
+      title: assignment.title,
+      status,
+      completedDate: studentAssignment.submittedAt ? new Date(studentAssignment.submittedAt).toLocaleDateString() : undefined,
+      dueDate: new Date(assignment.dueDate).toLocaleDateString(),
+      score: studentAssignment.grade !== undefined ? `${studentAssignment.grade}/${assignment.totalPoints}` : undefined,
+      grade,
+      timeSpent: studentAssignment.timeSpent ? `${studentAssignment.timeSpent} min` : undefined,
+      estimatedDuration: `${assignment.estimatedTimeMinutes} min`,
+      passingScore: `${assignment.passingGrade}%`,
+      retakeAvailable: isFailed && (studentAssignment.attempts || 0) < 3, // Allow up to 3 attempts
+    };
+  });
 
   // Sort quizzes by status (upcoming first, then failed, then completed)
   const sortedQuizzes = [...quizzes].sort((a, b) => {
