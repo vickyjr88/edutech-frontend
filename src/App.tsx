@@ -11,6 +11,7 @@ import { intercomConfig } from "@/components/support/IntercomConfig";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
+import RecoveryPage from "./pages/auth/RecoveryPage";
 import Dashboard from "./pages/Dashboard";
 import TeacherDashboard from "./pages/TeacherDashboard";
 import NotFound from "./pages/NotFound";
@@ -77,6 +78,8 @@ const App = () => {
                 <Route path="/" element={<Index />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/signup" element={<Signup />} />
+                <Route path="/auth/recovery" element={<RecoveryPage />} />
+                <Route path="/forgot-password" element={<RecoveryPage />} />
                 <Route path="/auth/callback" element={<AuthCallback />} />
                 <Route path="/zoom/callback" element={<ZoomAuthCallback />} />
                 <Route path="/google-calendar/callback" element={<GoogleCalendarAuthCallback />} />
@@ -285,6 +288,8 @@ const App = () => {
                   <Route path="/" element={<Index />} />
                   <Route path="/login" element={<Login />} />
                   <Route path="/signup" element={<Signup />} />
+                  <Route path="/auth/recovery" element={<RecoveryPage />} />
+                  <Route path="/forgot-password" element={<RecoveryPage />} />
                   <Route path="/auth/callback" element={<AuthCallback />} />
                   <Route path="/zoom/callback" element={<ZoomAuthCallback />} />
                 <Route path="/google-calendar/callback" element={<GoogleCalendarAuthCallback />} />

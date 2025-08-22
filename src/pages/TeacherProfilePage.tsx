@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { teacherService } from "@/integrations/api/services/teacher.service";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 // Transform API teacher data to a format that works with our components
 const transformTeacherData = (apiTeacher: any): any => {
@@ -229,6 +230,7 @@ const transformTeacherData = (apiTeacher: any): any => {
 
 const TeacherProfilePage = () => {
   const { teacherId } = useParams<{ teacherId: string }>();
+  const { signOut, user } = useAuth();
   const [teacher, setTeacher] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

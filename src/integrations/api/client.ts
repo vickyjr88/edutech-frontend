@@ -14,6 +14,7 @@ class ApiClient {
         // Create axios instance with base configuration
         this.client = axios.create({
             baseURL: import.meta.env.VITE_API_URL,
+            withCredentials: true, // Include cookies for Ory session
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -21,27 +22,53 @@ class ApiClient {
 
         // Add request interceptor to include auth token
         this.client.interceptors.request.use((config) => {
-            const session = authService.getSession();
-            if (session?.token) {
-                config.headers.Authorization = `Bearer ${session.token}`;
+            const accessToken = localStorage.getItem('kidato_access_token');
+            if (accessToken) {
+                config.headers.Authorization = `Bearer ${accessToken}`;
             }
             return config;
         });
 
-        // Add response interceptor to handle errors
+        // Add response interceptor to handle token refresh
         this.client.interceptors.response.use(
             (response) => response,
             async (error) => {
-                // Try to refresh token if unauthorized
-                if (error.response?.status === 401) {
-                    const refreshed = await authService.refreshSession();
-                    if (refreshed) {
-                        // Retry the original request with the new token
-                        const session = authService.getSession();
-                        error.config.headers.Authorization = `Bearer ${session.token}`;
-                        return this.client.request(error.config);
+                const originalRequest = error.config;
+
+                // If we get a 401 and haven't already tried to refresh
+                if (error.response?.status === 401 && !originalRequest._retry) {
+                    originalRequest._retry = true;
+
+                    try {
+                        const refreshToken = localStorage.getItem('kidato_refresh_token');
+                        if (refreshToken) {
+                            const response = await this.client.post('/auth/refresh-token', {
+                                refreshToken: refreshToken
+                            });
+
+                            const { accessToken, refreshToken: newRefreshToken } = response.data;
+                            
+                            // Update stored tokens
+                            localStorage.setItem('kidato_access_token', accessToken);
+                            if (newRefreshToken) {
+                                localStorage.setItem('kidato_refresh_token', newRefreshToken);
+                            }
+
+                            // Update the Authorization header and retry the original request
+                            originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+                            return this.client(originalRequest);
+                        }
+                    } catch (refreshError) {
+                        // Refresh failed, clear tokens and redirect to login
+                        localStorage.removeItem('kidato_access_token');
+                        localStorage.removeItem('kidato_refresh_token');
+                        localStorage.removeItem('kidato_user');
+                        
+                        // You may want to redirect to login page here
+                        window.location.href = '/login';
                     }
                 }
+
                 return Promise.reject(error);
             }
         );

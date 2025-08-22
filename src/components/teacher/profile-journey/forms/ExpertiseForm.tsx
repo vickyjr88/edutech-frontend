@@ -95,7 +95,7 @@ export const ExpertiseForm = ({ onComplete }: ExpertiseFormProps) => {
         institution: exp.institution || '',
         position: exp.position || '',
         subjects: exp.subjects?.join(', ') || '',
-        startYear: exp. || '',
+        startYear: exp.startYear?.toString() || '',
         endYear: exp.endYear?.toString() || '',
         description: exp.description || ''
       }));

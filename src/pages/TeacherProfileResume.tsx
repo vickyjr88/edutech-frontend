@@ -287,7 +287,7 @@ const TeacherProfileResume: React.FC = () => {
       }
 
       try {
-        const { data, error } = await teacherService.getProfileById(user.teacherId);
+        const { data, error } = await teacherService.getProfileById(user?.teacherId);
         if (error) {
           console.error("Error fetching teacher profile:", error);
         } else {

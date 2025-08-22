@@ -30,45 +30,56 @@ export async function getOrFetchData<T>(
   try {
     // Check for data in cache
     const cachedJson = localStorage.getItem(key);
-    
+
     if (cachedJson) {
-      const cached = JSON.parse(cachedJson) as CacheEntry<T>;
-      
-      // Check cache version and age
-      const isCurrentVersion = cached.version === CACHE_VERSION;
-      const isFresh = Date.now() - cached.timestamp < maxAge;
-      
-      if (isCurrentVersion && isFresh) {
-        console.log(`Using cached data for ${key}`);
-        return cached.data;
+      try { // Add a nested try-catch for parsing cachedJson
+        const cached = JSON.parse(cachedJson) as CacheEntry<T>;
+
+        // Check cache version and age
+        const isCurrentVersion = cached.version === CACHE_VERSION;
+        const isFresh = Date.now() - cached.timestamp < maxAge;
+
+        if (isCurrentVersion && isFresh) {
+          console.log(`Using cached data for ${key}`);
+          return cached.data;
+        }
+      } catch (parseError) {
+        console.error(`Error parsing cached data for ${key}:`, parseError);
+        // If parsing fails, treat as if no valid cache exists and proceed to fetch
+        localStorage.removeItem(key); // Clear invalid cache
       }
     }
-    
+
     // If we reach here, need to fetch fresh data
     console.log(`Fetching fresh data for ${key}`);
     const data = await fetchFn();
-    
+
     // Cache the result
     const cacheEntry: CacheEntry<T> = {
       data,
       timestamp: Date.now(),
       version: CACHE_VERSION,
     };
-    
+
     localStorage.setItem(key, JSON.stringify(cacheEntry));
     return data;
   } catch (error) {
     console.error(`Error getting/fetching data for ${key}:`, error);
-    
-    // If we have any cached data (even if old), use it as fallback
+    // If the initial fetch fails, and there's *still* cached data (even if invalid JSON),
+    // we should try to use it as a fallback. But if parsing that fallback fails,
+    // we should re-throw the original fetch error.
     const cachedJson = localStorage.getItem(key);
     if (cachedJson) {
-      console.log(`Using stale cache as fallback for ${key}`);
-      const cached = JSON.parse(cachedJson) as CacheEntry<T>;
-      return cached.data;
+      try {
+        console.log(`Using stale cache as fallback for ${key}`);
+        const cached = JSON.parse(cachedJson) as CacheEntry<T>;
+        return cached.data;
+      } catch (fallbackParseError) {
+        console.error(`Error parsing stale fallback cache for ${key}:`, fallbackParseError);
+        localStorage.removeItem(key); // Clear invalid cache
+      }
     }
-    
-    // Re-throw if we have no fallback
+    // Re-throw the original error if no valid fallback could be used
     throw error;
   }
 }

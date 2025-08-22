@@ -59,8 +59,8 @@ class AuthService {
             if (response.data) {
                 this.setSession({
                     user: response.data.user,
-                    token: response.data['accessToken'],
-                    refreshToken: response.data['refreshToken'],
+                    token: response.data.accessToken,
+                    refreshToken: response.data.refreshToken,
                     expiresAt: this.calculateExpiryTime(24) // Assuming 24 hour token
                 });
             }
@@ -116,12 +116,18 @@ class AuthService {
 
     async refreshSession(): Promise<boolean> {
         try {
-            const response = await api.post<AuthResponse>('/auth/refresh-token');
+            const refreshToken = localStorage.getItem('kidato_refresh_token');
+            if (!refreshToken) {
+                this.clearSession();
+                return false;
+            }
+
+            const response = await api.post<AuthResponse>('/auth/refresh-token', { refreshToken });
 
             if (response.data) {
                 this.setSession({
                     user: response.data.user,
-                    token: response.data.token,
+                    token: response.data.accessToken,
                     refreshToken: response.data.refreshToken,
                     expiresAt: this.calculateExpiryTime(24)
                 });
@@ -130,12 +136,13 @@ class AuthService {
 
             return false;
         } catch (error) {
+            console.error('Session refresh error:', error);
             this.clearSession();
             return false;
         }
     }
 
-    async getCurrentUser(): Promise<ApiResponse<User>> {
+    async getCurrentUser(retryCount: number = 0): Promise<ApiResponse<User>> {
         if (!this.getSession()) {
             return {
                 data: null,
@@ -177,12 +184,12 @@ class AuthService {
                 error: { message: 'Invalid response format', status: 500 }
             };
         } catch (error) {
-            if (error.response?.status === 401) {
+            if (error.response?.status === 401 && retryCount < 2) {
                 // Token expired, try to refresh
                 const refreshed = await this.refreshSession();
                 if (refreshed) {
                     // Retry with new token
-                    return await this.getCurrentUser();
+                    return await this.getCurrentUser(retryCount + 1);
                 }
             }
 
@@ -196,7 +203,7 @@ class AuthService {
         }
     }
 
-    async updateUserProfile(userData: UpdateUserData): Promise<ApiResponse<User>> {
+    async updateUserProfile(userData: UpdateUserData, retryCount: number = 0): Promise<ApiResponse<User>> {
         if (!this.getSession()) {
             return {
                 data: null,
@@ -224,14 +231,14 @@ class AuthService {
             
             return response;
         } catch (error) {
-            if (error.response?.status === 401) {
+            if (error.response?.status === 401 && retryCount < 2) {
                 // Token expired, try to refresh
                 const refreshed = await this.refreshSession();
                 if (refreshed) {
                     // Retry with new token
                     const currentUserId = this.session?.user?.id;
                     if (currentUserId) {
-                        return await api.patch<User>(`/users/${currentUserId}`, userData);
+                        return await this.updateUserProfile(userData, retryCount + 1);
                     }
                 }
             }
@@ -281,6 +288,14 @@ class AuthService {
             localStorage.setItem(SESSION_KEY, JSON.stringify(session));
             localStorage.setItem(TOKEN_KEY, session.token);
             localStorage.setItem(REFRESH_KEY, session.refreshToken);
+            const user = localStorage.getItem('kidato_user');
+            if (user) {
+                const userObj = JSON.parse(user);
+                userObj.teacherId = session.user.teacherId;
+                userObj.studentId = session.user.studentId;
+                userObj.parentId = session.user.parentId;
+                localStorage.setItem('kidato_user', JSON.stringify(userObj));
+            }
         }
 
         // Notify listeners

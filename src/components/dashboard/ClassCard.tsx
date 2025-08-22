@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Users, Clock, Calendar, Award, Star, BookOpen, Bookmark, CheckCircle2 } from "lucide-react";
 
 interface ClassCardProps {
-  classItem: any;
+  classItem: any & { teacherId?: string };
   isCurrentClass: boolean;
   minutesSinceStart: number | null;
   isBookmarked: boolean;
@@ -93,6 +93,13 @@ const ClassCard = ({
                   {classItem.title}
                 </h3>
                 <p className="text-sm text-gray-600">{classItem.teacher}</p>
+                {classItem.teacherId && (
+                  <Link to={`/teacher/${classItem.teacherId}`}>
+                    <Button variant="link" size="sm" className="p-0 h-auto text-kidato-purple">
+                      View Teacher Profile
+                    </Button>
+                  </Link>
+                )}
                 
                 <div className="mt-2 flex flex-wrap gap-2">
                   <div className="text-xs text-gray-500">

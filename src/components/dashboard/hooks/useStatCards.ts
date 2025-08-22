@@ -3,6 +3,8 @@ import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { BookOpen, Clock, GraduationCap, Trophy, Flame } from "lucide-react";
 import { studentProgressData } from "../data/studentProgressData";
+import { useCurrentDashboardStats } from "@/hooks/use-student-service";
+import { useStudentId } from "@/hooks";
 
 export interface StatCardData {
   title: string;
@@ -22,56 +24,62 @@ export interface StatCardData {
 }
 
 export const useStatCards = () => {
+  const { studentId } = useStudentId();
   const { toast } = useToast();
   const [hovered, setHovered] = useState<number | null>(null);
   const [animatePoints, setAnimatePoints] = useState<boolean>(false);
   
+  // Fetch real dashboard stats
+  const { data: dashboardStatsResponse, isLoading } = useCurrentDashboardStats(studentId);
+  const dashboardStats = dashboardStatsResponse?.data;
+
+  
   const stats: StatCardData[] = [
     {
       title: "Enrolled Classes",
-      value: "3",
+      value: isLoading ? "..." : (dashboardStats?.enrolledClasses?.total?.toString() || "0"),
       icon: BookOpen,
       color: "blue",
-      detail: "2 in progress, 1 starting soon",
-      badge: {
+      detail: isLoading ? "Loading..." : `${dashboardStats?.enrolledClasses?.inProgress || 0} in progress, ${dashboardStats?.enrolledClasses?.startingSoon || 0} starting soon`,
+      badge: dashboardStats?.enrolledClasses?.isNewClassAvailable ? {
         text: "New class available",
         variant: "info" 
-      },
+      } : undefined,
       tooltip: "Classes you're currently taking"
     },
     {
       title: "Learning Hours",
-      value: "42",
+      value: isLoading ? "..." : (dashboardStats?.learningHours?.total?.toString() || "0"),
       icon: Clock,
       color: "purple",
-      detail: "+3 hours this week",
-      badge: {
+      detail: isLoading ? "Loading..." : `+${dashboardStats?.learningHours?.thisWeek || 0} hours this week`,
+      badge: dashboardStats?.learningHours?.isPersonalBest ? {
         text: "Personal best",
         variant: "warning"
-      },
+      } : undefined,
       tooltip: "Total hours spent learning on the platform"
     },
     {
       title: "Completion Rate",
-      value: "87%",
+      value: isLoading ? "..." : `${dashboardStats?.completionRate?.percentage || 0}%`,
       icon: GraduationCap,
       color: "green",
-      detail: "Above average",
-      progress: 87,
+      detail: isLoading ? "Loading..." : (dashboardStats?.completionRate?.isAboveAverage ? "Above average" : "Keep it up!"),
+      progress: dashboardStats?.completionRate?.percentage || 0,
       tooltip: "Percentage of assigned tasks you've completed"
     },
     {
       title: "Achievements & Streak",
-      value: `${studentProgressData.achievements.unlocked}/${studentProgressData.achievements.total}`,
+      value: isLoading ? "..." : `${dashboardStats?.achievementsAndStreak?.achievements || 0}/${dashboardStats?.achievementsAndStreak?.totalPossible || 0}`,
       icon: Trophy,
       secondaryIcon: Flame,
       color: "yellow",
-      detail: `${studentProgressData.streak}-day streak`,
-      badge: {
+      detail: isLoading ? "Loading..." : `${dashboardStats?.achievementsAndStreak?.streak || 0}-day streak`,
+      badge: dashboardStats?.achievementsAndStreak?.isOnFire ? {
         text: "On fire!",
         variant: "warning"
-      },
-      progress: (studentProgressData.streak / 10) * 100, // Assuming 10 days is the max streak goal
+      } : undefined,
+      progress: dashboardStats?.achievementsAndStreak?.streak ? Math.min((dashboardStats.achievementsAndStreak.streak / 10) * 100, 100) : 0,
       tooltip: "Your achievements and learning streak multiply your XP",
       clickable: true,
       clickMessage: "Your achievements and streak give you XP multipliers!"
@@ -99,5 +107,6 @@ export const useStatCards = () => {
     hovered,
     setHovered,
     animatePoints,
+    isLoading,
   };
 };

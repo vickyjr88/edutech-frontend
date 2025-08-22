@@ -10,59 +10,66 @@ interface UseTeacherIdReturn {
 }
 
 export const useTeacherId = (): UseTeacherIdReturn => {
-  const { user } = useAuth();
+  const { user, isLoading: isAuthLoading } = useAuth();
   const [teacherId, setTeacherId] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchTeacherId = async () => {
-    try {
+  useEffect(() => {
+    if (isAuthLoading) {
+      return;
+    }
+
+    if (user?.teacherId) {
+      // Use teacherId directly from user context
+      setTeacherId(user.teacherId);
+      setLoading(false);
       setError(null);
-      setLoading(true);
+    } else if (user?.id) {
+      // Fallback to API call if teacherId not available in context
+      fetchTeacherProfile();
+    } else {
+      setTeacherId(null);
+      setLoading(false);
+      setError('No authenticated user or user ID found.');
+    }
+  }, [user, isAuthLoading]);
 
-      // First try to get teacherId from user object
-      if (user?.teacherId) {
-        setTeacherId(user.teacherId);
-        setLoading(false);
-        return;
-      }
-
-      // If not available in user object, get current teacher profile
-      if (user?.id) {
-        const response = await teacherService.getCurrentProfile();
-        
-        if (response.error) {
-          setError(response.error.message || 'Failed to fetch teacher profile');
-          return;
-        }
-
-        if (response.data) {
-          setTeacherId(response.data.id);
-        } else {
-          setError('No teacher profile found');
-        }
+  const fetchTeacherProfile = async () => {
+    if (!user?.id) return;
+    
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const response = await teacherService.getProfileByUserId(user.id);
+      if (response.data?.id) {
+        setTeacherId(response.data.id);
       } else {
-        setError('No authenticated user found');
+        setError('Teacher profile not found');
+        setTeacherId(null);
       }
     } catch (err) {
-      console.error('Error fetching teacher ID:', err);
-      setError(err instanceof Error ? err.message : 'Unknown error occurred');
+      setError('Failed to fetch teacher profile');
+      setTeacherId(null);
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    if (user) {
-      fetchTeacherId();
+  const refetch = () => {
+    if (user?.teacherId) {
+      // Use teacherId directly from user context
+      setTeacherId(user.teacherId);
+      setLoading(false);
+      setError(null);
+    } else if (user?.id) {
+      fetchTeacherProfile();
     } else {
       setTeacherId(null);
       setLoading(false);
+      setError('No authenticated user or user ID found.');
     }
-  }, [user]);
-
-  const refetch = () => {
-    fetchTeacherId();
   };
 
   return {

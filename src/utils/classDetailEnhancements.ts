@@ -47,7 +47,7 @@ export function calculatePreparationScore(
 // Transform API student data to StudentInsight format
 export function transformStudentsToInsights(students: any[], classData?: any): StudentInsight[] {
   if (!students || students.length === 0) {
-    return generateStudentInsights(classData || {});
+    return [];
   }
 
   return students.map((student, index) => {
@@ -556,12 +556,12 @@ function inferObjectiveCategory(text: string): 'knowledge' | 'skills' | 'underst
 }
 
 // Helper functions
-function getTimeToNextClass(classData: any): number {
+export function getTimeToNextClass(classData: any): number {
   // Mock implementation - returns random time
   return Math.floor(Math.random() * 48 * 60); // 0-48 hours in minutes
 }
 
-function generateRandomConcepts(count: number, subject: string): string[] {
+function generateRandomConcepts(count: number, subject?: string): string[] {
   const concepts: Record<string, string[]> = {
     mathematics: ['Quadratic Equations', 'Linear Functions', 'Probability', 'Statistics', 'Geometry'],
     science: ['Photosynthesis', 'Chemical Reactions', 'Newton\'s Laws', 'Cell Division', 'Atomic Structure'],
@@ -570,7 +570,8 @@ function generateRandomConcepts(count: number, subject: string): string[] {
     default: ['Key Concepts', 'Core Principles', 'Advanced Topics', 'Practical Applications']
   };
   
-  const subjectConcepts = concepts[subject.toLowerCase()] || concepts.default;
+  const normalizedSubject = subject ? subject.toLowerCase() : 'default'; // Handle undefined subject
+  const subjectConcepts = concepts[normalizedSubject] || concepts.default;
   return subjectConcepts.slice(0, count);
 }
 

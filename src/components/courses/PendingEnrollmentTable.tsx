@@ -155,13 +155,23 @@ const EnrollmentTableRow = ({
       <TableCell>
         <div className="flex items-center">
           <Clock className="h-3.5 w-3.5 text-gray-400 mr-1" />
-          <span className="text-sm">{`${formatDate(enrollment?.nextClass?.date, 'MMMM d, yyyy')}, ${enrollment?.nextClass?.time}`}</span>
+          <span className="text-sm">
+            {enrollment?.nextClass?.date ? 
+              `${formatDate(new Date(enrollment.nextClass.date), 'MMMM d, yyyy')}, ${enrollment.nextClass.time || 'TBA'}` :
+              'TBA'
+            }
+          </span>
         </div>
       </TableCell>
       <TableCell>
         <div className="flex items-center">
           <Calendar className="h-3.5 w-3.5 text-gray-400 mr-1" />
-          <span className="text-sm">{formatDate(enrollment?.enrollmentDeadline, 'MMMM d, yyyy')}</span>
+          <span className="text-sm">
+            {enrollment?.enrollmentDeadline ? 
+              formatDate(new Date(enrollment.enrollmentDeadline), 'MMMM d, yyyy') :
+              'TBA'
+            }
+          </span>
         </div>
       </TableCell>
       <TableCell>

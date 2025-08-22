@@ -94,9 +94,20 @@ export interface UpcomingSession {
     studentsEnrolled: number;
 }
 
+export interface RecentActivity {
+    type: string;
+    description: string;
+    userId: string;
+    timestamp: string;
+}
+
 export const studentService = {
     getProfile: (studentId: string): Promise<ApiResponse<Student>> => {
-        return api.get<Student>(`/students/users/${studentId}/profile`);
+        return api.get<Student>(`/users/profile`);
+    },
+
+    getProfileByUserId: (userId: string): Promise<ApiResponse<Student>> => {
+        return api.get<Student>(`/students/users/${userId}/profile`);
     },
 
     getDashboardStats: (studentId: string): Promise<ApiResponse<DashboardStats>> => {
@@ -117,5 +128,9 @@ export const studentService = {
 
     updateProfile: (studentId: string, data: Partial<Student>): Promise<ApiResponse<Student>> => {
         return api.put<Student>(`/students/profiles/${studentId}`, data);
+    },
+
+    getRecentActivities: (userId: string): Promise<ApiResponse<RecentActivity[]>> => {
+        return api.get<RecentActivity[]>(`/recent-activities/${userId}`);
     }
 };

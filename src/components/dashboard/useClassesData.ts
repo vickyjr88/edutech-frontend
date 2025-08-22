@@ -15,7 +15,7 @@ export function useClassesData() {
   // Fetch today's lessons and upcoming sessions
   const { data: todaysLessonsResponse, isLoading: todaysLessonsLoading } = useTodaysLessons(user?.studentId || '');
   const { data: upcomingSessionsResponse, isLoading: upcomingSessionsLoading } = useUpcomingSessions(user?.studentId || '');
-  
+
   useEffect(() => {
     // Update current time every minute
     const timer = setInterval(() => {
@@ -23,7 +23,7 @@ export function useClassesData() {
     }, 60000);
     
     return () => clearInterval(timer);
-  }, []);
+  }, []); 
   
   // Transform API data to match expected format
   const todaysLessons = todaysLessonsResponse?.data?.lessons || [];
@@ -47,6 +47,7 @@ export function useClassesData() {
     subject: session?.subject || 'General',
     teacher: session?.teacherName || 'TBA',
     teacherImage: session?.profileImage || '/api/placeholder/80/80',
+    teacherId: (session as any)?.teacherId || '', // Add this line - assuming backend will provide it
     cohort: session?.cohortName || 'Standard',
     sessionTime: new Date(session?.startTime || Date.now()),
     isLiveNow: false,

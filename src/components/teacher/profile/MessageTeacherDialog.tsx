@@ -15,13 +15,15 @@ import { Input } from "@/components/ui/input";
 
 interface MessageTeacherDialogProps {
   teacherName: string;
+  teacherId: string;
   isOpen?: boolean;
   onOpenChange?: (open: boolean) => void;
   onClose?: () => void; // Add onClose for compatibility with TeacherPublicProfile
 }
 
 export default function MessageTeacherDialog({ 
-  teacherName, 
+  teacherName,
+  teacherId,
   isOpen: externalIsOpen, 
   onOpenChange: externalOnOpenChange,
   onClose

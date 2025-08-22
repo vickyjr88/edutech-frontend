@@ -134,17 +134,17 @@ export const useGetRecommendedClasses = (studentId: string) => {
 };
 
 // Student-specific Hooks
-export const useGetCurrentClassesForStudent = (userId: string) => {
+export const useGetCurrentClassesForStudent = (studentId: string) => {
   return useQuery({
-    queryKey: ['studentClasses', userId],
-    queryFn: () => classService.getCurrentClassesForStudent(userId),
+    queryKey: ['studentClasses', studentId],
+    queryFn: () => classService.getCurrentClassesForStudent(studentId),
   });
 };
 
-export const useGetCompletedClassesForStudent = (userId: string) => {
+export const useGetCompletedClassesForStudent = (studentId: string) => {
   return useQuery({
-    queryKey: ['completedClasses', userId],
-    queryFn: () => classService.getCompletedClassesForStudent(userId),
+    queryKey: ['completedClasses', studentId],
+    queryFn: () => classService.getCompletedClassesForStudent(studentId),
   });
 };
 

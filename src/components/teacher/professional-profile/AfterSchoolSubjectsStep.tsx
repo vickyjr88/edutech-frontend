@@ -41,7 +41,7 @@ const AfterSchoolSubjectsStep = ({ subjects, setSubjects, onSubjectsChange }: Af
     addAfterSchoolSubject, 
     updateAfterSchoolSubject, 
     deleteAfterSchoolSubject 
-  } = useAfterSchoolSubjects(user?.id,user.teacherId);
+  } = useAfterSchoolSubjects(user?.id, user.teacherId);
   
   const [isLoading, setIsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);

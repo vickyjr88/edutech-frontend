@@ -15,6 +15,7 @@ import {
 import { ExtractedCourseData, CourseUploadResponse } from '@/types/course-data';
 import { CourseImportDialog } from './CourseImportDialog';
 import { toast } from 'sonner';
+import api from '@/lib/axios';
 
 interface CourseImportTriggerProps {
   onImport: (extractedData: ExtractedCourseData) => void;
@@ -58,19 +59,13 @@ export const CourseImportTrigger: React.FC<CourseImportTriggerProps> = ({
       formData.append('file', file);
 
       // Call the upload-and-process endpoint
-      const response = await fetch('/api/course-outline/upload-and-process', {
-        method: 'POST',
-        body: formData,
+      const response = await api.post('/api/course-outline/upload-and-process', formData, {
         headers: {
-          // Don't set Content-Type, let the browser set it with boundary for FormData
+          'Content-Type': 'multipart/form-data',
         }
       });
 
-      if (!response.ok) {
-        throw new Error(`Upload failed: ${response.statusText}`);
-      }
-
-      const result: CourseUploadResponse = await response.json();
+      const result: CourseUploadResponse = response.data;
 
       if (!result.success) {
         throw new Error(result.message || 'Failed to process course outline');
