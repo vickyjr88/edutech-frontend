@@ -9,6 +9,8 @@ env:
     VITE_BASIS_THEORY_API_KEY: "production/frontend:VITE_BASIS_THEORY_API_KEY"
     VITE_STRIPE_PUBLISHABLE_KEY: "production/frontend:VITE_STRIPE_PUBLISHABLE_KEY"
     VITE_GOOGLE_MAPS_KEY: "production/frontend:VITE_GOOGLE_MAPS_KEY"
+    VITE_ORY_SDK_URL: "production/frontend:VITE_ORY_SDK_URL"
+    VITE_ORY_PROJECT_ID: "production/frontend:VITE_ORY_PROJECT_ID"
 phases:
   pre_build:
     commands:
@@ -37,6 +39,8 @@ phases:
           --build-arg VITE_APP_ENV=$VITE_APP_ENV \
           --build-arg VITE_GOOGLE_MAPS_KEY=$VITE_GOOGLE_MAPS_KEY \
           --build-arg VITE_STRIPE_PUBLISHABLE_KEY=$VITE_STRIPE_PUBLISHABLE_KEY \
+          --build-arg VITE_ORY_SDK_URL=$VITE_ORY_SDK_URL \
+          --build-arg VITE_ORY_PROJECT_ID=$VITE_ORY_PROJECT_ID \
           --build-arg PORT=$PORT \
           -t $REPOSITORY_URI:$IMAGE_TAG .
       - test "$IMAGE_TAG" = "master" && docker tag $REPOSITORY_URI:$IMAGE_TAG $REPOSITORY_URI:latest || echo "Skipping latest tag for non-master branch"
