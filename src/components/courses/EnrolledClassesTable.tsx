@@ -75,6 +75,7 @@ interface EnrolledClassesTableProps {
   };
 
 const EnrolledClassesTable = ({ enrolledCourses }: EnrolledClassesTableProps) => {
+  console.log("Enrolled courses", enrolledCourses);
 
   return (
     <Card>
@@ -178,14 +179,24 @@ const CourseRow = ({ enrollment }: { enrollment: ClassDetail }) => {
         <span className="text-sm text-gray-500">No upcoming activities</span>
       </TableCell>
       <TableCell className="text-right">
-        <Link to={`/course-progress/${course._id}`}>
+        {course.enrollmentId ? (
+          <Link to={`/course-progress/${course.enrollmentId}`}>
+            <Button
+              size="sm"
+              className="bg-indigo-600 hover:bg-indigo-700 h-8"
+            >
+              View Progress
+            </Button>
+          </Link>
+        ) : (
           <Button
             size="sm"
-            className="bg-indigo-600 hover:bg-indigo-700 h-8"
+            className="bg-gray-400 cursor-not-allowed h-8"
+            disabled
           >
             View Progress
           </Button>
-        </Link>
+        )}
       </TableCell>
     </TableRow>
   );
