@@ -85,7 +85,7 @@ const MatchingClassesSection = ({ course }: MatchingClassesSectionProps) => {
 
             <div className="flex justify-end space-x-2">
               <Button variant="outline" asChild>
-                <Link to={`/teacher/${matchingTeacher._id}`}>
+                <Link to={`/teacher/${matchingTeacher.teacherId}`}>
                   View Profile
                 </Link>
               </Button>

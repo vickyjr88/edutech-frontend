@@ -110,7 +110,7 @@ const PersonalInformationStep = () => {
         throw new Error("Teacher ID not found");
       }
       
-      const { data, error } = await teacherService.uploadProfilePhoto(user.id, base64File, mimeType);
+      const { data, error } = await teacherService.uploadProfilePhoto(user.teacherId, base64File, mimeType);
       
       if (error) {
         throw new Error(error.message || "Failed to upload profile image");
