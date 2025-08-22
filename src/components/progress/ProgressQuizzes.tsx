@@ -21,7 +21,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useGetStudentCurrentEnrollments } from "@/hooks/use-enrollment-service";
-import { useGetStudentAssignmentsByClass, AssignmentType } from "@/hooks/use-assignment-service";
+import { useGetStudentAssignmentsByClass } from "@/hooks/use-assignment-service";
+import { AssignmentType } from "@/integrations/api/services/assignment.service";
 import { useAuth } from "@/contexts/AuthContext";
 
 interface ProgressQuizzesProps {
@@ -109,7 +110,7 @@ const ProgressQuizzes = ({ courseId }: ProgressQuizzesProps) => {
   }
 
   // Filter for quiz-type assignments only
-  const quizAssignments = assignmentsData?.data?.filter(sa => sa.assignment.type === AssignmentType.QUIZ) || [];
+  const quizAssignments = assignmentsData?.data?.data.filter(sa => sa.assignment.type === AssignmentType.QUIZ) || [];
   
   // Convert StudentAssignment[] to quiz format
   const quizzes = quizAssignments.map(studentAssignment => {

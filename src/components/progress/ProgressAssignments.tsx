@@ -6,7 +6,8 @@ import { AssignmentStatistics } from "./components/AssignmentStatistics";
 import { AssignmentsTable } from "./components/AssignmentsTable";
 import { getMockAssignmentsData, Assignment } from "./data/mockAssignmentsData";
 import { useGetStudentCurrentEnrollments } from "@/hooks/use-enrollment-service";
-import { useGetStudentAssignmentsByClass, AssignmentType } from "@/hooks/use-assignment-service";
+import { useGetStudentAssignmentsByClass } from "@/hooks/use-assignment-service";
+import { AssignmentType } from "@/integrations/api/services/assignment.service";
 import { useAuth } from "@/contexts/AuthContext";
 
 interface ProgressAssignmentsProps {
@@ -91,7 +92,7 @@ const ProgressAssignments = ({ courseId }: ProgressAssignmentsProps) => {
   }
 
   // Filter out quiz-type assignments and convert to mock format for existing components
-  const assignments = assignmentsData?.data?.filter(sa => sa.assignment.type !== AssignmentType.QUIZ) || [];
+  const assignments = assignmentsData?.data?.data.filter(sa => sa.assignment.type !== AssignmentType.QUIZ) || [];
   
   // Convert StudentAssignment[] to Assignment[] format expected by existing components
   const convertedAssignments: Assignment[] = assignments.map(studentAssignment => ({
