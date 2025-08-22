@@ -11,32 +11,75 @@ import { AssignmentMetadata } from "./assignment-dialog/AssignmentMetadata";
 import { TeacherFeedback } from "./assignment-dialog/TeacherFeedback";
 import { AssignmentSubmissionForm } from "./assignment-dialog/AssignmentSubmissionForm";
 import { Assignment, AssignmentDialogProps } from "./assignment-dialog/types";
+import { useSubmitAssignment, useUpdateSubmission } from "@/hooks/use-assignment-service";
 
 const AssignmentDialog = ({ isOpen, onClose, assignment, onUpdateAssignment }: AssignmentDialogProps) => {
   const { toast } = useToast();
+  const submitAssignmentMutation = useSubmitAssignment();
+  const updateSubmissionMutation = useUpdateSubmission();
   
-  // Mock data for resources and video links if not provided
-  const resources = assignment?.resources || [
-    { id: "r1", name: "Assignment Instructions.pdf", type: "pdf", size: "245 KB" },
-    { id: "r2", name: "Reference Document.docx", type: "docx", size: "120 KB" },
-  ];
+  // Extract real resources from assignment data
+  const resources = assignment?.attachments?.map((attachment: string, index: number) => ({
+    id: `attachment_${index}`,
+    name: attachment.split('/').pop() || `Resource ${index + 1}`,
+    type: attachment.split('.').pop()?.toLowerCase() || 'file',
+    size: "Unknown size", // API doesn't provide file sizes
+    url: attachment
+  })) || assignment?.resources || [];
   
-  const videoLinks = assignment?.videoLinks || [
-    { id: "v1", title: "Introduction to the Assignment", url: "https://www.youtube.com/watch?v=example1" },
-    { id: "v2", title: "How to Complete Section 2", url: "https://www.youtube.com/watch?v=example2" },
-  ];
+  // For now, no video links in the API, so we'll show empty or allow them to be added later
+  const videoLinks = assignment?.videoLinks || [];
   
-  const isEditable = ["in_progress", "late", "upcoming"].includes(assignment?.status);
+  const isEditable = ["in_progress", "late", "upcoming", "not-started"].includes(assignment?.status);
   
-  const handleUpdateAssignment = (assignmentId: string, updatedData: any) => {
-    if (onUpdateAssignment) {
-      onUpdateAssignment(assignmentId, updatedData);
-    }
+  const handleUpdateAssignment = async (assignmentId: string, updatedData: any) => {
+    if (!assignment?.assignmentId) return;
     
-    toast({
-      title: "Assignment Submitted!",
-      description: "Your teacher will review your work soon.",
-    });
+    try {
+      if (assignment.submissionStatus === 'Not Started' || !assignment.submittedAt) {
+        // Initial submission
+        await submitAssignmentMutation.mutateAsync({
+          assignmentId: assignment.assignmentId,
+          content: updatedData.answer || updatedData.content || "",
+          attachments: updatedData.attachments || []
+        });
+        
+        toast({
+          title: "Assignment Submitted!",
+          description: "Your assignment has been submitted successfully.",
+        });
+      } else {
+        // Update existing submission
+        await updateSubmissionMutation.mutateAsync({
+          studentAssignmentId: assignment.studentAssignmentId || assignment.id,
+          data: {
+            assignmentId: assignment.assignmentId,
+            content: updatedData.answer || updatedData.content || "",
+            attachments: updatedData.attachments || []
+          }
+        });
+        
+        toast({
+          title: "Assignment Updated!",
+          description: "Your assignment has been updated successfully.",
+        });
+      }
+      
+      // Call the parent callback
+      if (onUpdateAssignment) {
+        onUpdateAssignment(assignmentId, updatedData);
+      }
+      
+      // Close dialog after successful submission
+      onClose();
+    } catch (error) {
+      console.error('Error submitting assignment:', error);
+      toast({
+        title: "Submission Failed",
+        description: "There was an error submitting your assignment. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   if (!assignment) return null;

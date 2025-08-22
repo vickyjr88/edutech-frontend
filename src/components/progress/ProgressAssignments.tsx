@@ -37,7 +37,32 @@ const ProgressAssignments = ({ courseId }: ProgressAssignmentsProps) => {
   );
 
   const handleViewAssignment = (assignment: Assignment) => {
-    setSelectedAssignment(assignment);
+    // Find the original StudentAssignment data
+    const studentAssignment = assignments.find(sa => sa._id === assignment.id);
+    
+    // Create enriched assignment data with all needed fields
+    const enrichedAssignment: Assignment = {
+      ...assignment,
+      // Add real API data fields
+      description: studentAssignment?.assignment?.description || studentAssignment?.assignment?.detailedInstructions || assignment.description,
+      submissionContent: studentAssignment?.content || "",
+      submittedAt: studentAssignment?.submittedAt,
+      attachments: studentAssignment?.attachments || [],
+      assignmentId: studentAssignment?.assignment?._id,
+      studentAssignmentId: studentAssignment?._id,
+      totalPoints: studentAssignment?.assignment?.totalPoints,
+      passingGrade: studentAssignment?.assignment?.passingGrade,
+      submissionStatus: studentAssignment?.submissionStatus,
+      timeSpent: studentAssignment?.timeSpent,
+      attempts: studentAssignment?.attempts || 0,
+      isLate: studentAssignment?.isLate || false,
+      feedback: studentAssignment?.feedback,
+      dueDate: studentAssignment?.assignment?.dueDate ? new Date(studentAssignment.assignment.dueDate).toLocaleDateString() : assignment.dueDate,
+      type: studentAssignment?.assignment?.type?.toLowerCase().includes('group') ? 'group' : 'individual',
+      grade: studentAssignment?.grade ? `${studentAssignment.grade}/${studentAssignment.assignment?.totalPoints}` : assignment.grade,
+    };
+    
+    setSelectedAssignment(enrichedAssignment);
     setAssignmentDialogOpen(true);
   };
 
