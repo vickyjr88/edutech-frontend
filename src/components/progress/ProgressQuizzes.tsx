@@ -75,6 +75,12 @@ const ProgressQuizzes = ({ courseId }: ProgressQuizzesProps) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Only fetch data if courseId is provided
+    if (!courseId) {
+      setLoading(false);
+      return;
+    }
+
     // Simulating API call
     const fetchData = async () => {
       setLoading(true);
@@ -86,6 +92,10 @@ const ProgressQuizzes = ({ courseId }: ProgressQuizzesProps) => {
 
     fetchData();
   }, [courseId]);
+
+  if (!courseId) {
+    return <div className="text-center py-8">No course selected</div>;
+  }
 
   if (loading) {
     return <div className="text-center py-8">Loading quizzes data...</div>;

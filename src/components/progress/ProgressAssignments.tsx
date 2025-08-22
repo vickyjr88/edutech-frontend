@@ -18,6 +18,12 @@ const ProgressAssignments = ({ courseId }: ProgressAssignmentsProps) => {
   const { toast } = useToast();
 
   useEffect(() => {
+    // Only fetch data if courseId is provided
+    if (!courseId) {
+      setLoading(false);
+      return;
+    }
+
     // Simulating API call
     const fetchData = async () => {
       setLoading(true);
@@ -49,6 +55,10 @@ const ProgressAssignments = ({ courseId }: ProgressAssignmentsProps) => {
       description: "Your assignment has been submitted successfully!",
     });
   };
+
+  if (!courseId) {
+    return <div className="text-center py-8">No course selected</div>;
+  }
 
   if (loading) {
     return <div className="text-center py-8">Loading assignments data...</div>;
