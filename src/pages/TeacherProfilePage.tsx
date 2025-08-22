@@ -229,6 +229,7 @@ const transformTeacherData = (apiTeacher: any): any => {
 };
 
 const TeacherProfilePage = () => {
+  const { teacherId } = useParams<{ teacherId: string }>();
   const { signOut, user } = useAuth();
   const [teacher, setTeacher] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -236,7 +237,7 @@ const TeacherProfilePage = () => {
 
   useEffect(() => {
     const fetchTeacher = async () => {
-      if (!user?.teacherId) {
+      if (!teacherId) {
         setError("No teacher ID provided");
         setLoading(false);
         return;
@@ -244,7 +245,7 @@ const TeacherProfilePage = () => {
 
       try {
         setLoading(true);
-        const { data, error: apiError } = await teacherService.getProfileById(user?.teacherId);
+        const { data, error: apiError } = await teacherService.getProfileById(teacherId);
         
         if (apiError) {
           throw new Error(apiError.message || "Failed to load teacher profile");
@@ -268,7 +269,7 @@ const TeacherProfilePage = () => {
     };
 
     fetchTeacher();
-  }, [user]);
+  }, [teacherId]);
 
   if (loading) {
     return (

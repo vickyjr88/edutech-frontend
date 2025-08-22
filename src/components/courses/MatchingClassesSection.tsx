@@ -29,6 +29,8 @@ const MatchingClassesSection = ({ course }: MatchingClassesSectionProps) => {
   const matchingTeacher = course.teacher; // Use populated teacher data directly from course
   const cohort = course.cohorts?.find((cohort) => cohort.isActive) ?? course.cohorts?.[0];
 
+  console.log("Matching teacher", matchingTeacher);
+
   const [showMessageDialog, setShowMessageDialog] = useState(false); // State for dialog visibility
 
   const nextClassTime = getNextClassTime({
@@ -85,7 +87,7 @@ const MatchingClassesSection = ({ course }: MatchingClassesSectionProps) => {
 
             <div className="flex justify-end space-x-2">
               <Button variant="outline" asChild>
-                <Link to={`/teacher/${matchingTeacher.teacherId}`}>
+                <Link to={`/teacher/${matchingTeacher._id}`}>
                   View Profile
                 </Link>
               </Button>
