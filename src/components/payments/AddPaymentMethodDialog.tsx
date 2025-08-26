@@ -12,20 +12,29 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Plus } from 'lucide-react';
 import UnifiedPaymentForm from './UnifiedPaymentForm';
+import type { BoyaCustomer } from '@/services/boya-payment.service';
 
 interface AddPaymentMethodDialogProps {
   basisTheoryApiKey?: string;
   stripePublishableKey?: string;
+  customer?: BoyaCustomer;
+  customerId?: string;
+  useBoyaFlow?: boolean;
   onSuccess?: (paymentMethod: any) => void;
-  onError?: (error: string) => void;
+  onError?: (error: string, boyaError?: any) => void;
+  onRequires3DSecure?: (authUrl: string) => void;
   children?: React.ReactNode;
 }
 
 const AddPaymentMethodDialog: React.FC<AddPaymentMethodDialogProps> = ({
   basisTheoryApiKey,
   stripePublishableKey,
+  customer,
+  customerId,
+  useBoyaFlow = true,
   onSuccess,
   onError,
+  onRequires3DSecure,
   children
 }) => {
   const [open, setOpen] = useState(false);
@@ -45,8 +54,12 @@ const AddPaymentMethodDialog: React.FC<AddPaymentMethodDialogProps> = ({
     setSetAsDefault(true);
   };
 
-  const handleError = (error: string) => {
-    onError?.(error);
+  const handleError = (error: string, boyaError?: any) => {
+    onError?.(error, boyaError);
+  };
+
+  const handle3DSecure = (authUrl: string) => {
+    onRequires3DSecure?.(authUrl);
   };
 
   return (
@@ -70,14 +83,21 @@ const AddPaymentMethodDialog: React.FC<AddPaymentMethodDialogProps> = ({
         <div className="space-y-6">
           {/* Card Payment Form */}
           <UnifiedPaymentForm
-            amount={0} // We're just adding a payment method, not charging
+            amount={1} // Small test amount to verify card (will be refunded)
+            currency="USD"
+            customer={customer}
+            customerId={customerId}
+            paymentDescription="Payment method verification"
+            saveForRecurringPayments={true}
             title="Card Information"
             description="Enter your card details"
             basisTheoryApiKey={basisTheoryApiKey}
             stripePublishableKey={stripePublishableKey}
-            preferredProvider="stripe"
+            preferredProvider={useBoyaFlow ? "boya" : "stripe"}
+            useBoyaFlow={useBoyaFlow}
             onSuccess={handleSuccess}
             onError={handleError}
+            onRequires3DSecure={handle3DSecure}
           />
           
           {/* Set as Default */}

@@ -41,10 +41,11 @@ export const useGetCurrentTeacherProfile = () => {
   });
 };
 
-export const useGetTeacherProfileById = (id: string) => {
+export const useGetTeacherProfileById = (id: string | null | undefined) => {
   return useQuery({
     queryKey: ['teacherProfile', id],
-    queryFn: () => teacherService.getProfileById(id),
+    queryFn: () => teacherService.getProfileById(id!),
+    enabled: !!id, // Only enable the query if id is available and truthy
   });
 };
 

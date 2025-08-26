@@ -76,11 +76,23 @@ const ParentsBilling = () => {
   const handlePaymentSuccess = (result: any) => {
     console.log('Payment successful:', result);
     // Handle successful payment
+    if (result.status === 'succeeded') {
+      alert('Payment successful! Your subscription has been updated.');
+    } else if (result.status === 'pending') {
+      alert('Payment is being processed. You will receive a confirmation shortly.');
+    }
   };
 
-  const handlePaymentError = (error: string) => {
-    console.error('Payment error:', error);
-    // Handle payment error
+  const handlePaymentError = (error: string, boyaError?: any) => {
+    console.error('Payment error:', error, boyaError);
+    // Handle payment error with user-friendly message
+    alert(`Payment failed: ${error}`);
+  };
+
+  const handleRequires3DSecure = (authUrl: string) => {
+    console.log('3D Secure authentication required:', authUrl);
+    // Open 3D Secure authentication in a new window
+    window.open(authUrl, '_blank', 'width=600,height=600');
   };
 
   const handleAddPaymentMethod = (paymentMethod: any) => {
@@ -121,8 +133,15 @@ const ParentsBilling = () => {
               <AddPaymentMethodDialog
                 basisTheoryApiKey={BASIS_THEORY_API_KEY}
                 stripePublishableKey={STRIPE_PUBLISHABLE_KEY}
+                customer={{
+                  name: 'Kate Johnson',
+                  email: 'kate@example.com',
+                  phone: '+1234567890'
+                }}
+                useBoyaFlow={true}
                 onSuccess={handleAddPaymentMethod}
                 onError={handlePaymentError}
+                onRequires3DSecure={handleRequires3DSecure}
               >
                 <Button>
                   <Plus className="h-4 w-4 mr-2" />

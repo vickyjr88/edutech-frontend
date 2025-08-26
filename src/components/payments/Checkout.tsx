@@ -6,6 +6,11 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useGetProfileById } from '@/hooks/use-student-service';
 import { useGetTeacherProfileById } from '@/hooks/use-teacher-service';
 import { formatDate } from 'date-fns';
+import { BoyaPaymentForm, ThreeDSecureHandler } from '@/components/payments';
+import BoyaPaymentFormSimple from '@/components/payments/BoyaPaymentFormSimple';
+import type { BoyaCustomer, BoyaPaymentResponse } from '@/services/boya-payment.service';
+
+const BASIS_THEORY_API_KEY = import.meta.env.VITE_BASIS_THEORY_API_KEY;
 
 // Move component definitions outside to prevent re-creation on every render
 const StepIndicator = ({ currentStep }: { currentStep: number }) => (
@@ -74,9 +79,18 @@ const CheckoutFlow = ({ onClose, enrollment }: CheckoutFlowProps) => {
     const { data: classDataResponse, isLoading: isLoadingClass, error: classError } = useClassById(enrollment?.course?.id);
 
     const classData = classDataResponse?.data;
-    const { data: teacherData } = useGetTeacherProfileById(classData?.teacher?._id)
+    const teacherId = classData?.teacher?._id;
+    // Hook will only run when teacherId is available due to enabled condition
+    const { data: teacherData, isLoading: isLoadingTeacher } = useGetTeacherProfileById(teacherId)
     const teacher = teacherData?.data?.user;
 
+    // All state hooks at the top level - never conditional
+    const [step, setStep] = useState(1);
+    const [paymentResult, setPaymentResult] = useState<BoyaPaymentResponse | null>(null);
+    const [paymentError, setPaymentError] = useState<string>('');
+    const [requires3DS, setRequires3DS] = useState(false);
+    const [authUrl, setAuthUrl] = useState<string>('');
+    
     const [formData, setFormData] = useState({
         seats: 1,
         paymentMethod: 'credit-card',
@@ -132,16 +146,16 @@ const CheckoutFlow = ({ onClose, enrollment }: CheckoutFlowProps) => {
         }
     }, [classData, enrollment, teacher]);
 
-    const handleInputChange = useCallback((field, value) => {
+    const handleInputChange = useCallback((field: string, value: any) => {
         setFormData(prev => ({ ...prev, [field]: value }));
     }, []);
 
-    const formatPrice = useCallback((price, seats) => {
+    const formatPrice = useCallback((price: number, seats: number) => {
         const total = price * seats;
-        return `${courseData.currency} ${total.toLocaleString('en-KE', { minimumFractionDigits: 2 })}`;
-    }, [courseData.currency]);
+        return `${courseData?.currency || 'USD'} ${total.toLocaleString('en-KE', { minimumFractionDigits: 2 })}`;
+    }, [courseData?.currency]);
 
-    const formatCardNumber = useCallback((value) => {
+    const formatCardNumber = useCallback((value: string) => {
         const v = value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
         const matches = v.match(/\d{4,16}/g);
         const match = matches && matches[0] || '';
@@ -156,7 +170,7 @@ const CheckoutFlow = ({ onClose, enrollment }: CheckoutFlowProps) => {
         }
     }, []);
 
-    const formatExpiryDate = useCallback((value) => {
+    const formatExpiryDate = useCallback((value: string) => {
         const v = value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
         if (v.length >= 2) {
             return v.substring(0, 2) + '/' + v.substring(2, 4);
@@ -164,8 +178,6 @@ const CheckoutFlow = ({ onClose, enrollment }: CheckoutFlowProps) => {
         return v;
     }, []);
 
-    const [step, setStep] = useState(1);
-    
     const handleNext = useCallback(() => {
         if (step < 3) setStep(step + 1);
     }, [step]);
@@ -174,9 +186,56 @@ const CheckoutFlow = ({ onClose, enrollment }: CheckoutFlowProps) => {
         if (step > 1) setStep(step - 1);
     }, [step]);
 
-    const handleSubmit = useCallback(() => {
-        // Here you would typically handle the payment processing
-        alert('Enrollment submitted! You will receive a confirmation email shortly.');
+    const handlePaymentSuccess = useCallback((result: BoyaPaymentResponse) => {
+        console.log('Payment successful:', result);
+        setPaymentResult(result);
+        setPaymentError('');
+        setRequires3DS(false);
+        
+        // Here you would typically call your backend to confirm enrollment
+        alert(`Payment successful! Enrollment confirmed. Payment ID: ${result.id}`);
+    }, []);
+
+    const handlePaymentError = useCallback((error: string, boyaError?: any) => {
+        console.error('Payment error:', error, boyaError);
+        setPaymentError(error);
+        setPaymentResult(null);
+        setRequires3DS(false);
+    }, []);
+
+    const handleRequires3DSecure = useCallback((url: string) => {
+        console.log('3D Secure required:', url);
+        setAuthUrl(url);
+        setRequires3DS(true);
+        setPaymentError('');
+    }, []);
+
+    const handle3DSecureSuccess = useCallback(() => {
+        console.log('3D Secure completed successfully');
+        setRequires3DS(false);
+        setAuthUrl('');
+        // Simulate successful payment after 3DS
+        const mockResult: BoyaPaymentResponse = {
+            id: 'payment_' + Date.now(),
+            status: 'succeeded',
+            amount: courseData.price * formData.seats * 100,
+            currency: courseData.currency,
+            customer_id: 'customer_' + user?.id
+        };
+        handlePaymentSuccess(mockResult);
+    }, [courseData.price, formData.seats, courseData.currency, user?.id, handlePaymentSuccess]);
+
+    const handle3DSecureError = useCallback((error: string) => {
+        console.error('3D Secure error:', error);
+        setRequires3DS(false);
+        setAuthUrl('');
+        setPaymentError(error);
+    }, []);
+
+    const handle3DSecureCancel = useCallback(() => {
+        console.log('3D Secure cancelled');
+        setRequires3DS(false);
+        setAuthUrl('');
     }, []);
 
     // Early return for loading state
@@ -234,12 +293,6 @@ const CheckoutFlow = ({ onClose, enrollment }: CheckoutFlowProps) => {
         );
     }
 
-    const CourseCardMemoized = useMemo(() => (
-        <CourseCard courseData={courseData} formData={formData} formatPrice={formatPrice} />
-    ), [courseData, formData, formatPrice]);
-
-
-
     return (
         <div className="min-h-screen bg-gray-50 py-8">
             <div className="max-w-4xl mx-auto px-4">
@@ -272,7 +325,7 @@ const CheckoutFlow = ({ onClose, enrollment }: CheckoutFlowProps) => {
                                 <div className="space-y-6">
                                     <div>
                                         <h2 className="text-2xl font-semibold text-gray-900 mb-6">Confirm Course Details</h2>
-                                        {CourseCardMemoized}
+                                        <CourseCard courseData={courseData} formData={formData} formatPrice={formatPrice} />
 
                                         <div className="bg-gray-50 rounded-lg p-4 mb-6">
                                             <h4 className="font-medium text-gray-900 mb-3">Session Information</h4>
@@ -401,120 +454,63 @@ const CheckoutFlow = ({ onClose, enrollment }: CheckoutFlowProps) => {
                             )}
                             {step === 3 && (
                                 <div className="space-y-6">
-                                    <div>
-                                        <h2 className="text-2xl font-semibold text-gray-900 mb-6">Payment Method</h2>
-
-                                        <div className="space-y-4">
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                <button
-                                                    onClick={() => handleInputChange('paymentMethod', 'credit-card')}
-                                                    className={`p-4 border-2 rounded-lg flex items-center gap-3 ${formData.paymentMethod === 'credit-card'
-                                                            ? 'border-blue-500 bg-blue-50'
-                                                            : 'border-gray-200 hover:border-gray-300'
-                                                        }`}
-                                                >
-                                                    <CreditCard className="w-5 h-5" />
-                                                    <span className="font-medium">Credit/Debit Card</span>
-                                                </button>
-
-                                                <button
-                                                    onClick={() => handleInputChange('paymentMethod', 'mpesa')}
-                                                    className={`p-4 border-2 rounded-lg flex items-center gap-3 ${formData.paymentMethod === 'mpesa'
-                                                            ? 'border-blue-500 bg-blue-50'
-                                                            : 'border-gray-200 hover:border-gray-300'
-                                                        }`}
-                                                >
-                                                    <Phone className="w-5 h-5" />
-                                                    <span className="font-medium">M-Pesa</span>
-                                                </button>
+                                    {requires3DS && authUrl ? (
+                                        <ThreeDSecureHandler
+                                            authUrl={authUrl}
+                                            amount={courseData.price * formData.seats}
+                                            currency={courseData.currency}
+                                            onSuccess={handle3DSecureSuccess}
+                                            onError={handle3DSecureError}
+                                            onCancel={handle3DSecureCancel}
+                                        />
+                                    ) : paymentResult ? (
+                                        <div className="text-center space-y-4">
+                                            <div className="text-green-600 text-6xl mb-4">
+                                                <Check className="w-16 h-16 mx-auto" />
                                             </div>
-
-                                            {formData.paymentMethod === 'credit-card' && (
-                                                <div className="bg-white border border-gray-200 rounded-lg p-6 mt-6">
-                                                    <h4 className="font-medium text-gray-900 mb-4">Card Details</h4>
-                                                    <div className="space-y-4">
-                                                        <div>
-                                                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                                Cardholder Name *
-                                                            </label>
-                                                            <input
-                                                                type="text"
-                                                                value={formData.cardholderName}
-                                                                onChange={(e) => handleInputChange('cardholderName', e.target.value)}
-                                                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                                                placeholder="Full name on card"
-                                                            />
-                                                        </div>
-
-                                                        <div>
-                                                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                                Card Number *
-                                                            </label>
-                                                            <input
-                                                                type="text"
-                                                                value={formData.cardNumber}
-                                                                onChange={(e) => handleInputChange('cardNumber', formatCardNumber(e.target.value))}
-                                                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                                                placeholder="1234 5678 9012 3456"
-                                                                maxLength={19}
-                                                            />
-                                                        </div>
-
-                                                        <div className="grid grid-cols-2 gap-4">
-                                                            <div>
-                                                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                                    Expiry Date *
-                                                                </label>
-                                                                <input
-                                                                    type="text"
-                                                                    value={formData.expiryDate}
-                                                                    onChange={(e) => handleInputChange('expiryDate', formatExpiryDate(e.target.value))}
-                                                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                                                    placeholder="MM/YY"
-                                                                    maxLength={5}
-                                                                />
-                                                            </div>
-
-                                                            <div>
-                                                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                                    CVV *
-                                                                </label>
-                                                                <input
-                                                                    type="text"
-                                                                    value={formData.cvv}
-                                                                    onChange={(e) => handleInputChange('cvv', e.target.value.replace(/\D/g, ''))}
-                                                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                                                    placeholder="123"
-                                                                    maxLength={4}
-                                                                />
-                                                            </div>
-                                                        </div>
-                                                    </div>
+                                            <h2 className="text-2xl font-semibold text-green-600">Payment Successful!</h2>
+                                            <p className="text-gray-600">Your enrollment has been confirmed.</p>
+                                            <div className="bg-green-50 p-4 rounded-lg">
+                                                <p className="text-sm text-green-800">
+                                                    Payment ID: {paymentResult.id}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div>
+                                            <h2 className="text-2xl font-semibold text-gray-900 mb-6">Payment</h2>
+                                            
+                                            {paymentError && (
+                                                <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                                                    <p className="text-red-600">{paymentError}</p>
                                                 </div>
                                             )}
-
-                                            {formData.paymentMethod === 'mpesa' && (
-                                                <div className="bg-white border border-gray-200 rounded-lg p-6 mt-6">
-                                                    <h4 className="font-medium text-gray-900 mb-4">M-Pesa Details</h4>
-                                                    <div>
-                                                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                            M-Pesa Phone Number *
-                                                        </label>
-                                                        <input
-                                                            type="tel"
-                                                            value={formData.mpesaNumber}
-                                                            onChange={(e) => handleInputChange('mpesaNumber', e.target.value)}
-                                                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                                            placeholder="+254 700 000 000"
-                                                        />
-                                                        <p className="text-sm text-gray-600 mt-2">
-                                                            You'll receive an M-Pesa prompt to complete the payment
-                                                        </p>
-                                                    </div>
+                                            
+                                            {BASIS_THEORY_API_KEY ? (
+                                                <BoyaPaymentFormSimple
+                                                    apiKey={BASIS_THEORY_API_KEY}
+                                                    amount={courseData.price * formData.seats}
+                                                    currency={courseData.currency}
+                                                    customer={{
+                                                        name: formData.fullName || user?.fullName || 'Student',
+                                                        email: formData.email || user?.email || '',
+                                                        phone: formData.parentPhone || '+1234567890'
+                                                    }}
+                                                    description={`Enrollment for ${courseData.title} (${formData.seats} seat${formData.seats > 1 ? 's' : ''})`}
+                                                    saveForRecurringPayments={false}
+                                                    onSuccess={handlePaymentSuccess}
+                                                    onError={handlePaymentError}
+                                                    onRequires3DSecure={handleRequires3DSecure}
+                                                    title="Complete Payment"
+                                                    formDescription="Secure payment powered by Boya"
+                                                />
+                                            ) : (
+                                                <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                                                    <p className="text-yellow-800">Payment system is not configured. Please contact support.</p>
                                                 </div>
                                             )}
                                         </div>
-                                    </div>
+                                    )}
                                 </div>
                             )}
                         </div>
@@ -538,19 +534,21 @@ const CheckoutFlow = ({ onClose, enrollment }: CheckoutFlowProps) => {
                                 </div>
 
                                 <div className="mt-6 space-y-3">
-                                    {step < 3 ? (
+                                    {step < 3 && (
                                         <button
                                             onClick={handleNext}
                                             className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-blue-700 transition-colors"
                                         >
                                             {step === 1 ? 'Continue to Student Info' : 'Continue to Payment'}
                                         </button>
-                                    ) : (
+                                    )}
+
+                                    {paymentResult && (
                                         <button
-                                            onClick={handleSubmit}
+                                            onClick={onClose}
                                             className="w-full bg-green-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-green-700 transition-colors"
                                         >
-                                            Complete Enrollment
+                                            Continue to Dashboard
                                         </button>
                                     )}
 
