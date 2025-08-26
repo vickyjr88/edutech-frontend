@@ -54,10 +54,13 @@ class BasisTheoryManager {
         throw new Error('BasisTheory SDK not loaded after 5 seconds');
       }
       
-      // Initialize BT with proper options for test environment
+      // Initialize BT with environment-appropriate options
+      const environment = (window as any).BT_ENVIRONMENT || 'development';
+      const enableLogging = (window as any).BT_DEV_MODE || false;
+      
       this.btInstance = await (window as any).BasisTheory.init(apiKey, {
-        environment: 'development',
-        enableLogging: true,
+        environment,
+        enableLogging,
         elements: true
       });
       

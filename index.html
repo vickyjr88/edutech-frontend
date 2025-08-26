@@ -20,10 +20,15 @@
 
   <body>
     <div id="root"></div>
-    <!-- Configure Basis Theory for test environment -->
+    <!-- Configure Basis Theory environment dynamically -->
     <script>
-      window.BT_ENVIRONMENT = 'development';
-      window.BT_DEV_MODE = true;
+      // Set Basis Theory environment based on app environment
+      const isProduction = window.location.hostname !== 'localhost' && 
+                           window.location.hostname !== '127.0.0.1' && 
+                           !window.location.hostname.includes('dev');
+      
+      window.BT_ENVIRONMENT = isProduction ? 'production' : 'development';
+      window.BT_DEV_MODE = !isProduction;
     </script>
     <!-- Load Basis Theory SDK -->
     <script src="https://js.basistheory.com" type="module"></script>
