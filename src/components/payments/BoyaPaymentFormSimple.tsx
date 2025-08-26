@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { 
   BasisTheoryProvider, 
   CardNumberElement,
@@ -13,6 +13,64 @@ import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, CreditCard, Shield } from 'lucide-react';
 import BoyaPaymentService, { BoyaCustomer, BoyaPaymentResponse } from '@/services/boya-payment.service';
+
+// Global BasisTheory manager to ensure single initialization
+class BasisTheoryManager {
+  private static instance: BasisTheoryManager;
+  private btInstance: any = null;
+  private initPromise: Promise<any> | null = null;
+  private isInitialized = false;
+
+  static getInstance(): BasisTheoryManager {
+    if (!BasisTheoryManager.instance) {
+      BasisTheoryManager.instance = new BasisTheoryManager();
+    }
+    return BasisTheoryManager.instance;
+  }
+
+  async initialize(apiKey: string): Promise<any> {
+    if (this.isInitialized && this.btInstance) {
+      return this.btInstance;
+    }
+
+    if (this.initPromise) {
+      return this.initPromise;
+    }
+
+    this.initPromise = this.performInitialization(apiKey);
+    return this.initPromise;
+  }
+
+  private async performInitialization(apiKey: string): Promise<any> {
+    try {
+      // Wait for BasisTheory to be available
+      let attempts = 0;
+      while (!(window as any).BasisTheory && attempts < 50) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+        attempts++;
+      }
+      
+      if (!(window as any).BasisTheory) {
+        throw new Error('BasisTheory SDK not loaded after 5 seconds');
+      }
+      
+      // Initialize BT with proper options for test environment
+      this.btInstance = await (window as any).BasisTheory.init(apiKey, {
+        environment: 'development',
+        enableLogging: true,
+        elements: true
+      });
+      
+      this.isInitialized = true;
+      
+      return this.btInstance;
+      
+    } catch (error) {
+      this.initPromise = null; // Reset so we can try again
+      throw error;
+    }
+  }
+}
 
 interface BoyaPaymentFormSimpleProps {
   amount: number;
@@ -46,6 +104,7 @@ const BoyaPaymentFormSimple: React.FC<BoyaPaymentFormSimpleProps> = ({
   const cardExpiryRef = useRef<any>();
   const cardCvcRef = useRef<any>();
   const [isLoading, setIsLoading] = useState(false);
+  
   const [error, setError] = useState<string>('');
   const [cardholder, setCardholder] = useState(customer?.name || '');
   const [cardBrand, setCardBrand] = useState();
@@ -66,28 +125,22 @@ const BoyaPaymentFormSimple: React.FC<BoyaPaymentFormSimpleProps> = ({
         throw new Error('Customer information is required');
       }
 
-      console.log('Step 1: Tokenizing card with Basis Theory...');
-
-      // Step 1: Tokenize the card with Basis Theory using the documented approach
       const tokenizeResponse = await bt.tokenize({
         number: cardNumberRef.current,
-        expiration_month: cardExpiryRef.current, 
-        expiration_year: cardExpiryRef.current,
+        expiration_month: cardExpiryRef.current,
+        expiration_year: cardExpiryRef.current,  
         cvc: cardCvcRef.current
       });
 
-      console.log('Tokenization response:', tokenizeResponse);
-
-      if (!tokenizeResponse || !tokenizeResponse.fingerprint) {
-        throw new Error('Failed to tokenize card - no fingerprint received');
+      const cardToken = tokenizeResponse.number;
+      
+      if (!cardToken) {
+        throw new Error('Failed to tokenize card - no card token received');
       }
 
-      console.log('Step 1 Complete: Card tokenized successfully');
-      console.log('Step 2: Processing payment with Boya...');
-
-      // Step 2: Process payment with Boya using the fingerprint
+      // Step 2: Process payment with Boya using the card token
       const paymentResponse = await paymentService.processPayment({
-        fingerprint: tokenizeResponse.fingerprint,
+        fingerprint: cardToken,
         amount: BoyaPaymentService.toCents(amount, currency),
         currency,
         customer: customerId ? undefined : customer,
@@ -96,14 +149,9 @@ const BoyaPaymentFormSimple: React.FC<BoyaPaymentFormSimpleProps> = ({
         saveForRecurringPayments
       });
 
-      console.log('Step 2 Complete: Payment response received:', paymentResponse.status);
-
-      // Step 3: Handle the payment response
       if (paymentResponse.status === 'succeeded') {
-        console.log('Payment succeeded immediately');
         onSuccess?.(paymentResponse);
       } else if (paymentService.requires3DSecure(paymentResponse)) {
-        console.log('Payment requires 3D Secure authentication');
         const authUrl = paymentService.get3DSecureUrl(paymentResponse);
         if (authUrl && onRequires3DSecure) {
           onRequires3DSecure(authUrl);
@@ -111,15 +159,12 @@ const BoyaPaymentFormSimple: React.FC<BoyaPaymentFormSimpleProps> = ({
           throw new Error('3D Secure authentication required but no handler provided');
         }
       } else if (paymentResponse.status === 'pending') {
-        console.log('Payment is pending');
         onSuccess?.(paymentResponse);
       } else {
         throw new Error(paymentResponse.error?.message || `Payment ${paymentResponse.status}`);
       }
 
     } catch (err: any) {
-      console.error('Payment processing error:', err);
-      
       let errorMessage = 'Payment failed. Please try again.';
       
       // Handle Boya API errors
@@ -328,6 +373,27 @@ const BoyaPaymentWrapperSimple: React.FC<BoyaPaymentWrapperSimpleProps> = ({
   apiKey,
   ...props
 }) => {
+  const [btInstance, setBtInstance] = useState<any>(null);
+  const [initError, setInitError] = useState<string>('');
+  
+  
+  // Initialize BasisTheory using singleton manager
+  useEffect(() => {
+    const initializeBT = async () => {
+      try {
+        const manager = BasisTheoryManager.getInstance();
+        const bt = await manager.initialize(apiKey);
+        setBtInstance(bt);
+      } catch (error) {
+        setInitError(error instanceof Error ? error.message : 'Initialization failed');
+      }
+    };
+    
+    if (apiKey) {
+      initializeBT();
+    }
+  }, [apiKey]);
+  
   if (!apiKey) {
     return (
       <div className="p-4 border border-red-200 rounded-md bg-red-50">
@@ -336,8 +402,34 @@ const BoyaPaymentWrapperSimple: React.FC<BoyaPaymentWrapperSimpleProps> = ({
     );
   }
   
+  // Check if the key format is correct for Elements
+  if (apiKey.includes('_pvt_')) {
+    return (
+      <div className="p-4 border border-red-200 rounded-md bg-red-50">
+        <p className="text-red-600">Error: Private key detected. Elements requires a PUBLIC key (key_test_...pub_...)</p>
+      </div>
+    );
+  }
+  
+  if (initError) {
+    return (
+      <div className="p-4 border border-red-200 rounded-md bg-red-50">
+        <p className="text-red-600">BasisTheory Error: {initError}</p>
+      </div>
+    );
+  }
+  
+  if (!btInstance) {
+    return (
+      <div className="p-4 border border-gray-200 rounded-md bg-gray-50">
+        <p className="text-gray-600">Initializing payment system...</p>
+      </div>
+    );
+  }
+  
+  
   return (
-    <BasisTheoryProvider apiKey={apiKey}>
+    <BasisTheoryProvider bt={btInstance}>
       <BoyaPaymentFormSimple {...props} />
     </BasisTheoryProvider>
   );

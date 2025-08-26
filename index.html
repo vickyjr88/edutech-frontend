@@ -20,6 +20,13 @@
 
   <body>
     <div id="root"></div>
+    <!-- Configure Basis Theory for test environment -->
+    <script>
+      window.BT_ENVIRONMENT = 'development';
+      window.BT_DEV_MODE = true;
+    </script>
+    <!-- Load Basis Theory SDK -->
+    <script src="https://js.basistheory.com" type="module"></script>
     <!-- IMPORTANT: DO NOT REMOVE THIS SCRIPT TAG OR THIS VERY COMMENT! -->
     <script src="https://cdn.gpteng.co/gptengineer.js" type="module"></script>
     <script type="module" src="/src/main.tsx"></script>

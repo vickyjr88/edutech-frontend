@@ -74,7 +74,6 @@ class BoyaPaymentService {
       (error) => {
         if (error.response?.data) {
           const boyaError: BoyaErrorResponse = error.response.data;
-          console.error('Boya API Error:', boyaError);
           
           // Create a more user-friendly error message
           let userMessage = boyaError.message || 'Payment failed';
@@ -101,26 +100,13 @@ class BoyaPaymentService {
    */
   async directCharge(request: BoyaDirectChargeRequest): Promise<BoyaPaymentResponse> {
     try {
-      console.log('Processing Boya direct charge:', {
-        ...request,
-        payment_intent: request.payment_intent.substring(0, 20) + '...'
-      });
-
       const response = await this.apiClient.post<BoyaPaymentResponse>(
         '/card-collections/direct-charge',
         request
       );
 
-      console.log('Boya charge response:', {
-        id: response.data.id,
-        status: response.data.status,
-        amount: response.data.amount,
-        hasNextAction: !!response.data.next_action
-      });
-
       return response.data;
     } catch (error: any) {
-      console.error('Boya direct charge failed:', error);
       throw error;
     }
   }
