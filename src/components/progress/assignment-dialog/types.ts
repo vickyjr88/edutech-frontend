@@ -20,6 +20,18 @@ export interface Assignment {
   videoLinks?: VideoLink[];
   lateBy?: string;
   isUrgent?: boolean;
+  // Additional fields from real API data
+  submissionContent?: string;
+  submittedAt?: string;
+  attachments?: string[];
+  assignmentId?: string; // The actual assignment ID for API calls
+  studentAssignmentId?: string; // For updating submissions
+  totalPoints?: number;
+  passingGrade?: number;
+  submissionStatus?: string;
+  timeSpent?: number;
+  attempts?: number;
+  isLate?: boolean;
 }
 
 export interface Resource {

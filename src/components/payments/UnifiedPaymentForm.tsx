@@ -1,40 +1,64 @@
 import React, { useState } from 'react';
 import CardPaymentWrapper from './CardPaymentForm';
 import StripePaymentWrapper from './StripePaymentForm';
+import BoyaPaymentWrapper from './BoyaPaymentForm';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { AlertTriangle, RefreshCw } from 'lucide-react';
+import { AlertTriangle, RefreshCw, ExternalLink } from 'lucide-react';
+import type { BoyaCustomer, BoyaPaymentResponse } from '@/services/boya-payment.service';
 
 interface UnifiedPaymentFormProps {
   amount: number;
   currency?: string;
+  customer?: BoyaCustomer;
+  customerId?: string;
+  paymentDescription?: string;
+  saveForRecurringPayments?: boolean;
   onSuccess?: (paymentResult: any) => void;
-  onError?: (error: string) => void;
+  onError?: (error: string, boyaError?: any) => void;
+  onRequires3DSecure?: (authUrl: string) => void;
   title?: string;
   description?: string;
   basisTheoryApiKey?: string;
   stripePublishableKey?: string;
-  preferredProvider?: 'stripe' | 'basis-theory';
+  preferredProvider?: 'stripe' | 'basis-theory' | 'boya';
+  useBoyaFlow?: boolean; // New flag to use Boya payment flow
 }
 
 const UnifiedPaymentForm: React.FC<UnifiedPaymentFormProps> = ({
   amount,
   currency = 'USD',
+  customer,
+  customerId,
+  paymentDescription,
+  saveForRecurringPayments = false,
   onSuccess,
   onError,
+  onRequires3DSecure,
   title = 'Payment Information',
   description = 'Enter your card details to complete payment',
   basisTheoryApiKey,
   stripePublishableKey,
-  preferredProvider = 'stripe'
+  preferredProvider = 'boya', // Default to Boya for new implementation
+  useBoyaFlow = true // Default to using Boya flow
 }) => {
-  const [currentProvider, setCurrentProvider] = useState<'stripe' | 'basis-theory'>(preferredProvider);
+  const [currentProvider, setCurrentProvider] = useState<'stripe' | 'basis-theory' | 'boya'>(preferredProvider);
+  const [requires3DS, setRequires3DS] = useState(false);
+  const [authUrl, setAuthUrl] = useState<string | null>(null);
   const [hasError, setHasError] = useState(false);
   const [errorCount, setErrorCount] = useState(0);
 
-  const handlePaymentError = (error: string) => {
+  const handlePaymentError = (error: string, boyaError?: any) => {
     console.error(`${currentProvider} payment error:`, error);
     setErrorCount(prev => prev + 1);
+    
+    // If using Boya and it fails, try Stripe as fallback (but only for non-Boya specific errors)
+    if (currentProvider === 'boya' && stripePublishableKey && errorCount < 2 && !boyaError) {
+      console.log('Falling back to Stripe payment processing...');
+      setCurrentProvider('stripe');
+      setHasError(true);
+      return;
+    }
     
     // If we're using Stripe and it fails, try Basis Theory as fallback
     if (currentProvider === 'stripe' && basisTheoryApiKey && errorCount < 2) {
@@ -52,8 +76,8 @@ const UnifiedPaymentForm: React.FC<UnifiedPaymentFormProps> = ({
       return;
     }
     
-    // If both fail or only one provider is available, report the error
-    onError?.(error);
+    // If all fail or only one provider is available, report the error
+    onError?.(error, boyaError);
   };
 
   const handlePaymentSuccess = (result: any) => {
@@ -66,14 +90,26 @@ const UnifiedPaymentForm: React.FC<UnifiedPaymentFormProps> = ({
     onSuccess?.(enhancedResult);
   };
 
+  const handle3DSecure = (url: string) => {
+    setAuthUrl(url);
+    setRequires3DS(true);
+    onRequires3DSecure?.(url);
+  };
+
   const switchProvider = () => {
-    if (currentProvider === 'stripe' && basisTheoryApiKey) {
+    if (currentProvider === 'boya' && stripePublishableKey) {
+      setCurrentProvider('stripe');
+    } else if (currentProvider === 'stripe' && basisTheoryApiKey) {
       setCurrentProvider('basis-theory');
+    } else if (currentProvider === 'basis-theory' && basisTheoryApiKey && useBoyaFlow) {
+      setCurrentProvider('boya');
     } else if (currentProvider === 'basis-theory' && stripePublishableKey) {
       setCurrentProvider('stripe');
     }
     setHasError(false);
     setErrorCount(0);
+    setRequires3DS(false);
+    setAuthUrl(null);
   };
 
   // Show error if no payment providers are configured
@@ -85,11 +121,39 @@ const UnifiedPaymentForm: React.FC<UnifiedPaymentFormProps> = ({
     );
   }
 
+  // If 3D Secure is required, show authentication interface
+  if (requires3DS && authUrl) {
+    return (
+      <div className="space-y-4">
+        <Alert>
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription>
+            Your card requires additional authentication. Please complete the verification to continue.
+          </AlertDescription>
+        </Alert>
+        <div className="flex justify-center">
+          <Button
+            onClick={() => window.open(authUrl, '_blank')}
+            className="flex items-center gap-2"
+          >
+            <ExternalLink className="h-4 w-4" />
+            Complete Authentication
+          </Button>
+        </div>
+        <div className="text-center text-sm text-muted-foreground">
+          After completing authentication, your payment will be processed automatically.
+        </div>
+      </div>
+    );
+  }
+
   // Determine which providers are available
   const hasBothProviders = !!(basisTheoryApiKey && stripePublishableKey);
-  const canSwitchProvider = hasBothProviders && (
+  const hasMultipleProviders = (basisTheoryApiKey && stripePublishableKey) || (useBoyaFlow && basisTheoryApiKey && stripePublishableKey);
+  const canSwitchProvider = hasMultipleProviders && (
+    (currentProvider === 'boya' && stripePublishableKey) ||
     (currentProvider === 'stripe' && basisTheoryApiKey) ||
-    (currentProvider === 'basis-theory' && stripePublishableKey)
+    (currentProvider === 'basis-theory' && (stripePublishableKey || (useBoyaFlow && basisTheoryApiKey)))
   );
 
   return (
@@ -105,7 +169,22 @@ const UnifiedPaymentForm: React.FC<UnifiedPaymentFormProps> = ({
       )}
 
       {/* Payment Form */}
-      {currentProvider === 'stripe' && stripePublishableKey ? (
+      {currentProvider === 'boya' && basisTheoryApiKey && useBoyaFlow ? (
+        <BoyaPaymentWrapper
+          apiKey={basisTheoryApiKey}
+          amount={amount}
+          currency={currency}
+          customer={customer}
+          customerId={customerId}
+          description={paymentDescription}
+          saveForRecurringPayments={saveForRecurringPayments}
+          onSuccess={handlePaymentSuccess}
+          onError={handlePaymentError}
+          onRequires3DSecure={handle3DSecure}
+          title={title}
+          formDescription={description}
+        />
+      ) : currentProvider === 'stripe' && stripePublishableKey ? (
         <StripePaymentWrapper
           publishableKey={stripePublishableKey}
           amount={amount}
@@ -141,15 +220,15 @@ const UnifiedPaymentForm: React.FC<UnifiedPaymentFormProps> = ({
             className="text-xs text-muted-foreground hover:text-foreground"
           >
             <RefreshCw className="h-3 w-3 mr-1" />
-            Switch to {currentProvider === 'stripe' ? 'Basis Theory' : 'Stripe'}
+            Switch to {currentProvider === 'boya' ? 'Stripe' : currentProvider === 'stripe' ? 'Basis Theory' : useBoyaFlow ? 'Boya' : 'Stripe'}
           </Button>
         </div>
       )}
 
       {/* Provider Info */}
       <div className="text-center text-xs text-muted-foreground">
-        Powered by {currentProvider === 'stripe' ? 'Stripe' : 'Basis Theory'}
-        {hasBothProviders && ' with automatic fallback'}
+        Powered by {currentProvider === 'boya' ? 'Boya + Basis Theory' : currentProvider === 'stripe' ? 'Stripe' : 'Basis Theory'}
+        {hasMultipleProviders && ' with automatic fallback'}
       </div>
     </div>
   );

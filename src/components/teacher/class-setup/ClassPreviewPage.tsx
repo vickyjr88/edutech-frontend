@@ -238,7 +238,12 @@ const ClassPreviewPage = ({
               <CardContent>
                 {formValues.objectives ? (
                   <div className="space-y-3">
-                    {formValues.objectives.split('\n').filter(Boolean).map((objective: string, index: number) => (
+                    {(Array.isArray(formValues.objectives)
+                      ? formValues.objectives
+                      : typeof formValues.objectives === 'string'
+                      ? formValues.objectives.split('\n')
+                      : []
+                    ).filter(Boolean).map((objective: string, index: number) => (
                       <div key={index} className="flex items-start gap-3">
                         <div className="w-6 h-6 bg-kidato-indigo/10 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
                           <span className="text-xs font-semibold text-kidato-indigo">{index + 1}</span>

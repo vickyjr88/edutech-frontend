@@ -30,12 +30,13 @@ export const AssignmentSubmissionForm = ({
   const [uploading, setUploading] = useState(false);
   const [fileSelected, setFileSelected] = useState<File | null>(null);
 
+  // Pre-populate form with existing submission data
   const form = useForm<AssignmentFormValues>({
     resolver: zodResolver(assignmentFormSchema),
     defaultValues: {
-      answer: "",
+      answer: assignment?.submissionContent || "",
       attachedFile: null,
-      externalLink: "",
+      externalLink: "", // Could be extracted from attachments if it's a link
       difficultyRating: "",
     },
   });
@@ -47,16 +48,24 @@ export const AssignmentSubmissionForm = ({
     }
   };
 
-  const onSubmit = (values: AssignmentFormValues) => {
+  const onSubmit = async (values: AssignmentFormValues) => {
     setUploading(true);
     
-    setTimeout(() => {
-      setUploading(false);
+    try {
+      // Prepare attachments - for now, just handle the file name
+      // In a real implementation, you'd upload the file to storage first
+      const attachments: string[] = [];
+      if (fileSelected) {
+        // In real implementation: upload file and get URL
+        attachments.push(fileSelected.name); // Placeholder
+      }
       
       // Call the parent handler with the updated data
       if (onUpdateAssignment) {
-        onUpdateAssignment(assignment.id, {
-          ...values,
+        await onUpdateAssignment(assignment.id, {
+          content: values.answer,
+          attachments,
+          answer: values.answer, // For backward compatibility
           status: "pending_review",
           submitDate: new Date().toLocaleDateString("en-US", {
             year: 'numeric', 
@@ -65,22 +74,46 @@ export const AssignmentSubmissionForm = ({
           })
         });
       }
-      
-      onClose();
-    }, 1500);
+    } catch (error) {
+      console.error('Error in form submission:', error);
+    } finally {
+      setUploading(false);
+    }
   };
 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5 pt-2">
         <div className="grid grid-cols-1 gap-5">
+          {/* Show existing submission info if available */}
+          {assignment?.submittedAt && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <h4 className="font-medium text-blue-900 mb-2">Previous Submission</h4>
+              <p className="text-sm text-blue-700 mb-2">
+                Submitted: {new Date(assignment.submittedAt).toLocaleDateString()}
+              </p>
+              {assignment.attachments && assignment.attachments.length > 0 && (
+                <div>
+                  <p className="text-sm text-blue-700 mb-1">Attachments:</p>
+                  <ul className="text-xs text-blue-600">
+                    {assignment.attachments.map((attachment: string, index: number) => (
+                      <li key={index}>{attachment.split('/').pop()}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Answer field */}
           <FormField
             control={form.control}
             name="answer"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-sm font-medium">Your Notes</FormLabel>
+                <FormLabel className="text-sm font-medium">
+                  {assignment?.submissionContent ? "Update Your Notes" : "Your Notes"}
+                </FormLabel>
                 <FormControl>
                   <Textarea 
                     placeholder="Add any notes or comments about your submission..." 
@@ -190,11 +223,11 @@ export const AssignmentSubmissionForm = ({
           </Button>
           <Button type="submit" disabled={uploading}>
             {uploading ? (
-              <>Uploading...</>
+              <>Saving...</>
             ) : (
               <>
                 <Upload className="h-4 w-4 mr-1" />
-                Submit Assignment
+                {assignment?.submittedAt ? "Update Submission" : "Submit Assignment"}
               </>
             )}
           </Button>

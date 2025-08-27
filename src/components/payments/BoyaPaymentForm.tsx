@@ -11,24 +11,35 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2, CreditCard, Shield } from 'lucide-react';
+import { Loader2, CreditCard, Shield, ExternalLink } from 'lucide-react';
+import BoyaPaymentService, { BoyaCustomer, BoyaPaymentResponse } from '@/services/boya-payment.service';
 
-interface CardPaymentFormProps {
+interface BoyaPaymentFormProps {
   amount: number;
   currency?: string;
-  onSuccess?: (paymentResult: any) => void;
-  onError?: (error: string) => void;
-  title?: string;
+  customer?: BoyaCustomer;
+  customerId?: string;
   description?: string;
+  saveForRecurringPayments?: boolean;
+  onSuccess?: (paymentResult: BoyaPaymentResponse) => void;
+  onError?: (error: string, boyaError?: any) => void;
+  onRequires3DSecure?: (authUrl: string) => void;
+  title?: string;
+  formDescription?: string;
 }
 
-const CardPaymentForm: React.FC<CardPaymentFormProps> = ({
+const BoyaPaymentForm: React.FC<BoyaPaymentFormProps> = ({
   amount,
   currency = 'USD',
+  customer,
+  customerId,
+  description = 'Payment',
+  saveForRecurringPayments = false,
   onSuccess,
   onError,
+  onRequires3DSecure,
   title = 'Payment Information',
-  description = 'Enter your card details to complete payment'
+  formDescription = 'Enter your card details to complete payment'
 }) => {
   const { bt } = useBasisTheory();
   const cardNumberRef = useRef<any>();
@@ -36,26 +47,20 @@ const CardPaymentForm: React.FC<CardPaymentFormProps> = ({
   const cardCvcRef = useRef<any>();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>('');
-  const [cardholder, setCardholder] = useState('');
+  const [cardholder, setCardholder] = useState(customer?.name || '');
   const [cardBrand, setCardBrand] = useState();
+  const [paymentService] = useState(() => new BoyaPaymentService());
 
   // Debug logging
   useEffect(() => {
-    console.log('BasisTheory instance from provider:', bt);
-    console.log('BT available:', !!bt);
-    if (bt) {
-      console.log('BT methods:', Object.keys(bt));
-    }
-  }, [bt]);
-
-  // Debug element refs
-  useEffect(() => {
-    console.log('Element refs:', {
-      cardNumber: cardNumberRef.current,
-      cardExpiry: cardExpiryRef.current,
-      cardCvc: cardCvcRef.current
+    console.log('BoyaPaymentForm initialized with:', {
+      amount,
+      currency,
+      hasCustomer: !!customer,
+      hasCustomerId: !!customerId,
+      btAvailable: !!bt
     });
-  }, [cardNumberRef.current, cardExpiryRef.current, cardCvcRef.current]);
+  }, [bt, amount, currency, customer, customerId]);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -67,44 +72,89 @@ const CardPaymentForm: React.FC<CardPaymentFormProps> = ({
         throw new Error('Payment system not initialized');
       }
 
-      console.log('Attempting tokenization with BasisTheory...');
+      // Validate customer information
+      if (!customerId && !customer) {
+        throw new Error('Customer information is required');
+      }
 
-      // Create tokenize request according to Basis Theory documentation
+      console.log('Step 1: Tokenizing card with Basis Theory...');
+
+      // Step 1: Tokenize the card with Basis Theory
       const tokenizeResponse = await bt.tokenize({
-        number: cardNumberRef.current,
-        expiration_month: cardExpiryRef.current, 
-        expiration_year: cardExpiryRef.current,
-        cvc: cardCvcRef.current
+        type: 'card',
+        data: {
+          number: cardNumberRef.current,
+          expiration_month: cardExpiryRef.current, 
+          expiration_year: cardExpiryRef.current,
+          cvc: cardCvcRef.current
+        }
       });
 
       if (!tokenizeResponse || !tokenizeResponse.fingerprint) {
         throw new Error('Failed to tokenize card - no fingerprint received');
       }
 
-      console.log('Tokenization successful:', { 
+      console.log('Step 1 Complete: Card tokenized successfully');
+      console.log('Step 2: Processing payment with Boya...');
+
+      // Step 2: Process payment with Boya using the fingerprint
+      const paymentResponse = await paymentService.processPayment({
         fingerprint: tokenizeResponse.fingerprint,
-        last4: tokenizeResponse.data?.last4
+        amount: BoyaPaymentService.toCents(amount, currency),
+        currency,
+        customer: customerId ? undefined : customer,
+        customerId,
+        description,
+        saveForRecurringPayments
       });
 
-      const paymentResult = {
-        fingerprint: tokenizeResponse.fingerprint,
-        token: tokenizeResponse.id,
-        last4: tokenizeResponse.data?.last4,
-        amount,
-        currency,
-        cardholder,
-        timestamp: new Date().toISOString()
-      };
+      console.log('Step 2 Complete: Payment response received:', paymentResponse.status);
 
-      onSuccess?.(paymentResult);
-    } catch (err) {
-      console.error('Basis Theory tokenization error:', err);
-      const errorMessage = err instanceof Error ? err.message : 'Payment failed';
+      // Step 3: Handle the payment response
+      if (paymentResponse.status === 'succeeded') {
+        console.log('Payment succeeded immediately');
+        onSuccess?.(paymentResponse);
+      } else if (paymentService.requires3DSecure(paymentResponse)) {
+        console.log('Payment requires 3D Secure authentication');
+        const authUrl = paymentService.get3DSecureUrl(paymentResponse);
+        if (authUrl && onRequires3DSecure) {
+          onRequires3DSecure(authUrl);
+        } else {
+          throw new Error('3D Secure authentication required but no handler provided');
+        }
+      } else if (paymentResponse.status === 'pending') {
+        console.log('Payment is pending');
+        onSuccess?.(paymentResponse);
+      } else {
+        throw new Error(paymentResponse.error?.message || `Payment ${paymentResponse.status}`);
+      }
+
+    } catch (err: any) {
+      console.error('Payment processing error:', err);
+      
+      let errorMessage = 'Payment failed. Please try again.';
+      
+      // Handle Boya API errors
+      if (err.userMessage) {
+        errorMessage = err.userMessage;
+      } else if (err.boyaError) {
+        errorMessage = err.boyaError.message || errorMessage;
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+      
       setError(errorMessage);
-      onError?.(errorMessage);
+      onError?.(errorMessage, err.boyaError);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const formatAmount = (amount: number, currency: string) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: currency
+    }).format(amount);
   };
 
   return (
@@ -114,13 +164,13 @@ const CardPaymentForm: React.FC<CardPaymentFormProps> = ({
           <CreditCard className="h-5 w-5" />
           {title}
         </CardTitle>
-        <p className="text-sm text-muted-foreground">{description}</p>
+        <p className="text-sm text-muted-foreground">{formDescription}</p>
         <div className="text-lg font-semibold text-primary">
-          {new Intl.NumberFormat('en-US', {
-            style: 'currency',
-            currency: currency
-          }).format(amount)}
+          {formatAmount(amount, currency)}
         </div>
+        {description && (
+          <p className="text-sm text-muted-foreground">{description}</p>
+        )}
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -273,15 +323,17 @@ const CardPaymentForm: React.FC<CardPaymentFormProps> = ({
             {isLoading ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Processing...
+                Processing Payment...
               </>
             ) : (
-              `Pay ${new Intl.NumberFormat('en-US', {
-                style: 'currency',
-                currency: currency
-              }).format(amount)}`
+              `Pay ${formatAmount(amount, currency)}`
             )}
           </Button>
+
+          {/* Powered by notice */}
+          <div className="text-center text-xs text-muted-foreground">
+            Secured by Basis Theory • Processed by Boya
+          </div>
         </form>
       </CardContent>
     </Card>
@@ -289,17 +341,14 @@ const CardPaymentForm: React.FC<CardPaymentFormProps> = ({
 };
 
 // Wrapper component with BasisTheoryProvider
-interface CardPaymentWrapperProps extends CardPaymentFormProps {
+interface BoyaPaymentWrapperProps extends BoyaPaymentFormProps {
   apiKey: string;
 }
 
-const CardPaymentWrapper: React.FC<CardPaymentWrapperProps> = ({
+const BoyaPaymentWrapper: React.FC<BoyaPaymentWrapperProps> = ({
   apiKey,
   ...props
 }) => {
-  console.log('CardPaymentWrapper apiKey:', apiKey);
-  const { bt } = useBasisTheory(apiKey);
-  
   if (!apiKey) {
     return (
       <div className="p-4 border border-red-200 rounded-md bg-red-50">
@@ -309,11 +358,12 @@ const CardPaymentWrapper: React.FC<CardPaymentWrapperProps> = ({
   }
   
   return (
-    <BasisTheoryProvider bt={bt}>
-      <CardPaymentForm {...props} />
+    <BasisTheoryProvider apiKey={apiKey}>
+      <BoyaPaymentForm {...props} />
     </BasisTheoryProvider>
   );
 };
 
-export default CardPaymentWrapper;
-export { CardPaymentForm };
+export default BoyaPaymentWrapper;
+export { BoyaPaymentForm };
+export type { BoyaPaymentFormProps };

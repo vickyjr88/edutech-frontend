@@ -656,7 +656,9 @@ const BasicInformationTab = ({ form, onNextTab }: BasicInformationTabProps) => {
           <FormField
             control={form.control}
             name="curriculum"
-            render={({ field }) => (
+            render={({ field }) => {
+              const uniqueCurricula = [...new Map(curricula.map(item => [item._id || item.code || item.id, item])).values()];
+              return (
               <FormItem>
                 <FormLabel>Curriculum</FormLabel>
                 <Select 
@@ -682,19 +684,19 @@ const BasicInformationTab = ({ form, onNextTab }: BasicInformationTabProps) => {
                         <span>{error}</span>
                       </div>
                       {/* Still show the curricula even with errors */}
-                      {curricula.map((curriculum) => (
+                      {uniqueCurricula.map((curriculum) => (
                         <SelectItem key={curriculum._id || curriculum.code || curriculum.id}
                                    value={curriculum.code || curriculum._id || curriculum.id}>
                           {curriculum.name}
                         </SelectItem>
                       ))}
                     </>
-                  ) : curricula.length === 0 ? (
+                  ) : uniqueCurricula.length === 0 ? (
                     <div className="p-2 text-sm text-gray-500">
                       No curricula available
                     </div>
                   ) : (
-                    curricula.map((curriculum) => (
+                    uniqueCurricula.map((curriculum) => (
                       <SelectItem key={curriculum._id || curriculum.code || curriculum.id}
                                  value={curriculum.code || curriculum._id || curriculum.id}>
                         {curriculum.name}
@@ -708,7 +710,8 @@ const BasicInformationTab = ({ form, onNextTab }: BasicInformationTabProps) => {
               </FormDescription>
               <FormMessage />
             </FormItem>
-          )}
+            )}
+          }
         />
         
         <FormField

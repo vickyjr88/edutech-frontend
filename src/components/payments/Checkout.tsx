@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { ArrowLeft, Users, Calendar, CreditCard, Phone, Check, Star, X } from 'lucide-react';
 import { Enrollment } from '@/integrations/api/services/enrollment.service';
 import { useClassById } from '@/hooks/use-class-service';
@@ -6,6 +6,67 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useGetProfileById } from '@/hooks/use-student-service';
 import { useGetTeacherProfileById } from '@/hooks/use-teacher-service';
 import { formatDate } from 'date-fns';
+import { BoyaPaymentForm, ThreeDSecureHandler } from '@/components/payments';
+import BoyaPaymentFormSimple from '@/components/payments/BoyaPaymentFormSimple';
+import type { BoyaCustomer, BoyaPaymentResponse } from '@/services/boya-payment.service';
+
+const BASIS_THEORY_API_KEY = import.meta.env.VITE_BASIS_THEORY_API_KEY;
+
+// Move component definitions outside to prevent re-creation on every render
+const StepIndicator = ({ currentStep }: { currentStep: number }) => (
+    <div className="flex items-center justify-center mb-8">
+        <div className="flex items-center">
+            {[1, 2, 3].map((stepNum) => (
+                <React.Fragment key={stepNum}>
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${stepNum <= currentStep
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-gray-200 text-gray-600'
+                        }`}>
+                        {stepNum < currentStep ? <Check size={16} /> : stepNum}
+                    </div>
+                    {stepNum < 3 && (
+                        <div className={`w-12 h-0.5 ${stepNum < currentStep ? 'bg-blue-600' : 'bg-gray-200'
+                            }`} />
+                    )}
+                </React.Fragment>
+            ))}
+        </div>
+    </div>
+);
+
+const CourseCard = ({ courseData, formData, formatPrice }: { courseData: any, formData: any, formatPrice: (price: number, seats: number) => string }) => (
+    <div className="bg-white rounded-lg border border-gray-200 p-6 mb-6">
+        <div className="flex items-start justify-between">
+            <div className="flex-1">
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">{courseData.title}</h3>
+                <div className="flex items-center gap-2 mb-2">
+                    <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                    <span className="text-sm text-gray-600">{courseData.rating}</span>
+                    <span className="text-sm text-gray-400">•</span>
+                    <span className="text-sm text-gray-600">{courseData.instructor}</span>
+                </div>
+                <div className="text-sm text-gray-600 space-y-1">
+                    <div className="flex items-center gap-2">
+                        <Calendar className="w-4 h-4" />
+                        <span>{courseData.schedule}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <Users className="w-4 h-4" />
+                        <span>{courseData.spotsRemaining} spots remaining</span>
+                    </div>
+                </div>
+            </div>
+            <div className="text-right">
+                <div className="text-2xl font-bold text-gray-900">
+                    {formatPrice(courseData.price, formData.seats)}
+                </div>
+                <div className="text-sm text-gray-500">
+                    {courseData.currency} {courseData.price.toFixed(2)} per seat
+                </div>
+            </div>
+        </div>
+    </div>
+);
 
 interface CheckoutFlowProps {
     onClose: () => void;
@@ -13,19 +74,23 @@ interface CheckoutFlowProps {
 }
 
 const CheckoutFlow = ({ onClose, enrollment }: CheckoutFlowProps) => {
-    const [step, setStep] = useState(1);
     const { user } = useAuth()
-    const { data: profile } = useGetProfileById(user.id)
-    const { data: classDataResponse, isLoading: isLoadingClass, error: classError } = useClassById(enrollment.course.id);
+    const { data: profile } = useGetProfileById(user?.id)
+    const { data: classDataResponse, isLoading: isLoadingClass, error: classError } = useClassById(enrollment?.course?.id);
 
     const classData = classDataResponse?.data;
-    console.log("classData",classData);
-    console.log("enrollment.course.id", enrollment.course.id);
-    console.log("classDataResponse", classDataResponse);
-    console.log("classError", classError);
-    const { data: teacherData } = useGetTeacherProfileById(classData?.teacher?._id)
+    const teacherId = classData?.teacher?._id;
+    // Hook will only run when teacherId is available due to enabled condition
+    const { data: teacherData, isLoading: isLoadingTeacher } = useGetTeacherProfileById(teacherId)
     const teacher = teacherData?.data?.user;
 
+    // All state hooks at the top level - never conditional
+    const [step, setStep] = useState(1);
+    const [paymentResult, setPaymentResult] = useState<BoyaPaymentResponse | null>(null);
+    const [paymentError, setPaymentError] = useState<string>('');
+    const [requires3DS, setRequires3DS] = useState(false);
+    const [authUrl, setAuthUrl] = useState<string>('');
+    
     const [formData, setFormData] = useState({
         seats: 1,
         paymentMethod: 'credit-card',
@@ -34,11 +99,144 @@ const CheckoutFlow = ({ onClose, enrollment }: CheckoutFlowProps) => {
         cvv: '',
         cardholderName: '',
         mpesaNumber: '',
-        email: user?.email,
-        fullName: user?.fullName,
+        email: user?.email || '',
+        fullName: user?.fullName || '',
         parentEmail: '',
         parentPhone: ''
     });
+
+    const courseData = useMemo(() => {
+        try {
+            return {
+                title: classData?.title || enrollment?.course?.title || 'Course',
+                price: enrollment?.price || 0,
+                currency: "USD",
+                instructor: teacher?.fullName || 'TBD',
+                rating: classData?.rating || enrollment?.course?.rating || 0,
+                schedule: enrollment?.nextClass?.date ? 
+                    `${formatDate(new Date(enrollment.nextClass.date), 'EEEE')}, ${enrollment.nextClass.time || 'TBA'}` : 
+                    'TBD',
+                startDate: classData?.cohorts?.[0]?.startDate ? 
+                    formatDate(new Date(classData.cohorts[0].startDate), 'MMMM d, yyyy') : 
+                    'TBD',
+                enrollmentDeadline: enrollment?.enrollmentDeadline ? 
+                    formatDate(new Date(enrollment.enrollmentDeadline), 'MMMM d, yyyy') : 
+                    'TBD',
+                spotsRemaining: enrollment?.participants ? 
+                    Math.max(0, (enrollment.participants.maximum || 0) - (enrollment.participants.current || 0)) : 
+                    0,
+                duration: "12 weeks",
+                description: classData?.description || 'Course description not available'
+            };
+        } catch (error) {
+            console.error('Error creating courseData:', error);
+            return {
+                title: 'Course',
+                price: 0,
+                currency: "USD",
+                instructor: 'TBD',
+                rating: 0,
+                schedule: 'TBD',
+                startDate: 'TBD',
+                enrollmentDeadline: 'TBD',
+                spotsRemaining: 0,
+                duration: "12 weeks",
+                description: 'Course description not available'
+            };
+        }
+    }, [classData, enrollment, teacher]);
+
+    const handleInputChange = useCallback((field: string, value: any) => {
+        setFormData(prev => ({ ...prev, [field]: value }));
+    }, []);
+
+    const formatPrice = useCallback((price: number, seats: number) => {
+        const total = price * seats;
+        return `${courseData?.currency || 'USD'} ${total.toLocaleString('en-KE', { minimumFractionDigits: 2 })}`;
+    }, [courseData?.currency]);
+
+    const formatCardNumber = useCallback((value: string) => {
+        const v = value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
+        const matches = v.match(/\d{4,16}/g);
+        const match = matches && matches[0] || '';
+        const parts = [];
+        for (let i = 0, len = match.length; i < len; i += 4) {
+            parts.push(match.substring(i, i + 4));
+        }
+        if (parts.length) {
+            return parts.join(' ');
+        } else {
+            return v;
+        }
+    }, []);
+
+    const formatExpiryDate = useCallback((value: string) => {
+        const v = value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
+        if (v.length >= 2) {
+            return v.substring(0, 2) + '/' + v.substring(2, 4);
+        }
+        return v;
+    }, []);
+
+    const handleNext = useCallback(() => {
+        if (step < 3) setStep(step + 1);
+    }, [step]);
+
+    const handleBack = useCallback(() => {
+        if (step > 1) setStep(step - 1);
+    }, [step]);
+
+    const handlePaymentSuccess = useCallback((result: BoyaPaymentResponse) => {
+        console.log('Payment successful:', result);
+        setPaymentResult(result);
+        setPaymentError('');
+        setRequires3DS(false);
+        
+        // Here you would typically call your backend to confirm enrollment
+        alert(`Payment successful! Enrollment confirmed. Payment ID: ${result.id}`);
+    }, []);
+
+    const handlePaymentError = useCallback((error: string, boyaError?: any) => {
+        console.error('Payment error:', error, boyaError);
+        setPaymentError(error);
+        setPaymentResult(null);
+        setRequires3DS(false);
+    }, []);
+
+    const handleRequires3DSecure = useCallback((url: string) => {
+        console.log('3D Secure required:', url);
+        setAuthUrl(url);
+        setRequires3DS(true);
+        setPaymentError('');
+    }, []);
+
+    const handle3DSecureSuccess = useCallback(() => {
+        console.log('3D Secure completed successfully');
+        setRequires3DS(false);
+        setAuthUrl('');
+        // Simulate successful payment after 3DS
+        const mockResult: BoyaPaymentResponse = {
+            id: 'payment_' + Date.now(),
+            status: 'succeeded',
+            amount: courseData.price * formData.seats * 100,
+            currency: courseData.currency,
+            customer_id: 'customer_' + user?.id
+        };
+        handlePaymentSuccess(mockResult);
+    }, [courseData.price, formData.seats, courseData.currency, user?.id, handlePaymentSuccess]);
+
+    const handle3DSecureError = useCallback((error: string) => {
+        console.error('3D Secure error:', error);
+        setRequires3DS(false);
+        setAuthUrl('');
+        setPaymentError(error);
+    }, []);
+
+    const handle3DSecureCancel = useCallback(() => {
+        console.log('3D Secure cancelled');
+        setRequires3DS(false);
+        setAuthUrl('');
+    }, []);
 
     // Early return for loading state
     if (isLoadingClass) {
@@ -76,9 +274,9 @@ const CheckoutFlow = ({ onClose, enrollment }: CheckoutFlowProps) => {
                                     {classError ? 'There was an error loading the course details.' : 'Course not found.'}
                                 </p>
                                 <div className="space-y-2">
-                                    <p className="text-sm text-gray-500">Course ID: {enrollment.course.id}</p>
+                                    <p className="text-sm text-gray-500">Course ID: {enrollment?.course?.id || 'Unknown'}</p>
                                     {classError && (
-                                        <p className="text-sm text-red-500">Error: {classError.message}</p>
+                                        <p className="text-sm text-red-500">Error: {classError?.message || 'Unknown error'}</p>
                                     )}
                                 </div>
                                 <button
@@ -94,390 +292,6 @@ const CheckoutFlow = ({ onClose, enrollment }: CheckoutFlowProps) => {
             </div>
         );
     }
-
-    const courseData = {
-        title: classData?.title || enrollment.course.title,
-        price: enrollment?.price || 0,
-        currency: "USD",
-        instructor: teacher?.fullName || 'TBD',
-        rating: classData?.rating || enrollment.course.rating || 0,
-        schedule: enrollment?.nextClass ? `${formatDate(enrollment.nextClass.date, 'EEEE')}, ${enrollment.nextClass.time}` : 'TBD',
-        startDate: classData?.cohorts?.[0]?.startDate ? formatDate(classData.cohorts[0].startDate, 'MMMM d, yyyy') : 'TBD',
-        enrollmentDeadline: enrollment?.enrollmentDeadline ? formatDate(enrollment.enrollmentDeadline, 'MMMM d, yyyy') : 'TBD',
-        spotsRemaining: enrollment?.participants ? (enrollment.participants.maximum - enrollment.participants.current) : 0,
-        duration: "12 weeks",
-        description: classData?.description || 'Course description not available'
-    };
-
-    const handleInputChange = (field, value) => {
-        setFormData(prev => ({ ...prev, [field]: value }));
-    };
-
-    const formatPrice = (price, seats) => {
-        const total = price * seats;
-        return `${courseData.currency} ${total.toLocaleString('en-KE', { minimumFractionDigits: 2 })}`;
-    };
-
-    const formatCardNumber = (value) => {
-        const v = value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
-        const matches = v.match(/\d{4,16}/g);
-        const match = matches && matches[0] || '';
-        const parts = [];
-        for (let i = 0, len = match.length; i < len; i += 4) {
-            parts.push(match.substring(i, i + 4));
-        }
-        if (parts.length) {
-            return parts.join(' ');
-        } else {
-            return v;
-        }
-    };
-
-    const formatExpiryDate = (value) => {
-        const v = value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
-        if (v.length >= 2) {
-            return v.substring(0, 2) + '/' + v.substring(2, 4);
-        }
-        return v;
-    };
-
-    const StepIndicator = ({ currentStep }) => (
-        <div className="flex items-center justify-center mb-8">
-            <div className="flex items-center">
-                {[1, 2, 3].map((stepNum) => (
-                    <React.Fragment key={stepNum}>
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${stepNum <= currentStep
-                                ? 'bg-blue-600 text-white'
-                                : 'bg-gray-200 text-gray-600'
-                            }`}>
-                            {stepNum < currentStep ? <Check size={16} /> : stepNum}
-                        </div>
-                        {stepNum < 3 && (
-                            <div className={`w-12 h-0.5 ${stepNum < currentStep ? 'bg-blue-600' : 'bg-gray-200'
-                                }`} />
-                        )}
-                    </React.Fragment>
-                ))}
-            </div>
-        </div>
-    );
-
-    const CourseCard = () => (
-        <div className="bg-white rounded-lg border border-gray-200 p-6 mb-6">
-            <div className="flex items-start justify-between">
-                <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">{courseData.title}</h3>
-                    <div className="flex items-center gap-2 mb-2">
-                        <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                        <span className="text-sm text-gray-600">{courseData.rating}</span>
-                        <span className="text-sm text-gray-400">•</span>
-                        <span className="text-sm text-gray-600">{courseData.instructor}</span>
-                    </div>
-                    <div className="text-sm text-gray-600 space-y-1">
-                        <div className="flex items-center gap-2">
-                            <Calendar className="w-4 h-4" />
-                            <span>{courseData.schedule}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <Users className="w-4 h-4" />
-                            <span>{courseData.spotsRemaining} spots remaining</span>
-                        </div>
-                    </div>
-                </div>
-                <div className="text-right">
-                    <div className="text-2xl font-bold text-gray-900">
-                        {formatPrice(courseData.price, formData.seats)}
-                    </div>
-                    <div className="text-sm text-gray-500">
-                        {courseData.currency} {courseData.price.toFixed(2)} per seat
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
-
-    const Step1Details = () => (
-        <div className="space-y-6">
-            <div>
-                <h2 className="text-2xl font-semibold text-gray-900 mb-6">Confirm Course Details</h2>
-                <CourseCard />
-
-                <div className="bg-gray-50 rounded-lg p-4 mb-6">
-                    <h4 className="font-medium text-gray-900 mb-3">Session Information</h4>
-                    <div className="grid grid-cols-2 gap-4 text-sm">
-                        <div>
-                            <span className="text-gray-600">Start Date:</span>
-                            <div className="font-medium">{courseData.startDate}</div>
-                        </div>
-                        <div>
-                            <span className="text-gray-600">Duration:</span>
-                            <div className="font-medium">{courseData.duration}</div>
-                        </div>
-                        <div>
-                            <span className="text-gray-600">Schedule:</span>
-                            <div className="font-medium">{courseData.schedule}</div>
-                        </div>
-                        <div>
-                            <span className="text-gray-600">Enrollment Deadline:</span>
-                            <div className="font-medium text-orange-600">{courseData.enrollmentDeadline}</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="bg-white border border-gray-200 rounded-lg p-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-3">
-                        Number of Seats
-                    </label>
-                    <div className="flex items-center gap-4">
-                        <button
-                            onClick={() => handleInputChange('seats', Math.max(1, formData.seats - 1))}
-                            className="w-10 h-10 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-50"
-                        >
-                            -
-                        </button>
-                        <span className="text-xl font-semibold w-8 text-center">{formData.seats}</span>
-                        <button
-                            onClick={() => handleInputChange('seats', Math.min(10, formData.seats + 1))}
-                            className="w-10 h-10 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-50"
-                        >
-                            +
-                        </button>
-                        <span className="text-sm text-gray-600 ml-4">
-                            {formData.seats === 1 ? '1 seat' : `${formData.seats} seats`} • Max 10 seats per order
-                        </span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
-
-    const Step2StudentInfo = () => (
-        <div className="space-y-6">
-            <div>
-                <h2 className="text-2xl font-semibold text-gray-900 mb-6">Student Information</h2>
-
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-                    <div className="flex items-center gap-2 mb-2">
-                        <Check className="w-5 h-5 text-blue-600" />
-                        <span className="text-sm font-medium text-blue-900">Using your profile information</span>
-                    </div>
-                    <p className="text-sm text-blue-700">
-                        We've pre-filled your details from your account. You can edit them if needed.
-                    </p>
-                </div>
-
-                <div className="space-y-4">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Student Full Name *
-                        </label>
-                        <input
-                            type="text"
-                            value={formData.fullName}
-                            onChange={(e) => handleInputChange('fullName', e.target.value)}
-                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50"
-                            placeholder="Enter student's full name"
-                        />
-                    </div>
-
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Student Email *
-                        </label>
-                        <input
-                            type="email"
-                            value={formData.email}
-                            onChange={(e) => handleInputChange('email', e.target.value)}
-                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50"
-                            placeholder="student@example.com"
-                        />
-                    </div>
-
-                    <div className="border-t pt-4">
-                        <h4 className="font-medium text-gray-900 mb-4">Parent/Guardian Information</h4>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Parent/Guardian Email *
-                                </label>
-                                <input
-                                    type="email"
-                                    value={formData.parentEmail}
-                                    onChange={(e) => handleInputChange('parentEmail', e.target.value)}
-                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50"
-                                    placeholder="parent@example.com"
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Parent/Guardian Phone *
-                                </label>
-                                <input
-                                    type="tel"
-                                    value={formData.parentPhone}
-                                    onChange={(e) => handleInputChange('parentPhone', e.target.value)}
-                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50"
-                                    placeholder="+254 700 000 000"
-                                />
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
-
-    const Step3Payment = () => (
-        <div className="space-y-6">
-            <div>
-                <h2 className="text-2xl font-semibold text-gray-900 mb-6">Payment Method</h2>
-
-                <div className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <button
-                            onClick={() => handleInputChange('paymentMethod', 'credit-card')}
-                            className={`p-4 border-2 rounded-lg flex items-center gap-3 ${formData.paymentMethod === 'credit-card'
-                                    ? 'border-blue-500 bg-blue-50'
-                                    : 'border-gray-200 hover:border-gray-300'
-                                }`}
-                        >
-                            <CreditCard className="w-5 h-5" />
-                            <span className="font-medium">Credit/Debit Card</span>
-                        </button>
-
-                        <button
-                            onClick={() => handleInputChange('paymentMethod', 'mpesa')}
-                            className={`p-4 border-2 rounded-lg flex items-center gap-3 ${formData.paymentMethod === 'mpesa'
-                                    ? 'border-blue-500 bg-blue-50'
-                                    : 'border-gray-200 hover:border-gray-300'
-                                }`}
-                        >
-                            <Phone className="w-5 h-5" />
-                            <span className="font-medium">M-Pesa</span>
-                        </button>
-                    </div>
-
-                    {formData.paymentMethod === 'credit-card' && (
-                        <div className="bg-white border border-gray-200 rounded-lg p-6 mt-6">
-                            <h4 className="font-medium text-gray-900 mb-4">Card Details</h4>
-                            <div className="space-y-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Cardholder Name *
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={formData.cardholderName}
-                                        onChange={(e) => handleInputChange('cardholderName', e.target.value)}
-                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                        placeholder="Full name on card"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Card Number *
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={formData.cardNumber}
-                                        onChange={(e) => handleInputChange('cardNumber', formatCardNumber(e.target.value))}
-                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                        placeholder="1234 5678 9012 3456"
-                                        maxLength="19"
-                                    />
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                                            Expiry Date *
-                                        </label>
-                                        <input
-                                            type="text"
-                                            value={formData.expiryDate}
-                                            onChange={(e) => handleInputChange('expiryDate', formatExpiryDate(e.target.value))}
-                                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                            placeholder="MM/YY"
-                                            maxLength="5"
-                                        />
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                                            CVV *
-                                        </label>
-                                        <input
-                                            type="text"
-                                            value={formData.cvv}
-                                            onChange={(e) => handleInputChange('cvv', e.target.value.replace(/\D/g, ''))}
-                                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                            placeholder="123"
-                                            maxLength="4"
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    {formData.paymentMethod === 'mpesa' && (
-                        <div className="bg-white border border-gray-200 rounded-lg p-6 mt-6">
-                            <h4 className="font-medium text-gray-900 mb-4">M-Pesa Details</h4>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    M-Pesa Phone Number *
-                                </label>
-                                <input
-                                    type="tel"
-                                    value={formData.mpesaNumber}
-                                    onChange={(e) => handleInputChange('mpesaNumber', e.target.value)}
-                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    placeholder="+254 700 000 000"
-                                />
-                                <p className="text-sm text-gray-600 mt-2">
-                                    You'll receive an M-Pesa prompt to complete the payment
-                                </p>
-                            </div>
-                        </div>
-                    )}
-                </div>
-            </div>
-        </div>
-    );
-
-    const OrderSummary = () => (
-        <div className="bg-gray-50 rounded-lg p-6">
-            <h3 className="font-semibold text-gray-900 mb-4">Order Summary</h3>
-            <div className="space-y-3">
-                <div className="flex justify-between">
-                    <span className="text-gray-600">Course Fee ({formData.seats} seat{formData.seats > 1 ? 's' : ''})</span>
-                    <span className="font-medium">{formatPrice(courseData.price, formData.seats)}</span>
-                </div>
-                <div className="border-t pt-3">
-                    <div className="flex justify-between text-lg font-semibold">
-                        <span>Total</span>
-                        <span>{formatPrice(courseData.price, formData.seats)}</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
-
-    const handleNext = () => {
-        if (step < 3) setStep(step + 1);
-    };
-
-    const handleBack = () => {
-        if (step > 1) setStep(step - 1);
-    };
-
-    const handleSubmit = () => {
-        // Here you would typically handle the payment processing
-        alert('Enrollment submitted! You will receive a confirmation email shortly.');
-    };
 
     return (
         <div className="min-h-screen bg-gray-50 py-8">
@@ -507,29 +321,234 @@ const CheckoutFlow = ({ onClose, enrollment }: CheckoutFlowProps) => {
 
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                         <div className="lg:col-span-2">
-                            {step === 1 && <Step1Details />}
-                            {step === 2 && <Step2StudentInfo />}
-                            {step === 3 && <Step3Payment />}
+                            {step === 1 && (
+                                <div className="space-y-6">
+                                    <div>
+                                        <h2 className="text-2xl font-semibold text-gray-900 mb-6">Confirm Course Details</h2>
+                                        <CourseCard courseData={courseData} formData={formData} formatPrice={formatPrice} />
+
+                                        <div className="bg-gray-50 rounded-lg p-4 mb-6">
+                                            <h4 className="font-medium text-gray-900 mb-3">Session Information</h4>
+                                            <div className="grid grid-cols-2 gap-4 text-sm">
+                                                <div>
+                                                    <span className="text-gray-600">Start Date:</span>
+                                                    <div className="font-medium">{courseData.startDate}</div>
+                                                </div>
+                                                <div>
+                                                    <span className="text-gray-600">Duration:</span>
+                                                    <div className="font-medium">{courseData.duration}</div>
+                                                </div>
+                                                <div>
+                                                    <span className="text-gray-600">Schedule:</span>
+                                                    <div className="font-medium">{courseData.schedule}</div>
+                                                </div>
+                                                <div>
+                                                    <span className="text-gray-600">Enrollment Deadline:</span>
+                                                    <div className="font-medium text-orange-600">{courseData.enrollmentDeadline}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="bg-white border border-gray-200 rounded-lg p-4">
+                                            <label className="block text-sm font-medium text-gray-700 mb-3">
+                                                Number of Seats
+                                            </label>
+                                            <div className="flex items-center gap-4">
+                                                <button
+                                                    onClick={() => handleInputChange('seats', Math.max(1, formData.seats - 1))}
+                                                    className="w-10 h-10 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-50"
+                                                >
+                                                    -
+                                                </button>
+                                                <span className="text-xl font-semibold w-8 text-center">{formData.seats}</span>
+                                                <button
+                                                    onClick={() => handleInputChange('seats', Math.min(10, formData.seats + 1))}
+                                                    className="w-10 h-10 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-50"
+                                                >
+                                                    +
+                                                </button>
+                                                <span className="text-sm text-gray-600 ml-4">
+                                                    {formData.seats === 1 ? '1 seat' : `${formData.seats} seats`} • Max 10 seats per order
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                            {step === 2 && (
+                                <div className="space-y-6">
+                                    <div>
+                                        <h2 className="text-2xl font-semibold text-gray-900 mb-6">Student Information</h2>
+
+                                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                                            <div className="flex items-center gap-2 mb-2">
+                                                <Check className="w-5 h-5 text-blue-600" />
+                                                <span className="text-sm font-medium text-blue-900">Using your profile information</span>
+                                            </div>
+                                            <p className="text-sm text-blue-700">
+                                                We've pre-filled your details from your account. You can edit them if needed.
+                                            </p>
+                                        </div>
+
+                                        <div className="space-y-4">
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                    Student Full Name *
+                                                </label>
+                                                <input
+                                                    type="text"
+                                                    value={formData.fullName}
+                                                    onChange={(e) => handleInputChange('fullName', e.target.value)}
+                                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50"
+                                                    placeholder="Enter student's full name"
+                                                />
+                                            </div>
+
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                    Student Email *
+                                                </label>
+                                                <input
+                                                    type="email"
+                                                    value={formData.email}
+                                                    onChange={(e) => handleInputChange('email', e.target.value)}
+                                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50"
+                                                    placeholder="student@example.com"
+                                                />
+                                            </div>
+
+                                            <div className="border-t pt-4">
+                                                <h4 className="font-medium text-gray-900 mb-4">Parent/Guardian Information</h4>
+
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                    <div>
+                                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                            Parent/Guardian Email *
+                                                        </label>
+                                                        <input
+                                                            type="email"
+                                                            value={formData.parentEmail}
+                                                            onChange={(e) => handleInputChange('parentEmail', e.target.value)}
+                                                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50"
+                                                            placeholder="parent@example.com"
+                                                        />
+                                                    </div>
+
+                                                    <div>
+                                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                            Parent/Guardian Phone *
+                                                        </label>
+                                                        <input
+                                                            type="tel"
+                                                            value={formData.parentPhone}
+                                                            onChange={(e) => handleInputChange('parentPhone', e.target.value)}
+                                                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50"
+                                                            placeholder="+254 700 000 000"
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                            {step === 3 && (
+                                <div className="space-y-6">
+                                    {requires3DS && authUrl ? (
+                                        <ThreeDSecureHandler
+                                            authUrl={authUrl}
+                                            amount={courseData.price * formData.seats}
+                                            currency={courseData.currency}
+                                            onSuccess={handle3DSecureSuccess}
+                                            onError={handle3DSecureError}
+                                            onCancel={handle3DSecureCancel}
+                                        />
+                                    ) : paymentResult ? (
+                                        <div className="text-center space-y-4">
+                                            <div className="text-green-600 text-6xl mb-4">
+                                                <Check className="w-16 h-16 mx-auto" />
+                                            </div>
+                                            <h2 className="text-2xl font-semibold text-green-600">Payment Successful!</h2>
+                                            <p className="text-gray-600">Your enrollment has been confirmed.</p>
+                                            <div className="bg-green-50 p-4 rounded-lg">
+                                                <p className="text-sm text-green-800">
+                                                    Payment ID: {paymentResult.id}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div>
+                                            <h2 className="text-2xl font-semibold text-gray-900 mb-6">Payment</h2>
+                                            
+                                            {paymentError && (
+                                                <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                                                    <p className="text-red-600">{paymentError}</p>
+                                                </div>
+                                            )}
+                                            
+                                            {BASIS_THEORY_API_KEY ? (
+                                                <BoyaPaymentFormSimple
+                                                    apiKey={BASIS_THEORY_API_KEY}
+                                                    amount={courseData.price * formData.seats}
+                                                    currency={courseData.currency}
+                                                    customer={{
+                                                        name: formData.fullName || user?.fullName || 'Student',
+                                                        email: formData.email || user?.email || '',
+                                                        phone: formData.parentPhone || '+1234567890'
+                                                    }}
+                                                    description={`Enrollment for ${courseData.title} (${formData.seats} seat${formData.seats > 1 ? 's' : ''})`}
+                                                    saveForRecurringPayments={false}
+                                                    onSuccess={handlePaymentSuccess}
+                                                    onError={handlePaymentError}
+                                                    onRequires3DSecure={handleRequires3DSecure}
+                                                    title="Complete Payment"
+                                                    formDescription="Secure payment powered by Boya"
+                                                />
+                                            ) : (
+                                                <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                                                    <p className="text-yellow-800">Payment system is not configured. Please contact support.</p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
                         </div>
 
                         <div className="lg:col-span-1">
                             <div className="sticky top-8">
-                                <OrderSummary />
+                                <div className="bg-gray-50 rounded-lg p-6">
+                                    <h3 className="font-semibold text-gray-900 mb-4">Order Summary</h3>
+                                    <div className="space-y-3">
+                                        <div className="flex justify-between">
+                                            <span className="text-gray-600">Course Fee ({formData.seats} seat{formData.seats > 1 ? 's' : ''})</span>
+                                            <span className="font-medium">{formatPrice(courseData.price, formData.seats)}</span>
+                                        </div>
+                                        <div className="border-t pt-3">
+                                            <div className="flex justify-between text-lg font-semibold">
+                                                <span>Total</span>
+                                                <span>{formatPrice(courseData.price, formData.seats)}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
 
                                 <div className="mt-6 space-y-3">
-                                    {step < 3 ? (
+                                    {step < 3 && (
                                         <button
                                             onClick={handleNext}
                                             className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-blue-700 transition-colors"
                                         >
                                             {step === 1 ? 'Continue to Student Info' : 'Continue to Payment'}
                                         </button>
-                                    ) : (
+                                    )}
+
+                                    {paymentResult && (
                                         <button
-                                            onClick={handleSubmit}
+                                            onClick={onClose}
                                             className="w-full bg-green-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-green-700 transition-colors"
                                         >
-                                            Complete Enrollment
+                                            Continue to Dashboard
                                         </button>
                                     )}
 

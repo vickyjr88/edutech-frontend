@@ -1,7 +1,11 @@
 export { default as CardPaymentForm, CardPaymentForm as CardPaymentFormComponent } from './CardPaymentForm';
 export { default as StripePaymentForm, StripePaymentForm as StripePaymentFormComponent } from './StripePaymentForm';
+export { default as BoyaPaymentForm, BoyaPaymentForm as BoyaPaymentFormComponent } from './BoyaPaymentForm';
+export { default as BoyaPaymentFormFixed, BoyaPaymentFormFixed as BoyaPaymentFormFixedComponent } from './BoyaPaymentFormFixed';
+export { default as BoyaPaymentFormSimple, BoyaPaymentFormSimple as BoyaPaymentFormSimpleComponent } from './BoyaPaymentFormSimple';
 export { default as UnifiedPaymentForm } from './UnifiedPaymentForm';
 export { default as PaymentMethodCard } from './PaymentMethodCard';
 export { default as BillingHistory } from './BillingHistory';
 export { default as AddPaymentMethodDialog } from './AddPaymentMethodDialog';
+export { default as ThreeDSecureHandler } from './ThreeDSecureHandler';
 export * from './types';

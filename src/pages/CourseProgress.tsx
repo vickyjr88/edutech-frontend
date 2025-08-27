@@ -16,6 +16,9 @@ import ProgressAssignments from "@/components/progress/ProgressAssignments";
 const CourseProgress = () => {
   const { courseId } = useParams();
   const [userName] = useState("John Doe");
+  
+  // Handle the case where courseId might be the string "undefined"
+  const validCourseId = courseId && courseId !== 'undefined' ? courseId : undefined;
 
   return (
     <div className="flex min-h-screen bg-gradient-to-b from-blue-50 to-white">
@@ -68,19 +71,19 @@ const CourseProgress = () => {
               </TabsList>
               
               <TabsContent value="lessons">
-                <ProgressLessons courseId={courseId} />
+                <ProgressLessons courseId={validCourseId} />
               </TabsContent>
               
               <TabsContent value="assignments">
-                <ProgressAssignments courseId={courseId} />
+                <ProgressAssignments courseId={validCourseId} />
               </TabsContent>
               
               <TabsContent value="quizzes">
-                <ProgressQuizzes courseId={courseId} />
+                <ProgressQuizzes courseId={validCourseId} />
               </TabsContent>
               
               <TabsContent value="overview">
-                <ProgressOverview courseId={courseId} />
+                <ProgressOverview courseId={validCourseId} />
               </TabsContent>
             </Tabs>
           </div>

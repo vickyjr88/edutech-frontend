@@ -75,6 +75,7 @@ interface EnrolledClassesTableProps {
   };
 
 const EnrolledClassesTable = ({ enrolledCourses }: EnrolledClassesTableProps) => {
+  console.log("Enrolled courses", enrolledCourses);
 
   return (
     <Card>
@@ -99,11 +100,11 @@ const EnrolledClassesTable = ({ enrolledCourses }: EnrolledClassesTableProps) =>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {enrolledCourses.map((enrollment) => {
+              {enrolledCourses.map((enrollment, index) => {
                 
                 return (
                   <CourseRow
-                    key={enrollment._id}
+                    key={enrollment._id || `enrollment-${index}`}
                     enrollment={enrollment} />
                 )
               })}
@@ -116,7 +117,7 @@ const EnrolledClassesTable = ({ enrolledCourses }: EnrolledClassesTableProps) =>
 };
 
 const CourseRow = ({ enrollment }: { enrollment: ClassDetail }) => {
-  const { class: course } = enrollment;
+  const course = enrollment; // enrollment is the ClassDetail itself
   const cohort = course.cohorts?.find((cohort) => cohort.isActive) ?? course.cohorts?.[0];
   const nextClassTime = cohort && getNextClassTime({
     daysOfWeek: cohort?.daysOfWeek,
@@ -124,7 +125,7 @@ const CourseRow = ({ enrollment }: { enrollment: ClassDetail }) => {
     endTime: cohort?.endTime
   });
   return (
-    <TableRow key={course._id}>
+    <TableRow>
       <TableCell className="font-medium">
         <div>
           <div className="font-semibold">{course.title}</div>
@@ -165,7 +166,7 @@ const CourseRow = ({ enrollment }: { enrollment: ClassDetail }) => {
           <span className="text-sm font-medium mr-2">{course?.studentsList?.length}/{cohort?.maximumStudents}</span>
           <div className="flex -space-x-2">
             {[...Array(3)].map((_, i) => (
-              <Avatar key={i} className="border-2 border-white w-7 h-7 bg-blue-200">
+              <Avatar key={`avatar-${course._id || 'unknown'}-${i}`} className="border-2 border-white w-7 h-7 bg-blue-200">
                 <AvatarFallback className="text-xs text-blue-700">
                   {generateInitials(i)}
                 </AvatarFallback>
@@ -175,27 +176,27 @@ const CourseRow = ({ enrollment }: { enrollment: ClassDetail }) => {
         </div>
       </TableCell>
       <TableCell>
-        {course.activityStatus ? (
-          <div className="flex items-center">
-            {getActivityIcon(course.activityStatus.type)}
-            <div className="ml-2">
-              <p className="text-sm font-medium">{course.activityStatus.label}</p>
-              <p className="text-xs text-gray-500">Due: {course.activityStatus.dueDate}</p>
-            </div>
-          </div>
-        ) : (
-          <span className="text-sm text-gray-500">No upcoming activities</span>
-        )}
+        <span className="text-sm text-gray-500">No upcoming activities</span>
       </TableCell>
       <TableCell className="text-right">
-        <Link to={`/course-progress/${course._id}`}>
+        {course.enrollmentId ? (
+          <Link to={`/course-progress/${course.enrollmentId}`}>
+            <Button
+              size="sm"
+              className="bg-indigo-600 hover:bg-indigo-700 h-8"
+            >
+              View Progress
+            </Button>
+          </Link>
+        ) : (
           <Button
             size="sm"
-            className="bg-indigo-600 hover:bg-indigo-700 h-8"
+            className="bg-gray-400 cursor-not-allowed h-8"
+            disabled
           >
             View Progress
           </Button>
-        </Link>
+        )}
       </TableCell>
     </TableRow>
   );

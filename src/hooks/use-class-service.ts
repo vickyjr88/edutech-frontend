@@ -24,6 +24,7 @@ export const useClassById = (classId: string) => {
   return useQuery({
     queryKey: ['class', classId],
     queryFn: () => classService.getById(classId),
+    enabled: !!classId, // Only run the query if classId is truthy
   });
 };
 
@@ -50,6 +51,7 @@ export const useGetTeacherClasses = (teacherId: string) => {
   return useQuery({
     queryKey: ['teacherClasses', teacherId],
     queryFn: () => classService.getTeacherClasses(teacherId),
+    enabled: !!teacherId, // Only run the query if teacherId is truthy
   });
 };
 
@@ -76,6 +78,7 @@ export const useGetLessonPlans = (classId: string) => {
   return useQuery({
     queryKey: ['lessonPlans', classId],
     queryFn: () => classService.getLessonPlans(classId),
+    enabled: !!classId, // Only run the query if classId is truthy
   });
 };
 
@@ -130,6 +133,7 @@ export const useGetRecommendedClasses = (studentId: string) => {
   return useQuery({
     queryKey: ['recommendedClasses', studentId],
     queryFn: () => classService.getRecommended(studentId),
+    enabled: !!studentId, // Only run the query if studentId is truthy
   });
 };
 
@@ -138,6 +142,7 @@ export const useGetCurrentClassesForStudent = (studentId: string) => {
   return useQuery({
     queryKey: ['studentClasses', studentId],
     queryFn: () => classService.getCurrentClassesForStudent(studentId),
+    enabled: !!studentId, // Only run the query if studentId is truthy
   });
 };
 
@@ -145,6 +150,7 @@ export const useGetCompletedClassesForStudent = (studentId: string) => {
   return useQuery({
     queryKey: ['completedClasses', studentId],
     queryFn: () => classService.getCompletedClassesForStudent(studentId),
+    enabled: !!studentId, // Only run the query if studentId is truthy
   });
 };
 
@@ -163,5 +169,6 @@ export const useGetReviews = (classId: string) => {
   return useQuery({
     queryKey: ['classReviews', classId],
     queryFn: () => classService.getReviews(classId),
+    enabled: !!classId, // Only run the query if classId is truthy
   });
 };
