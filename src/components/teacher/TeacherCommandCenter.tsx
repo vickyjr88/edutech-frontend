@@ -50,77 +50,6 @@ import { useTeacherUpcomingSessions } from '@/hooks/useTeacherUpcomingSessions';
 import { useTeacherSummary } from '@/hooks/useTeacherSummary';
 import { Activity, ActivityType, ActivityPriority } from '@/types/activity';
 
-// Mock data for demonstration
-const mockTeacherData = {
-  name: 'Sarah Johnson',
-  avatar: '/placeholder.svg',
-  totalStudents: 45,
-  weekEarnings: 1247,
-  earningsGrowth: 23,
-  rating: 4.9,
-  teachingStreak: 47,
-  nextClass: {
-    subject: 'Physics Year 10',
-    time: '2h 15m',
-    students: 25,
-    isReady: true
-  },
-  currentClass: null, // Will be populated when teaching live
-  todayClasses: [
-    {
-      id: '1',
-      subject: 'Advanced Physics',
-      time: '09:00',
-      duration: '60 min',
-      students: 18,
-      status: 'completed',
-      satisfaction: 4.8
-    },
-    {
-      id: '2',
-      subject: 'Physics Year 10',
-      time: '14:30',
-      duration: '45 min',
-      students: 25,
-      status: 'upcoming',
-      materialsReady: true
-    },
-    {
-      id: '3',
-      subject: 'Mathematics A-Level',
-      time: '16:00',
-      duration: '90 min',
-      students: 12,
-      status: 'upcoming',
-      materialsReady: false
-    }
-  ],
-  studentActivity: {
-    checkedIn: 18,
-    total: 25,
-    recentAchievements: [
-      { student: 'Maria Santos', achievement: 'Completed Advanced Algebra' },
-      { student: 'James Wilson', achievement: 'First Calculus Problem Solved' }
-    ],
-    needsAttention: [
-      { student: 'Tommy Lee', issue: 'Missing homework submission' },
-      { student: 'Emma Brown', issue: 'Low quiz scores' }
-    ]
-  },
-  performance: {
-    weekRevenue: 1247,
-    revenueGrowth: 23,
-    engagement: 87,
-    satisfaction: 4.9,
-    completionRate: 96
-  },
-  insights: {
-    bestClass: 'Advanced Physics',
-    improvement: 'Tommy\'s math scores improved 40%',
-    opportunity: 'Physics tutoring demand up 25%',
-    tip: 'Try interactive polls for better engagement'
-  }
-};
 
 // Helper function to format time left
 const formatTimeLeft = (minutes: number): string => {
@@ -304,7 +233,7 @@ const TeacherCommandCenter: React.FC = () => {
               Help
             </Button>
             <Avatar className="w-8 h-8">
-              <AvatarImage src={mockTeacherData.avatar} />
+              <AvatarImage src={user?.profilePhotoUrl || '/placeholder.svg'} />
               <AvatarFallback>SJ</AvatarFallback>
             </Avatar>
             <div className="text-sm">
@@ -745,22 +674,22 @@ const TeacherCommandCenter: React.FC = () => {
           <div className="space-y-3">
             <div className="p-3 bg-blue-50 rounded-lg">
               <div className="font-medium text-blue-900">Best Performing Class</div>
-              <div className="text-sm text-blue-700">{mockTeacherData.insights.bestClass}</div>
+              <div className="text-sm text-blue-700">{statsData?.bestPerformingClass || 'N/A'}</div>
             </div>
             
             <div className="p-3 bg-green-50 rounded-lg">
               <div className="font-medium text-green-900">Student Progress</div>
-              <div className="text-sm text-green-700">{mockTeacherData.insights.improvement}</div>
+              <div className="text-sm text-green-700">{statsData?.topImprovement || 'Great progress from students'}</div>
             </div>
             
             <div className="p-3 bg-purple-50 rounded-lg">
               <div className="font-medium text-purple-900">Market Opportunity</div>
-              <div className="text-sm text-purple-700">{mockTeacherData.insights.opportunity}</div>
+              <div className="text-sm text-purple-700">{statsData?.marketOpportunity || 'Explore new teaching opportunities'}</div>
             </div>
             
             <div className="p-3 bg-orange-50 rounded-lg">
               <div className="font-medium text-orange-900">Teaching Tip</div>
-              <div className="text-sm text-orange-700">{mockTeacherData.insights.tip}</div>
+              <div className="text-sm text-orange-700">{statsData?.teachingTip || 'Try interactive polls for better engagement'}</div>
             </div>
           </div>
         </CardContent>

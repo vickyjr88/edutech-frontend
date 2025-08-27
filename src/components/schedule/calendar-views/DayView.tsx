@@ -1,5 +1,5 @@
 import { format } from "date-fns";
-import { mockEvents } from "../mockScheduleData";
+import { ScheduleEvent } from "../mockScheduleData";
 import { cn } from "@/lib/utils";
 import { EventActions } from "../EventActions";
 import { Plus } from "lucide-react";
@@ -9,14 +9,15 @@ import { EventFormDialog } from "../EventFormDialog";
 
 interface DayViewProps {
   date: Date;
+  events?: ScheduleEvent[];
 }
 
-export function DayView({ date }: DayViewProps) {
+export function DayView({ date, events = [] }: DayViewProps) {
   const [showAddEventDialog, setShowAddEventDialog] = useState(false);
   const [selectedHour, setSelectedHour] = useState<number | null>(null);
   
   const dateStr = format(date, "yyyy-MM-dd");
-  const events = mockEvents.filter(event => 
+  const dayEvents = events.filter(event => 
     format(new Date(event.date), "yyyy-MM-dd") === dateStr
   );
   
@@ -36,7 +37,7 @@ export function DayView({ date }: DayViewProps) {
       <div className="bg-white rounded-md shadow-sm border">
         <div className="grid grid-cols-1">
           {hours.map((hour, idx) => {
-            const hourEvents = events.filter(event => 
+            const hourEvents = dayEvents.filter(event => 
               new Date(event.date).getHours() === hour
             );
             

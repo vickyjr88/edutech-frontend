@@ -1,24 +1,25 @@
 
 import { Calendar } from "@/components/ui/calendar";
 import { format, isSameDay } from "date-fns";
-import { mockEvents } from "../mockScheduleData";
+import { ScheduleEvent } from "../mockScheduleData";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface MonthViewProps {
   month: Date;
   onDateSelect: (date: Date) => void;
+  events?: ScheduleEvent[];
 }
 
-export function MonthView({ month, onDateSelect }: MonthViewProps) {
-  const eventsByDate = mockEvents.reduce((acc, event) => {
+export function MonthView({ month, onDateSelect, events = [] }: MonthViewProps) {
+  const eventsByDate = events.reduce((acc, event) => {
     const dateStr = format(new Date(event.date), "yyyy-MM-dd");
     if (!acc[dateStr]) {
       acc[dateStr] = [];
     }
     acc[dateStr].push(event);
     return acc;
-  }, {} as Record<string, typeof mockEvents>);
+  }, {} as Record<string, ScheduleEvent[]>);
   
   return (
     <div className="bg-white rounded-md shadow-sm border w-full">
