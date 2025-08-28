@@ -1,54 +1,39 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { FileCheck, ExternalLink, Loader2 } from "lucide-react";
+import { FileCheck, ExternalLink } from "lucide-react";
 import { Link } from "react-router-dom";
 import AssignmentDialog from "../progress/AssignmentDialog";
-import { useGetStudentAssignments } from "@/hooks/use-assignment-service";
-import { AssignmentType } from "@/integrations/api/services/assignment.service";
-import { Assignment } from "../progress/data/mockAssignmentsData";
+import { getMockAssignmentsData } from "../progress/data/mockAssignmentsData";
 
 export default function UpcomingAssignments() {
-  const [selectedAssignment, setSelectedAssignment] = useState<Assignment | null>(null);
+  const [selectedAssignment, setSelectedAssignment] = useState<any>(null);
   const [assignmentDialogOpen, setAssignmentDialogOpen] = useState(false);
+  const [assignments, setAssignments] = useState<any[]>([]);
 
-  // Fetch student assignments with filters for upcoming and in-progress
-  const { data: assignmentsData, isLoading, error } = useGetStudentAssignments({
-    status: ['pending', 'in_progress'], // Get pending (upcoming) and in-progress assignments
-    sortBy: 'dueDate',
-    sortOrder: 'asc',
-    limit: 3 // Limit to 3 assignments for the dashboard
-  });
+  // Fetch assignments data from the same source as the course progress page
+  useEffect(() => {
+    const allAssignments = getMockAssignmentsData();
+    
+    // Filter to get only upcoming or in-progress assignments
+    const upcomingAssignments = allAssignments
+      .filter(assignment => 
+        assignment.status === "upcoming" || 
+        assignment.status === "in_progress")
+      .slice(0, 3); // Limit to 3 assignments for the dashboard
+    
+    setAssignments(upcomingAssignments);
+  }, []);
 
-  // Process the API data to convert to the expected format
-  const assignments = assignmentsData?.data?.data?.filter(sa => sa.assignment.type !== AssignmentType.QUIZ) || [];
-  
-  // Convert StudentAssignment[] to Assignment[] format expected by existing components
-  const convertedAssignments: Assignment[] = assignments.map(studentAssignment => ({
-    id: studentAssignment._id,
-    title: studentAssignment.assignment.title,
-    description: studentAssignment.assignment.description || "",
-    dueDate: new Date(studentAssignment.assignment.dueDate).toLocaleDateString(),
-    status: studentAssignment.submissionStatus.toLowerCase().replace(' ', '-') as any,
-    type: studentAssignment.assignment.type.toLowerCase().replace(' ', '-') as any,
-    grade: studentAssignment.grade || 0,
-    maxGrade: studentAssignment.assignment.totalPoints,
-    submissionDate: studentAssignment.submittedAt ? new Date(studentAssignment.submittedAt).toLocaleDateString() : "",
-    feedback: studentAssignment.feedback || "",
-    isLate: studentAssignment.isLate,
-    timeSpent: studentAssignment.timeSpent ? `${studentAssignment.timeSpent} min` : "",
-    course: studentAssignment.assignment.class?.title || "Course", // Add course name
-  }));
-
-  const handleViewAssignment = (assignment: Assignment) => {
+  const handleViewAssignment = (assignment: any) => {
     setSelectedAssignment(assignment);
     setAssignmentDialogOpen(true);
   };
 
   const handleUpdateAssignment = (assignmentId: string, updatedData: any) => {
-    // This would trigger a refetch or optimistic update
+    // In a real app, this would update the assignment in the database
     console.log("Assignment updated:", assignmentId, updatedData);
   };
 
@@ -59,21 +44,12 @@ export default function UpcomingAssignments() {
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          {isLoading ? (
-            <div className="flex items-center justify-center py-4">
-              <Loader2 className="h-4 w-4 animate-spin mr-2" />
-              Loading assignments...
-            </div>
-          ) : error ? (
-            <div className="text-center py-4 text-red-500">
-              Failed to load assignments
-            </div>
-          ) : convertedAssignments.length === 0 ? (
+          {assignments.length === 0 ? (
             <div className="text-center py-4 text-gray-500">
               No upcoming assignments
             </div>
           ) : (
-            convertedAssignments.map((assignment) => (
+            assignments.map((assignment) => (
               <div 
                 key={assignment.id} 
                 className="border rounded-md p-3"

@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { format, addDays, startOfWeek, isSameDay } from "date-fns";
-import { ScheduleEvent } from "../mockScheduleData";
+import { mockEvents } from "../mockScheduleData";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -9,10 +9,9 @@ import { cn } from "@/lib/utils";
 interface WeekViewProps {
   date: Date;
   onDateSelect: (date: Date) => void;
-  events?: ScheduleEvent[];
 }
 
-export function WeekView({ date, onDateSelect, events = [] }: WeekViewProps) {
+export function WeekView({ date, onDateSelect }: WeekViewProps) {
   const weekStart = startOfWeek(date, { weekStartsOn: 1 }); // Start from Monday
   const today = new Date();
   
@@ -20,7 +19,7 @@ export function WeekView({ date, onDateSelect, events = [] }: WeekViewProps) {
   const weekDays = Array.from({ length: 7 }).map((_, i) => {
     const day = addDays(weekStart, i);
     const dayStr = format(day, "yyyy-MM-dd");
-    const dayEvents = events.filter(event => 
+    const events = mockEvents.filter(event => 
       format(new Date(event.date), "yyyy-MM-dd") === dayStr
     );
     
@@ -31,7 +30,7 @@ export function WeekView({ date, onDateSelect, events = [] }: WeekViewProps) {
       dayName: format(day, "EEE"),
       dayNumber: format(day, "d"),
       isToday,
-      events: dayEvents
+      events
     };
   });
 

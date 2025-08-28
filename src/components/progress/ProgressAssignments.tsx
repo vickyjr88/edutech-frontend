@@ -4,7 +4,7 @@ import { useToast } from "@/components/ui/use-toast";
 import AssignmentDialog from "./AssignmentDialog";
 import { AssignmentStatistics } from "./components/AssignmentStatistics";
 import { AssignmentsTable } from "./components/AssignmentsTable";
-import { Assignment } from "./data/mockAssignmentsData";
+import { getMockAssignmentsData, Assignment } from "./data/mockAssignmentsData";
 import { useGetStudentCurrentEnrollments } from "@/hooks/use-enrollment-service";
 import { useGetStudentAssignmentsByClass } from "@/hooks/use-assignment-service";
 import { AssignmentType } from "@/integrations/api/services/assignment.service";
