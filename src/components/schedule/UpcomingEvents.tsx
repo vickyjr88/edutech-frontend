@@ -2,32 +2,44 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CalendarClock } from "lucide-react";
+import { CalendarClock, Loader2 } from "lucide-react";
 import { format, isToday, isTomorrow, parseISO } from "date-fns";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { mockEvents, ScheduleEvent } from "./mockScheduleData";
+import { ScheduleEvent } from "./mockScheduleData";
 import { Separator } from "@/components/ui/separator";
 import { EventActions } from "./EventActions";
+import { useTeacherUpcomingSessions } from "@/hooks/useTeacherUpcomingSessions";
+import { useAuth } from "@/contexts/AuthContext";
 
 export function UpcomingEvents() {
+  const { user } = useAuth();
   const [events, setEvents] = useState<ScheduleEvent[]>([]);
 
-  // Update events when mockEvents changes
+  // Fetch real upcoming sessions data
+  const { upcomingSessions, loading, error } = useTeacherUpcomingSessions({
+    teacherId: user?.teacherId || '',
+    refreshInterval: 60000 // Refresh every minute
+  });
+
+  // Convert API data to ScheduleEvent format
   useEffect(() => {
-    // Sort events by date
-    const sortedEvents = [...mockEvents].sort((a, b) => {
-      return new Date(a.date).getTime() - new Date(b.date).getTime();
-    });
-    
-    // Get only upcoming events (today and future)
-    const upcomingEvents = sortedEvents.filter(event => {
-      const eventDate = new Date(event.date);
-      const now = new Date();
-      return eventDate >= new Date(now.setHours(0, 0, 0, 0));
-    });
-    
-    setEvents(upcomingEvents.slice(0, 8)); // Show first 8 upcoming events
-  }, [mockEvents]);
+    if (upcomingSessions && upcomingSessions.length > 0) {
+      const convertedEvents: ScheduleEvent[] = upcomingSessions.slice(0, 8).map((session, index) => ({
+        id: index + 1, // Generate a simple ID
+        title: session.className || session.subject || 'Class Session',
+        date: session.startTime,
+        time: `${format(new Date(session.startTime), 'h:mm a')} - ${format(new Date(session.endTime), 'h:mm a')}`,
+        location: session.meetingLink ? 'Online' : session.location || 'TBD',
+        description: session.description || `Class with ${session.studentCount || 0} students`,
+        type: "class" as const,
+        duration: (new Date(session.endTime).getTime() - new Date(session.startTime).getTime()) / (1000 * 60 * 60) // Convert to hours
+      }));
+      
+      setEvents(convertedEvents);
+    } else {
+      setEvents([]);
+    }
+  }, [upcomingSessions]);
 
   const formatEventDate = (dateStr: string) => {
     const date = parseISO(dateStr);
@@ -68,9 +80,18 @@ export function UpcomingEvents() {
       <CardContent className="p-4">
         <ScrollArea className="h-[calc(100vh-250px)]">
           <div className="space-y-1">
-            {events.length === 0 ? (
+            {loading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                Loading upcoming sessions...
+              </div>
+            ) : error ? (
+              <div className="text-center py-8 text-red-500">
+                Failed to load sessions
+              </div>
+            ) : events.length === 0 ? (
               <div className="text-center py-8 text-gray-500">
-                No upcoming events
+                No upcoming sessions
               </div>
             ) : (
               events.map((event, index) => (
