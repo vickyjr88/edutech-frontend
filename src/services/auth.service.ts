@@ -633,7 +633,16 @@ class AuthService {
   async getBackendUserByOryId(oryIdentityId: string) {
     try {
       console.log('Fetching backend user by Ory ID:', oryIdentityId);
-      const response = await api.get(`/users/by-ory-id/${oryIdentityId}`);
+      // Use axios directly with credentials to include Ory session cookies
+      const response = await axios.get(
+        `${import.meta.env.VITE_API_URL}/users/by-ory-id/${oryIdentityId}`,
+        {
+          withCredentials: true, // Include session cookies
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
       
       // If we get tokens, persist them for legacy API compatibility
       return response.data;
@@ -645,12 +654,22 @@ class AuthService {
 
   async createBackendUserFromOry(session: Session) {
     try {
-      const response = await api.post('/users/from-ory', {
-        oryIdentityId: session.identity.id,
-        email: session.identity.traits.email,
-        fullName: `${session.identity.traits.name.first} ${session.identity.traits.name.last}`,
-        role: session.identity.traits.role,
-      });
+      // Use axios directly with credentials to include Ory session cookies
+      const response = await axios.post(
+        `${import.meta.env.VITE_API_URL}/users/from-ory`,
+        {
+          oryIdentityId: session.identity.id,
+          email: session.identity.traits.email,
+          fullName: `${session.identity.traits.name.first} ${session.identity.traits.name.last}`,
+          role: session.identity.traits.role,
+        },
+        {
+          withCredentials: true, // Include session cookies
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
 
       return response.data;
     } catch (error) {
