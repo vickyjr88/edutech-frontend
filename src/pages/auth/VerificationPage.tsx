@@ -1,5 +1,5 @@
 import React from 'react';
-import { AuthLayout } from '@/components/auth/AuthLayout';
+import AuthLayout from '@/components/auth/AuthLayout';
 import { OryVerificationForm } from '@/components/auth/OryVerificationForm';
 
 export const VerificationPage: React.FC = () => {
@@ -7,7 +7,7 @@ export const VerificationPage: React.FC = () => {
     <AuthLayout
       title="Verify Your Email"
       subtitle="Complete your account setup by verifying your email address"
-      showToggle={false}
+      authType="signup"
     >
       <OryVerificationForm />
     </AuthLayout>
