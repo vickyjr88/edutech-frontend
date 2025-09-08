@@ -89,6 +89,8 @@ export const OryLoginForm: React.FC<OryLoginFormProps> = ({ onSuccess, redirectT
 
       // Handle OAuth redirect (this is the normal flow)
       if (result.redirect_browser_to) {
+        // Store return URL in sessionStorage to handle post-OAuth redirect
+        sessionStorage.setItem('kidato_post_oauth_redirect', window.location.origin + '/login');
         window.location.href = result.redirect_browser_to;
         return;
       }

@@ -328,6 +328,10 @@ class AuthService {
 
   async logout() {
     try {
+      // Clear local storage immediately
+      this.clearLocalSession();
+
+      // Initialize logout flow
       const response = await fetch(`${this.oryProxyUrl}/self-service/logout/browser`, {
         method: 'GET',
         headers: {
@@ -336,16 +340,55 @@ class AuthService {
         credentials: 'include',
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || `Logout flow initialization failed with status ${response.status}`);
+      if (response.ok) {
+        const logoutFlow = await response.json();
+        // Perform server-side logout
+        if (logoutFlow.logout_url) {
+          await fetch(logoutFlow.logout_url, {
+            method: 'GET',
+            credentials: 'include',
+          });
+        }
       }
-      const logoutFlow = await response.json();
-      window.location.href = logoutFlow.logout_url;
+      
+      // Force clear any remaining session data
+      this.clearLocalSession();
+      
+      // Navigate to login page after clearing everything
+      window.location.href = '/login';
     } catch (error) {
       console.error('Logout failed:', error);
-      throw error;
+      // Even if logout fails, clear local session and redirect
+      this.clearLocalSession();
+      window.location.href = '/login';
     }
+  }
+
+  private clearLocalSession() {
+    // Clear all authentication-related localStorage items
+    localStorage.removeItem('kidato_user');
+    localStorage.removeItem('kidato_access_token');
+    localStorage.removeItem('kidato_refresh_token');
+    
+    // Clear any other session-related items
+    const keysToRemove = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && (key.startsWith('kidato_') || key.startsWith('ory_'))) {
+        keysToRemove.push(key);
+      }
+    }
+    keysToRemove.forEach(key => localStorage.removeItem(key));
+    
+    // Clear sessionStorage as well
+    const sessionKeysToRemove = [];
+    for (let i = 0; i < sessionStorage.length; i++) {
+      const key = sessionStorage.key(i);
+      if (key && (key.startsWith('kidato_') || key.startsWith('ory_'))) {
+        sessionKeysToRemove.push(key);
+      }
+    }
+    sessionKeysToRemove.forEach(key => sessionStorage.removeItem(key));
   }
 
   async initializeRecoveryFlow(): Promise<any> {
