@@ -4,6 +4,8 @@ import Index from "../pages/Index";
 import Login from "../pages/Login";
 import Signup from "../pages/Signup";
 import RecoveryPage from "../pages/auth/RecoveryPage";
+import { VerificationPage } from "../pages/auth/VerificationPage";
+import { OAuthCallbackPage } from "../pages/auth/OAuthCallbackPage";
 import Dashboard from "../pages/Dashboard";
 import TeacherDashboard from "../pages/TeacherDashboard";
 import NotFound from "../pages/NotFound";
@@ -58,8 +60,10 @@ const AppRoutes = () => {
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
       <Route path="/auth/recovery" element={<RecoveryPage />} />
+      <Route path="/auth/verification" element={<VerificationPage />} />
       <Route path="/forgot-password" element={<RecoveryPage />} />
       <Route path="/auth/callback" element={<AuthCallback />} />
+      <Route path="/auth/oauth-callback" element={<OAuthCallbackPage />} />
       <Route path="/zoom/callback" element={<ZoomAuthCallback />} />
       <Route path="/google-calendar/callback" element={<GoogleCalendarAuthCallback />} />
       <Route path="/for-teachers" element={<ForTeachers />} />

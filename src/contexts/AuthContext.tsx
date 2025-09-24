@@ -169,8 +169,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Helper function to clear user data
   const clearUserData = () => {
+    // Clear localStorage
     localStorage.removeItem('kidato_user');
     localStorage.removeItem('kidato_session_id');
+    localStorage.removeItem('kidato_access_token');
+    localStorage.removeItem('kidato_refresh_token');
+    
+    // Clear any other authentication-related items
+    const keysToRemove = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && (key.startsWith('kidato_') || key.startsWith('ory_'))) {
+        keysToRemove.push(key);
+      }
+    }
+    keysToRemove.forEach(key => localStorage.removeItem(key));
+    
+    // Clear sessionStorage as well
+    const sessionKeysToRemove = [];
+    for (let i = 0; i < sessionStorage.length; i++) {
+      const key = sessionStorage.key(i);
+      if (key && (key.startsWith('kidato_') || key.startsWith('ory_'))) {
+        sessionKeysToRemove.push(key);
+      }
+    }
+    sessionKeysToRemove.forEach(key => sessionStorage.removeItem(key));
+    
+    // Clear React state
     setUser(null);
     setSession(null);
   };
@@ -227,12 +252,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = async () => {
     try {
+      // Clear user data first to prevent any authentication loops
       clearUserData();
+      setIsLoading(false); // Ensure loading state is cleared
+      
+      // Call auth service logout which handles both local and server-side logout
       await authService.logout();
     } catch (error) {
       console.error('Logout failed:', error);
-      // Clear data even if logout fails
+      // Ensure data is cleared and redirect even if logout fails
       clearUserData();
+      setIsLoading(false);
+      // Force navigation to login if it hasn't happened
+      if (window.location.pathname !== '/login') {
+        window.location.href = '/login';
+      }
     }
   };
 

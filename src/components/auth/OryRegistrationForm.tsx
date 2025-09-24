@@ -81,6 +81,8 @@ export const OryRegistrationForm: React.FC<OryRegistrationFormProps> = ({ onSucc
 
       // Handle OAuth redirect (this is the normal flow)
       if (result.redirect_browser_to) {
+        // Store return URL in sessionStorage to handle post-OAuth redirect
+        sessionStorage.setItem('kidato_post_oauth_redirect', window.location.origin + '/signup');
         window.location.href = result.redirect_browser_to;
         return;
       }
