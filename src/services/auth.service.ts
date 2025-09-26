@@ -119,6 +119,27 @@ class AuthService {
     }
   }
 
+  async getRegistrationFlow(flowId: string): Promise<RegistrationFlow> {
+    try {
+      const response = await fetch(`${this.oryProxyUrl}/self-service/registration/flows?id=${flowId}`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+        },
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || `Failed to fetch registration flow with status ${response.status}`);
+      }
+      return await response.json();
+    } catch (error) {
+      console.error('Failed to fetch registration flow:', error);
+      throw error;
+    }
+  }
+
   async submitLoginFlow(flowId: string, values: Record<string, any>): Promise<AuthResponse> { // Changed return type
     try {
       const response = await fetch(`${this.oryProxyUrl}/self-service/login?flow=${flowId}`, {
