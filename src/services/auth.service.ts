@@ -97,6 +97,27 @@ class AuthService {
     }
   }
 
+  async getLoginFlow(flowId: string): Promise<LoginFlow> {
+    try {
+      const response = await fetch(`${this.oryProxyUrl}/self-service/login/flows?id=${flowId}`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+        },
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || `Failed to fetch login flow with status ${response.status}`);
+      }
+      return await response.json();
+    } catch (error) {
+      console.error('Failed to fetch login flow:', error);
+      throw error;
+    }
+  }
+
   async initializeRegistrationFlow(returnTo?: string): Promise<RegistrationFlow> {
     try {
       const response = await fetch(`${this.oryProxyUrl}/self-service/registration/browser`, {
@@ -115,6 +136,27 @@ class AuthService {
     } catch (error) {
       console.error('Failed to initialize registration flow:', error);
       // This is where you'd typically trigger your fallback to native auth
+      throw error;
+    }
+  }
+
+  async getRegistrationFlow(flowId: string): Promise<RegistrationFlow> {
+    try {
+      const response = await fetch(`${this.oryProxyUrl}/self-service/registration/flows?id=${flowId}`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+        },
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || `Failed to fetch registration flow with status ${response.status}`);
+      }
+      return await response.json();
+    } catch (error) {
+      console.error('Failed to fetch registration flow:', error);
       throw error;
     }
   }

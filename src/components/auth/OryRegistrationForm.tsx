@@ -31,6 +31,7 @@ export const OryRegistrationForm: React.FC<OryRegistrationFormProps> = ({ onSucc
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<any>({});
   const [flowError, setFlowError] = useState('');
+  const [prefilledFields, setPrefilledFields] = useState<Set<string>>(new Set());
 
   const navigate = useNavigate();
 
@@ -82,7 +83,9 @@ export const OryRegistrationForm: React.FC<OryRegistrationFormProps> = ({ onSucc
       // Handle OAuth redirect (this is the normal flow)
       if (result.redirect_browser_to) {
         // Store return URL in sessionStorage to handle post-OAuth redirect
-        sessionStorage.setItem('kidato_post_oauth_redirect', window.location.origin + '/signup');
+        const returnUrl = `${window.location.origin}/signup`;
+        sessionStorage.setItem('kidato_post_oauth_redirect', returnUrl);
+        console.log('Redirecting to OAuth provider:', result.redirect_browser_to);
         window.location.href = result.redirect_browser_to;
         return;
       }
@@ -147,15 +150,83 @@ export const OryRegistrationForm: React.FC<OryRegistrationFormProps> = ({ onSucc
   const initializeFlow = async () => {
     try {
       setIsLoading(true);
-      const registrationFlow = await authService.initializeRegistrationFlow(redirectTo);
+      
+      // Check if there's a flow ID in the URL (from Google OAuth redirect)
+      const urlParams = new URLSearchParams(window.location.search);
+      const flowId = urlParams.get('flow');
+      
+      let registrationFlow: RegistrationFlow;
+      
+      if (flowId) {
+        // If flow ID exists, fetch the existing flow with pre-filled data
+        console.log('Found flow ID in URL, fetching flow data:', flowId);
+        registrationFlow = await authService.getRegistrationFlow(flowId);
+        
+        // Populate form with pre-filled data from Google OAuth
+        populateFormFromFlow(registrationFlow);
+      } else {
+        // Initialize new flow
+        registrationFlow = await authService.initializeRegistrationFlow(redirectTo);
+      }
+      
       setFlow(registrationFlow);
       setFlowError('');
+      
+      // Clean up URL parameters after successful flow initialization
+      if (flowId) {
+        const url = new URL(window.location.href);
+        url.searchParams.delete('flow');
+        window.history.replaceState({}, document.title, url.pathname + url.search);
+      }
       
     } catch (error: any) {
       console.error('Failed to initialize registration flow:', error);
       setFlowError('Failed to initialize registration. Please try again.');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // Helper function to populate form with pre-filled data from OAuth
+  const populateFormFromFlow = (flow: RegistrationFlow) => {
+    if (!flow.ui.nodes) return;
+    
+    const updatedFormData = { ...formData };
+    const prefilled = new Set<string>();
+    let hasPrefilledData = false;
+    
+    flow.ui.nodes.forEach(node => {
+      if (node.attributes && node.attributes.value) {
+        const fieldName = node.attributes.name;
+        const fieldValue = node.attributes.value;
+        
+        switch (fieldName) {
+          case 'traits.email':
+            updatedFormData.email = fieldValue;
+            prefilled.add('email');
+            hasPrefilledData = true;
+            console.log('Pre-filled email from Google:', fieldValue);
+            break;
+          case 'traits.name.first':
+            updatedFormData.firstName = fieldValue;
+            prefilled.add('firstName');
+            hasPrefilledData = true;
+            console.log('Pre-filled first name from Google:', fieldValue);
+            break;
+          case 'traits.name.last':
+            updatedFormData.lastName = fieldValue;
+            prefilled.add('lastName');
+            hasPrefilledData = true;
+            console.log('Pre-filled last name from Google:', fieldValue);
+            break;
+        }
+      }
+    });
+    
+    if (hasPrefilledData) {
+      setFormData(updatedFormData);
+      setPrefilledFields(prefilled);
+      console.log('Form populated with Google OAuth data:', updatedFormData);
     }
   };
 
@@ -328,7 +399,12 @@ export const OryRegistrationForm: React.FC<OryRegistrationFormProps> = ({ onSucc
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <Label htmlFor="firstName">First name</Label>
+          <Label htmlFor="firstName">
+            First name
+            {prefilledFields.has('firstName') && (
+              <span className="text-xs text-green-600 ml-1">(from Google)</span>
+            )}
+          </Label>
           <div className="mt-1">
             <Input
               id="firstName"
@@ -338,7 +414,7 @@ export const OryRegistrationForm: React.FC<OryRegistrationFormProps> = ({ onSucc
               required
               value={formData.firstName}
               onChange={(e) => handleInputChange('firstName', e.target.value)}
-              className={`block w-full ${errors['traits.name.first'] ? 'border-red-500' : ''}`}
+              className={`block w-full ${errors['traits.name.first'] ? 'border-red-500' : ''} ${prefilledFields.has('firstName') ? 'bg-green-50 border-green-200' : ''}`}
               disabled={isLoading}
             />
             {errors['traits.name.first'] && (
@@ -348,7 +424,12 @@ export const OryRegistrationForm: React.FC<OryRegistrationFormProps> = ({ onSucc
         </div>
 
         <div>
-          <Label htmlFor="lastName">Last name</Label>
+          <Label htmlFor="lastName">
+            Last name
+            {prefilledFields.has('lastName') && (
+              <span className="text-xs text-green-600 ml-1">(from Google)</span>
+            )}
+          </Label>
           <div className="mt-1">
             <Input
               id="lastName"
@@ -358,7 +439,7 @@ export const OryRegistrationForm: React.FC<OryRegistrationFormProps> = ({ onSucc
               required
               value={formData.lastName}
               onChange={(e) => handleInputChange('lastName', e.target.value)}
-              className={`block w-full ${errors['traits.name.last'] ? 'border-red-500' : ''}`}
+              className={`block w-full ${errors['traits.name.last'] ? 'border-red-500' : ''} ${prefilledFields.has('lastName') ? 'bg-green-50 border-green-200' : ''}`}
               disabled={isLoading}
             />
             {errors['traits.name.last'] && (
@@ -369,7 +450,12 @@ export const OryRegistrationForm: React.FC<OryRegistrationFormProps> = ({ onSucc
       </div>
 
       <div>
-        <Label htmlFor="email">Email address</Label>
+        <Label htmlFor="email">
+          Email address
+          {prefilledFields.has('email') && (
+            <span className="text-xs text-green-600 ml-1">(from Google)</span>
+          )}
+        </Label>
         <div className="mt-1">
           <Input
             id="email"
@@ -379,9 +465,13 @@ export const OryRegistrationForm: React.FC<OryRegistrationFormProps> = ({ onSucc
             required
             value={formData.email}
             onChange={(e) => handleInputChange('email', e.target.value)}
-            className={`block w-full ${errors['traits.email'] ? 'border-red-500' : ''}`}
-            disabled={isLoading}
+            className={`block w-full ${errors['traits.email'] ? 'border-red-500' : ''} ${prefilledFields.has('email') ? 'bg-green-50 border-green-200' : ''}`}
+            disabled={isLoading || prefilledFields.has('email')}
+            readOnly={prefilledFields.has('email')}
           />
+          {prefilledFields.has('email') && (
+            <p className="mt-1 text-xs text-green-600">This email is verified through Google</p>
+          )}
           {errors['traits.email'] && (
             <p className="mt-1 text-sm text-red-600">{errors['traits.email']}</p>
           )}

@@ -23,6 +23,7 @@ export const OryLoginForm: React.FC<OryLoginFormProps> = ({ onSuccess, redirectT
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<any>({});
   const [flowError, setFlowError] = useState('');
+  const [prefilledFields, setPrefilledFields] = useState<Set<string>>(new Set());
   const hasInitialized = useRef(false);
 
   const navigate = useNavigate();
@@ -90,7 +91,9 @@ export const OryLoginForm: React.FC<OryLoginFormProps> = ({ onSuccess, redirectT
       // Handle OAuth redirect (this is the normal flow)
       if (result.redirect_browser_to) {
         // Store return URL in sessionStorage to handle post-OAuth redirect
-        sessionStorage.setItem('kidato_post_oauth_redirect', window.location.origin + '/login');
+        const returnUrl = `${window.location.origin}/login`;
+        sessionStorage.setItem('kidato_post_oauth_redirect', returnUrl);
+        console.log('Redirecting to OAuth provider:', result.redirect_browser_to);
         window.location.href = result.redirect_browser_to;
         return;
       }
@@ -157,14 +160,120 @@ export const OryLoginForm: React.FC<OryLoginFormProps> = ({ onSuccess, redirectT
   const initializeFlow = async () => {
     try {
       setIsLoading(true);
-      // Remove return_to parameter temporarily until allowed URLs are configured
-      const loginFlow = await authService.initializeLoginFlow();
+      
+      // Check if there's a flow ID in the URL (from Google OAuth redirect)
+      const urlParams = new URLSearchParams(window.location.search);
+      const flowId = urlParams.get('flow');
+      
+      let loginFlow: LoginFlow;
+      
+      if (flowId) {
+        // If flow ID exists, fetch the existing flow with pre-filled data
+        console.log('Found flow ID in URL, fetching flow data:', flowId);
+        loginFlow = await authService.getLoginFlow(flowId);
+        
+        // Populate form with pre-filled data from Google OAuth
+        populateFormFromFlow(loginFlow);
+      } else {
+        // Initialize new flow
+        loginFlow = await authService.initializeLoginFlow();
+      }
+      
       setFlow(loginFlow);
       setFlowError('');
+      
+      // Clean up URL parameters after successful flow initialization
+      if (flowId) {
+        const url = new URL(window.location.href);
+        url.searchParams.delete('flow');
+        window.history.replaceState({}, document.title, url.pathname + url.search);
+      }
       
     } catch (error: any) {
       console.error('Failed to initialize login flow:', error);
       setFlowError('Failed to initialize login. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Helper function to populate form with pre-filled data from OAuth
+  const populateFormFromFlow = (flow: LoginFlow) => {
+    if (!flow.ui.nodes) return;
+    
+    const prefilled = new Set<string>();
+    let hasPrefilledData = false;
+    
+    flow.ui.nodes.forEach(node => {
+      if (node.attributes && node.attributes.value) {
+        const fieldName = node.attributes.name;
+        const fieldValue = node.attributes.value;
+        
+        switch (fieldName) {
+          case 'identifier':
+            setEmail(fieldValue);
+            prefilled.add('email');
+            hasPrefilledData = true;
+            console.log('Pre-filled email from Google:', fieldValue);
+            break;
+        }
+      }
+    });
+    
+    if (hasPrefilledData) {
+      setPrefilledFields(prefilled);
+      console.log('Login form populated with Google OAuth data');
+      
+      // For Google OAuth flows with pre-filled email, we should auto-submit
+      // since the user has already been authenticated with Google
+      setTimeout(() => {
+        handleOAuthAutoLogin(flow);
+      }, 1000);
+    }
+  };
+
+  // Auto-submit login for OAuth flows with pre-filled data
+  const handleOAuthAutoLogin = async (flow: LoginFlow) => {
+    if (!prefilledFields.has('email') || isLoading) return;
+    
+    console.log('Auto-submitting OAuth login with pre-filled email');
+    setIsLoading(true);
+    
+    try {
+      const csrfToken = flow.ui.nodes.find(node => node.attributes.name === 'csrf_token')?.attributes.value;
+      
+      const result = await authService.submitLoginFlow(flow.id, {
+        identifier: email,
+        csrf_token: csrfToken,
+        method: 'oidc',
+      });
+
+      console.log('Auto-login result:', result);
+      
+      if (result.data.session || result.data.legacy) {
+        toast({
+          title: 'Welcome back!',
+          description: 'You have successfully logged in with Google.',
+        });
+        
+        // Handle role-based redirection
+        const userRole = result.data.session?.identity?.traits?.role || result.data.user?.role;
+        console.log('User role from OAuth auto-login:', userRole);
+        
+        if (userRole === 'teacher') {
+          window.location.href = '/teacher-dashboard';
+        } else if (userRole === 'student') {
+          window.location.href = '/student-dashboard';
+        } else if (userRole === 'parent') {
+          window.location.href = '/parents-dashboard';
+        } else {
+          window.location.href = '/dashboard';
+        }
+      }
+    } catch (error: any) {
+      console.error('OAuth auto-login failed:', error);
+      // If auto-login fails, user can still enter password manually
+      setFlowError('Automatic login failed. Please enter your password to continue.');
     } finally {
       setIsLoading(false);
     }
@@ -315,7 +424,12 @@ export const OryLoginForm: React.FC<OryLoginFormProps> = ({ onSuccess, redirectT
       )}
 
       <div>
-        <Label htmlFor="email">Email address</Label>
+        <Label htmlFor="email">
+          Email address
+          {prefilledFields.has('email') && (
+            <span className="text-xs text-green-600 ml-1">(from Google)</span>
+          )}
+        </Label>
         <div className="mt-1">
           <Input
             id="email"
@@ -325,69 +439,85 @@ export const OryLoginForm: React.FC<OryLoginFormProps> = ({ onSuccess, redirectT
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className={`block w-full ${errors.identifier ? 'border-red-500' : ''}`}
-            disabled={isLoading}
+            className={`block w-full ${errors.identifier ? 'border-red-500' : ''} ${prefilledFields.has('email') ? 'bg-green-50 border-green-200' : ''}`}
+            disabled={isLoading || prefilledFields.has('email')}
+            readOnly={prefilledFields.has('email')}
           />
+          {prefilledFields.has('email') && (
+            <div className="mt-1">
+              <p className="text-xs text-green-600">This email is verified through Google</p>
+              {isLoading && (
+                <p className="text-xs text-blue-600 mt-1 flex items-center">
+                  <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-600 mr-1"></div>
+                  Completing sign-in...
+                </p>
+              )}
+            </div>
+          )}
           {errors.identifier && (
             <p className="mt-1 text-sm text-red-600">{errors.identifier}</p>
           )}
         </div>
       </div>
 
-      <div>
-        <div className="flex items-center justify-between">
-          <Label htmlFor="password">Password</Label>
+      {!prefilledFields.has('email') && (
+        <div>
+          <div className="flex items-center justify-between">
+            <Label htmlFor="password">Password</Label>
+            <Button
+              type="button"
+              variant="link"
+              className="text-sm font-medium text-kidato-purple hover:text-kidato-dark-blue p-0 h-auto"
+              onClick={() => navigate('/auth/recovery')}
+            >
+              Forgot your password?
+            </Button>
+          </div>
+          <div className="mt-1 relative">
+            <Input
+              id="password"
+              name="password"
+              type={showPassword ? 'text' : 'password'}
+              autoComplete="current-password"
+              required={!prefilledFields.has('email')}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className={`block w-full pr-10 ${errors.password ? 'border-red-500' : ''}`}
+              disabled={isLoading}
+            />
+            <button
+              type="button"
+              className="absolute inset-y-0 right-0 pr-3 flex items-center"
+              onClick={() => setShowPassword(!showPassword)}
+              disabled={isLoading}
+            >
+              {showPassword ? (
+                <EyeOff className="h-5 w-5 text-gray-400" />
+              ) : (
+                <Eye className="h-5 w-5 text-gray-400" />
+              )}
+            </button>
+          </div>
+          {errors.password && (
+            <p className="mt-1 text-sm text-red-600">{errors.password}</p>
+          )}
+        </div>
+      )}
+
+      {!prefilledFields.has('email') && (
+        <div>
           <Button
-            type="button"
-            variant="link"
-            className="text-sm font-medium text-kidato-purple hover:text-kidato-dark-blue p-0 h-auto"
-            onClick={() => navigate('/auth/recovery')}
+            type="submit"
+            className="w-full bg-kidato-purple hover:bg-kidato-dark-blue"
+            disabled={isLoading || !flow}
           >
-            Forgot your password?
+            {isLoading ? 'Logging in...' : 'Log in'}
           </Button>
         </div>
-        <div className="mt-1 relative">
-          <Input
-            id="password"
-            name="password"
-            type={showPassword ? 'text' : 'password'}
-            autoComplete="current-password"
-            required
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className={`block w-full pr-10 ${errors.password ? 'border-red-500' : ''}`}
-            disabled={isLoading}
-          />
-          <button
-            type="button"
-            className="absolute inset-y-0 right-0 pr-3 flex items-center"
-            onClick={() => setShowPassword(!showPassword)}
-            disabled={isLoading}
-          >
-            {showPassword ? (
-              <EyeOff className="h-5 w-5 text-gray-400" />
-            ) : (
-              <Eye className="h-5 w-5 text-gray-400" />
-            )}
-          </button>
-        </div>
-        {errors.password && (
-          <p className="mt-1 text-sm text-red-600">{errors.password}</p>
-        )}
-      </div>
-
-      <div>
-        <Button
-          type="submit"
-          className="w-full bg-kidato-purple hover:bg-kidato-dark-blue"
-          disabled={isLoading || !flow}
-        >
-          {isLoading ? 'Logging in...' : 'Log in'}
-        </Button>
-      </div>
+      )}
 
       {/* OAuth Login Options */}
-      {flow && (
+      {flow && !prefilledFields.has('email') && (
         <>
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
