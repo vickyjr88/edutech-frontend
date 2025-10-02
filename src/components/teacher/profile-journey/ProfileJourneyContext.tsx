@@ -632,7 +632,7 @@ export const ProfileJourneyProvider = ({ children }: { children: ReactNode }) =>
         };
 
         // Only include id for existing items (not new items with temporary IDs)
-      if (exp._id && !exp._id.startsWith('cv-') && !exp._id.startsWith('temp_')) {
+      if (exp._id && !exp._id.startsWith('cv-') && !exp._id.startsWith('temp_') && !exp._id.startsWith('exp-')) {
           return {
             id: exp._id,
             ...baseItem

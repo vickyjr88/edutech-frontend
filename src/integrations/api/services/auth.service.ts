@@ -254,13 +254,41 @@ class AuthService {
     }
 
     getSession(): Session | null {
-        // Check if token is expired
-        if (this.session && this.session.expiresAt && this.session.expiresAt < Date.now()) {
-            this.clearSession();
-            return null;
+        // First check if we have a stored session
+        if (this.session) {
+            // Check if token is expired
+            if (this.session.expiresAt && this.session.expiresAt < Date.now()) {
+                this.clearSession();
+                return null;
+            }
+            return this.session;
         }
 
-        return this.session;
+        // If no session in memory, check localStorage for tokens
+        const accessToken = localStorage.getItem('kidato_access_token');
+        const refreshToken = localStorage.getItem('kidato_refresh_token');
+        const storedUser = localStorage.getItem('kidato_user');
+
+        if (accessToken && refreshToken && storedUser) {
+            try {
+                const user = JSON.parse(storedUser);
+                // Create a session from localStorage data
+                this.session = {
+                    user: user,
+                    token: accessToken,
+                    refreshToken: refreshToken,
+                    expiresAt: this.calculateExpiryTime(24) // Default to 24 hours
+                };
+                return this.session;
+            } catch (error) {
+                console.error('Error parsing stored user data:', error);
+                // Clear corrupted data
+                this.clearSession();
+                return null;
+            }
+        }
+
+        return null;
     }
 
     isAuthenticated(): boolean {
@@ -309,6 +337,10 @@ class AuthService {
         if (typeof window !== 'undefined') {
             localStorage.removeItem(SESSION_KEY);
             localStorage.removeItem(TOKEN_KEY);
+            localStorage.removeItem(REFRESH_KEY);
+            localStorage.removeItem('kidato_access_token');
+            localStorage.removeItem('kidato_refresh_token');
+            localStorage.removeItem('kidato_user');
         }
 
         // Notify listeners
@@ -317,11 +349,33 @@ class AuthService {
 
     private loadSession(): void {
         if (typeof window !== 'undefined') {
+            // First try to load from the new format (SESSION_KEY)
             const sessionStr = localStorage.getItem(SESSION_KEY);
             if (sessionStr) {
                 try {
                     this.session = JSON.parse(sessionStr);
+                    return;
                 } catch (e) {
+                    console.warn('Failed to parse stored session, trying alternative format');
+                }
+            }
+
+            // If no SESSION_KEY, try to construct from individual tokens
+            const accessToken = localStorage.getItem('kidato_access_token');
+            const refreshToken = localStorage.getItem('kidato_refresh_token');
+            const storedUser = localStorage.getItem('kidato_user');
+
+            if (accessToken && refreshToken && storedUser) {
+                try {
+                    const user = JSON.parse(storedUser);
+                    this.session = {
+                        user: user,
+                        token: accessToken,
+                        refreshToken: refreshToken,
+                        expiresAt: this.calculateExpiryTime(24) // Default to 24 hours
+                    };
+                } catch (e) {
+                    console.error('Failed to construct session from stored tokens');
                     this.clearSession();
                 }
             }

@@ -1,7 +1,6 @@
 import { ory } from '../lib/ory'; // Import ory from lib/ory
 import axios from 'axios';
 import { api } from '../integrations/api/client';
-import { s } from 'node_modules/framer-motion/dist/types.d-DSjX-LJB';
 
 // Removed: import { getOryBaseUrl } from '../lib/ory';
 
@@ -294,19 +293,19 @@ class AuthService {
     if (accessToken && refreshToken && storedUser) {
       try {
         const user = JSON.parse(storedUser);
-        // Construct a mock Ory session from local storage data
-        // This assumes the local storage user object has enough info
-        // to mimic an Ory session for the purpose of AuthContext
-        return {
-          id: 'local-session', // A dummy ID for local session
-          active: true,
-          authenticated_at: new Date().toISOString(),
-          expires_at: new Date(Date.now() + 3600 * 1000).toISOString(), // 1 hour from now
-          issued_at: new Date().toISOString(),
+        // Validate user object has required fields
+        if (!user.id || !user.email || !user.fullName || !user.role) {
+          console.warn('Stored user data is incomplete, clearing localStorage');
+          this.clearLocalSession();
+          return null;
+        }
+
+        // Construct a proper Ory session from local storage data
+        const mockSession: Session = {
+          id: user.oryIdentityId || user.id || 'local-session',
+          expires_at: new Date(Date.now() + 24 * 3600 * 1000).toISOString(), // 24 hours from now
           identity: {
-            id: user.id,
-            schema_id: 'default',
-            schema_url: '',
+            id: user.oryIdentityId || user.id,
             traits: {
               email: user.email,
               name: {
@@ -315,8 +314,7 @@ class AuthService {
               },
               role: user.role,
             },
-            metadata_public: user.metadata || {},
-            verifiable_addresses: [{
+            verifiable_addresses: user.email ? [{
               id: 'email-address',
               value: user.email,
               verified: user.verified || false,
@@ -324,15 +322,16 @@ class AuthService {
               status: 'completed',
               created_at: new Date().toISOString(),
               updated_at: new Date().toISOString(),
-            }],
+            }] : undefined,
+            metadata_public: user.metadata || {},
           },
-        } as Session;
+        };
+
+        return mockSession;
       } catch (e) {
         console.error('Error parsing stored user from local storage:', e);
         // Clear corrupted data and proceed to Ory API call
-        localStorage.removeItem('kidato_user');
-        localStorage.removeItem('kidato_access_token');
-        localStorage.removeItem('kidato_refresh_token');
+        this.clearLocalSession();
       }
     }
 
@@ -352,18 +351,36 @@ class AuthService {
           console.log('No Ory session found (401)');
           return null;
         }
-        const errorData = await response.json();
-        throw new Error(errorData.message || `Failed to fetch session with status ${response.status}`);
+        
+        // For other errors, try to get error details
+        let errorMessage = `Failed to fetch session with status ${response.status}`;
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.message || errorMessage;
+        } catch (parseError) {
+          // If we can't parse error response, use the default message
+        }
+        
+        console.error('Error fetching session:', errorMessage);
+        return null;
       }
       
       const sessionData = await response.json();
+      
+      // Validate session data structure
+      if (!sessionData || !sessionData.identity || !sessionData.identity.traits) {
+        console.error('Invalid session data structure received from Ory');
+        return null;
+      }
+      
       return sessionData;
     } catch (error) {
       console.error('Error fetching current session from Ory:', error);
-      // If Ory session fails, clear any potentially stale local storage data
-      localStorage.removeItem('kidato_user');
-      localStorage.removeItem('kidato_access_token');
-      localStorage.removeItem('kidato_refresh_token');
+      // Don't clear localStorage here unless we're sure it's invalid
+      // Only clear if we have a network error or server error, not client errors
+      if (error instanceof TypeError || error.message?.includes('fetch')) {
+        console.log('Network error detected, keeping localStorage data');
+      }
       return null;
     }
   }
@@ -761,6 +778,66 @@ class AuthService {
       console.error('Error creating backend user from Ory:', error);
       throw error;
     }
+  }
+
+  // Helper methods for session management compatibility
+  setSession(sessionData: { user: any; token: string; refreshToken: string; expiresAt?: number }) {
+    const { user, token, refreshToken, expiresAt } = sessionData;
+    
+    // Store in localStorage for persistence
+    localStorage.setItem('kidato_user', JSON.stringify(user));
+    localStorage.setItem('kidato_access_token', token);
+    localStorage.setItem('kidato_refresh_token', refreshToken);
+    
+    if (expiresAt) {
+      localStorage.setItem('kidato_session_expires_at', expiresAt.toString());
+    }
+  }
+
+  calculateExpiryTime(hours: number): number {
+    return Date.now() + (hours * 60 * 60 * 1000);
+  }
+
+  // Check if session is expired
+  isSessionExpired(): boolean {
+    const expiresAt = localStorage.getItem('kidato_session_expires_at');
+    if (!expiresAt) return false;
+    
+    try {
+      const expiry = parseInt(expiresAt, 10);
+      return Date.now() > expiry;
+    } catch (error) {
+      console.error('Error checking session expiry:', error);
+      return true; // Assume expired if we can't parse
+    }
+  }
+
+  // Get session info for compatibility
+  getSessionInfo() {
+    const user = localStorage.getItem('kidato_user');
+    const token = localStorage.getItem('kidato_access_token');
+    const refreshToken = localStorage.getItem('kidato_refresh_token');
+    
+    if (!user || !token || !refreshToken) {
+      return null;
+    }
+
+    try {
+      return {
+        user: JSON.parse(user),
+        token,
+        refreshToken,
+        isExpired: this.isSessionExpired()
+      };
+    } catch (error) {
+      console.error('Error getting session info:', error);
+      return null;
+    }
+  }
+
+  // Alias for getCurrentSession for backward compatibility
+  getSession() {
+    return this.getCurrentSession();
   }
 }
 
