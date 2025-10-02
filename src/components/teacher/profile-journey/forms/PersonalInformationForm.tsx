@@ -232,6 +232,7 @@ export const PersonalInformationForm = ({ onComplete }: PersonalInformationFormP
         email: localFormData.email,
         bio: localFormData.bio,
         phoneNumber: `${localFormData.countryCode}${localFormData.phone}`,
+        ...(localFormData.profileImage && { profileImage: localFormData.profileImage }),
         legal_id: {
           id_type: localFormData.idType.toLowerCase().replace(/\s+/g, '_').replace("'", ""),
           id: localFormData.idNumber,
@@ -245,24 +246,83 @@ export const PersonalInformationForm = ({ onComplete }: PersonalInformationFormP
         })
       };
 
+      // Prepare teacher profile data for API call
+      const teacherData = {
+        ...(localFormData.introVideoUrl && { introVideoUrl: localFormData.introVideoUrl }),
+        // Always include basic location if address is provided
+        ...(localFormData.homeAddress && {
+          location: {
+            address: localFormData.homeAddress,
+            city: localFormData.locationCity || '',
+            county: localFormData.locationCounty || '',
+            postalCode: localFormData.locationPostalCode || '',
+            ...(localFormData.locationCoordinates && {
+              coordinates: localFormData.locationCoordinates
+            })
+          }
+        })
+      };
+
       // Update the context with final form data
       updatePersonalInfo(localFormData);
 
-      // Update user profile via API
-      const response = await authService.updateUserProfile(userData);
-      
-      if (response.error) {
-        throw new Error(response.error.message);
+      try {
+        // Update user profile via API
+        const userResponse = await authService.updateUserProfile(userData);
+        
+        if (userResponse.error) {
+          throw new Error(userResponse.error.message);
+        }
+
+        // Update teacher profile if there's teacher-specific data
+        if (Object.keys(teacherData).length > 0) {
+          // Get teacher ID
+          let teacherId: string;
+          if (user?.teacherId) {
+            teacherId = user.teacherId;
+          } else {
+            // Get teacher profile to find ID
+            const teacherProfile = await teacherService.getCurrentProfile();
+            if (teacherProfile.data) {
+              teacherId = teacherProfile.data.id || teacherProfile.data._id;
+            } else {
+              // If no teacher profile exists, create one first
+              const newProfile = await teacherService.createProfile({
+                userId: user?.id || '',
+                user: {
+                  _id: user?.id || '',
+                  fullName: localFormData.fullName,
+                  email: localFormData.email,
+                  legal_id: userData.legal_id
+                }
+              });
+              
+              if (newProfile.data) {
+                teacherId = newProfile.data.id || newProfile.data._id;
+              }
+            }
+          }
+
+          if (teacherId) {
+            const teacherResponse = await teacherService.updateProfile(teacherId, teacherData);
+            if (teacherResponse.error) {
+              console.error('Teacher profile update error:', teacherResponse.error);
+              // Don't fail the entire process for teacher profile update errors
+            }
+          }
+        }
+
+        toast({
+          title: "Success",
+          description: "Personal information updated successfully",
+        });
+
+        // Mark step as complete
+        completeStep('personal');
+        onComplete();
+      } catch (error) {
+        throw error; // Re-throw to be caught by outer catch block
       }
-
-      toast({
-        title: "Success",
-        description: "Personal information updated successfully",
-      });
-
-      // Mark step as complete
-      completeStep('personal');
-      onComplete();
     } catch (error) {
       console.error('Error updating personal information:', error);
       toast({

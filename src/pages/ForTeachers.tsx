@@ -1,3 +1,4 @@
+
 import { BookOpen, DollarSign, Clock, Calendar, ShieldCheck, Award, CreditCard } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -130,9 +131,9 @@ const ForTeachers = () => {
         <HeroSection 
           title="Share Your Knowledge, Inspire the Next Generation"
           description="Join our community of passionate educators making quality education accessible across Africa."
-          primaryButtonText="Apply to Teach"
-          primaryButtonLink="/teacher-signup"
-          secondaryButtonText="View Pricing"
+          primaryButtonText="View Pricing"
+          primaryButtonLink="/teacher-pricing"
+          secondaryButtonText="Learn More"
           secondaryButtonLink="/teacher-pricing"
         />
         
@@ -148,8 +149,8 @@ const ForTeachers = () => {
           title="How to Join Our Teaching Community"
           subtitle="Four simple steps to start your teaching journey with Kidato."
           steps={steps}
-          ctaText="Start Your Application"
-          ctaLink="/teacher-signup"
+          ctaText="View Pricing Plans"
+          ctaLink="/teacher-pricing"
         />
         
         <TestimonialsSection 
@@ -160,16 +161,16 @@ const ForTeachers = () => {
         
         <RequirementsSection 
           requirements={requirements}
-          ctaText="Apply Now"
-          ctaLink="/teacher-signup"
+          ctaText="Explore Pricing"
+          ctaLink="/teacher-pricing"
           earningOptions={earningOptions}
         />
         
         <CTASection 
           title="Ready to Transform African Education?"
           description="Join our teaching community today and help shape the future of thousands of African students."
-          buttonText="Start Your Teaching Journey"
-          buttonLink="/teacher-signup"
+          buttonText="View Pricing"
+          buttonLink="/teacher-pricing"
         />
       </main>
       <Footer />
