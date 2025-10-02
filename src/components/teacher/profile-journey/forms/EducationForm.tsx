@@ -33,15 +33,24 @@ export const EducationForm = ({ onComplete }: EducationFormProps) => {
   // Convert existing education to local state format
   const [educationEntries, setEducationEntries] = useState<EducationEntry[]>(() => {
     if (education.length > 0) {
-      return education.map((edu, index) => ({
-        id: edu._id || `edu-${index}`,
-        institution: edu.institution || '',
-        degree: edu.degree || '',
-        fieldOfStudy: edu.fieldOfStudy || '',
-        startYear: edu.startYear?.toString() || '',
-        endYear: edu.endYear?.toString() || '',
-        isCompleted: edu.isCompleted || false
-      }));
+      return education.map((edu, index) => {
+        // Extract year from startDate (e.g., "2015-01-01T00:00:00.000Z" -> "2015")
+        const extractYear = (dateStr: string): string => {
+          if (!dateStr) return '';
+          const date = new Date(dateStr);
+          return date.getFullYear().toString();
+        };
+
+        return {
+          id: edu._id || `edu-${index}`,
+          institution: edu.institution || edu.institutionName || '',
+          degree: edu.degree || '',
+          fieldOfStudy: edu.additionalDetails || '', // Map additionalDetails to fieldOfStudy
+          startYear: edu.startDate ? extractYear(edu.startDate) : '',
+          endYear: edu.endDate ? extractYear(edu.endDate) : '',
+          isCompleted: !edu.isCurrentlyStudying // Invert: if not currently studying, then completed
+        };
+      });
     }
     return [{
       id: 'edu-1',
@@ -53,6 +62,29 @@ export const EducationForm = ({ onComplete }: EducationFormProps) => {
       isCompleted: false
     }];
   });
+
+  // Update local state when education prop changes (e.g., when data is loaded from API)
+  useEffect(() => {
+    if (education.length > 0) {
+      const extractYear = (dateStr: string): string => {
+        if (!dateStr) return '';
+        const date = new Date(dateStr);
+        return date.getFullYear().toString();
+      };
+
+      const convertedEntries = education.map((edu, index) => ({
+        id: edu._id || `edu-${index}`,
+        institution: edu.institution || edu.institutionName || '',
+        degree: edu.degree || '',
+        fieldOfStudy: edu.additionalDetails || '', // Map additionalDetails to fieldOfStudy
+        startYear: edu.startDate ? extractYear(edu.startDate) : '',
+        endYear: edu.endDate ? extractYear(edu.endDate) : '',
+        isCompleted: !edu.isCurrentlyStudying // Invert: if not currently studying, then completed
+      }));
+      
+      setEducationEntries(convertedEntries);
+    }
+  }, [education]);
 
   // Check for CV extracted data on component mount
   useEffect(() => {
@@ -195,8 +227,8 @@ export const EducationForm = ({ onComplete }: EducationFormProps) => {
       // Update the context
       setEducation(educationData);
       
-      // Save education to the API
-      const saveSuccess = await saveEducation();
+      // Save education to the API (pass the data directly to avoid async state issues)
+      const saveSuccess = await saveEducation(educationData);
       
       if (saveSuccess) {
         // Mark step as complete only if save was successful

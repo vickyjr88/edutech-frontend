@@ -179,7 +179,7 @@ interface ProfileJourneyContextType {
   updatePersonalInfo: (data: Partial<ProfileJourneyContextType['personalInfo']>) => void;
   updateLocationInfo: (data: Partial<ProfileJourneyContextType['locationInfo']>) => void;
   setEducation: (items: EducationItem[]) => void;
-  saveEducation: () => Promise<boolean>;
+  saveEducation: (educationData?: EducationItem[]) => Promise<boolean>;
   setExperience: (items: ExperienceItem[]) => void;
   saveExperience: (experienceData?: ExperienceItem[]) => Promise<boolean>;
   saveSubjects: (academicSubjectsData?: AcademicSubjectItem[], afterSchoolSubjectsData?: AfterSchoolSubjectItem[]) => Promise<boolean>;
@@ -521,7 +521,7 @@ export const ProfileJourneyProvider = ({ children }: { children: ReactNode }) =>
   };
 
   // Save education function - called when education step is completed
-  const saveEducation = async (): Promise<boolean> => {
+  const saveEducation = async (educationData?: EducationItem[]): Promise<boolean> => {
     try {
       if (!user?.teacherId) {
         toast({
@@ -533,11 +533,12 @@ export const ProfileJourneyProvider = ({ children }: { children: ReactNode }) =>
       }
 
       const teacherId = user.teacherId;
+      const educationToSave = educationData || education;
       console.log("Saving education for teacher:", teacherId);
-      console.log("Education items to save:", education);
+      console.log("Education items to save:", educationToSave);
 
       // Convert EducationItem format to Education format for the API
-      const educationItemsForAPI = education.map(edu => {
+      const educationItemsForAPI = educationToSave.map(edu => {
         const baseItem = {
           institution: edu.institution || edu.institutionName || '',
           degree: edu.degree || '',
@@ -545,11 +546,11 @@ export const ProfileJourneyProvider = ({ children }: { children: ReactNode }) =>
           startDate: edu.startDate,
           endDate: edu.endDate,
           isCurrentlyEnrolled: edu.isCurrentlyStudying || false
-          // Removed grade, activities, and description as they're not expected by the API
+          // Note: teacherProfile is added by the service method, don't add it here
         };
 
         // Only include id for existing items (not new items with temporary IDs)
-        if (edu._id && !edu._id.startsWith('edu-') && !edu._id.startsWith('cv-edu-')) {
+        if (edu._id && !edu._id.startsWith('edu-') && !edu._id.startsWith('cv-edu-') && !edu._id.startsWith('temp_')) {
           return {
             id: edu._id,
             ...baseItem
@@ -571,11 +572,25 @@ export const ProfileJourneyProvider = ({ children }: { children: ReactNode }) =>
 
       // Update local state with the response data if available
       if (result.data && Array.isArray(result.data)) {
-        const updatedEducation = result.data.map((apiEdu, index) => ({
-          ...education[index],
-          _id: apiEdu.id || education[index]._id
+        // Convert the API response back to EducationItem format
+        const updatedEducation: EducationItem[] = result.data.map((apiEdu) => ({
+          _id: apiEdu._id || apiEdu.id,
+          institution: apiEdu.institutionName,
+          institutionName: apiEdu.institutionName,
+          degree: apiEdu.degree,
+          additionalDetails: apiEdu.additionalDetails || '',
+          startDate: apiEdu.startDate,
+          endDate: apiEdu.endDate,
+          isCurrentlyStudying: apiEdu.isCurrentlyStudying || false,
+          institutionType: apiEdu.institutionType || 'university'
         }));
+        // Update both the context state and the passed data
         setEducation(updatedEducation);
+        // If educationData was passed, we should also update that reference for consistency
+        if (educationData) {
+          educationData.length = 0;
+          educationData.push(...updatedEducation);
+        }
       }
 
       toast({
@@ -1534,7 +1549,19 @@ export const ProfileJourneyProvider = ({ children }: { children: ReactNode }) =>
           let hasLoadedCertifications = false;
           
           if (profileData.education && profileData.education.length > 0) {
-            setEducation(profileData.education as any[]);
+            // Convert backend Education format to frontend EducationItem format
+            const convertedEducation: EducationItem[] = (profileData.education as any[]).map((edu: any) => ({
+              _id: edu._id || edu.id,
+              institution: edu.institutionName || edu.institution,
+              institutionName: edu.institutionName || edu.institution,
+              degree: edu.degree,
+              additionalDetails: edu.additionalDetails || '',
+              startDate: edu.startDate,
+              endDate: edu.endDate,
+              isCurrentlyStudying: edu.isCurrentlyStudying || false,
+              institutionType: edu.institutionType || 'university'
+            }));
+            setEducation(convertedEducation);
             hasLoadedEducation = true;
           }
           
@@ -1595,7 +1622,19 @@ export const ProfileJourneyProvider = ({ children }: { children: ReactNode }) =>
             try {
               const { data: educationData } = await teacherService.getTeacherEducation(teacherId);
               if (educationData && educationData.length > 0) {
-                setEducation(educationData);
+                // Convert backend Education format to frontend EducationItem format
+                const convertedEducation: EducationItem[] = educationData.map((edu: any) => ({
+                  _id: edu._id || edu.id,
+                  institution: edu.institutionName || edu.institution,
+                  institutionName: edu.institutionName || edu.institution,
+                  degree: edu.degree,
+                  additionalDetails: edu.additionalDetails || '',
+                  startDate: edu.startDate,
+                  endDate: edu.endDate,
+                  isCurrentlyStudying: edu.isCurrentlyStudying || false,
+                  institutionType: edu.institutionType || 'university'
+                }));
+                setEducation(convertedEducation);
               }
             } catch (error) {
               console.error("Error loading education data:", error);
