@@ -95,9 +95,9 @@ export const ExpertiseForm = ({ onComplete }: ExpertiseFormProps) => {
         institution: exp.institution || '',
         position: exp.position || '',
         subjects: exp.subjects?.join(', ') || '',
-        startYear: exp.startYear?.toString() || '',
-        endYear: exp.endYear?.toString() || '',
-        description: exp.description || ''
+        startYear: exp.startDate ? new Date(exp.startDate).getFullYear().toString() : '',
+        endYear: exp.endDate ? new Date(exp.endDate).getFullYear().toString() : '',
+        description: exp.additionalDetails || ''
       }));
     }
     return [{
@@ -115,8 +115,8 @@ export const ExpertiseForm = ({ onComplete }: ExpertiseFormProps) => {
     if (teachingStyle.languages.length > 0) {
       return teachingStyle.languages.map((lang, index) => ({
         id: lang._id || `lang-${index}`,
-        name: lang.language || '',
-        proficiency: lang || 'Beginner',
+        name: lang.name || lang.language || '',
+        proficiency: lang.proficiency || 'Beginner',
         isCertified: lang.isCertified || false
       }));
     }
@@ -127,7 +127,7 @@ export const ExpertiseForm = ({ onComplete }: ExpertiseFormProps) => {
     if (teachingStyle.technicalSkills.length > 0) {
       return teachingStyle.technicalSkills.map((skill, index) => ({
         id: skill._id || `skill-${index}`,
-        name: skill.name || '',
+        name: skill.skill || skill.name || '',
         description: skill.description || '',
         level: skill.level || 'Beginner',
         isCertified: skill.isCertified || false
@@ -188,6 +188,99 @@ export const ExpertiseForm = ({ onComplete }: ExpertiseFormProps) => {
 
     loadCurriculums();
   }, []);
+
+  // Update form when subjects from context change
+  useEffect(() => {
+    if (subjects.academic.length > 0) {
+      const academicEntries = subjects.academic.map((subject, index) => ({
+        id: subject._id || `academic-${index + 1}`,
+        subject: subject.subject || '',
+        curriculum: subject.curriculum || '',
+        curriculumName: subject.curriculumName || subject.curriculum || '',
+        isCertified: subject.isCertified || false
+      }));
+      setAcademicSubjectEntries(academicEntries);
+    }
+
+    if (subjects.afterSchool.length > 0) {
+      const afterSchoolEntries = subjects.afterSchool.map((subject, index) => ({
+        id: subject._id || `afterschool-${index + 1}`,
+        subject: subject.subject || '',
+        isCertified: subject.isCertified || false
+      }));
+      setAfterSchoolSubjectEntries(afterSchoolEntries);
+    }
+  }, [subjects.academic, subjects.afterSchool]);
+
+  // Update form when experience from context changes
+  useEffect(() => {
+    if (experience.length > 0) {
+      const experienceEntries = experience.map((exp, index) => ({
+        id: exp._id || `exp-${index}`,
+        institution: exp.institution || '',
+        position: exp.position || '',
+        subjects: exp.subjects?.join(', ') || '',
+        startYear: exp.startDate ? new Date(exp.startDate).getFullYear().toString() : '',
+        endYear: exp.endDate ? new Date(exp.endDate).getFullYear().toString() : '',
+        description: exp.additionalDetails || ''
+      }));
+      setExperienceEntries(experienceEntries);
+    }
+  }, [experience]);
+
+  // Update form when languages from context change
+  useEffect(() => {
+    if (teachingStyle.languages.length > 0) {
+      const languageEntries = teachingStyle.languages.map((lang, index) => ({
+        id: lang._id || `lang-${index}`,
+        name: lang.name || lang.language || '',
+        proficiency: lang.proficiency || 'Beginner',
+        isCertified: lang.isCertified || false
+      }));
+      setLanguageEntries(languageEntries);
+    }
+  }, [teachingStyle.languages]);
+
+  // Update form when technical skills change - separate general skills from technical skills
+  useEffect(() => {
+    if (teachingStyle.technicalSkills.length > 0) {
+      // Filter general skills from technical skills based on GENERAL_SKILLS list
+      const generalSkills = teachingStyle.technicalSkills.filter(skill => 
+        GENERAL_SKILLS.some(generalSkill => 
+          generalSkill.toLowerCase() === (skill.skill || skill.name || '').toLowerCase()
+        )
+      );
+      
+      if (generalSkills.length > 0) {
+        const generalEntries = generalSkills.map((skill, index) => ({
+          id: skill._id || `general-${index}`,
+          name: skill.skill || skill.name || '',
+          description: skill.description || '',
+          level: skill.level || 'Beginner',
+          isCertified: skill.isCertified || false
+        }));
+        setGeneralSkillEntries(generalEntries);
+      }
+
+      // Update technical skills to exclude general skills
+      const purelyTechnicalSkills = teachingStyle.technicalSkills.filter(skill => 
+        !GENERAL_SKILLS.some(generalSkill => 
+          generalSkill.toLowerCase() === (skill.skill || skill.name || '').toLowerCase()
+        )
+      );
+      
+      if (purelyTechnicalSkills.length > 0) {
+        const techSkillEntries = purelyTechnicalSkills.map((skill, index) => ({
+          id: skill._id || `skill-${index}`,
+          name: skill.skill || skill.name || '',
+          description: skill.description || '',
+          level: skill.level || 'Beginner',
+          isCertified: skill.isCertified || false
+        }));
+        setSkillEntries(techSkillEntries);
+      }
+    }
+  }, [teachingStyle.technicalSkills, GENERAL_SKILLS]);
 
   // Check for CV extracted data on component mount
   useEffect(() => {
@@ -644,17 +737,19 @@ export const ExpertiseForm = ({ onComplete }: ExpertiseFormProps) => {
                     </div>
                     <span className="font-semibold text-[#5c64d4]">Academic Subject</span>
                   </div>
-                  {academicSubjectEntries.length > 1 && (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => setAcademicSubjectEntries(prev => prev.filter(s => s.id !== entry.id))}
-                      className="text-red-500 hover:bg-red-100 rounded-full"
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  )}
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setAcademicSubjectEntries(prev => {
+                      const filtered = prev.filter(s => s.id !== entry.id);
+                      // If removing all items, add an empty one
+                      return filtered.length === 0 ? [{ id: 'academic-1', subject: '', curriculum: '', curriculumName: '', isCertified: false }] : filtered;
+                    })}
+                    className="text-red-500 hover:bg-red-100 rounded-full"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -750,17 +845,19 @@ export const ExpertiseForm = ({ onComplete }: ExpertiseFormProps) => {
                     </div>
                     <span className="font-semibold text-[#fc9323]">Extracurricular Subject</span>
                   </div>
-                  {afterSchoolSubjectEntries.length > 1 && (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => setAfterSchoolSubjectEntries(prev => prev.filter(s => s.id !== entry.id))}
-                      className="text-red-500 hover:bg-red-100 rounded-full"
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  )}
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setAfterSchoolSubjectEntries(prev => {
+                      const filtered = prev.filter(s => s.id !== entry.id);
+                      // If removing all items, add an empty one
+                      return filtered.length === 0 ? [{ id: 'afterschool-1', subject: '', isCertified: false }] : filtered;
+                    })}
+                    className="text-red-500 hover:bg-red-100 rounded-full"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
                 </div>
                 
                 <div className="space-y-4">
@@ -925,17 +1022,19 @@ export const ExpertiseForm = ({ onComplete }: ExpertiseFormProps) => {
                     </div>
                     <span className="font-semibold text-blue-800">Language</span>
                   </div>
-                  {languageEntries.length > 1 && (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => setLanguageEntries(prev => prev.filter(l => l.id !== entry.id))}
-                      className="text-red-500 hover:bg-red-100 rounded-full"
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  )}
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setLanguageEntries(prev => {
+                      const filtered = prev.filter(l => l.id !== entry.id);
+                      // If removing all items, add an empty one
+                      return filtered.length === 0 ? [{ id: 'lang-1', name: '', proficiency: 'Beginner', isCertified: false }] : filtered;
+                    })}
+                    className="text-red-500 hover:bg-red-100 rounded-full"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -1052,17 +1151,19 @@ export const ExpertiseForm = ({ onComplete }: ExpertiseFormProps) => {
                     </div>
                     <span className="font-semibold text-[#fc9323]">Technical Skill</span>
                   </div>
-                  {skillEntries.length > 1 && (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => setSkillEntries(prev => prev.filter(s => s.id !== entry.id))}
-                      className="text-red-500 hover:bg-red-100 rounded-full"
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  )}
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setSkillEntries(prev => {
+                      const filtered = prev.filter(s => s.id !== entry.id);
+                      // If removing all items, add an empty one
+                      return filtered.length === 0 ? [{ id: 'skill-1', name: '', description: '', level: 'Beginner', isCertified: false }] : filtered;
+                    })}
+                    className="text-red-500 hover:bg-red-100 rounded-full"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -1205,17 +1306,19 @@ export const ExpertiseForm = ({ onComplete }: ExpertiseFormProps) => {
                     </div>
                     <span className="font-semibold text-[#5c64d4]">General Skill</span>
                   </div>
-                  {generalSkillEntries.length > 1 && (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => setGeneralSkillEntries(prev => prev.filter(s => s.id !== entry.id))}
-                      className="text-red-500 hover:bg-red-100 rounded-full"
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  )}
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setGeneralSkillEntries(prev => {
+                      const filtered = prev.filter(s => s.id !== entry.id);
+                      // If removing all items, add an empty one
+                      return filtered.length === 0 ? [{ id: 'general-1', name: '', description: '', level: 'Beginner', isCertified: false }] : filtered;
+                    })}
+                    className="text-red-500 hover:bg-red-100 rounded-full"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">

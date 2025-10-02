@@ -728,7 +728,7 @@ export const ProfileJourneyProvider = ({ children }: { children: ReactNode }) =>
           };
 
           // Only include id for existing items (not new items with temporary IDs)
-          if (subject._id && !subject._id.startsWith('cv-academic')) {
+          if (subject._id && !subject._id.startsWith('cv-academic') && !subject._id.startsWith('academic-') && !subject._id.startsWith('temp_')) {
             return {
               id: subject._id,
               ...baseItem
@@ -749,7 +749,7 @@ export const ProfileJourneyProvider = ({ children }: { children: ReactNode }) =>
           };
 
           // Only include id for existing items (not new items with temporary IDs)
-          if (subject._id && !subject._id.startsWith('afterschool-')) {
+          if (subject._id && !subject._id.startsWith('afterschool-') && !subject._id.startsWith('after-school-') && !subject._id.startsWith('temp_')) {
             return {
               id: subject._id,
               ...baseItem
@@ -918,7 +918,7 @@ export const ProfileJourneyProvider = ({ children }: { children: ReactNode }) =>
         };
 
         // Only include id for existing items (not new items with temporary IDs)
-        if (skill._id && !skill._id.startsWith('skill-') && !skill._id.startsWith('cv-skill-')) {
+        if (skill._id && !skill._id.startsWith('skill-') && !skill._id.startsWith('cv-skill-') && !skill._id.startsWith('general-') && !skill._id.startsWith('temp_')) {
           return {
             id: skill._id,
             ...baseItem
