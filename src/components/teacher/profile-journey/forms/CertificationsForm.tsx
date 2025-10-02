@@ -24,7 +24,8 @@ interface CertificationsFormProps {
 export const CertificationsForm = ({ onComplete }: CertificationsFormProps) => {
   const { 
     certifications, 
-    setCertifications, 
+    setCertifications,
+    saveCertifications,
     completeStep 
   } = useProfileJourney();
   const { toast } = useToast();
@@ -73,6 +74,20 @@ export const CertificationsForm = ({ onComplete }: CertificationsFormProps) => {
 
     checkCVData();
   }, []);
+
+  // Update form when certifications from context change
+  useEffect(() => {
+    if (certifications.length > 0) {
+      const certificationEntries = certifications.map((cert, index) => ({
+        id: cert._id || cert.id || `cert-${index}`,
+        name: cert.name || cert.value || '',
+        issuer: cert.issuer || '',
+        year: cert.year?.toString() || (cert.issueDate ? new Date(cert.issueDate).getFullYear().toString() : ''),
+        description: cert.description || cert.details || ''
+      }));
+      setCertificationEntries(certificationEntries);
+    }
+  }, [certifications]);
 
   // Handle CV prefill
   const handleCVPrefill = async () => {
@@ -154,28 +169,42 @@ export const CertificationsForm = ({ onComplete }: CertificationsFormProps) => {
         entry.name.trim()
       );
 
-      if (validCertifications.length > 0) {
-        const certificationData = validCertifications.map(entry => ({
-          id: entry.id,
-          value: entry.name,
-          name: entry.name,
-          issuer: entry.issuer,
-          year: entry.year ? parseInt(entry.year) : undefined,
-          details: entry.description,
-          description: entry.description
-        }));
-        setCertifications(certificationData);
-      }
-
-      // Check if form has minimum required data
       if (validCertifications.length === 0) {
         alert('Please add at least one certification');
         return;
       }
 
-      // Mark step as complete
-      completeStep('certifications');
-      onComplete();
+      // Convert form data to API format
+      const certificationData = validCertifications.map(entry => ({
+        certificateType: 'Professional',
+        name: entry.name,
+        issuer: entry.issuer || '',
+        ...(entry.year && { issueDate: `${entry.year}-01-01` }),
+        description: entry.description || '',
+        isVerifiable: false,
+        credentialUrl: '',
+        cert_docs: []
+      }));
+
+      console.log("Submitting certifications:", certificationData);
+
+      // Save certifications using the API
+      const success = await saveCertifications(certificationData);
+      
+      if (success) {
+        // Mark step as complete
+        completeStep('certifications');
+        onComplete();
+      } else {
+        throw new Error('Failed to save certifications');
+      }
+    } catch (error) {
+      console.error('Error submitting certifications:', error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to save certifications. Please try again.",
+        variant: "destructive",
+      });
     } finally {
       setIsSubmitting(false);
     }

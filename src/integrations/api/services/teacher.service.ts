@@ -718,8 +718,8 @@ export const teacherService = {
         const normalizedData = {
             ...certification,
             teacherProfile: teacherId,
-            issueDate: certification.issueDate ? normalizeDate(certification.issueDate as string) : "",
-            expiryDate: certification.expiryDate ? normalizeDate(certification.expiryDate as string) : null
+            ...(certification.issueDate && { issueDate: normalizeDate(certification.issueDate as string) }),
+            ...(certification.expiryDate && { expiryDate: normalizeDate(certification.expiryDate as string) })
         };
         
         delete normalizedData._id;
@@ -948,5 +948,27 @@ export const teacherService = {
     // Primary Bank Account
     getPrimaryBankAccount: (): Promise<ApiResponse<PrimaryBankAccount>> => {
         return api.get<PrimaryBankAccount>('/teacher/bank-accounts/primary');
+    },
+
+
+    getTeacherCertifications: (teacherId: string): Promise<ApiResponse<any[]>> => {
+        return api.get<any[]>(`/teachers/${teacherId}/certifications`);
+    },
+
+    updateCertification: (teacherId: string, certificationId: string, data: Partial<CertificationItem>): Promise<ApiResponse<any>> => {
+        return api.patch<any>(`/teachers/${teacherId}/certifications/${certificationId}`, {
+            certificateType: data.certificateType,
+            name: data.name,
+            issuer: data.issuer,
+            issueDate: data.issueDate || data.year ? `${data.year}-01-01` : undefined,
+            description: data.description,
+            isVerifiable: data.isVerifiable,
+            credentialUrl: data.credentialUrl,
+            cert_docs: data.cert_docs
+        });
+    },
+
+    deleteCertification: (teacherId: string, certificationId: string): Promise<ApiResponse<any>> => {
+        return api.delete<any>(`/teachers/${teacherId}/certifications/${certificationId}`);
     },
 };

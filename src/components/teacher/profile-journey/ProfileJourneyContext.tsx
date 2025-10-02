@@ -185,6 +185,7 @@ interface ProfileJourneyContextType {
   saveSubjects: (academicSubjectsData?: AcademicSubjectItem[], afterSchoolSubjectsData?: AfterSchoolSubjectItem[]) => Promise<boolean>;
   saveLanguages: (languagesData?: LanguageItem[]) => Promise<boolean>;
   saveTechnicalSkills: (skillsData?: TechnicalSkillItem[]) => Promise<boolean>;
+  saveCertifications: (certificationsData?: any[]) => Promise<boolean>;
   setAcademicSubjects: (items: AcademicSubjectItem[]) => void;
   setAfterSchoolSubjects: (items: AfterSchoolSubjectItem[]) => void;
   setStrategies: (items: StrategyItem[]) => void;
@@ -304,6 +305,7 @@ const defaultContext: ProfileJourneyContextType = {
   saveSubjects: async () => false,
   saveLanguages: async () => false,
   saveTechnicalSkills: async () => false,
+  saveCertifications: async () => false,
   setAcademicSubjects: () => {},
   setAfterSchoolSubjects: () => {},
   setStrategies: () => {},
@@ -963,6 +965,104 @@ export const ProfileJourneyProvider = ({ children }: { children: ReactNode }) =>
       toast({
         title: "Error",
         description: error instanceof Error ? error.message : "Failed to save technical skills information. Please try again.",
+        variant: "destructive",
+      });
+      return false;
+    }
+  };
+
+  // Save certifications function - called when certifications are updated
+  const saveCertifications = async (certificationsData?: any[]): Promise<boolean> => {
+    try {
+      if (!user?.teacherId) {
+        toast({
+          title: "Error",
+          description: "Teacher ID not found. Please ensure you are logged in.",
+          variant: "destructive"
+        });
+        return false;
+      }
+
+      const teacherId = user.teacherId;
+      console.log("Saving certifications for teacher:", teacherId);
+      
+      // Use provided data or fall back to context state
+      const certificationsToSave = certificationsData || certifications;
+      console.log("Certifications to save:", certificationsToSave);
+
+      // Get existing certifications from API to handle updates vs creates
+      let existingCerts = [];
+      try {
+        const existingCertifications = await teacherService.getTeacherCertifications(teacherId);
+        existingCerts = existingCertifications.data || [];
+      } catch (error) {
+        console.log("No existing certifications found or error fetching them:", error);
+      }
+
+      const results = [];
+
+      // Process each certification
+      for (const cert of certificationsToSave) {
+        const certificationData = {
+          certificateType: 'Professional',
+          name: cert.name || cert.value || '',
+          issuer: cert.issuer || '',
+          year: cert.year,
+          issueDate: cert.year ? `${cert.year}-01-01` : undefined,
+          description: cert.description || cert.details || '',
+          isVerifiable: cert.isVerifiable || false,
+          credentialUrl: cert.credentialUrl || '',
+          cert_docs: cert.cert_docs || []
+        };
+
+        // Check if this is an existing certification (has _id and it's not temporary)
+        const existingCert = existingCerts.find(existing => existing._id === cert._id);
+        
+        if (existingCert && cert._id && !cert._id.startsWith('cert-') && !cert._id.startsWith('cv-cert-')) {
+          // Update existing certification
+          const result = await teacherService.updateCertification(teacherId, cert._id, certificationData);
+          if (result.error) {
+            throw new Error(result.error.message || 'Failed to update certification');
+          }
+          results.push(result.data);
+        } else {
+          // Create new certification
+          const result = await teacherService.addCertification(teacherId, certificationData);
+          if (result.error) {
+            throw new Error(result.error.message || 'Failed to save certification');
+          }
+          results.push(result.data);
+        }
+      }
+
+      // Update local state with the response data
+      if (results.length > 0) {
+        const updatedCertifications = results.map((apiCert, index) => ({
+          ...certificationsToSave[index],
+          _id: apiCert._id || certificationsToSave[index]._id,
+          id: apiCert._id || certificationsToSave[index].id,
+          name: apiCert.name || certificationsToSave[index].name,
+          value: apiCert.name || certificationsToSave[index].value,
+          issuer: apiCert.issuer || certificationsToSave[index].issuer,
+          year: apiCert.issueDate ? new Date(apiCert.issueDate).getFullYear() : certificationsToSave[index].year,
+          description: apiCert.description || certificationsToSave[index].description,
+          details: apiCert.description || certificationsToSave[index].details
+        }));
+        setCertifications(updatedCertifications);
+      }
+
+      toast({
+        title: "Success",
+        description: "Certifications saved successfully",
+      });
+
+      console.log("Certifications saved successfully");
+      return true;
+    } catch (error) {
+      console.error("Error saving certifications:", error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to save certifications. Please try again.",
         variant: "destructive",
       });
       return false;
@@ -1728,7 +1828,7 @@ export const ProfileJourneyProvider = ({ children }: { children: ReactNode }) =>
           // Load certifications if not already loaded
           if (!hasLoadedCertifications) {
             try {
-              const { data: certificationsData } = await teacherService.getCertifications(teacherId);
+              const { data: certificationsData } = await teacherService.getTeacherCertifications(teacherId);
               if (certificationsData && certificationsData.length > 0) {
                 console.log("Setting certifications:", certificationsData);
                 setCertifications(certificationsData);
@@ -1890,6 +1990,7 @@ export const ProfileJourneyProvider = ({ children }: { children: ReactNode }) =>
     setTechnicalSkills,
     saveTechnicalSkills,
     setCertifications,
+    saveCertifications,
     updateVerification,
     updatePlatformSettings,
     
