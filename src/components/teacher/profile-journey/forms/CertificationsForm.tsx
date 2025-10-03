@@ -7,7 +7,9 @@ import { useProfileJourney } from '../ProfileJourneyContext';
 import { Award, Plus, X, FileText, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { cvService } from '@/integrations/api/services/cv.service';
+import { teacherService } from '@/integrations/api/services/teacher.service';
 import { useToast } from '@/components/ui/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface CertificationEntry {
   id: string;
@@ -29,20 +31,27 @@ export const CertificationsForm = ({ onComplete }: CertificationsFormProps) => {
     completeStep 
   } = useProfileJourney();
   const { toast } = useToast();
+  const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showCVPrefill, setShowCVPrefill] = useState(false);
   const [isCVLoading, setIsCVLoading] = useState(false);
+  const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set());
 
   // Local state for certifications
   const [certificationEntries, setCertificationEntries] = useState<CertificationEntry[]>(() => {
     if (certifications.length > 0) {
-      return certifications.map((cert, index) => ({
-        id: cert.id || `cert-${index}`,
-        name: cert.value || cert.name || '',
-        issuer: cert.issuer || '',
-        year: cert.year?.toString() || '',
-        description: cert.details || cert.description || ''
-      }));
+      console.log("Initial state - Raw certifications:", certifications);
+      return certifications.map((cert, index) => {
+        const mapped = {
+          id: cert._id || cert.id || `cert-${index}`,
+          name: cert.name || cert.value || '',
+          issuer: cert.issuer || '',
+          year: cert.year?.toString() || (cert.issueDate ? new Date(cert.issueDate).getFullYear().toString() : ''),
+          description: cert.description || cert.details || ''
+        };
+        console.log(`Initial state - Mapped cert ${index}:`, mapped);
+        return mapped;
+      });
     }
     return [{
       id: 'cert-1',
@@ -78,13 +87,25 @@ export const CertificationsForm = ({ onComplete }: CertificationsFormProps) => {
   // Update form when certifications from context change
   useEffect(() => {
     if (certifications.length > 0) {
-      const certificationEntries = certifications.map((cert, index) => ({
-        id: cert._id || cert.id || `cert-${index}`,
-        name: cert.name || cert.value || '',
-        issuer: cert.issuer || '',
-        year: cert.year?.toString() || (cert.issueDate ? new Date(cert.issueDate).getFullYear().toString() : ''),
-        description: cert.description || cert.details || ''
-      }));
+      console.log("Raw certifications from context:", certifications);
+      const certificationEntries = certifications.map((cert, index) => {
+        console.log(`Processing cert ${index}:`, cert);
+        const mapped = {
+          id: cert._id || cert.id || `cert-${index}`,
+          name: cert.name || cert.value || '',
+          issuer: cert.issuer || '',
+          year: cert.year?.toString() || (cert.issueDate ? new Date(cert.issueDate).getFullYear().toString() : ''),
+          description: cert.description || cert.details || ''
+        };
+        console.log(`Mapped cert ${index}:`, mapped);
+        console.log(`  - issuer from cert:`, cert.issuer);
+        console.log(`  - year from cert.year:`, cert.year);
+        console.log(`  - issueDate from cert:`, cert.issueDate);
+        console.log(`  - final year:`, mapped.year);
+        console.log(`  - final issuer:`, mapped.issuer);
+        return mapped;
+      });
+      console.log("Final certification entries:", certificationEntries);
       setCertificationEntries(certificationEntries);
     }
   }, [certifications]);
@@ -137,30 +158,107 @@ export const CertificationsForm = ({ onComplete }: CertificationsFormProps) => {
     }]);
   };
 
-  const handleRemoveCertification = (id: string) => {
-    const filtered = certificationEntries.filter(entry => entry.id !== id);
-    if (filtered.length === 0) {
-      setCertificationEntries([{
-        id: 'cert-1',
-        name: '',
-        issuer: '',
-        year: '',
-        description: ''
-      }]);
-    } else {
-      setCertificationEntries(filtered);
+  const handleRemoveCertification = async (id: string) => {
+    console.log('Attempting to remove certification with ID:', id);
+    
+    // Prevent multiple deletion attempts for the same certification
+    if (deletingIds.has(id)) {
+      console.log('Already deleting certification:', id);
+      return;
+    }
+    
+    try {
+      // Check if this is an existing certification (has MongoDB ID, not temporary cert- ID)
+      const isExistingCertification = !id.startsWith('cert-') && !id.startsWith('cv-cert-');
+      
+      if (isExistingCertification) {
+        console.log('Deleting existing certification from backend:', id);
+        
+        // Get teacher profile ID from user
+        if (!user?.teacherId) {
+          console.error('No teacher profile ID available');
+          return;
+        }
+
+        // Mark as deleting
+        setDeletingIds(prev => new Set([...prev, id]));
+
+        // Use the teacher profile ID to delete the certification
+        await teacherService.deleteCertification(user.teacherId, id);
+        
+        console.log('Successfully deleted certification from backend');
+        
+        // Update context to remove from certifications array
+        const updatedCertifications = certifications.filter(cert => 
+          cert._id !== id && cert.id !== id
+        );
+        console.log('Updated certifications context:', updatedCertifications);
+        setCertifications(updatedCertifications);
+        
+        toast({
+          title: "Success",
+          description: "Certification deleted successfully",
+        });
+      } else {
+        console.log('Removing new certification from form only:', id);
+      }
+      
+      // Always remove from local form state
+      const filtered = certificationEntries.filter(entry => entry.id !== id);
+      console.log('Filtered certification entries:', filtered);
+      
+      if (filtered.length === 0) {
+        // If no certifications left, add a blank one
+        setCertificationEntries([{
+          id: 'cert-1',
+          name: '',
+          issuer: '',
+          year: '',
+          description: ''
+        }]);
+      } else {
+        setCertificationEntries(filtered);
+      }
+      
+    } catch (error) {
+      console.error('Error deleting certification:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete certification. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      // Remove from deleting state
+      setDeletingIds(prev => {
+        const updated = new Set(prev);
+        updated.delete(id);
+        return updated;
+      });
     }
   };
 
   const handleCertificationChange = (id: string, field: keyof CertificationEntry, value: string) => {
-    setCertificationEntries(prev => prev.map(entry => 
-      entry.id === id ? { ...entry, [field]: value } : entry
-    ));
+    console.log(`Changing certification ${id}, field: ${field}, value:`, value);
+    setCertificationEntries(prev => prev.map(entry => {
+      if (entry.id === id) {
+        const updated = { ...entry, [field]: value };
+        console.log(`Updated certification ${id}:`, updated);
+        return updated;
+      }
+      return entry;
+    }));
   };
 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Prevent multiple submissions
+    if (isSubmitting) {
+      console.log("Form already submitting, ignoring duplicate submission");
+      return;
+    }
+    
     setIsSubmitting(true);
 
     try {
@@ -174,17 +272,31 @@ export const CertificationsForm = ({ onComplete }: CertificationsFormProps) => {
         return;
       }
 
-      // Convert form data to API format
-      const certificationData = validCertifications.map(entry => ({
-        certificateType: 'Professional',
-        name: entry.name,
-        issuer: entry.issuer || '',
-        ...(entry.year && { issueDate: `${entry.year}-01-01` }),
-        description: entry.description || '',
-        isVerifiable: false,
-        credentialUrl: '',
-        cert_docs: []
-      }));
+      // Convert form data to API format, preserving IDs for updates
+      const certificationData = validCertifications.map(entry => {
+        console.log("Processing certification entry:", entry);
+        const result = {
+          // Preserve existing ID for updates vs creates
+          _id: entry.id.includes('cert-') ? undefined : entry.id,
+          id: entry.id,
+          certificateType: 'Professional',
+          name: entry.name,
+          issuer: entry.issuer || '',
+          description: entry.description || '',
+          isVerifiable: false,
+          credentialUrl: '',
+          cert_docs: [],
+          year: entry.year
+        };
+        
+        // Add issueDate if year is provided
+        if (entry.year && entry.year.trim()) {
+          result.issueDate = `${entry.year}-01-01`;
+          console.log("Added issueDate:", result.issueDate);
+        }
+        
+        return result;
+      });
 
       console.log("Submitting certifications:", certificationData);
 
@@ -289,9 +401,19 @@ export const CertificationsForm = ({ onComplete }: CertificationsFormProps) => {
                     variant="ghost"
                     size="icon"
                     onClick={() => handleRemoveCertification(entry.id)}
-                    className="text-red-500 hover:text-red-700 hover:bg-red-100 rounded-full"
+                    disabled={deletingIds.has(entry.id)}
+                    className={cn(
+                      "rounded-full",
+                      deletingIds.has(entry.id) 
+                        ? "text-gray-400 hover:text-gray-400 cursor-not-allowed" 
+                        : "text-red-500 hover:text-red-700 hover:bg-red-100"
+                    )}
                   >
-                    <X className="h-5 w-5" />
+                    {deletingIds.has(entry.id) ? (
+                      <div className="w-5 h-5 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <X className="h-5 w-5" />
+                    )}
                   </Button>
                 )}
               </div>

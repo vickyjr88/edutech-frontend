@@ -1263,16 +1263,40 @@ export const ProfileJourneyProvider = ({ children }: { children: ReactNode }) =>
         case "education":
           // Education requirements: College + High School
           const hasEducation = education.length > 0 ? 1 : 0;
-          // Could be more granular - check for college and high school separately
-          const hasCollegeEducation = education.some(edu => 
-            edu.degree?.toLowerCase().includes('bachelor') || 
-            edu.degree?.toLowerCase().includes('master') || 
-            edu.degree?.toLowerCase().includes('degree')
-          ) ? 1 : 0;
-          const hasHighSchoolEducation = education.some(edu => 
-            edu.degree?.toLowerCase().includes('high school') || 
-            edu.degree?.toLowerCase().includes('secondary')
-          ) ? 1 : 0;
+          
+          // More inclusive college education detection
+          const hasCollegeEducation = education.some(edu => {
+            const degree = edu.degree?.toLowerCase() || '';
+            const institution = edu.institutionName?.toLowerCase() || edu.institution?.toLowerCase() || '';
+            return degree.includes('bachelor') || 
+                   degree.includes('master') || 
+                   degree.includes('degree') ||
+                   degree.includes('diploma') ||
+                   degree.includes('certificate') ||
+                   degree.includes('phd') ||
+                   degree.includes('doctorate') ||
+                   institution.includes('university') ||
+                   institution.includes('college') ||
+                   institution.includes('institute');
+          }) ? 1 : 0;
+          
+          // More inclusive high school education detection  
+          const hasHighSchoolEducation = education.some(edu => {
+            const degree = edu.degree?.toLowerCase() || '';
+            const institution = edu.institutionName?.toLowerCase() || edu.institution?.toLowerCase() || '';
+            return degree.includes('high school') || 
+                   degree.includes('secondary') ||
+                   degree.includes('kcse') ||
+                   degree.includes('o-level') ||
+                   degree.includes('a-level') ||
+                   institution.includes('high school') ||
+                   institution.includes('secondary');
+          }) ? 1 : 0;
+          
+          // If we have education but can't categorize it, assume it's valid and give full credit
+          if (hasEducation && !hasCollegeEducation && !hasHighSchoolEducation) {
+            return 100; // Give full credit for any education entry
+          }
           
           return hasEducation ? Math.max(50, (hasCollegeEducation + hasHighSchoolEducation) * 50) : 0;
           
