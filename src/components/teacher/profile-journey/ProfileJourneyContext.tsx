@@ -179,12 +179,13 @@ interface ProfileJourneyContextType {
   updatePersonalInfo: (data: Partial<ProfileJourneyContextType['personalInfo']>) => void;
   updateLocationInfo: (data: Partial<ProfileJourneyContextType['locationInfo']>) => void;
   setEducation: (items: EducationItem[]) => void;
-  saveEducation: () => Promise<boolean>;
+  saveEducation: (educationData?: EducationItem[]) => Promise<boolean>;
   setExperience: (items: ExperienceItem[]) => void;
   saveExperience: (experienceData?: ExperienceItem[]) => Promise<boolean>;
   saveSubjects: (academicSubjectsData?: AcademicSubjectItem[], afterSchoolSubjectsData?: AfterSchoolSubjectItem[]) => Promise<boolean>;
   saveLanguages: (languagesData?: LanguageItem[]) => Promise<boolean>;
   saveTechnicalSkills: (skillsData?: TechnicalSkillItem[]) => Promise<boolean>;
+  saveCertifications: (certificationsData?: any[]) => Promise<boolean>;
   setAcademicSubjects: (items: AcademicSubjectItem[]) => void;
   setAfterSchoolSubjects: (items: AfterSchoolSubjectItem[]) => void;
   setStrategies: (items: StrategyItem[]) => void;
@@ -304,6 +305,7 @@ const defaultContext: ProfileJourneyContextType = {
   saveSubjects: async () => false,
   saveLanguages: async () => false,
   saveTechnicalSkills: async () => false,
+  saveCertifications: async () => false,
   setAcademicSubjects: () => {},
   setAfterSchoolSubjects: () => {},
   setStrategies: () => {},
@@ -521,7 +523,7 @@ export const ProfileJourneyProvider = ({ children }: { children: ReactNode }) =>
   };
 
   // Save education function - called when education step is completed
-  const saveEducation = async (): Promise<boolean> => {
+  const saveEducation = async (educationData?: EducationItem[]): Promise<boolean> => {
     try {
       if (!user?.teacherId) {
         toast({
@@ -533,11 +535,12 @@ export const ProfileJourneyProvider = ({ children }: { children: ReactNode }) =>
       }
 
       const teacherId = user.teacherId;
+      const educationToSave = educationData || education;
       console.log("Saving education for teacher:", teacherId);
-      console.log("Education items to save:", education);
+      console.log("Education items to save:", educationToSave);
 
       // Convert EducationItem format to Education format for the API
-      const educationItemsForAPI = education.map(edu => {
+      const educationItemsForAPI = educationToSave.map(edu => {
         const baseItem = {
           institution: edu.institution || edu.institutionName || '',
           degree: edu.degree || '',
@@ -545,11 +548,11 @@ export const ProfileJourneyProvider = ({ children }: { children: ReactNode }) =>
           startDate: edu.startDate,
           endDate: edu.endDate,
           isCurrentlyEnrolled: edu.isCurrentlyStudying || false
-          // Removed grade, activities, and description as they're not expected by the API
+          // Note: teacherProfile is added by the service method, don't add it here
         };
 
         // Only include id for existing items (not new items with temporary IDs)
-        if (edu._id && !edu._id.startsWith('edu-') && !edu._id.startsWith('cv-edu-')) {
+        if (edu._id && !edu._id.startsWith('edu-') && !edu._id.startsWith('cv-edu-') && !edu._id.startsWith('temp_')) {
           return {
             id: edu._id,
             ...baseItem
@@ -571,11 +574,25 @@ export const ProfileJourneyProvider = ({ children }: { children: ReactNode }) =>
 
       // Update local state with the response data if available
       if (result.data && Array.isArray(result.data)) {
-        const updatedEducation = result.data.map((apiEdu, index) => ({
-          ...education[index],
-          _id: apiEdu.id || education[index]._id
+        // Convert the API response back to EducationItem format
+        const updatedEducation: EducationItem[] = result.data.map((apiEdu) => ({
+          _id: apiEdu._id || apiEdu.id,
+          institution: apiEdu.institutionName,
+          institutionName: apiEdu.institutionName,
+          degree: apiEdu.degree,
+          additionalDetails: apiEdu.additionalDetails || '',
+          startDate: apiEdu.startDate,
+          endDate: apiEdu.endDate,
+          isCurrentlyStudying: apiEdu.isCurrentlyStudying || false,
+          institutionType: apiEdu.institutionType || 'university'
         }));
+        // Update both the context state and the passed data
         setEducation(updatedEducation);
+        // If educationData was passed, we should also update that reference for consistency
+        if (educationData) {
+          educationData.length = 0;
+          educationData.push(...updatedEducation);
+        }
       }
 
       toast({
@@ -713,7 +730,7 @@ export const ProfileJourneyProvider = ({ children }: { children: ReactNode }) =>
           };
 
           // Only include id for existing items (not new items with temporary IDs)
-          if (subject._id && !subject._id.startsWith('cv-academic')) {
+          if (subject._id && !subject._id.startsWith('cv-academic') && !subject._id.startsWith('academic-') && !subject._id.startsWith('temp_')) {
             return {
               id: subject._id,
               ...baseItem
@@ -734,7 +751,7 @@ export const ProfileJourneyProvider = ({ children }: { children: ReactNode }) =>
           };
 
           // Only include id for existing items (not new items with temporary IDs)
-          if (subject._id && !subject._id.startsWith('afterschool-')) {
+          if (subject._id && !subject._id.startsWith('afterschool-') && !subject._id.startsWith('after-school-') && !subject._id.startsWith('temp_')) {
             return {
               id: subject._id,
               ...baseItem
@@ -903,7 +920,7 @@ export const ProfileJourneyProvider = ({ children }: { children: ReactNode }) =>
         };
 
         // Only include id for existing items (not new items with temporary IDs)
-        if (skill._id && !skill._id.startsWith('skill-') && !skill._id.startsWith('cv-skill-')) {
+        if (skill._id && !skill._id.startsWith('skill-') && !skill._id.startsWith('cv-skill-') && !skill._id.startsWith('general-') && !skill._id.startsWith('temp_')) {
           return {
             id: skill._id,
             ...baseItem
@@ -948,6 +965,104 @@ export const ProfileJourneyProvider = ({ children }: { children: ReactNode }) =>
       toast({
         title: "Error",
         description: error instanceof Error ? error.message : "Failed to save technical skills information. Please try again.",
+        variant: "destructive",
+      });
+      return false;
+    }
+  };
+
+  // Save certifications function - called when certifications are updated
+  const saveCertifications = async (certificationsData?: any[]): Promise<boolean> => {
+    try {
+      if (!user?.teacherId) {
+        toast({
+          title: "Error",
+          description: "Teacher ID not found. Please ensure you are logged in.",
+          variant: "destructive"
+        });
+        return false;
+      }
+
+      const teacherId = user.teacherId;
+      console.log("Saving certifications for teacher:", teacherId);
+      
+      // Use provided data or fall back to context state
+      const certificationsToSave = certificationsData || certifications;
+      console.log("Certifications to save:", certificationsToSave);
+
+      // Get existing certifications from API to handle updates vs creates
+      let existingCerts = [];
+      try {
+        const existingCertifications = await teacherService.getTeacherCertifications(teacherId);
+        existingCerts = existingCertifications.data || [];
+      } catch (error) {
+        console.log("No existing certifications found or error fetching them:", error);
+      }
+
+      const results = [];
+
+      // Process each certification
+      for (const cert of certificationsToSave) {
+        const certificationData = {
+          certificateType: 'Professional',
+          name: cert.name || cert.value || '',
+          issuer: cert.issuer || '',
+          year: cert.year,
+          issueDate: cert.year ? `${cert.year}-01-01` : undefined,
+          description: cert.description || cert.details || '',
+          isVerifiable: cert.isVerifiable || false,
+          credentialUrl: cert.credentialUrl || '',
+          cert_docs: cert.cert_docs || []
+        };
+
+        // Check if this is an existing certification (has _id and it's not temporary)
+        const existingCert = existingCerts.find(existing => existing._id === cert._id);
+        
+        if (existingCert && cert._id && !cert._id.startsWith('cert-') && !cert._id.startsWith('cv-cert-')) {
+          // Update existing certification
+          const result = await teacherService.updateCertification(teacherId, cert._id, certificationData);
+          if (result.error) {
+            throw new Error(result.error.message || 'Failed to update certification');
+          }
+          results.push(result.data);
+        } else {
+          // Create new certification
+          const result = await teacherService.addCertification(teacherId, certificationData);
+          if (result.error) {
+            throw new Error(result.error.message || 'Failed to save certification');
+          }
+          results.push(result.data);
+        }
+      }
+
+      // Update local state with the response data
+      if (results.length > 0) {
+        const updatedCertifications = results.map((apiCert, index) => ({
+          ...certificationsToSave[index],
+          _id: apiCert._id || certificationsToSave[index]._id,
+          id: apiCert._id || certificationsToSave[index].id,
+          name: apiCert.name || certificationsToSave[index].name,
+          value: apiCert.name || certificationsToSave[index].value,
+          issuer: apiCert.issuer || certificationsToSave[index].issuer,
+          year: apiCert.issueDate ? new Date(apiCert.issueDate).getFullYear() : certificationsToSave[index].year,
+          description: apiCert.description || certificationsToSave[index].description,
+          details: apiCert.description || certificationsToSave[index].details
+        }));
+        setCertifications(updatedCertifications);
+      }
+
+      toast({
+        title: "Success",
+        description: "Certifications saved successfully",
+      });
+
+      console.log("Certifications saved successfully");
+      return true;
+    } catch (error) {
+      console.error("Error saving certifications:", error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to save certifications. Please try again.",
         variant: "destructive",
       });
       return false;
@@ -1148,16 +1263,40 @@ export const ProfileJourneyProvider = ({ children }: { children: ReactNode }) =>
         case "education":
           // Education requirements: College + High School
           const hasEducation = education.length > 0 ? 1 : 0;
-          // Could be more granular - check for college and high school separately
-          const hasCollegeEducation = education.some(edu => 
-            edu.degree?.toLowerCase().includes('bachelor') || 
-            edu.degree?.toLowerCase().includes('master') || 
-            edu.degree?.toLowerCase().includes('degree')
-          ) ? 1 : 0;
-          const hasHighSchoolEducation = education.some(edu => 
-            edu.degree?.toLowerCase().includes('high school') || 
-            edu.degree?.toLowerCase().includes('secondary')
-          ) ? 1 : 0;
+          
+          // More inclusive college education detection
+          const hasCollegeEducation = education.some(edu => {
+            const degree = edu.degree?.toLowerCase() || '';
+            const institution = edu.institutionName?.toLowerCase() || edu.institution?.toLowerCase() || '';
+            return degree.includes('bachelor') || 
+                   degree.includes('master') || 
+                   degree.includes('degree') ||
+                   degree.includes('diploma') ||
+                   degree.includes('certificate') ||
+                   degree.includes('phd') ||
+                   degree.includes('doctorate') ||
+                   institution.includes('university') ||
+                   institution.includes('college') ||
+                   institution.includes('institute');
+          }) ? 1 : 0;
+          
+          // More inclusive high school education detection  
+          const hasHighSchoolEducation = education.some(edu => {
+            const degree = edu.degree?.toLowerCase() || '';
+            const institution = edu.institutionName?.toLowerCase() || edu.institution?.toLowerCase() || '';
+            return degree.includes('high school') || 
+                   degree.includes('secondary') ||
+                   degree.includes('kcse') ||
+                   degree.includes('o-level') ||
+                   degree.includes('a-level') ||
+                   institution.includes('high school') ||
+                   institution.includes('secondary');
+          }) ? 1 : 0;
+          
+          // If we have education but can't categorize it, assume it's valid and give full credit
+          if (hasEducation && !hasCollegeEducation && !hasHighSchoolEducation) {
+            return 100; // Give full credit for any education entry
+          }
           
           return hasEducation ? Math.max(50, (hasCollegeEducation + hasHighSchoolEducation) * 50) : 0;
           
@@ -1534,7 +1673,19 @@ export const ProfileJourneyProvider = ({ children }: { children: ReactNode }) =>
           let hasLoadedCertifications = false;
           
           if (profileData.education && profileData.education.length > 0) {
-            setEducation(profileData.education as any[]);
+            // Convert backend Education format to frontend EducationItem format
+            const convertedEducation: EducationItem[] = (profileData.education as any[]).map((edu: any) => ({
+              _id: edu._id || edu.id,
+              institution: edu.institutionName || edu.institution,
+              institutionName: edu.institutionName || edu.institution,
+              degree: edu.degree,
+              additionalDetails: edu.additionalDetails || '',
+              startDate: edu.startDate,
+              endDate: edu.endDate,
+              isCurrentlyStudying: edu.isCurrentlyStudying || false,
+              institutionType: edu.institutionType || 'university'
+            }));
+            setEducation(convertedEducation);
             hasLoadedEducation = true;
           }
           
@@ -1595,7 +1746,19 @@ export const ProfileJourneyProvider = ({ children }: { children: ReactNode }) =>
             try {
               const { data: educationData } = await teacherService.getTeacherEducation(teacherId);
               if (educationData && educationData.length > 0) {
-                setEducation(educationData);
+                // Convert backend Education format to frontend EducationItem format
+                const convertedEducation: EducationItem[] = educationData.map((edu: any) => ({
+                  _id: edu._id || edu.id,
+                  institution: edu.institutionName || edu.institution,
+                  institutionName: edu.institutionName || edu.institution,
+                  degree: edu.degree,
+                  additionalDetails: edu.additionalDetails || '',
+                  startDate: edu.startDate,
+                  endDate: edu.endDate,
+                  isCurrentlyStudying: edu.isCurrentlyStudying || false,
+                  institutionType: edu.institutionType || 'university'
+                }));
+                setEducation(convertedEducation);
               }
             } catch (error) {
               console.error("Error loading education data:", error);
@@ -1689,7 +1852,7 @@ export const ProfileJourneyProvider = ({ children }: { children: ReactNode }) =>
           // Load certifications if not already loaded
           if (!hasLoadedCertifications) {
             try {
-              const { data: certificationsData } = await teacherService.getCertifications(teacherId);
+              const { data: certificationsData } = await teacherService.getTeacherCertifications(teacherId);
               if (certificationsData && certificationsData.length > 0) {
                 console.log("Setting certifications:", certificationsData);
                 setCertifications(certificationsData);
@@ -1851,6 +2014,7 @@ export const ProfileJourneyProvider = ({ children }: { children: ReactNode }) =>
     setTechnicalSkills,
     saveTechnicalSkills,
     setCertifications,
+    saveCertifications,
     updateVerification,
     updatePlatformSettings,
     

@@ -107,11 +107,11 @@ export const fetchExperienceRecords = async (teacherId: string): Promise<Experie
     return [];
   }
   
-  // Format dates to be human-readable and mark as saved
+  // Format dates to be form-compatible (YYYY-MM format) and mark as saved
   const formattedData = data.map(record => ({
     ...record,
-    startDate: record.startDate ? new Date(record.startDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long' }) : "",
-    endDate: record.endDate ? new Date(record.endDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long' }) : "",
+    startDate: record.startDate ? new Date(record.startDate).toISOString().substring(0, 7) : "",
+    endDate: record.endDate ? new Date(record.endDate).toISOString().substring(0, 7) : "",
     saved: true
   }));
 
