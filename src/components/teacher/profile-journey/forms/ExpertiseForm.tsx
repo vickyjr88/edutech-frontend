@@ -92,6 +92,7 @@ export const ExpertiseForm = ({ onComplete }: ExpertiseFormProps) => {
     setLanguages,
     saveLanguages,
     setTechnicalSkills,
+    setGeneralSkills,
     saveTechnicalSkills,
     completeStep 
   } = useProfileJourney();
@@ -329,58 +330,31 @@ export const ExpertiseForm = ({ onComplete }: ExpertiseFormProps) => {
   // Update form when technical skills change - separate general skills from technical skills
   useEffect(() => {
     if (teachingStyle.technicalSkills.length > 0) {
-      // Filter general skills from technical skills based on GENERAL_SKILLS list
-      const generalSkills = teachingStyle.technicalSkills.filter(skill => {
-        const skillName = (skill as any).name || (skill as any).skill || '';
-        return GENERAL_SKILLS.some(generalSkill => 
-          generalSkill.toLowerCase() === skillName.toLowerCase()
-        );
-      });
-      
-      if (generalSkills.length > 0) {
-        const generalEntries = generalSkills.map((skill, index) => {
-          const skillName = (skill as any).name || (skill as any).skill || '';
-          return {
-            id: skill._id || `general-${index}`,
-            name: skillName,
-            description: skill.description || '',
-            level: skill.level || 'Beginner',
-            isCertified: skill.isCertified || false
-          };
-        });
-        setGeneralSkillEntries(generalEntries);
-      } else {
-        setGeneralSkillEntries([{ id: 'general-1', name: '', description: '', level: 'Beginner', isCertified: false }]);
-      }
-
-      // Update technical skills to exclude general skills
-      const purelyTechnicalSkills = teachingStyle.technicalSkills.filter(skill => {
-        const skillName = (skill as any).name || (skill as any).skill || '';
-        return !GENERAL_SKILLS.some(generalSkill => 
-          generalSkill.toLowerCase() === skillName.toLowerCase()
-        );
-      });
-      
-      if (purelyTechnicalSkills.length > 0) {
-        const techSkillEntries = purelyTechnicalSkills.map((skill, index) => {
-          const skillName = (skill as any).name || (skill as any).skill || '';
-          return {
-            id: skill._id || `skill-${index}`,
-            name: skillName,
-            description: skill.description || '',
-            level: skill.level || 'Beginner',
-            isCertified: skill.isCertified || false
-          };
-        });
-        setSkillEntries(techSkillEntries);
-      } else {
-        setSkillEntries([{ id: 'skill-1', name: '', description: '', level: 'Beginner', isCertified: false }]);
-      }
+      setSkillEntries(teachingStyle.technicalSkills.map((skill, index) => ({
+        id: skill._id || `skill-${index}`,
+        name: skill.name || skill.skill || '',
+        description: skill.description || '',
+        level: skill.level || 'Beginner',
+        isCertified: skill.isCertified || false,
+      })));
     } else {
-        setGeneralSkillEntries([{ id: 'general-1', name: '', description: '', level: 'Beginner', isCertified: false }]);
-        setSkillEntries([{ id: 'skill-1', name: '', description: '', level: 'Beginner', isCertified: false }]);
+      setSkillEntries([{ id: 'skill-1', name: '', description: '', level: 'Beginner', isCertified: false }]);
     }
   }, [teachingStyle.technicalSkills]);
+
+  useEffect(() => {
+    if (teachingStyle.generalSkills.length > 0) {
+      setGeneralSkillEntries(teachingStyle.generalSkills.map((skill, index) => ({
+        id: skill._id || `general-${index}`,
+        name: skill.name || skill.skill || '',
+        description: skill.description || '',
+        level: skill.level || 'Beginner',
+        isCertified: skill.isCertified || false,
+      })));
+    } else {
+      setGeneralSkillEntries([{ id: 'general-1', name: '', description: '', level: 'Beginner', isCertified: false }]);
+    }
+  }, [teachingStyle.generalSkills]);
 
   // Check for CV extracted data on component mount
   useEffect(() => {
@@ -692,47 +666,45 @@ export const ExpertiseForm = ({ onComplete }: ExpertiseFormProps) => {
         if (!languagesSaved) saveSuccessful = false;
       }
 
+      // Accumulator for all skills (technical and general)
+      let allSkillsToSave: { _id: string; name: string; description: string; level: string; isCertified: boolean; isGeneral: boolean }[] = [];
+
       // Process technical skills
       const validSkills = skillEntries.filter(entry => entry.name.trim());
       if (validSkills.length > 0) {
-        skillData = validSkills.map(entry => ({
+        const technicalSkillsData = validSkills.map(entry => ({
           _id: entry.id,
           name: entry.name,
           description: entry.description || '',
           level: entry.level,
-          isCertified: entry.isCertified
+          isCertified: entry.isCertified,
+          isGeneral: false
         }));
-        
-        // Update context state for UI consistency
-        setTechnicalSkills(skillData);
-        
-        // Save technical skills via bulk API - pass the data directly
-        const skillsSaved = await saveTechnicalSkills(skillData);
-        if (!skillsSaved) saveSuccessful = false;
+        allSkillsToSave.push(...technicalSkillsData);
       }
 
-      // Process general skills (we'll treat them as technical skills for now, or create a separate API endpoint)
+      // Process general skills
       const validGeneralSkills = generalSkillEntries.filter(entry => entry.name.trim());
       if (validGeneralSkills.length > 0) {
-        // For now, we'll combine general skills with technical skills
-        // In the future, you might want a separate API endpoint for general skills
-        const generalSkillData = validGeneralSkills.map(entry => ({
+        const generalSkillsData = validGeneralSkills.map(entry => ({
           _id: entry.id,
           name: entry.name,
           description: entry.description || '',
           level: entry.level,
-          isCertified: entry.isCertified
+          isCertified: entry.isCertified,
+          isGeneral: true
         }));
-        
-        // Combine with technical skills
-        const allSkillData = [...(validSkills.length > 0 ? skillData : []), ...generalSkillData];
-        
-        // Update context state for UI consistency
-        setTechnicalSkills(allSkillData);
-        
-        // Save combined skills via bulk API
-        const allSkillsSaved = await saveTechnicalSkills(allSkillData);
-        if (!allSkillsSaved) saveSuccessful = false;
+        allSkillsToSave.push(...generalSkillsData);
+      }
+
+      // Save all skills (technical and general) via bulk API
+      if (allSkillsToSave.length > 0) {
+        // Update context state for UI consistency (this will trigger the useEffects to update skillEntries and generalSkillEntries)
+        setTechnicalSkills(allSkillsToSave.filter(s => !s.isGeneral));
+        setGeneralSkills(allSkillsToSave.filter(s => s.isGeneral));
+
+        const skillsSaved = await saveTechnicalSkills(allSkillsToSave);
+        if (!skillsSaved) saveSuccessful = false;
       }
 
       // Check if form has minimum required data
@@ -1286,7 +1258,7 @@ export const ExpertiseForm = ({ onComplete }: ExpertiseFormProps) => {
                     <Input
                       placeholder="e.g., Google Classroom, Zoom, Canva"
                       value={entry.name}
-                      onChange={(e) => setSkillEntries(prev => prev.map(skill => 
+                      onChange={(e) => setGeneralSkillEntries(prev => prev.map(skill => 
                         skill.id === entry.id ? { ...skill, name: e.target.value } : skill
                       ))}
                       className="rounded-xl border-[#fc9323]/20"
@@ -1328,7 +1300,7 @@ export const ExpertiseForm = ({ onComplete }: ExpertiseFormProps) => {
                     <Textarea
                       placeholder="Describe your experience with this skill, projects you've used it for, or specific features you're familiar with..."
                       value={entry.description}
-                      onChange={(e) => setSkillEntries(prev => prev.map(skill => 
+                      onChange={(e) => setGeneralSkillEntries(prev => prev.map(skill => 
                         skill.id === entry.id ? { ...skill, description: e.target.value } : skill
                       ))}
                       className="rounded-xl border-[#fc9323]/20"
