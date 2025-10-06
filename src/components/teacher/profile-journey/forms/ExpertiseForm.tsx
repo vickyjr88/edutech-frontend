@@ -68,6 +68,9 @@ interface ExpertiseFormProps {
   onComplete: () => void;
 }
 
+const proficiencyLevels = ['Beginner', 'Intermediate', 'Advanced', 'Native'];
+const skillLevels = ['Beginner', 'Intermediate', 'Advanced', 'Expert'];
+
 export const ExpertiseForm = ({ onComplete }: ExpertiseFormProps) => {
   const { 
     experience, 
@@ -117,12 +120,15 @@ export const ExpertiseForm = ({ onComplete }: ExpertiseFormProps) => {
 
   const [languageEntries, setLanguageEntries] = useState<LanguageEntry[]>(() => {
     if (teachingStyle.languages.length > 0) {
-      return teachingStyle.languages.map((lang, index) => ({
-        id: lang._id || `lang-${index}`,
-        name: lang.name || lang.language || '',
-        proficiency: lang.proficiency || 'Beginner',
-        isCertified: lang.isCertified || false
-      }));
+      return teachingStyle.languages.map((lang, index) => {
+        const validProficiency = lang.proficiency && proficiencyLevels.find(p => p.toLowerCase() === lang.proficiency.toLowerCase());
+        return {
+          id: lang._id || `lang-${index}`,
+          name: lang.name || lang.language || '',
+          proficiency: validProficiency || 'Beginner',
+          isCertified: lang.isCertified || false
+        };
+      });
     }
     return [{ id: 'lang-1', name: '', proficiency: 'Beginner', isCertified: false }];
   });
@@ -234,8 +240,7 @@ export const ExpertiseForm = ({ onComplete }: ExpertiseFormProps) => {
       });
     }
   };
-  const proficiencyLevels = ['Beginner', 'Intermediate', 'Advanced', 'Native'];
-  const skillLevels = ['Beginner', 'Intermediate', 'Advanced', 'Expert'];
+
 
   // Common general skills for quick add
   const GENERAL_SKILLS = [
@@ -306,12 +311,15 @@ export const ExpertiseForm = ({ onComplete }: ExpertiseFormProps) => {
   // Update form when languages from context change
   useEffect(() => {
     if (teachingStyle.languages.length > 0) {
-      const languageEntries = teachingStyle.languages.map((lang, index) => ({
-        id: lang._id || `lang-${index}`,
-        name: lang.name || lang.language || '',
-        proficiency: lang.proficiency || 'Beginner',
-        isCertified: lang.isCertified || false
-      }));
+      const languageEntries = teachingStyle.languages.map((lang, index) => {
+        const validProficiency = lang.proficiency && proficiencyLevels.find(p => p.toLowerCase() === lang.proficiency.toLowerCase());
+        return {
+          id: lang._id || `lang-${index}`,
+          name: lang.name || lang.language || '',
+          proficiency: validProficiency || 'Beginner',
+          isCertified: lang.isCertified || false
+        };
+      });
       setLanguageEntries(languageEntries);
     }
   }, [teachingStyle.languages]);
@@ -472,12 +480,15 @@ export const ExpertiseForm = ({ onComplete }: ExpertiseFormProps) => {
 
       // Prefill languages
       if (cvData.languages && cvData.languages.length > 0) {
-        const cvLanguageEntries = cvData.languages.map((lang, index) => ({
-          id: `cv-lang-${index}`,
-          name: lang.language || '',
-          proficiency: lang.proficiency || 'Intermediate',
-          isCertified: false // CV data doesn't specify certification for languages
-        }));
+        const cvLanguageEntries = cvData.languages.map((lang, index) => {
+          const validProficiency = lang.proficiency && proficiencyLevels.find(p => p.toLowerCase() === lang.proficiency.toLowerCase());
+          return {
+            id: `cv-lang-${index}`,
+            name: lang.language || '',
+            proficiency: validProficiency || 'Intermediate',
+            isCertified: false // CV data doesn't specify certification for languages
+          };
+        });
         setLanguageEntries(cvLanguageEntries);
         itemsAdded += cvLanguageEntries.length;
       }
@@ -650,13 +661,16 @@ export const ExpertiseForm = ({ onComplete }: ExpertiseFormProps) => {
       // Process languages
       const validLanguages = languageEntries.filter(entry => entry.name.trim());
       if (validLanguages.length > 0) {
-        const languageData = validLanguages.map(entry => ({
-          _id: entry.id,
-          language: entry.name,
-          proficiency: entry.proficiency,
-          name: entry.name, // For compatibility with LanguageItem type
-          isCertified: false // Default value for LanguageItem type
-        }));
+        const languageData = validLanguages.map(entry => {
+          const validProficiency = entry.proficiency && proficiencyLevels.find(p => p.toLowerCase() === entry.proficiency.toLowerCase());
+          return {
+            _id: entry.id,
+            language: entry.name,
+            proficiency: validProficiency || 'Beginner',
+            name: entry.name, // For compatibility with LanguageItem type
+            isCertified: false // Default value for LanguageItem type
+          };
+        });
         
         // Update context state for UI consistency
         setLanguages(languageData);
@@ -1141,7 +1155,7 @@ export const ExpertiseForm = ({ onComplete }: ExpertiseFormProps) => {
                       ))}
                     >
                       <SelectTrigger className="rounded-xl border-blue-200">
-                        <SelectValue />
+                        <SelectValue placeholder="Select Level" />
                       </SelectTrigger>
                       <SelectContent>
                         {proficiencyLevels.map(level => (

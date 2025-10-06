@@ -838,7 +838,7 @@ export const ProfileJourneyProvider = ({ children }: { children: ReactNode }) =>
       const languagesForAPI = languagesToSave.map(lang => {
         const baseItem = {
           name: lang.name || lang.language || '', // Use name field as per API requirement
-          proficiency: lang.language || '',
+          proficiency: lang.proficiency || 'Beginner',
           teacherProfile: teacherId
         };
 
