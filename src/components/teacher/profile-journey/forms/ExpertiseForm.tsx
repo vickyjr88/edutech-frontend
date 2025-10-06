@@ -332,7 +332,7 @@ export const ExpertiseForm = ({ onComplete }: ExpertiseFormProps) => {
     if (teachingStyle.technicalSkills.length > 0) {
       setSkillEntries(teachingStyle.technicalSkills.map((skill, index) => ({
         id: skill._id || `skill-${index}`,
-        name: skill.name || skill.skill || '',
+        name: skill.name || (skill as any).skill || '',
         description: skill.description || '',
         level: skill.level || 'Beginner',
         isCertified: skill.isCertified || false,
@@ -346,7 +346,7 @@ export const ExpertiseForm = ({ onComplete }: ExpertiseFormProps) => {
     if (teachingStyle.generalSkills.length > 0) {
       setGeneralSkillEntries(teachingStyle.generalSkills.map((skill, index) => ({
         id: skill._id || `general-${index}`,
-        name: skill.name || skill.skill || '',
+        name: skill.name || (skill as any).skill || '',
         description: skill.description || '',
         level: skill.level || 'Beginner',
         isCertified: skill.isCertified || false,
@@ -527,6 +527,12 @@ export const ExpertiseForm = ({ onComplete }: ExpertiseFormProps) => {
       proficiency: 'Beginner',
       isCertified: false
     }]);
+  };
+
+  const handleSkillChange = (id: string, field: keyof SkillEntry, value: string | boolean) => {
+    setSkillEntries(prev => prev.map(entry =>
+      entry.id === id ? { ...entry, [field]: value } : entry
+    ));
   };
 
   const handleAddSkill = () => {
@@ -1258,12 +1264,11 @@ export const ExpertiseForm = ({ onComplete }: ExpertiseFormProps) => {
                     <Input
                       placeholder="e.g., Google Classroom, Zoom, Canva"
                       value={entry.name}
-                      onChange={(e) => setGeneralSkillEntries(prev => prev.map(skill => 
+                      onChange={(e) => setSkillEntries(prev => prev.map(skill => 
                         skill.id === entry.id ? { ...skill, name: e.target.value } : skill
                       ))}
                       className="rounded-xl border-[#fc9323]/20"
-                      list={`skills-${entry.id}`}
-                    />
+                      list={`skills-${entry.id}`} />
                     <datalist id={`skills-${entry.id}`}>
                       {TECHNICAL_SKILLS.filter(skill => 
                         skill.toLowerCase().includes(entry.name.toLowerCase()) && 
@@ -1300,7 +1305,7 @@ export const ExpertiseForm = ({ onComplete }: ExpertiseFormProps) => {
                     <Textarea
                       placeholder="Describe your experience with this skill, projects you've used it for, or specific features you're familiar with..."
                       value={entry.description}
-                      onChange={(e) => setGeneralSkillEntries(prev => prev.map(skill => 
+                      onChange={(e) => setSkillEntries(prev => prev.map(skill => 
                         skill.id === entry.id ? { ...skill, description: e.target.value } : skill
                       ))}
                       className="rounded-xl border-[#fc9323]/20"
