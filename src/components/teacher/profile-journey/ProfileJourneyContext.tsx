@@ -162,6 +162,7 @@ interface ProfileJourneyContextType {
     methodologies: MethodologyItem[];
     languages: LanguageItem[];
     technicalSkills: TechnicalSkillItem[];
+    generalSkills: TechnicalSkillItem[];
   };
   certifications: any[]; // Directly expose certifications
   verification: {
@@ -192,6 +193,7 @@ interface ProfileJourneyContextType {
   setMethodologies: (items: MethodologyItem[]) => void;
   setLanguages: (items: LanguageItem[]) => void;
   setTechnicalSkills: (items: TechnicalSkillItem[]) => void;
+  setGeneralSkills: (items: TechnicalSkillItem[]) => void;
   setCertifications: (items: any[]) => void;
   updateVerification: (data: Partial<ProfileJourneyContextType['verification']>) => void;
   updatePlatformSettings: (data: Partial<ProfileJourneyContextType['platformSettings']>) => void;
@@ -284,6 +286,7 @@ const defaultContext: ProfileJourneyContextType = {
     methodologies: [],
     languages: [],
     technicalSkills: [],
+    generalSkills: [],
   },
   certifications: [],
   verification: {
@@ -312,6 +315,7 @@ const defaultContext: ProfileJourneyContextType = {
   setMethodologies: () => {},
   setLanguages: () => {},
   setTechnicalSkills: () => {},
+  setGeneralSkills: () => {},
   setCertifications: () => {},
   updateVerification: () => {},
   updatePlatformSettings: () => {},
@@ -360,6 +364,7 @@ export const ProfileJourneyProvider = ({ children }: { children: ReactNode }) =>
   const [methodologies, setMethodologies] = useState<MethodologyItem[]>([]);
   const [languages, setLanguages] = useState<LanguageItem[]>([]);
   const [technicalSkills, setTechnicalSkills] = useState<TechnicalSkillItem[]>([]);
+  const [generalSkills, setGeneralSkills] = useState<TechnicalSkillItem[]>([]);
   const [certifications, setCertifications] = useState<any[]>([]);
   const [verification, setVerification] = useState(defaultContext.verification);
   const [platformSettings, setPlatformSettings] = useState(defaultContext.platformSettings);
@@ -838,7 +843,7 @@ export const ProfileJourneyProvider = ({ children }: { children: ReactNode }) =>
       const languagesForAPI = languagesToSave.map(lang => {
         const baseItem = {
           name: lang.name || lang.language || '', // Use name field as per API requirement
-          proficiency: lang.language || '',
+          proficiency: lang.proficiency || 'Beginner',
           teacherProfile: teacherId
         };
 
@@ -916,6 +921,7 @@ export const ProfileJourneyProvider = ({ children }: { children: ReactNode }) =>
           description: skill.description || '',
           level: skill.level || '',
           isCertified: skill.isCertified || false,
+          isGeneral: (skill as any).isGeneral || false,
           teacherProfile: teacherId
         };
 
@@ -942,15 +948,17 @@ export const ProfileJourneyProvider = ({ children }: { children: ReactNode }) =>
 
       // Update local state with the response data if available
       if (result.data && Array.isArray(result.data)) {
-        const updatedSkills = result.data.map((apiSkill, index) => ({
+        const allUpdatedSkills = result.data.map((apiSkill, index) => ({
           ...skillsToSave[index],
           _id: apiSkill._id || skillsToSave[index]._id,
-          name: apiSkill.name || '', // API returns 'skill' field, map to 'name'
+          name: apiSkill.skill || '',
           description: apiSkill.description || '',
           level: apiSkill.level || '',
-          isCertified: apiSkill.isCertified || false
+          isCertified: apiSkill.isCertified || false,
+          isGeneral: apiSkill.isGeneral || false
         }));
-        setTechnicalSkills(updatedSkills);
+        setTechnicalSkills(allUpdatedSkills.filter(s => !s.isGeneral));
+        setGeneralSkills(allUpdatedSkills.filter(s => s.isGeneral));
       }
 
       toast({
@@ -1403,6 +1411,17 @@ export const ProfileJourneyProvider = ({ children }: { children: ReactNode }) =>
       
       setIsLoading(true);
       
+      let hasLoadedEducation = false;
+      let hasLoadedExperience = false;
+      let hasLoadedAcademicSubjects = false;
+      let hasLoadedAfterSchoolSubjects = false;
+      let hasLoadedStrategies = false;
+      let hasLoadedMethodologies = false;
+      let hasLoadedLanguages = false;
+      let hasLoadedTechnicalSkills = false;
+      let hasLoadedGeneralSkills = false;
+      let hasLoadedCertifications = false;
+
       try {
         // Load teacher profile
         const { data: profileData } = await teacherService.getProfileById(user.teacherId);
@@ -1661,16 +1680,7 @@ export const ProfileJourneyProvider = ({ children }: { children: ReactNode }) =>
             });
           }
           
-          // Check if education, experience, etc. are directly in the profile data
-          let hasLoadedEducation = false;
-          let hasLoadedExperience = false;
-          let hasLoadedAcademicSubjects = false;
-          let hasLoadedAfterSchoolSubjects = false;
-          let hasLoadedStrategies = false;
-          let hasLoadedMethodologies = false;
-          let hasLoadedLanguages = false;
-          let hasLoadedSkills = false;
-          let hasLoadedCertifications = false;
+
           
           if (profileData.education && profileData.education.length > 0) {
             // Convert backend Education format to frontend EducationItem format
@@ -1711,7 +1721,11 @@ export const ProfileJourneyProvider = ({ children }: { children: ReactNode }) =>
           
           if (profileData.skills && profileData.skills.length > 0) {
             setTechnicalSkills(profileData.skills as any[]);
-            hasLoadedSkills = true;
+            hasLoadedTechnicalSkills = true;
+          }
+          if (profileData.generalSkills && profileData.generalSkills.length > 0) {
+            setGeneralSkills(profileData.generalSkills as any[]);
+            hasLoadedGeneralSkills = true;
           }
           
           if (profileData.subjects) {
@@ -1730,11 +1744,7 @@ export const ProfileJourneyProvider = ({ children }: { children: ReactNode }) =>
           }
           
           if (profileData.certifications && profileData.certifications.length > 0) {
-            setCertifications((profileData.certifications as any[]).map((cert: any) => ({ 
-              id: cert._id, 
-              value: cert.name,
-              details: cert.description || '' 
-            })));
+            setCertifications(profileData.certifications as any[]);
             hasLoadedCertifications = true;
           }
           
@@ -1837,15 +1847,16 @@ export const ProfileJourneyProvider = ({ children }: { children: ReactNode }) =>
             }
           }
           
-          // Load technical skills if not already loaded
-          if (!hasLoadedSkills) {
+          // Load technical and general skills if not already loaded
+          if (!hasLoadedTechnicalSkills && !hasLoadedGeneralSkills) { // Check both flags
             try {
-              const { data: skillsData } = await teacherService.getTechnicalSkills(teacherId);
-              if (skillsData && skillsData.length > 0) {
-                setTechnicalSkills(skillsData);
+              const { data: skillsData } = await teacherService.getTechnicalSkills(teacherId); // Assuming this now returns an object with technicalSkills and generalSkills
+              if (skillsData) {
+                setTechnicalSkills(skillsData.technicalSkills || []);
+                setGeneralSkills(skillsData.generalSkills || []);
               }
             } catch (error) {
-              console.error("Error loading technical skills:", error);
+              console.error("Error loading skills data:", error);
             }
           }
           
@@ -1991,7 +2002,8 @@ export const ProfileJourneyProvider = ({ children }: { children: ReactNode }) =>
       strategies,
       methodologies,
       languages,
-      technicalSkills
+      technicalSkills,
+      generalSkills
     },
     certifications,
     verification,
@@ -2012,6 +2024,7 @@ export const ProfileJourneyProvider = ({ children }: { children: ReactNode }) =>
     setLanguages,
     saveLanguages,
     setTechnicalSkills,
+  setGeneralSkills,
     saveTechnicalSkills,
     setCertifications,
     saveCertifications,

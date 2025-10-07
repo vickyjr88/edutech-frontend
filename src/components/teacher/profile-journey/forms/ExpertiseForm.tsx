@@ -9,7 +9,9 @@ import { useProfileJourney } from '../ProfileJourneyContext';
 import { BookOpen, Plus, X, Briefcase, Globe, Code, Star, FileText, Sparkles, Award, Lightbulb } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { cvService } from '@/integrations/api/services/cv.service';
+import { teacherService } from '@/integrations/api/services/teacher.service';
 import { useToast } from '@/components/ui/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 import { TECHNICAL_SKILLS } from '@/components/teacher/professional-profile/utils/technicalSkillUtils';
 import { platformService } from '@/integrations/api/services/platform.service';
 import { Curriculum } from '@/components/teacher/class-setup/types';
@@ -62,9 +64,20 @@ interface AfterSchoolSubjectEntry {
   isCertified: boolean;
 }
 
+// Common general skills for quick add (hoisted to module scope to avoid re-creating on each render)
+const GENERAL_SKILLS = [
+  'Leadership', 'Communication', 'Teamwork', 'Problem Solving', 'Critical Thinking',
+  'Creativity', 'Time Management', 'Organization', 'Adaptability', 'Public Speaking',
+  'Mentoring', 'Conflict Resolution', 'Project Management', 'Research', 'Writing',
+  'Event Planning', 'Customer Service', 'Multitasking', 'Decision Making', 'Analytical Thinking'
+];
+
 interface ExpertiseFormProps {
   onComplete: () => void;
 }
+
+const proficiencyLevels = ['Beginner', 'Intermediate', 'Advanced', 'Native'];
+const skillLevels = ['Beginner', 'Intermediate', 'Advanced', 'Expert'];
 
 export const ExpertiseForm = ({ onComplete }: ExpertiseFormProps) => {
   const { 
@@ -79,11 +92,14 @@ export const ExpertiseForm = ({ onComplete }: ExpertiseFormProps) => {
     setLanguages,
     saveLanguages,
     setTechnicalSkills,
+    setGeneralSkills,
     saveTechnicalSkills,
     completeStep 
   } = useProfileJourney();
   const { toast } = useToast();
+  const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [deletingSkillIds, setDeletingSkillIds] = useState<Set<string>>(new Set());
   const [showCVPrefill, setShowCVPrefill] = useState(false);
   const [isCVLoading, setIsCVLoading] = useState(false);
 
@@ -113,28 +129,22 @@ export const ExpertiseForm = ({ onComplete }: ExpertiseFormProps) => {
 
   const [languageEntries, setLanguageEntries] = useState<LanguageEntry[]>(() => {
     if (teachingStyle.languages.length > 0) {
-      return teachingStyle.languages.map((lang, index) => ({
-        id: lang._id || `lang-${index}`,
-        name: lang.name || lang.language || '',
-        proficiency: lang.proficiency || 'Beginner',
-        isCertified: lang.isCertified || false
-      }));
+      return teachingStyle.languages.map((lang, index) => {
+        const validProficiency = lang.proficiency && proficiencyLevels.find(p => p.toLowerCase() === lang.proficiency.toLowerCase());
+        return {
+          id: lang._id || `lang-${index}`,
+          name: lang.name || lang.language || '',
+          proficiency: validProficiency || 'Beginner',
+          isCertified: lang.isCertified || false
+        };
+      });
     }
     return [{ id: 'lang-1', name: '', proficiency: 'Beginner', isCertified: false }];
   });
 
-  const [skillEntries, setSkillEntries] = useState<SkillEntry[]>(() => {
-    if (teachingStyle.technicalSkills.length > 0) {
-      return teachingStyle.technicalSkills.map((skill, index) => ({
-        id: skill._id || `skill-${index}`,
-        name: skill.skill || skill.name || '',
-        description: skill.description || '',
-        level: skill.level || 'Beginner',
-        isCertified: skill.isCertified || false
-      }));
-    }
-    return [{ id: 'skill-1', name: '', description: '', level: 'Beginner', isCertified: false }];
-  });
+  const [skillEntries, setSkillEntries] = useState<SkillEntry[]>([
+    { id: 'skill-1', name: '', description: '', level: 'Beginner', isCertified: false }
+  ]);
 
   const [generalSkillEntries, setGeneralSkillEntries] = useState<GeneralSkillEntry[]>([
     { id: 'general-1', name: '', description: '', level: 'Beginner', isCertified: false }
@@ -159,16 +169,89 @@ export const ExpertiseForm = ({ onComplete }: ExpertiseFormProps) => {
 
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: 30 }, (_, i) => currentYear - i);
-  const proficiencyLevels = ['Beginner', 'Intermediate', 'Advanced', 'Native'];
-  const skillLevels = ['Beginner', 'Intermediate', 'Advanced', 'Expert'];
 
-  // Common general skills for quick add
-  const GENERAL_SKILLS = [
-    'Leadership', 'Communication', 'Teamwork', 'Problem Solving', 'Critical Thinking',
-    'Creativity', 'Time Management', 'Organization', 'Adaptability', 'Public Speaking',
-    'Mentoring', 'Conflict Resolution', 'Project Management', 'Research', 'Writing',
-    'Event Planning', 'Customer Service', 'Multitasking', 'Decision Making', 'Analytical Thinking'
-  ];
+  // Handle removing technical skills
+  const handleRemoveTechnicalSkill = async (id: string) => {
+    console.log('Attempting to remove technical skill with ID:', id);
+    
+    // Prevent multiple deletion attempts for the same skill
+    if (deletingSkillIds.has(id)) {
+      console.log('Already deleting skill:', id);
+      return;
+    }
+    
+    try {
+      // Check if this is an existing skill (has MongoDB ID, not temporary skill- ID)
+      const isExistingSkill = !id.startsWith('skill-') && !id.startsWith('general-') && !id.startsWith('cv-skill-');
+      
+      if (isExistingSkill) {
+        console.log('Deleting existing technical skill from backend:', id);
+        
+        // Get teacher profile ID from user
+        if (!user?.teacherId) {
+          console.error('No teacher profile ID available');
+          return;
+        }
+
+        // Mark as deleting
+        setDeletingSkillIds(prev => new Set([...prev, id]));
+
+        // Delete from backend
+        await teacherService.deleteTechnicalSkill(user.teacherId, id);
+        
+        console.log('Successfully deleted technical skill from backend');
+        
+        // Update context to remove from technicalSkills array
+        const updatedSkills = teachingStyle.technicalSkills.filter(skill => 
+          skill._id !== id
+        );
+        console.log('Updated technical skills context:', updatedSkills);
+        setTechnicalSkills(updatedSkills);
+        
+        toast({
+          title: "Success",
+          description: "Technical skill deleted successfully",
+        });
+      } else {
+        console.log('Removing new technical skill from form only:', id);
+      }
+      
+      // Always remove from local form state
+      const filtered = skillEntries.filter(entry => entry.id !== id);
+      console.log('Filtered skill entries:', filtered);
+      
+      if (filtered.length === 0) {
+        // If no skills left, add a blank one
+        setSkillEntries([{
+          id: 'skill-1',
+          name: '',
+          description: '',
+          level: 'Beginner',
+          isCertified: false
+        }]);
+      } else {
+        setSkillEntries(filtered);
+      }
+      
+    } catch (error) {
+      console.error('Error deleting technical skill:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete technical skill. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      // Remove from deleting state
+      setDeletingSkillIds(prev => {
+        const updated = new Set(prev);
+        updated.delete(id);
+        return updated;
+      });
+    }
+  };
+
+
+  // GENERAL_SKILLS moved to module scope to keep reference stable
 
   // Load curriculums on component mount
   useEffect(() => {
@@ -196,7 +279,7 @@ export const ExpertiseForm = ({ onComplete }: ExpertiseFormProps) => {
         id: subject._id || `academic-${index + 1}`,
         subject: subject.subject || '',
         curriculum: subject.curriculum || '',
-        curriculumName: subject.curriculumName || subject.curriculum || '',
+        curriculumName: subject.curriculum || '',
         isCertified: subject.isCertified || false
       }));
       setAcademicSubjectEntries(academicEntries);
@@ -231,12 +314,15 @@ export const ExpertiseForm = ({ onComplete }: ExpertiseFormProps) => {
   // Update form when languages from context change
   useEffect(() => {
     if (teachingStyle.languages.length > 0) {
-      const languageEntries = teachingStyle.languages.map((lang, index) => ({
-        id: lang._id || `lang-${index}`,
-        name: lang.name || lang.language || '',
-        proficiency: lang.proficiency || 'Beginner',
-        isCertified: lang.isCertified || false
-      }));
+      const languageEntries = teachingStyle.languages.map((lang, index) => {
+        const validProficiency = lang.proficiency && proficiencyLevels.find(p => p.toLowerCase() === lang.proficiency.toLowerCase());
+        return {
+          id: lang._id || `lang-${index}`,
+          name: lang.name || lang.language || '',
+          proficiency: validProficiency || 'Beginner',
+          isCertified: lang.isCertified || false
+        };
+      });
       setLanguageEntries(languageEntries);
     }
   }, [teachingStyle.languages]);
@@ -244,43 +330,31 @@ export const ExpertiseForm = ({ onComplete }: ExpertiseFormProps) => {
   // Update form when technical skills change - separate general skills from technical skills
   useEffect(() => {
     if (teachingStyle.technicalSkills.length > 0) {
-      // Filter general skills from technical skills based on GENERAL_SKILLS list
-      const generalSkills = teachingStyle.technicalSkills.filter(skill => 
-        GENERAL_SKILLS.some(generalSkill => 
-          generalSkill.toLowerCase() === (skill.skill || skill.name || '').toLowerCase()
-        )
-      );
-      
-      if (generalSkills.length > 0) {
-        const generalEntries = generalSkills.map((skill, index) => ({
-          id: skill._id || `general-${index}`,
-          name: skill.skill || skill.name || '',
-          description: skill.description || '',
-          level: skill.level || 'Beginner',
-          isCertified: skill.isCertified || false
-        }));
-        setGeneralSkillEntries(generalEntries);
-      }
-
-      // Update technical skills to exclude general skills
-      const purelyTechnicalSkills = teachingStyle.technicalSkills.filter(skill => 
-        !GENERAL_SKILLS.some(generalSkill => 
-          generalSkill.toLowerCase() === (skill.skill || skill.name || '').toLowerCase()
-        )
-      );
-      
-      if (purelyTechnicalSkills.length > 0) {
-        const techSkillEntries = purelyTechnicalSkills.map((skill, index) => ({
-          id: skill._id || `skill-${index}`,
-          name: skill.skill || skill.name || '',
-          description: skill.description || '',
-          level: skill.level || 'Beginner',
-          isCertified: skill.isCertified || false
-        }));
-        setSkillEntries(techSkillEntries);
-      }
+      setSkillEntries(teachingStyle.technicalSkills.map((skill, index) => ({
+        id: skill._id || `skill-${index}`,
+        name: skill.name || (skill as any).skill || '',
+        description: skill.description || '',
+        level: skill.level || 'Beginner',
+        isCertified: skill.isCertified || false,
+      })));
+    } else {
+      setSkillEntries([{ id: 'skill-1', name: '', description: '', level: 'Beginner', isCertified: false }]);
     }
-  }, [teachingStyle.technicalSkills, GENERAL_SKILLS]);
+  }, [teachingStyle.technicalSkills]);
+
+  useEffect(() => {
+    if (teachingStyle.generalSkills.length > 0) {
+      setGeneralSkillEntries(teachingStyle.generalSkills.map((skill, index) => ({
+        id: skill._id || `general-${index}`,
+        name: skill.name || (skill as any).skill || '',
+        description: skill.description || '',
+        level: skill.level || 'Beginner',
+        isCertified: skill.isCertified || false,
+      })));
+    } else {
+      setGeneralSkillEntries([{ id: 'general-1', name: '', description: '', level: 'Beginner', isCertified: false }]);
+    }
+  }, [teachingStyle.generalSkills]);
 
   // Check for CV extracted data on component mount
   useEffect(() => {
@@ -390,12 +464,15 @@ export const ExpertiseForm = ({ onComplete }: ExpertiseFormProps) => {
 
       // Prefill languages
       if (cvData.languages && cvData.languages.length > 0) {
-        const cvLanguageEntries = cvData.languages.map((lang, index) => ({
-          id: `cv-lang-${index}`,
-          name: lang.language || '',
-          proficiency: lang.proficiency || 'Intermediate',
-          isCertified: false // CV data doesn't specify certification for languages
-        }));
+        const cvLanguageEntries = cvData.languages.map((lang, index) => {
+          const validProficiency = lang.proficiency && proficiencyLevels.find(p => p.toLowerCase() === lang.proficiency.toLowerCase());
+          return {
+            id: `cv-lang-${index}`,
+            name: lang.language || '',
+            proficiency: validProficiency || 'Intermediate',
+            isCertified: false // CV data doesn't specify certification for languages
+          };
+        });
         setLanguageEntries(cvLanguageEntries);
         itemsAdded += cvLanguageEntries.length;
       }
@@ -452,6 +529,12 @@ export const ExpertiseForm = ({ onComplete }: ExpertiseFormProps) => {
     }]);
   };
 
+  const handleSkillChange = (id: string, field: keyof SkillEntry, value: string | boolean) => {
+    setSkillEntries(prev => prev.map(entry =>
+      entry.id === id ? { ...entry, [field]: value } : entry
+    ));
+  };
+
   const handleAddSkill = () => {
     if (skillEntries.length < 4) {
       setSkillEntries([...skillEntries, {
@@ -504,6 +587,8 @@ export const ExpertiseForm = ({ onComplete }: ExpertiseFormProps) => {
 
     try {
       let saveSuccessful = true;
+      // Accumulator for technical skills to combine with general skills later
+      let skillData: { _id: string; name: string; description: string; level: string; isCertified: boolean }[] = [];
       
       // Process experience entries
       const validExperience = experienceEntries.filter(entry => 
@@ -568,13 +653,16 @@ export const ExpertiseForm = ({ onComplete }: ExpertiseFormProps) => {
       // Process languages
       const validLanguages = languageEntries.filter(entry => entry.name.trim());
       if (validLanguages.length > 0) {
-        const languageData = validLanguages.map(entry => ({
-          _id: entry.id,
-          language: entry.name,
-          proficiency: entry.proficiency,
-          name: entry.name, // For compatibility with LanguageItem type
-          isCertified: false // Default value for LanguageItem type
-        }));
+        const languageData = validLanguages.map(entry => {
+          const validProficiency = entry.proficiency && proficiencyLevels.find(p => p.toLowerCase() === entry.proficiency.toLowerCase());
+          return {
+            _id: entry.id,
+            language: entry.name,
+            proficiency: validProficiency || 'Beginner',
+            name: entry.name, // For compatibility with LanguageItem type
+            isCertified: false // Default value for LanguageItem type
+          };
+        });
         
         // Update context state for UI consistency
         setLanguages(languageData);
@@ -584,47 +672,45 @@ export const ExpertiseForm = ({ onComplete }: ExpertiseFormProps) => {
         if (!languagesSaved) saveSuccessful = false;
       }
 
+      // Accumulator for all skills (technical and general)
+      let allSkillsToSave: { _id: string; name: string; description: string; level: string; isCertified: boolean; isGeneral: boolean }[] = [];
+
       // Process technical skills
       const validSkills = skillEntries.filter(entry => entry.name.trim());
       if (validSkills.length > 0) {
-        const skillData = validSkills.map(entry => ({
+        const technicalSkillsData = validSkills.map(entry => ({
           _id: entry.id,
           name: entry.name,
           description: entry.description || '',
           level: entry.level,
-          isCertified: entry.isCertified
+          isCertified: entry.isCertified,
+          isGeneral: false
         }));
-        
-        // Update context state for UI consistency
-        setTechnicalSkills(skillData);
-        
-        // Save technical skills via bulk API - pass the data directly
-        const skillsSaved = await saveTechnicalSkills(skillData);
-        if (!skillsSaved) saveSuccessful = false;
+        allSkillsToSave.push(...technicalSkillsData);
       }
 
-      // Process general skills (we'll treat them as technical skills for now, or create a separate API endpoint)
+      // Process general skills
       const validGeneralSkills = generalSkillEntries.filter(entry => entry.name.trim());
       if (validGeneralSkills.length > 0) {
-        // For now, we'll combine general skills with technical skills
-        // In the future, you might want a separate API endpoint for general skills
-        const generalSkillData = validGeneralSkills.map(entry => ({
+        const generalSkillsData = validGeneralSkills.map(entry => ({
           _id: entry.id,
           name: entry.name,
           description: entry.description || '',
           level: entry.level,
-          isCertified: entry.isCertified
+          isCertified: entry.isCertified,
+          isGeneral: true
         }));
-        
-        // Combine with technical skills
-        const allSkillData = [...(validSkills.length > 0 ? skillData : []), ...generalSkillData];
-        
-        // Update context state for UI consistency
-        setTechnicalSkills(allSkillData);
-        
-        // Save combined skills via bulk API
-        const allSkillsSaved = await saveTechnicalSkills(allSkillData);
-        if (!allSkillsSaved) saveSuccessful = false;
+        allSkillsToSave.push(...generalSkillsData);
+      }
+
+      // Save all skills (technical and general) via bulk API
+      if (allSkillsToSave.length > 0) {
+        // Update context state for UI consistency (this will trigger the useEffects to update skillEntries and generalSkillEntries)
+        setTechnicalSkills(allSkillsToSave.filter(s => !s.isGeneral));
+        setGeneralSkills(allSkillsToSave.filter(s => s.isGeneral));
+
+        const skillsSaved = await saveTechnicalSkills(allSkillsToSave);
+        if (!skillsSaved) saveSuccessful = false;
       }
 
       // Check if form has minimum required data
@@ -1059,7 +1145,7 @@ export const ExpertiseForm = ({ onComplete }: ExpertiseFormProps) => {
                       ))}
                     >
                       <SelectTrigger className="rounded-xl border-blue-200">
-                        <SelectValue />
+                        <SelectValue placeholder="Select Level" />
                       </SelectTrigger>
                       <SelectContent>
                         {proficiencyLevels.map(level => (
@@ -1155,14 +1241,20 @@ export const ExpertiseForm = ({ onComplete }: ExpertiseFormProps) => {
                     type="button"
                     variant="ghost"
                     size="icon"
-                    onClick={() => setSkillEntries(prev => {
-                      const filtered = prev.filter(s => s.id !== entry.id);
-                      // If removing all items, add an empty one
-                      return filtered.length === 0 ? [{ id: 'skill-1', name: '', description: '', level: 'Beginner', isCertified: false }] : filtered;
-                    })}
-                    className="text-red-500 hover:bg-red-100 rounded-full"
+                    onClick={() => handleRemoveTechnicalSkill(entry.id)}
+                    disabled={deletingSkillIds.has(entry.id)}
+                    className={cn(
+                      "rounded-full",
+                      deletingSkillIds.has(entry.id) 
+                        ? "text-gray-400 hover:text-gray-400 cursor-not-allowed" 
+                        : "text-red-500 hover:bg-red-100"
+                    )}
                   >
-                    <X className="h-4 w-4" />
+                    {deletingSkillIds.has(entry.id) ? (
+                      <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <X className="h-4 w-4" />
+                    )}
                   </Button>
                 </div>
                 
@@ -1176,8 +1268,7 @@ export const ExpertiseForm = ({ onComplete }: ExpertiseFormProps) => {
                         skill.id === entry.id ? { ...skill, name: e.target.value } : skill
                       ))}
                       className="rounded-xl border-[#fc9323]/20"
-                      list={`skills-${entry.id}`}
-                    />
+                      list={`skills-${entry.id}`} />
                     <datalist id={`skills-${entry.id}`}>
                       {TECHNICAL_SKILLS.filter(skill => 
                         skill.toLowerCase().includes(entry.name.toLowerCase()) && 
