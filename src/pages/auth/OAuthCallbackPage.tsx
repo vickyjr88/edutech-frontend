@@ -53,37 +53,13 @@ export const OAuthCallbackPage: React.FC = () => {
           description: 'You have successfully signed in with Google.',
         });
 
-        // Get the redirect URL from sessionStorage
+        // Clear any stored redirect URL
         const postOAuthRedirect = sessionStorage.getItem('kidato_post_oauth_redirect');
         sessionStorage.removeItem('kidato_post_oauth_redirect');
 
-        // Determine where to redirect based on user role
-        const userRole = session.identity.traits.role || backendUser.user?.role;
-        
-        // If it was a signup flow (redirect URL contains signup), handle accordingly
-        if (postOAuthRedirect && postOAuthRedirect.includes('/signup')) {
-          // New user registration flow
-          if (userRole === 'teacher') {
-            navigate('/teacher-profile-setup');
-          } else if (userRole === 'student') {
-            navigate('/student-dashboard');
-          } else if (userRole === 'parent') {
-            navigate('/parents-dashboard');
-          } else {
-            navigate('/dashboard');
-          }
-        } else {
-          // Existing user login flow
-          if (userRole === 'teacher') {
-            navigate('/teacher-dashboard');
-          } else if (userRole === 'student') {
-            navigate('/student-dashboard');
-          } else if (userRole === 'parent') {
-            navigate('/parents-dashboard');
-          } else {
-            navigate('/dashboard');
-          }
-        }
+        // Always redirect to /dashboard - the RoleBasedDashboardRouter will handle
+        // routing to the appropriate dashboard based on user role
+        navigate('/dashboard');
       } else {
         throw new Error('Failed to create or retrieve user account');
       }

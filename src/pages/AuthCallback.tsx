@@ -20,19 +20,10 @@ const AuthCallback = () => {
           return;
         }
 
-        // If we have a user, redirect to the appropriate dashboard
+        // If we have a user, redirect to /dashboard which will handle role-based routing
         if (user) {
           console.log("User:", user);
-          const userRole = user.role;
-          if (userRole === "teacher") {
-            navigate("/teacher-dashboard");
-          }else if (userRole === "student") {
-            navigate("/student-dashboard");
-          }else if (userRole === "parent") {
-            navigate("/parent-dashboard");
-          }else {
-            navigate("/dashboard");
-          }
+          navigate("/dashboard");
         } else {
           // Wait a bit for auth state to be processed
           setTimeout(() => {

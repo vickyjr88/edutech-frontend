@@ -6,6 +6,7 @@ import Signup from "../pages/Signup";
 import RecoveryPage from "../pages/auth/RecoveryPage";
 import { VerificationPage } from "../pages/auth/VerificationPage";
 import { OAuthCallbackPage } from "../pages/auth/OAuthCallbackPage";
+import { RoleBasedDashboardRouter } from "./auth/RoleBasedDashboardRouter";
 import Dashboard from "../pages/Dashboard";
 import TeacherDashboard from "../pages/TeacherDashboard";
 import NotFound from "../pages/NotFound";
@@ -87,7 +88,9 @@ const AppRoutes = () => {
         </ProtectedRoute>
       } />
       <Route path="/dashboard" element={
-        <Navigate to="/student-dashboard" replace />
+        <ProtectedRoute>
+          <RoleBasedDashboardRouter />
+        </ProtectedRoute>
       } />
       
       {/* Teacher Dashboard Routes */}
