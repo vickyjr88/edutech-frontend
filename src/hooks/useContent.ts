@@ -59,6 +59,24 @@ export function useContent<T = PageContent>(contentPath: string): UseContentResu
         if (contentPath === 'pages/index.json') {
           const module = await import('../content/pages/index.json');
           data = module.default || module;
+        } else if (contentPath === 'pages/for-parents.json') {
+          const module = await import('../content/pages/for-parents.json');
+          data = module.default || module;
+        } else if (contentPath === 'pages/for-students.json') {
+          const module = await import('../content/pages/for-students.json');
+          data = module.default || module;
+        } else if (contentPath === 'pages/for-teachers.json') {
+          const module = await import('../content/pages/for-teachers.json');
+          data = module.default || module;
+        } else if (contentPath === 'pages/teachers-pricing.json') {
+          const module = await import('../content/pages/teachers-pricing.json');
+          data = module.default || module;
+        } else if (contentPath === 'pages/privacy-policy.json') {
+          const module = await import('../content/pages/privacy-policy.json');
+          data = module.default || module;
+        } else if (contentPath === 'pages/terms-and-conditions.json') {
+          const module = await import('../content/pages/terms-and-conditions.json');
+          data = module.default || module;
         } else {
           // Fallback: try to fetch as a static asset
           const response = await fetch(`/src/content/${contentPath}`);
@@ -139,6 +157,24 @@ export async function preloadContent(contentPath: string): Promise<void> {
 
     if (contentPath === 'pages/index.json') {
       const module = await import('../content/pages/index.json');
+      data = module.default || module;
+    } else if (contentPath === 'pages/for-parents.json') {
+      const module = await import('../content/pages/for-parents.json');
+      data = module.default || module;
+    } else if (contentPath === 'pages/for-students.json') {
+      const module = await import('../content/pages/for-students.json');
+      data = module.default || module;
+    } else if (contentPath === 'pages/for-teachers.json') {
+      const module = await import('../content/pages/for-teachers.json');
+      data = module.default || module;
+    } else if (contentPath === 'pages/teachers-pricing.json') {
+      const module = await import('../content/pages/teachers-pricing.json');
+      data = module.default || module;
+    } else if (contentPath === 'pages/privacy-policy.json') {
+      const module = await import('../content/pages/privacy-policy.json');
+      data = module.default || module;
+    } else if (contentPath === 'pages/terms-and-conditions.json') {
+      const module = await import('../content/pages/terms-and-conditions.json');
       data = module.default || module;
     } else {
       const response = await fetch(`/src/content/${contentPath}`);

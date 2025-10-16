@@ -59,7 +59,7 @@ const ForParents = () => {
   const ctaSection = content?.sections.find(s => s.type === 'cta');
 
   // Map benefits with icons
-  const benefits = benefitsSection?.type === 'benefits' ? benefitsSection.benefits.map(benefit => ({
+  const benefits = benefitsSection?.type === 'benefits' ? (benefitsSection.benefits || []).map(benefit => ({
     ...benefit,
     icon: iconMap[benefit.icon] || GraduationCap
   })) : [];
@@ -88,7 +88,7 @@ const ForParents = () => {
   });
 
   // Extract popular packages from JSON
-  const popularPackages = packagesSection?.type === 'contentCards' ? packagesSection.cards : [];
+  const popularPackages = packagesSection?.type === 'contentCards' ? (packagesSection.cards || []) : [];
 
   const getFilteredPackages = () => {
     if (!selectedCurriculum && !selectedGrade) {
@@ -103,19 +103,19 @@ const ForParents = () => {
   };
 
   // Extract testimonials from JSON
-  const testimonials = testimonialsSection?.type === 'testimonials' ? testimonialsSection.testimonials : [];
+  const testimonials = testimonialsSection?.type === 'testimonials' ? (testimonialsSection.testimonials || []) : [];
 
   // Extract how it works steps
-  const steps = howItWorksSection?.type === 'howItWorks' ? howItWorksSection.steps : [];
+  const steps = howItWorksSection?.type === 'howItWorks' ? (howItWorksSection.steps || []) : [];
 
   // Extract pricing tiers
-  const pricingTiers = pricingSection?.type === 'pricing' ? pricingSection.tiers.map(tier => ({
+  const pricingTiers = pricingSection?.type === 'pricing' ? (pricingSection.tiers || []).map(tier => ({
     ...tier,
     icon: iconMap[tier.icon as string] || Users
   })) : [];
 
   // Extract FAQs
-  const faqs = faqSection?.type === 'faq' ? faqSection.questions : [];
+  const faqs = faqSection?.type === 'faq' ? (faqSection.questions || []) : [];
 
   // Helper functions
   const getCurriculumIcon = (curriculum: string) => {
@@ -416,26 +416,28 @@ const ForParents = () => {
                     <div className={`rounded-full mx-auto w-14 h-14 flex items-center justify-center mb-4 ${plan.highlighted ? 'bg-orange-100' : 'bg-blue-100'}`}>
                       <plan.icon className={`h-7 w-7 ${plan.highlighted ? 'text-kidato-orange' : 'text-kidato-purple'}`} />
                     </div>
-                    <h3 className="text-xl font-bold text-gray-900">{plan.title}</h3>
+                    <h3 className="text-xl font-bold text-gray-900">{plan.title || plan.name}</h3>
                     <div className="mt-2">
-                      <span className={`text-3xl font-bold ${plan.highlighted ? 'text-kidato-orange' : 'text-kidato-purple'}`}>{plan.price}</span>
-                      <span className="text-gray-600"> {plan.unit}</span>
+                      <span className={`text-3xl font-bold ${plan.highlighted ? 'text-kidato-orange' : 'text-kidato-purple'}`}>
+                        {plan.price?.prefix || '$'}{plan.price?.amount}
+                      </span>
+                      <span className="text-gray-600">/{plan.price?.period || 'month'}</span>
                     </div>
                     <p className="mt-2 text-gray-600 text-sm">{plan.description}</p>
                   </CardHeader>
                   <CardContent className="pt-4">
                     <ul className="space-y-3 mb-6">
-                      {plan.features?.map((feature: string, i: number) => (
+                      {plan.features?.map((feature: any, i: number) => (
                         <li key={i} className="flex items-start">
                           <Check className={`h-5 w-5 ${plan.highlighted ? 'text-kidato-orange' : 'text-green-500'} mr-2 flex-shrink-0`} />
-                          <span className="text-gray-600 text-sm">{feature}</span>
+                          <span className="text-gray-600 text-sm">{typeof feature === 'string' ? feature : feature.text}</span>
                         </li>
                       ))}
                     </ul>
                     <Button
                       className={`w-full ${plan.highlighted ? 'bg-kidato-orange hover:bg-orange-600' : 'bg-kidato-purple hover:bg-kidato-dark-blue'} text-white`}
                     >
-                      <Link to={plan.link || '#'}>{plan.cta}</Link>
+                      <Link to={plan.cta?.href || plan.link || '#'}>{plan.cta?.text || plan.cta || 'Get Started'}</Link>
                     </Button>
                   </CardContent>
                   {plan.highlighted && (
