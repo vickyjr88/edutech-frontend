@@ -23,7 +23,7 @@ const HowItWorks = () => {
               <Button size="lg" className="bg-white text-kidato-purple hover:bg-gray-100">
                 <Link to="/signup">Create Account</Link>
               </Button>
-              <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10">
+              <Button size="lg" variant="outline" className="bg-kidato-dark-blue hover:bg-white border-white text-white hover:bg-white/10">
                 <Link to="/contact">Ask Questions</Link>
               </Button>
             </div>

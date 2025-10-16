@@ -163,7 +163,7 @@ const ForParents = () => {
                         {heroSection?.type === 'hero' && heroSection.primaryCTA ? heroSection.primaryCTA.text : 'Find a Tutor'}
                       </Link>
                     </Button>
-                    <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10">
+                    <Button size="lg" variant="outline" className="bg-kidato-orange  border-white text-white hover:bg-white/10">
                       <Link to="/explore-classes">
                         {heroSection?.type === 'hero' && heroSection.secondaryCTA ? heroSection.secondaryCTA.text : 'Explore Classes'}
                       </Link>

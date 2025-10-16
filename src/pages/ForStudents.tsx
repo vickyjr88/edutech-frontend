@@ -82,7 +82,7 @@ const ForStudents = () => {
                     {heroSection?.type === 'hero' && heroSection.primaryCTA ? heroSection.primaryCTA.text : 'Join Now'}
                   </Link>
                 </Button>
-                <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10">
+                <Button size="lg" variant="outline" className="bg-kidato-dark-blue border-white text-white hover:text-white hover:bg-white/10">
                   <Link to={heroSection?.type === 'hero' && heroSection.secondaryCTA ? heroSection.secondaryCTA.href : '/student-classes'}>
                     {heroSection?.type === 'hero' && heroSection.secondaryCTA ? heroSection.secondaryCTA.text : 'See Classes'}
                   </Link>
