@@ -155,7 +155,11 @@ const featuredTeachers = [
   }
 ];
 
-const Features = () => {
+interface FeaturesProps {
+  content?: any; // Accept any content for now, will use defaults
+}
+
+const Features = ({ content }: FeaturesProps = {}) => {
   const [showAllFeatures, setShowAllFeatures] = useState(false);
   const displayedFeatures = showAllFeatures ? features : features.slice(0, 3);
 
