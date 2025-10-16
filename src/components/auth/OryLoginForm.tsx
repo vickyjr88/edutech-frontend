@@ -90,9 +90,9 @@ export const OryLoginForm: React.FC<OryLoginFormProps> = ({ onSuccess, redirectT
 
       // Handle OAuth redirect (this is the normal flow)
       if (result.redirect_browser_to) {
-        // Store return URL in sessionStorage to handle post-OAuth redirect
-        const returnUrl = `${window.location.origin}/login`;
-        sessionStorage.setItem('kidato_post_oauth_redirect', returnUrl);
+        // Don't store return URL - let OAuth callback handle routing via /dashboard
+        // This prevents existing users from being redirected to signup
+        sessionStorage.removeItem('kidato_post_oauth_redirect');
         console.log('Redirecting to OAuth provider:', result.redirect_browser_to);
         window.location.href = result.redirect_browser_to;
         return;

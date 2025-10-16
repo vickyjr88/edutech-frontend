@@ -53,6 +53,7 @@ import DocumentViewer from "../pages/DocumentViewer";
 import DocumentProxy from "../pages/DocumentProxy";
 import PrivacyPolicy from "../pages/PrivacyPolicy";
 import TermsAndConditions from "../pages/TermsAndConditions";
+import OrySettingsPage from "../pages/OrySettingsPage";
 
 const AppRoutes = () => {
   return (
@@ -90,6 +91,11 @@ const AppRoutes = () => {
       <Route path="/dashboard" element={
         <ProtectedRoute>
           <RoleBasedDashboardRouter />
+        </ProtectedRoute>
+      } />
+      <Route path="/settings/ory" element={
+        <ProtectedRoute>
+          <OrySettingsPage />
         </ProtectedRoute>
       } />
       
