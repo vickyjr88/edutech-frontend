@@ -1,0 +1,259 @@
+{
+  "metadata": {
+    "title": "For Students - Learning That's Actually Fun | Kidato",
+    "description": "Join thousands of students across Africa who are making friends, building confidence, and improving their grades with Kidato's interactive online classes.",
+    "keywords": [
+      "online learning for students",
+      "student tutoring Africa",
+      "fun online classes",
+      "interactive learning",
+      "student success",
+      "homework help",
+      "grade improvement"
+    ]
+  },
+  "sections": [
+    {
+      "type": "hero",
+      "title": "Learning That's Actually Fun!",
+      "subtitle": "Join thousands of students across Africa who are making friends, building confidence, and improving their grades with Kidato.",
+      "primaryCTA": {
+        "text": "Join Now",
+        "href": "/student-signup",
+        "variant": "primary"
+      },
+      "secondaryCTA": {
+        "text": "See Classes",
+        "href": "/student-classes",
+        "variant": "outline"
+      },
+      "variant": "gradient"
+    },
+    {
+      "type": "benefits",
+      "title": "Why Students Love Kidato",
+      "description": "Our platform is designed to make learning enjoyable and effective for students like you.",
+      "benefits": [
+        {
+          "icon": "BookOpen",
+          "title": "Learn Your Way",
+          "description": "Study at your own pace with teachers who understand how you learn best."
+        },
+        {
+          "icon": "Users",
+          "title": "Make New Friends",
+          "description": "Connect with other students from across Africa in our collaborative group classes."
+        },
+        {
+          "icon": "Award",
+          "title": "Get Better Grades",
+          "description": "Improve your understanding and performance in school with targeted support."
+        },
+        {
+          "icon": "Globe",
+          "title": "Learn From Anywhere",
+          "description": "Join classes from home, school, or anywhere with an internet connection."
+        }
+      ],
+      "layout": "grid"
+    },
+    {
+      "type": "contentCards",
+      "title": "Popular Classes You'll Love",
+      "subtitle": "Join fun, interactive classes with amazing teachers and students from all over Africa.",
+      "cards": [
+        {
+          "id": "math-made-easy",
+          "title": "Math Made Easy",
+          "description": "Grades 6-8",
+          "image": {
+            "src": "https://images.unsplash.com/photo-1596496181848-3091d4878b24?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+            "alt": "Math class"
+          },
+          "tags": ["Mathematics", "4.9", "245 students", "Popular"],
+          "link": {
+            "text": "Learn More",
+            "href": "/class-details"
+          }
+        },
+        {
+          "id": "creative-writing",
+          "title": "Creative Writing Adventure",
+          "description": "Grades 4-7",
+          "image": {
+            "src": "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+            "alt": "Writing class"
+          },
+          "tags": ["English", "4.8", "187 students"],
+          "link": {
+            "text": "Learn More",
+            "href": "/class-details"
+          }
+        },
+        {
+          "id": "coding-beginners",
+          "title": "Coding for Beginners",
+          "description": "Ages 10+",
+          "image": {
+            "src": "https://images.unsplash.com/photo-1599507593499-a3f7d7d97667?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+            "alt": "Coding class"
+          },
+          "tags": ["Computer Science", "5.0", "164 students", "Popular"],
+          "link": {
+            "text": "Learn More",
+            "href": "/class-details"
+          }
+        },
+        {
+          "id": "science-experiments",
+          "title": "Science Experiments at Home",
+          "description": "Grades 3-5",
+          "image": {
+            "src": "https://images.unsplash.com/photo-1507413245164-6160d8298b31?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+            "alt": "Science experiments"
+          },
+          "tags": ["Science", "4.7", "203 students"],
+          "link": {
+            "text": "Learn More",
+            "href": "/class-details"
+          }
+        }
+      ],
+      "columns": 4
+    },
+    {
+      "type": "howItWorks",
+      "title": "How Kidato Works",
+      "description": "Getting started is easy! Here's what to expect when you join.",
+      "steps": [
+        {
+          "number": 1,
+          "title": "Create Your Account",
+          "description": "Sign up with your parent's help and set up your student profile."
+        },
+        {
+          "number": 2,
+          "title": "Join Your First Class",
+          "description": "Pick a class or teacher that interests you and book your spot."
+        },
+        {
+          "number": 3,
+          "title": "Learn and Have Fun",
+          "description": "Attend interactive online sessions and track your progress as you improve!"
+        }
+      ],
+      "layout": "horizontal"
+    },
+    {
+      "type": "contentCards",
+      "title": "What You'll Need to Get Started",
+      "cards": [
+        {
+          "id": "requirements-list",
+          "title": "Requirements",
+          "description": "Everything you need to join Kidato",
+          "icon": "CheckCircle",
+          "tags": [
+            "Computer, tablet, or smartphone",
+            "Internet connection",
+            "Quiet place to learn",
+            "Notebook and pencil",
+            "Parent's permission",
+            "Curiosity and enthusiasm!"
+          ]
+        },
+        {
+          "id": "free-trial",
+          "title": "Your First Class is Free!",
+          "description": "Try any class with no commitment. If you enjoy it, you can sign up for more sessions!",
+          "icon": "Monitor"
+        },
+        {
+          "id": "safety-promise",
+          "title": "Student Safety Promise",
+          "description": "All classes are monitored and taught by verified teachers in a secure online environment. Your safety is our top priority.",
+          "icon": "Shield"
+        }
+      ],
+      "columns": 3
+    },
+    {
+      "type": "testimonials",
+      "title": "What Students Like You Say",
+      "subtitle": "Hear from other students about their experiences with Kidato.",
+      "testimonials": [
+        {
+          "id": "kwame",
+          "name": "Kwame, 12",
+          "role": "Student",
+          "location": "Ghana",
+          "avatar": {
+            "src": "https://images.unsplash.com/photo-1595295425345-3917574f45b1?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+            "alt": "Kwame"
+          },
+          "content": "I used to struggle with math, but my Kidato teacher makes it fun! Now I understand fractions and can help my friends too.",
+          "rating": 5
+        },
+        {
+          "id": "zainab",
+          "name": "Zainab, 15",
+          "role": "Student",
+          "location": "Nigeria",
+          "avatar": {
+            "src": "https://images.unsplash.com/photo-1601288496920-b6154fe3626a?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+            "alt": "Zainab"
+          },
+          "content": "I've made friends from different countries in my English class. We practice speaking together and learn about each other's cultures.",
+          "rating": 5
+        },
+        {
+          "id": "tariq",
+          "name": "Tariq, 10",
+          "role": "Student",
+          "location": "Kenya",
+          "avatar": {
+            "src": "https://images.unsplash.com/photo-1595295425202-61d18b0d3b35?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+            "alt": "Tariq"
+          },
+          "content": "Coding class is my favorite! I built my first game and my parents were so impressed. I want to be a programmer when I grow up.",
+          "rating": 5
+        }
+      ],
+      "layout": "grid"
+    },
+    {
+      "type": "faq",
+      "title": "Questions Students Ask",
+      "subtitle": "Answers to common questions that students have about Kidato.",
+      "faqs": [
+        {
+          "question": "Will classes help with my school work?",
+          "answer": "Yes! Our teachers design classes to support what you're learning in school. We can help you understand difficult topics, prepare for exams, and complete assignments with confidence."
+        },
+        {
+          "question": "What if I miss a class?",
+          "answer": "Don't worry! Many classes are recorded so you can watch them later. If you know you'll miss a class, just let your teacher know in advance."
+        },
+        {
+          "question": "Do I need to turn on my camera?",
+          "answer": "We encourage students to turn on their cameras during class to create a more interactive learning environment, but we understand if you're not comfortable. Talk to your teacher about options."
+        },
+        {
+          "question": "Can I take classes with my friends?",
+          "answer": "Absolutely! You can invite friends to join your class or sign up for the same group sessions together. Learning with friends can make the experience even more fun."
+        }
+      ]
+    },
+    {
+      "type": "cta",
+      "title": "Ready to Make Learning Fun?",
+      "description": "Join thousands of students who are learning, making friends, and having fun with Kidato!",
+      "primaryCTA": {
+        "text": "Get Started Today",
+        "href": "/student-signup",
+        "variant": "primary"
+      },
+      "variant": "gradient"
+    }
+  ]
+}

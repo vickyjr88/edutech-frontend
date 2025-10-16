@@ -1,0 +1,226 @@
+{
+  "metadata": {
+    "title": "For Teachers - Share Your Knowledge, Inspire the Next Generation | Kidato",
+    "description": "Join our community of passionate educators making quality education accessible across Africa. Flexible teaching, competitive income, and growth opportunities.",
+    "keywords": [
+      "teach online Africa",
+      "online tutoring jobs",
+      "teacher opportunities",
+      "remote teaching",
+      "educator income",
+      "teaching platform",
+      "African education"
+    ]
+  },
+  "sections": [
+    {
+      "type": "hero",
+      "title": "Share Your Knowledge, Inspire the Next Generation",
+      "subtitle": "Join our community of passionate educators making quality education accessible across Africa.",
+      "primaryCTA": {
+        "text": "View Pricing",
+        "href": "/teacher-pricing",
+        "variant": "primary"
+      },
+      "secondaryCTA": {
+        "text": "Learn More",
+        "href": "/teacher-pricing",
+        "variant": "outline"
+      }
+    },
+    {
+      "type": "benefits",
+      "title": "Why Teach with Kidato?",
+      "subtitle": "Our platform offers the perfect environment for passionate educators to thrive.",
+      "benefits": [
+        {
+          "icon": "Clock",
+          "title": "Flexible Teaching",
+          "description": "Set your own hours and teach from anywhere with our easy-to-use online platform."
+        },
+        {
+          "icon": "DollarSign",
+          "title": "Competitive Income",
+          "description": "Earn reliable income with our competitive rates and regular payment schedule."
+        },
+        {
+          "icon": "ShieldCheck",
+          "title": "Verified Students",
+          "description": "Teach verified students in a safe online environment designed with mutual trust in mind."
+        },
+        {
+          "icon": "Award",
+          "title": "Growth Opportunities",
+          "description": "Enhance your teaching skills and grow your career with our professional development resources."
+        },
+        {
+          "icon": "Calendar",
+          "title": "Simple Scheduling",
+          "description": "Our intuitive calendar system makes managing your teaching schedule effortless."
+        },
+        {
+          "icon": "CreditCard",
+          "title": "Secure Payments",
+          "description": "Get paid on time, every time with our secure and reliable payment system."
+        }
+      ],
+      "layout": "grid"
+    },
+    {
+      "type": "howItWorks",
+      "title": "How to Join Our Teaching Community",
+      "subtitle": "Four simple steps to start your teaching journey with Kidato.",
+      "steps": [
+        {
+          "number": 1,
+          "title": "Apply",
+          "description": "Complete our simple online application form with your qualifications and expertise."
+        },
+        {
+          "number": 2,
+          "title": "Interview",
+          "description": "Meet with our team to discuss your teaching approach and experience."
+        },
+        {
+          "number": 3,
+          "title": "Training",
+          "description": "Learn how to use our platform effectively in our online onboarding sessions."
+        },
+        {
+          "number": 4,
+          "title": "Start Teaching",
+          "description": "Set up your profile, create your schedule, and welcome your first students!"
+        }
+      ],
+      "layout": "horizontal"
+    },
+    {
+      "type": "testimonials",
+      "title": "Hear From Our Teachers",
+      "subtitle": "Discover how Kidato has helped educators across Africa pursue their passion for teaching.",
+      "testimonials": [
+        {
+          "id": "grace-muthoni",
+          "name": "Grace Muthoni",
+          "role": "Mathematics Teacher",
+          "avatar": {
+            "src": "https://randomuser.me/api/portraits/women/32.jpg",
+            "alt": "Grace Muthoni"
+          },
+          "content": "Joining Kidato has transformed my teaching career. I can now reach students across Africa while earning a reliable income on my own schedule.",
+          "rating": 5
+        },
+        {
+          "id": "daniel-okonkwo",
+          "name": "Daniel Okonkwo",
+          "role": "Science Educator",
+          "avatar": {
+            "src": "https://randomuser.me/api/portraits/men/45.jpg",
+            "alt": "Daniel Okonkwo"
+          },
+          "content": "As a teacher on Kidato, I've found a supportive community that values quality education. The platform is intuitive and the students are motivated to learn.",
+          "rating": 5
+        },
+        {
+          "id": "fatima-abdullahi",
+          "name": "Fatima Abdullahi",
+          "role": "Language Arts Instructor",
+          "avatar": {
+            "src": "https://randomuser.me/api/portraits/women/68.jpg",
+            "alt": "Fatima Abdullahi"
+          },
+          "content": "The flexibility Kidato offers has allowed me to balance my passion for teaching with my family responsibilities. It's truly the best of both worlds.",
+          "rating": 5
+        }
+      ],
+      "layout": "grid"
+    },
+    {
+      "type": "contentCards",
+      "title": "Teacher Requirements",
+      "subtitle": "What we look for in our educators",
+      "cards": [
+        {
+          "id": "requirements",
+          "title": "Requirements",
+          "description": "Essential qualifications and skills",
+          "icon": "CheckCircle",
+          "tags": [
+            "Teaching qualification or relevant degree",
+            "At least 2 years of teaching experience",
+            "Passion for education and working with young learners",
+            "Strong communication skills",
+            "Reliable internet connection and computer",
+            "Commitment to professional growth"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "pricing",
+      "title": "Earning Opportunities",
+      "subtitle": "Flexible options to match your teaching style",
+      "tiers": [
+        {
+          "id": "one-on-one",
+          "name": "One-on-One Tuition Classes",
+          "description": "Personalized instruction tailored to individual student needs.",
+          "price": {
+            "amount": 15,
+            "currency": "USD",
+            "period": "hour",
+            "prefix": "$"
+          },
+          "note": "$15-35/hour"
+        },
+        {
+          "id": "group-classes",
+          "name": "Group Classes",
+          "description": "Teaching multiple students with similar educational goals.",
+          "price": {
+            "amount": 20,
+            "currency": "USD",
+            "period": "hour",
+            "prefix": "$"
+          },
+          "note": "$20-50/hour"
+        },
+        {
+          "id": "exam-prep",
+          "name": "Exam-Prep",
+          "description": "Specialized sessions focused on test preparation and exam strategies.",
+          "price": {
+            "amount": 25,
+            "currency": "USD",
+            "period": "hour",
+            "prefix": "$"
+          },
+          "note": "$25-60/hour"
+        },
+        {
+          "id": "online-schooling",
+          "name": "Online Schooling",
+          "description": "Regular curriculum-based lessons delivered through our online platform.",
+          "price": {
+            "amount": 10,
+            "currency": "USD",
+            "period": "lesson",
+            "prefix": "$"
+          },
+          "note": "$10-30/lesson"
+        }
+      ]
+    },
+    {
+      "type": "cta",
+      "title": "Ready to Transform African Education?",
+      "description": "Join our teaching community today and help shape the future of thousands of African students.",
+      "primaryCTA": {
+        "text": "View Pricing",
+        "href": "/teacher-pricing",
+        "variant": "primary"
+      },
+      "variant": "gradient"
+    }
+  ]
+}
