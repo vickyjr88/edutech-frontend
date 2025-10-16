@@ -10,6 +10,7 @@ import { cn } from '@/lib/utils';
 import { CVUploadNudge } from './CVUploadNudge';
 import { teacherService } from '@/integrations/api/services/teacher.service';
 import { authService } from '@/integrations/api/services/auth.service';
+import { cvService } from '@/integrations/api/services/cv.service';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
 import GooglePlacesAutocomplete from '@/components/teacher/GooglePlacesAutocomplete';
@@ -135,10 +136,7 @@ export const PersonalInformationForm = ({ onComplete }: PersonalInformationFormP
     setIsCVProcessing(true);
     try {
       console.log('CV uploaded:', file.name);
-      
-      // Import the CV service
-      const { cvService } = await import('@/integrations/api/services/cv.service');
-      
+
       // Upload and process CV with actual API
       const result = await cvService.uploadCV(file);
       
