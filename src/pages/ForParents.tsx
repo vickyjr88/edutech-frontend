@@ -15,6 +15,12 @@ import type { PageContent } from "@/content/types";
 const ForParents = () => {
   const { content, loading, error } = useContent<PageContent>('pages/for-parents.json');
 
+  // State hooks - must be declared before any conditional returns
+  const [selectedCurriculum, setSelectedCurriculum] = useState("");
+  const [selectedGrade, setSelectedGrade] = useState("");
+  const [isPackageDialogOpen, setIsPackageDialogOpen] = useState(false);
+  const [selectedPackage, setSelectedPackage] = useState<any>(null);
+
   // Icon mapping
   const iconMap: Record<string, any> = {
     GraduationCap,
@@ -57,11 +63,6 @@ const ForParents = () => {
     ...benefit,
     icon: iconMap[benefit.icon] || GraduationCap
   })) : [];
-
-  const [selectedCurriculum, setSelectedCurriculum] = useState("");
-  const [selectedGrade, setSelectedGrade] = useState("");
-  const [isPackageDialogOpen, setIsPackageDialogOpen] = useState(false);
-  const [selectedPackage, setSelectedPackage] = useState<any>(null);
 
   const handleFilterChange = (curriculum: string, grade: string) => {
     setSelectedCurriculum(curriculum);
