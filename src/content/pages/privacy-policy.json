@@ -1,0 +1,132 @@
+{
+  "metadata": {
+    "title": "Privacy Policy - Your Data Protection and Privacy Rights | Kidato",
+    "description": "Kidato's Privacy Policy explains how we collect, use, and protect your personal information. GDPR compliant, COPPA certified, and secure encryption.",
+    "keywords": [
+      "privacy policy",
+      "data protection",
+      "GDPR",
+      "COPPA",
+      "student privacy",
+      "child data protection",
+      "secure encryption",
+      "educational data"
+    ]
+  },
+  "sections": [
+    {
+      "type": "hero",
+      "title": "Privacy Policy",
+      "subtitle": "We are committed to protecting your personal information and ensuring the privacy of our students, teachers, and families.",
+      "badge": {
+        "text": "Last Updated: January 2025",
+        "variant": "info"
+      }
+    },
+    {
+      "type": "legal",
+      "title": "Privacy Policy",
+      "lastUpdated": "January 2025",
+      "sections": [
+        {
+          "heading": "1. Scope of Policy",
+          "content": "This Privacy Policy describes how Kidato Inc (\"Kidato,\" \"we,\" \"us,\" or \"our\") collects, uses, and protects your personal information. This policy applies to all users, including teachers, students, guardians, and institutional partners.",
+          "list": [
+            "By using the Kidato platform, you consent to the collection and use of your data as described herein."
+          ]
+        },
+        {
+          "heading": "2. Data We Collect",
+          "content": "We collect the following categories of information:",
+          "list": [
+            "Personal Data: Names, email addresses, phone numbers, and birth dates.",
+            "Academic Data: Grades, performance records, assignments, and assessments.",
+            "Behavioural Data: Engagement patterns, time spent on lessons, interaction styles.",
+            "Media Data: Audio/video recordings of classes for quality and compliance.",
+            "Device & Usage Data: Browser type, location (approximate), time zone, and device type."
+          ]
+        },
+        {
+          "heading": "3. How We Use Data",
+          "content": "Your data is used to:",
+          "list": [
+            "Create and optimise student and teacher profiles.",
+            "Match students to relevant tutors or AI-powered classes.",
+            "Generate custom quizzes and assessments.",
+            "Enhance platform functionality and user experience.",
+            "Provide guardians with progress tracking dashboards.",
+            "Improve our AI models over time via anonymised analysis."
+          ]
+        },
+        {
+          "heading": "4. AI & Data Retention",
+          "content": "Our AI tutors and recommendation engines utilise user data to improve accuracy, personalisation, and platform intelligence. AI-generated content and interactions may be stored and analysed to train future models.",
+          "list": [
+            "By using Kidato, you agree to the use of your anonymised or aggregated data to enhance platform capabilities."
+          ]
+        },
+        {
+          "heading": "5. Data Storage & Hosting",
+          "content": "Data is primarily stored in Africa with backups in the European Union and the United States to ensure security, compliance, and disaster recovery. While we follow industry best practices, no system is completely immune to breaches."
+        },
+        {
+          "heading": "6. Third-Party Services",
+          "content": "We rely on trusted third-party providers (e.g., Firebase, Stripe, Zoom, Google Analytics) to deliver parts of our service. These providers may access your data strictly under our direction and following their privacy policies."
+        },
+        {
+          "heading": "7. Parental Consent & Children's Data",
+          "content": "We comply with child data protection standards (e.g., COPPA, GDPR). Students under legal age must obtain parental/guardian consent. Kidato only processes children's data with explicit permission, and guardians can request data review, correction, or deletion at any time."
+        },
+        {
+          "heading": "8. Marketing & Communications",
+          "content": "We may use your contact information to send updates about platform features, educational content, or partnerships. You may opt out of marketing communications by following the \"unsubscribe\" link or contacting us directly.",
+          "list": [
+            "We do not sell or rent user data to third parties."
+          ]
+        },
+        {
+          "heading": "9. Your Rights",
+          "content": "You have the right to:",
+          "list": [
+            "Request access to your data.",
+            "Correct or delete inaccurate data.",
+            "Withdraw consent for processing (where applicable)."
+          ],
+          "subheading": "To exercise any of these rights, please contact our support team."
+        },
+        {
+          "heading": "10. Liability Disclaimer",
+          "content": "Kidato is not liable for:",
+          "list": [
+            "Any loss, theft, or misuse of personal data by users.",
+            "User actions taken outside the platform, including illegal or unethical behaviour.",
+            "Breaches caused by user negligence or third-party tools beyond our control."
+          ],
+          "subheading": "Users are responsible for maintaining the confidentiality of their login credentials and for ensuring their activity on Kidato remains lawful and respectful."
+        },
+        {
+          "heading": "11. Changes to this Policy",
+          "content": "We reserve the right to update this Privacy Policy. Users will be notified of any changes, and their continued use of the platform will be considered acceptance."
+        },
+        {
+          "heading": "12. Child Safety and Educator Responsibility",
+          "content": "All teachers, tutors, and educational institutions registered on Kidato agree to uphold ethical standards for engaging with minors, as detailed in our Ethical Agreement on Child Protection (see Section 8 in Terms & Conditions). We monitor educator behaviour through activity logs, peer reviews, and session analytics to uphold student safety."
+        }
+      ]
+    }
+  ],
+  "complianceBadges": [
+    {
+      "name": "GDPR Compliant",
+      "icon": "CheckCircle"
+    },
+    {
+      "name": "COPPA Certified",
+      "icon": "CheckCircle"
+    },
+    {
+      "name": "Secure Encryption",
+      "icon": "CheckCircle"
+    }
+  ]
+}
