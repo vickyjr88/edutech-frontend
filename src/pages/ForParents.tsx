@@ -35,7 +35,7 @@ const ForParents = () => {
     Star
   };
 
-  // Loading state
+  // Loading state - early return
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col">
@@ -149,209 +149,209 @@ const ForParents = () => {
       <Navbar />
       <main className="flex-grow pt-16">
         <section className="bg-gradient-to-r from-kidato-orange to-orange-500 text-white py-20">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="max-w-3xl">
-              <h1 className="text-4xl md:text-5xl font-bold mb-6">
-                {heroSection?.type === 'hero' ? heroSection.title : 'Unlock Your Child\'s Potential with Personalized Learning'}
-              </h1>
-              <p className="text-xl mb-8">
-                {heroSection?.type === 'hero' ? heroSection.subtitle : 'Trusted by thousands of parents across Africa to provide quality, accessible education that fits your family\'s needs.'}
-              </p>
-              <div className="space-x-4">
-                <Button size="lg" className="bg-white text-kidato-orange hover:bg-gray-100">
-                  <Link to="/find-tutors">
-                    {heroSection?.type === 'hero' && heroSection.primaryCTA ? heroSection.primaryCTA.text : 'Find a Tutor'}
-                  </Link>
-                </Button>
-                <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10">
-                  <Link to="/explore-classes">
-                    {heroSection?.type === 'hero' && heroSection.secondaryCTA ? heroSection.secondaryCTA.text : 'Explore Classes'}
-                  </Link>
-                </Button>
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="max-w-3xl">
+                  <h1 className="text-4xl md:text-5xl font-bold mb-6">
+                    {heroSection?.type === 'hero' ? heroSection.title : 'Unlock Your Child\'s Potential with Personalized Learning'}
+                  </h1>
+                  <p className="text-xl mb-8">
+                    {heroSection?.type === 'hero' ? heroSection.subtitle : 'Trusted by thousands of parents across Africa to provide quality, accessible education that fits your family\'s needs.'}
+                  </p>
+                  <div className="space-x-4">
+                    <Button size="lg" className="bg-white text-kidato-orange hover:bg-gray-100">
+                      <Link to="/find-tutors">
+                        {heroSection?.type === 'hero' && heroSection.primaryCTA ? heroSection.primaryCTA.text : 'Find a Tutor'}
+                      </Link>
+                    </Button>
+                    <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10">
+                      <Link to="/explore-classes">
+                        {heroSection?.type === 'hero' && heroSection.secondaryCTA ? heroSection.secondaryCTA.text : 'Explore Classes'}
+                      </Link>
+                    </Button>
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
-        </section>
+            </section>
 
-        <section className="py-16 bg-white">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold text-gray-900">
-                {benefitsSection?.type === 'benefits' ? benefitsSection.title : 'Why Parents Choose Kidato'}
-              </h2>
-              <p className="mt-4 text-xl text-gray-600 max-w-3xl mx-auto">
-                {benefitsSection?.type === 'benefits' ? benefitsSection.subtitle : 'We partner with you to support your child\'s educational journey in a safe, engaging environment.'}
-              </p>
-            </div>
-
-            <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
-              {benefits.map((benefit, index) => (
-                <div key={index} className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-300">
-                  <div className="bg-orange-100 rounded-full w-12 h-12 flex items-center justify-center mb-4">
-                    <benefit.icon className="h-6 w-6 text-kidato-orange" />
-                  </div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">{benefit.title}</h3>
-                  <p className="text-gray-600">{benefit.description}</p>
+            <section className="py-16 bg-white">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="text-center mb-12">
+                  <h2 className="text-3xl font-bold text-gray-900">
+                    {benefitsSection?.type === 'benefits' ? benefitsSection.title : 'Why Parents Choose Kidato'}
+                  </h2>
+                  <p className="mt-4 text-xl text-gray-600 max-w-3xl mx-auto">
+                    {benefitsSection?.type === 'benefits' ? benefitsSection.subtitle : 'We partner with you to support your child\'s educational journey in a safe, engaging environment.'}
+                  </p>
                 </div>
-              ))}
-            </div>
-          </div>
-        </section>
 
-        <section className="py-16 bg-gray-50">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold text-gray-900">
-                {howItWorksSection?.type === 'howItWorks' ? howItWorksSection.title : 'How Kidato Works for Your Family'}
-              </h2>
-              <p className="mt-4 text-xl text-gray-600 max-w-3xl mx-auto">
-                {howItWorksSection?.type === 'howItWorks' ? howItWorksSection.subtitle : 'Getting started is simple - we\'ll guide you through every step.'}
-              </p>
-            </div>
-
-            <div className="grid gap-6 md:grid-cols-3">
-              {steps.map((step: any, index: number) => (
-                <div key={index} className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-300 text-center">
-                  <div className="bg-kidato-orange text-white rounded-full w-10 h-10 flex items-center justify-center mx-auto mb-4 font-bold">
-                    {step.step || index + 1}
-                  </div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">{step.title}</h3>
-                  <p className="text-gray-600">{step.description}</p>
-                </div>
-              ))}
-            </div>
-
-            <div className="text-center mt-12">
-              <Button size="lg" className="bg-kidato-orange hover:bg-orange-600 text-white">
-                <Link to="/parent-signup">Get Started Today</Link>
-              </Button>
-            </div>
-          </div>
-        </section>
-
-        <section className="py-16 bg-white">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold text-gray-900">
-                {packagesSection?.type === 'contentCards' ? packagesSection.title : 'Popular Learning Packages'}
-              </h2>
-              <p className="mt-4 text-xl text-gray-600 max-w-3xl mx-auto">
-                {packagesSection?.type === 'contentCards' ? packagesSection.subtitle : 'Find the perfect full home learning package for your child based on their curriculum and grade level.'}
-              </p>
-            </div>
-
-            <CurriculumGradeFilter onFilterChange={handleFilterChange} />
-
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {getFilteredPackages().map((subject, index) => {
-                const CurriculumIcon = getCurriculumIcon(subject.curriculum);
-                const subjectCount = getSubjectCount(subject.id);
-                const levelClass = getLevelColor(subject.level);
-
-                return (
-                  <Card
-                    key={index}
-                    className="border border-gray-200 hover:shadow-lg hover:scale-[1.02] transition-all duration-300 overflow-hidden group"
-                  >
-                    <div className="relative">
-                      <div className={`absolute top-0 right-0 z-10 ${
-                        subject.popularity === "Most Popular" ? "bg-kidato-orange" :
-                        subject.popularity === "Trending" ? "bg-pink-500" :
-                        subject.popularity === "Essential" ? "bg-amber-500" :
-                        subject.popularity === "Growing" ? "bg-green-500" :
-                        subject.popularity === "Recommended" ? "bg-purple-500" :
-                        subject.popularity === "Important" ? "bg-indigo-500" :
-                        subject.popularity === "New" ? "bg-teal-500" :
-                        "bg-blue-500"
-                      } text-white py-1 px-3 rounded-bl-lg text-xs font-medium`}>
-                        {subject.popularity}
+                <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
+                  {benefits.map((benefit, index) => (
+                    <div key={index} className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-300">
+                      <div className="bg-orange-100 rounded-full w-12 h-12 flex items-center justify-center mb-4">
+                        <benefit.icon className="h-6 w-6 text-kidato-orange" />
                       </div>
-                      <div className={`h-1.5 w-full ${
-                        subject.curriculum === "igcse" ? "bg-indigo-500" :
-                        subject.curriculum === "ib" ? "bg-sky-500" :
-                        subject.curriculum === "american" ? "bg-rose-500" :
-                        subject.curriculum === "british" ? "bg-emerald-500" :
-                        "bg-amber-500"
-                      }`}></div>
+                      <h3 className="text-xl font-semibold text-gray-900 mb-2">{benefit.title}</h3>
+                      <p className="text-gray-600">{benefit.description}</p>
                     </div>
-                    <CardContent className="p-6">
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="flex-1">
-                          <div className="flex items-center">
-                            <div className={`rounded-full p-2 mr-3 ${
-                              subject.curriculum === "igcse" ? "bg-indigo-100 text-indigo-600" :
-                              subject.curriculum === "ib" ? "bg-sky-100 text-sky-600" :
-                              subject.curriculum === "american" ? "bg-rose-100 text-rose-600" :
-                              subject.curriculum === "british" ? "bg-emerald-100 text-emerald-600" :
-                              "bg-amber-100 text-amber-600"
-                            }`}>
-                              <CurriculumIcon className="h-5 w-5" />
-                            </div>
-                            <h3 className="text-xl font-bold text-gray-900">{subject.name}</h3>
-                          </div>
-                          <div className="flex items-center mt-2">
-                            <span className={`text-sm font-medium ${levelClass} flex items-center`}>
-                              {subject.level === "Primary" ? (
-                                <BookOpen className={`h-4 w-4 mr-1 ${levelClass}`} />
-                              ) : (
-                                <GraduationCap className={`h-4 w-4 mr-1 ${levelClass}`} />
-                              )}
-                              {subject.level}
-                            </span>
-                            <span className="mx-2 text-gray-300">•</span>
-                            <span className="text-sm text-gray-600 flex items-center">
-                              <BookText className="h-4 w-4 mr-1 text-gray-500" />
-                              {subjectCount} Subjects
-                            </span>
-                          </div>
-                        </div>
+                  ))}
+                </div>
+              </div>
+            </section>
+
+            <section className="py-16 bg-gray-50">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="text-center mb-12">
+                  <h2 className="text-3xl font-bold text-gray-900">
+                    {howItWorksSection?.type === 'howItWorks' ? howItWorksSection.title : 'How Kidato Works for Your Family'}
+                  </h2>
+                  <p className="mt-4 text-xl text-gray-600 max-w-3xl mx-auto">
+                    {howItWorksSection?.type === 'howItWorks' ? howItWorksSection.subtitle : 'Getting started is simple - we\'ll guide you through every step.'}
+                  </p>
+                </div>
+
+                <div className="grid gap-6 md:grid-cols-3">
+                  {steps.map((step: any, index: number) => (
+                    <div key={index} className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-300 text-center">
+                      <div className="bg-kidato-orange text-white rounded-full w-10 h-10 flex items-center justify-center mx-auto mb-4 font-bold">
+                        {step.step || index + 1}
                       </div>
+                      <h3 className="text-xl font-semibold text-gray-900 mb-2">{step.title}</h3>
+                      <p className="text-gray-600">{step.description}</p>
+                    </div>
+                  ))}
+                </div>
 
-                      <p className="text-sm text-gray-600 mb-6">{subject.description}</p>
+                <div className="text-center mt-12">
+                  <Button size="lg" className="bg-kidato-orange hover:bg-orange-600 text-white">
+                    <Link to="/parent-signup">Get Started Today</Link>
+                  </Button>
+                </div>
+              </div>
+            </section>
 
-                      <div className="mt-2 flex flex-col space-y-2">
-                        <div className="flex items-center text-sm text-gray-600">
-                          <Check className="h-4 w-4 text-green-500 mr-2" />
-                          <span>Curriculum-aligned content</span>
-                        </div>
-                        <div className="flex items-center text-sm text-gray-600">
-                          <Check className="h-4 w-4 text-green-500 mr-2" />
-                          <span>Regular assessments</span>
-                        </div>
-                        <div className="flex items-center text-sm text-gray-600">
-                          <Check className="h-4 w-4 text-green-500 mr-2" />
-                          <span>Learning materials included</span>
-                        </div>
-                      </div>
+            <section className="py-16 bg-white">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="text-center mb-12">
+                  <h2 className="text-3xl font-bold text-gray-900">
+                    {packagesSection?.type === 'contentCards' ? packagesSection.title : 'Popular Learning Packages'}
+                  </h2>
+                  <p className="mt-4 text-xl text-gray-600 max-w-3xl mx-auto">
+                    {packagesSection?.type === 'contentCards' ? packagesSection.subtitle : 'Find the perfect full home learning package for your child based on their curriculum and grade level.'}
+                  </p>
+                </div>
 
-                      <Button
-                        className="w-full mt-6 bg-white border-2 border-kidato-orange text-kidato-orange hover:bg-orange-50 group-hover:bg-kidato-orange group-hover:text-white transition-colors"
-                        onClick={() => openPackageDetails(packageDetailsData[subject.id] || {
-                          id: subject.id,
-                          name: subject.name,
-                          curriculum: subject.curriculum,
-                          grade: subject.grade,
-                          subjects: ["Mathematics", "English", "Science", "Social Studies", "Arts"],
-                          hasCheckpoint: subject.grade === "6" || subject.grade === "9" || subject.grade === "3",
-                          developmentTips: [
-                            "Establish consistent homework routines",
-                            "Encourage reading for at least 30 minutes daily",
-                            "Practice concepts through real-world applications",
-                            "Balance screen time with physical activities",
-                            "Maintain regular communication with teachers"
-                          ],
-                          description: `Complete package for ${subject.curriculum.toUpperCase()} curriculum Grade ${subject.grade}`
-                        })}
+                <CurriculumGradeFilter onFilterChange={handleFilterChange} />
+
+                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                  {getFilteredPackages().map((subject, index) => {
+                    const CurriculumIcon = getCurriculumIcon(subject.curriculum);
+                    const subjectCount = getSubjectCount(subject.id);
+                    const levelClass = getLevelColor(subject.level);
+
+                    return (
+                      <Card
+                        key={index}
+                        className="border border-gray-200 hover:shadow-lg hover:scale-[1.02] transition-all duration-300 overflow-hidden group"
                       >
-                        <span>View Details</span>
-                      </Button>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-          </div>
-        </section>
+                        <div className="relative">
+                          <div className={`absolute top-0 right-0 z-10 ${
+                            subject.popularity === "Most Popular" ? "bg-kidato-orange" :
+                            subject.popularity === "Trending" ? "bg-pink-500" :
+                            subject.popularity === "Essential" ? "bg-amber-500" :
+                            subject.popularity === "Growing" ? "bg-green-500" :
+                            subject.popularity === "Recommended" ? "bg-purple-500" :
+                            subject.popularity === "Important" ? "bg-indigo-500" :
+                            subject.popularity === "New" ? "bg-teal-500" :
+                            "bg-blue-500"
+                          } text-white py-1 px-3 rounded-bl-lg text-xs font-medium`}>
+                            {subject.popularity}
+                          </div>
+                          <div className={`h-1.5 w-full ${
+                            subject.curriculum === "igcse" ? "bg-indigo-500" :
+                            subject.curriculum === "ib" ? "bg-sky-500" :
+                            subject.curriculum === "american" ? "bg-rose-500" :
+                            subject.curriculum === "british" ? "bg-emerald-500" :
+                            "bg-amber-500"
+                          }`}></div>
+                        </div>
+                        <CardContent className="p-6">
+                          <div className="flex items-start justify-between mb-4">
+                            <div className="flex-1">
+                              <div className="flex items-center">
+                                <div className={`rounded-full p-2 mr-3 ${
+                                  subject.curriculum === "igcse" ? "bg-indigo-100 text-indigo-600" :
+                                  subject.curriculum === "ib" ? "bg-sky-100 text-sky-600" :
+                                  subject.curriculum === "american" ? "bg-rose-100 text-rose-600" :
+                                  subject.curriculum === "british" ? "bg-emerald-100 text-emerald-600" :
+                                  "bg-amber-100 text-amber-600"
+                                }`}>
+                                  <CurriculumIcon className="h-5 w-5" />
+                                </div>
+                                <h3 className="text-xl font-bold text-gray-900">{subject.name}</h3>
+                              </div>
+                              <div className="flex items-center mt-2">
+                                <span className={`text-sm font-medium ${levelClass} flex items-center`}>
+                                  {subject.level === "Primary" ? (
+                                    <BookOpen className={`h-4 w-4 mr-1 ${levelClass}`} />
+                                  ) : (
+                                    <GraduationCap className={`h-4 w-4 mr-1 ${levelClass}`} />
+                                  )}
+                                  {subject.level}
+                                </span>
+                                <span className="mx-2 text-gray-300">•</span>
+                                <span className="text-sm text-gray-600 flex items-center">
+                                  <BookText className="h-4 w-4 mr-1 text-gray-500" />
+                                  {subjectCount} Subjects
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+
+                          <p className="text-sm text-gray-600 mb-6">{subject.description}</p>
+
+                          <div className="mt-2 flex flex-col space-y-2">
+                            <div className="flex items-center text-sm text-gray-600">
+                              <Check className="h-4 w-4 text-green-500 mr-2" />
+                              <span>Curriculum-aligned content</span>
+                            </div>
+                            <div className="flex items-center text-sm text-gray-600">
+                              <Check className="h-4 w-4 text-green-500 mr-2" />
+                              <span>Regular assessments</span>
+                            </div>
+                            <div className="flex items-center text-sm text-gray-600">
+                              <Check className="h-4 w-4 text-green-500 mr-2" />
+                              <span>Learning materials included</span>
+                            </div>
+                          </div>
+
+                          <Button
+                            className="w-full mt-6 bg-white border-2 border-kidato-orange text-kidato-orange hover:bg-orange-50 group-hover:bg-kidato-orange group-hover:text-white transition-colors"
+                            onClick={() => openPackageDetails(packageDetailsData[subject.id] || {
+                              id: subject.id,
+                              name: subject.name,
+                              curriculum: subject.curriculum,
+                              grade: subject.grade,
+                              subjects: ["Mathematics", "English", "Science", "Social Studies", "Arts"],
+                              hasCheckpoint: subject.grade === "6" || subject.grade === "9" || subject.grade === "3",
+                              developmentTips: [
+                                "Establish consistent homework routines",
+                                "Encourage reading for at least 30 minutes daily",
+                                "Practice concepts through real-world applications",
+                                "Balance screen time with physical activities",
+                                "Maintain regular communication with teachers"
+                              ],
+                              description: `Complete package for ${subject.curriculum.toUpperCase()} curriculum Grade ${subject.grade}`
+                            })}
+                          >
+                            <span>View Details</span>
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              </div>
+            </section>
 
         <section className="py-16 bg-kidato-light-blue">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -514,4 +514,4 @@ const ForParents = () => {
   );
 };
 
-export default ForParents; 
+export default ForParents;
