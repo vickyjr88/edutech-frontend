@@ -1,53 +1,80 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TrendingUp, Users, BookOpen, MessageCircle } from "lucide-react";
+import { BlogStats as BlogStatsType } from "@/types/blog";
+import { blogApiService } from "@/services/blogApi";
 
 const BlogStats = () => {
-  const stats = [
+  const [stats, setStats] = useState<BlogStatsType | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadStats = async () => {
+      try {
+        const statsData = await blogApiService.getStats();
+        setStats(statsData);
+      } catch (error) {
+        console.error('Failed to load blog stats:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadStats();
+  }, []);
+
+  if (loading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Blog Statistics</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="animate-pulse space-y-4">
+            {[...Array(4)].map((_, index) => (
+              <div key={index} className="flex items-center space-x-3">
+                <div className="w-5 h-5 bg-gray-200 rounded"></div>
+                <div className="flex-1">
+                  <div className="h-4 bg-gray-200 rounded w-3/4 mb-1"></div>
+                  <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const statsData = [
     {
       icon: <BookOpen className="w-5 h-5" />,
       label: "Total Articles",
-      value: "150+",
+      value: stats ? `${stats.totalPosts}+` : "0",
       color: "text-blue-600"
     },
     {
       icon: <Users className="w-5 h-5" />,
-      label: "Monthly Readers",
-      value: "50K+",
+      label: "Total Views",
+      value: stats ? `${Math.floor(stats.totalViews / 1000)}K+` : "0",
       color: "text-green-600"
     },
     {
       icon: <MessageCircle className="w-5 h-5" />,
       label: "Comments",
-      value: "2.5K+",
+      value: stats ? `${Math.floor(stats.totalComments / 1000)}K+` : "0",
       color: "text-purple-600"
     },
     {
       icon: <TrendingUp className="w-5 h-5" />,
-      label: "Growth Rate",
-      value: "25%",
+      label: "Subscribers",
+      value: stats ? `${Math.floor(stats.totalSubscribers / 1000)}K+` : "0",
       color: "text-orange-600"
     }
   ];
 
-  const popularCategories = [
-    { name: "Parenting", count: 45, color: "#3B82F6" },
-    { name: "Education", count: 38, color: "#10B981" },
-    { name: "Teachers", count: 32, color: "#F59E0B" },
-    { name: "Technology", count: 28, color: "#8B5CF6" },
-    { name: "Success Stories", count: 22, color: "#EF4444" }
-  ];
-
-  const recentTags = [
-    "online learning",
-    "parenting tips",
-    "education technology",
-    "teacher resources",
-    "student success",
-    "african education",
-    "digital learning",
-    "curriculum"
-  ];
+  const popularCategories = stats?.topCategories || [];
+  const recentTags = stats?.topTags || [];
 
   return (
     <div className="space-y-6">
@@ -57,7 +84,7 @@ const BlogStats = () => {
           <CardTitle className="text-lg">Blog Statistics</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          {stats.map((stat, index) => (
+          {statsData.map((stat, index) => (
             <div key={index} className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
                 <div className={`${stat.color}`}>
@@ -85,12 +112,12 @@ const BlogStats = () => {
                 <div className="flex items-center space-x-3">
                   <div 
                     className="w-3 h-3 rounded-full"
-                    style={{ backgroundColor: category.color }}
+                    style={{ backgroundColor: category.color || '#3B82F6' }}
                   ></div>
                   <span className="text-sm text-gray-600">{category.name}</span>
                 </div>
                 <span className="text-sm font-medium text-gray-900">
-                  {category.count}
+                  {category.postCount}
                 </span>
               </div>
             ))}
@@ -110,7 +137,7 @@ const BlogStats = () => {
                 key={index}
                 className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded-full hover:bg-gray-200 cursor-pointer transition-colors"
               >
-                #{tag}
+                #{tag.tag} ({tag.count})
               </span>
             ))}
           </div>

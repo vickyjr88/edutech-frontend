@@ -1,11 +1,12 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Search, Filter, X } from "lucide-react";
-import { BlogFilters as BlogFiltersType } from "@/types/blog";
+import { BlogFilters as BlogFiltersType, BlogCategory } from "@/types/blog";
+import { blogApiService } from "@/services/blogApi";
 
 interface BlogFiltersProps {
   filters: BlogFiltersType;
@@ -13,25 +14,31 @@ interface BlogFiltersProps {
 }
 
 const BlogFilters: React.FC<BlogFiltersProps> = ({ filters, onFiltersChange }) => {
-  const categories = [
-    { id: "all", name: "All Categories", slug: "all" },
-    { id: "parenting", name: "Parenting", slug: "parenting" },
-    { id: "education", name: "Education", slug: "education" },
-    { id: "teachers", name: "Teachers", slug: "teachers" },
-    { id: "technology", name: "Technology", slug: "technology" },
-    { id: "success-stories", name: "Success Stories", slug: "success-stories" }
-  ];
+  const [categories, setCategories] = useState<BlogCategory[]>([]);
+  const [popularTags, setPopularTags] = useState<Array<{ tag: string; count: number }>>([]);
+  const [loadingFilters, setLoadingFilters] = useState(true);
 
-  const popularTags = [
-    "online learning",
-    "parenting tips",
-    "education technology",
-    "teacher resources",
-    "student success",
-    "african education",
-    "digital learning",
-    "curriculum"
-  ];
+  useEffect(() => {
+    let isMounted = true;
+    const loadFilters = async () => {
+      try {
+        setLoadingFilters(true);
+        const [cats, stats] = await Promise.all([
+          blogApiService.getCategories(),
+          blogApiService.getStats(),
+        ]);
+        if (!isMounted) return;
+        setCategories(cats || []);
+        setPopularTags(stats?.topTags || []);
+      } catch (e) {
+        console.error('Failed to load blog filters:', e);
+      } finally {
+        if (isMounted) setLoadingFilters(false);
+      }
+    };
+    loadFilters();
+    return () => { isMounted = false; };
+  }, []);
 
   const sortOptions = [
     { value: "publishedAt", label: "Latest" },
@@ -119,9 +126,19 @@ const BlogFilters: React.FC<BlogFiltersProps> = ({ filters, onFiltersChange }) =
           <div>
             <h3 className="text-sm font-semibold text-gray-900 mb-3">Categories</h3>
             <div className="flex flex-wrap gap-2">
-              {categories.map((category) => (
+              {/* "All" option */}
+              <Button
+                key="all"
+                variant={filters.category ? "outline" : "default"}
+                size="sm"
+                onClick={() => handleCategoryChange("all")}
+                className="text-sm"
+              >
+                All Categories
+              </Button>
+              {(categories || []).map((category) => (
                 <Button
-                  key={category.id}
+                  key={category.slug || (category as any).id || category.name}
                   variant={filters.category === category.slug ? "default" : "outline"}
                   size="sm"
                   onClick={() => handleCategoryChange(category.slug)}
@@ -130,6 +147,9 @@ const BlogFilters: React.FC<BlogFiltersProps> = ({ filters, onFiltersChange }) =
                   {category.name}
                 </Button>
               ))}
+              {loadingFilters && (
+                <span className="text-xs text-gray-500">Loading...</span>
+              )}
             </div>
           </div>
 
@@ -137,16 +157,19 @@ const BlogFilters: React.FC<BlogFiltersProps> = ({ filters, onFiltersChange }) =
           <div>
             <h3 className="text-sm font-semibold text-gray-900 mb-3">Popular Tags</h3>
             <div className="flex flex-wrap gap-2">
-              {popularTags.map((tag) => (
+              {(popularTags || []).map((tag) => (
                 <Badge
-                  key={tag}
-                  variant={filters.tag === tag ? "default" : "secondary"}
+                  key={tag.tag}
+                  variant={filters.tag === tag.tag ? "default" : "secondary"}
                   className="cursor-pointer hover:bg-blue-100"
-                  onClick={() => handleTagClick(tag)}
+                  onClick={() => handleTagClick(tag.tag)}
                 >
-                  {tag}
+                  {tag.tag} ({tag.count})
                 </Badge>
               ))}
+              {loadingFilters && (
+                <span className="text-xs text-gray-500">Loading...</span>
+              )}
             </div>
           </div>
 

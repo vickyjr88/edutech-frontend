@@ -13,7 +13,9 @@ interface BlogPostSidebarProps {
 }
 
 const BlogPostSidebar: React.FC<BlogPostSidebarProps> = ({ post, relatedPosts }) => {
-  const formatDate = (date: Date) => {
+  const formatDate = (dateLike: Date | string | number | null | undefined) => {
+    const date = dateLike instanceof Date ? dateLike : new Date(dateLike as any);
+    if (isNaN(date.getTime())) return '—';
     return new Intl.DateTimeFormat('en-US', {
       month: 'short',
       day: 'numeric',
@@ -138,12 +140,12 @@ const BlogPostSidebar: React.FC<BlogPostSidebarProps> = ({ post, relatedPosts })
         <CardContent>
           <div className="space-y-2">
             {post.categories.map((category) => (
-              <Link key={category.id} to={`/blog?category=${category.slug}`}>
+              <Link key={(category as any).id || category.slug || category.name} to={`/blog?category=${category.slug}`}>
                 <div className="flex items-center justify-between p-2 rounded hover:bg-gray-50 transition-colors">
                   <div className="flex items-center space-x-2">
                     <div 
                       className="w-3 h-3 rounded-full"
-                      style={{ backgroundColor: category.color }}
+                      style={{ backgroundColor: category.color || undefined }}
                     ></div>
                     <span className="text-sm text-gray-700">{category.name}</span>
                   </div>
@@ -182,7 +184,7 @@ const BlogPostSidebar: React.FC<BlogPostSidebarProps> = ({ post, relatedPosts })
           <CardContent>
             <div className="space-y-4">
               {relatedPosts.map((relatedPost) => (
-                <Link key={relatedPost.id} to={`/blog/${relatedPost.slug}`}>
+                <Link key={(relatedPost as any).id || (relatedPost as any)._id || relatedPost.slug} to={`/blog/${relatedPost.slug}`}>
                   <div className="group">
                     <div className="flex space-x-3">
                       {relatedPost.featuredImage && (

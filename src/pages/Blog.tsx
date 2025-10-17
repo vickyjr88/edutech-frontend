@@ -6,11 +6,13 @@ import { BlogFilters } from "@/components/blog/BlogFilters";
 import { BlogPostGrid } from "@/components/blog/BlogPostGrid";
 import { BlogNewsletter } from "@/components/blog/BlogNewsletter";
 import { BlogStats } from "@/components/blog/BlogStats";
-import { BlogPost, BlogFilters as BlogFiltersType } from "@/types/blog";
+import { BlogPost, BlogFilters as BlogFiltersType, BlogListResponse } from "@/types/blog";
+import { blogApiService } from "@/services/blogApi";
 
 const Blog = () => {
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [filters, setFilters] = useState<BlogFiltersType>({
     status: 'published',
     sortBy: 'publishedAt',
@@ -20,7 +22,27 @@ const Blog = () => {
   });
   const [totalPages, setTotalPages] = useState(1);
 
-  // Mock data for demonstration
+  // Load blog posts from API
+  const loadPosts = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response: BlogListResponse = await blogApiService.getPosts(filters);
+      setPosts(response.posts);
+      setTotalPages(response.totalPages);
+    } catch (err) {
+      console.error('Failed to load blog posts:', err);
+      setError(err instanceof Error ? err.message : 'Failed to load blog posts');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadPosts();
+  }, [filters]);
+
+  // Mock data for demonstration (fallback)
   const mockPosts: BlogPost[] = [
     {
       id: "1",
@@ -154,24 +176,6 @@ const Blog = () => {
     }
   ];
 
-  useEffect(() => {
-    // Simulate API call
-    const loadPosts = async () => {
-      setLoading(true);
-      try {
-        // In a real app, this would be an API call
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        setPosts(mockPosts);
-        setTotalPages(1);
-      } catch (error) {
-        console.error('Error loading posts:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadPosts();
-  }, [filters]);
 
   const handleFiltersChange = (newFilters: Partial<BlogFiltersType>) => {
     setFilters(prev => ({ ...prev, ...newFilters }));
@@ -195,6 +199,7 @@ const Blog = () => {
               <BlogPostGrid 
                 posts={posts} 
                 loading={loading}
+                error={error}
                 totalPages={totalPages}
                 currentPage={filters.page || 1}
                 onPageChange={(page) => handleFiltersChange({ page })}

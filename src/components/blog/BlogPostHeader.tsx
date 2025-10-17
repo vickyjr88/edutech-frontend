@@ -11,7 +11,9 @@ interface BlogPostHeaderProps {
 }
 
 const BlogPostHeader: React.FC<BlogPostHeaderProps> = ({ post }) => {
-  const formatDate = (date: Date) => {
+  const formatDate = (dateLike: Date | string | number | null | undefined) => {
+    const date = dateLike instanceof Date ? dateLike : new Date(dateLike as any);
+    if (isNaN(date.getTime())) return '—';
     return new Intl.DateTimeFormat('en-US', {
       year: 'numeric',
       month: 'long',
@@ -66,11 +68,11 @@ const BlogPostHeader: React.FC<BlogPostHeaderProps> = ({ post }) => {
         {/* Categories */}
         <div className="flex flex-wrap gap-2 mb-4">
           {post.categories.map((category) => (
-            <Link key={category.id} to={`/blog?category=${category.slug}`}>
+            <Link key={(category as any).id || category.slug || category.name} to={`/blog?category=${category.slug}`}>
               <Badge
                 variant="secondary"
                 className="hover:bg-blue-100 transition-colors"
-                style={{ backgroundColor: category.color + '20', color: category.color }}
+                style={{ backgroundColor: (category.color ? category.color + '20' : undefined), color: category.color || undefined }}
               >
                 {category.name}
               </Badge>

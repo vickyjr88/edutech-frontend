@@ -10,6 +10,7 @@ import { BlogPost } from "@/types/blog";
 interface BlogPostGridProps {
   posts: BlogPost[];
   loading: boolean;
+  error?: string | null;
   totalPages: number;
   currentPage: number;
   onPageChange: (page: number) => void;
@@ -18,11 +19,14 @@ interface BlogPostGridProps {
 const BlogPostGrid: React.FC<BlogPostGridProps> = ({
   posts,
   loading,
+  error,
   totalPages,
   currentPage,
   onPageChange
 }) => {
-  const formatDate = (date: Date) => {
+  const formatDate = (dateLike: Date | string | number | null | undefined) => {
+    const date = dateLike instanceof Date ? dateLike : new Date(dateLike as any);
+    if (isNaN(date.getTime())) return '—';
     return new Intl.DateTimeFormat('en-US', {
       year: 'numeric',
       month: 'long',
@@ -60,6 +64,23 @@ const BlogPostGrid: React.FC<BlogPostGridProps> = ({
     );
   }
 
+  if (error) {
+    return (
+      <div className="text-center py-12">
+        <div className="text-red-400 mb-4">
+          <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+          </svg>
+        </div>
+        <h3 className="text-lg font-semibold text-gray-900 mb-2">Error loading articles</h3>
+        <p className="text-gray-600 mb-4">{error}</p>
+        <Button variant="outline" onClick={() => window.location.reload()}>
+          Try Again
+        </Button>
+      </div>
+    );
+  }
+
   if (posts.length === 0) {
     return (
       <div className="text-center py-12">
@@ -82,7 +103,7 @@ const BlogPostGrid: React.FC<BlogPostGridProps> = ({
       {/* Posts Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {posts.map((post) => (
-          <Card key={post.id} className="overflow-hidden hover:shadow-lg transition-shadow duration-300">
+          <Card key={(post as any).id || (post as any)._id || post.slug} className="overflow-hidden hover:shadow-lg transition-shadow duration-300">
             {post.featuredImage && (
               <div className="aspect-video overflow-hidden">
                 <img
@@ -99,10 +120,10 @@ const BlogPostGrid: React.FC<BlogPostGridProps> = ({
                 <div className="flex flex-wrap gap-2">
                   {post.categories.slice(0, 2).map((category) => (
                     <Badge
-                      key={category.id}
+                      key={(category as any).id || category.slug || category.name}
                       variant="secondary"
                       className="text-xs"
-                      style={{ backgroundColor: category.color + '20', color: category.color }}
+                      style={{ backgroundColor: (category.color ? category.color + '20' : undefined), color: category.color || undefined }}
                     >
                       {category.name}
                     </Badge>

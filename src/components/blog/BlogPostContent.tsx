@@ -19,11 +19,11 @@ const BlogPostContent: React.FC<BlogPostContentProps> = ({ post }) => {
         <div className="mt-8 pt-8 border-t border-gray-200">
           <div className="flex items-center justify-between">
             <div className="text-sm text-gray-500">
-              Last updated: {new Intl.DateTimeFormat('en-US', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-              }).format(post.updatedAt)}
+              Last updated: {(() => {
+                const d = post.updatedAt instanceof Date ? post.updatedAt : new Date(post.updatedAt as any);
+                if (isNaN(d.getTime())) return '—';
+                return new Intl.DateTimeFormat('en-US', { year: 'numeric', month: 'long', day: 'numeric' }).format(d);
+              })()}
             </div>
             
             <div className="flex items-center space-x-4 text-sm text-gray-500">
