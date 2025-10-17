@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import {
   FileText,
   Plus,
-  Settings,
   LogOut,
   Menu,
   X,
@@ -91,15 +90,7 @@ const AdminDashboard = () => {
         </nav>
 
         {/* Sidebar Footer */}
-        <div className="p-4 border-t space-y-2">
-          <Button
-            variant="ghost"
-            className="w-full justify-start"
-            onClick={() => navigate("/admin/settings")}
-          >
-            <Settings className="h-5 w-5 mr-3" />
-            Settings
-          </Button>
+        <div className="p-4 border-t">
           <Button
             variant="ghost"
             className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50"
