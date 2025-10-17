@@ -23,7 +23,9 @@ const Login = () => {
     const checkUserRedirect = async () => {
       if (user) {
         const userRole = user?.role;
-        if (userRole === "teacher" && user.id) {
+        if (userRole === "admin") {
+          navigate("/admin/pages");
+        } else if (userRole === "teacher" && user.id) {
           try {
             // Check if the teacher profile is complete
             const isProfileComplete = await teacherService.isProfileComplete(user.id);

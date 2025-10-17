@@ -16,13 +16,13 @@ import {
  * Provides navigation and layout for all admin CMS pages
  */
 const AdminDashboard = () => {
-  const { user, logout } = useAuth();
+  const { user, signOut } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await signOut();
     navigate("/login");
   };
 

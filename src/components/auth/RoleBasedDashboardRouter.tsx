@@ -28,6 +28,10 @@ export const RoleBasedDashboardRouter: React.FC = () => {
     const role = user.role?.toLowerCase();
 
     switch (role) {
+      case 'admin':
+        navigate('/admin/pages', { replace: true });
+        break;
+
       case 'teacher':
         // Check if teacher needs to complete profile setup
         if (!user.teacherId) {
