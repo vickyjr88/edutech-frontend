@@ -7,8 +7,10 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Save, Eye, ArrowLeft } from "lucide-react";
+import SectionEditor from "@/components/admin/SectionEditor";
 
 /**
  * Page Editor Component
@@ -29,7 +31,7 @@ const PageEditor = () => {
   const [description, setDescription] = useState("");
   const [keywords, setKeywords] = useState("");
   const [pageSlug, setPageSlug] = useState("");
-  const [sectionsJson, setSectionsJson] = useState("[]");
+  const [sections, setSections] = useState<any[]>([]);
   const [changeLog, setChangeLog] = useState("");
 
   // Load page if editing
@@ -50,7 +52,7 @@ const PageEditor = () => {
       setDescription(pageData.metadata.description);
       setKeywords(pageData.metadata.keywords.join(", "));
       setPageSlug(pageData.slug);
-      setSectionsJson(JSON.stringify(pageData.sections, null, 2));
+      setSections(pageData.sections || []);
     } catch (error: any) {
       toast({
         title: "Error loading page",
@@ -63,28 +65,8 @@ const PageEditor = () => {
     }
   };
 
-  // Validate sections JSON
-  const validateSections = (): any[] | null => {
-    try {
-      const parsed = JSON.parse(sectionsJson);
-      if (!Array.isArray(parsed)) {
-        throw new Error("Sections must be an array");
-      }
-      return parsed;
-    } catch (error: any) {
-      toast({
-        title: "Invalid JSON",
-        description: error.message || "Sections must be valid JSON array",
-        variant: "destructive",
-      });
-      return null;
-    }
-  };
-
   // Save as draft
   const handleSaveDraft = async () => {
-    const sections = validateSections();
-    if (!sections) return;
 
     if (!isEditMode && !pageSlug) {
       toast({
@@ -139,8 +121,6 @@ const PageEditor = () => {
 
   // Save and publish
   const handleSaveAndPublish = async () => {
-    const sections = validateSections();
-    if (!sections) return;
 
     if (!isEditMode && !pageSlug) {
       toast({
@@ -316,20 +296,40 @@ const PageEditor = () => {
         <CardHeader>
           <CardTitle>Page Sections</CardTitle>
           <CardDescription>
-            Define the content sections as JSON array
+            Add and manage content sections for this page
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Textarea
-            value={sectionsJson}
-            onChange={(e) => setSectionsJson(e.target.value)}
-            placeholder='[{"type": "hero", "title": "Welcome"}]'
-            rows={15}
-            className="font-mono text-sm"
-          />
-          <p className="text-sm text-gray-500 mt-2">
-            JSON array of section objects. Each section should have a "type" field.
-          </p>
+          <Tabs defaultValue="visual">
+            <TabsList>
+              <TabsTrigger value="visual">Visual Editor</TabsTrigger>
+              <TabsTrigger value="json">JSON Editor</TabsTrigger>
+            </TabsList>
+            <TabsContent value="visual" className="mt-4">
+              <SectionEditor sections={sections} onChange={setSections} />
+            </TabsContent>
+            <TabsContent value="json" className="mt-4">
+              <Textarea
+                value={JSON.stringify(sections, null, 2)}
+                onChange={(e) => {
+                  try {
+                    const parsed = JSON.parse(e.target.value);
+                    if (Array.isArray(parsed)) {
+                      setSections(parsed);
+                    }
+                  } catch {
+                    // Invalid JSON, don't update
+                  }
+                }}
+                placeholder='[{"type": "hero", "title": "Welcome"}]'
+                rows={15}
+                className="font-mono text-sm"
+              />
+              <p className="text-sm text-gray-500 mt-2">
+                JSON array of section objects. Each section should have a "type" field.
+              </p>
+            </TabsContent>
+          </Tabs>
         </CardContent>
       </Card>
 

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import type { PageContent } from '@/content/types';
+import { cmsApiService } from '@/services/cms-api.service';
 
 interface UseContentResult<T = PageContent> {
   content: T | null;
@@ -11,7 +12,42 @@ interface UseContentResult<T = PageContent> {
 const contentCache = new Map<string, any>();
 
 /**
- * Custom hook for loading content from JSON files
+ * Helper function to load content from local JSON files
+ */
+async function loadLocalContent(contentPath: string): Promise<any> {
+  if (contentPath === 'pages/index.json') {
+    const module = await import('../content/pages/index.json');
+    return module.default || module;
+  } else if (contentPath === 'pages/for-parents.json') {
+    const module = await import('../content/pages/for-parents.json');
+    return module.default || module;
+  } else if (contentPath === 'pages/for-students.json') {
+    const module = await import('../content/pages/for-students.json');
+    return module.default || module;
+  } else if (contentPath === 'pages/for-teachers.json') {
+    const module = await import('../content/pages/for-teachers.json');
+    return module.default || module;
+  } else if (contentPath === 'pages/teachers-pricing.json') {
+    const module = await import('../content/pages/teachers-pricing.json');
+    return module.default || module;
+  } else if (contentPath === 'pages/privacy-policy.json') {
+    const module = await import('../content/pages/privacy-policy.json');
+    return module.default || module;
+  } else if (contentPath === 'pages/terms-and-conditions.json') {
+    const module = await import('../content/pages/terms-and-conditions.json');
+    return module.default || module;
+  } else {
+    // Fallback: try to fetch as a static asset
+    const response = await fetch(`/src/content/${contentPath}`);
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+    return await response.json();
+  }
+}
+
+/**
+ * Custom hook for loading content from CMS API or JSON files (fallback)
  *
  * @param contentPath - The path to the content file relative to /src/content/
  *                      Example: 'pages/index.json' or 'shared/navigation.json'
@@ -50,40 +86,27 @@ export function useContent<T = PageContent>(contentPath: string): UseContentResu
         setLoading(true);
         setError(null);
 
-        // Dynamically import the JSON file
-        // Vite requires the file extension in the static part
-        // We'll use a switch/map for known paths or fetch for dynamic paths
+        // Extract slug from path (e.g., 'pages/index.json' -> 'index')
+        const slug = contentPath.replace('pages/', '').replace('.json', '');
+
         let data;
 
-        // For now, use a simple approach with known paths
-        if (contentPath === 'pages/index.json') {
-          const module = await import('../content/pages/index.json');
-          data = module.default || module;
-        } else if (contentPath === 'pages/for-parents.json') {
-          const module = await import('../content/pages/for-parents.json');
-          data = module.default || module;
-        } else if (contentPath === 'pages/for-students.json') {
-          const module = await import('../content/pages/for-students.json');
-          data = module.default || module;
-        } else if (contentPath === 'pages/for-teachers.json') {
-          const module = await import('../content/pages/for-teachers.json');
-          data = module.default || module;
-        } else if (contentPath === 'pages/teachers-pricing.json') {
-          const module = await import('../content/pages/teachers-pricing.json');
-          data = module.default || module;
-        } else if (contentPath === 'pages/privacy-policy.json') {
-          const module = await import('../content/pages/privacy-policy.json');
-          data = module.default || module;
-        } else if (contentPath === 'pages/terms-and-conditions.json') {
-          const module = await import('../content/pages/terms-and-conditions.json');
-          data = module.default || module;
-        } else {
-          // Fallback: try to fetch as a static asset
-          const response = await fetch(`/src/content/${contentPath}`);
-          if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-          }
-          data = await response.json();
+        // Try to fetch from CMS API first
+        try {
+          const pageData = await cmsApiService.getPage(slug);
+          // Transform API response to match expected PageContent structure
+          data = {
+            metadata: pageData.metadata,
+            sections: pageData.sections,
+            ...pageData.additionalFields,
+          };
+          console.log(`✅ Loaded content for ${slug} from CMS API`);
+        } catch (apiError) {
+          console.warn(`CMS API unavailable for ${slug}, falling back to local JSON:`, apiError);
+
+          // Fallback to local JSON files
+          data = await loadLocalContent(contentPath);
+          console.log(`✅ Loaded content for ${slug} from local JSON`);
         }
 
         // Cache the loaded content
@@ -153,35 +176,20 @@ export async function preloadContent(contentPath: string): Promise<void> {
   }
 
   try {
+    const slug = contentPath.replace('pages/', '').replace('.json', '');
     let data;
 
-    if (contentPath === 'pages/index.json') {
-      const module = await import('../content/pages/index.json');
-      data = module.default || module;
-    } else if (contentPath === 'pages/for-parents.json') {
-      const module = await import('../content/pages/for-parents.json');
-      data = module.default || module;
-    } else if (contentPath === 'pages/for-students.json') {
-      const module = await import('../content/pages/for-students.json');
-      data = module.default || module;
-    } else if (contentPath === 'pages/for-teachers.json') {
-      const module = await import('../content/pages/for-teachers.json');
-      data = module.default || module;
-    } else if (contentPath === 'pages/teachers-pricing.json') {
-      const module = await import('../content/pages/teachers-pricing.json');
-      data = module.default || module;
-    } else if (contentPath === 'pages/privacy-policy.json') {
-      const module = await import('../content/pages/privacy-policy.json');
-      data = module.default || module;
-    } else if (contentPath === 'pages/terms-and-conditions.json') {
-      const module = await import('../content/pages/terms-and-conditions.json');
-      data = module.default || module;
-    } else {
-      const response = await fetch(`/src/content/${contentPath}`);
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-      data = await response.json();
+    // Try CMS API first
+    try {
+      const pageData = await cmsApiService.getPage(slug);
+      data = {
+        metadata: pageData.metadata,
+        sections: pageData.sections,
+        ...pageData.additionalFields,
+      };
+    } catch {
+      // Fallback to local JSON
+      data = await loadLocalContent(contentPath);
     }
 
     contentCache.set(contentPath, data);
