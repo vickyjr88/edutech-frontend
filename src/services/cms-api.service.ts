@@ -234,10 +234,19 @@ class CMSApiService {
   }
 
   /**
-   * Archive a page
+   * Archive a page (soft delete)
    */
   async archivePage(slug: string): Promise<void> {
     await api.delete(`${this.baseUrl}/${slug}`, {
+      headers: this.getAuthHeaders(),
+    });
+  }
+
+  /**
+   * Permanently delete a page (hard delete - IRREVERSIBLE)
+   */
+  async deletePage(slug: string): Promise<void> {
+    await api.delete(`${this.baseUrl}/${slug}/permanent`, {
       headers: this.getAuthHeaders(),
     });
   }

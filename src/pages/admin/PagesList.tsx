@@ -36,6 +36,7 @@ import {
   Copy,
   Loader2,
   Search,
+  Trash2,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { formatDistanceToNow } from "date-fns";
@@ -180,6 +181,36 @@ const PagesList = () => {
       toast({
         title: "Error duplicating page",
         description: error.message || "Failed to duplicate page",
+        variant: "destructive",
+      });
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  // Delete page permanently
+  const handleDelete = async (slug: string, title: string) => {
+    if (!confirm(`Are you sure you want to PERMANENTLY DELETE "${title}"?\n\nThis action CANNOT be undone. All versions and history will be lost.`)) {
+      return;
+    }
+
+    // Double confirmation for safety
+    if (!confirm("This is your final warning. Type 'DELETE' to confirm.") && prompt("Type 'DELETE' to confirm:") !== "DELETE") {
+      return;
+    }
+
+    try {
+      setActionLoading(slug);
+      await cmsApiService.deletePage(slug);
+      toast({
+        title: "Page deleted",
+        description: "The page has been permanently deleted",
+      });
+      loadPages();
+    } catch (error: any) {
+      toast({
+        title: "Error deleting page",
+        description: error.message || "Failed to delete page",
         variant: "destructive",
       });
     } finally {
@@ -350,10 +381,17 @@ const PagesList = () => {
                         )}
                         <DropdownMenuItem
                           onClick={() => handleArchive(page.slug)}
-                          className="text-red-600"
+                          className="text-orange-600"
                         >
                           <Archive className="h-4 w-4 mr-2" />
                           Archive
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => handleDelete(page.slug, page.metadata.title)}
+                          className="text-red-600 font-semibold"
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Delete Permanently
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
