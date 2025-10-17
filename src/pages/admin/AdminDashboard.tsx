@@ -9,6 +9,8 @@ import {
   Menu,
   X,
   Home,
+  List,
+  Share2,
 } from "lucide-react";
 
 /**
@@ -32,6 +34,18 @@ const AdminDashboard = () => {
       href: "/admin/pages",
       icon: FileText,
       current: location.pathname.startsWith("/admin/pages"),
+    },
+    {
+      name: "Menus",
+      href: "/admin/menus",
+      icon: List,
+      current: location.pathname.startsWith("/admin/menus"),
+    },
+    {
+      name: "Social Links",
+      href: "/admin/social-links",
+      icon: Share2,
+      current: location.pathname.startsWith("/admin/social-links"),
     },
   ];
 

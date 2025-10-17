@@ -78,8 +78,74 @@ export interface QueryPagesDto {
   offset?: number;
 }
 
+export interface MenuItem {
+  label: string;
+  href: string;
+  external?: boolean;
+  order: number;
+}
+
+export interface Menu {
+  _id?: string;
+  identifier: string;
+  title: string;
+  items: MenuItem[];
+  order: number;
+  active: boolean;
+  description?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+export interface CreateMenuDto {
+  identifier: string;
+  title: string;
+  items: MenuItem[];
+  order?: number;
+  active?: boolean;
+  description?: string;
+}
+
+export interface UpdateMenuDto {
+  title?: string;
+  items?: MenuItem[];
+  order?: number;
+  active?: boolean;
+  description?: string;
+}
+
+export interface SocialLink {
+  platform: 'facebook' | 'instagram' | 'twitter' | 'linkedin' | 'youtube' | 'tiktok';
+  url: string;
+  icon?: string;
+  order: number;
+  active: boolean;
+}
+
+export interface SocialLinks {
+  _id?: string;
+  identifier: string;
+  links: SocialLink[];
+  description?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+export interface CreateSocialLinksDto {
+  identifier?: string;
+  links: SocialLink[];
+  description?: string;
+}
+
+export interface UpdateSocialLinksDto {
+  links?: SocialLink[];
+  description?: string;
+}
+
 class CMSApiService {
   private baseUrl = '/cms/pages';
+  private menusUrl = '/cms/menus';
+  private socialLinksUrl = '/cms/social-links';
 
   /**
    * Get authentication token from localStorage
@@ -247,6 +313,122 @@ class CMSApiService {
    */
   async deletePage(slug: string): Promise<void> {
     await api.delete(`${this.baseUrl}/${slug}/permanent`, {
+      headers: this.getAuthHeaders(),
+    });
+  }
+
+  // ========== MENUS ==========
+
+  /**
+   * List all menus
+   */
+  async listMenus(activeOnly: boolean = false): Promise<Menu[]> {
+    const params = activeOnly ? '?activeOnly=true' : '';
+    const response = await api.get(`${this.menusUrl}${params}`);
+    return response.data;
+  }
+
+  /**
+   * Get a specific menu by identifier
+   */
+  async getMenu(identifier: string): Promise<Menu> {
+    const response = await api.get(`${this.menusUrl}/${identifier}`);
+    return response.data;
+  }
+
+  /**
+   * Create a new menu
+   */
+  async createMenu(data: CreateMenuDto): Promise<Menu> {
+    const response = await api.post(this.menusUrl, data, {
+      headers: this.getAuthHeaders(),
+    });
+    return response.data;
+  }
+
+  /**
+   * Update a menu
+   */
+  async updateMenu(identifier: string, data: UpdateMenuDto): Promise<Menu> {
+    const response = await api.put(`${this.menusUrl}/${identifier}`, data, {
+      headers: this.getAuthHeaders(),
+    });
+    return response.data;
+  }
+
+  /**
+   * Toggle menu active status
+   */
+  async toggleMenuActive(identifier: string): Promise<Menu> {
+    const response = await api.post(
+      `${this.menusUrl}/${identifier}/toggle`,
+      {},
+      {
+        headers: this.getAuthHeaders(),
+      }
+    );
+    return response.data;
+  }
+
+  /**
+   * Delete a menu
+   */
+  async deleteMenu(identifier: string): Promise<void> {
+    await api.delete(`${this.menusUrl}/${identifier}`, {
+      headers: this.getAuthHeaders(),
+    });
+  }
+
+  // ========== SOCIAL LINKS ==========
+
+  /**
+   * List all social links sets
+   */
+  async listSocialLinks(): Promise<SocialLinks[]> {
+    const response = await api.get(this.socialLinksUrl);
+    return response.data;
+  }
+
+  /**
+   * Get a specific social links set by identifier
+   */
+  async getSocialLinks(identifier: string = 'main'): Promise<SocialLinks> {
+    const response = await api.get(`${this.socialLinksUrl}/${identifier}`);
+    return response.data;
+  }
+
+  /**
+   * Create a new social links set
+   */
+  async createSocialLinks(data: CreateSocialLinksDto): Promise<SocialLinks> {
+    const response = await api.post(this.socialLinksUrl, data, {
+      headers: this.getAuthHeaders(),
+    });
+    return response.data;
+  }
+
+  /**
+   * Update social links
+   */
+  async updateSocialLinks(
+    identifier: string,
+    data: UpdateSocialLinksDto
+  ): Promise<SocialLinks> {
+    const response = await api.put(
+      `${this.socialLinksUrl}/${identifier}`,
+      data,
+      {
+        headers: this.getAuthHeaders(),
+      }
+    );
+    return response.data;
+  }
+
+  /**
+   * Delete social links
+   */
+  async deleteSocialLinks(identifier: string): Promise<void> {
+    await api.delete(`${this.socialLinksUrl}/${identifier}`, {
       headers: this.getAuthHeaders(),
     });
   }

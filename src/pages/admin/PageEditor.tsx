@@ -20,7 +20,8 @@ const PageEditor = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const isEditMode = slug !== "new";
+  // Check if slug exists and is not undefined to determine edit mode
+  const isEditMode = Boolean(slug);
 
   const [loading, setLoading] = useState(isEditMode);
   const [saving, setSaving] = useState(false);

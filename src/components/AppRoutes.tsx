@@ -59,6 +59,12 @@ import AdminDashboard from "../pages/admin/AdminDashboard";
 import PagesList from "../pages/admin/PagesList";
 import PageEditor from "../pages/admin/PageEditor";
 import VersionHistory from "../pages/admin/VersionHistory";
+import MenusList from "../pages/admin/MenusList";
+import MenuEditor from "../pages/admin/MenuEditor";
+import SocialLinksManager from "../pages/admin/SocialLinksManager";
+import AboutUs from "../pages/AboutUs";
+import Careers from "../pages/Careers";
+import { DynamicPage } from "../components/cms";
 
 const AppRoutes = () => {
   return (
@@ -83,9 +89,13 @@ const AppRoutes = () => {
       <Route path="/teacher/:teacherId" element={<TeacherProfilePage />} />
       <Route path="/teacher-pricing" element={<TeachersPricing />} />
       
+      {/* Company Pages */}
+      <Route path="/about-us" element={<AboutUs />} />
+      <Route path="/careers" element={<Careers />} />
+
       {/* Legal Pages */}
-      <Route path="/privacy" element={<PrivacyPolicy />} />
-      <Route path="/terms" element={<TermsAndConditions />} />
+      <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+      <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
       
       {/* Protected Routes */}
       <Route path="/student-dashboard" element={
@@ -280,12 +290,19 @@ const AppRoutes = () => {
         <Route path="pages/new" element={<PageEditor />} />
         <Route path="pages/:slug/edit" element={<PageEditor />} />
         <Route path="pages/:slug/versions" element={<VersionHistory />} />
+        <Route path="menus" element={<MenusList />} />
+        <Route path="menus/new" element={<MenuEditor />} />
+        <Route path="menus/:identifier/edit" element={<MenuEditor />} />
+        <Route path="social-links" element={<SocialLinksManager />} />
       </Route>
 
       {/* Document Viewers - Public (uses signed URL for security) */}
       <Route path="/document-viewer" element={<DocumentViewer />} />
       <Route path="/document-proxy" element={<DocumentProxy />} />
-      
+
+      {/* Dynamic CMS Pages - Catch-all for any page created in CMS */}
+      <Route path="/page/:slug" element={<DynamicPage />} />
+
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
