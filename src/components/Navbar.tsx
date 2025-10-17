@@ -60,6 +60,12 @@ const Navbar = () => {
               >
                 For Students
               </Link>
+              <Link 
+                to="/blog" 
+                className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-kidato-purple-500"
+              >
+                Blog
+              </Link>
             </div>
           </div>
           
@@ -131,6 +137,20 @@ const Navbar = () => {
               onClick={() => setIsMenuOpen(false)}
             >
               For Students
+            </Link>
+            <Link 
+              to="/blog" 
+              className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-kidato-purple hover:bg-gray-50"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              Blog
+            </Link>
+            <Link 
+              to="/contact-us" 
+              className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-kidato-purple hover:bg-gray-50"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              Contact Us
             </Link>
             <div className="flex flex-col px-3 py-2 space-y-2">
               <Link 

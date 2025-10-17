@@ -64,6 +64,9 @@ import MenuEditor from "../pages/admin/MenuEditor";
 import SocialLinksManager from "../pages/admin/SocialLinksManager";
 import AboutUs from "../pages/AboutUs";
 import Careers from "../pages/Careers";
+import ContactUs from "../pages/ContactUs";
+import Blog from "../pages/Blog";
+import BlogPost from "../pages/BlogPost";
 import { DynamicPage } from "../components/cms";
 
 const AppRoutes = () => {
@@ -92,6 +95,9 @@ const AppRoutes = () => {
       {/* Company Pages */}
       <Route path="/about-us" element={<AboutUs />} />
       <Route path="/careers" element={<Careers />} />
+      <Route path="/contact-us" element={<ContactUs />} />
+      <Route path="/blog" element={<Blog />} />
+      <Route path="/blog/:slug" element={<BlogPost />} />
 
       {/* Legal Pages */}
       <Route path="/privacy-policy" element={<PrivacyPolicy />} />
