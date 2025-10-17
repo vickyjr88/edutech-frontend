@@ -11,6 +11,10 @@ import {
   Home,
   List,
   Share2,
+  BookOpen,
+  Tag,
+  Tags,
+  Users,
 } from "lucide-react";
 
 /**
@@ -46,6 +50,30 @@ const AdminDashboard = () => {
       href: "/admin/social-links",
       icon: Share2,
       current: location.pathname.startsWith("/admin/social-links"),
+    },
+    {
+      name: "Blog Posts",
+      href: "/admin/blog/posts",
+      icon: BookOpen,
+      current: location.pathname.startsWith("/admin/blog/posts"),
+    },
+    {
+      name: "Categories",
+      href: "/admin/blog/categories",
+      icon: Tag,
+      current: location.pathname.startsWith("/admin/blog/categories"),
+    },
+    {
+      name: "Tags",
+      href: "/admin/blog/tags",
+      icon: Tags,
+      current: location.pathname.startsWith("/admin/blog/tags"),
+    },
+    {
+      name: "Authors",
+      href: "/admin/blog/authors",
+      icon: Users,
+      current: location.pathname.startsWith("/admin/blog/authors"),
     },
   ];
 

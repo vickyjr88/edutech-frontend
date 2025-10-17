@@ -68,6 +68,11 @@ import ContactUs from "../pages/ContactUs";
 import Blog from "../pages/Blog";
 import BlogPost from "../pages/BlogPost";
 import { DynamicPage } from "../components/cms";
+import BlogPostsList from "../pages/admin/BlogPostsList";
+import BlogPostEditor from "../pages/admin/BlogPostEditor";
+import BlogCategoriesList from "../pages/admin/BlogCategoriesList";
+import BlogTagsList from "../pages/admin/BlogTagsList";
+import BloggersList from "../pages/admin/BloggersList";
 
 const AppRoutes = () => {
   return (
@@ -300,6 +305,12 @@ const AppRoutes = () => {
         <Route path="menus/new" element={<MenuEditor />} />
         <Route path="menus/:identifier/edit" element={<MenuEditor />} />
         <Route path="social-links" element={<SocialLinksManager />} />
+        <Route path="blog/posts" element={<BlogPostsList />} />
+        <Route path="blog/posts/new" element={<BlogPostEditor />} />
+        <Route path="blog/posts/:postId/edit" element={<BlogPostEditor />} />
+        <Route path="blog/categories" element={<BlogCategoriesList />} />
+        <Route path="blog/tags" element={<BlogTagsList />} />
+        <Route path="blog/authors" element={<BloggersList />} />
       </Route>
 
       {/* Document Viewers - Public (uses signed URL for security) */}
