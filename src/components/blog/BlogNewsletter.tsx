@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Mail, CheckCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import api from "@/lib/axios";
 
 const BlogNewsletter = () => {
   const [email, setEmail] = useState("");
@@ -26,8 +27,7 @@ const BlogNewsletter = () => {
     setIsLoading(true);
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await api.post('/newsletter/subscribe', { email });
       
       setIsSubscribed(true);
       toast({

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+
 import { cmsApiService, Menu, SocialLinks } from "@/services/cms-api.service";
 
 const Footer = () => {
@@ -206,6 +207,8 @@ const Footer = () => {
               </div>
             </>
           )}
+
+
         </div>
         <div className="mt-8 pt-8 border-t border-gray-200">
           <p className="text-center text-gray-500 text-sm">

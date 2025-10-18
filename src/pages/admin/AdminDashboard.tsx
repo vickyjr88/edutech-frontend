@@ -15,6 +15,7 @@ import {
   Tag,
   Tags,
   Users,
+  Mail,
 } from "lucide-react";
 
 /**
@@ -74,6 +75,18 @@ const AdminDashboard = () => {
       href: "/admin/blog/authors",
       icon: Users,
       current: location.pathname.startsWith("/admin/blog/authors"),
+    },
+    {
+      name: "Inquiries",
+      href: "/admin/inquiries",
+      icon: Mail,
+      current: location.pathname.startsWith("/admin/inquiries"),
+    },
+    {
+      name: "Newsletter Subscribers",
+      href: "/admin/newsletter-subscribers",
+      icon: Users,
+      current: location.pathname.startsWith("/admin/newsletter-subscribers"),
     },
   ];
 

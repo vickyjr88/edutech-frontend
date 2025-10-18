@@ -72,6 +72,9 @@ import BlogPostsList from "../pages/admin/BlogPostsList";
 import BlogPostEditor from "../pages/admin/BlogPostEditor";
 import BlogCategoriesList from "../pages/admin/BlogCategoriesList";
 import BlogTagsList from "../pages/admin/BlogTagsList";
+import InquiriesPage from "../pages/admin/InquiriesPage";
+import NewsletterSubscribersPage from "../pages/admin/NewsletterSubscribersPage";
+import UnsubscribePage from "../pages/Unsubscribe";
 import BloggersList from "../pages/admin/BloggersList";
 
 const AppRoutes = () => {
@@ -96,6 +99,7 @@ const AppRoutes = () => {
       <Route path="/class/:id" element={<ClassDetailsPage />} />
       <Route path="/teacher/:teacherId" element={<TeacherProfilePage />} />
       <Route path="/teacher-pricing" element={<TeachersPricing />} />
+      <Route path="/unsubscribe/:token" element={<UnsubscribePage />} />
       
       {/* Company Pages */}
       <Route path="/about-us" element={<AboutUs />} />
@@ -311,6 +315,8 @@ const AppRoutes = () => {
         <Route path="blog/categories" element={<BlogCategoriesList />} />
         <Route path="blog/tags" element={<BlogTagsList />} />
         <Route path="blog/authors" element={<BloggersList />} />
+        <Route path="inquiries" element={<InquiriesPage />} />
+        <Route path="newsletter-subscribers" element={<NewsletterSubscribersPage />} />
       </Route>
 
       {/* Document Viewers - Public (uses signed URL for security) */}

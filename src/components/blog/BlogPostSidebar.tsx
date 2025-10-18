@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Calendar, Clock, Eye, ArrowRight } from "lucide-react";
 import { BlogPost } from "@/types/blog";
+import NewsletterForm from "../newsletter/NewsletterForm";
 
 interface BlogPostSidebarProps {
   post: BlogPost;
@@ -234,9 +235,7 @@ const BlogPostSidebar: React.FC<BlogPostSidebarProps> = ({ post, relatedPosts })
             <p className="text-sm text-blue-700 mb-4">
               Get the latest articles and insights delivered to your inbox.
             </p>
-            <Button className="w-full bg-blue-600 hover:bg-blue-700">
-              Subscribe to Newsletter
-            </Button>
+            <NewsletterForm />
           </div>
         </CardContent>
       </Card>
