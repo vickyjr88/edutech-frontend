@@ -1,49 +1,97 @@
 
 import { Link } from "react-router-dom";
-import { 
-  ArrowRight, 
-  User, 
-  Bell, 
-  BookOpen, 
-  Users, 
-  CheckCircle, 
-  Award, 
-  Calendar, 
-  MoreVertical 
+import {
+  ArrowRight,
+  User,
+  Bell,
+  BookOpen,
+  Users,
+  CheckCircle,
+  Award,
+  Calendar,
+  MoreVertical
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import type { HeroSection } from "@/content/types";
 
-const Hero = () => {
+interface HeroProps {
+  content?: HeroSection;
+}
+
+const Hero = ({ content }: HeroProps) => {
+  // Default content (fallback)
+  const defaultContent: HeroSection = {
+    type: 'hero',
+    title: "Learn, Connect, and Grow with Africa's Premier Learning Platform",
+    subtitle: "Give your child the academic support they deserve with personalized tutoring from Africa's most qualified educators.",
+    badge: {
+      text: "Parents: 90% of our students show improved grades within 3 months",
+      variant: "warning"
+    },
+    primaryCTA: {
+      text: "Get Started",
+      href: "/signup",
+      variant: "primary"
+    },
+    secondaryCTA: {
+      text: "Explore Courses",
+      href: "/courses",
+      variant: "outline"
+    }
+  };
+
+  const data = content || defaultContent;
+
+  // Parse title for colored spans (simple approach for now)
+  const renderTitle = () => {
+    const title = data.title;
+    // For the default title, apply colors
+    if (title.includes("Learn") && title.includes("Connect") && title.includes("Grow")) {
+      return (
+        <>
+          <span className="text-kidato-purple">Learn</span>, <span className="text-kidato-orange">Connect</span>, and <span className="text-kidato-purple">Grow</span> with Africa's Premier Learning Platform
+        </>
+      );
+    }
+    return title;
+  };
+
   return (
     <div className="hero-gradient pt-20 pb-12 md:pt-24 md:pb-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
           <div className="animate-fade-in">
             <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 leading-tight">
-              <span className="text-kidato-purple">Learn</span>, <span className="text-kidato-orange">Connect</span>, and <span className="text-kidato-purple">Grow</span> with Africa's Premier Learning Platform
+              {renderTitle()}
             </h1>
             <p className="mt-3 text-lg text-gray-600">
-              Give your child the academic support they deserve with personalized tutoring from Africa's most qualified educators.
+              {data.subtitle}
             </p>
-            <div className="mt-4 inline-block px-4 py-2 bg-yellow-100 text-yellow-800 rounded-lg text-sm">
-              <strong>Parents:</strong> 90% of our students show improved grades within 3 months
-            </div>
+            {data.badge && (
+              <div className={`mt-4 inline-block px-4 py-2 rounded-lg text-sm ${
+                data.badge.variant === 'warning' ? 'bg-yellow-100 text-yellow-800' : 'bg-blue-100 text-blue-800'
+              }`}>
+                <strong>{data.badge.text.split(':')[0]}:</strong> {data.badge.text.split(':')[1]}
+              </div>
+            )}
             <div className="mt-6 flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4">
-              <Link to="/signup">
+              <Link to={data.primaryCTA.href}>
                 <Button className="w-full sm:w-auto bg-kidato-purple hover:bg-kidato-dark-blue button-hover-effect text-lg px-6 py-5">
-                  Get Started <ArrowRight className="ml-2 h-5 w-5" />
+                  {data.primaryCTA.text} <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
               </Link>
-              <Link to="/courses">
-                <Button 
-                  variant="outline" 
-                  className="w-full sm:w-auto text-lg px-6 py-5 border-2 border-kidato-purple text-kidato-purple hover:bg-kidato-purple/10 transition-colors duration-300"
-                >
-                  Explore Courses
-                </Button>
-              </Link>
+              {data.secondaryCTA && (
+                <Link to={data.secondaryCTA.href}>
+                  <Button
+                    variant="outline"
+                    className="w-full sm:w-auto text-lg px-6 py-5 border-2 border-kidato-purple text-kidato-purple hover:bg-kidato-purple/10 transition-colors duration-300"
+                  >
+                    {data.secondaryCTA.text}
+                  </Button>
+                </Link>
+              )}
             </div>
           </div>
           <div className="hidden md:block animate-fade-in">

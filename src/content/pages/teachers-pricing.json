@@ -1,0 +1,201 @@
+{
+  "metadata": {
+    "title": "Teacher Pricing Plans - Flexible Options for Educators | Kidato",
+    "description": "Flexible pricing plans for solo tutors, coaching centers, and schools. Start for free or upgrade to access premium features and lower revenue sharing.",
+    "keywords": [
+      "teacher pricing",
+      "tutor subscription",
+      "teaching platform fees",
+      "tuition center plans",
+      "educator pricing",
+      "revenue share",
+      "teacher earnings"
+    ]
+  },
+  "sections": [
+    {
+      "type": "hero",
+      "title": "Choose Your Teaching Plan",
+      "subtitle": "Flexible plans for solo tutors, coaching centers, and schools",
+      "primaryCTA": {
+        "text": "Start for Free",
+        "href": "/teacher-signup",
+        "variant": "primary"
+      },
+      "secondaryCTA": {
+        "text": "Compare Plans",
+        "href": "#pricing-comparison",
+        "variant": "outline"
+      },
+      "variant": "gradient"
+    },
+    {
+      "type": "pricing",
+      "title": "Pricing Plans",
+      "description": "Choose the plan that works best for you",
+      "billingToggle": {
+        "monthly": "Monthly",
+        "annual": "Annual",
+        "discount": "Save 20%"
+      },
+      "tiers": [
+        {
+          "id": "free",
+          "name": "Free",
+          "description": "Perfect for getting started",
+          "price": {
+            "amount": 0,
+            "currency": "USD",
+            "period": "month"
+          },
+          "features": [
+            {
+              "text": "Up to 5 students",
+              "included": true
+            },
+            {
+              "text": "Basic scheduling tools",
+              "included": true
+            },
+            {
+              "text": "Basic learning materials",
+              "included": true
+            },
+            {
+              "text": "Student progress tracking",
+              "included": true
+            }
+          ],
+          "cta": {
+            "text": "Get Started",
+            "href": "/teacher-signup"
+          },
+          "note": "30% revenue share on all transactions"
+        },
+        {
+          "id": "pro",
+          "name": "Pro",
+          "description": "For dedicated individual tutors",
+          "price": {
+            "amount": 29,
+            "currency": "USD",
+            "period": "month",
+            "prefix": "$"
+          },
+          "features": [
+            {
+              "text": "Unlimited students",
+              "included": true,
+              "highlight": true
+            },
+            {
+              "text": "Advanced scheduling",
+              "included": true
+            },
+            {
+              "text": "Premium learning materials",
+              "included": true
+            },
+            {
+              "text": "Detailed analytics",
+              "included": true
+            },
+            {
+              "text": "Custom branding",
+              "included": true
+            },
+            {
+              "text": "Payment processing",
+              "included": true
+            }
+          ],
+          "cta": {
+            "text": "Choose Pro",
+            "href": "/teacher-signup?plan=pro"
+          },
+          "popular": true,
+          "badge": "Most Popular",
+          "note": "15% revenue share on all transactions"
+        },
+        {
+          "id": "tuition-center",
+          "name": "Tuition Center",
+          "description": "For coaching centers & small schools",
+          "price": {
+            "amount": 99,
+            "currency": "USD",
+            "period": "month",
+            "prefix": "$"
+          },
+          "features": [
+            {
+              "text": "Up to 3 teachers included",
+              "included": true,
+              "highlight": true
+            },
+            {
+              "text": "All Pro features",
+              "included": true
+            },
+            {
+              "text": "Teacher management",
+              "included": true
+            },
+            {
+              "text": "Admin dashboard",
+              "included": true
+            },
+            {
+              "text": "Centralized billing",
+              "included": true
+            },
+            {
+              "text": "Priority support",
+              "included": true
+            }
+          ],
+          "cta": {
+            "text": "Request for a Meeting",
+            "href": "/contact-sales"
+          },
+          "note": "10% revenue share on all transactions. + $39/month per additional teacher"
+        }
+      ]
+    },
+    {
+      "type": "cta",
+      "title": "Need more than 10 teachers?",
+      "description": "Our B2B plans offer custom pricing, dedicated support, and enterprise features for larger educational institutions.",
+      "primaryCTA": {
+        "text": "Talk to Sales",
+        "href": "/contact-sales",
+        "variant": "outline"
+      },
+      "variant": "highlighted"
+    },
+    {
+      "type": "cta",
+      "title": "Ready to Start Teaching?",
+      "description": "Join thousands of educators already using Kidato",
+      "primaryCTA": {
+        "text": "Create Your Account",
+        "href": "/teacher-signup",
+        "variant": "primary"
+      },
+      "variant": "gradient"
+    }
+  ],
+  "priceVariations": {
+    "monthly": {
+      "pro": 29,
+      "tuitionCenter": 99,
+      "perAdditionalTeacher": 39
+    },
+    "annual": {
+      "pro": 23,
+      "tuitionCenter": 79,
+      "perAdditionalTeacher": 32,
+      "discount": "20% savings"
+    }
+  }
+}

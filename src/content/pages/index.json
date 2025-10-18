@@ -1,0 +1,344 @@
+{
+  "metadata": {
+    "title": "Kidato - Learn, Connect, and Grow with Africa's Premier Learning Platform",
+    "description": "Give your child the academic support they deserve with personalized tutoring from Africa's most qualified educators. Join thousands of students, parents, and tutors.",
+    "keywords": [
+      "online tutoring",
+      "African education",
+      "personalized learning",
+      "qualified tutors",
+      "student success",
+      "e-learning platform",
+      "African curriculum"
+    ]
+  },
+  "sections": [
+    {
+      "type": "hero",
+      "title": "Learn, Connect, and Grow with Africa's Premier Learning Platform",
+      "subtitle": "Give your child the academic support they deserve with personalized tutoring from Africa's most qualified educators.",
+      "badge": {
+        "text": "Parents: 90% of our students show improved grades within 3 months",
+        "variant": "warning"
+      },
+      "primaryCTA": {
+        "text": "Get Started",
+        "href": "/signup",
+        "variant": "primary"
+      },
+      "secondaryCTA": {
+        "text": "Explore Courses",
+        "href": "/courses",
+        "variant": "outline"
+      }
+    },
+    {
+      "type": "features",
+      "title": "Why Parents Choose Kidato",
+      "description": "Join parents who trust us with their children's education. Here's how we support your child's learning journey:",
+      "features": [
+        {
+          "icon": "Shield",
+          "title": "Safe Learning Environment",
+          "description": "Your child connects with verified, background-checked tutors in a monitored online environment designed with child safety as the priority."
+        },
+        {
+          "icon": "Users",
+          "title": "Personalized Attention",
+          "description": "Watch your child thrive with individualized support that addresses their specific learning needs, pace, and interests."
+        },
+        {
+          "icon": "Book",
+          "title": "Curriculum-Aligned Learning",
+          "description": "All sessions are designed to complement your child's school curriculum, ensuring they excel in their regular academic studies."
+        },
+        {
+          "icon": "Globe",
+          "title": "Global Perspective",
+          "description": "Expose your child to diverse perspectives as they connect with world-class tutors and peers from across the globe while focusing on African curriculum."
+        },
+        {
+          "icon": "Award",
+          "title": "Progress Tracking",
+          "description": "Receive regular updates on your child's development with detailed progress reports and achievement milestones."
+        }
+      ],
+      "layout": "grid",
+      "columns": 3
+    },
+    {
+      "type": "contentCards",
+      "title": "Available Classes",
+      "cards": [
+        {
+          "id": "class-algebra",
+          "title": "Introduction to Algebra",
+          "description": "Grade 7-8",
+          "image": {
+            "src": "https://images.unsplash.com/photo-1580582932707-520aed937b7b?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+            "alt": "Mathematics class"
+          },
+          "tags": ["Mathematics", "3 spots left", "$12/class"],
+          "link": {
+            "text": "Enroll Now",
+            "href": "/classes/algebra"
+          }
+        },
+        {
+          "id": "class-science",
+          "title": "Science Experiments at Home",
+          "description": "Grade 5-6",
+          "image": {
+            "src": "https://images.unsplash.com/photo-1503944583220-79d8926ad5e2?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+            "alt": "Science experiments"
+          },
+          "tags": ["Science", "2 spots left", "$10/class"],
+          "link": {
+            "text": "Enroll Now",
+            "href": "/classes/science-experiments"
+          }
+        },
+        {
+          "id": "class-literature",
+          "title": "English Literature Essentials",
+          "description": "Grade 9-10",
+          "image": {
+            "src": "https://images.unsplash.com/photo-1513475382585-d06e58bcb0e0?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+            "alt": "English literature"
+          },
+          "tags": ["English", "5 spots left", "$15/class"],
+          "link": {
+            "text": "Enroll Now",
+            "href": "/classes/literature"
+          }
+        },
+        {
+          "id": "class-coding",
+          "title": "Coding for Kids",
+          "description": "Grade 4-6",
+          "image": {
+            "src": "https://images.unsplash.com/photo-1515879218367-8466d910aaa4?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+            "alt": "Coding class"
+          },
+          "tags": ["Computer Science", "1 spot left", "$18/class"],
+          "link": {
+            "text": "Enroll Now",
+            "href": "/classes/coding-kids"
+          }
+        }
+      ],
+      "columns": 4
+    },
+    {
+      "type": "text",
+      "content": "Our mission is to empower your child with quality education that builds confidence, sparks curiosity, and prepares them for future success - all while giving you peace of mind.",
+      "variant": "article"
+    },
+    {
+      "type": "team",
+      "title": "Featured Educators",
+      "subtitle": "Meet our highly-rated teachers who are making a difference in students' lives across Africa",
+      "members": [
+        {
+          "name": "Dr. Sarah Okafor",
+          "role": "Mathematics & Physics",
+          "bio": "Joining Kidato transformed my teaching career. I now connect with motivated students from across Africa, set my own schedule, and earn a reliable income doing what I love.",
+          "avatar": {
+            "src": "https://images.unsplash.com/photo-1531123897727-8f129e1688ce?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+            "alt": "Dr. Sarah Okafor"
+          },
+          "social": {
+            "email": "teacher@kidato.com"
+          }
+        },
+        {
+          "name": "Mr. Taiwo Makinde",
+          "role": "Computer Science & Programming",
+          "bio": "I specialize in teaching coding to beginners and advanced students. My passion is making complex programming concepts accessible to learners of all ages.",
+          "avatar": {
+            "src": "https://images.unsplash.com/photo-1568602471122-7832951cc4c5?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+            "alt": "Mr. Taiwo Makinde"
+          },
+          "social": {
+            "email": "teacher@kidato.com"
+          }
+        },
+        {
+          "name": "Ms. Nneka Okonkwo",
+          "role": "English Literature & Writing",
+          "bio": "With a background in journalism and creative writing, I help students develop strong communication skills and a love for literature that will serve them throughout their lives.",
+          "avatar": {
+            "src": "https://images.unsplash.com/photo-1544005313-94ddf0286df2?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+            "alt": "Ms. Nneka Okonkwo"
+          },
+          "social": {
+            "email": "teacher@kidato.com"
+          }
+        },
+        {
+          "name": "Mr. Kofi Mensah",
+          "role": "Biology & Environmental Science",
+          "bio": "I bring science to life through practical experiments and real-world applications. My students learn to observe, question, and understand the natural world around them.",
+          "avatar": {
+            "src": "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+            "alt": "Mr. Kofi Mensah"
+          },
+          "social": {
+            "email": "teacher@kidato.com"
+          }
+        }
+      ]
+    },
+    {
+      "type": "howItWorks",
+      "title": "How Kidato Works for Teachers",
+      "description": "Our platform empowers educators to reach students across Africa with just a few simple steps",
+      "steps": [
+        {
+          "number": 1,
+          "title": "Create Your Profile",
+          "description": "Build your teaching profile highlighting your expertise, qualifications, and teaching style to stand out to students and parents across Africa.",
+          "icon": "User"
+        },
+        {
+          "number": 2,
+          "title": "Connect & Grow",
+          "description": "Build your professional network, join specialized teaching communities, and access continuous development opportunities.",
+          "icon": "Users"
+        },
+        {
+          "number": 3,
+          "title": "Teach & Earn",
+          "description": "Deliver engaging virtual lessons, build your reputation, and create flexible income streams while making a real impact on students' lives.",
+          "icon": "Award"
+        }
+      ],
+      "layout": "vertical"
+    },
+    {
+      "type": "benefits",
+      "title": "Why Educators Choose Kidato",
+      "benefits": [
+        {
+          "icon": "GraduationCap",
+          "title": "Professional Growth",
+          "description": "Access specialized training and certification programs to enhance your teaching skills and advance your career."
+        },
+        {
+          "icon": "Globe",
+          "title": "Global Classroom",
+          "description": "Connect with students across Africa without geographical limitations, expanding your teaching reach beyond borders."
+        },
+        {
+          "icon": "Trophy",
+          "title": "Recognition & Rewards",
+          "description": "Build your reputation through student reviews, ratings, and our teacher recognition program celebrating educational excellence."
+        },
+        {
+          "icon": "BookOpen",
+          "title": "Teaching Resources",
+          "description": "Access our library of curriculum-aligned materials, interactive tools, and lesson templates to enhance your teaching."
+        }
+      ],
+      "layout": "grid"
+    },
+    {
+      "type": "testimonials",
+      "title": "What Our Community Says",
+      "subtitle": "Hear from students, parents, and tutors who are part of the Kidato family",
+      "testimonials": [
+        {
+          "id": "testimonial-sarah",
+          "name": "Sarah M.",
+          "role": "Parent",
+          "avatar": {
+            "src": "https://randomuser.me/api/portraits/women/1.jpg",
+            "alt": "Sarah M."
+          },
+          "content": "Kidato has transformed my daughter's learning experience. She's more engaged and excited about school than ever before.",
+          "rating": 5
+        },
+        {
+          "id": "testimonial-michael",
+          "name": "Michael O.",
+          "role": "Mathematics Tutor",
+          "avatar": {
+            "src": "https://randomuser.me/api/portraits/men/32.jpg",
+            "alt": "Michael O."
+          },
+          "content": "As a tutor on Kidato, I've been able to reach students across Africa and make a real difference in their educational journey.",
+          "rating": 5
+        },
+        {
+          "id": "testimonial-amina",
+          "name": "Amina K.",
+          "role": "Student, Age 13",
+          "avatar": {
+            "src": "https://randomuser.me/api/portraits/women/67.jpg",
+            "alt": "Amina K."
+          },
+          "content": "I've made friends from different countries while learning coding. The classes are fun and the teachers are amazing!",
+          "rating": 5
+        }
+      ],
+      "layout": "grid"
+    },
+    {
+      "type": "contentCards",
+      "title": "Something for Everyone",
+      "subtitle": "Kidato serves different needs in the educational ecosystem",
+      "cards": [
+        {
+          "id": "role-tutors",
+          "title": "For Tutors",
+          "description": "Share your knowledge, set your own schedule, and earn income while making a difference in students' lives.",
+          "icon": "BookOpen",
+          "link": {
+            "text": "Become a Tutor",
+            "href": "/tutor-signup",
+            "variant": "primary"
+          }
+        },
+        {
+          "id": "role-parents",
+          "title": "For Parents",
+          "description": "Find qualified tutors to support your child's educational journey with personalized attention and care.",
+          "icon": "Heart",
+          "link": {
+            "text": "Find Tutors",
+            "href": "/parent-signup",
+            "variant": "primary"
+          }
+        },
+        {
+          "id": "role-students",
+          "title": "For Students",
+          "description": "Learn at your own pace, make friends with peers across Africa, and have fun while developing your skills.",
+          "icon": "Users",
+          "link": {
+            "text": "Start Learning",
+            "href": "/student-signup",
+            "variant": "primary"
+          }
+        }
+      ],
+      "columns": 3
+    },
+    {
+      "type": "cta",
+      "title": "Ready to Transform Learning in Africa?",
+      "description": "Join thousands of students, parents, and tutors who are already part of the Kidato community.",
+      "primaryCTA": {
+        "text": "Sign Up",
+        "href": "/signup",
+        "variant": "secondary"
+      },
+      "secondaryCTA": {
+        "text": "Explore Courses",
+        "href": "/courses",
+        "variant": "outline"
+      },
+      "variant": "gradient"
+    }
+  ]
+}

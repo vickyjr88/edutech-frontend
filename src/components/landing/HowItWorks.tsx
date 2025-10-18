@@ -74,7 +74,11 @@ const teacherBenefits = [
   }
 ];
 
-const HowItWorks = () => {
+interface HowItWorksProps {
+  content?: any; // Accept any content for now, will use defaults
+}
+
+const HowItWorks = ({ content }: HowItWorksProps = {}) => {
   return (
     <div className="section-padding bg-gray-50">
       <div className="max-w-7xl mx-auto">

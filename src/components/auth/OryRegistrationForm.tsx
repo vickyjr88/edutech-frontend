@@ -550,7 +550,7 @@ export const OryRegistrationForm: React.FC<OryRegistrationFormProps> = ({ onSucc
         <Label htmlFor="terms" className="ml-2 block text-sm text-gray-900">
           I agree to the{' '}
           <a
-            href="/terms"
+            href="/terms-and-conditions"
             target="_blank"
             rel="noopener noreferrer"
             className="text-kidato-purple hover:text-kidato-dark-blue"
@@ -559,7 +559,7 @@ export const OryRegistrationForm: React.FC<OryRegistrationFormProps> = ({ onSucc
           </a>{' '}
           and{' '}
           <a
-            href="/privacy"
+            href="/privacy-policy"
             target="_blank"
             rel="noopener noreferrer"
             className="text-kidato-purple hover:text-kidato-dark-blue"

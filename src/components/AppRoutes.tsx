@@ -12,6 +12,7 @@ import TeacherDashboard from "../pages/TeacherDashboard";
 import NotFound from "../pages/NotFound";
 import ProtectedRoute from "./auth/ProtectedRoute";
 import TeacherRoute from "./auth/TeacherRoute";
+import AdminRoute from "./auth/AdminRoute";
 import AuthCallback from "../pages/AuthCallback";
 import ZoomAuthCallback from "../pages/ZoomAuthCallback";
 import GoogleCalendarAuthCallback from "../pages/GoogleCalendarAuthCallback";
@@ -54,6 +55,27 @@ import DocumentProxy from "../pages/DocumentProxy";
 import PrivacyPolicy from "../pages/PrivacyPolicy";
 import TermsAndConditions from "../pages/TermsAndConditions";
 import OrySettingsPage from "../pages/OrySettingsPage";
+import AdminDashboard from "../pages/admin/AdminDashboard";
+import PagesList from "../pages/admin/PagesList";
+import PageEditor from "../pages/admin/PageEditor";
+import VersionHistory from "../pages/admin/VersionHistory";
+import MenusList from "../pages/admin/MenusList";
+import MenuEditor from "../pages/admin/MenuEditor";
+import SocialLinksManager from "../pages/admin/SocialLinksManager";
+import AboutUs from "../pages/AboutUs";
+import Careers from "../pages/Careers";
+import ContactUs from "../pages/ContactUs";
+import Blog from "../pages/Blog";
+import BlogPost from "../pages/BlogPost";
+import { DynamicPage } from "../components/cms";
+import BlogPostsList from "../pages/admin/BlogPostsList";
+import BlogPostEditor from "../pages/admin/BlogPostEditor";
+import BlogCategoriesList from "../pages/admin/BlogCategoriesList";
+import BlogTagsList from "../pages/admin/BlogTagsList";
+import InquiriesPage from "../pages/admin/InquiriesPage";
+import NewsletterSubscribersPage from "../pages/admin/NewsletterSubscribersPage";
+import UnsubscribePage from "../pages/Unsubscribe";
+import BloggersList from "../pages/admin/BloggersList";
 
 const AppRoutes = () => {
   return (
@@ -77,10 +99,18 @@ const AppRoutes = () => {
       <Route path="/class/:id" element={<ClassDetailsPage />} />
       <Route path="/teacher/:teacherId" element={<TeacherProfilePage />} />
       <Route path="/teacher-pricing" element={<TeachersPricing />} />
+      <Route path="/unsubscribe/:token" element={<UnsubscribePage />} />
       
+      {/* Company Pages */}
+      <Route path="/about-us" element={<AboutUs />} />
+      <Route path="/careers" element={<Careers />} />
+      <Route path="/contact-us" element={<ContactUs />} />
+      <Route path="/blog" element={<Blog />} />
+      <Route path="/blog/:slug" element={<BlogPost />} />
+
       {/* Legal Pages */}
-      <Route path="/privacy" element={<PrivacyPolicy />} />
-      <Route path="/terms" element={<TermsAndConditions />} />
+      <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+      <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
       
       {/* Protected Routes */}
       <Route path="/student-dashboard" element={
@@ -263,11 +293,39 @@ const AppRoutes = () => {
           <ChildDashboard />
         </ProtectedRoute>
       } />
-      
+
+      {/* Admin CMS Routes */}
+      <Route path="/admin" element={
+        <AdminRoute>
+          <AdminDashboard />
+        </AdminRoute>
+      }>
+        <Route index element={<Navigate to="/admin/pages" replace />} />
+        <Route path="pages" element={<PagesList />} />
+        <Route path="pages/new" element={<PageEditor />} />
+        <Route path="pages/:slug/edit" element={<PageEditor />} />
+        <Route path="pages/:slug/versions" element={<VersionHistory />} />
+        <Route path="menus" element={<MenusList />} />
+        <Route path="menus/new" element={<MenuEditor />} />
+        <Route path="menus/:identifier/edit" element={<MenuEditor />} />
+        <Route path="social-links" element={<SocialLinksManager />} />
+        <Route path="blog/posts" element={<BlogPostsList />} />
+        <Route path="blog/posts/new" element={<BlogPostEditor />} />
+        <Route path="blog/posts/:postId/edit" element={<BlogPostEditor />} />
+        <Route path="blog/categories" element={<BlogCategoriesList />} />
+        <Route path="blog/tags" element={<BlogTagsList />} />
+        <Route path="blog/authors" element={<BloggersList />} />
+        <Route path="inquiries" element={<InquiriesPage />} />
+        <Route path="newsletter-subscribers" element={<NewsletterSubscribersPage />} />
+      </Route>
+
       {/* Document Viewers - Public (uses signed URL for security) */}
       <Route path="/document-viewer" element={<DocumentViewer />} />
       <Route path="/document-proxy" element={<DocumentProxy />} />
-      
+
+      {/* Dynamic CMS Pages - Catch-all for any page created in CMS */}
+      <Route path="/page/:slug" element={<DynamicPage />} />
+
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
