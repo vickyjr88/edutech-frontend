@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Table,
   TableBody,
@@ -19,54 +19,196 @@ import {
 } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Eye, Search, Filter, Download, UserPlus } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import {
+  Eye, Search, Filter, Download, UserPlus,
+  MoreVertical, Ban, CheckCircle, XCircle, Trash2,
+  Users, Shield
+} from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { adminService } from '@/integrations/api/services/admin.service';
+import { useToast } from '@/hooks/use-toast';
 
 interface ParentsListProps {
   onViewParent: (parentId: string) => void;
+  onAddParent?: () => void;
 }
 
-const ParentsList = ({ onViewParent }: ParentsListProps) => {
+const ParentsList = ({ onViewParent, onAddParent }: ParentsListProps) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [verificationFilter, setVerificationFilter] = useState<string>('all');
+  const [selectedParents, setSelectedParents] = useState<Set<string>>(new Set());
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
 
-  // Fetch parents list
-  const { data: parentsData, isLoading, error } = useQuery({
-    queryKey: ['adminParents', currentPage, searchTerm],
+  // Fetch parents list with advanced query
+  const { data: parentsData, isLoading, error, refetch } = useQuery({
+    queryKey: ['adminParents', currentPage, searchTerm, statusFilter, verificationFilter],
     queryFn: async () => {
-      const response = await adminService.getParents({
+      // Map status filter to API format
+      let status: 'active' | 'inactive' | 'suspended' | undefined;
+      if (statusFilter === 'active') status = 'active';
+      else if (statusFilter === 'inactive') status = 'inactive';
+      else if (statusFilter === 'suspended') status = 'suspended';
+
+      const response = await adminService.advancedQueryUsers({
+        role: 'parent',
         page: currentPage,
         limit: pageSize,
         search: searchTerm || undefined,
+        status,
+        isEmailVerified: verificationFilter === 'verified' ? true : verificationFilter === 'unverified' ? false : undefined,
       });
       return response;
     },
   });
 
-  const parents = parentsData?.data?.parents || [];
-
-  // Filter by status locally (search is done server-side)
-  const filteredParents = parents.filter((parent: any) => {
-    const matchesStatus =
-      statusFilter === 'all' ||
-      (statusFilter === 'active' && parent.isActive) ||
-      (statusFilter === 'inactive' && !parent.isActive);
-
-    return matchesStatus;
-  });
-
+  const parents = parentsData?.data?.users || [];
   const totalParents = parentsData?.data?.total || 0;
   const totalPages = parentsData?.data?.totalPages || 1;
+  const stats = parentsData?.data?.stats;
+
+  // Bulk action mutation
+  const bulkActionMutation = useMutation({
+    mutationFn: async (action: 'activate' | 'deactivate' | 'suspend' | 'delete') => {
+      return adminService.bulkAction({
+        userIds: Array.from(selectedParents),
+        action,
+        reason: action === 'suspend' ? 'other' : undefined,
+      });
+    },
+    onSuccess: (data) => {
+      toast({
+        title: 'Bulk action completed',
+        description: `${data.success} parents updated successfully. ${data.failed} failed.`,
+      });
+      setSelectedParents(new Set());
+      refetch();
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Bulk action failed',
+        description: error.message || 'An error occurred',
+        variant: 'destructive',
+      });
+    },
+  });
+
+  // Toggle selection
+  const toggleParent = (parentId: string) => {
+    const newSelected = new Set(selectedParents);
+    if (newSelected.has(parentId)) {
+      newSelected.delete(parentId);
+    } else {
+      newSelected.add(parentId);
+    }
+    setSelectedParents(newSelected);
+  };
+
+  // Select all on current page
+  const toggleSelectAll = () => {
+    if (selectedParents.size === parents.length) {
+      setSelectedParents(new Set());
+    } else {
+      setSelectedParents(new Set(parents.map((p: any) => p._id)));
+    }
+  };
+
+  const handleBulkAction = (action: 'activate' | 'deactivate' | 'suspend' | 'delete') => {
+    if (selectedParents.size === 0) {
+      toast({
+        title: 'No parents selected',
+        description: 'Please select parents first',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (confirm(`Are you sure you want to ${action} ${selectedParents.size} parent(s)?`)) {
+      bulkActionMutation.mutate(action);
+    }
+  };
 
   const handleExport = () => {
-    // Export functionality
-    console.log('Exporting parents data...');
+    toast({
+      title: 'Export started',
+      description: 'Your export is being prepared...',
+    });
+    // TODO: Implement actual export
   };
 
   return (
     <div className="space-y-4">
+      {/* Bulk Actions Bar */}
+      {selectedParents.size > 0 && (
+        <Card className="border-blue-200 bg-blue-50">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Users className="h-5 w-5 text-blue-600" />
+                <span className="font-medium text-blue-900">
+                  {selectedParents.size} parent(s) selected
+                </span>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => handleBulkAction('activate')}
+                  disabled={bulkActionMutation.isPending}
+                >
+                  <CheckCircle className="h-4 w-4 mr-1" />
+                  Activate
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => handleBulkAction('deactivate')}
+                  disabled={bulkActionMutation.isPending}
+                >
+                  <XCircle className="h-4 w-4 mr-1" />
+                  Deactivate
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => handleBulkAction('suspend')}
+                  disabled={bulkActionMutation.isPending}
+                >
+                  <Ban className="h-4 w-4 mr-1" />
+                  Suspend
+                </Button>
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  onClick={() => handleBulkAction('delete')}
+                  disabled={bulkActionMutation.isPending}
+                >
+                  <Trash2 className="h-4 w-4 mr-1" />
+                  Delete
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => setSelectedParents(new Set())}
+                >
+                  Clear
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Header Actions */}
       <div className="flex justify-between items-center">
         <div className="flex gap-3 flex-1 max-w-2xl">
@@ -81,13 +223,23 @@ const ParentsList = ({ onViewParent }: ParentsListProps) => {
           </div>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className="w-40">
-              <Filter className="h-4 w-4 mr-2" />
               <SelectValue placeholder="Status" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Status</SelectItem>
               <SelectItem value="active">Active</SelectItem>
               <SelectItem value="inactive">Inactive</SelectItem>
+              <SelectItem value="suspended">Suspended</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={verificationFilter} onValueChange={setVerificationFilter}>
+            <SelectTrigger className="w-40">
+              <SelectValue placeholder="Verification" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All</SelectItem>
+              <SelectItem value="verified">Verified</SelectItem>
+              <SelectItem value="unverified">Unverified</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -96,7 +248,7 @@ const ParentsList = ({ onViewParent }: ParentsListProps) => {
             <Download className="h-4 w-4 mr-2" />
             Export
           </Button>
-          <Button>
+          <Button onClick={onAddParent}>
             <UserPlus className="h-4 w-4 mr-2" />
             Add Parent
           </Button>
@@ -123,7 +275,7 @@ const ParentsList = ({ onViewParent }: ParentsListProps) => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
-              {parents.filter((p: any) => p.isActive).length}
+              {stats?.activeCount || 0}
             </div>
           </CardContent>
         </Card>
@@ -135,26 +287,19 @@ const ParentsList = ({ onViewParent }: ParentsListProps) => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-gray-500">
-              {parents.filter((p: any) => !p.isActive).length}
+              {stats?.inactiveCount || 0}
             </div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-gray-500">
-              This Month
+              Suspended
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">
-              {parents.filter((p: any) => {
-                const createdAt = new Date(p.createdAt);
-                const now = new Date();
-                return (
-                  createdAt.getMonth() === now.getMonth() &&
-                  createdAt.getFullYear() === now.getFullYear()
-                );
-              }).length}
+            <div className="text-2xl font-bold text-red-600">
+              {stats?.suspendedCount || 0}
             </div>
           </CardContent>
         </Card>
@@ -169,7 +314,7 @@ const ParentsList = ({ onViewParent }: ParentsListProps) => {
             <div className="p-8 text-center text-red-500">
               Error loading parents. Please try again.
             </div>
-          ) : filteredParents.length === 0 ? (
+          ) : parents.length === 0 ? (
             <div className="p-8 text-center text-gray-500">
               No parents found matching your criteria.
             </div>
@@ -177,31 +322,61 @@ const ParentsList = ({ onViewParent }: ParentsListProps) => {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-12">
+                    <Checkbox
+                      checked={parents.length > 0 && selectedParents.size === parents.length}
+                      onCheckedChange={toggleSelectAll}
+                    />
+                  </TableHead>
                   <TableHead>Name</TableHead>
                   <TableHead>Email</TableHead>
                   <TableHead>Phone</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead>Verification</TableHead>
                   <TableHead>Joined</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredParents.map((parent: any) => (
-                  <TableRow key={parent._id}>
+                {parents.map((parent: any) => (
+                  <TableRow key={parent._id} className={selectedParents.has(parent._id) ? 'bg-blue-50' : ''}>
+                    <TableCell>
+                      <Checkbox
+                        checked={selectedParents.has(parent._id)}
+                        onCheckedChange={() => toggleParent(parent._id)}
+                      />
+                    </TableCell>
                     <TableCell className="font-medium">
                       <div>
                         <div>{parent.fullName || 'N/A'}</div>
-                        <div className="text-sm text-gray-500">{parent._id}</div>
+                        <div className="text-xs text-gray-500">{parent._id}</div>
                       </div>
                     </TableCell>
                     <TableCell>{parent.email || 'N/A'}</TableCell>
                     <TableCell>{parent.phoneNumber || 'N/A'}</TableCell>
                     <TableCell>
-                      <Badge
-                        variant={parent.isActive ? 'default' : 'secondary'}
-                      >
-                        {parent.isActive ? 'active' : 'inactive'}
-                      </Badge>
+                      <div className="flex gap-1">
+                        {parent.isSuspended ? (
+                          <Badge variant="destructive" className="gap-1">
+                            <Shield className="h-3 w-3" />
+                            Suspended
+                          </Badge>
+                        ) : parent.isActive ? (
+                          <Badge variant="default" className="bg-green-600">Active</Badge>
+                        ) : (
+                          <Badge variant="secondary">Inactive</Badge>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex gap-1">
+                        {parent.isEmailVerified && (
+                          <Badge variant="outline" className="text-xs">Email ✓</Badge>
+                        )}
+                        {parent.isPhoneVerified && (
+                          <Badge variant="outline" className="text-xs">Phone ✓</Badge>
+                        )}
+                      </div>
                     </TableCell>
                     <TableCell>
                       {parent.createdAt

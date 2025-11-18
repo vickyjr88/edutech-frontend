@@ -7,9 +7,13 @@ export interface AdminUser {
   email: string;
   phoneNumber?: string;
   alternativePhoneNumber?: string;
+  bio?: string;
   country?: string;
   role: 'teacher' | 'student' | 'parent' | 'admin';
   isActive: boolean;
+  isSuspended?: boolean;
+  suspendedAt?: string;
+  suspendedUntil?: string;
   isEmailVerified: boolean;
   isPhoneVerified: boolean;
   passwordChangedAt?: string;
@@ -263,5 +267,260 @@ export const adminService = {
    */
   async updateParent(parentId: string, data: Partial<AdminUser>) {
     return api.patch<{ success: boolean; data: AdminUser }>(`/admin/parents/${parentId}`, data);
+  },
+
+  // ==================== NEW ENHANCED FEATURES ====================
+
+  /**
+   * Create a new user
+   */
+  async createUser(data: {
+    fullName: string;
+    email: string;
+    password: string;
+    role: 'teacher' | 'student' | 'parent';
+    phoneNumber?: string;
+    alternativePhoneNumber?: string;
+    bio?: string;
+    country?: string;
+    isEmailVerified?: boolean;
+    isPhoneVerified?: boolean;
+    sendWelcomeEmail?: boolean;
+  }) {
+    return api.post<{ success: boolean; data: AdminUser }>('/admin/users', data);
+  },
+
+  /**
+   * Advanced user query with more filters
+   */
+  async advancedQueryUsers(params: {
+    search?: string;
+    role?: string;
+    roles?: string[];
+    country?: string;
+    status?: 'active' | 'inactive' | 'suspended';
+    isEmailVerified?: boolean;
+    isPhoneVerified?: boolean;
+    createdAfter?: string;
+    createdBefore?: string;
+    lastLoginAfter?: string;
+    lastLoginBefore?: string;
+    page?: number;
+    limit?: number;
+    sortBy?: string;
+    sortOrder?: 'asc' | 'desc';
+    fields?: string[];
+  } = {}) {
+    const queryParams = new URLSearchParams();
+
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        if (Array.isArray(value)) {
+          value.forEach(v => queryParams.append(key, v));
+        } else {
+          queryParams.append(key, value.toString());
+        }
+      }
+    });
+
+    return api.get<{
+      users: AdminUser[];
+      total: number;
+      page: number;
+      totalPages: number;
+      stats: {
+        activeCount: number;
+        inactiveCount: number;
+        suspendedCount: number;
+      };
+    }>(`/admin/users/advanced?${queryParams.toString()}`);
+  },
+
+  /**
+   * Suspend a user
+   */
+  async suspendUser(userId: string, data: {
+    reason: 'policy_violation' | 'payment_issue' | 'fraudulent_activity' | 'inappropriate_behavior' | 'security_concern' | 'user_request' | 'other';
+    notes?: string;
+    suspendedUntil?: string;
+    internalNotes?: string;
+  }) {
+    return api.post<{ success: boolean; message: string; suspension: any }>(`/admin/users/${userId}/suspend`, data);
+  },
+
+  /**
+   * Unsuspend a user
+   */
+  async unsuspendUser(userId: string, notes?: string) {
+    return api.post<{ success: boolean; message: string }>(`/admin/users/${userId}/unsuspend`, { notes });
+  },
+
+  /**
+   * Get user suspension history
+   */
+  async getUserSuspensions(userId: string) {
+    return api.get<any[]>(`/admin/users/${userId}/suspensions`);
+  },
+
+  /**
+   * Perform bulk action on users
+   */
+  async bulkAction(data: {
+    userIds: string[];
+    action: 'activate' | 'deactivate' | 'suspend' | 'delete' | 'send_email';
+    reason?: string;
+    emailTemplate?: string;
+    emailSubject?: string;
+    emailContent?: string;
+  }) {
+    return api.post<{
+      success: number;
+      failed: number;
+      errors: Array<{ userId: string; error: string }>;
+    }>('/admin/users/bulk-action', data);
+  },
+
+  /**
+   * Get user audit logs
+   */
+  async getUserAuditLogs(userId: string, limit = 50) {
+    return api.get<any[]>(`/admin/users/${userId}/audit-logs?limit=${limit}`);
+  },
+
+  /**
+   * Get all audit logs with filters
+   */
+  async getAuditLogs(params: {
+    action?: string;
+    performedBy?: string;
+    targetUser?: string;
+    startDate?: string;
+    endDate?: string;
+    page?: number;
+    limit?: number;
+  } = {}) {
+    const queryParams = new URLSearchParams();
+
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        queryParams.append(key, value.toString());
+      }
+    });
+
+    return api.get<{
+      logs: any[];
+      total: number;
+      page: number;
+      totalPages: number;
+    }>(`/admin/audit-logs?${queryParams.toString()}`);
+  },
+
+  /**
+   * Get dashboard statistics
+   */
+  async getDashboardStats() {
+    return api.get<{
+      users: {
+        total: number;
+        active: number;
+        inactive: number;
+        suspended: number;
+        newThisMonth: number;
+        byRole: Record<string, number>;
+      };
+      tickets: {
+        total: number;
+        open: number;
+        pending: number;
+        resolved: number;
+      };
+    }>('/admin/dashboard/stats');
+  },
+
+  // ==================== SUPPORT TICKETS ====================
+
+  /**
+   * Create a support ticket
+   */
+  async createTicket(data: {
+    userId: string;
+    subject: string;
+    message: string;
+    category: 'account_access' | 'payment' | 'technical' | 'content' | 'general' | 'feature_request' | 'bug_report' | 'other';
+    priority?: 'low' | 'medium' | 'high' | 'urgent';
+    attachments?: string[];
+    tags?: string[];
+  }) {
+    return api.post<any>('/admin/tickets', data);
+  },
+
+  /**
+   * Get all tickets with filters
+   */
+  async getTickets(params: {
+    search?: string;
+    status?: 'open' | 'in_progress' | 'pending_user' | 'resolved' | 'closed';
+    priority?: 'low' | 'medium' | 'high' | 'urgent';
+    category?: string;
+    userId?: string;
+    assignedTo?: string;
+    page?: number;
+    limit?: number;
+    sortBy?: string;
+    sortOrder?: 'asc' | 'desc';
+  } = {}) {
+    const queryParams = new URLSearchParams();
+
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        queryParams.append(key, value.toString());
+      }
+    });
+
+    return api.get<{
+      tickets: any[];
+      total: number;
+      page: number;
+      totalPages: number;
+    }>(`/admin/tickets?${queryParams.toString()}`);
+  },
+
+  /**
+   * Get a single ticket by ID
+   */
+  async getTicketById(ticketId: string) {
+    return api.get<any>(`/admin/tickets/${ticketId}`);
+  },
+
+  /**
+   * Update a ticket
+   */
+  async updateTicket(ticketId: string, data: {
+    status?: 'open' | 'in_progress' | 'pending_user' | 'resolved' | 'closed';
+    priority?: 'low' | 'medium' | 'high' | 'urgent';
+    category?: string;
+    assignedTo?: string;
+    resolution?: string;
+    tags?: string[];
+  }) {
+    return api.patch<any>(`/admin/tickets/${ticketId}`, data);
+  },
+
+  /**
+   * Add a message to a ticket
+   */
+  async addTicketMessage(ticketId: string, data: {
+    message: string;
+    isInternal?: boolean;
+    attachments?: string[];
+  }) {
+    return api.post<any>(`/admin/tickets/${ticketId}/messages`, data);
+  },
+
+  /**
+   * Get user's tickets
+   */
+  async getUserTickets(userId: string) {
+    return api.get<any[]>(`/admin/users/${userId}/tickets`);
   },
 };
