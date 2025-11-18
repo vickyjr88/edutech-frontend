@@ -19,6 +19,7 @@ import {
   GraduationCap,
   UserCircle,
   UsersRound,
+  MessageSquare,
 } from "lucide-react";
 
 /**
@@ -108,6 +109,12 @@ const AdminDashboard = () => {
       href: "/admin/parents",
       icon: UsersRound,
       current: location.pathname.startsWith("/admin/parents"),
+    },
+    {
+      name: "Support Tickets",
+      href: "/admin/tickets",
+      icon: MessageSquare,
+      current: location.pathname.startsWith("/admin/tickets"),
     },
   ];
 

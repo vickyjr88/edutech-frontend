@@ -79,6 +79,7 @@ import BloggersList from "../pages/admin/BloggersList";
 import TeachersManagement from "../pages/admin/TeachersManagement";
 import StudentsManagement from "../pages/admin/StudentsManagement";
 import ParentsManagement from "../pages/admin/ParentsManagement";
+import TicketsManagement from "../pages/admin/TicketsManagement";
 
 const AppRoutes = () => {
   return (
@@ -323,6 +324,7 @@ const AppRoutes = () => {
         <Route path="teachers" element={<TeachersManagement />} />
         <Route path="students" element={<StudentsManagement />} />
         <Route path="parents" element={<ParentsManagement />} />
+        <Route path="tickets" element={<TicketsManagement />} />
       </Route>
 
       {/* Document Viewers - Public (uses signed URL for security) */}
