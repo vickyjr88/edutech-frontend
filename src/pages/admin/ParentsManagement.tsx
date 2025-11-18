@@ -1,6 +1,8 @@
+import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import ParentsList from '@/components/admin/parents/ParentsList';
 import ParentDetails from '@/components/admin/parents/ParentDetails';
+import CreateUserForm from '@/components/admin/users/CreateUserForm';
 
 /**
  * Parents Management Page
@@ -10,6 +12,7 @@ import ParentDetails from '@/components/admin/parents/ParentDetails';
 const ParentsManagement = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const [createModalOpen, setCreateModalOpen] = useState(false);
   const parentId = searchParams.get('id');
 
   const handleViewParent = (parentId: string) => {
@@ -20,14 +23,24 @@ const ParentsManagement = () => {
     navigate('/admin/parents');
   };
 
+  const handleAddParent = () => {
+    setCreateModalOpen(true);
+  };
+
   return (
     <div>
       <h1 className="text-2xl font-bold mb-4">Parents Management</h1>
       {parentId ? (
         <ParentDetails parentId={parentId} onBack={handleBack} />
       ) : (
-        <ParentsList onViewParent={handleViewParent} />
+        <ParentsList onViewParent={handleViewParent} onAddParent={handleAddParent} />
       )}
+
+      <CreateUserForm
+        open={createModalOpen}
+        onClose={() => setCreateModalOpen(false)}
+        defaultRole="parent"
+      />
     </div>
   );
 };

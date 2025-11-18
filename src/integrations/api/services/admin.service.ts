@@ -523,4 +523,67 @@ export const adminService = {
   async getUserTickets(userId: string) {
     return api.get<any[]>(`/admin/users/${userId}/tickets`);
   },
+
+  // ==================== DASHBOARD ====================
+
+  /**
+   * Get comprehensive dashboard statistics
+   */
+  async getDashboardStats() {
+    return api.get<{
+      users: {
+        total: number;
+        active: number;
+        inactive: number;
+        suspended: number;
+        newThisMonth: number;
+        newThisWeek: number;
+        verifiedEmails: number;
+        verifiedPhones: number;
+        verificationRate: string;
+        byRole: Record<string, number>;
+        growthTrend: Array<{ _id: string; count: number }>;
+      };
+      tickets: {
+        total: number;
+        open: number;
+        inProgress: number;
+        pending: number;
+        resolved: number;
+        closed: number;
+        newThisWeek: number;
+        urgent: number;
+        highPriority: number;
+        needsAttention: number;
+        resolutionRate: string;
+        byCategory: Record<string, number>;
+        trend: Array<{ _id: string; count: number }>;
+      };
+      classes: {
+        total: number;
+        active: number;
+        inactive: number;
+      };
+      enrollments: {
+        total: number;
+        active: number;
+        completed: number;
+        pending: number;
+      };
+      activity: {
+        recentActions: number;
+        activeSuspensions: number;
+      };
+      overview: {
+        totalUsers: number;
+        totalTeachers: number;
+        totalStudents: number;
+        totalParents: number;
+        totalClasses: number;
+        totalEnrollments: number;
+        totalTickets: number;
+        activeTickets: number;
+      };
+    }>(`/admin/dashboard/stats`);
+  },
 };

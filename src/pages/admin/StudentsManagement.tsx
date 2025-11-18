@@ -1,6 +1,8 @@
+import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import StudentsList from '@/components/admin/students/StudentsList';
 import StudentDetails from '@/components/admin/students/StudentDetails';
+import CreateUserForm from '@/components/admin/users/CreateUserForm';
 
 /**
  * Students Management Page
@@ -10,6 +12,7 @@ import StudentDetails from '@/components/admin/students/StudentDetails';
 const StudentsManagement = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const [createModalOpen, setCreateModalOpen] = useState(false);
   const studentId = searchParams.get('id');
 
   const handleViewStudent = (studentId: string) => {
@@ -20,14 +23,24 @@ const StudentsManagement = () => {
     navigate('/admin/students');
   };
 
+  const handleAddStudent = () => {
+    setCreateModalOpen(true);
+  };
+
   return (
     <div>
       <h1 className="text-2xl font-bold mb-4">Students Management</h1>
       {studentId ? (
         <StudentDetails studentId={studentId} onBack={handleBack} />
       ) : (
-        <StudentsList onViewStudent={handleViewStudent} />
+        <StudentsList onViewStudent={handleViewStudent} onAddStudent={handleAddStudent} />
       )}
+
+      <CreateUserForm
+        open={createModalOpen}
+        onClose={() => setCreateModalOpen(false)}
+        defaultRole="student"
+      />
     </div>
   );
 };

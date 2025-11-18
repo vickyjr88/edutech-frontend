@@ -100,7 +100,7 @@ const CreateUserForm = ({ open, onClose, defaultRole = 'student' }: CreateUserFo
     if (!formData.password) newErrors.password = 'Password is required';
     else if (formData.password.length < 8) {
       newErrors.password = 'Password must be at least 8 characters';
-    } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])/.test(formData.password)) {
+    } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z0-9])/.test(formData.password)) {
       newErrors.password = 'Password must contain uppercase, lowercase, number and special character';
     }
 
@@ -236,7 +236,7 @@ const CreateUserForm = ({ open, onClose, defaultRole = 'student' }: CreateUserFo
             <Alert>
               <AlertCircle className="h-4 w-4" />
               <AlertDescription className="text-xs">
-                Password must be at least 8 characters and contain uppercase, lowercase, number and special character (@$!%*?&)
+                Password must be at least 8 characters and contain uppercase, lowercase, number and special character (any non-alphanumeric)
               </AlertDescription>
             </Alert>
 
