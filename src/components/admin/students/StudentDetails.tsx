@@ -19,6 +19,11 @@ import {
   TrendingUp,
   User,
   Activity,
+  Shield,
+  Ban,
+  CheckCircle,
+  XCircle,
+  History,
 } from 'lucide-react';
 import { adminService } from '@/integrations/api/services/admin.service';
 import { useToast } from '@/hooks/use-toast';
@@ -33,6 +38,8 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import SuspendUserModal from '@/components/admin/users/SuspendUserModal';
+import AuditLogViewer from '@/components/admin/users/AuditLogViewer';
 
 interface StudentDetailsProps {
   studentId: string;
@@ -42,6 +49,7 @@ interface StudentDetailsProps {
 const StudentDetails = ({ studentId, onBack }: StudentDetailsProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState<any>({});
+  const [suspendModalOpen, setSuspendModalOpen] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -101,6 +109,51 @@ const StudentDetails = ({ studentId, onBack }: StudentDetailsProps) => {
     },
   });
 
+  // Activate/Deactivate mutations
+  const activateMutation = useMutation({
+    mutationFn: () => adminService.bulkAction({
+      userIds: [studentId],
+      action: 'activate',
+    }),
+    onSuccess: () => {
+      toast({
+        title: 'Student Activated',
+        description: 'The student has been activated successfully',
+      });
+      queryClient.invalidateQueries({ queryKey: ['adminStudent', studentId] });
+      queryClient.invalidateQueries({ queryKey: ['adminStudents'] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Error',
+        description: error.response?.data?.message || 'Failed to activate student',
+        variant: 'destructive',
+      });
+    },
+  });
+
+  const deactivateMutation = useMutation({
+    mutationFn: () => adminService.bulkAction({
+      userIds: [studentId],
+      action: 'deactivate',
+    }),
+    onSuccess: () => {
+      toast({
+        title: 'Student Deactivated',
+        description: 'The student has been deactivated successfully',
+      });
+      queryClient.invalidateQueries({ queryKey: ['adminStudent', studentId] });
+      queryClient.invalidateQueries({ queryKey: ['adminStudents'] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Error',
+        description: error.response?.data?.message || 'Failed to deactivate student',
+        variant: 'destructive',
+      });
+    },
+  });
+
   // Helper function to generate random password
   const generateRandomPassword = () => {
     return Math.random().toString(36).slice(-10) + Math.random().toString(36).toUpperCase().slice(-2);
@@ -155,6 +208,81 @@ const StudentDetails = ({ studentId, onBack }: StudentDetailsProps) => {
         <div className="flex gap-2">
           {!isEditing ? (
             <>
+              {/* Suspension/Activation Controls */}
+              {student?.isSuspended ? (
+                <Button
+                  variant="outline"
+                  onClick={() => setSuspendModalOpen(true)}
+                  className="border-green-600 text-green-600 hover:bg-green-50"
+                >
+                  <CheckCircle className="h-4 w-4 mr-2" />
+                  Unsuspend
+                </Button>
+              ) : student?.isActive ? (
+                <>
+                  <Button
+                    variant="outline"
+                    onClick={() => setSuspendModalOpen(true)}
+                    className="border-red-600 text-red-600 hover:bg-red-50"
+                  >
+                    <Ban className="h-4 w-4 mr-2" />
+                    Suspend
+                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="outline">
+                        <XCircle className="h-4 w-4 mr-2" />
+                        Deactivate
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Deactivate Student</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This will deactivate the student account. They will not be able to log in
+                          until the account is reactivated.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={() => deactivateMutation.mutate()}
+                          className="bg-orange-600 hover:bg-orange-700"
+                        >
+                          Deactivate
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </>
+              ) : (
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="outline" className="border-green-600 text-green-600 hover:bg-green-50">
+                      <CheckCircle className="h-4 w-4 mr-2" />
+                      Activate
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Activate Student</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This will activate the student account, allowing them to log in and access the platform.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={() => activateMutation.mutate()}
+                        className="bg-green-600 hover:bg-green-700"
+                      >
+                        Activate
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              )}
+
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <Button variant="outline">
@@ -205,6 +333,10 @@ const StudentDetails = ({ studentId, onBack }: StudentDetailsProps) => {
           <TabsTrigger value="enrollments">Enrollments ({enrollments?.length || 0})</TabsTrigger>
           <TabsTrigger value="progress">Progress</TabsTrigger>
           <TabsTrigger value="parent">Parent Info</TabsTrigger>
+          <TabsTrigger value="activity">
+            <History className="h-4 w-4 mr-2" />
+            Activity History
+          </TabsTrigger>
         </TabsList>
 
         {/* Details Tab */}
@@ -237,9 +369,23 @@ const StudentDetails = ({ studentId, onBack }: StudentDetailsProps) => {
                 <CardTitle className="text-sm font-medium text-gray-500">Status</CardTitle>
               </CardHeader>
               <CardContent>
-                <Badge variant={student?.isActive ? 'default' : 'secondary'}>
-                  {student?.isActive ? 'Active' : 'Inactive'}
-                </Badge>
+                <div className="flex gap-2">
+                  {student?.isSuspended ? (
+                    <Badge variant="destructive" className="gap-1">
+                      <Shield className="h-3 w-3" />
+                      Suspended
+                    </Badge>
+                  ) : student?.isActive ? (
+                    <Badge variant="default" className="bg-green-600">Active</Badge>
+                  ) : (
+                    <Badge variant="secondary">Inactive</Badge>
+                  )}
+                </div>
+                {student?.isSuspended && student?.suspendedUntil && (
+                  <p className="text-xs text-gray-500 mt-2">
+                    Until: {new Date(student.suspendedUntil).toLocaleDateString()}
+                  </p>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -383,7 +529,21 @@ const StudentDetails = ({ studentId, onBack }: StudentDetailsProps) => {
             </CardContent>
           </Card>
         </TabsContent>
+
+        {/* Activity History Tab */}
+        <TabsContent value="activity">
+          <AuditLogViewer userId={studentId} limit={50} />
+        </TabsContent>
       </Tabs>
+
+      {/* Suspend/Unsuspend Modal */}
+      <SuspendUserModal
+        open={suspendModalOpen}
+        onClose={() => setSuspendModalOpen(false)}
+        userId={studentId}
+        userName={student?.fullName || 'Student'}
+        isSuspended={student?.isSuspended || false}
+      />
     </div>
   );
 };

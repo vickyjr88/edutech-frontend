@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Mail, Phone, Edit, Save, X, KeyRound, Users, DollarSign } from 'lucide-react';
+import { ArrowLeft, Mail, Phone, Edit, Save, X, KeyRound, Users, DollarSign, Shield, Ban, CheckCircle, XCircle, History } from 'lucide-react';
 import { adminService } from '@/integrations/api/services/admin.service';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -20,6 +20,8 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import SuspendUserModal from '@/components/admin/users/SuspendUserModal';
+import AuditLogViewer from '@/components/admin/users/AuditLogViewer';
 
 interface ParentDetailsProps {
   parentId: string;
@@ -29,6 +31,7 @@ interface ParentDetailsProps {
 const ParentDetails = ({ parentId, onBack }: ParentDetailsProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState<any>({});
+  const [suspendModalOpen, setSuspendModalOpen] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -80,6 +83,51 @@ const ParentDetails = ({ parentId, onBack }: ParentDetailsProps) => {
     },
   });
 
+  // Activate/Deactivate mutations
+  const activateMutation = useMutation({
+    mutationFn: () => adminService.bulkAction({
+      userIds: [parentId],
+      action: 'activate',
+    }),
+    onSuccess: () => {
+      toast({
+        title: 'Parent Activated',
+        description: 'The parent has been activated successfully',
+      });
+      queryClient.invalidateQueries({ queryKey: ['adminParent', parentId] });
+      queryClient.invalidateQueries({ queryKey: ['adminParents'] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Error',
+        description: error.response?.data?.message || 'Failed to activate parent',
+        variant: 'destructive',
+      });
+    },
+  });
+
+  const deactivateMutation = useMutation({
+    mutationFn: () => adminService.bulkAction({
+      userIds: [parentId],
+      action: 'deactivate',
+    }),
+    onSuccess: () => {
+      toast({
+        title: 'Parent Deactivated',
+        description: 'The parent has been deactivated successfully',
+      });
+      queryClient.invalidateQueries({ queryKey: ['adminParent', parentId] });
+      queryClient.invalidateQueries({ queryKey: ['adminParents'] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Error',
+        description: error.response?.data?.message || 'Failed to deactivate parent',
+        variant: 'destructive',
+      });
+    },
+  });
+
   // Helper function to generate random password
   const generateRandomPassword = () => {
     return Math.random().toString(36).slice(-10) + Math.random().toString(36).toUpperCase().slice(-2);
@@ -109,6 +157,81 @@ const ParentDetails = ({ parentId, onBack }: ParentDetailsProps) => {
         <div className="flex gap-2">
           {!isEditing ? (
             <>
+              {/* Suspension/Activation Controls */}
+              {parent?.isSuspended ? (
+                <Button
+                  variant="outline"
+                  onClick={() => setSuspendModalOpen(true)}
+                  className="border-green-600 text-green-600 hover:bg-green-50"
+                >
+                  <CheckCircle className="h-4 w-4 mr-2" />
+                  Unsuspend
+                </Button>
+              ) : parent?.isActive ? (
+                <>
+                  <Button
+                    variant="outline"
+                    onClick={() => setSuspendModalOpen(true)}
+                    className="border-red-600 text-red-600 hover:bg-red-50"
+                  >
+                    <Ban className="h-4 w-4 mr-2" />
+                    Suspend
+                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="outline">
+                        <XCircle className="h-4 w-4 mr-2" />
+                        Deactivate
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Deactivate Parent</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This will deactivate the parent account. They will not be able to log in
+                          until the account is reactivated.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={() => deactivateMutation.mutate()}
+                          className="bg-orange-600 hover:bg-orange-700"
+                        >
+                          Deactivate
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </>
+              ) : (
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="outline" className="border-green-600 text-green-600 hover:bg-green-50">
+                      <CheckCircle className="h-4 w-4 mr-2" />
+                      Activate
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Activate Parent</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This will activate the parent account, allowing them to log in and access the platform.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={() => activateMutation.mutate()}
+                        className="bg-green-600 hover:bg-green-700"
+                      >
+                        Activate
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              )}
+
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <Button variant="outline">
@@ -163,6 +286,10 @@ const ParentDetails = ({ parentId, onBack }: ParentDetailsProps) => {
           <TabsTrigger value="details">Details</TabsTrigger>
           <TabsTrigger value="children">Children ({children?.length || 0})</TabsTrigger>
           <TabsTrigger value="payments">Payments</TabsTrigger>
+          <TabsTrigger value="activity">
+            <History className="h-4 w-4 mr-2" />
+            Activity History
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="details" className="space-y-4">
@@ -194,9 +321,23 @@ const ParentDetails = ({ parentId, onBack }: ParentDetailsProps) => {
                 <CardTitle className="text-sm font-medium text-gray-500">Status</CardTitle>
               </CardHeader>
               <CardContent>
-                <Badge variant={parent?.isActive ? 'default' : 'secondary'}>
-                  {parent?.isActive ? 'Active' : 'Inactive'}
-                </Badge>
+                <div className="flex gap-2">
+                  {parent?.isSuspended ? (
+                    <Badge variant="destructive" className="gap-1">
+                      <Shield className="h-3 w-3" />
+                      Suspended
+                    </Badge>
+                  ) : parent?.isActive ? (
+                    <Badge variant="default" className="bg-green-600">Active</Badge>
+                  ) : (
+                    <Badge variant="secondary">Inactive</Badge>
+                  )}
+                </div>
+                {parent?.isSuspended && parent?.suspendedUntil && (
+                  <p className="text-xs text-gray-500 mt-2">
+                    Until: {new Date(parent.suspendedUntil).toLocaleDateString()}
+                  </p>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -280,7 +421,21 @@ const ParentDetails = ({ parentId, onBack }: ParentDetailsProps) => {
             </CardContent>
           </Card>
         </TabsContent>
+
+        {/* Activity History Tab */}
+        <TabsContent value="activity">
+          <AuditLogViewer userId={parentId} limit={50} />
+        </TabsContent>
       </Tabs>
+
+      {/* Suspend/Unsuspend Modal */}
+      <SuspendUserModal
+        open={suspendModalOpen}
+        onClose={() => setSuspendModalOpen(false)}
+        userId={parentId}
+        userName={parent?.fullName || 'Parent'}
+        isSuspended={parent?.isSuspended || false}
+      />
     </div>
   );
 };
