@@ -133,6 +133,7 @@ const TeacherDetails = ({ teacherId, onBack }: TeacherDetailsProps) => {
       fullName: formData.fullName,
       phoneNumber: formData.phoneNumber,
       country: formData.country,
+      bio: formData.bio,
     };
     updateMutation.mutate(allowedFields);
   };
