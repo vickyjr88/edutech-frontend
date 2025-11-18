@@ -76,6 +76,9 @@ import InquiriesPage from "../pages/admin/InquiriesPage";
 import NewsletterSubscribersPage from "../pages/admin/NewsletterSubscribersPage";
 import UnsubscribePage from "../pages/Unsubscribe";
 import BloggersList from "../pages/admin/BloggersList";
+import TeachersManagement from "../pages/admin/TeachersManagement";
+import StudentsManagement from "../pages/admin/StudentsManagement";
+import ParentsManagement from "../pages/admin/ParentsManagement";
 
 const AppRoutes = () => {
   return (
@@ -317,6 +320,9 @@ const AppRoutes = () => {
         <Route path="blog/authors" element={<BloggersList />} />
         <Route path="inquiries" element={<InquiriesPage />} />
         <Route path="newsletter-subscribers" element={<NewsletterSubscribersPage />} />
+        <Route path="teachers" element={<TeachersManagement />} />
+        <Route path="students" element={<StudentsManagement />} />
+        <Route path="parents" element={<ParentsManagement />} />
       </Route>
 
       {/* Document Viewers - Public (uses signed URL for security) */}
