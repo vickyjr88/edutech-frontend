@@ -46,21 +46,28 @@ const TeacherDetails = ({ teacherId, onBack }: TeacherDetailsProps) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Fetch teacher details and resources
-  const { data: teacherResponse, isLoading } = useQuery({
+  // Fetch teacher basic details
+  const { data: teacherResponse, isLoading, error } = useQuery({
     queryKey: ['adminTeacher', teacherId],
-    queryFn: async () => {
-      const response = await adminService.getTeacherResources(teacherId);
-      return response;
-    },
+    queryFn: () => adminService.getTeacherById(teacherId),
   });
 
-  const teacherData = (teacherResponse as any)?.data;
-  const teacher = teacherData?.user;
-  const teacherProfile = teacherData?.teacherProfile;
-  const teacherClasses = teacherData?.classes || [];
-  const teacherStudents = teacherData?.students || [];
-  const teacherEarnings = teacherData?.earnings || { total: 0, pending: 0, paid: 0 };
+  // Fetch teacher resources (classes, students, earnings)
+  const { data: resourcesResponse } = useQuery({
+    queryKey: ['adminTeacherResources', teacherId],
+    queryFn: () => adminService.getTeacherResources(teacherId),
+    enabled: !!teacherId,
+  });
+
+  // Extract data from API client wrapper (same as StudentDetails)
+  const teacher = teacherResponse?.data;
+  const teacherProfile = teacher?.teacherProfile;
+
+  // Extract resources data
+  const resourcesData = resourcesResponse?.data?.data;
+  const teacherClasses = resourcesData?.classes || [];
+  const teacherStudents = resourcesData?.students || [];
+  const teacherEarnings = resourcesData?.earnings || { total: 0, pending: 0, paid: 0 };
 
   // Update teacher mutation
   const updateMutation = useMutation({
@@ -86,23 +93,29 @@ const TeacherDetails = ({ teacherId, onBack }: TeacherDetailsProps) => {
 
   // Reset password mutation
   const resetPasswordMutation = useMutation({
-    mutationFn: async (newPassword: string) => {
-      return adminService.resetUserPassword(teacherId, newPassword);
-    },
+    mutationFn: () => adminService.resetUserPassword({
+      userId: teacherId,
+      newPassword: generateRandomPassword()
+    }),
     onSuccess: () => {
       toast({
         title: 'Password Reset',
         description: 'Password has been reset successfully',
       });
     },
-    onError: () => {
+    onError: (error: any) => {
       toast({
         title: 'Error',
-        description: 'Failed to reset password',
+        description: error.response?.data?.message || 'Failed to reset password',
         variant: 'destructive',
       });
     },
   });
+
+  // Helper function to generate random password
+  const generateRandomPassword = () => {
+    return Math.random().toString(36).slice(-10) + Math.random().toString(36).toUpperCase().slice(-2);
+  };
 
   const handleEdit = () => {
     setFormData(teacher);
@@ -119,10 +132,7 @@ const TeacherDetails = ({ teacherId, onBack }: TeacherDetailsProps) => {
   };
 
   const handleResetPassword = () => {
-    // For security, you might want to generate a random password
-    // or send a reset link instead
-    const tempPassword = 'TempPass' + Math.random().toString(36).slice(-8);
-    resetPasswordMutation.mutate(tempPassword);
+    resetPasswordMutation.mutate();
   };
 
   if (isLoading) {
@@ -131,9 +141,28 @@ const TeacherDetails = ({ teacherId, onBack }: TeacherDetailsProps) => {
     );
   }
 
+  if (error) {
+    return (
+      <div className="p-8 text-center text-red-500">
+        Error loading teacher details: {(error as any)?.message || 'Unknown error'}
+      </div>
+    );
+  }
+
+  if (teacherResponse?.error) {
+    return (
+      <div className="p-8 text-center text-red-500">
+        API Error: {teacherResponse.error.message}
+      </div>
+    );
+  }
+
   if (!teacher) {
     return (
-      <div className="p-8 text-center text-gray-500">Teacher not found</div>
+      <div className="p-8 text-center text-gray-500">
+        Teacher not found
+        <div className="text-xs mt-2">Debug: Check console for response data</div>
+      </div>
     );
   }
 
