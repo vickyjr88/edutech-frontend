@@ -80,6 +80,7 @@ import TeachersManagement from "../pages/admin/TeachersManagement";
 import StudentsManagement from "../pages/admin/StudentsManagement";
 import ParentsManagement from "../pages/admin/ParentsManagement";
 import TicketsManagement from "../pages/admin/TicketsManagement";
+import AdminDashboardPage from "../pages/admin/AdminDashboardPage";
 
 const AppRoutes = () => {
   return (
@@ -304,7 +305,8 @@ const AppRoutes = () => {
           <AdminDashboard />
         </AdminRoute>
       }>
-        <Route index element={<Navigate to="/admin/pages" replace />} />
+        <Route index element={<AdminDashboardPage />} />
+        <Route path="dashboard" element={<AdminDashboardPage />} />
         <Route path="pages" element={<PagesList />} />
         <Route path="pages/new" element={<PageEditor />} />
         <Route path="pages/:slug/edit" element={<PageEditor />} />

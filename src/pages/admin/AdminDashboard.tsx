@@ -20,6 +20,7 @@ import {
   UserCircle,
   UsersRound,
   MessageSquare,
+  LayoutDashboard,
 } from "lucide-react";
 
 /**
@@ -38,6 +39,12 @@ const AdminDashboard = () => {
   };
 
   const navigation = [
+    {
+      name: "Dashboard",
+      href: "/admin/dashboard",
+      icon: LayoutDashboard,
+      current: location.pathname === "/admin" || location.pathname === "/admin/dashboard",
+    },
     {
       name: "Pages",
       href: "/admin/pages",
