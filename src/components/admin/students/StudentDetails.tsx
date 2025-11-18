@@ -117,7 +117,13 @@ const StudentDetails = ({ studentId, onBack }: StudentDetailsProps) => {
   };
 
   const handleSave = () => {
-    updateMutation.mutate(formData);
+    // Only send allowed fields to avoid validation errors
+    const allowedFields = {
+      fullName: formData.fullName,
+      phoneNumber: formData.phoneNumber,
+      gradeLevel: formData.gradeLevel,
+    };
+    updateMutation.mutate(allowedFields);
   };
 
   const handleResetPassword = () => {

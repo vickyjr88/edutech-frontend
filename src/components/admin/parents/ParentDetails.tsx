@@ -142,7 +142,14 @@ const ParentDetails = ({ parentId, onBack }: ParentDetailsProps) => {
                 <X className="h-4 w-4 mr-2" />
                 Cancel
               </Button>
-              <Button onClick={() => updateMutation.mutate(formData)}>
+              <Button onClick={() => {
+                // Only send allowed fields to avoid validation errors
+                const allowedFields = {
+                  fullName: formData.fullName,
+                  phoneNumber: formData.phoneNumber,
+                };
+                updateMutation.mutate(allowedFields);
+              }}>
                 <Save className="h-4 w-4 mr-2" />
                 Save
               </Button>

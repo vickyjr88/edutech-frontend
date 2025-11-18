@@ -128,7 +128,13 @@ const TeacherDetails = ({ teacherId, onBack }: TeacherDetailsProps) => {
   };
 
   const handleSave = () => {
-    updateMutation.mutate(formData);
+    // Only send allowed fields to avoid validation errors
+    const allowedFields = {
+      fullName: formData.fullName,
+      phoneNumber: formData.phoneNumber,
+      country: formData.country,
+    };
+    updateMutation.mutate(allowedFields);
   };
 
   const handleResetPassword = () => {
