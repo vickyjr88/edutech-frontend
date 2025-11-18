@@ -16,6 +16,9 @@ import {
   Tags,
   Users,
   Mail,
+  GraduationCap,
+  UserCircle,
+  UsersRound,
 } from "lucide-react";
 
 /**
@@ -87,6 +90,24 @@ const AdminDashboard = () => {
       href: "/admin/newsletter-subscribers",
       icon: Users,
       current: location.pathname.startsWith("/admin/newsletter-subscribers"),
+    },
+    {
+      name: "Teachers",
+      href: "/admin/teachers",
+      icon: GraduationCap,
+      current: location.pathname.startsWith("/admin/teachers"),
+    },
+    {
+      name: "Students",
+      href: "/admin/students",
+      icon: UserCircle,
+      current: location.pathname.startsWith("/admin/students"),
+    },
+    {
+      name: "Parents",
+      href: "/admin/parents",
+      icon: UsersRound,
+      current: location.pathname.startsWith("/admin/parents"),
     },
   ];
 
