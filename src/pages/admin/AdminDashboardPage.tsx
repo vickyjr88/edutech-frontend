@@ -70,7 +70,7 @@ const AdminDashboardPage = () => {
     },
     enrollments: {
       total: rawStats?.enrollments?.total || 0,
-      active: rawStats?.enrollments?.active || 0,
+      enrolled: rawStats?.enrollments?.enrolled || 0,
       completed: rawStats?.enrollments?.completed || 0,
       pending: rawStats?.enrollments?.pending || 0,
     },
@@ -352,8 +352,8 @@ const AdminDashboardPage = () => {
                     <span className="font-semibold">{stats.enrollments.total}</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">Active</span>
-                    <span className="font-semibold text-green-600">{stats.enrollments.active}</span>
+                    <span className="text-sm text-gray-600">Enrolled</span>
+                    <span className="font-semibold text-green-600">{stats.enrollments.enrolled}</span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-gray-600">Completed</span>

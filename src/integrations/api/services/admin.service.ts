@@ -566,7 +566,7 @@ export const adminService = {
       };
       enrollments: {
         total: number;
-        active: number;
+        enrolled: number;
         completed: number;
         pending: number;
       };
