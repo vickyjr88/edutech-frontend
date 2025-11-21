@@ -285,16 +285,15 @@ export const CertificationsForm = ({ onComplete }: CertificationsFormProps) => {
           description: entry.description || '',
           isVerifiable: false,
           credentialUrl: '',
-          cert_docs: [],
-          year: entry.year
+          cert_docs: []
         };
-        
+
         // Add issueDate if year is provided
         if (entry.year && entry.year.trim()) {
           result.issueDate = `${entry.year}-01-01`;
           console.log("Added issueDate:", result.issueDate);
         }
-        
+
         return result;
       });
 
