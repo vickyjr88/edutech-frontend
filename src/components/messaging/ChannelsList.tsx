@@ -2,18 +2,12 @@
 import { PlusCircle, Hash, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-
-interface Channel {
-  id: number;
-  name: string;
-  unread: number;
-  private?: boolean;
-}
+import { Channel } from "@/integrations/api/services/messaging.service";
 
 interface ChannelsListProps {
   channels: Channel[];
   activeChannel: string;
-  setActiveChannel: (channelName: string) => void;
+  setActiveChannel: (channelId: string) => void;
 }
 
 export default function ChannelsList({ channels, activeChannel, setActiveChannel }: ChannelsListProps) {
@@ -25,29 +19,26 @@ export default function ChannelsList({ channels, activeChannel, setActiveChannel
           <PlusCircle className="h-4 w-4" />
         </Button>
       </div>
-      
+
       <ScrollArea className="h-[200px]">
         <div className="space-y-1 px-1">
           {channels.map((channel) => (
             <Button
               key={channel.id}
               variant="ghost"
-              className={`w-full justify-start py-1 px-2 h-auto ${
-                channel.name === activeChannel 
-                  ? "bg-gray-700 text-white" 
+              className={`w-full justify-start py-1 px-2 h-auto ${channel.id === activeChannel
+                  ? "bg-gray-700 text-white"
                   : "text-gray-300 hover:text-white hover:bg-gray-700"
-              }`}
-              onClick={() => setActiveChannel(channel.name)}
+                }`}
+              onClick={() => setActiveChannel(channel.id)}
             >
               <div className="flex items-center w-full">
-                {channel.private ? 
-                  <Lock className="h-4 w-4 mr-1 flex-shrink-0" /> : 
-                  <Hash className="h-4 w-4 mr-1 flex-shrink-0" />
-                }
+                {/* Assuming all channels are public for now, or check for private flag if added to interface */}
+                <Hash className="h-4 w-4 mr-1 flex-shrink-0" />
                 <span className="truncate">{channel.name}</span>
-                {channel.unread > 0 && (
+                {channel.unreadCount > 0 && (
                   <span className="ml-auto bg-red-500 text-white text-xs rounded-full h-5 min-w-[20px] flex items-center justify-center px-1">
-                    {channel.unread}
+                    {channel.unreadCount}
                   </span>
                 )}
               </div>

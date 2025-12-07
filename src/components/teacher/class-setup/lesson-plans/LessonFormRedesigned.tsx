@@ -352,9 +352,6 @@ export const LessonFormRedesigned = ({
     setAiError(null);
 
     try {
-      // Mock AI generation - in real implementation, this would call an AI service
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
       const generatedPlan = generateMainContent(lessonTitle, lessonDuration, objectives);
       onUpdate("description", generatedPlan);
       

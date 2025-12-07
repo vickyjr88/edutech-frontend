@@ -193,166 +193,53 @@ Lab report with findings and reflections`,
   }
 ];
 
-// Mock AI generation - in a real implementation, this would call an API
-const generateLessonWithAI = (subjectId: string, title: string, classType: string, template?: string): Promise<any> => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      // Create subject-specific content
-      let content = '';
-      const isAssessment = template === 'assessment';
-      
-      if (subjectId.includes('english') || subjectId.includes('language')) {
-        content = isAssessment ? 
-          `# Reading Comprehension Assessment
-          
-## Objectives
-- Assess student understanding of main idea and supporting details
-- Evaluate reading fluency and expression
-- Measure vocabulary development
+// Real AI generation using the teacher service API
+const generateLessonWithAI = async (subjectId: string, title: string, classType: string, template?: string): Promise<any> => {
+  try {
+    // Import the teacher service
+    const { teacherService } = await import('@/integrations/api/services/teacher.service');
 
-## Assessment Components
-1. Reading passage analysis (20 minutes)
-2. Vocabulary in context questions (10 minutes)
-3. Short response questions (15 minutes)
-4. Reading fluency check-in (individual assessments during independent work)
+    // Prepare the prompt for AI generation
+    const templateInfo = template ? templates.find(t => t.id === template) : null;
+    const templateName = templateInfo?.name || 'Standard Lesson';
 
-## Preparation
-Prepare reading passages at appropriate levels and assessment rubrics.` :
-          `# Language Arts Lesson: Narrative Elements
-          
-## Objectives
-- Identify key elements of narrative texts
-- Analyze character development in a story
-- Apply narrative structure to writing
+    const prompt = `Create a detailed lesson plan for a ${classType} class on the subject "${subjectId}".
+    
+Lesson Title: ${title || 'Untitled Lesson'}
+Template Type: ${templateName}
+${templateInfo ? `Template Description: ${templateInfo.description}` : ''}
 
-## Activities
-1. Read-aloud and discussion (15 minutes)
-2. Character analysis chart (10 minutes)
-3. Story elements graphic organizer (15 minutes)
-4. Writing prompt: Create a character (15 minutes)
-5. Sharing and feedback (5 minutes)
+Please generate a comprehensive lesson plan that includes:
+1. Clear learning objectives
+2. Detailed activities with time allocations
+3. Assessment methods
+4. Required resources and materials
+5. Differentiation strategies if applicable
 
-## Resources
-- Selected reading text
-- Graphic organizers
-- Writing materials`;
-      } else if (subjectId.includes('math')) {
-        content = isAssessment ?
-          `# Mathematics Assessment: Problem Solving
-          
-## Objectives
-- Evaluate understanding of key mathematical concepts
-- Assess problem-solving strategies
-- Measure procedural fluency
+Format the response in Markdown with clear sections.`;
 
-## Assessment Components
-1. Quick skill review (10 minutes)
-2. Problem-solving assessment (25 minutes)
-3. Self-evaluation of strategies used (10 minutes)
-4. Challenge problems (for early finishers)
+    // Call the real AI API
+    const response = await teacherService.generateCustomClassDescription(prompt);
 
-## Preparation
-Prepare assessment with varied question types and difficulty levels.` :
-          `# Mathematics Lesson: Problem-Solving Strategies
-          
-## Objectives
-- Apply multiple strategies to solve word problems
-- Explain mathematical thinking and reasoning
-- Evaluate the efficiency of different approaches
+    if (response.data && response.data.description) {
+      // Extract standards based on subject
+      const standards = subjectId ?
+        (learningStandards[subjectId.split('_')[0]] || learningStandards.default).slice(0, 3) :
+        learningStandards.default.slice(0, 3);
 
-## Activities
-1. Warm-up problem (5 minutes)
-2. Strategy demonstration (10 minutes)
-3. Guided practice with partner work (15 minutes)
-4. Independent problem-solving (20 minutes)
-5. Strategy sharing and comparison (10 minutes)
-
-## Resources
-- Problem set handouts
-- Math manipulatives
-- Strategy reference charts`;
-      } else if (subjectId.includes('science')) {
-        content = isAssessment ?
-          `# Science Assessment: Concept Application
-          
-## Objectives
-- Evaluate understanding of scientific concepts
-- Assess ability to interpret data
-- Measure application of scientific method
-
-## Assessment Components
-1. Concept review questions (15 minutes)
-2. Data interpretation exercise (15 minutes)
-3. Experimental design scenario (15 minutes)
-4. Self-reflection (5 minutes)
-
-## Preparation
-Prepare assessment materials and data sets for interpretation.` :
-          `# Science Lesson: Experimental Investigation
-          
-## Objectives
-- Design a controlled experiment
-- Collect and record accurate data
-- Draw evidence-based conclusions
-
-## Activities
-1. Question and hypothesis formation (10 minutes)
-2. Experimental design planning (15 minutes)
-3. Experiment execution (20 minutes)
-4. Data analysis and conclusion drawing (10 minutes)
-5. Presentation of findings (5 minutes)
-
-## Resources
-- Lab equipment
-- Data collection sheets
-- Safety guidelines`;
-      } else {
-        content = isAssessment ?
-          `# Unit Assessment
-          
-## Objectives
-- Evaluate conceptual understanding
-- Assess skill application in context
-- Measure progress toward learning goals
-
-## Assessment Components
-1. Key concept review (10 minutes)
-2. Written assessment (30 minutes)
-3. Reflection on learning (10 minutes)
-4. Self-evaluation (10 minutes)
-
-## Preparation
-Prepare assessment items aligned with unit objectives.` :
-          `# Lesson Plan: Key Concept Exploration
-          
-## Objectives
-- Understand foundational concepts
-- Apply knowledge in relevant contexts
-- Develop critical thinking skills
-
-## Activities
-1. Concept introduction (10 minutes)
-2. Guided exploration (15 minutes)
-3. Collaborative application (20 minutes)
-4. Independent practice (10 minutes)
-5. Check for understanding (5 minutes)
-
-## Resources
-- Presentation materials
-- Activity worksheets
-- Reference materials`;
-      }
-      
-      resolve({
-        title: title || (isAssessment ? 'Unit Assessment' : 'Lesson Plan'),
-        description: content,
+      return {
+        title: title || 'AI-Generated Lesson Plan',
+        description: response.data.description,
         duration: '60',
-        standards: subjectId ? 
-          (learningStandards[subjectId.split('_')[0]] || learningStandards.default).slice(0, 3) :
-          learningStandards.default.slice(0, 3)
-      });
-    }, 1500); // Simulate API delay
-  });
+        standards
+      };
+    } else {
+      throw new Error('Invalid API response');
+    }
+  } catch (error) {
+    console.error("AI generation error:", error);
+    throw error;
+  }
 };
 
 interface EnhancedLessonPlanCreatorProps {
@@ -403,7 +290,7 @@ const EnhancedLessonPlanCreator: React.FC<EnhancedLessonPlanCreatorProps> = ({
   const [newLinkTitle, setNewLinkTitle] = useState('');
   const [newLinkUrl, setNewLinkUrl] = useState('');
   const [deletingLessonId, setDeletingLessonId] = useState<string | null>(null);
-  
+
   // Navigation and filtering state
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStandard, setFilterStandard] = useState('all');
@@ -429,8 +316,8 @@ const EnhancedLessonPlanCreator: React.FC<EnhancedLessonPlanCreatorProps> = ({
       });
     };
   }, [autoSaveTimeouts]);
-  
-  const availableStandards = subject ? 
+
+  const availableStandards = subject ?
     learningStandards[subject.split('_')[0]] || learningStandards.default :
     learningStandards.default;
 
@@ -534,7 +421,7 @@ const EnhancedLessonPlanCreator: React.FC<EnhancedLessonPlanCreatorProps> = ({
       [lessonId]: (prev[lessonId] || []).filter(resource => resource.id !== resourceId)
     }));
   };
-  
+
   // Reset form when dialog opens
   useEffect(() => {
     if (isCreatingLesson) {
@@ -548,7 +435,7 @@ const EnhancedLessonPlanCreator: React.FC<EnhancedLessonPlanCreatorProps> = ({
       setUseAI(false);
     }
   }, [isCreatingLesson]);
-  
+
   // Apply template when selected
   useEffect(() => {
     if (selectedTemplate) {
@@ -560,29 +447,44 @@ const EnhancedLessonPlanCreator: React.FC<EnhancedLessonPlanCreatorProps> = ({
       }
     }
   }, [selectedTemplate]);
-  
+
   // Generate content with AI when requested
   const handleAIGeneration = async () => {
     setIsGenerating(true);
     try {
+      toast({
+        title: "Generating lesson plan...",
+        description: "AI is creating your lesson plan. This may take a moment.",
+      });
+
       const result = await generateLessonWithAI(
-        subject, 
-        customTitle, 
-        classType, 
+        subject,
+        customTitle,
+        classType,
         selectedTemplate
       );
-      
+
       setCustomTitle(result.title);
       setCustomDescription(result.description);
       setCustomDuration(result.duration);
       setSelectedStandards(result.standards || []);
+
+      toast({
+        title: "Success!",
+        description: "AI-generated lesson plan is ready. Review and customize as needed.",
+      });
     } catch (error) {
       console.error("AI generation error:", error);
+      toast({
+        title: "Generation Failed",
+        description: "Failed to generate lesson plan with AI. Please try again or create manually.",
+        variant: "destructive"
+      });
     } finally {
       setIsGenerating(false);
     }
   };
-  
+
   // Create a new lesson plan
   const handleCreateLesson = (e?: React.MouseEvent) => {
     if (e) {
@@ -656,7 +558,7 @@ const EnhancedLessonPlanCreator: React.FC<EnhancedLessonPlanCreatorProps> = ({
       console.error("Error creating lesson plan:", error);
     }
   };
-  
+
   // Extract standards from lesson description
   const getLessonStandards = (description: string): string[] => {
     const match = description.match(/<!-- STANDARDS: (.*?) -->/);
@@ -665,7 +567,7 @@ const EnhancedLessonPlanCreator: React.FC<EnhancedLessonPlanCreatorProps> = ({
     }
     return [];
   };
-  
+
   // State for the edit modal
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("content");
@@ -686,15 +588,15 @@ const EnhancedLessonPlanCreator: React.FC<EnhancedLessonPlanCreatorProps> = ({
   const saveInlineEdit = async (lessonId: string, field: string) => {
     const key = `${lessonId}-${field}`;
     const newValue = tempValues[key];
-    
+
     if (newValue !== undefined) {
       updateLessonPlan(lessonId, field, newValue);
-      
+
       // Auto-save after a short delay
       if (autoSaveTimeouts[lessonId]) {
         clearTimeout(autoSaveTimeouts[lessonId]);
       }
-      
+
       const timeoutId = setTimeout(async () => {
         if (saveLessonPlans) {
           await saveLessonPlans();
@@ -706,10 +608,10 @@ const EnhancedLessonPlanCreator: React.FC<EnhancedLessonPlanCreatorProps> = ({
           return newTimeouts;
         });
       }, 1000);
-      
+
       setAutoSaveTimeouts(prev => ({ ...prev, [lessonId]: timeoutId }));
     }
-    
+
     cancelInlineEdit();
   };
 
@@ -731,18 +633,18 @@ const EnhancedLessonPlanCreator: React.FC<EnhancedLessonPlanCreatorProps> = ({
       const lesson = lessonPlans.find(l => l.id === lessonId);
       if (lesson) {
         const currentLinks = getLessonResourceLinks(lesson);
-        const newResource = { 
-          id: Date.now().toString(), 
-          title: newLinkTitle.trim(), 
-          url: newLinkUrl.trim() 
+        const newResource = {
+          id: Date.now().toString(),
+          title: newLinkTitle.trim(),
+          url: newLinkUrl.trim()
         };
         updateLessonResourceLinks(lessonId, [...currentLinks, newResource]);
-        
+
         // Auto-save the new link
         if (autoSaveTimeouts[lessonId]) {
           clearTimeout(autoSaveTimeouts[lessonId]);
         }
-        
+
         const timeoutId = setTimeout(async () => {
           if (saveLessonPlans) {
             await saveLessonPlans();
@@ -753,7 +655,7 @@ const EnhancedLessonPlanCreator: React.FC<EnhancedLessonPlanCreatorProps> = ({
             return newTimeouts;
           });
         }, 1000);
-        
+
         setAutoSaveTimeouts(prev => ({ ...prev, [lessonId]: timeoutId }));
       }
     }
@@ -771,7 +673,7 @@ const EnhancedLessonPlanCreator: React.FC<EnhancedLessonPlanCreatorProps> = ({
     if (deletingLessonId) {
       // Remove from local state
       removeLessonPlan(deletingLessonId);
-      
+
       // Update via API if available
       if (saveLessonPlans) {
         try {
@@ -780,7 +682,7 @@ const EnhancedLessonPlanCreator: React.FC<EnhancedLessonPlanCreatorProps> = ({
           console.error("Failed to save lesson plans after deletion:", error);
         }
       }
-      
+
       setDeletingLessonId(null);
     }
   };
@@ -790,16 +692,16 @@ const EnhancedLessonPlanCreator: React.FC<EnhancedLessonPlanCreatorProps> = ({
   };
 
   // File upload function
-  const uploadFileToBackend = async (file: File, lessonId: string, lessonIndex: number, classId ?: string) => {
+  const uploadFileToBackend = async (file: File, lessonId: string, lessonIndex: number, classId?: string) => {
     console.log("Uploading file:", form.getValues());
     if (!classId) {
       // For new classes, store files locally and show a message
       toast({
-        title: "Class Not Saved Yet "+currentLessonId,
+        title: "Class Not Saved Yet " + currentLessonId,
         description: "Files will be uploaded when you save the class. For now, files are stored locally.",
         variant: "default",
       });
-      
+
       // Store file locally and return a temporary uploaded resource
       return {
         id: `temp-${lessonId}-${file.name}-${Date.now()}`,
@@ -888,7 +790,7 @@ const EnhancedLessonPlanCreator: React.FC<EnhancedLessonPlanCreatorProps> = ({
     setActiveTab("content");
     setIsEditModalOpen(true);
   };
-  
+
   // Toggle a learning standard selection
   const toggleStandard = (standard: string) => {
     if (selectedStandards.includes(standard)) {
@@ -897,23 +799,23 @@ const EnhancedLessonPlanCreator: React.FC<EnhancedLessonPlanCreatorProps> = ({
       setSelectedStandards([...selectedStandards, standard]);
     }
   };
-  
+
   // Calculate completion rate for standards coverage
   const getStandardsCoverage = (): number => {
     // Get all standards from all lesson plans
     const allStandardsUsed = lessonPlans
       .map(lesson => getLessonStandards(lesson.description || ''))
       .flat();
-    
+
     // Count unique standards used
     const uniqueStandardsUsed = new Set(allStandardsUsed);
-    
+
     // Calculate percentage of available standards covered
     return Math.round((uniqueStandardsUsed.size / availableStandards.length) * 100);
   };
-  
+
   const standardsCoverage = getStandardsCoverage();
-  
+
   return (
     <div className="space-y-4" key={key}>
       <div className="space-y-4">
@@ -932,8 +834,8 @@ const EnhancedLessonPlanCreator: React.FC<EnhancedLessonPlanCreatorProps> = ({
               Create detailed lesson plans for your class. ✨ Click any field to edit inline!
             </p>
           </div>
-          
-          <Button 
+
+          <Button
             type="button"
             onClick={() => setIsCreatingLesson(true)}
           >
@@ -958,7 +860,7 @@ const EnhancedLessonPlanCreator: React.FC<EnhancedLessonPlanCreatorProps> = ({
                     />
                   </div>
                 </div>
-                
+
                 <div className="flex items-center gap-3 flex-wrap">
                   <div className="flex items-center gap-2">
                     <Filter className="h-4 w-4 text-gray-500" />
@@ -1011,7 +913,7 @@ const EnhancedLessonPlanCreator: React.FC<EnhancedLessonPlanCreatorProps> = ({
                   </div>
                 </div>
               </div>
-              
+
               {/* Quick Stats */}
               <div className="flex items-center justify-between mt-3 pt-3 border-t">
                 <div className="text-sm text-gray-600">
@@ -1027,7 +929,7 @@ const EnhancedLessonPlanCreator: React.FC<EnhancedLessonPlanCreatorProps> = ({
           </Card>
         )}
       </div>
-        
+
       {/* Lesson Creation Dialog */}
       <Dialog
         modal={true}
@@ -1048,66 +950,65 @@ const EnhancedLessonPlanCreator: React.FC<EnhancedLessonPlanCreatorProps> = ({
           onInteractOutside={(e) => e.preventDefault()}
           onPointerDownOutside={(e) => e.preventDefault()}
         >
-            <DialogHeader>
-              <DialogTitle>{isEditMode ? 'Edit Lesson Plan' : 'Create New Lesson Plan'}</DialogTitle>
-              <DialogDescription>
-                {isEditMode 
-                  ? 'Update your lesson plan content and settings' 
-                  : 'Choose a template or create a custom lesson plan'}
-              </DialogDescription>
-            </DialogHeader>
-            
-            <div className="flex-grow overflow-hidden">
-              <Tabs defaultValue="template">
-                <TabsList className="w-full flex">
-                  <TabsTrigger value="template" className="flex-1">
-                    <FileText className="h-4 w-4 mr-2" />
-                    Templates
-                  </TabsTrigger>
-                  <TabsTrigger value="custom" className="flex-1">
-                    <Edit className="h-4 w-4 mr-2" />
-                    Custom
-                  </TabsTrigger>
-                  <TabsTrigger value="standards" className="flex-1">
-                    <ListChecks className="h-4 w-4 mr-2" />
-                    Standards
-                  </TabsTrigger>
-                  <TabsTrigger value="resources" className="flex-1">
-                    <Upload className="h-4 w-4 mr-2" />
-                    Resources
-                  </TabsTrigger>
-                </TabsList>
-                
-                <ScrollArea className="max-h-[60vh] overflow-y-auto">
-                  <div className="p-1 mt-2">
-                    <TabsContent value="template" className="space-y-4 mt-0">
-                      <div className="flex items-center space-x-2">
-                        <Switch 
-                          id="use-ai" 
-                          checked={useAI} 
-                          onCheckedChange={setUseAI}
-                        />
-                        <Label htmlFor="use-ai" className="flex items-center">
-                          <Sparkles className="h-4 w-4 mr-1 text-amber-500" />
-                          Enhance with AI
-                        </Label>
-                      </div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        {templates.map(template => (
-                          <div
-                            key={template.id}
-                            className="relative"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              setSelectedTemplate(template.id);
-                              return false;
-                            }}
-                          >
+          <DialogHeader>
+            <DialogTitle>{isEditMode ? 'Edit Lesson Plan' : 'Create New Lesson Plan'}</DialogTitle>
+            <DialogDescription>
+              {isEditMode
+                ? 'Update your lesson plan content and settings'
+                : 'Choose a template or create a custom lesson plan'}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="flex-grow overflow-hidden">
+            <Tabs defaultValue="template">
+              <TabsList className="w-full flex">
+                <TabsTrigger value="template" className="flex-1">
+                  <FileText className="h-4 w-4 mr-2" />
+                  Templates
+                </TabsTrigger>
+                <TabsTrigger value="custom" className="flex-1">
+                  <Edit className="h-4 w-4 mr-2" />
+                  Custom
+                </TabsTrigger>
+                <TabsTrigger value="standards" className="flex-1">
+                  <ListChecks className="h-4 w-4 mr-2" />
+                  Standards
+                </TabsTrigger>
+                <TabsTrigger value="resources" className="flex-1">
+                  <Upload className="h-4 w-4 mr-2" />
+                  Resources
+                </TabsTrigger>
+              </TabsList>
+
+              <ScrollArea className="max-h-[60vh] overflow-y-auto">
+                <div className="p-1 mt-2">
+                  <TabsContent value="template" className="space-y-4 mt-0">
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        id="use-ai"
+                        checked={useAI}
+                        onCheckedChange={setUseAI}
+                      />
+                      <Label htmlFor="use-ai" className="flex items-center">
+                        <Sparkles className="h-4 w-4 mr-1 text-amber-500" />
+                        Enhance with AI
+                      </Label>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {templates.map(template => (
+                        <div
+                          key={template.id}
+                          className="relative"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setSelectedTemplate(template.id);
+                            return false;
+                          }}
+                        >
                           <Card
-                            className={`cursor-pointer hover:border-blue-300 transition-all ${
-                              selectedTemplate === template.id ? 'border-blue-500 bg-blue-50' : ''
-                            }`}
+                            className={`cursor-pointer hover:border-blue-300 transition-all ${selectedTemplate === template.id ? 'border-blue-500 bg-blue-50' : ''
+                              }`}
                             onClick={(e) => {
                               e.preventDefault();
                               e.stopPropagation();
@@ -1124,205 +1025,205 @@ const EnhancedLessonPlanCreator: React.FC<EnhancedLessonPlanCreatorProps> = ({
                               </p>
                             </CardContent>
                           </Card>
-                          </div>
-                        ))}
-                      </div>
-                      {useAI && (
-                        <Button
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            handleAIGeneration();
-                          }}
-                          disabled={isGenerating}
-                          className="w-full mt-4"
-                          variant="outline"
-                        >
-                          {isGenerating ? (
-                            <>
-                              <motion.div 
-                                className="h-4 w-4 border-2 border-current border-t-transparent rounded-full mr-2"
-                                animate={{ rotate: 360 }}
-                                transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
-                              ></motion.div>
-                              Generating Content...
-                            </>
-                          ) : (
-                            <>
-                              <Sparkles className="h-4 w-4 mr-2" />
-                              Generate AI Content
-                            </>
-                          )}
-                        </Button>
-                      )}
-                    </TabsContent>
-                    
-                    <TabsContent value="custom" className="space-y-4 mt-0">
-                      <div className="space-y-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="lesson-title">Lesson Title</Label>
-                          <Input 
-                            id="lesson-title" 
-                            value={customTitle}
-                            onChange={(e) => setCustomTitle(e.target.value)}
-                            placeholder="Enter a descriptive title for this lesson"
-                          />
                         </div>
-                        
-                        <div className="space-y-2">
-                          <Label htmlFor="lesson-description">Detailed Plan</Label>
-                          <Textarea 
-                            id="lesson-description" 
-                            value={customDescription}
-                            onChange={(e) => setCustomDescription(e.target.value)}
-                            placeholder="Enter the detailed lesson plan including objectives, activities, and assessments"
-                            className="h-[220px] font-mono text-sm"
-                          />
-                          <p className="text-xs text-muted-foreground">
-                            Supports Markdown formatting. Use #, ##, ### for headings, * for lists, etc.
-                          </p>
-                        </div>
-                        
-                        <div className="space-y-2">
-                          <Label htmlFor="lesson-duration">Duration (minutes)</Label>
-                          <Input 
-                            id="lesson-duration" 
-                            value={customDuration}
-                            onChange={(e) => setCustomDuration(e.target.value)}
-                            type="number"
-                            placeholder="60"
-                            className="w-full sm:w-40"
-                          />
-                        </div>
-                      </div>
-                    </TabsContent>
-                    
-                    <TabsContent value="standards" className="space-y-4 mt-0">
-                      <h3 className="font-medium text-sm mb-2">Learning Standards</h3>
+                      ))}
+                    </div>
+                    {useAI && (
+                      <Button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          handleAIGeneration();
+                        }}
+                        disabled={isGenerating}
+                        className="w-full mt-4"
+                        variant="outline"
+                      >
+                        {isGenerating ? (
+                          <>
+                            <motion.div
+                              className="h-4 w-4 border-2 border-current border-t-transparent rounded-full mr-2"
+                              animate={{ rotate: 360 }}
+                              transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+                            ></motion.div>
+                            Generating Content...
+                          </>
+                        ) : (
+                          <>
+                            <Sparkles className="h-4 w-4 mr-2" />
+                            Generate AI Content
+                          </>
+                        )}
+                      </Button>
+                    )}
+                  </TabsContent>
+
+                  <TabsContent value="custom" className="space-y-4 mt-0">
+                    <div className="space-y-4">
                       <div className="space-y-2">
-                        {availableStandards.map(standard => (
-                          <div key={standard} className="flex items-center space-x-2">
-                            <input
-                              type="checkbox"
-                              id={`standard-${standard}`}
-                              checked={selectedStandards.includes(standard)}
-                              onChange={() => toggleStandard(standard)}
-                              className="h-4 w-4 rounded border-gray-300"
-                            />
-                            <Label htmlFor={`standard-${standard}`} className="text-sm">
-                              {standard}
-                            </Label>
-                          </div>
-                        ))}
+                        <Label htmlFor="lesson-title">Lesson Title</Label>
+                        <Input
+                          id="lesson-title"
+                          value={customTitle}
+                          onChange={(e) => setCustomTitle(e.target.value)}
+                          placeholder="Enter a descriptive title for this lesson"
+                        />
                       </div>
-                    </TabsContent>
 
-                    <TabsContent value="resources" className="space-y-4 mt-0">
-                      {isEditMode && currentLessonId && (
+                      <div className="space-y-2">
+                        <Label htmlFor="lesson-description">Detailed Plan</Label>
+                        <Textarea
+                          id="lesson-description"
+                          value={customDescription}
+                          onChange={(e) => setCustomDescription(e.target.value)}
+                          placeholder="Enter the detailed lesson plan including objectives, activities, and assessments"
+                          className="h-[220px] font-mono text-sm"
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          Supports Markdown formatting. Use #, ##, ### for headings, * for lists, etc.
+                        </p>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="lesson-duration">Duration (minutes)</Label>
+                        <Input
+                          id="lesson-duration"
+                          value={customDuration}
+                          onChange={(e) => setCustomDuration(e.target.value)}
+                          type="number"
+                          placeholder="60"
+                          className="w-full sm:w-40"
+                        />
+                      </div>
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="standards" className="space-y-4 mt-0">
+                    <h3 className="font-medium text-sm mb-2">Learning Standards</h3>
+                    <div className="space-y-2">
+                      {availableStandards.map(standard => (
+                        <div key={standard} className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            id={`standard-${standard}`}
+                            checked={selectedStandards.includes(standard)}
+                            onChange={() => toggleStandard(standard)}
+                            className="h-4 w-4 rounded border-gray-300"
+                          />
+                          <Label htmlFor={`standard-${standard}`} className="text-sm">
+                            {standard}
+                          </Label>
+                        </div>
+                      ))}
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="resources" className="space-y-4 mt-0">
+                    {isEditMode && currentLessonId && (
+                      <div className="space-y-4">
+                        <h3 className="font-medium text-sm mb-2">Lesson Resources</h3>
+
                         <div className="space-y-4">
-                          <h3 className="font-medium text-sm mb-2">Lesson Resources</h3>
+                          <div className="border rounded-md p-4">
+                            <h4 className="text-sm font-medium mb-2 flex items-center">
+                              <Upload className="h-4 w-4 mr-2" />
+                              Supporting Files
+                            </h4>
+                            {handleLessonFileChange && removeLessonFile && (
+                              <FileUploads
+                                lessonId={currentLessonId}
+                                classId={form.getValues('id') || undefined} // Pass class ID for upload API (if available)
+                                lessonIndex={lessonPlans.findIndex(plan => plan.id === currentLessonId)} // Pass lesson index
+                                files={lessonFileUploads[currentLessonId] || []}
+                                uploadedResources={uploadedResources[currentLessonId] || []}
+                                onFilesSelected={(lessonId, files) => {
+                                  if (handleLessonFileChange) {
+                                    const event = {
+                                      target: { files: files }
+                                    } as unknown as React.ChangeEvent<HTMLInputElement>;
+                                    handleLessonFileChange(lessonId, event);
+                                  }
+                                }}
+                                onFileRemove={removeLessonFile}
+                                onResourceUploaded={handleResourceUploaded}
+                                onResourceRemoved={handleResourceRemoved}
+                              />
+                            )}
+                          </div>
 
-                          <div className="space-y-4">
-                            <div className="border rounded-md p-4">
-                              <h4 className="text-sm font-medium mb-2 flex items-center">
-                                <Upload className="h-4 w-4 mr-2" />
-                                Supporting Files
-                              </h4>
-                              {handleLessonFileChange && removeLessonFile && (
-                                <FileUploads
-                                  lessonId={currentLessonId}
-                                  classId={form.getValues('id') || undefined} // Pass class ID for upload API (if available)
-                                  lessonIndex={lessonPlans.findIndex(plan => plan.id === currentLessonId)} // Pass lesson index
-                                  files={lessonFileUploads[currentLessonId] || []}
-                                  uploadedResources={uploadedResources[currentLessonId] || []}
-                                  onFilesSelected={(lessonId, files) => {
-                                    if (handleLessonFileChange) {
-                                      const mockEvent = {
-                                        target: { files: files }
-                                      } as unknown as React.ChangeEvent<HTMLInputElement>;
-                                      handleLessonFileChange(lessonId, mockEvent);
-                                    }
-                                  }}
-                                  onFileRemove={removeLessonFile}
-                                  onResourceUploaded={handleResourceUploaded}
-                                  onResourceRemoved={handleResourceRemoved}
-                                />
-                              )}
-                            </div>
+                          <div className="border rounded-md p-4">
+                            <h4 className="text-sm font-medium mb-2 flex items-center">
+                              <Link className="h-4 w-4 mr-2" />
+                              Resource Links
+                            </h4>
 
-                            <div className="border rounded-md p-4">
-                              <h4 className="text-sm font-medium mb-2 flex items-center">
-                                <Link className="h-4 w-4 mr-2" />
-                                Resource Links
-                              </h4>
-
-                              {currentLessonId && (
-                                <ResourceLinks
-                                  lessonId={currentLessonId}
-                                  resourceLinks={(() => {
-                                    const lesson = lessonPlans.find(l => l.id === currentLessonId);
-                                    return getLessonResourceLinks(lesson || {});
-                                  })()}
-                                  onAddResourceLink={(lessonId, title, url) => {
-                                    const lesson = lessonPlans.find(l => l.id === lessonId);
-                                    if (lesson) {
-                                      const currentLinks = getLessonResourceLinks(lesson);
-                                      const newResource = { id: Date.now().toString(), title, url };
-                                      updateLessonResourceLinks(lessonId, [...currentLinks, newResource]);
-                                    }
-                                  }}
-                                  onRemoveResourceLink={(lessonId, linkId) => {
-                                    const lesson = lessonPlans.find(l => l.id === lessonId);
-                                    if (lesson) {
-                                      const currentLinks = getLessonResourceLinks(lesson);
-                                      const updatedLinks = currentLinks.filter((res: ResourceLink) => res.id !== linkId);
-                                      updateLessonResourceLinks(lessonId, updatedLinks);
-                                    }
-                                  }}
-                                />
-                              )}
-                            </div>
+                            {currentLessonId && (
+                              <ResourceLinks
+                                lessonId={currentLessonId}
+                                resourceLinks={(() => {
+                                  const lesson = lessonPlans.find(l => l.id === currentLessonId);
+                                  return getLessonResourceLinks(lesson || {});
+                                })()}
+                                onAddResourceLink={(lessonId, title, url) => {
+                                  const lesson = lessonPlans.find(l => l.id === lessonId);
+                                  if (lesson) {
+                                    const currentLinks = getLessonResourceLinks(lesson);
+                                    const newResource = { id: Date.now().toString(), title, url };
+                                    updateLessonResourceLinks(lessonId, [...currentLinks, newResource]);
+                                  }
+                                }}
+                                onRemoveResourceLink={(lessonId, linkId) => {
+                                  const lesson = lessonPlans.find(l => l.id === lessonId);
+                                  if (lesson) {
+                                    const currentLinks = getLessonResourceLinks(lesson);
+                                    const updatedLinks = currentLinks.filter((res: ResourceLink) => res.id !== linkId);
+                                    updateLessonResourceLinks(lessonId, updatedLinks);
+                                  }
+                                }}
+                              />
+                            )}
                           </div>
                         </div>
-                      )}
-                      {!isEditMode && (
-                        <div className="text-center p-4 text-muted-foreground text-sm">
-                          <p>Resources can be added after creating the lesson plan.</p>
-                        </div>
-                      )}
-                    </TabsContent>
-                  </div>
-                </ScrollArea>
-              </Tabs>
-            </div>
-            
-            <DialogFooter>
-              <Button
-                variant="outline"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setIsCreatingLesson(false);
-                }}
-                type="button"
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  handleCreateLesson();
-                }}
-                disabled={!customTitle || !customDescription}
-                type="button"
-              >
-                {isEditMode ? 'Update Lesson' : 'Create Lesson'}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      
+                      </div>
+                    )}
+                    {!isEditMode && (
+                      <div className="text-center p-4 text-muted-foreground text-sm">
+                        <p>Resources can be added after creating the lesson plan.</p>
+                      </div>
+                    )}
+                  </TabsContent>
+                </div>
+              </ScrollArea>
+            </Tabs>
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setIsCreatingLesson(false);
+              }}
+              type="button"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleCreateLesson();
+              }}
+              disabled={!customTitle || !customDescription}
+              type="button"
+            >
+              {isEditMode ? 'Update Lesson' : 'Create Lesson'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Standards Coverage */}
       <Card className="bg-blue-50 border-blue-200">
         <CardHeader className="py-3">
@@ -1333,12 +1234,11 @@ const EnhancedLessonPlanCreator: React.FC<EnhancedLessonPlanCreatorProps> = ({
         </CardHeader>
         <CardContent className="py-2">
           <div className="w-full bg-blue-100 h-2 rounded-full mb-2">
-            <div 
-              className={`h-full rounded-full ${
-                standardsCoverage > 75 ? 'bg-green-500' : 
-                standardsCoverage > 50 ? 'bg-blue-500' : 
-                standardsCoverage > 25 ? 'bg-amber-500' : 'bg-red-500'
-              }`}
+            <div
+              className={`h-full rounded-full ${standardsCoverage > 75 ? 'bg-green-500' :
+                standardsCoverage > 50 ? 'bg-blue-500' :
+                  standardsCoverage > 25 ? 'bg-amber-500' : 'bg-red-500'
+                }`}
               style={{ width: `${standardsCoverage}%` }}
             ></div>
           </div>
@@ -1348,17 +1248,17 @@ const EnhancedLessonPlanCreator: React.FC<EnhancedLessonPlanCreatorProps> = ({
           </div>
         </CardContent>
       </Card>
-      
+
       {/* Lesson Plans List */}
       <div className={viewMode === 'grid' ? 'grid grid-cols-1 lg:grid-cols-2 gap-6' : 'space-y-3'}>
         <AnimatePresence>
           {lessonPlans.length === 0 ? (
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
             >
-              <EmptyState 
+              <EmptyState
                 onAddLesson={() => setIsCreatingLesson(true)}
                 onApplyAIContent={(changes) => {
                   if (changes.lessonPlans) {
@@ -1381,7 +1281,7 @@ const EnhancedLessonPlanCreator: React.FC<EnhancedLessonPlanCreatorProps> = ({
               const resourceLinks = getLessonResourceLinks(lesson);
               const resourceFiles = getLessonResourceFiles(lesson);
               const hasResources = (uploadedResources[lessonId]?.length || 0) + (lessonFileUploads[lessonId]?.length || 0) + resourceLinks.length + resourceFiles.length > 0;
-              
+
               return (
                 <motion.div
                   key={lesson.id || lesson._id}
@@ -1435,7 +1335,7 @@ const EnhancedLessonPlanCreator: React.FC<EnhancedLessonPlanCreatorProps> = ({
                             </div>
                           </div>
                         ) : (
-                          <CardTitle 
+                          <CardTitle
                             className="text-base flex items-start cursor-pointer hover:bg-blue-50 p-1 -m-1 rounded group-hover:bg-blue-50/50 transition-colors"
                             onClick={() => startInlineEdit(lesson.id, 'title', lesson.title || '')}
                           >
@@ -1446,14 +1346,14 @@ const EnhancedLessonPlanCreator: React.FC<EnhancedLessonPlanCreatorProps> = ({
                             <Edit className="h-3 w-3 text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity ml-2 mt-0.5 flex-shrink-0" />
                           </CardTitle>
                         )}
-                        
+
                         {/* Duration Display */}
                         <CardDescription className="flex items-center mt-1">
                           <Clock className="h-3.5 w-3.5 mr-1.5" />
                           <span>{lesson.duration || 60} minutes</span>
                         </CardDescription>
                       </div>
-                      
+
                       {/* Action Buttons */}
                       <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
                         <Button
@@ -1531,13 +1431,13 @@ const EnhancedLessonPlanCreator: React.FC<EnhancedLessonPlanCreatorProps> = ({
                           </div>
                         </div>
                       ) : (
-                        <div 
+                        <div
                           className="text-sm max-h-24 overflow-hidden relative mb-3 cursor-pointer hover:bg-blue-50/50 p-2 -m-2 rounded transition-colors group/desc"
                           onClick={() => startInlineEdit(lesson.id, 'description', lesson.description?.replace(/\\n\\n<!-- STANDARDS:.*?-->/, '') || '')}
                         >
                           <div className="prose prose-sm">
                             {lesson.description ? (
-                              <div dangerouslySetInnerHTML={{ 
+                              <div dangerouslySetInnerHTML={{
                                 __html: lesson.description
                                   .replace(/# (.*)/g, '<h3 class="text-base font-medium mt-1 mb-2">$1</h3>')
                                   .replace(/## (.*)/g, '<h4 class="text-sm font-medium mt-1 mb-1">$1</h4>')
@@ -1552,7 +1452,7 @@ const EnhancedLessonPlanCreator: React.FC<EnhancedLessonPlanCreatorProps> = ({
                           <Edit className="absolute top-2 right-2 h-3 w-3 text-blue-400 opacity-0 group-hover/desc:opacity-100 transition-opacity" />
                         </div>
                       )}
-                      
+
                       {/* Badges and Indicators */}
                       <div className="flex flex-wrap items-center gap-3 mt-3">
                         {/* Auto-save indicator */}
@@ -1567,7 +1467,7 @@ const EnhancedLessonPlanCreator: React.FC<EnhancedLessonPlanCreatorProps> = ({
                             Auto-saving...
                           </motion.div>
                         )}
-                        
+
                         {standards.length > 0 && (
                           <div className="flex flex-wrap gap-1">
                             {standards.map(standard => (
@@ -1632,42 +1532,42 @@ const EnhancedLessonPlanCreator: React.FC<EnhancedLessonPlanCreatorProps> = ({
                             <div className="space-y-2 mb-3">
                               <h4 className="text-xs font-medium text-gray-600 uppercase tracking-wide">Links</h4>
                               {resourceLinks.map((link: any) => (
-                              <div key={link.id} className="flex items-center justify-between p-2 bg-amber-50 border border-amber-200 rounded text-sm">
-                                <div className="flex items-center space-x-2 flex-1 min-w-0">
-                                  <Link className="h-3 w-3 text-amber-600 flex-shrink-0" />
-                                  <div className="min-w-0 flex-1">
-                                    <div className="font-medium text-amber-700 truncate">{link.title}</div>
-                                    <div className="text-xs text-amber-600 truncate">{link.url}</div>
+                                <div key={link.id} className="flex items-center justify-between p-2 bg-amber-50 border border-amber-200 rounded text-sm">
+                                  <div className="flex items-center space-x-2 flex-1 min-w-0">
+                                    <Link className="h-3 w-3 text-amber-600 flex-shrink-0" />
+                                    <div className="min-w-0 flex-1">
+                                      <div className="font-medium text-amber-700 truncate">{link.title}</div>
+                                      <div className="text-xs text-amber-600 truncate">{link.url}</div>
+                                    </div>
+                                    <Badge variant="outline" className="text-xs flex-shrink-0">Link</Badge>
                                   </div>
-                                  <Badge variant="outline" className="text-xs flex-shrink-0">Link</Badge>
+                                  <div className="flex items-center space-x-1 ml-2">
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => window.open(link.url, '_blank')}
+                                      className="h-6 w-6 p-0 text-amber-600 hover:text-amber-700"
+                                      title="Open link"
+                                    >
+                                      <Link className="h-3 w-3" />
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => {
+                                        const currentLinks = getLessonResourceLinks(lesson);
+                                        const updatedLinks = currentLinks.filter((res: any) => res.id !== link.id);
+                                        updateLessonResourceLinks(lesson.id, updatedLinks);
+                                      }}
+                                      className="h-6 w-6 p-0 text-red-500 hover:text-red-700"
+                                    >
+                                      <X className="h-3 w-3" />
+                                    </Button>
+                                  </div>
                                 </div>
-                                <div className="flex items-center space-x-1 ml-2">
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => window.open(link.url, '_blank')}
-                                    className="h-6 w-6 p-0 text-amber-600 hover:text-amber-700"
-                                    title="Open link"
-                                  >
-                                    <Link className="h-3 w-3" />
-                                  </Button>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => {
-                                      const currentLinks = getLessonResourceLinks(lesson);
-                                      const updatedLinks = currentLinks.filter((res: any) => res.id !== link.id);
-                                      updateLessonResourceLinks(lesson.id, updatedLinks);
-                                    }}
-                                    className="h-6 w-6 p-0 text-red-500 hover:text-red-700"
-                                  >
-                                    <X className="h-3 w-3" />
-                                  </Button>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        );
+                              ))}
+                            </div>
+                          );
                         })()}
 
                         {/* Show Resource Files */}
@@ -1677,33 +1577,33 @@ const EnhancedLessonPlanCreator: React.FC<EnhancedLessonPlanCreatorProps> = ({
                             <div className="space-y-2 mb-3">
                               <h4 className="text-xs font-medium text-gray-600 uppercase tracking-wide">Server Files</h4>
                               {resourceFiles.map((file: any) => (
-                              <div key={file._id || file.id} className="flex items-center justify-between p-2 bg-blue-50 border border-blue-200 rounded text-sm">
-                                <div className="flex items-center space-x-2 flex-1 min-w-0">
-                                  <Upload className="h-3 w-3 text-blue-600 flex-shrink-0" />
-                                  <div className="min-w-0 flex-1">
-                                    <div className="font-medium text-blue-700 truncate">{file.filename || file.name}</div>
-                                    <div className="text-xs text-blue-600 truncate">Uploaded to server</div>
+                                <div key={file._id || file.id} className="flex items-center justify-between p-2 bg-blue-50 border border-blue-200 rounded text-sm">
+                                  <div className="flex items-center space-x-2 flex-1 min-w-0">
+                                    <Upload className="h-3 w-3 text-blue-600 flex-shrink-0" />
+                                    <div className="min-w-0 flex-1">
+                                      <div className="font-medium text-blue-700 truncate">{file.filename || file.name}</div>
+                                      <div className="text-xs text-blue-600 truncate">Uploaded to server</div>
+                                    </div>
+                                    <Badge variant="outline" className="text-xs flex-shrink-0">File</Badge>
                                   </div>
-                                  <Badge variant="outline" className="text-xs flex-shrink-0">File</Badge>
+                                  <div className="flex items-center space-x-1 ml-2">
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => {
+                                        const currentFiles = getLessonResourceFiles(lesson);
+                                        const updatedFiles = currentFiles.filter((res: any) => (res._id || res.id) !== (file._id || file.id));
+                                        updateLessonResourceFiles(lesson.id || lesson._id, updatedFiles);
+                                      }}
+                                      className="h-6 w-6 p-0 text-red-500 hover:text-red-700"
+                                    >
+                                      <X className="h-3 w-3" />
+                                    </Button>
+                                  </div>
                                 </div>
-                                <div className="flex items-center space-x-1 ml-2">
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => {
-                                      const currentFiles = getLessonResourceFiles(lesson);
-                                      const updatedFiles = currentFiles.filter((res: any) => (res._id || res.id) !== (file._id || file.id));
-                                      updateLessonResourceFiles(lesson.id || lesson._id, updatedFiles);
-                                    }}
-                                    className="h-6 w-6 p-0 text-red-500 hover:text-red-700"
-                                  >
-                                    <X className="h-3 w-3" />
-                                  </Button>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        );
+                              ))}
+                            </div>
+                          );
                         })()}
 
                         {/* Show uploading files */}
@@ -1717,7 +1617,7 @@ const EnhancedLessonPlanCreator: React.FC<EnhancedLessonPlanCreatorProps> = ({
                                 return (
                                   <div key={fileKey} className="flex items-center justify-between p-2 bg-blue-50 border border-blue-200 rounded text-sm">
                                     <div className="flex items-center space-x-2">
-                                      <motion.div 
+                                      <motion.div
                                         className="h-3 w-3 border-2 border-blue-600 border-t-transparent rounded-full"
                                         animate={{ rotate: 360 }}
                                         transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
@@ -1743,9 +1643,8 @@ const EnhancedLessonPlanCreator: React.FC<EnhancedLessonPlanCreatorProps> = ({
                             }).map((resource) => {
                               const isLocalFile = resource.id.startsWith('temp-');
                               return (
-                                <div key={resource.id} className={`flex items-center justify-between p-2 rounded text-sm ${
-                                  isLocalFile ? 'bg-yellow-50 border border-yellow-200' : 'bg-green-50 border border-green-200'
-                                }`}>
+                                <div key={resource.id} className={`flex items-center justify-between p-2 rounded text-sm ${isLocalFile ? 'bg-yellow-50 border border-yellow-200' : 'bg-green-50 border border-green-200'
+                                  }`}>
                                   <div className="flex items-center space-x-2">
                                     <Upload className={`h-3 w-3 ${isLocalFile ? 'text-yellow-600' : 'text-green-600'}`} />
                                     <span className={`font-medium ${isLocalFile ? 'text-yellow-700' : 'text-green-700'}`}>
@@ -1784,11 +1683,11 @@ const EnhancedLessonPlanCreator: React.FC<EnhancedLessonPlanCreatorProps> = ({
                                         const lessonIndex = lessonPlans.findIndex(plan => plan.id === lesson.id);
                                         const fileKey = `${lesson.id}-${file.name}`;
                                         const isUploading = uploadingFiles.has(fileKey);
-                                        
+
                                         if (isUploading) return; // Prevent double upload
 
                                         const uploadedResource = await uploadFileToBackend(file, lesson.id, lessonIndex, classId);
-                                        
+
                                         if (uploadedResource) {
                                           handleResourceUploaded(lesson.id, uploadedResource);
                                           // Remove from local files
@@ -1802,7 +1701,7 @@ const EnhancedLessonPlanCreator: React.FC<EnhancedLessonPlanCreatorProps> = ({
                                     >
                                       {uploadingFiles.has(`${lesson.id}-${file.name}`) ? (
                                         <>
-                                          <motion.div 
+                                          <motion.div
                                             className="h-3 w-3 border border-current border-t-transparent rounded-full mr-1"
                                             animate={{ rotate: 360 }}
                                             transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
@@ -1891,7 +1790,7 @@ const EnhancedLessonPlanCreator: React.FC<EnhancedLessonPlanCreatorProps> = ({
                                   if (files.length === 0) return;
 
                                   const lessonIndex = lessonPlans.findIndex(plan => plan.id === lesson.id);
-                                  
+
                                   // Upload each file immediately
                                   for (const file of files) {
                                     const uploadedResource = await uploadFileToBackend(file, lesson.id, lessonIndex, classId);
@@ -1950,7 +1849,7 @@ const EnhancedLessonPlanCreator: React.FC<EnhancedLessonPlanCreatorProps> = ({
               <div className="text-sm text-gray-600">
                 Showing {startIndex + 1}-{Math.min(startIndex + LESSONS_PER_PAGE, filteredAndSortedLessons.length)} of {filteredAndSortedLessons.length} lessons
               </div>
-              
+
               <div className="flex items-center space-x-2">
                 <Button
                   variant="outline"
@@ -1961,7 +1860,7 @@ const EnhancedLessonPlanCreator: React.FC<EnhancedLessonPlanCreatorProps> = ({
                   <ChevronLeft className="h-4 w-4 mr-1" />
                   Previous
                 </Button>
-                
+
                 <div className="flex items-center space-x-1">
                   {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                     let pageNum;
@@ -1974,7 +1873,7 @@ const EnhancedLessonPlanCreator: React.FC<EnhancedLessonPlanCreatorProps> = ({
                     } else {
                       pageNum = currentPage - 2 + i;
                     }
-                    
+
                     return (
                       <Button
                         key={pageNum}
@@ -1987,7 +1886,7 @@ const EnhancedLessonPlanCreator: React.FC<EnhancedLessonPlanCreatorProps> = ({
                       </Button>
                     );
                   })}
-                  
+
                   {totalPages > 5 && currentPage < totalPages - 2 && (
                     <>
                       <span className="text-gray-400">...</span>
@@ -2002,7 +1901,7 @@ const EnhancedLessonPlanCreator: React.FC<EnhancedLessonPlanCreatorProps> = ({
                     </>
                   )}
                 </div>
-                
+
                 <Button
                   variant="outline"
                   size="sm"
@@ -2013,7 +1912,7 @@ const EnhancedLessonPlanCreator: React.FC<EnhancedLessonPlanCreatorProps> = ({
                   <ChevronRight className="h-4 w-4 ml-1" />
                 </Button>
               </div>
-              
+
               <div className="text-sm text-gray-600">
                 Page {currentPage} of {totalPages}
               </div>
@@ -2129,10 +2028,10 @@ const EnhancedLessonPlanCreator: React.FC<EnhancedLessonPlanCreatorProps> = ({
                               uploadedResources={uploadedResources[currentLessonId] || []}
                               onFilesSelected={(lessonId, files) => {
                                 if (handleLessonFileChange) {
-                                  const mockEvent = {
+                                  const event = {
                                     target: { files: files }
                                   } as unknown as React.ChangeEvent<HTMLInputElement>;
-                                  handleLessonFileChange(lessonId, mockEvent);
+                                  handleLessonFileChange(lessonId, event);
                                 }
                               }}
                               onFileRemove={removeLessonFile}
@@ -2283,11 +2182,11 @@ const EnhancedLessonPlanCreator: React.FC<EnhancedLessonPlanCreatorProps> = ({
       {deletingLessonId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           {/* Backdrop */}
-          <div 
+          <div
             className="absolute inset-0 bg-black/20 backdrop-blur-sm"
             onClick={cancelDelete}
           />
-          
+
           {/* Floating Dialog */}
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 10 }}
@@ -2305,7 +2204,7 @@ const EnhancedLessonPlanCreator: React.FC<EnhancedLessonPlanCreatorProps> = ({
                 <p className="text-sm text-gray-500">This action cannot be undone.</p>
               </div>
             </div>
-            
+
             <div className="flex gap-3 justify-end">
               <Button
                 variant="outline"

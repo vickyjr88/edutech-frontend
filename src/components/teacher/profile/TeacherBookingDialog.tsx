@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Calendar, CalendarDays, Check, Clock, DollarSign, ExternalLink } from 'lucide-react';
 import {
   Dialog,
@@ -14,6 +14,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { availabilityService } from '@/integrations/api/services/availability.service';
 
 interface TeacherBookingDialogProps {
   isOpen: boolean;
@@ -26,15 +27,40 @@ const TeacherBookingDialog: React.FC<TeacherBookingDialogProps> = ({ isOpen, onC
   const [sessionType, setSessionType] = useState<'one-time' | 'recurring' | 'package'>('one-time');
   const [selectedDate, setSelectedDate] = useState<string>('');
   const [selectedTime, setSelectedTime] = useState<string>('');
-  
-  // Mock data for UI demonstration
-  const availableDates = [
-    '2023-05-12', '2023-05-13', '2023-05-15', '2023-05-16', '2023-05-18'
-  ];
-  
-  const availableTimes = [
-    '09:00 AM', '10:00 AM', '11:00 AM', '02:00 PM', '03:00 PM', '04:00 PM', '05:00 PM'
-  ];
+  const [availableDates, setAvailableDates] = useState<string[]>([]);
+  const [availableTimes, setAvailableTimes] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (teacher?.id) {
+      loadAvailableDates();
+    }
+  }, [teacher]);
+
+  useEffect(() => {
+    if (selectedDate && teacher?.id) {
+      loadAvailableTimes();
+    }
+  }, [selectedDate, teacher]);
+
+  const loadAvailableDates = async () => {
+    const startDate = new Date().toISOString().split('T')[0];
+    const endDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    try {
+      const response = await availabilityService.getAvailableDates(teacher.id, startDate, endDate);
+      if (response.data) setAvailableDates(response.data);
+    } catch (error) {
+      console.error('Failed to load available dates:', error);
+    }
+  };
+
+  const loadAvailableTimes = async () => {
+    try {
+      const response = await availabilityService.getAvailableTimes(teacher.id, selectedDate);
+      if (response.data) setAvailableTimes(response.data);
+    } catch (error) {
+      console.error('Failed to load available times:', error);
+    }
+  };
 
   const handleContinue = () => {
     if (step === 'session-type') {

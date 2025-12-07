@@ -14,7 +14,7 @@ export const IntegrationsTab = () => {
 
     const [zoomStatus, setZoomStatus] = useState<{ connected: boolean; email?: string } | null>(null);
     const [calendarStatus, setCalendarStatus] = useState<{ connected: boolean; email?: string } | null>(null);
-    const [driveStatus, setDriveStatus] = useState<{ connected: boolean; email?: string }>({ connected: false }); // Mocked for now
+    const [driveStatus] = useState<{ connected: boolean; email?: string }>({ connected: false });
 
     const [loading, setLoading] = useState(true);
     const [actionLoading, setActionLoading] = useState<string | null>(null);

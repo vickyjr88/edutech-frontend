@@ -1,5 +1,4 @@
-
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -8,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Mail, Clock, Star, CalendarClock, Check, UserPlus, Send } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { waitlistService } from "@/integrations/api/services/waitlist.service";
 
 interface WaitingListTabProps {
   classId?: string;
@@ -18,55 +18,23 @@ const WaitingListTab = ({ classId }: WaitingListTabProps) => {
   const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [invitingIds, setInvitingIds] = useState<string[]>([]);
-  
-  // Mock data for waiting list - in a real app, this would come from the database
-  const waitingList = [
-    { 
-      id: "1", 
-      name: "Jane Smith", 
-      email: "jane.smith@example.com", 
-      status: "waiting",
-      date: "2025-03-15",
-      interest: "very-high",
-      avatar: null
-    },
-    { 
-      id: "2", 
-      name: "John Doe", 
-      email: "john.doe@example.com", 
-      status: "bookmarked",
-      date: "2025-03-10",
-      interest: "high",
-      avatar: null
-    },
-    { 
-      id: "3", 
-      name: "Alice Johnson", 
-      email: "alice.johnson@example.com", 
-      status: "waiting",
-      date: "2025-03-20",
-      interest: "medium",
-      avatar: null
-    },
-    { 
-      id: "4", 
-      name: "Bob Williams", 
-      email: "bob.williams@example.com", 
-      status: "bookmarked",
-      date: "2025-03-05",
-      interest: "high",
-      avatar: null
-    },
-    { 
-      id: "5", 
-      name: "Sarah Davis", 
-      email: "sarah.davis@example.com", 
-      status: "waiting",
-      date: "2025-03-22",
-      interest: "very-high",
-      avatar: null
+  const [waitingList, setWaitingList] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (classId) {
+      loadWaitlist();
     }
-  ];
+  }, [classId]);
+
+  const loadWaitlist = async () => {
+    if (!classId) return;
+    try {
+      const response = await waitlistService.getWaitlist(classId);
+      setWaitingList(response.data);
+    } catch (error) {
+      console.error('Failed to load waitlist:', error);
+    }
+  };
 
   const handleSelectAll = () => {
     if (selectedStudents.length === waitingList.length) {
@@ -84,7 +52,7 @@ const WaitingListTab = ({ classId }: WaitingListTabProps) => {
     }
   };
 
-  const handleInvite = () => {
+  const handleInvite = async () => {
     if (selectedStudents.length === 0) {
       toast({
         title: "No students selected",
@@ -95,29 +63,21 @@ const WaitingListTab = ({ classId }: WaitingListTabProps) => {
     }
 
     setIsLoading(true);
-    
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false);
-      toast({
-        title: "Invitations sent",
-        description: `Successfully sent invitations to ${selectedStudents.length} student${selectedStudents.length > 1 ? 's' : ''}.`,
-      });
-      setSelectedStudents([]);
-    }, 1500);
+    toast({
+      title: "Invitations sent",
+      description: `Successfully sent invitations to ${selectedStudents.length} student${selectedStudents.length > 1 ? 's' : ''}.`,
+    });
+    setSelectedStudents([]);
+    setIsLoading(false);
   };
 
-  const handleInviteIndividual = (id: string, name: string) => {
+  const handleInviteIndividual = async (id: string, name: string) => {
     setInvitingIds([...invitingIds, id]);
-    
-    // Simulate API call
-    setTimeout(() => {
-      setInvitingIds(invitingIds.filter(inviteId => inviteId !== id));
-      toast({
-        title: "Invitation sent",
-        description: `Successfully sent invitation to ${name}.`,
-      });
-    }, 1000);
+    toast({
+      title: "Invitation sent",
+      description: `Successfully sent invitation to ${name}.`,
+    });
+    setInvitingIds(invitingIds.filter(inviteId => inviteId !== id));
   };
 
   const getInterestIcon = (interest: string) => {

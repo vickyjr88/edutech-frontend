@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { Share2, Copy, Star, Mail, Link, User, Users, MessageSquare } from "lucide-react";
 import ReviewForm from "../../teacher/reviews/ReviewForm";
+import { reviewService } from "@/integrations/api/services/review.service";
 
 interface ReviewsTabProps {
   classId?: string;
@@ -24,20 +25,50 @@ const ReviewsTab = ({ classId }: ReviewsTabProps) => {
   const [showPreview, setShowPreview] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
   const [activeTab, setActiveTab] = useState("request");
+  const [pendingReviews, setPendingReviews] = useState<any[]>([]);
+  const [receivedReviews, setReceivedReviews] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  // Mock review data
-  const pendingReviews = [
-    { id: 1, name: "James Smith", type: "Parent", date: "2025-03-28", status: "Pending" },
-    { id: 2, name: "Sarah Johnson", type: "Student", date: "2025-03-27", status: "Pending" },
-  ];
+  useEffect(() => {
+    if (activeTab === 'pending') {
+      loadPendingReviews();
+    } else if (activeTab === 'received') {
+      loadReceivedReviews();
+    }
+  }, [activeTab]);
 
-  const receivedReviews = [
-    { id: 1, name: "Michael Brown", type: "Parent", date: "2025-03-25", rating: 5, comment: "Excellent teacher!" },
-    { id: 2, name: "Lisa Williams", type: "Student", date: "2025-03-24", rating: 4, comment: "Very helpful and patient." },
-    { id: 3, name: "Robert Clark", type: "Supervisor", date: "2025-03-22", rating: 5, comment: "Outstanding professional." },
-  ];
+  const loadPendingReviews = async () => {
+    try {
+      const response = await reviewService.getPendingReviews();
+      setPendingReviews(response.data.map(r => ({
+        id: r._id,
+        name: r.reviewerName,
+        type: r.reviewerType,
+        date: new Date(r.invitationSentAt || r.createdAt).toLocaleDateString(),
+        status: 'Pending'
+      })));
+    } catch (error) {
+      console.error('Failed to load pending reviews:', error);
+    }
+  };
 
-  const handleRequestReview = () => {
+  const loadReceivedReviews = async () => {
+    try {
+      const response = await reviewService.getCompletedReviews();
+      setReceivedReviews(response.data.map(r => ({
+        id: r._id,
+        name: r.reviewerName,
+        type: r.reviewerType,
+        date: new Date(r.completedAt || r.createdAt).toLocaleDateString(),
+        rating: r.rating || 0,
+        comment: r.comment || ''
+      })));
+    } catch (error) {
+      console.error('Failed to load received reviews:', error);
+    }
+  };
+
+  const handleRequestReview = async () => {
     if (!reviewerName || !reviewerEmail) {
       toast({
         title: "Missing information",
@@ -47,16 +78,32 @@ const ReviewsTab = ({ classId }: ReviewsTabProps) => {
       return;
     }
 
-    // Simulate sending invitation
-    toast({
-      title: "Review invitation sent",
-      description: `Invitation has been sent to ${reviewerName} (${reviewerEmail}).`,
-    });
+    setLoading(true);
+    try {
+      await reviewService.createRequest({
+        reviewerName,
+        reviewerEmail,
+        reviewerType: reviewerType as any,
+        customMessage
+      });
 
-    // Reset form
-    setReviewerName("");
-    setReviewerEmail("");
-    setCustomMessage("");
+      toast({
+        title: "Review invitation sent",
+        description: `Invitation has been sent to ${reviewerName} (${reviewerEmail}).`,
+      });
+
+      setReviewerName("");
+      setReviewerEmail("");
+      setCustomMessage("");
+    } catch (error) {
+      toast({
+        title: "Failed to send invitation",
+        description: "Please try again later.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleCopyLink = () => {
@@ -168,6 +215,7 @@ const ReviewsTab = ({ classId }: ReviewsTabProps) => {
                         <Button 
                           onClick={handleRequestReview}
                           className="w-full sm:w-auto"
+                          disabled={loading}
                         >
                           <Mail className="mr-2 h-4 w-4" />
                           Send Review Request
@@ -337,7 +385,20 @@ const ReviewsTab = ({ classId }: ReviewsTabProps) => {
                             </span>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                            <Button variant="ghost" size="sm">Resend</Button>
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              onClick={async () => {
+                                try {
+                                  await reviewService.resendRequest(review.id);
+                                  toast({ title: "Invitation resent" });
+                                } catch (error) {
+                                  toast({ title: "Failed to resend", variant: "destructive" });
+                                }
+                              }}
+                            >
+                              Resend
+                            </Button>
                           </td>
                         </tr>
                       ))}

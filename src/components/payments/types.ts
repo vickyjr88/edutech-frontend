@@ -6,25 +6,8 @@ export interface PaymentMethod {
   expiryMonth?: number;
   expiryYear?: number;
   isDefault: boolean;
-  name: string;
-}
-
-export interface PaymentResult {
-  token: string;
-  amount: number;
-  currency: string;
-  cardholder: string;
-  timestamp: string;
-  paymentMethodId?: string;
-}
-
-export interface BillingAddress {
-  line1: string;
-  line2?: string;
-  city: string;
-  state: string;
-  postalCode: string;
-  country: string;
+  name?: string;
+  bankName?: string;
 }
 
 export interface Invoice {
@@ -34,12 +17,32 @@ export interface Invoice {
   status: 'paid' | 'pending' | 'failed' | 'cancelled';
   description: string;
   downloadUrl?: string;
+  invoiceNumber?: string;
 }
 
-export interface PaymentFormConfig {
-  apiKey: string;
-  currency: string;
-  allowedCardBrands?: string[];
-  collectBillingAddress?: boolean;
-  theme?: 'light' | 'dark';
+export interface PlanFeature {
+  name: string;
+  included: boolean;
+}
+
+export interface BillingPlan {
+  id: string;
+  name: string;
+  price: string;
+  interval: 'month' | 'year';
+  status: 'Active' | 'Inactive' | 'Cancelled';
+  nextBilling: string;
+  features: string[];
+}
+
+export interface BillingDashboardData {
+  currentPlan: BillingPlan;
+  paymentMethods: PaymentMethod[];
+  recentInvoices: Invoice[];
+  upcomingCharges?: {
+    date: string;
+    amount: number;
+    description: string;
+  }[];
+  totalSpent?: number;
 }

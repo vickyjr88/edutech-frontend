@@ -32,6 +32,8 @@ import Achievements from "../pages/Achievements";
 import Courses from "../pages/Courses";
 import CourseProgress from "../pages/CourseProgress";
 import Profile from "../pages/Profile";
+import Settings from "../pages/Settings";
+import NotificationSettings from "../pages/NotificationSettings";
 import ParentsDashboard from "../pages/ParentsDashboard";
 import ParentsSchedule from "../pages/parents/ParentsSchedule";
 import ParentsCourses from "../pages/parents/ParentsCourses";
@@ -105,7 +107,7 @@ const AppRoutes = () => {
       <Route path="/teacher/:teacherId" element={<TeacherProfilePage />} />
       <Route path="/teacher-pricing" element={<TeachersPricing />} />
       <Route path="/unsubscribe/:token" element={<UnsubscribePage />} />
-      
+
       {/* Company Pages */}
       <Route path="/about-us" element={<AboutUs />} />
       <Route path="/careers" element={<Careers />} />
@@ -116,7 +118,7 @@ const AppRoutes = () => {
       {/* Legal Pages */}
       <Route path="/privacy-policy" element={<PrivacyPolicy />} />
       <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
-      
+
       {/* Protected Routes */}
       <Route path="/student-dashboard" element={
         <ProtectedRoute>
@@ -133,7 +135,7 @@ const AppRoutes = () => {
           <OrySettingsPage />
         </ProtectedRoute>
       } />
-      
+
       {/* Teacher Dashboard Routes */}
       <Route path="/teacher-dashboard" element={
         <TeacherRoute requireProfileComplete={true}>
@@ -160,13 +162,18 @@ const AppRoutes = () => {
           <TeacherDashboard />
         </TeacherRoute>
       } />
-      
+
       <Route path="/teacher-dashboard/zoom" element={
         <TeacherRoute requireProfileComplete={true}>
           <TeacherZoomPage />
         </TeacherRoute>
       } />
       <Route path="/teacher-dashboard/calendar" element={
+        <TeacherRoute requireProfileComplete={true}>
+          <TeacherDashboard />
+        </TeacherRoute>
+      } />
+      <Route path="/teacher-dashboard/content" element={
         <TeacherRoute requireProfileComplete={true}>
           <TeacherDashboard />
         </TeacherRoute>
@@ -241,6 +248,16 @@ const AppRoutes = () => {
           <Profile />
         </ProtectedRoute>
       } />
+      <Route path="/settings" element={
+        <ProtectedRoute>
+          <Settings />
+        </ProtectedRoute>
+      } />
+      <Route path="/notifications" element={
+        <ProtectedRoute>
+          <NotificationSettings />
+        </ProtectedRoute>
+      } />
       <Route path="/messaging" element={
         <ProtectedRoute>
           <Messaging />
@@ -256,7 +273,7 @@ const AppRoutes = () => {
           <CourseProgress />
         </ProtectedRoute>
       } />
-      
+
       {/* Parent Routes */}
       <Route path="/parents-schedule" element={
         <ProtectedRoute>

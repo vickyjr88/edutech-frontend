@@ -1,39 +1,29 @@
-
+import { useState, useEffect } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Image } from "lucide-react";
+import { teacherGalleryService } from '@/integrations/api/services/teacher-gallery.service';
 
 interface PhotosTabProps {
   teacher: any;
 }
 
 export default function PhotosTab({ teacher }: PhotosTabProps) {
-  // Mock data - in a real application, this would come from the teacher's profile
-  const photos = teacher.photos || [
-    {
-      id: "photo1",
-      url: "https://images.unsplash.com/photo-1605810230434-7631ac76ec81?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
-      title: "Classroom Session",
-      description: "Engaging with students during a science demonstration"
-    },
-    {
-      id: "photo2",
-      url: "https://images.unsplash.com/photo-1513258496099-48168024aec0?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
-      title: "Lab Work",
-      description: "Students working on chemistry experiments"
-    },
-    {
-      id: "photo3",
-      url: "https://images.unsplash.com/photo-1509062522246-3755977927d7?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
-      title: "Field Trip",
-      description: "Educational visit to the local science museum"
-    },
-    {
-      id: "photo4",
-      url: "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
-      title: "Group Project",
-      description: "Students collaborating on their term projects"
+  const [photos, setPhotos] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (teacher?.id) {
+      loadPhotos();
     }
-  ];
+  }, [teacher]);
+
+  const loadPhotos = async () => {
+    try {
+      const response = await teacherGalleryService.getPhotos(teacher.id);
+      if (response.data) setPhotos(response.data);
+    } catch (error) {
+      console.error('Failed to load photos:', error);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -41,8 +31,8 @@ export default function PhotosTab({ teacher }: PhotosTabProps) {
       
       {photos.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {photos.map((photo: any) => (
-            <Card key={photo.id} className="overflow-hidden">
+          {photos.map((photo: any, index: number) => (
+            <Card key={index} className="overflow-hidden">
               <div className="aspect-video relative">
                 <img
                   src={photo.url}

@@ -1,27 +1,30 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { 
-  Search, UserPlus, Mail, Award, Filter, ChevronDown, Star, 
-  MessageCircle, BarChart, Check, Clock, X, Users, User, 
-  BookText, Send, RefreshCw, Bell, PhoneCall, Eye
+import {
+  Search, UserPlus, Mail, Award, Filter, ChevronDown, Star,
+  MessageCircle, BarChart, Check, Clock, X, Users, User,
+  BookText, Send, RefreshCw, Bell, PhoneCall, Eye, Loader2
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuLabel, 
-  DropdownMenuSeparator, 
-  DropdownMenuTrigger 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 import EnrollStudentsPage from "@/components/teacher/enrollment/EnrollStudentsPage";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import RequestReviewModal from "./RequestReviewModal";
 import FeedbackHub from "./FeedbackHub";
+import { classService } from "@/integrations/api/services/class.service";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 
 // Types for student data
 interface Student {
@@ -47,105 +50,18 @@ interface Student {
   };
 }
 
-// Mock student data
-const mockStudents: Student[] = [
-  {
-    id: "s1",
-    name: "Emma Johnson",
-    avatar: "/lovable-uploads/student-emma.png",
-    email: "emma.j@example.com",
-    phone: "+254 712 345 678",
-    classes: ["Mathematics Grade A", "Physics"],
-    enrollmentDate: "2024-12-01",
-    status: "active",
-    lastActivity: "2 hours ago",
-    performance: {
-      assignments: 15,
-      assignmentsCompleted: 14,
-      attendance: 95,
-      averageGrade: 88
-    },
-    parent: {
-      name: "David Johnson",
-      email: "david.j@example.com",
-      phone: "+254 723 456 789"
-    }
-  },
-  {
-    id: "s2",
-    name: "Alex Mboya",
-    avatar: "/lovable-uploads/student-alex.png",
-    email: "alex.m@example.com",
-    classes: ["Chemistry", "Biology"],
-    enrollmentDate: "2024-12-05",
-    status: "active",
-    lastActivity: "1 day ago",
-    performance: {
-      assignments: 12,
-      assignmentsCompleted: 10,
-      attendance: 90,
-      averageGrade: 82
-    },
-    parent: {
-      name: "Lidia Mboya",
-      email: "lidia.m@example.com"
-    }
-  },
-  {
-    id: "s3",
-    name: "Sophia Chen",
-    email: "sophia.c@example.com",
-    phone: "+254 734 567 890",
-    classes: ["English Literature", "History"],
-    enrollmentDate: "2024-11-15",
-    status: "inactive",
-    lastActivity: "2 weeks ago",
-    performance: {
-      assignments: 14,
-      assignmentsCompleted: 8,
-      attendance: 70
-    }
-  },
-  {
-    id: "s4",
-    name: "Daniel Kamau",
-    avatar: "/lovable-uploads/student-daniel.png",
-    email: "daniel.k@example.com",
-    classes: ["Mathematics Grade A"],
-    enrollmentDate: "2024-11-28",
-    status: "waitlisted",
-    parent: {
-      name: "James Kamau",
-      email: "james.k@example.com",
-      phone: "+254 745 678 901"
-    }
-  },
-  {
-    id: "s5",
-    name: "Grace Odhiambo",
-    email: "grace.o@example.com",
-    classes: ["Physics", "Chemistry"],
-    enrollmentDate: "2024-11-20",
-    status: "active",
-    lastActivity: "3 days ago",
-    performance: {
-      assignments: 16,
-      assignmentsCompleted: 16,
-      attendance: 98,
-      averageGrade: 94
-    }
-  }
-];
-
 interface StudentViewProps {
   onViewProfile?: (studentId: string) => void;
   onEnrollStudents: () => void;
 }
 
-const StudentView: React.FC<StudentViewProps> = ({ 
-  onViewProfile, 
-  onEnrollStudents 
+const StudentView: React.FC<StudentViewProps> = ({
+  onViewProfile,
+  onEnrollStudents
 }) => {
+  const { user } = useAuth();
+  const { toast } = useToast();
+
   const [activeTab, setActiveTab] = useState("enrolled");
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
@@ -154,25 +70,100 @@ const StudentView: React.FC<StudentViewProps> = ({
   const [selectedReviewTarget, setSelectedReviewTarget] = useState<'student' | 'parent' | 'teacher' | null>(null);
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
 
+  const [students, setStudents] = useState<Student[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch teacher's classes and extract students
+  useEffect(() => {
+    const fetchStudents = async () => {
+      if (!user?.id) {
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        setIsLoading(true);
+        const response = await classService.getTeacherClasses(user.id);
+
+        if (response.data) {
+          const allStudents: Student[] = [];
+          const studentMap = new Map<string, Student>();
+
+          // Extract students from all classes
+          response.data.forEach((classDetail: any) => {
+            const className = classDetail.title || "Unknown Class";
+
+            if (classDetail.studentsList && Array.isArray(classDetail.studentsList)) {
+              classDetail.studentsList.forEach((student: any) => {
+                const studentId = student._id;
+
+                if (studentMap.has(studentId)) {
+                  // Student already exists, add this class to their list
+                  const existingStudent = studentMap.get(studentId)!;
+                  existingStudent.classes.push(className);
+                } else {
+                  // New student
+                  const newStudent: Student = {
+                    id: studentId,
+                    name: student.fullName || "Unknown Student",
+                    avatar: student.profileImage,
+                    email: student.email || `student${studentId}@example.com`,
+                    phone: student.phone,
+                    classes: [className],
+                    enrollmentDate: new Date().toISOString().split('T')[0], // Default to today
+                    status: 'active', // Default status
+                    performance: {
+                      assignments: 0,
+                      assignmentsCompleted: 0,
+                      attendance: 85, // Default attendance
+                      averageGrade: 0
+                    }
+                  };
+                  studentMap.set(studentId, newStudent);
+                  allStudents.push(newStudent);
+                }
+              });
+            }
+          });
+
+          setStudents(allStudents);
+        }
+      } catch (err) {
+        console.error("Failed to fetch students:", err);
+        setError("Failed to load students");
+        toast({
+          title: "Error",
+          description: "Failed to load students. Please try again.",
+          variant: "destructive"
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchStudents();
+  }, [user?.id, toast]);
+
   // Filter students based on search query and filters
-  const filteredStudents = mockStudents.filter(student => {
+  const filteredStudents = students.filter(student => {
     // Search query filter
-    const matchesSearch = !searchQuery || 
+    const matchesSearch = !searchQuery ||
       student.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       student.email.toLowerCase().includes(searchQuery.toLowerCase());
-    
+
     // Status filter
     const matchesStatus = !statusFilter || student.status === statusFilter;
-    
+
     // Class filter
     const matchesClass = !classFilter || student.classes.includes(classFilter);
-    
+
     return matchesSearch && matchesStatus && matchesClass;
   });
 
   // Extract all unique classes for the filter dropdown
   const allClasses = Array.from(
-    new Set(mockStudents.flatMap(student => student.classes))
+    new Set(students.flatMap(student => student.classes))
   );
 
   // Handle requesting a review
@@ -182,8 +173,8 @@ const StudentView: React.FC<StudentViewProps> = ({
     setShowReviewModal(true);
   };
 
-  const selectedStudent = selectedStudentId 
-    ? mockStudents.find(s => s.id === selectedStudentId) 
+  const selectedStudent = selectedStudentId
+    ? students.find(s => s.id === selectedStudentId)
     : null;
 
   return (
@@ -204,7 +195,7 @@ const StudentView: React.FC<StudentViewProps> = ({
             Invite & Enroll
           </TabsTrigger>
         </TabsList>
-        
+
         {/* Enrolled Students Tab */}
         <TabsContent value="enrolled" className="space-y-6">
           <Card>
@@ -217,18 +208,18 @@ const StudentView: React.FC<StudentViewProps> = ({
                   </CardDescription>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
+                  <Button
+                    variant="outline"
+                    size="sm"
                     className="flex items-center"
                     onClick={onEnrollStudents}
                   >
                     <UserPlus className="mr-2 h-4 w-4" />
                     Enroll Students
                   </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
+                  <Button
+                    variant="outline"
+                    size="sm"
                     className="flex items-center"
                     onClick={() => handleRequestReview('bulk', 'student')}
                   >
@@ -238,7 +229,7 @@ const StudentView: React.FC<StudentViewProps> = ({
                 </div>
               </div>
             </CardHeader>
-            
+
             <CardContent className="pt-6">
               {/* Search and filters */}
               <div className="flex flex-col md:flex-row gap-4 mb-6">
@@ -281,7 +272,7 @@ const StudentView: React.FC<StudentViewProps> = ({
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
-                  
+
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="outline" size="sm" className="min-w-32">
@@ -307,9 +298,23 @@ const StudentView: React.FC<StudentViewProps> = ({
                   </DropdownMenu>
                 </div>
               </div>
-              
+
               {/* Students list */}
-              {filteredStudents.length > 0 ? (
+              {isLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+                  <span className="ml-3 text-gray-600">Loading students...</span>
+                </div>
+              ) : error ? (
+                <div className="text-center py-12 text-gray-500">
+                  <Users className="h-16 w-16 mx-auto mb-4 opacity-50" />
+                  <p>{error}</p>
+                  <Button onClick={() => window.location.reload()} className="mt-4">
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Retry
+                  </Button>
+                </div>
+              ) : filteredStudents.length > 0 ? (
                 <div className="space-y-4">
                   {filteredStudents.map((student) => (
                     <Card key={student.id} className="overflow-hidden">
@@ -337,7 +342,7 @@ const StudentView: React.FC<StudentViewProps> = ({
                               )}
                             </div>
                           </div>
-                          
+
                           <div className="md:border-l md:pl-4 flex-1 space-y-2">
                             <div className="flex flex-col md:flex-row md:items-center gap-2">
                               <div className="md:w-1/3">
@@ -350,28 +355,28 @@ const StudentView: React.FC<StudentViewProps> = ({
                                   ))}
                                 </div>
                               </div>
-                              
+
                               {student.performance && (
                                 <>
                                   <div className="md:w-1/3">
                                     <span className="text-xs text-gray-500">Attendance:</span>
                                     <div className="mt-1 flex items-center gap-2">
                                       <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
-                                        <div 
-                                          className="h-full bg-blue-500 rounded-full" 
+                                        <div
+                                          className="h-full bg-blue-500 rounded-full"
                                           style={{ width: `${student.performance.attendance}%` }}
                                         ></div>
                                       </div>
                                       <span className="text-xs font-medium">{student.performance.attendance}%</span>
                                     </div>
                                   </div>
-                                  
+
                                   <div className="md:w-1/3">
                                     <span className="text-xs text-gray-500">Assignments:</span>
                                     <div className="mt-1 flex items-center gap-2">
                                       <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
-                                        <div 
-                                          className="h-full bg-green-500 rounded-full" 
+                                        <div
+                                          className="h-full bg-green-500 rounded-full"
                                           style={{ width: `${(student.performance.assignmentsCompleted / student.performance.assignments) * 100}%` }}
                                         ></div>
                                       </div>
@@ -383,7 +388,7 @@ const StudentView: React.FC<StudentViewProps> = ({
                                 </>
                               )}
                             </div>
-                            
+
                             <div className="flex flex-wrap gap-2 text-sm">
                               {student.lastActivity && (
                                 <span className="text-gray-500 flex items-center">
@@ -396,42 +401,42 @@ const StudentView: React.FC<StudentViewProps> = ({
                             </div>
                           </div>
                         </div>
-                        
+
                         {/* Actions */}
                         <div className="bg-gray-50 p-4 flex flex-row md:flex-col justify-end md:justify-center items-center gap-2">
-                          <Button 
-                            size="sm" 
-                            variant="ghost" 
+                          <Button
+                            size="sm"
+                            variant="ghost"
                             className="text-blue-700 flex items-center"
                             onClick={() => onViewProfile && onViewProfile(student.id)}
                           >
                             <Eye className="mr-1 h-4 w-4" />
                             <span className="hidden md:inline">View</span>
                           </Button>
-                          
-                          <Button 
-                            size="sm" 
-                            variant="ghost" 
+
+                          <Button
+                            size="sm"
+                            variant="ghost"
                             className="text-purple-700 flex items-center"
                             onClick={() => handleRequestReview(student.id, 'student')}
                           >
                             <Star className="mr-1 h-4 w-4" />
                             <span className="hidden md:inline">Review</span>
                           </Button>
-                          
-                          <Button 
-                            size="sm" 
-                            variant="ghost" 
+
+                          <Button
+                            size="sm"
+                            variant="ghost"
                             className="text-green-700 flex items-center"
                           >
                             <MessageCircle className="mr-1 h-4 w-4" />
                             <span className="hidden md:inline">Message</span>
                           </Button>
-                          
+
                           {student.parent && (
-                            <Button 
-                              size="sm" 
-                              variant="ghost" 
+                            <Button
+                              size="sm"
+                              variant="ghost"
                               className="text-amber-700 flex items-center"
                               onClick={() => handleRequestReview(student.id, 'parent')}
                             >
@@ -449,7 +454,7 @@ const StudentView: React.FC<StudentViewProps> = ({
                   <Users className="h-16 w-16 text-gray-300 mx-auto mb-4" />
                   <h3 className="text-lg font-medium text-gray-900 mb-1">No Students Found</h3>
                   <p className="text-sm text-gray-500 mb-6 max-w-md mx-auto">
-                    {searchQuery || statusFilter || classFilter 
+                    {searchQuery || statusFilter || classFilter
                       ? "No students match your current filters. Try adjusting your search or filters."
                       : "You haven't enrolled any students yet. Start enrolling students to your classes."}
                   </p>
@@ -460,7 +465,7 @@ const StudentView: React.FC<StudentViewProps> = ({
                 </div>
               )}
             </CardContent>
-            
+
             <CardFooter className="border-t bg-gray-50 px-6 py-4">
               <div className="flex flex-col md:flex-row items-center justify-between w-full">
                 <div className="text-sm text-gray-500 mb-4 md:mb-0">
@@ -478,7 +483,7 @@ const StudentView: React.FC<StudentViewProps> = ({
                       <SelectItem value="100">100</SelectItem>
                     </SelectContent>
                   </Select>
-                  
+
                   <div className="flex gap-1">
                     <Button variant="outline" size="sm" disabled>
                       Previous
@@ -492,18 +497,18 @@ const StudentView: React.FC<StudentViewProps> = ({
             </CardFooter>
           </Card>
         </TabsContent>
-        
+
         {/* Feedback Hub Tab */}
         <TabsContent value="feedbackHub">
           <FeedbackHub onRequestReview={handleRequestReview} />
         </TabsContent>
-        
+
         {/* Invite & Enroll Tab */}
         <TabsContent value="invite">
           <EnrollStudentsPage />
         </TabsContent>
       </Tabs>
-      
+
       {/* Review Request Modal */}
       {showReviewModal && selectedReviewTarget && (
         <RequestReviewModal

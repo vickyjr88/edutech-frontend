@@ -21,30 +21,6 @@ import { teacherService } from '@/integrations/api';
 import { useAuth } from '@/contexts/AuthContext';
 import type { RevenueSummaryRequestParams } from '@/integrations/api';
 
-// This would typically come from your API
-const mockEarningsData = {
-  totalEarnings: 4250.75,
-  pendingPayouts: 850.25,
-  availableBalance: 425.50,
-  studentsCount: 45,
-  classesCount: 7,
-  monthlyRevenue: [
-    { month: "Jan", amount: 420.50 },
-    { month: "Feb", amount: 580.75 },
-    { month: "Mar", amount: 690.25 },
-    { month: "Apr", amount: 750.00 },
-    { month: "May", amount: 820.50 },
-    { month: "Jun", amount: 988.75 }
-  ],
-  recentTransactions: [
-    { id: 1, date: "2023-06-15", description: "Class payment - Math Fundamentals", amount: 125.00, status: "completed" },
-    { id: 2, date: "2023-06-12", description: "Class payment - Science Explorer", amount: 150.00, status: "completed" },
-    { id: 3, date: "2023-06-10", description: "Class payment - English Composition", amount: 125.00, status: "completed" },
-    { id: 4, date: "2023-06-05", description: "Payout to bank account", amount: -375.50, status: "completed" }
-  ],
-  paymentSchedule: "Monthly"
-};
-
 const EarningsSummary = () => {
   const [timeframe, setTimeframe] = useState("6m");
   const { user } = useAuth();

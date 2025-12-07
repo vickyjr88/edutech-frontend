@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { MapPin, Search, X } from "lucide-react";
+import { MapPin, Search, X, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import GooglePlacesAutocomplete from "./GooglePlacesAutocomplete";
@@ -35,9 +35,6 @@ const LocationPicker = ({
   initialCounty = "",
   initialPostalCode = "",
 }: LocationPickerProps) => {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [isSearching, setIsSearching] = useState(false);
-  const [mockResults, setMockResults] = useState<any[]>([]);
   const [selectedLocation, setSelectedLocation] = useState({
     address: initialAddress,
     apartment: initialApartment,
@@ -48,60 +45,7 @@ const LocationPicker = ({
     latitude: 0,
     longitude: 0,
   });
-
-  // Mock locations for demonstration
-  const mockLocations = [
-    {
-      address: "123 Main Street",
-      apartment: "Apt 4B",
-      houseNumber: "123",
-      city: "Nairobi",
-      county: "Nairobi County",
-      postalCode: "00100",
-      latitude: -1.2921,
-      longitude: 36.8219,
-    },
-    {
-      address: "456 Valley Road",
-      apartment: "Suite 201",
-      houseNumber: "456",
-      city: "Nairobi",
-      county: "Nairobi County",
-      postalCode: "00200",
-      latitude: -1.2747,
-      longitude: 36.8116,
-    },
-    {
-      address: "789 University Way",
-      apartment: "",
-      houseNumber: "789",
-      city: "Nairobi",
-      county: "Nairobi County",
-      postalCode: "00100",
-      latitude: -1.2809,
-      longitude: 36.8157,
-    },
-    {
-      address: "321 Mombasa Road",
-      apartment: "Block C, Unit 5",
-      houseNumber: "321",
-      city: "Nairobi",
-      county: "Nairobi County",
-      postalCode: "00500",
-      latitude: -1.3183,
-      longitude: 36.8288,
-    },
-    {
-      address: "555 Ngong Road",
-      apartment: "Garden Flats",
-      houseNumber: "555",
-      city: "Nairobi",
-      county: "Nairobi County",
-      postalCode: "00200",
-      latitude: -1.2985,
-      longitude: 36.7766,
-    },
-  ];
+  const [isGettingLocation, setIsGettingLocation] = useState(false);
 
   useEffect(() => {
     // Initialize with any provided values
@@ -119,36 +63,55 @@ const LocationPicker = ({
     }
   }, [initialAddress, initialApartment, initialHouseNumber, initialCity, initialCounty, initialPostalCode]);
 
-  const handleSearch = () => {
-    setIsSearching(true);
-    
-    // Simulate API delay
-    setTimeout(() => {
-      // Filter mock locations based on search query
-      const filteredLocations = mockLocations.filter(
-        location => 
-          location.address.toLowerCase().includes(searchQuery.toLowerCase()) || 
-          location.city.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          location.county.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-      
-      setMockResults(filteredLocations);
-      setIsSearching(false);
-    }, 800);
-  };
-
-  const selectLocation = (location: any) => {
-    setSelectedLocation(location);
-    setMockResults([]);
-    setSearchQuery("");
-    onLocationSelect(location);
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      handleSearch();
+  const handleGetCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      alert("Geolocation is not supported by your browser");
+      return;
     }
+
+    setIsGettingLocation(true);
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+
+        try {
+          // Use reverse geocoding to get address from coordinates
+          const response = await fetch(
+            `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}`
+          );
+          const data = await response.json();
+
+          if (data.results && data.results[0]) {
+            const result = data.results[0];
+            const addressComponents = result.address_components;
+
+            const location = {
+              address: result.formatted_address,
+              apartment: "",
+              houseNumber: "",
+              city: addressComponents.find((c: any) => c.types.includes("locality"))?.long_name || "",
+              county: addressComponents.find((c: any) => c.types.includes("administrative_area_level_1"))?.long_name || "",
+              postalCode: addressComponents.find((c: any) => c.types.includes("postal_code"))?.long_name || "",
+              latitude,
+              longitude,
+            };
+
+            setSelectedLocation(location);
+            onLocationSelect(location);
+          }
+        } catch (error) {
+          console.error("Error getting address from coordinates:", error);
+          alert("Failed to get address from your location");
+        } finally {
+          setIsGettingLocation(false);
+        }
+      },
+      (error) => {
+        console.error("Error getting location:", error);
+        alert("Failed to get your current location");
+        setIsGettingLocation(false);
+      }
+    );
   };
 
   const handleApartmentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -181,7 +144,28 @@ const LocationPicker = ({
   return (
     <div className="space-y-4 w-full">
       <div className="space-y-2">
-        <Label>Location Search</Label>
+        <div className="flex items-center justify-between">
+          <Label>Location Search</Label>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleGetCurrentLocation}
+            disabled={isGettingLocation}
+            className="flex items-center gap-2"
+          >
+            {isGettingLocation ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Getting location...
+              </>
+            ) : (
+              <>
+                <MapPin className="w-4 h-4" />
+                Use Current Location
+              </>
+            )}
+          </Button>
+        </div>
         <GooglePlacesAutocomplete
           onPlaceSelect={handlePlaceSelect}
           placeholder="Search for your teaching location..."
@@ -189,74 +173,12 @@ const LocationPicker = ({
         />
       </div>
 
-      {/* Fallback search for areas without Google Places */}
-      <div className="flex items-center space-x-2">
-        <div className="relative flex-1">
-          <Input
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Or search manually (fallback)..."
-            onKeyDown={handleKeyDown}
-            className="pr-10"
-          />
-          {searchQuery && (
-            <button 
-              className="absolute right-10 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
-              onClick={() => setSearchQuery("")}
-            >
-              <X className="w-4 h-4" />
-            </button>
-          )}
-          <button 
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
-            onClick={handleSearch}
-          >
-            <Search className="w-4 h-4" />
-          </button>
-        </div>
-        <Button 
-          variant="outline" 
-          size="icon"
-          title="Use current location"
-          onClick={() => selectLocation(mockLocations[0])}
-        >
-          <MapPin className="w-4 h-4" />
-        </Button>
-      </div>
-
-      {/* Mock search results */}
-      {mockResults.length > 0 && (
-        <Card className="p-2 max-h-60 overflow-y-auto">
-          <ul className="divide-y">
-            {mockResults.map((location, index) => (
-              <li 
-                key={index}
-                className="p-2 hover:bg-gray-100 cursor-pointer rounded"
-                onClick={() => selectLocation(location)}
-              >
-                <div className="flex items-start">
-                  <MapPin className="w-4 h-4 mt-1 mr-2 flex-shrink-0 text-gray-500" />
-                  <div>
-                    <p className="font-medium">{location.address}</p>
-                    <p className="text-sm text-gray-600">
-                      {location.city}, {location.county}, {location.postalCode}
-                    </p>
-                  </div>
-                </div>
-              </li>
-            ))}
-          </ul>
-        </Card>
-      )}
-
-      {/* Mock map display */}
       {selectedLocation.address && (
         <div className="space-y-3">
           <div className="relative w-full h-40 bg-gray-200 rounded-md overflow-hidden">
-            {/* Mock map image */}
-            <div 
+            <div
               className="w-full h-full bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center"
-              style={{ 
+              style={{
                 backgroundImage: "url('https://via.placeholder.com/800x400/e5e7eb/94a3b8?text=Map')",
                 backgroundSize: "cover",
                 backgroundPosition: "center",
@@ -269,9 +191,6 @@ const LocationPicker = ({
                 </div>
               </div>
             </div>
-            <div className="absolute bottom-2 right-2 bg-white p-1 rounded shadow-sm text-xs text-gray-700">
-              Mock Map View
-            </div>
           </div>
 
           <div className="grid grid-cols-1 gap-3">
@@ -282,7 +201,7 @@ const LocationPicker = ({
                 {selectedLocation.city}, {selectedLocation.county}, {selectedLocation.postalCode}
               </p>
             </div>
-            
+
             {/* House Number and Apartment Name fields */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2">
               <div>

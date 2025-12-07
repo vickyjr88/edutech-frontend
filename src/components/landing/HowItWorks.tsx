@@ -96,7 +96,7 @@ const HowItWorks = ({ content }: HowItWorksProps = {}) => {
               className={`flex flex-col ${index % 2 === 1 ? 'lg:flex-row-reverse' : 'lg:flex-row'} gap-8 items-center`}
             >
               <div className="w-full lg:w-1/2">
-                {/* Dashboard mockups based on step */}
+
                 {index === 0 && <ProfileSetupDashboard />}
                 {index === 1 && <CommunityDashboard />}
                 {index === 2 && <TeachingDashboard />}
@@ -178,7 +178,7 @@ const HowItWorks = ({ content }: HowItWorksProps = {}) => {
   );
 };
 
-// Profile Setup Dashboard Mockup
+
 const ProfileSetupDashboard = () => (
   <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200 transform scale-90">
     <div className="bg-gradient-to-r from-purple-100 to-blue-50 p-2 flex items-center justify-between">
@@ -244,7 +244,7 @@ const ProfileSetupDashboard = () => (
   </div>
 );
 
-// Community Dashboard Mockup
+
 const CommunityDashboard = () => (
   <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200 transform scale-90">
     <div className="bg-gradient-to-r from-kidato-light-blue to-blue-50 p-2 flex items-center justify-between">
@@ -304,7 +304,7 @@ const CommunityDashboard = () => (
   </div>
 );
 
-// Teaching Dashboard Mockup
+
 const TeachingDashboard = () => (
   <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200 transform scale-90">
     <div className="bg-gradient-to-r from-orange-50 to-orange-100 p-2 flex items-center justify-between">

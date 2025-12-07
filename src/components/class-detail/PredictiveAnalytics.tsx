@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { 
+import {
   BarChart3,
   TrendingUp,
   TrendingDown,
@@ -58,34 +58,120 @@ const PredictiveAnalytics: React.FC<PredictiveAnalyticsProps> = ({
     }
   };
 
-  // Mock predictive data based on current effectiveness
+
+  // Calculate predictive data based on real effectiveness metrics
   const generatePredictiveData = () => {
     const baseScore = teachingEffectiveness.overallScore;
-    
+    const trends = teachingEffectiveness.trends;
+
+    // Calculate expected engagement based on current trends
+    const engagementTrend = trends.studentEngagement?.trend || 'stable';
+    const participationTrend = trends.participationRate?.trend || 'stable';
+
+    let engagementAdjustment = 0;
+    if (engagementTrend === 'up') engagementAdjustment += 5;
+    if (engagementTrend === 'down') engagementAdjustment -= 5;
+    if (participationTrend === 'up') engagementAdjustment += 3;
+    if (participationTrend === 'down') engagementAdjustment -= 3;
+
+    const expectedEngagement = Math.min(100, Math.max(0, baseScore + engagementAdjustment));
+
+    // Determine risk factors based on current metrics
+    const riskFactors = [];
+
+    if (trends.attentionSpan?.current < 70) {
+      riskFactors.push({
+        factor: 'Student attention declining',
+        probability: (100 - trends.attentionSpan.current) / 100,
+        impact: 'high' as const
+      });
+    }
+
+    if (trends.technicalIssues?.current > 20) {
+      riskFactors.push({
+        factor: 'Technical issues reported',
+        probability: trends.technicalIssues.current / 100,
+        impact: 'high' as const
+      });
+    }
+
+    if (mode === 'teaching' && timeToClass < 30) {
+      riskFactors.push({
+        factor: 'Limited preparation time',
+        probability: 0.4,
+        impact: 'medium' as const
+      });
+    }
+
+    // Identify opportunities based on positive trends
+    const opportunities = [];
+
+    if (trends.cameraUsage?.trend === 'up') {
+      opportunities.push({
+        opportunity: 'Increasing camera usage momentum',
+        probability: 0.75,
+        impact: 'high' as const
+      });
+    }
+
+    if (trends.chatActivity?.current > 80) {
+      opportunities.push({
+        opportunity: 'High chat engagement',
+        probability: 0.85,
+        impact: 'medium' as const
+      });
+    }
+
+    if (timeToClass > 60 && mode === 'preparing') {
+      opportunities.push({
+        opportunity: 'Ample preparation time available',
+        probability: 0.9,
+        impact: 'high' as const
+      });
+    }
+
+    // Calculate learning outcome distribution
+    const avgScore = (trends.studentEngagement?.current || 75);
+    const onTrack = Math.min(100, Math.round(avgScore * 0.75));
+    const atRisk = Math.min(100 - onTrack, Math.round(avgScore * 0.15));
+    const excelling = Math.max(0, 100 - onTrack - atRisk);
+
+    // Generate engagement forecast based on typical session patterns
+    const engagementForecast = [
+      {
+        time: '0-15min',
+        predicted: Math.min(100, baseScore + 10),
+        actual: mode === 'teaching' ? Math.min(100, trends.studentEngagement?.current + 5) : null
+      },
+      {
+        time: '15-30min',
+        predicted: Math.min(100, baseScore + 5),
+        actual: mode === 'teaching' ? trends.studentEngagement?.current : null
+      },
+      {
+        time: '30-45min',
+        predicted: Math.max(0, baseScore - 5),
+        actual: null
+      },
+      {
+        time: '45-60min',
+        predicted: Math.max(0, baseScore - 10),
+        actual: null
+      }
+    ];
+
     return {
       nextSessionPrediction: {
-        expectedEngagement: Math.min(baseScore + Math.random() * 10 - 5, 100),
-        riskFactors: [
-          { factor: 'Student fatigue', probability: 0.3, impact: 'medium' },
-          { factor: 'Technical issues', probability: 0.15, impact: 'high' },
-          { factor: 'Concept difficulty', probability: 0.25, impact: 'high' }
-        ],
-        opportunities: [
-          { opportunity: 'High energy time slot', probability: 0.8, impact: 'high' },
-          { opportunity: 'Recent breakthrough momentum', probability: 0.6, impact: 'medium' }
-        ]
+        expectedEngagement,
+        riskFactors,
+        opportunities
       },
       learningOutcomes: {
-        onTrack: Math.floor(baseScore * 0.7),
-        atRisk: Math.floor(baseScore * 0.2),
-        excelling: Math.floor(baseScore * 0.1)
+        onTrack,
+        atRisk,
+        excelling
       },
-      engagementForecast: [
-        { time: '0-15min', predicted: 85, actual: mode === 'teaching' ? 87 : null },
-        { time: '15-30min', predicted: 78, actual: mode === 'teaching' ? 82 : null },
-        { time: '30-45min', predicted: 72, actual: null },
-        { time: '45-60min', predicted: 68, actual: null }
-      ]
+      engagementForecast
     };
   };
 
@@ -120,7 +206,7 @@ const PredictiveAnalytics: React.FC<PredictiveAnalyticsProps> = ({
                 </div>
                 <div className="text-xl font-bold">{data.current}%</div>
                 <div className={cn("text-xs", getTrendColor(data.trend))}>
-                  {data.trend === 'up' ? '↗' : data.trend === 'down' ? '↘' : '→'} 
+                  {data.trend === 'up' ? '↗' : data.trend === 'down' ? '↘' : '→'}
                   {data.trend !== 'stable' && ` ${Math.abs(Math.random() * 10 + 2).toFixed(1)}%`}
                 </div>
               </div>
@@ -177,13 +263,13 @@ const PredictiveAnalytics: React.FC<PredictiveAnalyticsProps> = ({
                   {optimization.impact}
                 </Badge>
               </div>
-              
+
               <p className="text-sm text-gray-700 mb-2">{optimization.description}</p>
               <p className="text-xs text-blue-600 mb-3">{optimization.implementation}</p>
-              
-              <Button 
-                size="sm" 
-                variant="outline" 
+
+              <Button
+                size="sm"
+                variant="outline"
                 className="w-full"
                 onClick={() => onImplementSuggestion?.(`optimization_${index}`)}
               >
@@ -336,7 +422,7 @@ const PredictiveAnalytics: React.FC<PredictiveAnalyticsProps> = ({
                   <Progress value={segment.predicted} className="h-2" />
                   {segment.actual && (
                     <div className="text-xs text-green-600">
-                      {segment.actual > segment.predicted ? '↗' : '↘'} 
+                      {segment.actual > segment.predicted ? '↗' : '↘'}
                       {Math.abs(segment.actual - segment.predicted)}% vs predicted
                     </div>
                   )}
@@ -384,7 +470,7 @@ const PredictiveAnalytics: React.FC<PredictiveAnalyticsProps> = ({
           {/* Intervention Recommendations */}
           <div className="space-y-3">
             <h4 className="font-medium">Recommended Interventions</h4>
-            
+
             <div className="p-3 bg-yellow-50 border border-yellow-200 rounded">
               <h5 className="font-medium text-yellow-800 mb-1">For At-Risk Students</h5>
               <ul className="text-sm text-yellow-700 space-y-1">
@@ -427,9 +513,9 @@ const PredictiveAnalytics: React.FC<PredictiveAnalyticsProps> = ({
           <BarChart3 className="h-6 w-6 text-blue-600" />
           Predictive Teaching Analytics
         </h2>
-        
-        <select 
-          value={selectedTimeframe} 
+
+        <select
+          value={selectedTimeframe}
           onChange={(e) => setSelectedTimeframe(e.target.value as any)}
           className="border rounded px-3 py-2 text-sm bg-white"
         >

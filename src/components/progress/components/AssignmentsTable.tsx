@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/table";
 import { FileText, Calendar, Users } from "lucide-react";
 import { getStatusBadge, getActionButton } from "../utils/assignmentUtils";
-import { Assignment } from "../data/mockAssignmentsData";
+import { Assignment } from "@/types/assignment";
 
 interface AssignmentsTableProps {
   assignments: Assignment[];
@@ -77,8 +77,8 @@ export const AssignmentsTable = ({ assignments, onViewAssignment }: AssignmentsT
                   <TableCell>
                     {assignment.grade ? (
                       <div className="flex items-center">
-                        <Badge 
-                          variant="outline" 
+                        <Badge
+                          variant="outline"
                           className="bg-green-100 text-green-700 border-green-200"
                         >
                           {assignment.grade}

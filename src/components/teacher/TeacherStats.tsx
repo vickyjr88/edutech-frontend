@@ -61,30 +61,19 @@ const TeacherStats = ({ teacher }: TeacherStatsProps) => {
     return teacher.certifications.filter(cert => cert.isVerified).length;
   };
 
-  // Count total students taught (mock data based on classes)
   const countStudentsTaught = () => {
     if (!teacher.classes) return 0;
-    // Calculate a realistic number of students based on classes
-    // Assuming average of 15-30 students per class
-    const minStudentsPerClass = 15;
-    const maxStudentsPerClass = 30;
-    let totalStudents = 0;
-    
-    teacher.classes.forEach(() => {
-      const classSize = Math.floor(Math.random() * (maxStudentsPerClass - minStudentsPerClass + 1)) + minStudentsPerClass;
-      totalStudents += classSize;
-    });
-    
-    return totalStudents;
+    return teacher.classes.reduce((total, classItem) => {
+      return total + (classItem.enrolledStudents || 0);
+    }, 0);
   };
 
-  // Mock growth metrics (for demo purposes)
   const getGrowthMetrics = () => {
     return {
-      classesGrowth: Math.floor(Math.random() * 30) + 5, // 5% to 35%
-      reviewsGrowth: Math.floor(Math.random() * 40) + 10, // 10% to 50%
-      certGrowth: Math.floor(Math.random() * 25), // 0% to 25%
-      studentsGrowth: Math.floor(Math.random() * 35) + 10, // 10% to 45%
+      classesGrowth: 0,
+      reviewsGrowth: 0,
+      certGrowth: 0,
+      studentsGrowth: 0,
     };
   };
 
@@ -113,10 +102,6 @@ const TeacherStats = ({ teacher }: TeacherStatsProps) => {
     <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-xl font-bold text-gray-900">Teacher Highlights</h2>
-        <Badge variant="info" className="flex items-center gap-1">
-          <TrendingUp className="h-3 w-3" />
-          <span>{growthMetrics.reviewsGrowth}% more reviews this month</span>
-        </Badge>
       </div>
       
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
@@ -134,12 +119,6 @@ const TeacherStats = ({ teacher }: TeacherStatsProps) => {
             <span className="text-lg text-gray-500">{totalClasses}</span>
           </div>
           <p className="text-sm text-center text-gray-600">Live/Total Classes</p>
-          {growthMetrics.classesGrowth > 0 && (
-            <div className="mt-2 flex items-center text-xs text-green-600">
-              <TrendingUp className="h-3 w-3 mr-1" />
-              <span>+{growthMetrics.classesGrowth}%</span>
-            </div>
-          )}
         </div>
 
         {/* Students Taught */}
@@ -149,12 +128,6 @@ const TeacherStats = ({ teacher }: TeacherStatsProps) => {
           </div>
           <span className="text-2xl font-bold text-gray-900">{studentsTaught}</span>
           <p className="text-sm text-center text-gray-600">Students Taught</p>
-          {growthMetrics.studentsGrowth > 0 && (
-            <div className="mt-2 flex items-center text-xs text-green-600">
-              <TrendingUp className="h-3 w-3 mr-1" />
-              <span>+{growthMetrics.studentsGrowth}%</span>
-            </div>
-          )}
         </div>
 
         {/* Years of Experience */}
@@ -164,7 +137,6 @@ const TeacherStats = ({ teacher }: TeacherStatsProps) => {
           </div>
           <span className="text-2xl font-bold text-gray-900">{yearsExperience}</span>
           <p className="text-sm text-center text-gray-600">Years Experience</p>
-          <div className="mt-2 h-4"></div> {/* Spacer for alignment */}
         </div>
 
         {/* Positive Reviews */}
@@ -174,12 +146,6 @@ const TeacherStats = ({ teacher }: TeacherStatsProps) => {
           </div>
           <span className="text-2xl font-bold text-gray-900">{positiveReviews}</span>
           <p className="text-sm text-center text-gray-600">Positive Reviews</p>
-          {growthMetrics.reviewsGrowth > 0 && (
-            <div className="mt-2 flex items-center text-xs text-green-600">
-              <TrendingUp className="h-3 w-3 mr-1" />
-              <span>+{growthMetrics.reviewsGrowth}%</span>
-            </div>
-          )}
         </div>
 
         {/* Verified Certifications */}
@@ -189,12 +155,6 @@ const TeacherStats = ({ teacher }: TeacherStatsProps) => {
           </div>
           <span className="text-2xl font-bold text-gray-900">{verifiedCertifications}</span>
           <p className="text-sm text-center text-gray-600">Verified Certs</p>
-          {growthMetrics.certGrowth > 0 && (
-            <div className="mt-2 flex items-center text-xs text-green-600">
-              <TrendingUp className="h-3 w-3 mr-1" />
-              <span>+{growthMetrics.certGrowth}%</span>
-            </div>
-          )}
         </div>
       </div>
     </div>

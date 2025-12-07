@@ -1,123 +1,196 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { 
-  MessageCircle, 
-  Users, 
-  User, 
-  Send, 
-  Search, 
-  PlusCircle, 
-  Hash, 
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import {
+  MessageCircle,
+  Users,
+  Send,
+  Search,
+  PlusCircle,
+  Hash,
   Bell,
   FileText,
   Paperclip,
   Image,
   Smile,
-  Settings
+  Settings,
+  Loader2
 } from "lucide-react";
 import MessageItem from "./MessageItem";
 import ChannelsList from "./ChannelsList";
 import UsersList from "./UsersList";
-
-// Mock data for demonstration
-const channels = [
-  { id: 1, name: "announcements", unread: 2 },
-  { id: 2, name: "homework-help", unread: 0 },
-  { id: 3, name: "class-discussion", unread: 5 },
-  { id: 4, name: "parent-corner", unread: 1 },
-  { id: 5, name: "events", unread: 0 }
-];
-
-const directMessages = [
-  { id: 1, name: "Ms. Johnson", role: "Teacher", status: "online", avatar: "" },
-  { id: 2, name: "David Miller", role: "Student", status: "online", avatar: "" },
-  { id: 3, name: "Sarah Parker", role: "Parent", status: "offline", avatar: "" },
-  { id: 4, name: "Robert Smith", role: "Teacher", status: "away", avatar: "" },
-  { id: 5, name: "Emily Wilson", role: "Student", status: "online", avatar: "" }
-];
-
-const messages = [
-  { 
-    id: 1, 
-    author: "Ms. Johnson", 
-    role: "Teacher", 
-    avatar: "", 
-    content: "Good morning everyone! Don't forget we have a quiz tomorrow on chapter 5.",
-    timestamp: "10:15 AM",
-    reactions: [{ emoji: "👍", count: 3 }, { emoji: "📝", count: 2 }]
-  },
-  { 
-    id: 2, 
-    author: "David Miller", 
-    role: "Student", 
-    avatar: "", 
-    content: "Will the quiz cover all the topics from the chapter or just the ones we discussed in class?",
-    timestamp: "10:17 AM",
-    reactions: []
-  },
-  { 
-    id: 3, 
-    author: "Ms. Johnson", 
-    role: "Teacher", 
-    avatar: "", 
-    content: "Great question, David! The quiz will focus on the topics we covered in class, specifically sections 5.1 through 5.3.",
-    timestamp: "10:20 AM",
-    reactions: [{ emoji: "🙏", count: 4 }]
-  },
-  { 
-    id: 4, 
-    author: "Sarah Parker", 
-    role: "Parent", 
-    avatar: "", 
-    content: "Thank you for the information. I'll help my child prepare tonight.",
-    timestamp: "10:25 AM",
-    reactions: [{ emoji: "❤️", count: 2 }]
-  },
-  { 
-    id: 5, 
-    author: "Emily Wilson", 
-    role: "Student", 
-    avatar: "", 
-    content: "Could you share any practice problems that might be similar to what will be on the quiz?",
-    timestamp: "10:30 AM",
-    reactions: [{ emoji: "👆", count: 6 }]
-  },
-  { 
-    id: 6, 
-    author: "Ms. Johnson", 
-    role: "Teacher", 
-    avatar: "", 
-    content: "I've just uploaded a set of practice problems to the resources section. They should give you a good idea of what to expect.",
-    timestamp: "10:35 AM",
-    reactions: [{ emoji: "🎉", count: 8 }]
-  }
-];
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
+import {
+  messagingService,
+  Channel,
+  DirectMessageUser,
+  Message
+} from "@/integrations/api/services/messaging.service";
 
 export default function MessagingPlatform() {
+  const { user } = useAuth();
+  const { toast } = useToast();
+
+  // State for data
+  const [channels, setChannels] = useState<Channel[]>([]);
+  const [directMessageUsers, setDirectMessageUsers] = useState<DirectMessageUser[]>([]);
+  const [messages, setMessages] = useState<Message[]>([]);
+
+  // State for UI
   const [newMessage, setNewMessage] = useState("");
-  const [activeChannel, setActiveChannel] = useState("homework-help");
+  const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
+  const [activeConversationTitle, setActiveConversationTitle] = useState("Select a conversation");
   const [activeTab, setActiveTab] = useState("channels");
-  
-  const handleSendMessage = () => {
-    if (newMessage.trim() !== "") {
-      console.log("Sending message:", newMessage);
-      // Here you would typically add the message to the messages array
-      // and potentially send it to a backend server
-      setNewMessage("");
+  const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingMessages, setIsLoadingMessages] = useState(false);
+
+  // Initial data fetch
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setIsLoading(true);
+        const [channelsResp, dmsResp] = await Promise.all([
+          messagingService.getChannels(),
+          messagingService.getDirectMessages()
+        ]);
+
+        if (channelsResp.data) {
+          setChannels(channelsResp.data);
+          // Set first channel as active if no active conversation
+          if (!activeConversationId && channelsResp.data.length > 0) {
+            setActiveConversationId(channelsResp.data[0].id);
+            setActiveConversationTitle(channelsResp.data[0].name);
+            setActiveTab("channels");
+          }
+        }
+
+        if (dmsResp.data) {
+          setDirectMessageUsers(dmsResp.data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch messaging data:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load messaging data. Please try again.",
+          variant: "destructive"
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [toast]);
+
+  // Fetch messages when active conversation changes
+  useEffect(() => {
+    const fetchMessages = async () => {
+      if (!activeConversationId) return;
+
+      try {
+        setIsLoadingMessages(true);
+        const response = await messagingService.getMessages(activeConversationId);
+        if (response.data) {
+          setMessages(response.data.messages);
+        }
+      } catch (error) {
+        console.error("Failed to fetch messages:", error);
+      } finally {
+        setIsLoadingMessages(false);
+      }
+    };
+
+    fetchMessages();
+  }, [activeConversationId]);
+
+  const handleSendMessage = async () => {
+    if (newMessage.trim() === "" || !activeConversationId) return;
+
+    // Optimistic update (optional, but good for UX)
+    // For now, we'll just wait for the API
+    try {
+      const response = await messagingService.sendMessage(activeConversationId, {
+        content: newMessage
+      });
+
+      if (response.data) {
+        setMessages([...messages, response.data]);
+        setNewMessage("");
+      }
+    } catch (error) {
+      console.error("Failed to send message:", error);
+      toast({
+        title: "Error",
+        description: "Failed to send message.",
+        variant: "destructive"
+      });
     }
   };
-  
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSendMessage();
     }
   };
+
+  const handleChannelSelect = (channelId: string) => {
+    const channel = channels.find(c => c.id === channelId);
+    if (channel) {
+      setActiveConversationId(channel.id);
+      setActiveConversationTitle(`#${channel.name}`);
+      setActiveConversationId(channel.id);
+    }
+  };
+
+  const handleUserSelect = async (userId: string) => {
+    const user = directMessageUsers.find(u => u.id === userId);
+    if (!user) return;
+
+    setActiveConversationTitle(user.name);
+
+    // If we already have a conversationId for this user, use it
+    if (user.conversationId) {
+      setActiveConversationId(user.conversationId);
+      return;
+    }
+
+    // Otherwise create/start one
+    try {
+      setIsLoadingMessages(true);
+      const response = await messagingService.startDirectMessage(userId);
+      if (response.data) {
+        // Update user with new conversation ID locally
+        setDirectMessageUsers(prev =>
+          prev.map(u => u.id === userId ? { ...u, conversationId: response.data!.conversationId } : u)
+        );
+        setActiveConversationId(response.data.conversationId);
+      }
+    } catch (error) {
+      console.error("Failed to start conversation:", error);
+      toast({
+        title: "Error",
+        description: "Failed to start conversation.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoadingMessages(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="bg-white rounded-lg shadow overflow-hidden h-[calc(100vh-140px)] flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+        <span className="ml-2 text-gray-500">Loading messaging...</span>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white rounded-lg shadow overflow-hidden h-[calc(100vh-140px)] flex">
@@ -127,9 +200,9 @@ export default function MessagingPlatform() {
           <h2 className="text-lg font-semibold">Kidato Class</h2>
           <p className="text-xs text-gray-400">Mathematics 101</p>
         </div>
-        
-        <Tabs 
-          defaultValue="channels" 
+
+        <Tabs
+          defaultValue="channels"
           className="w-full"
           value={activeTab}
           onValueChange={setActiveTab}
@@ -144,24 +217,34 @@ export default function MessagingPlatform() {
               </TabsTrigger>
             </TabsList>
           </div>
-          
+
           <TabsContent value="channels" className="mt-0 p-0">
-            <ChannelsList channels={channels} activeChannel={activeChannel} setActiveChannel={setActiveChannel} />
+            <ChannelsList
+              channels={channels}
+              activeChannel={activeConversationId || ""}
+              setActiveChannel={handleChannelSelect}
+            />
           </TabsContent>
-          
+
           <TabsContent value="dms" className="mt-0 p-0">
-            <UsersList users={directMessages} />
+            <UsersList
+              users={directMessageUsers}
+              onSelectUser={handleUserSelect}
+              activeUserId={activeConversationId || ""}
+            />
           </TabsContent>
         </Tabs>
-        
+
         <div className="mt-auto p-3 bg-gray-900">
           <div className="flex items-center">
             <Avatar className="h-8 w-8">
-              <AvatarFallback className="bg-blue-500 text-white">JD</AvatarFallback>
+              <AvatarFallback className="bg-blue-500 text-white">
+                {user?.fullName ? user.fullName.split(" ").map(n => n[0]).join("") : "ME"}
+              </AvatarFallback>
             </Avatar>
             <div className="ml-2">
-              <p className="text-sm font-medium">John Doe</p>
-              <p className="text-xs text-gray-400">Student</p>
+              <p className="text-sm font-medium">{user?.fullName || "User"}</p>
+              <p className="text-xs text-gray-400">{user?.role || "Student"}</p>
             </div>
             <Button variant="ghost" size="icon" className="ml-auto text-gray-400 hover:text-white">
               <Settings className="h-4 w-4" />
@@ -169,14 +252,18 @@ export default function MessagingPlatform() {
           </div>
         </div>
       </div>
-      
+
       {/* Main content - Messages */}
       <div className="flex-1 flex flex-col">
         {/* Channel header */}
         <div className="flex items-center justify-between px-6 py-3 border-b">
           <div className="flex items-center">
-            <Hash className="h-5 w-5 text-gray-500 mr-2" />
-            <h2 className="font-medium">{activeChannel}</h2>
+            {activeTab === "channels" ? (
+              <Hash className="h-5 w-5 text-gray-500 mr-2" />
+            ) : (
+              <Users className="h-5 w-5 text-gray-500 mr-2" />
+            )}
+            <h2 className="font-medium">{activeConversationTitle}</h2>
           </div>
           <div className="flex space-x-2">
             <Button variant="ghost" size="icon">
@@ -193,16 +280,27 @@ export default function MessagingPlatform() {
             </Button>
           </div>
         </div>
-        
+
         {/* Messages area */}
         <ScrollArea className="flex-1 p-4">
-          <div className="space-y-4">
-            {messages.map((message) => (
-              <MessageItem key={message.id} message={message} />
-            ))}
-          </div>
+          {isLoadingMessages ? (
+            <div className="flex items-center justify-center h-full">
+              <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+            </div>
+          ) : messages.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-full text-gray-400">
+              <MessageCircle className="h-12 w-12 mb-2" />
+              <p>No messages yet. Start the conversation!</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {messages.map((message) => (
+                <MessageItem key={message.id} message={message} />
+              ))}
+            </div>
+          )}
         </ScrollArea>
-        
+
         {/* Message input */}
         <div className="p-4 border-t">
           <div className="flex items-end bg-gray-100 rounded-lg p-2">
@@ -218,21 +316,22 @@ export default function MessagingPlatform() {
               </Button>
             </div>
             <div className="flex-1">
-              <Input 
-                placeholder="Message #homework-help"
+              <Input
+                placeholder={`Message ${activeConversationTitle}`}
                 className="border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
                 onKeyDown={handleKeyDown}
+                disabled={isLoadingMessages || !activeConversationId}
               />
             </div>
             <div className="flex items-center">
               <Button variant="ghost" size="icon" className="text-gray-500 hover:text-gray-800">
                 <Smile className="h-5 w-5" />
               </Button>
-              <Button 
-                onClick={handleSendMessage} 
-                disabled={newMessage.trim() === ""}
+              <Button
+                onClick={handleSendMessage}
+                disabled={newMessage.trim() === "" || isLoadingMessages || !activeConversationId}
                 className="ml-2 bg-kidato-purple hover:bg-blue-700"
               >
                 <Send className="h-4 w-4" />
@@ -241,69 +340,11 @@ export default function MessagingPlatform() {
           </div>
         </div>
       </div>
-      
-      {/* Right sidebar - Member list */}
+
+      {/* Right sidebar - Member list - Currently hidden/static since API doesn't support generic member list yet */}
       <div className="w-60 border-l bg-gray-50 p-4 hidden lg:block">
-        <h3 className="font-medium text-sm uppercase text-gray-500 mb-4">Members - 24</h3>
-        
-        <div className="space-y-1">
-          <h4 className="text-xs font-medium text-gray-500 mt-4 mb-1">TEACHERS - 3</h4>
-          {directMessages
-            .filter(user => user.role === "Teacher")
-            .map(user => (
-              <div key={user.id} className="flex items-center p-2 rounded hover:bg-gray-100 cursor-pointer">
-                <div className={`h-2 w-2 rounded-full mr-2 ${
-                  user.status === 'online' ? 'bg-green-500' : 
-                  user.status === 'away' ? 'bg-yellow-500' : 'bg-gray-400'
-                }`}></div>
-                <Avatar className="h-6 w-6 mr-2">
-                  <AvatarFallback className="bg-blue-500 text-white text-xs">
-                    {user.name.split(" ").map(n => n[0]).join("")}
-                  </AvatarFallback>
-                </Avatar>
-                <span className="text-sm">{user.name}</span>
-              </div>
-            ))
-          }
-          
-          <h4 className="text-xs font-medium text-gray-500 mt-4 mb-1">STUDENTS - 15</h4>
-          {directMessages
-            .filter(user => user.role === "Student")
-            .map(user => (
-              <div key={user.id} className="flex items-center p-2 rounded hover:bg-gray-100 cursor-pointer">
-                <div className={`h-2 w-2 rounded-full mr-2 ${
-                  user.status === 'online' ? 'bg-green-500' : 
-                  user.status === 'away' ? 'bg-yellow-500' : 'bg-gray-400'
-                }`}></div>
-                <Avatar className="h-6 w-6 mr-2">
-                  <AvatarFallback className="bg-purple-500 text-white text-xs">
-                    {user.name.split(" ").map(n => n[0]).join("")}
-                  </AvatarFallback>
-                </Avatar>
-                <span className="text-sm">{user.name}</span>
-              </div>
-            ))
-          }
-          
-          <h4 className="text-xs font-medium text-gray-500 mt-4 mb-1">PARENTS - 6</h4>
-          {directMessages
-            .filter(user => user.role === "Parent")
-            .map(user => (
-              <div key={user.id} className="flex items-center p-2 rounded hover:bg-gray-100 cursor-pointer">
-                <div className={`h-2 w-2 rounded-full mr-2 ${
-                  user.status === 'online' ? 'bg-green-500' : 
-                  user.status === 'away' ? 'bg-yellow-500' : 'bg-gray-400'
-                }`}></div>
-                <Avatar className="h-6 w-6 mr-2">
-                  <AvatarFallback className="bg-green-500 text-white text-xs">
-                    {user.name.split(" ").map(n => n[0]).join("")}
-                  </AvatarFallback>
-                </Avatar>
-                <span className="text-sm">{user.name}</span>
-              </div>
-            ))
-          }
-        </div>
+        <h3 className="font-medium text-sm uppercase text-gray-500 mb-4">Conversation Members</h3>
+        <p className="text-sm text-gray-500 italic">Select a channel to view members</p>
       </div>
     </div>
   );

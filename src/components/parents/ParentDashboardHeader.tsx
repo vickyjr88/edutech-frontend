@@ -1,10 +1,10 @@
-import { Bell, MessageSquare, Search, Calendar, Video, HelpCircle, User, LogOut, Settings } from "lucide-react";
+import { Bell, MessageSquare, Search, Video, HelpCircle, User, LogOut, Settings, Phone, FileQuestion, Book } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "@/components/ui/use-toast";
 import {
   DropdownMenu,
@@ -14,6 +14,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { classService } from "@/integrations/api/services/class.service";
+import NotificationsPanel from "@/components/parents/NotificationsPanel";
 
 interface ParentDashboardHeaderProps {
   parentName: string;
@@ -21,16 +28,40 @@ interface ParentDashboardHeaderProps {
 
 const ParentDashboardHeader = ({ parentName }: ParentDashboardHeaderProps) => {
   const navigate = useNavigate();
-  const { signOut } = useAuth();
+  const { signOut, user } = useAuth();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
-  
+  const [liveClassesCount, setLiveClassesCount] = useState(0);
+
+  useEffect(() => {
+    const fetchLiveClasses = async () => {
+      if (!user?.id) return;
+      try {
+        const response = await classService.getCurrentClassesForStudent(user.id);
+        if (response.data) {
+          const now = new Date();
+          const count = response.data.filter((classData: any) => {
+            if (!classData.schedule) return false;
+            const start = new Date(classData.schedule.startTime);
+            const end = new Date(classData.schedule.endTime);
+            return now >= start && now <= end;
+          }).length;
+          setLiveClassesCount(count);
+        }
+      } catch (error) {
+        console.error("Failed to fetch live classes count", error);
+      }
+    };
+
+    fetchLiveClasses();
+    // Poll every minute to keep valid
+    const interval = setInterval(fetchLiveClasses, 60000);
+    return () => clearInterval(interval);
+  }, [user?.id]);
+
   const initials = parentName
     .split(" ")
     .map((n) => n[0])
     .join("");
-
-  // Check if there are any live classes happening now
-  const liveClassesCount = 1; // Mock data - in a real app this would be calculated
 
   const handleLogout = async () => {
     try {
@@ -51,6 +82,13 @@ const ParentDashboardHeader = ({ parentName }: ParentDashboardHeaderProps) => {
     } finally {
       setIsLoggingOut(false);
     }
+  };
+
+  const handleHelpAction = (action: string) => {
+    toast({
+      title: action,
+      description: "This feature is coming soon to the help center.",
+    });
   };
 
   return (
@@ -88,7 +126,7 @@ const ParentDashboardHeader = ({ parentName }: ParentDashboardHeaderProps) => {
         </div>
 
         {liveClassesCount > 0 && (
-          <Button size="sm" className="bg-red-500 hover:bg-red-600 text-white ml-2">
+          <Button size="sm" className="bg-red-500 hover:bg-red-600 text-white ml-2 animate-pulse">
             <Video className="h-4 w-4 mr-1" />
             <span>Live Classes</span>
             <Badge variant="outline" className="ml-1 bg-white text-red-500 border-0">{liveClassesCount}</Badge>
@@ -97,17 +135,54 @@ const ParentDashboardHeader = ({ parentName }: ParentDashboardHeaderProps) => {
       </div>
 
       <div className="flex items-center gap-2">
-        <Button variant="ghost" size="icon" className="relative">
-          <Bell className="h-5 w-5 text-blue-600" />
-          <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full"></span>
-        </Button>
-        <Button variant="ghost" size="icon" className="text-blue-600">
+        {/* Notifications Popover */}
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="ghost" size="icon" className="relative">
+              <Bell className="h-5 w-5 text-blue-600" />
+              {/* We can optionally query notification count here or just show a dot if we don't know */}
+              <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full"></span>
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-96 p-0" align="end">
+            <div className="max-h-[80vh] overflow-y-auto">
+              <NotificationsPanel />
+            </div>
+          </PopoverContent>
+        </Popover>
+
+        {/* Messages */}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="text-blue-600"
+          onClick={() => navigate('/parents-messages')}
+        >
           <MessageSquare className="h-5 w-5" />
         </Button>
-        <Button variant="ghost" size="icon" className="text-blue-600">
-          <HelpCircle className="h-5 w-5" />
-        </Button>
-        
+
+        {/* Help Menu */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" className="text-blue-600">
+              <HelpCircle className="h-5 w-5" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuLabel>Help & Support</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => handleHelpAction("Help Center")}>
+              <Book className="mr-2 h-4 w-4" /> Help Center
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => handleHelpAction("FAQs")}>
+              <FileQuestion className="mr-2 h-4 w-4" /> FAQs
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => handleHelpAction("Contact Support")}>
+              <Phone className="mr-2 h-4 w-4" /> Contact Support
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
         {/* User Profile Dropdown */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -123,15 +198,15 @@ const ParentDashboardHeader = ({ parentName }: ParentDashboardHeaderProps) => {
           <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuLabel>My Account</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="cursor-pointer">
+            <DropdownMenuItem className="cursor-pointer" onClick={() => navigate('/profile')}>
               <User className="mr-2 h-4 w-4" /> Profile
             </DropdownMenuItem>
-            <DropdownMenuItem className="cursor-pointer">
+            <DropdownMenuItem className="cursor-pointer" onClick={() => navigate('/settings')}>
               <Settings className="mr-2 h-4 w-4" /> Settings
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem 
-              className="cursor-pointer text-red-600 hover:text-red-700 hover:bg-red-50" 
+            <DropdownMenuItem
+              className="cursor-pointer text-red-600 hover:text-red-700 hover:bg-red-50"
               onClick={handleLogout}
               disabled={isLoggingOut}
             >

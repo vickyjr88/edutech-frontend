@@ -438,10 +438,7 @@ export const AcademicClassProvider = ({
             lessonSchedules,
             repeatSchedule,
             id,
-            _id, // Exclude _id if it's new/temp, or keep if updating? 
-            // CreateClass usually creates new cohorts. UpdateClass might update. 
-            // If _id mocks a temp ID (Date.now()), exclude it. 
-            // Given validation IsMongoId, random string fails. 
+            _id,
             ...validCohort
           } = cohort;
 

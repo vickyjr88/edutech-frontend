@@ -1,6 +1,6 @@
 
-import { useState } from "react";
-import { 
+import { useState, useEffect } from "react";
+import {
   Dialog,
   DialogContent,
   DialogHeader,
@@ -32,6 +32,10 @@ import {
   RadioGroup,
   RadioGroupItem
 } from "@/components/ui/radio-group";
+import { classService } from "@/integrations/api/services/class.service";
+import { enrollmentService } from "@/integrations/api/services/enrollment.service";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 
 interface CreateGroupDialogProps {
   open: boolean;
@@ -40,10 +44,10 @@ interface CreateGroupDialogProps {
 }
 
 const subjects = [
-  "Mathematics", 
-  "Science", 
-  "English", 
-  "History", 
+  "Mathematics",
+  "Science",
+  "English",
+  "History",
   "Art",
   "Music",
   "Computer Science",
@@ -52,39 +56,10 @@ const subjects = [
   "Foreign Language"
 ];
 
-// Mock data for courses
-const courses = [
-  { id: "c1", name: "Introduction to Algebra", subject: "Mathematics" },
-  { id: "c2", name: "Advanced Chemistry", subject: "Science" },
-  { id: "c3", name: "Creative Writing", subject: "English" },
-  { id: "c4", name: "World History", subject: "History" },
-];
-
-// Mock data for lessons
-const lessonsMap = {
-  "c1": [
-    { id: "l1", name: "Linear Equations" },
-    { id: "l2", name: "Quadratic Functions" },
-    { id: "l3", name: "Systems of Equations" }
-  ],
-  "c2": [
-    { id: "l4", name: "Periodic Table" },
-    { id: "l5", name: "Chemical Reactions" },
-    { id: "l6", name: "Laboratory Safety" }
-  ],
-  "c3": [
-    { id: "l7", name: "Narrative Writing" },
-    { id: "l8", name: "Poetry Techniques" },
-    { id: "l9", name: "Character Development" }
-  ],
-  "c4": [
-    { id: "l10", name: "Ancient Civilizations" },
-    { id: "l11", name: "World Wars" },
-    { id: "l12", name: "Modern History" }
-  ],
-};
-
 const CreateGroupDialog = ({ open, onOpenChange, onGroupCreate }: CreateGroupDialogProps) => {
+  const { user } = useAuth();
+  const { toast } = useToast();
+
   const [formData, setFormData] = useState({
     name: "",
     subject: "",
@@ -97,7 +72,41 @@ const CreateGroupDialog = ({ open, onOpenChange, onGroupCreate }: CreateGroupDia
     endDate: null as Date | null,
   });
 
+  const [courses, setCourses] = useState<Array<{ id: string; name: string; subject: string }>>([]);
   const [availableLessons, setAvailableLessons] = useState<{ id: string, name: string }[]>([]);
+  const [isLoadingCourses, setIsLoadingCourses] = useState(false);
+  const [isLoadingLessons, setIsLoadingLessons] = useState(false);
+
+  // Fetch enrolled courses when dialog opens
+  useEffect(() => {
+    const fetchEnrolledCourses = async () => {
+      if (!open || !user?.id) return;
+
+      setIsLoadingCourses(true);
+      try {
+        const response = await enrollmentService.getStudentCurrentEnrollments(user.id);
+        if (response.data) {
+          const mappedCourses = response.data.map((enrollment: any) => ({
+            id: enrollment.course?.id || enrollment.enrollmentId,
+            name: enrollment.course?.title || "Untitled Course",
+            subject: enrollment.course?.subject || "General"
+          }));
+          setCourses(mappedCourses);
+        }
+      } catch (error) {
+        console.error("Failed to fetch enrolled courses:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load your courses. Please try again.",
+          variant: "destructive"
+        });
+      } finally {
+        setIsLoadingCourses(false);
+      }
+    };
+
+    fetchEnrolledCourses();
+  }, [open, user?.id, toast]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -108,14 +117,35 @@ const CreateGroupDialog = ({ open, onOpenChange, onGroupCreate }: CreateGroupDia
     setFormData((prev) => ({ ...prev, subject: value }));
   };
 
-  const handleCourseChange = (courseId: string) => {
-    const lessons = lessonsMap[courseId as keyof typeof lessonsMap] || [];
-    setAvailableLessons(lessons);
-    setFormData((prev) => ({ 
-      ...prev, 
+  const handleCourseChange = async (courseId: string) => {
+    setFormData((prev) => ({
+      ...prev,
       courseId: courseId,
       lessons: [] // Reset lessons when course changes
     }));
+
+    // Fetch lessons for the selected course
+    setIsLoadingLessons(true);
+    try {
+      const response = await classService.getLessonPlans(courseId);
+      if (response.data) {
+        const mappedLessons = response.data.map((lesson: any, index: number) => ({
+          id: lesson._id || lesson.id || `lesson-${index}`,
+          name: lesson.title || `Lesson ${index + 1}`
+        }));
+        setAvailableLessons(mappedLessons);
+      }
+    } catch (error) {
+      console.error("Failed to fetch lessons:", error);
+      setAvailableLessons([]);
+      toast({
+        title: "Info",
+        description: "No lessons found for this course.",
+        variant: "default"
+      });
+    } finally {
+      setIsLoadingLessons(false);
+    }
   };
 
   const handleLessonChange = (lessonId: string) => {
@@ -154,13 +184,13 @@ const CreateGroupDialog = ({ open, onOpenChange, onGroupCreate }: CreateGroupDia
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Get lesson names for selected lesson IDs
     const selectedLessonNames = formData.lessons.map(lessonId => {
       const lesson = availableLessons.find(l => l.id === lessonId);
       return lesson ? lesson.name : '';
     }).filter(Boolean);
-    
+
     // Here you would typically handle the API call to create a group
     if (onGroupCreate) {
       onGroupCreate({
@@ -171,10 +201,10 @@ const CreateGroupDialog = ({ open, onOpenChange, onGroupCreate }: CreateGroupDia
         lessonNames: selectedLessonNames,
       });
     }
-    
+
     // Close the dialog
     onOpenChange(false);
-    
+
     // Reset form
     setFormData({
       name: "",
@@ -199,13 +229,13 @@ const CreateGroupDialog = ({ open, onOpenChange, onGroupCreate }: CreateGroupDia
             Create a new collaborative group for your project or study session.
           </DialogDescription>
         </DialogHeader>
-        
+
         <form onSubmit={handleSubmit} className="space-y-4 pt-4">
           <div className="grid grid-cols-1 gap-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="name">Group Name</Label>
-                <Input 
+                <Input
                   id="name"
                   name="name"
                   value={formData.name}
@@ -214,11 +244,11 @@ const CreateGroupDialog = ({ open, onOpenChange, onGroupCreate }: CreateGroupDia
                   required
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="subject">Subject</Label>
-                <Select 
-                  value={formData.subject} 
+                <Select
+                  value={formData.subject}
                   onValueChange={handleSubjectChange}
                   required
                 >
@@ -235,10 +265,10 @@ const CreateGroupDialog = ({ open, onOpenChange, onGroupCreate }: CreateGroupDia
                 </Select>
               </div>
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="description">Description</Label>
-              <Textarea 
+              <Textarea
                 id="description"
                 name="description"
                 value={formData.description}
@@ -250,7 +280,7 @@ const CreateGroupDialog = ({ open, onOpenChange, onGroupCreate }: CreateGroupDia
 
             <div className="space-y-2">
               <Label>Group Type</Label>
-              <RadioGroup 
+              <RadioGroup
                 value={formData.groupType}
                 onValueChange={handleGroupTypeChange}
                 className="flex space-x-4"
@@ -269,7 +299,7 @@ const CreateGroupDialog = ({ open, onOpenChange, onGroupCreate }: CreateGroupDia
                 </div>
               </RadioGroup>
             </div>
-            
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Course</Label>
@@ -289,10 +319,10 @@ const CreateGroupDialog = ({ open, onOpenChange, onGroupCreate }: CreateGroupDia
                   </SelectContent>
                 </Select>
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="meetingTime">Meeting Time</Label>
-                <Input 
+                <Input
                   id="meetingTime"
                   name="meetingTime"
                   value={formData.meetingTime}
@@ -309,8 +339,8 @@ const CreateGroupDialog = ({ open, onOpenChange, onGroupCreate }: CreateGroupDia
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 border rounded-md p-3">
                   {availableLessons.map(lesson => (
                     <div key={lesson.id} className="flex items-center space-x-2">
-                      <input 
-                        type="checkbox" 
+                      <input
+                        type="checkbox"
                         id={`lesson-${lesson.id}`}
                         checked={formData.lessons.includes(lesson.id)}
                         onChange={() => handleLessonChange(lesson.id)}
@@ -324,7 +354,7 @@ const CreateGroupDialog = ({ open, onOpenChange, onGroupCreate }: CreateGroupDia
                 </div>
               </div>
             )}
-            
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Start Date</Label>
@@ -352,7 +382,7 @@ const CreateGroupDialog = ({ open, onOpenChange, onGroupCreate }: CreateGroupDia
                   </PopoverContent>
                 </Popover>
               </div>
-              
+
               <div className="space-y-2">
                 <Label>End Date</Label>
                 <Popover>
@@ -382,16 +412,16 @@ const CreateGroupDialog = ({ open, onOpenChange, onGroupCreate }: CreateGroupDia
               </div>
             </div>
           </div>
-          
+
           <DialogFooter>
-            <Button 
-              type="button" 
-              variant="outline" 
+            <Button
+              type="button"
+              variant="outline"
               onClick={() => onOpenChange(false)}
             >
               Cancel
             </Button>
-            <Button 
+            <Button
               type="submit"
               className="bg-kidato-purple hover:bg-kidato-dark-blue"
             >

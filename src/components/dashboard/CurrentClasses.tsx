@@ -59,7 +59,7 @@ export default function CurrentClasses() {
               
               return (
                 <ClassCard
-                  key={classItem.id}
+                  key={`${classItem.id}-${index}`}
                   classItem={classItem}
                   isCurrentClass={isCurrentClass}
                   minutesSinceStart={minutesSinceStart}

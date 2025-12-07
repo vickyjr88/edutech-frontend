@@ -65,9 +65,19 @@ export function useClassesData() {
     iconBg: 'bg-blue-100 text-blue-600'
   }));
   
-  // Combine and sort all classes
+  // Combine and sort all classes, removing duplicates
   const allClasses = [...transformedTodaysLessons, ...transformedUpcomingSessions];
-  const sortedClasses = allClasses.sort((a, b) => 
+  
+  // Remove duplicates based on class ID
+  const uniqueClasses = allClasses.reduce((acc, current) => {
+    const exists = acc.find(item => item.id === current.id);
+    if (!exists && current.id) {
+      return [...acc, current];
+    }
+    return acc;
+  }, [] as typeof allClasses);
+  
+  const sortedClasses = uniqueClasses.sort((a, b) => 
     a.sessionTime.getTime() - b.sessionTime.getTime()
   );
 

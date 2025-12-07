@@ -49,6 +49,7 @@ import { useTeacherStats } from '@/hooks/useTeacherStats';
 import { useTeacherUpcomingSessions } from '@/hooks/useTeacherUpcomingSessions';
 import { useTeacherSummary } from '@/hooks/useTeacherSummary';
 import { Activity, ActivityType, ActivityPriority } from '@/types/activity';
+import { teacherResourcesService, SuccessStory } from "@/integrations/api/services/teacher-resources.service";
 
 
 // Helper function to format time left
@@ -74,24 +75,24 @@ const canStartEarly = (timeLeftInMinutes: number): boolean => {
 // Helper function to check minimum readiness requirements
 const hasMinimumReadiness = (readiness: any): boolean => {
   if (!readiness) return false;
-  return readiness.overallReadiness >= 70 && 
-         readiness.lessonPlanReady && 
-         readiness.materialsReady;
+  return readiness.overallReadiness >= 70 &&
+    readiness.lessonPlanReady &&
+    readiness.materialsReady;
 };
 
 // Helper function to get readiness status message
 const getReadinessMessage = (readiness: any): string => {
   if (!readiness) return 'Readiness data not available';
-  
+
   const missing = [];
   if (!readiness.lessonPlanReady) missing.push('lesson plan');
   if (!readiness.materialsReady) missing.push('materials');
   if (!readiness.zoomSetup) missing.push('Zoom setup');
-  
+
   if (missing.length === 0) {
     return 'All requirements met';
   }
-  
+
   return `Missing: ${missing.join(', ')}`;
 };
 
@@ -110,7 +111,7 @@ const TeacherCommandCenter: React.FC = () => {
   const [classProgress, setClassProgress] = useState(0);
   const [isStartingEarly, setIsStartingEarly] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
-  
+
   // Fetch real dashboard data
   const { activities, dashboardData, loading, error, refetch } = useTeacherRecentActivity({
     teacherId: user?.teacherId || '',
@@ -138,6 +139,21 @@ const TeacherCommandCenter: React.FC = () => {
     teacherId: user?.teacherId || '',
   });
 
+  const [successStories, setSuccessStories] = useState<SuccessStory[]>([]);
+  useEffect(() => {
+    const fetchStories = async () => {
+      if (user?.teacherId) {
+        try {
+          const { data } = await teacherResourcesService.getSuccessStories(user.teacherId);
+          if (data) setSuccessStories(data);
+        } catch (error) {
+          console.error("Failed to fetch success stories", error);
+        }
+      }
+    };
+    fetchStories();
+  }, [user?.teacherId]);
+
   useEffect(() => {
     // Update time every minute
     const timer = setInterval(() => {
@@ -162,28 +178,28 @@ const TeacherCommandCenter: React.FC = () => {
   // API call to start class early
   const handleStartEarly = useCallback(async () => {
     if (!statsData?.nextUpcomingClassSession) return;
-    
+
     const session = statsData.nextUpcomingClassSession;
     setIsStartingEarly(true);
-    
+
     try {
       const response = await api.post(`/api/classes/${session.classId}/${session.sessionId}/start-early`, {
         teacherId: user?.teacherId,
         sessionId: session.sessionId,
         classId: session.classId
       });
-      
+
       const result = response.data;
-      
+
       // Update local state with real session data
       setIsLive(true);
       setLiveStudents(session.enrolledStudents || 0);
       setClassProgress(0); // Start fresh
       setShowConfirmModal(false);
-      
+
       // TODO: Show success notification
       console.log('Class started early successfully:', result);
-      
+
     } catch (error) {
       console.error('Error starting class early:', error);
       // TODO: Show error notification
@@ -204,7 +220,7 @@ const TeacherCommandCenter: React.FC = () => {
             </Badge>
           )}
         </div>
-        
+
         <div className="flex items-center space-x-6">
           <div className="flex items-center space-x-4 text-sm text-gray-600">
             <div className="flex items-center space-x-1">
@@ -226,7 +242,7 @@ const TeacherCommandCenter: React.FC = () => {
               </div>
             )}
           </div>
-          
+
           <div className="flex items-center space-x-3">
             <Button variant="outline" size="sm">
               <HelpCircle className="w-4 h-4 mr-2" />
@@ -274,7 +290,7 @@ const TeacherCommandCenter: React.FC = () => {
                 </Button>
               </div>
             </div>
-            
+
             <div className="grid grid-cols-4 gap-4 mb-4">
               <div className="text-center">
                 <div className="text-2xl font-bold text-red-900">{liveStudents}</div>
@@ -295,7 +311,7 @@ const TeacherCommandCenter: React.FC = () => {
                 <div className="text-sm text-red-700">Progress</div>
               </div>
             </div>
-            
+
             <Progress value={classProgress} className="h-2" />
           </CardContent>
         </Card>
@@ -308,11 +324,11 @@ const TeacherCommandCenter: React.FC = () => {
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-xl font-bold text-blue-900">
-                {statsData?.nextUpcomingClassSession?.title || 'No upcoming class'} 
+                {statsData?.nextUpcomingClassSession?.title || 'No upcoming class'}
                 {statsData?.nextUpcomingClassSession && ` starts in ${formatTimeLeft(statsData.nextUpcomingClassSession.timeLeft)}`}
               </h2>
               <p className="text-blue-700">
-                {statsData?.nextUpcomingClassSession 
+                {statsData?.nextUpcomingClassSession
                   ? `${statsData.nextUpcomingClassSession.enrolledStudents} students enrolled`
                   : 'Schedule your next class to see upcoming sessions'
                 }
@@ -325,16 +341,16 @@ const TeacherCommandCenter: React.FC = () => {
                   const canStart = canStartEarly(session.timeLeft);
                   const hasReadiness = hasMinimumReadiness(session.readiness);
                   const isReady = canStart && hasReadiness;
-                  
+
                   return (
                     <div className="flex flex-col space-y-1">
-                      <Button 
-                        size="sm" 
+                      <Button
+                        size="sm"
                         onClick={() => setShowConfirmModal(true)}
                         disabled={!isReady || isStartingEarly}
-                        title={!canStart ? `Can only start early within 15 minutes (${session.timeLeft}m left)` : 
-                               !hasReadiness ? getReadinessMessage(session.readiness) :
-                               'Start class early and notify students'}
+                        title={!canStart ? `Can only start early within 15 minutes (${session.timeLeft}m left)` :
+                          !hasReadiness ? getReadinessMessage(session.readiness) :
+                            'Start class early and notify students'}
                       >
                         {isStartingEarly ? (
                           <>
@@ -365,7 +381,7 @@ const TeacherCommandCenter: React.FC = () => {
               )}
             </div>
           </div>
-          
+
           {statsData?.nextUpcomingClassSession && (
             <div className="mt-4 space-y-3">
               {/* Overall Readiness Progress */}
@@ -376,12 +392,12 @@ const TeacherCommandCenter: React.FC = () => {
                     {statsData.nextUpcomingClassSession.readiness?.overallReadiness || 0}%
                   </span>
                 </div>
-                <Progress 
-                  value={statsData.nextUpcomingClassSession.readiness?.overallReadiness || 0} 
+                <Progress
+                  value={statsData.nextUpcomingClassSession.readiness?.overallReadiness || 0}
                   className="h-2"
                 />
               </div>
-              
+
               {/* Readiness Status Items */}
               <div className="grid grid-cols-2 gap-2">
                 <div className="flex items-center space-x-2">
@@ -394,7 +410,7 @@ const TeacherCommandCenter: React.FC = () => {
                     Lesson Plan
                   </span>
                 </div>
-                
+
                 <div className="flex items-center space-x-2">
                   {statsData.nextUpcomingClassSession.readiness?.materialsReady ? (
                     <CheckCircle className="w-4 h-4 text-green-500" />
@@ -405,7 +421,7 @@ const TeacherCommandCenter: React.FC = () => {
                     Materials
                   </span>
                 </div>
-                
+
                 <div className="flex items-center space-x-2">
                   {statsData.nextUpcomingClassSession.readiness?.zoomSetup ? (
                     <CheckCircle className="w-4 h-4 text-green-500" />
@@ -416,7 +432,7 @@ const TeacherCommandCenter: React.FC = () => {
                     Zoom Setup
                   </span>
                 </div>
-                
+
                 <div className="flex items-center space-x-2">
                   {statsData.nextUpcomingClassSession.readiness?.studentsNotified ? (
                     <CheckCircle className="w-4 h-4 text-green-500" />
@@ -466,10 +482,9 @@ const TeacherCommandCenter: React.FC = () => {
               {upcomingSessions.map((session) => (
                 <div key={session.classId} className="flex items-center justify-between p-3 rounded-lg border">
                   <div className="flex items-center space-x-3">
-                    <div className={`w-3 h-3 rounded-full ${
-                      session.readiness.overallReadiness >= 80 ? 'bg-green-500' :
+                    <div className={`w-3 h-3 rounded-full ${session.readiness.overallReadiness >= 80 ? 'bg-green-500' :
                       session.readiness.overallReadiness >= 50 ? 'bg-yellow-500' : 'bg-red-500'
-                    }`}></div>
+                      }`}></div>
                     <div>
                       <div className="font-medium">{session.title}</div>
                       <div className="text-sm text-gray-600">
@@ -574,7 +589,7 @@ const TeacherCommandCenter: React.FC = () => {
                   </div>
                 </div>
               )}
-              
+
               <div>
                 <h4 className="font-medium text-sm mb-2">Recent Activity</h4>
                 {activities.length === 0 ? (
@@ -640,7 +655,7 @@ const TeacherCommandCenter: React.FC = () => {
               <div className="text-sm text-gray-600">Average Rating ⭐</div>
             </div>
           </div>
-          
+
           <div className="space-y-2">
             <div className="flex justify-between">
               <span className="text-sm">Completion Rate</span>
@@ -648,7 +663,7 @@ const TeacherCommandCenter: React.FC = () => {
             </div>
             <Progress value={statsData?.completionRate || 0} className="h-2" />
           </div>
-          
+
           <div className="space-y-2 mt-3">
             <div className="flex justify-between">
               <span className="text-sm">Hours Progress</span>
@@ -722,24 +737,50 @@ const TeacherCommandCenter: React.FC = () => {
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            <div className="p-3 border-l-4 border-green-500 bg-green-50">
-              <div className="font-medium">Recent Win</div>
-              <div className="text-sm text-gray-600">James solved his first calculus problem!</div>
-            </div>
-            
-            <div className="p-3 border-l-4 border-blue-500 bg-blue-50">
-              <div className="font-medium">Parent Feedback</div>
-              <div className="text-sm text-gray-600">"Sarah's teaching style really connects with our daughter."</div>
-            </div>
-            
-            <div className="p-3 border-l-4 border-purple-500 bg-purple-50">
-              <div className="font-medium">Long-term Impact</div>
-              <div className="text-sm text-gray-600">Emma improved from C to A this semester</div>
-            </div>
-            
-            <Button variant="outline" size="sm" className="w-full">
+            {successStories.length === 0 ? (
+              <>
+                <div className="p-3 border-l-4 border-green-500 bg-green-50">
+                  <div className="font-medium">Recent Win</div>
+                  <div className="text-sm text-gray-600">James solved his first calculus problem!</div>
+                </div>
+
+                <div className="p-3 border-l-4 border-blue-500 bg-blue-50">
+                  <div className="font-medium">Parent Feedback</div>
+                  <div className="text-sm text-gray-600">"Sarah's teaching style really connects with our daughter."</div>
+                </div>
+
+                <div className="p-3 border-l-4 border-purple-500 bg-purple-50">
+                  <div className="font-medium">Long-term Impact</div>
+                  <div className="text-sm text-gray-600">Emma improved from C to A this semester</div>
+                </div>
+              </>
+            ) : (
+              successStories.map((story, idx) => {
+                let borderColor = "border-green-500";
+                let bgColor = "bg-green-50";
+                if (story.category === "Parent Feedback") {
+                  borderColor = "border-blue-500";
+                  bgColor = "bg-blue-50";
+                } else if (story.category === "Long-term Impact") {
+                  borderColor = "border-purple-500";
+                  bgColor = "bg-purple-50";
+                } else if (story.category === "Other") {
+                  borderColor = "border-gray-500";
+                  bgColor = "bg-gray-50";
+                }
+
+                return (
+                  <div key={idx} className={`p-3 border-l-4 ${borderColor} ${bgColor}`}>
+                    <div className="font-medium">{story.category}</div>
+                    <div className="text-sm text-gray-600">{story.content}</div>
+                  </div>
+                );
+              })
+            )}
+
+            <Button variant="outline" size="sm" className="w-full" onClick={() => navigate('/teacher-dashboard/content')}>
               <Share2 className="w-4 h-4 mr-2" />
-              Share Success Story
+              Manage Success Stories
             </Button>
           </div>
         </CardContent>
@@ -764,21 +805,21 @@ const TeacherCommandCenter: React.FC = () => {
 
   const QuickActionsHub = () => {
     const needsAttentionCount = studentsData?.performanceSummary?.needsAttention || 0;
-    
+
     return (
       <div className="fixed bottom-6 right-6 flex space-x-3 z-50">
-        <Button 
-          className="rounded-full w-12 h-12 shadow-lg hover:scale-110 transition-all duration-200 bg-gradient-to-r from-[#5e6ad2] to-[#abb4dd] hover:from-[#5e6ad2]/90 hover:to-[#abb4dd]/90" 
+        <Button
+          className="rounded-full w-12 h-12 shadow-lg hover:scale-110 transition-all duration-200 bg-gradient-to-r from-[#5e6ad2] to-[#abb4dd] hover:from-[#5e6ad2]/90 hover:to-[#abb4dd]/90"
           title="Create New Class - Start building your next course"
           onClick={handleCreateNewClass}
           aria-label="Create new class"
         >
           <Plus className="w-5 h-5 text-white" />
         </Button>
-        
-        <Button 
-          variant="outline" 
-          className="rounded-full w-12 h-12 shadow-lg hover:scale-110 transition-all duration-200 relative bg-white/90 backdrop-blur-sm border-[#5e6ad2]/20 hover:border-[#5e6ad2] hover:bg-[#5e6ad2]/5" 
+
+        <Button
+          variant="outline"
+          className="rounded-full w-12 h-12 shadow-lg hover:scale-110 transition-all duration-200 relative bg-white/90 backdrop-blur-sm border-[#5e6ad2]/20 hover:border-[#5e6ad2] hover:bg-[#5e6ad2]/5"
           title={`Message Students - ${studentsData?.totalStudents || 0} students${needsAttentionCount > 0 ? `, ${needsAttentionCount} need attention` : ''}`}
           onClick={handleMessageStudents}
           aria-label={`Message students${needsAttentionCount > 0 ? ` (${needsAttentionCount} need attention)` : ''}`}
@@ -790,10 +831,10 @@ const TeacherCommandCenter: React.FC = () => {
             </div>
           )}
         </Button>
-        
-        <Button 
-          variant="outline" 
-          className="rounded-full w-12 h-12 shadow-lg hover:scale-110 transition-all duration-200 bg-white/90 backdrop-blur-sm border-[#5e6ad2]/20 hover:border-[#5e6ad2] hover:bg-[#5e6ad2]/5" 
+
+        <Button
+          variant="outline"
+          className="rounded-full w-12 h-12 shadow-lg hover:scale-110 transition-all duration-200 bg-white/90 backdrop-blur-sm border-[#5e6ad2]/20 hover:border-[#5e6ad2] hover:bg-[#5e6ad2]/5"
           title={`View Analytics - Track your teaching performance (${statsData?.averageRating || 0}⭐ rating)`}
           onClick={handleViewAnalytics}
           aria-label="View detailed analytics and performance metrics"
@@ -807,14 +848,14 @@ const TeacherCommandCenter: React.FC = () => {
   // Confirmation Modal Component
   const ConfirmStartEarlyModal = () => {
     if (!showConfirmModal || !statsData?.nextUpcomingClassSession) return null;
-    
+
     const session = statsData.nextUpcomingClassSession;
-    
+
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
         <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
           <h3 className="text-lg font-semibold mb-4">Start Class Early?</h3>
-          
+
           <div className="space-y-3 mb-6">
             <div className="flex justify-between">
               <span className="text-sm text-gray-600">Class:</span>
@@ -829,7 +870,7 @@ const TeacherCommandCenter: React.FC = () => {
               <span className="text-sm font-medium">in {formatTimeLeft(session.timeLeft)}</span>
             </div>
           </div>
-          
+
           {/* Readiness Checklist */}
           <div className="mb-6">
             <h4 className="text-sm font-medium mb-2">Readiness Checklist:</h4>
@@ -860,23 +901,23 @@ const TeacherCommandCenter: React.FC = () => {
               </div>
             </div>
           </div>
-          
+
           <div className="bg-blue-50 p-3 rounded-lg mb-6">
             <p className="text-sm text-blue-800">
               💬 Starting early will automatically notify all enrolled students via push notification.
             </p>
           </div>
-          
+
           <div className="flex space-x-3">
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               className="flex-1"
               onClick={() => setShowConfirmModal(false)}
               disabled={isStartingEarly}
             >
               Cancel
             </Button>
-            <Button 
+            <Button
               className="flex-1"
               onClick={handleStartEarly}
               disabled={isStartingEarly}
@@ -899,10 +940,10 @@ const TeacherCommandCenter: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <HeaderCommandBar />
-      
+
       <div className="p-6 space-y-6">
         <LiveTeachingStatus />
-        
+
         <div className="grid grid-cols-5 gap-6">
           <div className="col-span-2">
             <UpcomingSessionsOverview />
@@ -912,7 +953,7 @@ const TeacherCommandCenter: React.FC = () => {
           </div>
         </div>
       </div>
-      
+
       <QuickActionsHub />
       <ConfirmStartEarlyModal />
     </div>
@@ -972,11 +1013,10 @@ const ActivityItem: React.FC<ActivityItemProps> = ({ activity }) => {
   };
 
   return (
-    <div className={`text-sm p-2 rounded-md border-l-4 ${
-      activity.priority === 'high' ? 'border-red-500 bg-red-50' :
+    <div className={`text-sm p-2 rounded-md border-l-4 ${activity.priority === 'high' ? 'border-red-500 bg-red-50' :
       activity.priority === 'medium' ? 'border-orange-500 bg-orange-50' :
-      'border-blue-500 bg-blue-50'
-    }`}>
+        'border-blue-500 bg-blue-50'
+      }`}>
       <div className="flex items-start justify-between">
         <div className="flex-1">
           <div className="flex items-center space-x-2">

@@ -2,7 +2,7 @@
 import React from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { 
+import {
   CheckCircle,
   XCircle,
   Calendar,
@@ -14,7 +14,7 @@ import {
   FileText,
   Users
 } from "lucide-react";
-import { Assignment } from "../data/mockAssignmentsData";
+import { Assignment } from "@/types/assignment";
 
 export const getStatusBadge = (status: string) => {
   switch (status) {
@@ -58,7 +58,7 @@ export const getStatusBadge = (status: string) => {
 };
 
 export const getActionButton = (
-  assignment: Assignment, 
+  assignment: Assignment,
   onViewAssignment: (assignment: Assignment) => void
 ) => {
   switch (assignment.status) {

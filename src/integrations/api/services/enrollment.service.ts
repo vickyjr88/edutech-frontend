@@ -41,6 +41,15 @@ export interface EnrollmentUpdate {
   paymentCurrency?: string;
   notes?: string;
 }
+
+export interface CompletePaymentRequest {
+  enrollmentId: string;
+  paymentId: string;
+  amount: number;
+  currency: string;
+  paymentMethod: string;
+  seats?: number;
+}
 export interface SingleEmailInviteRequest {
   classId: string;
   cohortId?: string;
@@ -118,5 +127,10 @@ export const enrollmentService = {
       console.error('Failed to send bulk email invites:', error);
       throw error;
     }
+  },
+
+  // Complete payment for enrollment
+  completePayment: (data: CompletePaymentRequest): Promise<ApiResponse<Enrollment>> => {
+    return api.post<Enrollment>('/enrollments/complete-payment', data);
   }
 };

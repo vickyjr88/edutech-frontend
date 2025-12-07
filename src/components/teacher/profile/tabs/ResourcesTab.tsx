@@ -1,69 +1,41 @@
-
+import { useState, useEffect } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { FileBox, FileText, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { teacherResourcesService } from '@/integrations/api/services/teacher-resources.service';
 
 interface ResourcesTabProps {
   teacher: any;
 }
 
 export default function ResourcesTab({ teacher }: ResourcesTabProps) {
-  // Mock data - in a real application, this would come from the teacher's profile
-  const resources = teacher.resources || [
-    {
-      id: "resource1",
-      title: "Chemistry Study Guide",
-      description: "Comprehensive notes for high school chemistry",
-      type: "pdf",
-      downloadUrl: "#"
-    },
-    {
-      id: "resource2",
-      title: "Physics Formula Sheet",
-      description: "Key formulas for physics exams",
-      type: "pdf",
-      downloadUrl: "#"
-    },
-    {
-      id: "resource3",
-      title: "Biology Diagrams",
-      description: "Visual aids for understanding biological systems",
-      type: "zip",
-      downloadUrl: "#"
-    },
-    {
-      id: "resource4",
-      title: "Mathematics Practice Problems",
-      description: "Additional practice problems for algebra",
-      type: "pdf",
-      downloadUrl: "#"
-    },
-    {
-      id: "resource5",
-      title: "History Timeline",
-      description: "Interactive timeline for historical events",
-      type: "link",
-      downloadUrl: "https://example.com/timeline"
-    }
-  ];
+  const [resources, setResources] = useState<any[]>([]);
+  const [articles, setArticles] = useState<any[]>([]);
 
-  // Group resources by type for better organization
-  const articles = teacher.articles || [
-    {
-      id: "article1",
-      title: "The Importance of STEM Education",
-      description: "Exploring the impact of STEM education on future career opportunities",
-      date: "March 15, 2023",
-      readUrl: "#"
-    },
-    {
-      id: "article2",
-      title: "Engaging Reluctant Learners",
-      description: "Strategies for motivating students who struggle with academic engagement",
-      date: "January 22, 2023",
-      readUrl: "#"
+  useEffect(() => {
+    if (teacher?.id) {
+      loadResources();
+      loadArticles();
     }
-  ];
+  }, [teacher]);
+
+  const loadResources = async () => {
+    try {
+      const response = await teacherResourcesService.getResources(teacher.id);
+      if (response.data) setResources(response.data);
+    } catch (error) {
+      console.error('Failed to load resources:', error);
+    }
+  };
+
+  const loadArticles = async () => {
+    try {
+      const response = await teacherResourcesService.getArticles(teacher.id);
+      if (response.data) setArticles(response.data);
+    } catch (error) {
+      console.error('Failed to load articles:', error);
+    }
+  };
 
   return (
     <div className="space-y-8">
@@ -72,8 +44,8 @@ export default function ResourcesTab({ teacher }: ResourcesTabProps) {
         
         {resources.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {resources.map((resource: any) => (
-              <Card key={resource.id}>
+            {resources.map((resource: any, index: number) => (
+              <Card key={index}>
                 <CardContent className="p-6 flex items-start">
                   <div className="bg-blue-50 p-3 rounded-full mr-4">
                     <FileText className="h-6 w-6 text-kidato-purple" />
@@ -111,8 +83,8 @@ export default function ResourcesTab({ teacher }: ResourcesTabProps) {
         
         {articles.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {articles.map((article: any) => (
-              <Card key={article.id}>
+            {articles.map((article: any, index: number) => (
+              <Card key={index}>
                 <CardContent className="p-6">
                   <h3 className="font-medium">{article.title}</h3>
                   <p className="text-sm text-gray-500 mb-2">{article.description}</p>

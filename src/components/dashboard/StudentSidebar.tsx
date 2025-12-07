@@ -1,62 +1,96 @@
 
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { 
-  Home, Book, MessageSquare, User, LogOut, 
+import {
+  Home, Book, MessageSquare, User, LogOut,
   Sparkles, Award, Users, Calendar, BellDot
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useState, useEffect } from "react";
+import { studentService } from "@/integrations/api/services/student.service";
+import { enrollmentService } from "@/integrations/api/services/enrollment.service";
 
 const StudentSidebar = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { signOut } = useAuth();
+  const { signOut, user } = useAuth();
   const currentPath = location.pathname;
+
+  // Notification states from API
+  const [hasNewMatches, setHasNewMatches] = useState(false);
+  const [hasGroupInvites, setHasGroupInvites] = useState(false);
+  const [hasUnreadMessages, setHasUnreadMessages] = useState(false);
+
+  useEffect(() => {
+    const fetchNotificationStates = async () => {
+      if (!user?.studentId) return;
+
+      try {
+        // Check for new class matches (classes starting soon)
+        const statsResponse = await studentService.getDashboardStats(user.studentId);
+        if (statsResponse.data) {
+          setHasNewMatches(statsResponse.data.enrolledClasses.isNewClassAvailable);
+        }
+      } catch (error: any) {
+        // Silently handle errors - these are just for notification badges
+        console.log("Dashboard stats not available:", error?.message);
+      }
+
+      try {
+        // Check for pending enrollments (could indicate invites)
+        const pendingResponse = await enrollmentService.getStudentPendingEnrollments(user.studentId);
+        if (pendingResponse.data) {
+          setHasGroupInvites(pendingResponse.data.length > 0);
+        }
+      } catch (error: any) {
+        // Silently handle errors - endpoint might not exist yet
+        console.log("Pending enrollments not available:", error?.message);
+      }
+
+      // Note: hasUnreadMessages would require a messaging service endpoint
+      // For now, keeping it as false until messaging API is available
+    };
+
+    fetchNotificationStates();
+  }, [user?.studentId]);
 
   // Helper function to determine if a link is active
   const isActive = (path: string) => currentPath === path;
-
-  // Mock notification states
-  const hasNewMatches = true;
-  const hasGroupInvites = true;
-  const hasUnreadMessages = false;
 
   return (
     <aside className="hidden md:flex flex-col w-64 bg-white border-r border-blue-100 shadow-md rounded-tr-xl rounded-br-xl mr-2 overflow-hidden h-screen sticky top-0 left-0">
       <div className="p-6">
         <Link to="/" className="flex items-center">
-          <img 
-            src="/lovable-uploads/15671e94-4ac9-490c-95b6-aa4fe6bbc23c.png" 
-            alt="Kidato Logo" 
+          <img
+            src="/lovable-uploads/15671e94-4ac9-490c-95b6-aa4fe6bbc23c.png"
+            alt="Kidato Logo"
             className="h-10"
           />
           <Sparkles className="h-4 w-4 ml-1 text-yellow-400" />
         </Link>
       </div>
-      
+
       <nav className="flex-1 px-4 py-2 space-y-1 overflow-y-auto">
         <h3 className="px-4 text-xs font-semibold uppercase text-gray-500 mb-2">MAIN</h3>
-        <Link 
-          to="/student-dashboard" 
-          className={`flex items-center px-4 py-3 text-sm font-medium rounded-xl ${
-            isActive("/student-dashboard") 
-              ? "bg-gradient-to-r from-kidato-light-blue to-blue-100 text-kidato-purple shadow-sm" 
-              : "text-gray-700 hover:bg-blue-50"
-          } transition-all`}
+        <Link
+          to="/student-dashboard"
+          className={`flex items-center px-4 py-3 text-sm font-medium rounded-xl ${isActive("/student-dashboard")
+            ? "bg-gradient-to-r from-kidato-light-blue to-blue-100 text-kidato-purple shadow-sm"
+            : "text-gray-700 hover:bg-blue-50"
+            } transition-all`}
         >
           <Home className="mr-3 h-5 w-5" />
           Dashboard
           {isActive("/student-dashboard") && <Sparkles className="ml-auto h-4 w-4 text-yellow-400" />}
         </Link>
-        
+
         {/*<h3 className="px-4 mt-5 text-xs font-semibold uppercase text-gray-500 mb-2">LEARNING</h3>*/}
-        <Link 
-          to="/courses" 
-          className={`flex items-center px-4 py-3 text-sm font-medium rounded-xl ${
-            isActive("/courses") 
-              ? "bg-gradient-to-r from-kidato-light-blue to-blue-100 text-kidato-purple shadow-sm" 
-              : "text-gray-700 hover:bg-blue-50"
-          } transition-all relative`}
+        <Link
+          to="/courses"
+          className={`flex items-center px-4 py-3 text-sm font-medium rounded-xl ${isActive("/courses")
+            ? "bg-gradient-to-r from-kidato-light-blue to-blue-100 text-kidato-purple shadow-sm"
+            : "text-gray-700 hover:bg-blue-50"
+            } transition-all relative`}
         >
           <Book className="mr-3 h-5 w-5" />
           My Classes
@@ -97,7 +131,7 @@ const StudentSidebar = () => {
         {/*  Achievements*/}
         {/*  {isActive("/achievements") && <Sparkles className="ml-auto h-4 w-4 text-yellow-400" />}*/}
         {/*</Link>*/}
-        
+
         {/*<h3 className="px-4 mt-5 text-xs font-semibold uppercase text-gray-500 mb-2">COMMUNICATION</h3>*/}
         {/*<Link */}
         {/*  to="/messaging" */}
@@ -116,23 +150,22 @@ const StudentSidebar = () => {
         {/*    </span>*/}
         {/*  )}*/}
         {/*</Link>*/}
-        <Link 
-          to="/schedule" 
-          className={`flex items-center px-4 py-3 text-sm font-medium rounded-xl ${
-            isActive("/schedule") 
-              ? "bg-gradient-to-r from-kidato-light-blue to-blue-100 text-kidato-purple shadow-sm" 
-              : "text-gray-700 hover:bg-blue-50"
-          } transition-all`}
+        <Link
+          to="/schedule"
+          className={`flex items-center px-4 py-3 text-sm font-medium rounded-xl ${isActive("/schedule")
+            ? "bg-gradient-to-r from-kidato-light-blue to-blue-100 text-kidato-purple shadow-sm"
+            : "text-gray-700 hover:bg-blue-50"
+            } transition-all`}
         >
           <Calendar className="mr-3 h-5 w-5" />
           Schedule
           {isActive("/schedule") && <Sparkles className="ml-auto h-4 w-4 text-yellow-400" />}
         </Link>
       </nav>
-      
+
       <div className="p-4 border-t border-blue-100">
-        <Button 
-          variant="ghost" 
+        <Button
+          variant="ghost"
           className="w-full flex items-center justify-center rounded-xl hover:bg-red-50 hover:text-red-500 transition-colors"
           onClick={async () => {
             await signOut();

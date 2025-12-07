@@ -13,346 +13,6 @@ import { platformService } from "@/integrations/api";
 import { useClassForm } from "./ClassFormContext";
 import { getCachedCurricula, getCachedSubjects } from "./utils/apiCache";
 
-// Mock data for fallback if API fails
-const mockCurricula: Curriculum[] = [
-  {
-    "_id": "681eedf557273be1ad816aeb",
-    "code": "cbc",
-    "name": "Competency-Based Curriculum (CBC)",
-    "description": "2-6-3-3-3 system focusing on skills development and practical competencies",
-    "levels": [
-      {
-        "code": "pre-primary",
-        "name": "Pre-Primary",
-        "gradeRange": "PP1-PP2",
-        "ageRange": "4-5",
-        "subjects": [
-          "Language Activities (English and Kiswahili)",
-          "Mathematical Activities",
-          "Environmental Activities",
-          "Psychomotor and Creative Activities",
-          "Religious Education Activities"
-        ]
-      },
-      {
-        "code": "lower-primary",
-        "name": "Lower Primary",
-        "gradeRange": "Grades 1-3",
-        "ageRange": "6-8",
-        "subjects": [
-          "English",
-          "Kiswahili / Kenyan Sign Language",
-          "Mathematics",
-          "Environmental Activities",
-          "Hygiene and Nutrition",
-          "Movement and Creative Activities",
-          "Religious Education",
-          "Indigenous Language",
-          "Pastoral Programme of Instruction"
-        ]
-      },
-      {
-        "code": "upper-primary",
-        "name": "Upper Primary",
-        "gradeRange": "Grades 4-6",
-        "ageRange": "9-11",
-        "subjects": [
-          "English",
-          "Kiswahili / Kenyan Sign Language",
-          "Mathematics",
-          "Science and Technology",
-          "Social Studies",
-          "Home Science",
-          "Agriculture",
-          "Religious Education",
-          "Art and Craft",
-          "Music",
-          "Physical and Health Education",
-          "Indigenous Language",
-          "ICT",
-          "Pastoral Programme of Instruction"
-        ]
-      },
-      {
-        "code": "junior-secondary",
-        "name": "Junior Secondary School",
-        "gradeRange": "Grades 7-9",
-        "ageRange": "12-14",
-        "subjects": [
-          "English",
-          "Kiswahili / Kenyan Sign Language",
-          "Mathematics",
-          "Integrated Science",
-          "Social Studies",
-          "Pre-Technical and Pre-Career Education",
-          "Religious Education",
-          "Business Studies",
-          "Agriculture",
-          "Life Skills Education",
-          "Sports and Physical Education",
-          "Health Education",
-          "Computer Science",
-          "Indigenous Language / Foreign Language",
-          "Creative Arts"
-        ]
-      },
-      {
-        "code": "senior-secondary",
-        "name": "Senior Secondary School",
-        "gradeRange": "Grades 10-12",
-        "ageRange": "15-17",
-        "subjects": {
-          "core": [
-            "English",
-            "Kiswahili / KSL",
-            "Life Skills",
-            "Health Education",
-            "Community Service Learning"
-          ],
-          "pathways": {
-            "stem": [
-              "Mathematics",
-              "Biology",
-              "Chemistry",
-              "Physics",
-              "Technical subjects"
-            ],
-            "social-sciences": [
-              "History",
-              "Religious Education",
-              "Business Studies",
-              "Geography",
-              "Foreign / Indigenous Languages",
-              "Community Service Learning"
-            ],
-            "arts-sports": [
-              "Performing Arts",
-              "Visual Arts",
-              "Music",
-              "Sports Science",
-              "Physical Education"
-            ]
-          }
-        }
-      }
-    ]
-  },
-  {
-    "_id": "681eec6c57273be1ad816ae9",
-    "code": "british",
-    "name": "British Curriculum (IGCSE / A-Levels)",
-    "description": "Key Stages 1-5 focusing on critical thinking and global academic standards",
-    "levels": [
-      {
-        "code": "key-stage-1",
-        "name": "Key Stage 1",
-        "gradeRange": "Years 1-2",
-        "ageRange": "5-7",
-        "subjects": [
-          "English",
-          "Mathematics",
-          "Science",
-          "Design and Technology",
-          "History",
-          "Geography",
-          "Art and Design",
-          "Music",
-          "Physical Education",
-          "Computing",
-          "PSHE"
-        ]
-      },
-      {
-        "code": "key-stage-2",
-        "name": "Key Stage 2",
-        "gradeRange": "Years 3-6",
-        "ageRange": "7-11",
-        "subjects": [
-          "English",
-          "Mathematics",
-          "Science",
-          "Design and Technology",
-          "History",
-          "Geography",
-          "Art and Design",
-          "Music",
-          "Physical Education",
-          "Computing",
-          "PSHE",
-          "Modern Foreign Language"
-        ]
-      },
-      {
-        "code": "key-stage-3",
-        "name": "Key Stage 3",
-        "gradeRange": "Years 7-9",
-        "ageRange": "11-14",
-        "subjects": [
-          "English",
-          "Mathematics",
-          "Science",
-          "History",
-          "Geography",
-          "Modern Foreign Language",
-          "Design and Technology",
-          "Art and Design",
-          "Music",
-          "Physical Education",
-          "Computing",
-          "PSHE"
-        ]
-      },
-      {
-        "code": "key-stage-4",
-        "name": "Key Stage 4 (IGCSE)",
-        "gradeRange": "Years 10-11",
-        "ageRange": "14-16",
-        "subjects": {
-          "core": [
-            "English Language",
-            "English Literature",
-            "Mathematics",
-            "Combined Science or Separate Sciences"
-          ],
-          "foundation": [
-            "History",
-            "Geography",
-            "Modern Foreign Language"
-          ],
-          "electives": [
-            "Art & Design",
-            "Music",
-            "PE",
-            "Business Studies",
-            "Computer Science",
-            "Religious Studies",
-            "Drama",
-            "Design Technology"
-          ],
-          "non-exam": [
-            "Physical Education",
-            "Religious Education",
-            "PSHE/Citizenship"
-          ]
-        }
-      },
-      {
-        "code": "a-levels",
-        "name": "A-Levels",
-        "gradeRange": "Years 12-13",
-        "ageRange": "16-18",
-        "subjects": {
-          "stem": [
-            "Mathematics",
-            "Further Mathematics",
-            "Physics",
-            "Chemistry",
-            "Biology",
-            "Computer Science",
-            "Design & Technology"
-          ],
-          "humanities": [
-            "History",
-            "Geography",
-            "Economics",
-            "Psychology",
-            "Sociology",
-            "Global Perspectives & Research"
-          ],
-          "languages": [
-            "English Literature",
-            "English Language",
-            "French",
-            "Spanish",
-            "Kiswahili"
-          ],
-          "arts": [
-            "Art & Design",
-            "Music",
-            "Drama & Theatre Studies",
-            "Media Studies"
-          ],
-          "business": [
-            "Business Studies",
-            "Accounting",
-            "Law",
-            "Politics"
-          ]
-        }
-      }
-    ]
-  },
-  {
-    "_id": "681eeee257273be1ad816aed",
-    "code": "ib",
-    "name": "International Baccalaureate (IB)",
-    "description": "Inquiry-based learning focusing on global citizenship and independent learning",
-    "levels": [
-      {
-        "code": "pyp",
-        "name": "Primary Years Programme (PYP)",
-        "gradeRange": "Pre-K to Grade 5",
-        "ageRange": "3-12",
-        "subjects": [
-          "Language",
-          "Mathematics",
-          "Science",
-          "Social Studies",
-          "Arts",
-          "Personal, Social, and Physical Education"
-        ]
-      },
-      {
-        "code": "myp",
-        "name": "Middle Years Programme (MYP)",
-        "gradeRange": "Grades 6-10",
-        "ageRange": "11-16",
-        "subjects": [
-          "Language and Literature",
-          "Language Acquisition",
-          "Individuals and Societies",
-          "Sciences",
-          "Mathematics",
-          "Arts",
-          "Physical and Health Education",
-          "Design"
-        ]
-      },
-      {
-        "code": "dp",
-        "name": "Diploma Programme (DP)",
-        "gradeRange": "Grades 11-12",
-        "ageRange": "16-19",
-        "subjects": {
-          "group1": [
-            "Studies in Language and Literature"
-          ],
-          "group2": [
-            "Language Acquisition"
-          ],
-          "group3": [
-            "Individuals and Societies"
-          ],
-          "group4": [
-            "Sciences"
-          ],
-          "group5": [
-            "Mathematics"
-          ],
-          "group6": [
-            "The Arts"
-          ],
-          "core": [
-            "Extended Essay",
-            "Theory of Knowledge",
-            "Creativity, Activity, Service"
-          ]
-        }
-      }
-    ]
-  }
-];
-
 interface BasicInformationTabProps {
   form: UseFormReturn<ClassFormValues>;
   onNextTab: () => void;
@@ -381,65 +41,62 @@ const BasicInformationTab = ({ form, onNextTab }: BasicInformationTabProps) => {
         // Get curricula using the caching utility
         const { data, error } = await getCachedCurricula(() => platformService.getCurricula());
 
-        let curriculaData: Curriculum[] = [];
-
         if (error || !data) {
-          console.error("API fetch failed, using mock data instead:", error);
-          curriculaData = mockCurricula;
-          setError("Using mock data - API error: " + (error?.message || "Unknown error"));
+          console.error("API fetch failed:", error);
+          setError("Failed to load curriculum data. Please try again.");
+          setCurricula([]);
         } else if (Array.isArray(data)) {
           if (data.length === 0) {
-            console.warn("API returned empty curricula array, using mock data");
-            curriculaData = mockCurricula;
-            setError("No curriculum data available - using mock data");
+            console.warn("API returned empty curricula array");
+            setError("No curriculum data available");
+            setCurricula([]);
           } else {
-            // Check if the data structure matches what we expect in the new format
+            // Check if the data structure matches what we expect
             const validData = data.every(item =>
               item && typeof item === 'object' &&
               (('_id' in item && 'code' in item && 'name' in item) ||
-              ('id' in item && 'name' in item)) // Support both old and new format
+                ('id' in item && 'name' in item)) // Support both old and new format
             );
 
             if (validData) {
-              curriculaData = data;
-              console.log("Using valid API response data:", curriculaData);
+              setCurricula(data);
+              console.log("Using API response data:", data);
             } else {
-              console.warn("API returned invalid curriculum structure, using mock data");
-              curriculaData = mockCurricula;
-              setError("Invalid API response format - using mock data");
+              console.warn("API returned invalid curriculum structure");
+              setError("Invalid curriculum data format");
+              setCurricula([]);
             }
           }
         } else {
-          console.log("API response is not an array, using mock data instead:", data);
-          curriculaData = mockCurricula;
-          setError("Invalid API response - using mock data");
+          console.log("API response is not an array:", data);
+          setError("Invalid API response format");
+          setCurricula([]);
         }
-
-        console.log("Final curriculum data:", curriculaData);
-        setCurricula(curriculaData);
 
         // Clear existing maps before populating
         Object.keys(curriculaMap).forEach(key => delete curriculaMap[key]);
         Object.keys(curriculumLevelMap).forEach(key => delete curriculumLevelMap[key]);
 
         // Populate the curriculum maps for lookup
-        curriculaData.forEach((curriculum: Curriculum) => {
-          // Support both old (id) and new (_id/code) formats
-          const curriculumId = curriculum._id || curriculum.code || curriculum.id || "";
-          curriculaMap[curriculumId] = curriculum;
+        if (Array.isArray(data) && data.length > 0) {
+          data.forEach((curriculum: Curriculum) => {
+            // Support both old (id) and new (_id/code) formats
+            const curriculumId = curriculum._id || curriculum.code || curriculum.id || "";
+            curriculaMap[curriculumId] = curriculum;
 
-          // Make sure levels is an array before iterating
-          if (Array.isArray(curriculum.levels)) {
-            curriculum.levels.forEach((level: CurriculumLevel) => {
-              const levelId = level.code || level.id || "";
-              curriculumLevelMap[levelId] = level;
-            });
-          }
-        });
+            // Make sure levels is an array before iterating
+            if (Array.isArray(curriculum.levels)) {
+              curriculum.levels.forEach((level: CurriculumLevel) => {
+                const levelId = level.code || level.id || "";
+                curriculumLevelMap[levelId] = level;
+              });
+            }
+          });
+        }
       } catch (err) {
         console.error("Error processing curricula:", err);
-        setError("Failed to load curriculum data - using mock data");
-        setCurricula(mockCurricula);
+        setError("Failed to load curriculum data. Please try again.");
+        setCurricula([]);
       } finally {
         setLoadingCurricula(false);
       }
@@ -481,7 +138,7 @@ const BasicInformationTab = ({ form, onNextTab }: BasicInformationTabProps) => {
       setSubjects([]);
     }
   }, [selectedCurriculum, curricula, form]);
-  
+
   // Get subjects directly from the curriculum level data or fetch from API
   useEffect(() => {
     const getSubjects = async () => {
@@ -659,99 +316,100 @@ const BasicInformationTab = ({ form, onNextTab }: BasicInformationTabProps) => {
             render={({ field }) => {
               const uniqueCurricula = [...new Map(curricula.map(item => [item._id || item.code || item.id, item])).values()];
               return (
+                <FormItem>
+                  <FormLabel>Curriculum</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    value={field.value || ""}
+                    disabled={loadingCurricula}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select curriculum" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {loadingCurricula ? (
+                        <div className="flex items-center justify-center p-2">
+                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                          <span>Loading curricula...</span>
+                        </div>
+                      ) : error ? (
+                        <>
+                          <div className="text-amber-500 p-2 text-sm flex items-start">
+                            <AlertTriangle className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0" />
+                            <span>{error}</span>
+                          </div>
+                          {/* Still show the curricula even with errors */}
+                          {uniqueCurricula.map((curriculum) => (
+                            <SelectItem key={curriculum._id || curriculum.code || curriculum.id}
+                              value={curriculum.code || curriculum._id || curriculum.id}>
+                              {curriculum.name}
+                            </SelectItem>
+                          ))}
+                        </>
+                      ) : uniqueCurricula.length === 0 ? (
+                        <div className="p-2 text-sm text-gray-500">
+                          No curricula available
+                        </div>
+                      ) : (
+                        uniqueCurricula.map((curriculum) => (
+                          <SelectItem key={curriculum._id || curriculum.code || curriculum.id}
+                            value={curriculum.code || curriculum._id || curriculum.id}>
+                            {curriculum.name}
+                          </SelectItem>
+                        ))
+                      )}
+                    </SelectContent>
+                  </Select>
+                  <FormDescription>
+                    Select the curriculum used in this class.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )
+            }
+            }
+          />
+
+          <FormField
+            control={form.control}
+            name="curriculumLevel"
+            render={({ field }) => (
               <FormItem>
-                <FormLabel>Curriculum</FormLabel>
-                <Select 
-                  onValueChange={field.onChange} 
+                <FormLabel>Level</FormLabel>
+                <Select
+                  onValueChange={field.onChange}
                   value={field.value || ""}
-                  disabled={loadingCurricula}
+                  disabled={!selectedCurriculum || levels.length === 0}
                 >
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select curriculum" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {loadingCurricula ? (
-                    <div className="flex items-center justify-center p-2">
-                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                      <span>Loading curricula...</span>
-                    </div>
-                  ) : error ? (
-                    <>
-                      <div className="text-amber-500 p-2 text-sm flex items-start">
-                        <AlertTriangle className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0" />
-                        <span>{error}</span>
-                      </div>
-                      {/* Still show the curricula even with errors */}
-                      {uniqueCurricula.map((curriculum) => (
-                        <SelectItem key={curriculum._id || curriculum.code || curriculum.id}
-                                   value={curriculum.code || curriculum._id || curriculum.id}>
-                          {curriculum.name}
-                        </SelectItem>
-                      ))}
-                    </>
-                  ) : uniqueCurricula.length === 0 ? (
-                    <div className="p-2 text-sm text-gray-500">
-                      No curricula available
-                    </div>
-                  ) : (
-                    uniqueCurricula.map((curriculum) => (
-                      <SelectItem key={curriculum._id || curriculum.code || curriculum.id}
-                                 value={curriculum.code || curriculum._id || curriculum.id}>
-                        {curriculum.name}
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder={
+                        !selectedCurriculum
+                          ? "Select curriculum first"
+                          : levels.length === 0
+                            ? "No levels available"
+                            : "Select level"
+                      } />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {levels.map((level) => (
+                      <SelectItem key={level.code || level.id} value={level.code || level.id}>
+                        {level.name} ({level.gradeRange})
                       </SelectItem>
-                    ))
-                  )}
-                </SelectContent>
-              </Select>
-              <FormDescription>
-                Select the curriculum used in this class.
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormDescription>
+                  Select the level within the chosen curriculum.
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
             )}
-          }
-        />
-        
-        <FormField
-          control={form.control}
-          name="curriculumLevel"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Level</FormLabel>
-              <Select 
-                onValueChange={field.onChange} 
-                value={field.value || ""}
-                disabled={!selectedCurriculum || levels.length === 0}
-              >
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder={
-                      !selectedCurriculum 
-                        ? "Select curriculum first" 
-                        : levels.length === 0 
-                          ? "No levels available" 
-                          : "Select level"
-                    } />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {levels.map((level) => (
-                    <SelectItem key={level.code || level.id} value={level.code || level.id}>
-                      {level.name} ({level.gradeRange})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormDescription>
-                Select the level within the chosen curriculum.
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        
+          />
+
         </div>
       )}
 
@@ -764,22 +422,22 @@ const BasicInformationTab = ({ form, onNextTab }: BasicInformationTabProps) => {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Subject</FormLabel>
-                <Select 
-                  onValueChange={field.onChange} 
+                <Select
+                  onValueChange={field.onChange}
                   value={field.value || ""}
                   disabled={!selectedCurriculum || !selectedLevel || loadingSubjects}
                 >
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder={
-                        !selectedCurriculum 
-                          ? "Select curriculum first" 
-                          : !selectedLevel 
-                            ? "Select level first" 
-                            : loadingSubjects 
-                              ? "Loading subjects..." 
-                              : subjects.length === 0 
-                                ? "No subjects available" 
+                        !selectedCurriculum
+                          ? "Select curriculum first"
+                          : !selectedLevel
+                            ? "Select level first"
+                            : loadingSubjects
+                              ? "Loading subjects..."
+                              : subjects.length === 0
+                                ? "No subjects available"
                                 : "Select subject"
                       } />
                     </SelectTrigger>
@@ -792,10 +450,10 @@ const BasicInformationTab = ({ form, onNextTab }: BasicInformationTabProps) => {
                       </div>
                     ) : subjects.length === 0 ? (
                       <div key="no-subjects" className="p-2 text-sm text-gray-500">
-                        {!selectedCurriculum 
-                          ? "Select a curriculum first" 
-                          : !selectedLevel 
-                            ? "Select a level first" 
+                        {!selectedCurriculum
+                          ? "Select a curriculum first"
+                          : !selectedLevel
+                            ? "Select a level first"
                             : "No subjects available for this level"}
                       </div>
                     ) : (
@@ -835,7 +493,7 @@ const BasicInformationTab = ({ form, onNextTab }: BasicInformationTabProps) => {
               <FormItem>
                 <FormLabel>Subject</FormLabel>
                 <FormControl>
-                  <Input 
+                  <Input
                     placeholder="Enter subject name (e.g., Piano, Coding, Art, etc.)"
                     {...field}
                   />
@@ -878,16 +536,16 @@ const BasicInformationTab = ({ form, onNextTab }: BasicInformationTabProps) => {
               // Parse grade range from selected curriculum level
               const selectedLevel = curriculumLevelMap[selectedCurriculum ? form.watch("curriculumLevel") : ""];
               const gradeRange = selectedLevel?.gradeRange || "";
-              
+
               // Parse grade range into an array of grades
               const getGradesFromRange = (range: string): string[] => {
                 // Check for common patterns like "Grades 1-3", "Years 3-6", "Grade 6", etc.
                 const rangeMatch = range.match(/(?:Grades?|Years?)\s+(\d+)(?:\s*-\s*(\d+))?/i);
-                
+
                 if (rangeMatch) {
                   const start = parseInt(rangeMatch[1]);
                   const end = rangeMatch[2] ? parseInt(rangeMatch[2]) : start;
-                  
+
                   if (!isNaN(start) && !isNaN(end)) {
                     const grades = [];
                     for (let i = start; i <= end; i++) {
@@ -896,26 +554,26 @@ const BasicInformationTab = ({ form, onNextTab }: BasicInformationTabProps) => {
                     return grades;
                   }
                 }
-                
+
                 // Fallback for other formats or when parsing fails
-                return ["grade1", "grade2", "grade3", "grade4", "grade5", "grade6", 
-                        "grade7", "grade8", "grade9", "grade10", "grade11", "grade12"];
+                return ["grade1", "grade2", "grade3", "grade4", "grade5", "grade6",
+                  "grade7", "grade8", "grade9", "grade10", "grade11", "grade12"];
               };
-              
+
               const relevantGrades = getGradesFromRange(gradeRange);
-              
+
               // Set a default value if current value is not in the relevant grades or is empty
               useEffect(() => {
                 if (selectedLevel && (!field.value || !relevantGrades.includes(field.value))) {
                   form.setValue("gradeLevel", relevantGrades[0] || "grade1");
                 }
               }, [relevantGrades, field.value, selectedLevel]);
-              
+
               return (
                 <FormItem>
                   <FormLabel>Grade Level</FormLabel>
-                  <Select 
-                    onValueChange={field.onChange} 
+                  <Select
+                    onValueChange={field.onChange}
                     value={field.value || ""}
                     disabled={!selectedLevel}
                   >
@@ -929,12 +587,12 @@ const BasicInformationTab = ({ form, onNextTab }: BasicInformationTabProps) => {
                         relevantGrades.length > 0 ? (
                           relevantGrades.map((grade) => {
                             const gradeNum = grade.replace('grade', '');
-                            const ordinal = 
-                              gradeNum === '1' ? '1st' : 
-                              gradeNum === '2' ? '2nd' : 
-                              gradeNum === '3' ? '3rd' : 
-                              `${gradeNum}th`;
-                            
+                            const ordinal =
+                              gradeNum === '1' ? '1st' :
+                                gradeNum === '2' ? '2nd' :
+                                  gradeNum === '3' ? '3rd' :
+                                    `${gradeNum}th`;
+
                             return (
                               <SelectItem key={grade} value={grade}>
                                 {ordinal} Grade
@@ -973,7 +631,7 @@ const BasicInformationTab = ({ form, onNextTab }: BasicInformationTabProps) => {
             render={({ field }) => {
               // For afterschool classes, we provide all age ranges without curriculum dependency
               const allAgeRanges = ["age3-5", "age6-8", "age9-11", "age12-14", "age15-18"];
-              
+
               // Map for display values
               const ageRangeDisplay = {
                 "age3-5": "3-5 years",
@@ -982,12 +640,12 @@ const BasicInformationTab = ({ form, onNextTab }: BasicInformationTabProps) => {
                 "age12-14": "12-14 years",
                 "age15-18": "15-18 years"
               };
-              
+
               return (
                 <FormItem>
                   <FormLabel>Age Range</FormLabel>
-                  <Select 
-                    onValueChange={field.onChange} 
+                  <Select
+                    onValueChange={field.onChange}
                     value={field.value || ""}
                   >
                     <FormControl>
@@ -1032,7 +690,7 @@ const BasicInformationTab = ({ form, onNextTab }: BasicInformationTabProps) => {
           </FormItem>
         )}
       />
-      
+
       <div className="space-y-4">
         <div className="flex items-center gap-2">
           <List className="h-5 w-5 text-muted-foreground" />
@@ -1106,10 +764,10 @@ const BasicInformationTab = ({ form, onNextTab }: BasicInformationTabProps) => {
         render={({ field }) => (
           <FormItem>
             <FormLabel>Number of Lessons</FormLabel>
-            <Input 
-              type="number" 
-              min="1" 
-              placeholder="Enter the number of lessons" 
+            <Input
+              type="number"
+              min="1"
+              placeholder="Enter the number of lessons"
               {...field}
               onChange={(e) => {
                 const value = parseInt(e.target.value);
@@ -1130,7 +788,7 @@ const BasicInformationTab = ({ form, onNextTab }: BasicInformationTabProps) => {
 
       <div className="space-y-4 border rounded-lg p-4">
         <h3 className="text-lg font-medium">Class Settings</h3>
-        
+
         <FormField
           control={form.control}
           name="isPublic"
@@ -1166,9 +824,9 @@ const BasicInformationTab = ({ form, onNextTab }: BasicInformationTabProps) => {
               render={({ field }) => (
                 <FormItem>
                   <FormControl>
-                    <Switch 
-                      checked={field.value} 
-                      onCheckedChange={field.onChange} 
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
                       id="hasCohorts"
                     />
                   </FormControl>
@@ -1199,7 +857,7 @@ const BasicInformationTab = ({ form, onNextTab }: BasicInformationTabProps) => {
           )}
         />
       </div>
-      
+
       <div className="flex justify-between pt-4">
         <div></div>
         <div className="flex gap-3">

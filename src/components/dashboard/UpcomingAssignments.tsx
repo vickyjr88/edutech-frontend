@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { FileCheck, ExternalLink, Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import AssignmentDialog from "../progress/AssignmentDialog";
-import { Assignment } from "../progress/data/mockAssignmentsData";
+import { Assignment } from "@/types/assignment";
 import { useGetStudentAssignments } from "@/hooks/use-assignment-service";
 import { SubmissionStatus, StudentAssignment } from "@/integrations/api/services/assignment.service";
 import { format, formatDistanceToNow, isPast, isToday, isTomorrow } from "date-fns";
@@ -152,7 +152,7 @@ export default function UpcomingAssignments() {
               </div>
             ))
           )}
-          <Link to="/course-progress/math101">
+          <Link to="/courses">
             <Button variant="ghost" size="sm" className="w-full mt-2">
               <ExternalLink className="h-3.5 w-3.5 mr-1" />
               View all assignments

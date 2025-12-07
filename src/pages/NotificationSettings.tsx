@@ -4,7 +4,8 @@ import {
     notificationService,
     NotificationPreferences,
     CategoryPreference,
-} from '../../services/notificationService';
+} from '../services/notificationService';
+import { useNavigate } from 'react-router-dom';
 
 const CATEGORY_LABELS: Record<string, string> = {
     student_enrollment_updates: 'Student enrollment updates',
@@ -16,6 +17,7 @@ const CATEGORY_LABELS: Record<string, string> = {
 };
 
 export const NotificationSettings: React.FC = () => {
+    const navigate = useNavigate();
     const [preferences, setPreferences] = useState<NotificationPreferences | null>(null);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -66,7 +68,7 @@ export const NotificationSettings: React.FC = () => {
     const updateCategoryEnabled = (categoryIndex: number, enabled: boolean) => {
         if (!preferences) return;
 
-        const updated Categories = [...preferences.categories];
+        const updatedCategories = [...preferences.categories];
         updatedCategories[categoryIndex] = {
             ...updatedCategories[categoryIndex],
             enabled,
@@ -100,6 +102,16 @@ export const NotificationSettings: React.FC = () => {
         });
     };
 
+    const handleTabChange = (tab: string) => {
+        if (tab === 'profile') {
+            navigate('/profile');
+        } else if (tab === 'integrations') {
+            navigate('/settings'); // Assuming integrations are under settings for now, or create a route
+        } else if (tab === 'notifications') {
+            // Already here
+        }
+    };
+
     if (loading) {
         return (
             <div className="flex items-center justify-center min-h-screen">
@@ -126,9 +138,21 @@ export const NotificationSettings: React.FC = () => {
 
             {/* Tabs */}
             <div className="flex gap-4 border-b border-gray-200 mb-8">
-                <button className="px-6 py-3 text-gray-500 hover:text-gray-700">Profile</button>
-                <button className="px-6 py-3 text-gray-500 hover:text-gray-700">Integrations</button>
-                <button className="px-6 py-3 text-blue-600 border-b-2 border-blue-600 font-medium">
+                <button
+                    onClick={() => handleTabChange('profile')}
+                    className="px-6 py-3 text-gray-500 hover:text-gray-700"
+                >
+                    Profile
+                </button>
+                <button
+                    onClick={() => handleTabChange('integrations')}
+                    className="px-6 py-3 text-gray-500 hover:text-gray-700"
+                >
+                    Integrations
+                </button>
+                <button
+                    className="px-6 py-3 text-blue-600 border-b-2 border-blue-600 font-medium"
+                >
                     Notifications
                 </button>
             </div>
@@ -258,3 +282,5 @@ export const NotificationSettings: React.FC = () => {
         </div>
     );
 };
+
+export default NotificationSettings;

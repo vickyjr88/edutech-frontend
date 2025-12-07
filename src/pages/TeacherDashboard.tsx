@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useLocation, Link } from "react-router-dom";
+import { useNavigate, useLocation, Link, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -15,6 +15,7 @@ import TeacherProfessionalProfileForm from "@/components/teacher/TeacherProfessi
 import ClassSetupForm from "@/components/teacher/ClassSetupForm";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Badge as UiBadge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import EnhancedClassSetup from "@/components/teacher/class-setup/EnhancedClassSetup";
 import TeacherClassView from "@/components/teacher/class-view/TeacherClassView";
 import EnhancedClassDetailPage from "@/components/class-detail/EnhancedClassDetailPage";
@@ -29,6 +30,8 @@ import { ZoomDashboard } from "@/components/teacher/zoom";
 import { GoogleCalendarDashboard } from "@/components/teacher/google-calendar";
 import { NotificationSettingsTab } from "@/components/teacher/settings/NotificationSettingsTab";
 import { IntegrationsTab } from "@/components/teacher/settings/IntegrationsTab";
+import { AvailabilityManager } from "@/components/teacher/content/AvailabilityManager";
+import { ContentManager } from "@/components/teacher/content/ContentManager";
 import { useAuth } from "@/contexts/AuthContext";
 import { teacherService } from "@/integrations/api/services/teacher.service.ts";
 import { classService } from "@/integrations/api/services/class.service.ts";
@@ -158,6 +161,8 @@ const TeacherDashboard = () => {
       return "zoom";
     } else if (path.includes('/teacher-dashboard/calendar')) {
       return "calendar";
+    } else if (path.includes('/teacher-dashboard/content')) {
+      return "content";
     }
     return "dashboard"; // Default tab
   };
@@ -1189,6 +1194,16 @@ const TeacherDashboard = () => {
             );
           })()}
           <Link
+            to="/teacher-dashboard/content"
+            className={`flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors ${activeTab === "content"
+              ? "bg-kidato-purple/10 text-kidato-purple"
+              : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+              }`}
+          >
+            <BookText className="mr-3 h-5 w-5" />
+            Content
+          </Link>
+          <Link
             to="/teacher-dashboard/settings"
             className={`flex items-center px-4 py-3 text-sm font-medium rounded-md w-full text-left ${activeTab === "settings"
               ? "bg-kidato-light-blue text-kidato-purple"
@@ -1450,756 +1465,185 @@ const TeacherDashboard = () => {
           )}
 
           {!isLoading && !authLoading && activeTab === "schedule" && (
-            <>
-              {classes.length === 0 ? (
-                <TeacherOnboardingDashboard
-                  hasProfile={hasProfile}
-                  hasClasses={classes.length > 0}
-                  zoomConnected={false}
-                  calendarConnected={false}
-                  driveConnected={false}
-                  onCreateClass={handleCreateClass}
-                  onViewProfile={() => navigate("/teacher-profile")}
-                  onConnectZoom={() => navigate("/teacher-dashboard/zoom")}
-                  onConnectCalendar={() => navigate("/teacher-dashboard/calendar")}
-                  onConnectDrive={() => console.log("Connect drive")}
-                />
-              ) : (
-                <div className="space-y-6">
-                  {/* Loading State */}
-                  {(sessionsLoading || summaryLoading) && (
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                      <div className="flex items-center space-x-3">
-                        <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
-                        <div>
-                          <p className="text-sm font-medium text-blue-800">Loading your schedule data...</p>
-                          <p className="text-xs text-blue-600">Fetching upcoming sessions and insights</p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
+            <div className="space-y-6">
+              <Tabs defaultValue="calendar" className="w-full">
+                <div className="flex justify-between items-center mb-6">
+                  <TabsList className="bg-gray-100 p-1 rounded-lg">
+                    <TabsTrigger value="calendar" className="px-4 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">Calendar</TabsTrigger>
+                    <TabsTrigger value="availability" className="px-4 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">My Availability</TabsTrigger>
+                  </TabsList>
+                </div>
 
-                  {/* Error State */}
-                  {(sessionsError || summaryError) && (
-                    <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                      <div className="flex items-center space-x-3">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-red-600">
-                          <circle cx="12" cy="12" r="10"></circle>
-                          <line x1="15" y1="9" x2="9" y2="15"></line>
-                          <line x1="9" y1="9" x2="15" y2="15"></line>
-                        </svg>
-                        <div>
-                          <p className="text-sm font-medium text-red-800">Unable to load schedule data</p>
-                          <p className="text-xs text-red-600">{sessionsError || summaryError}</p>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="mt-2 h-7 text-xs border-red-300 text-red-700 hover:bg-red-50"
-                            onClick={() => {
-                              refetchSessions();
-                              refetchSummary();
+                <TabsContent value="calendar" className="space-y-6">
+                  <div className="flex flex-col md:flex-row gap-6">
+                    {/* Main Schedule Area */}
+                    <div className="flex-1 min-w-0">
+                      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                        <div className="p-4 border-b border-gray-200 flex flex-col sm:flex-row gap-4 justify-between items-center bg-gray-50">
+                          {/* Calendar View Toggles */}
+                          <div className="flex bg-white rounded-lg p-1 border shadow-sm">
+                            {(["day", "week", "month"] as const).map((view) => (
+                              <button
+                                key={view}
+                                onClick={() => setScheduleView(view)}
+                                className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors ${scheduleView === view
+                                  ? "bg-kidato-purple text-white shadow-sm"
+                                  : "text-gray-600 hover:bg-gray-50"
+                                  }`}
+                              >
+                                {view.charAt(0).toUpperCase() + view.slice(1)}
+                              </button>
+                            ))}
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            <Button variant="outline" size="sm" onClick={handleGoogleSync}>
+                              <RefreshCw className="h-4 w-4 mr-2" />
+                              Sync
+                            </Button>
+                            <Button size="sm" onClick={() => navigate("/teacher-dashboard/classes?create=true")}>
+                              <Plus className="h-4 w-4 mr-2" />
+                              New Class
+                            </Button>
+                          </div>
+                        </div>
+
+                        <div className="p-4">
+                          <ScheduleCalendar
+                            events={scheduleEvents}
+                            view={scheduleView}
+                            onEventClick={(event) => {
+                              toast({
+                                title: event.title,
+                                description: `${event.description} at ${event.time}`,
+                              });
                             }}
-                          >
-                            Retry
-                          </Button>
+                          />
                         </div>
                       </div>
                     </div>
-                  )}
-                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-                    <div className="flex items-center gap-2">
-                      <Button variant="outline" className="gap-2 bg-white" onClick={handleGoogleSync}>
-                        <RefreshCw className="h-4 w-4" />
-                        Sync with Google Calendar
-                      </Button>
 
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button variant="outline" className="gap-2 bg-white">
-                            <Filter className="h-4 w-4" />
-                            Filter
-                            <ChevronDown className="h-4 w-4 opacity-50" />
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-56" align="start">
+                    {/* Sidebar - Quick Schedule & Filters */}
+                    <div className="w-full md:w-80 flex-shrink-0 space-y-6">
+                      <Card>
+                        <CardHeader className="pb-3">
+                          <CardTitle className="text-lg">Quick Schedule</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
                           <div className="space-y-2">
-                            <h4 className="font-medium text-sm text-gray-900 border-b pb-2 mb-2">Event Types</h4>
-                            <div className="flex flex-wrap gap-2">
-                              {['Classes', 'Hangouts', 'Birthdays', 'Achievements', 'Assignments'].map(type => (
+                            <Label>Class Type</Label>
+                            <Select
+                              value={quickSchedule.type}
+                              onValueChange={(val) => setQuickSchedule({ ...quickSchedule, type: val })}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select type" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="Regular class">Regular class</SelectItem>
+                                <SelectItem value="Makeup session">Makeup session</SelectItem>
+                                <SelectItem value="Trial class">Trial class</SelectItem>
+                                <SelectItem value="Assessment">Assessment</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label>Class</Label>
+                            {/* Assuming classes is available in scope */}
+                            <Select
+                              value={quickSchedule.classId}
+                              onValueChange={(val) => setQuickSchedule({ ...quickSchedule, classId: val })}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select class" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {classes.map((cls: any) => (
+                                  <SelectItem key={cls._id || cls.id} value={cls._id || cls.id}>
+                                    {cls.title}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-2">
+                            <div className="space-y-2">
+                              <Label>Date</Label>
+                              <Input
+                                type="date"
+                                value={quickSchedule.date}
+                                onChange={(e) => setQuickSchedule({ ...quickSchedule, date: e.target.value })}
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label>Time</Label>
+                              <Input
+                                type="time"
+                                value={quickSchedule.time}
+                                onChange={(e) => setQuickSchedule({ ...quickSchedule, time: e.target.value })}
+                              />
+                            </div>
+                          </div>
+
+                          <Button
+                            className="w-full"
+                            onClick={handleQuickSchedule}
+                            disabled={isScheduling}
+                          >
+                            {isScheduling ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Plus className="h-4 w-4 mr-2" />}
+                            Schedule
+                          </Button>
+                        </CardContent>
+                      </Card>
+
+                      <Card>
+                        <CardHeader className="pb-3">
+                          <CardTitle className="text-lg">Filters</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="flex flex-wrap gap-2">
+                            {['Classes', 'Hangouts', 'Birthdays', 'Achievements', 'Assignments'].map((type) => {
+                              const isSelected = selectedEventTypes.includes(type);
+                              return (
                                 <UiBadge
                                   key={type}
                                   variant="outline"
-                                  className={`cursor-pointer transition-colors border ${getEventTypeColor(type, selectedEventTypes.includes(type))}`}
+                                  className={`cursor-pointer transition-colors ${getEventTypeColor(type, isSelected)}`}
                                   onClick={() => handleEventTypeToggle(type)}
                                 >
                                   {type}
                                 </UiBadge>
-                              ))}
-                            </div>
-                          </div>
-                        </PopoverContent>
-                      </Popover>
-                    </div>
-
-                    <Button className="bg-indigo-600 hover:bg-indigo-700 gap-2">
-                      <Plus className="h-4 w-4" />
-                      Add Event
-                    </Button>
-                  </div>
-                  <div className="flex flex-col lg:flex-row gap-6">
-                    {/* Main calendar section */}
-                    <div className="lg:w-2/3">
-                      <Card className="border-t-4 border-t-sky-500">
-                        <CardHeader className="flex flex-row items-center justify-between pb-2">
-                          <div>
-                            <CardTitle className="text-xl flex items-center text-gray-800">
-                              <Calendar className="mr-2 h-5 w-5 text-sky-600" />
-                              Teaching Schedule
-                            </CardTitle>
-                            <CardDescription>
-                              Manage your classes and availability
-                            </CardDescription>
-                          </div>
-                          <div className="flex gap-2">
-                            <Button
-                              size="sm"
-                              variant={scheduleView === 'day' ? "default" : "outline"}
-                              className={scheduleView === 'day' ? "bg-sky-600 text-xs" : "text-xs"}
-                              onClick={() => setScheduleView('day')}
-                            >
-                              Day
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant={scheduleView === 'week' ? "default" : "outline"}
-                              className={scheduleView === 'week' ? "bg-sky-600 text-xs" : "text-xs"}
-                              onClick={() => setScheduleView('week')}
-                            >
-                              Week
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant={scheduleView === 'month' ? "default" : "outline"}
-                              className={scheduleView === 'month' ? "bg-sky-600 text-xs" : "text-xs"}
-                              onClick={() => setScheduleView('month')}
-                            >
-                              Month
-                            </Button>
-                          </div>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="mt-2">
-                            <ScheduleCalendar
-                              view={scheduleView}
-                              events={scheduleEvents}
-                              onAddEvent={(date) => {
-                                if (date) {
-                                  setQuickSchedule(prev => ({
-                                    ...prev,
-                                    date: format(date, 'yyyy-MM-dd')
-                                  }));
-                                  // Scroll to quick schedule
-                                  const quickScheduleEl = document.getElementById('quick-schedule-card');
-                                  if (quickScheduleEl) quickScheduleEl.scrollIntoView({ behavior: 'smooth' });
-                                }
-                              }}
-                            />
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </div>
-
-                    {/* Side panel */}
-                    <div className="lg:w-1/3 space-y-6">
-                      {/* Quick add event */}
-                      <Card className="border-t-4 border-t-indigo-500" id="quick-schedule-card">
-                        <CardHeader className="pb-2">
-                          <CardTitle className="text-lg flex items-center text-gray-800">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 text-indigo-600">
-                              <path d="M8 2v4"></path>
-                              <path d="M16 2v4"></path>
-                              <rect width="18" height="18" x="3" y="4" rx="2"></rect>
-                              <path d="M3 10h18"></path>
-                              <path d="M12 16h6"></path>
-                              <path d="M12 14v4"></path>
-                            </svg>
-                            Quick Schedule
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="space-y-3">
-                            <div className="grid grid-cols-2 gap-3">
-                              <div>
-                                <Label htmlFor="class">Class</Label>
-                                <select
-                                  className="w-full mt-1 rounded-md border border-gray-300 px-3 py-2 text-sm"
-                                  value={quickSchedule.classId}
-                                  onChange={(e) => setQuickSchedule({ ...quickSchedule, classId: e.target.value })}
-                                >
-                                  <option value="">Select a class</option>
-                                  {(summaryData?.classes || []).map((cls: any) => (
-                                    <option key={cls.classId} value={cls.classId}>
-                                      {cls.title}
-                                    </option>
-                                  ))}
-                                </select>
-                              </div>
-                              <div>
-                                <Label htmlFor="type">Type</Label>
-                                <select
-                                  className="w-full mt-1 rounded-md border border-gray-300 px-3 py-2 text-sm"
-                                  value={quickSchedule.type}
-                                  onChange={(e) => setQuickSchedule({ ...quickSchedule, type: e.target.value })}
-                                >
-                                  <option>Regular class</option>
-                                  <option>Lab session</option>
-                                  <option>Review session</option>
-                                  <option>Test/Quiz</option>
-                                </select>
-                              </div>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-3">
-                              <div>
-                                <Label htmlFor="date">Date</Label>
-                                <Input
-                                  type="date"
-                                  id="date"
-                                  className="mt-1"
-                                  value={quickSchedule.date}
-                                  onChange={(e) => setQuickSchedule({ ...quickSchedule, date: e.target.value })}
-                                />
-                              </div>
-                              <div>
-                                <Label htmlFor="time">Time</Label>
-                                <Input
-                                  type="time"
-                                  id="time"
-                                  className="mt-1"
-                                  value={quickSchedule.time}
-                                  onChange={(e) => setQuickSchedule({ ...quickSchedule, time: e.target.value })}
-                                />
-                              </div>
-                            </div>
-
-                            <div>
-                              <Label htmlFor="duration">Duration</Label>
-                              <div className="flex items-center gap-2 mt-1">
-                                <Input
-                                  type="number"
-                                  id="duration"
-                                  className="w-20"
-                                  value={quickSchedule.duration}
-                                  onChange={(e) => setQuickSchedule({ ...quickSchedule, duration: Number(e.target.value) })}
-                                />
-                                <span className="text-sm text-gray-500">hours</span>
-                              </div>
-                            </div>
-
-                            <div>
-                              <Label htmlFor="location">Location</Label>
-                              <Input
-                                type="text"
-                                id="location"
-                                placeholder="Room, building, or online link"
-                                className="mt-1"
-                                value={quickSchedule.location}
-                                onChange={(e) => setQuickSchedule({ ...quickSchedule, location: e.target.value })}
-                              />
-                            </div>
-
-                            <div>
-                              <Label className="flex items-center gap-2">
-                                <input
-                                  type="checkbox"
-                                  className="rounded text-indigo-600"
-                                  checked={quickSchedule.repeat}
-                                  onChange={(e) => setQuickSchedule({ ...quickSchedule, repeat: e.target.checked })}
-                                />
-                                <span className="text-sm text-gray-700">Repeat weekly</span>
-                              </Label>
-                            </div>
-
-                            <div className="pt-2">
-                              <Button
-                                className="w-full bg-indigo-600 hover:bg-indigo-700"
-                                onClick={handleQuickSchedule}
-                                disabled={isScheduling}
-                              >
-                                {isScheduling ? (
-                                  <>
-                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                    Scheduling...
-                                  </>
-                                ) : (
-                                  <>
-                                    <PlusCircle className="mr-2 h-4 w-4" />
-                                    Add to Schedule
-                                  </>
-                                )}
-                              </Button>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-
-                      {/* Upcoming classes */}
-                      <Card className="border-t-4 border-t-emerald-500">
-                        <CardHeader className="pb-2">
-                          <CardTitle className="text-lg flex items-center text-gray-800">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 text-emerald-600">
-                              <circle cx="12" cy="12" r="10"></circle>
-                              <path d="M12 6v6l4 2"></path>
-                            </svg>
-                            Upcoming Classes
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="space-y-3">
-                            {sessionsLoading ? (
-                              <div className="flex items-center justify-center py-8">
-                                <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
-                                <span className="ml-2 text-sm text-gray-500">Loading sessions...</span>
-                              </div>
-                            ) : upcomingSessions.length === 0 ? (
-                              <div className="text-center py-8">
-                                <Calendar className="w-12 h-12 text-gray-300 mx-auto mb-2" />
-                                <p className="text-gray-500 text-sm">No upcoming sessions</p>
-                                <p className="text-gray-400 text-xs mt-1">Schedule a class to get started</p>
-                              </div>
-                            ) : (
-                              upcomingSessions.slice(0, 3).map((session, index) => {
-                                const colors = getSessionColor(index);
-                                const startTime = formatTime(session.startTime);
-                                const endTime = formatTime(new Date(new Date(session.startTime).getTime() + session.duration * 60000).toISOString());
-                                const sessionDate = new Date(session.startTime);
-                                const isToday = sessionDate.toDateString() === new Date().toDateString();
-                                const isTomorrow = sessionDate.toDateString() === new Date(Date.now() + 24 * 60 * 60 * 1000).toDateString();
-                                const timeLeft = Math.max(0, sessionDate.getTime() - Date.now());
-                                const hoursLeft = Math.floor(timeLeft / (1000 * 60 * 60));
-                                const minutesLeft = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
-
-                                let timeLabel = 'Upcoming';
-                                if (isToday) {
-                                  if (hoursLeft < 1) {
-                                    timeLabel = minutesLeft > 0 ? `${minutesLeft}m` : 'Starting soon';
-                                  } else {
-                                    timeLabel = `${hoursLeft}h ${minutesLeft}m`;
-                                  }
-                                } else if (isTomorrow) {
-                                  timeLabel = 'Tomorrow';
-                                } else {
-                                  timeLabel = sessionDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-                                }
-
-                                return (
-                                  <div key={session.classId} className={`${colors.bg} rounded-lg overflow-hidden border ${colors.border}`}>
-                                    <div className="p-3">
-                                      <div className="flex items-center justify-between">
-                                        <h4 className={`font-medium ${colors.text} truncate`}>{session.title}</h4>
-                                        <div className={`text-xs px-2 py-1 ${colors.bg.replace('100', '200')} rounded-full ${colors.subtext}`}>{timeLabel}</div>
-                                      </div>
-                                      <div className="flex items-start mt-1">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`mr-1 ${colors.subtext} mt-0.5`}>
-                                          <circle cx="12" cy="12" r="10"></circle>
-                                          <path d="M12 6v6l4 2"></path>
-                                        </svg>
-                                        <div className={`text-sm ${colors.subtext}`}>{startTime} - {endTime}</div>
-                                      </div>
-                                      <div className="flex items-start mt-1">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`mr-1 ${colors.subtext} mt-0.5`}>
-                                          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                                          <circle cx="12" cy="10" r="3"></circle>
-                                        </svg>
-                                        <div className={`text-sm ${colors.subtext} truncate`}>{session.cohortName}</div>
-                                      </div>
-                                      <div className="flex items-start mt-1">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`mr-1 ${colors.subtext} mt-0.5`}>
-                                          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                                          <circle cx="9" cy="7" r="4"></circle>
-                                          <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                                          <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-                                        </svg>
-                                        <div className={`text-sm ${colors.subtext}`}>{session.enrolledStudents} students</div>
-                                      </div>
-                                      {session.readiness && (
-                                        <div className="flex items-start mt-1">
-                                          <CheckCircle2 className={`w-3.5 h-3.5 mr-1 ${colors.subtext} mt-0.5`} />
-                                          <div className={`text-sm ${colors.subtext}`}>Ready: {Math.round(session.readiness.overallReadiness || 0)}%</div>
-                                        </div>
-                                      )}
-                                    </div>
-                                    <div className={`flex items-center justify-end ${colors.bg.replace('100', '200')} px-3 py-2 text-xs`}>
-                                      <Button
-                                        size="sm"
-                                        variant="ghost"
-                                        className="h-7 text-xs"
-                                        onClick={() => navigate(`/teacher-dashboard/classes?id=${session.classId}`)}
-                                      >
-                                        View
-                                      </Button>
-                                      {session.readiness && session.readiness.overallReadiness > 80 && (
-                                        <Button
-                                          size="sm"
-                                          className={`h-7 text-xs ml-2 ${colors.text.includes('blue') ? 'bg-blue-600 hover:bg-blue-700' : colors.text.includes('purple') ? 'bg-purple-600 hover:bg-purple-700' : colors.text.includes('green') ? 'bg-green-600 hover:bg-green-700' : 'bg-amber-600 hover:bg-amber-700'}`}
-                                          onClick={() => {
-                                            // Start class logic would go here
-                                            toast({ title: "Starting class", description: `Starting ${session.title}` });
-                                          }}
-                                        >
-                                          {hoursLeft < 1 ? 'Start Class' : 'Prepare'}
-                                        </Button>
-                                      )}
-                                    </div>
-                                  </div>
-                                );
-                              })
-                            )}
-
-                            {upcomingSessions.length > 3 && (
-                              <div className="pt-2 flex justify-center">
-                                <Button
-                                  variant="link"
-                                  className="text-emerald-600"
-                                  onClick={() => setActiveTab('schedule')}
-                                >
-                                  View all {upcomingSessions.length} upcoming sessions
-                                </Button>
-                              </div>
-                            )}
+                              );
+                            })}
                           </div>
                         </CardContent>
                       </Card>
                     </div>
                   </div>
+                </TabsContent>
 
-                  {/* Schedule Insights & Critical Path */}
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    {/* Teaching Insights */}
-                    <Card className="border-t-4 border-t-emerald-500">
-                      <CardHeader className="pb-3">
-                        <CardTitle className="text-lg flex items-center text-gray-800">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 text-emerald-600">
-                            <path d="M9 11H5a2 2 0 0 0-2 2v7c0 2 1 3 3 3h10c2 0 3-1 3-3v-7a2 2 0 0 0-2-2h-4"></path>
-                            <path d="M8 7V6a2 2 0 1 1 4 0v1"></path>
-                            <path d="M9 17v-7h6v7"></path>
-                            <path d="M8 17h8"></path>
-                          </svg>
-                          Smart Insights
-                        </CardTitle>
-                        <CardDescription>
-                          AI-powered recommendations for your schedule
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-4">
-                          {summaryData?.analytics?.insights?.slice(0, 3).map((insight, index) => (
-                            <div key={index} className="flex items-start space-x-3 p-3 bg-emerald-50 rounded-lg border border-emerald-100">
-                              <div className="w-2 h-2 bg-emerald-500 rounded-full mt-2 flex-shrink-0"></div>
-                              <div className="flex-1">
-                                <p className="text-sm text-emerald-800">{insight}</p>
-                              </div>
-                            </div>
-                          )) || (
-                              <div className="text-center py-4">
-                                <p className="text-gray-500 text-sm">Insights will appear as you teach more classes</p>
-                              </div>
-                            )}
-
-                          {/* Preparation Recommendations */}
-                          <div className="border-t pt-4">
-                            <h4 className="text-sm font-medium text-gray-800 mb-2">Preparation Recommendations</h4>
-                            <div className="space-y-2">
-                              {upcomingSessions.slice(0, 2).map((session, index) => {
-                                const readiness = session.readiness?.overallReadiness || 0;
-                                let recommendation = '';
-                                let color = 'text-green-600';
-
-                                if (readiness < 50) {
-                                  recommendation = 'Review lesson materials and prepare activities';
-                                  color = 'text-red-600';
-                                } else if (readiness < 80) {
-                                  recommendation = 'Check tech setup and review student progress';
-                                  color = 'text-amber-600';
-                                } else {
-                                  recommendation = 'All set! Consider bonus activities';
-                                  color = 'text-green-600';
-                                }
-
-                                return (
-                                  <div key={session.classId} className="text-xs">
-                                    <span className="font-medium text-gray-700">{session.title}:</span>
-                                    <span className={`ml-1 ${color}`}>{recommendation}</span>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-
-                    {/* Critical Path */}
-                    <Card className="border-t-4 border-t-purple-500">
-                      <CardHeader className="pb-3">
-                        <CardTitle className="text-lg flex items-center text-gray-800">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 text-purple-600">
-                            <path d="M12 20h9"></path>
-                            <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path>
-                            <path d="M12 20h9"></path>
-                          </svg>
-                          Critical Path
-                        </CardTitle>
-                        <CardDescription>
-                          Key actions to stay ahead and deliver excellence
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-3">
-                          {/* Critical Actions */}
-                          <div className="bg-purple-50 rounded-lg p-3 border border-purple-100">
-                            <div className="flex items-center justify-between mb-2">
-                              <h4 className="text-sm font-medium text-purple-800">Next 24 Hours</h4>
-                              <div className="text-xs text-purple-600 bg-purple-100 px-2 py-1 rounded">
-                                {upcomingSessions.filter(s => new Date(s.startTime).getTime() - Date.now() < 24 * 60 * 60 * 1000).length} sessions
-                              </div>
-                            </div>
-                            <div className="space-y-1 text-xs text-purple-700">
-                              {upcomingSessions
-                                .filter(s => new Date(s.startTime).getTime() - Date.now() < 24 * 60 * 60 * 1000)
-                                .slice(0, 3)
-                                .map((session, index) => (
-                                  <div key={session.classId} className="flex items-center justify-between">
-                                    <span>{session.title}</span>
-                                    <span className={`px-1 rounded text-xs ${(session.readiness?.overallReadiness || 0) > 80
-                                      ? 'bg-green-100 text-green-600'
-                                      : (session.readiness?.overallReadiness || 0) > 50
-                                        ? 'bg-amber-100 text-amber-600'
-                                        : 'bg-red-100 text-red-600'
-                                      }`}>
-                                      {Math.round(session.readiness?.overallReadiness || 0)}%
-                                    </span>
-                                  </div>
-                                ))
-                              }
-                            </div>
-                          </div>
-
-                          {/* Weekly Goals */}
-                          <div className="bg-blue-50 rounded-lg p-3 border border-blue-100">
-                            <h4 className="text-sm font-medium text-blue-800 mb-2">Weekly Goals</h4>
-                            <div className="space-y-1 text-xs text-blue-700">
-                              <div className="flex items-center justify-between">
-                                <span>• Content delivery excellence</span>
-                                <CheckCircle2 className="w-3 h-3 text-green-500" />
-                              </div>
-                              <div className="flex items-center justify-between">
-                                <span>• Student engagement optimization</span>
-                                <div className="w-3 h-3 border border-blue-300 rounded-full"></div>
-                              </div>
-                              <div className="flex items-center justify-between">
-                                <span>• Research & preparation buffer</span>
-                                <div className="w-3 h-3 border border-blue-300 rounded-full"></div>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Performance Metrics */}
-                          {summaryData?.analytics && (
-                            <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
-                              <h4 className="text-sm font-medium text-gray-800 mb-2">Performance Metrics</h4>
-                              <div className="grid grid-cols-2 gap-3 text-xs">
-                                <div className="text-center">
-                                  <div className="text-lg font-bold text-gray-800">{summaryData.analytics.overallPerformance?.averageEngagement || 0}%</div>
-                                  <div className="text-gray-600">Engagement</div>
-                                </div>
-                                <div className="text-center">
-                                  <div className="text-lg font-bold text-gray-800">{summaryData.analytics.classHealthScore || 0}%</div>
-                                  <div className="text-gray-600">Health Score</div>
-                                </div>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      </CardContent>
-                    </Card>
+                <TabsContent value="availability">
+                  <div className="max-w-4xl mx-auto">
+                    <AvailabilityManager />
                   </div>
+                </TabsContent>
+              </Tabs>
+            </div>
+          )}
 
-                  {/* Recurring schedules */}
-                  <Card className="border-t-4 border-t-amber-500">
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-xl flex items-center text-gray-800">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 text-amber-600">
-                          <path d="M21 7v6h-6"></path>
-                          <path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3l3 2.7"></path>
-                        </svg>
-                        Recurring Schedules
-                      </CardTitle>
-                      <CardDescription>
-                        Manage your weekly teaching patterns
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        <div className="border rounded-lg p-4 hover:shadow-md transition-shadow bg-blue-50 border-blue-200">
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <h3 className="font-medium text-gray-900">Math Class - Grade 7</h3>
-                              <p className="text-sm text-gray-500 mt-1">Every Monday, Wednesday</p>
-                              <p className="text-sm text-gray-500">9:00 AM - 10:00 AM</p>
-                              <p className="text-sm text-gray-500">Room 203</p>
-                            </div>
-                            <div className="px-2 py-1 bg-blue-100 rounded-full text-xs text-blue-700">
-                              Weekly
-                            </div>
-                          </div>
-                          <div className="flex mt-4 justify-end gap-2">
-                            <Button size="sm" variant="outline" className="text-xs h-8">Edit</Button>
-                            <Button size="sm" variant="outline" className="text-xs h-8">Pause</Button>
-                          </div>
-                        </div>
+          {!isLoading && !authLoading && activeTab === "content" && (
 
-                        <div className="border rounded-lg p-4 hover:shadow-md transition-shadow bg-purple-50 border-purple-200">
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <h3 className="font-medium text-gray-900">Science Lab - Grade 5</h3>
-                              <p className="text-sm text-gray-500 mt-1">Every Tuesday, Thursday</p>
-                              <p className="text-sm text-gray-500">1:00 PM - 2:00 PM</p>
-                              <p className="text-sm text-gray-500">Science Lab 4</p>
-                            </div>
-                            <div className="px-2 py-1 bg-purple-100 rounded-full text-xs text-purple-700">
-                              Weekly
-                            </div>
-                          </div>
-                          <div className="flex mt-4 justify-end gap-2">
-                            <Button size="sm" variant="outline" className="text-xs h-8">Edit</Button>
-                            <Button size="sm" variant="outline" className="text-xs h-8">Pause</Button>
-                          </div>
-                        </div>
+            <div className="space-y-6">
+              <div className="mb-6">
+                <h2 className="text-2xl font-bold text-gray-900">Content Management</h2>
+                <p className="text-gray-500">Manage your educational resources, articles, and videos.</p>
+              </div>
 
-                        <div className="border rounded-lg p-4 border-dashed flex flex-col items-center justify-center text-center h-[152px]">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400 mb-2">
-                            <circle cx="12" cy="12" r="10"></circle>
-                            <path d="M12 8v8"></path>
-                            <path d="M8 12h8"></path>
-                          </svg>
-                          <p className="text-sm text-gray-500 mb-2">Create a new recurring schedule</p>
-                          <Button size="sm" variant="outline" className="text-xs">
-                            Add Recurring Schedule
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
+              <ContentManager />
+            </div>
 
-                  {/* Schedule analysis */}
-                  <Card className="border-t-4 border-t-emerald-500">
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-xl flex items-center text-gray-800">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 text-emerald-600">
-                          <path d="M3 3v18h18"></path>
-                          <path d="m19 9-5 5-4-4-3 3"></path>
-                        </svg>
-                        Schedule Analytics
-                      </CardTitle>
-                      <CardDescription>
-                        Insights to optimize your teaching schedule
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div className="bg-gray-50 rounded-lg p-4 text-center">
-                          <h3 className="text-sm font-medium text-gray-500 mb-1">Weekly Teaching Hours</h3>
-                          <p className="text-3xl font-bold text-gray-900">8.5</p>
-                          <div className="flex justify-center items-center mt-2 text-green-600 text-sm">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1">
-                              <path d="m6 9 6 6 6-6"></path>
-                            </svg>
-                            <span>+2.5 from last week</span>
-                          </div>
-                          <div className="h-2 bg-gray-200 rounded-full mt-3">
-                            <div className="h-2 bg-emerald-500 rounded-full" style={{ width: "85%" }}></div>
-                          </div>
-                          <p className="text-xs text-gray-500 mt-1">85% of availability filled</p>
-                        </div>
-
-                        <div className="bg-gray-50 rounded-lg p-4 text-center">
-                          <h3 className="text-sm font-medium text-gray-500 mb-1">Busiest Day</h3>
-                          <p className="text-3xl font-bold text-gray-900">Wednesday</p>
-                          <p className="text-sm text-gray-500 mt-2">3 classes scheduled</p>
-                          <div className="grid grid-cols-7 gap-1 mt-3">
-                            {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => (
-                              <div
-                                key={i}
-                                className={`text-xs font-medium rounded-full h-6 flex items-center justify-center ${i === 3 ? 'bg-emerald-200 text-emerald-800' : 'bg-gray-200 text-gray-600'
-                                  }`}
-                              >
-                                {day}
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-
-                        <div className="bg-gray-50 rounded-lg p-4 text-center">
-                          <h3 className="text-sm font-medium text-gray-500 mb-1">Class Distribution</h3>
-                          <div className="flex justify-center mt-3">
-                            {/* Simple pie chart visualization */}
-                            <div className="relative w-24 h-24">
-                              <svg viewBox="0 0 36 36" className="w-full h-full">
-                                <path
-                                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                                  fill="none"
-                                  stroke="#E5E7EB"
-                                  strokeWidth="4"
-                                />
-                                <path
-                                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                                  fill="none"
-                                  stroke="#3B82F6"
-                                  strokeWidth="4"
-                                  strokeDasharray="25, 100"
-                                  strokeDashoffset="25"
-                                />
-                                <path
-                                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                                  fill="none"
-                                  stroke="#8B5CF6"
-                                  strokeWidth="4"
-                                  strokeDasharray="20, 100"
-                                  strokeDashoffset="0"
-                                />
-                                <path
-                                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                                  fill="none"
-                                  stroke="#10B981"
-                                  strokeWidth="4"
-                                  strokeDasharray="30, 100"
-                                  strokeDashoffset="50"
-                                />
-                              </svg>
-                            </div>
-                          </div>
-                          <div className="grid grid-cols-3 gap-1 mt-3 text-xs">
-                            <div className="flex items-center">
-                              <span className="w-3 h-3 rounded-full bg-blue-500 mr-1"></span>
-                              <span className="text-gray-600">Math</span>
-                            </div>
-                            <div className="flex items-center">
-                              <span className="w-3 h-3 rounded-full bg-purple-500 mr-1"></span>
-                              <span className="text-gray-600">Science</span>
-                            </div>
-                            <div className="flex items-center">
-                              <span className="w-3 h-3 rounded-full bg-emerald-500 mr-1"></span>
-                              <span className="text-gray-600">English</span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-              )}
-            </>
           )}
 
           {!isLoading && activeTab === "viewClass" && selectedClass && (

@@ -4,7 +4,7 @@ import { useToast } from "@/components/ui/use-toast";
 import AssignmentDialog from "./AssignmentDialog";
 import { AssignmentStatistics } from "./components/AssignmentStatistics";
 import { AssignmentsTable } from "./components/AssignmentsTable";
-import { Assignment } from "./data/mockAssignmentsData";
+import { Assignment } from "@/types/assignment";
 import { useGetStudentCurrentEnrollments } from "@/hooks/use-enrollment-service";
 import { useGetStudentAssignmentsByClass } from "@/hooks/use-assignment-service";
 import { AssignmentType } from "@/integrations/api/services/assignment.service";
@@ -22,15 +22,15 @@ const ProgressAssignments = ({ courseId }: ProgressAssignmentsProps) => {
 
   // courseId is actually an enrollment ID
   const { data: enrollmentsData, isLoading: enrollmentLoading, error: enrollmentError } = useGetStudentCurrentEnrollments(user.studentId || "");
-  
+
   // Find the specific enrollment by enrollmentId
   const currentEnrollment = enrollmentsData?.data?.find((enrollment: any) => enrollment.enrollmentId === courseId);
   const classId = currentEnrollment?.course?.id;
 
   // Fetch student assignments for the class, excluding quizzes
   const { data: assignmentsData, isLoading: assignmentsLoading, error: assignmentsError } = useGetStudentAssignmentsByClass(
-    classId || "", 
-    { 
+    classId || "",
+    {
       // Filter out quiz assignments - those will be shown in Quizzes tab
       sortBy: 'dueDate',
       sortOrder: 'asc'
@@ -40,7 +40,7 @@ const ProgressAssignments = ({ courseId }: ProgressAssignmentsProps) => {
   const handleViewAssignment = (assignment: Assignment) => {
     // Find the original StudentAssignment data
     const studentAssignment = assignments.find(sa => sa._id === assignment.id);
-    
+
     // Create enriched assignment data with all needed fields
     const enrichedAssignment: Assignment = {
       ...assignment,
@@ -62,7 +62,7 @@ const ProgressAssignments = ({ courseId }: ProgressAssignmentsProps) => {
       type: studentAssignment?.assignment?.type?.toLowerCase().includes('group') ? 'group' : 'individual',
       grade: studentAssignment?.grade ? `${studentAssignment.grade}/${studentAssignment.assignment?.totalPoints}` : assignment.grade,
     };
-    
+
     setSelectedAssignment(enrichedAssignment);
     setAssignmentDialogOpen(true);
   };
@@ -91,9 +91,8 @@ const ProgressAssignments = ({ courseId }: ProgressAssignmentsProps) => {
     return <div className="text-center py-8">Failed to load assignments data</div>;
   }
 
-  // Filter out quiz-type assignments and convert to mock format for existing components
   const assignments = assignmentsData?.data?.data.filter(sa => sa.assignment.type !== AssignmentType.QUIZ) || [];
-  
+
   // Convert StudentAssignment[] to Assignment[] format expected by existing components
   const convertedAssignments: Assignment[] = assignments.map(studentAssignment => ({
     id: studentAssignment._id,
@@ -114,11 +113,11 @@ const ProgressAssignments = ({ courseId }: ProgressAssignmentsProps) => {
     <div className="space-y-6">
       {/* Assignment Statistics */}
       <AssignmentStatistics assignments={convertedAssignments} />
-      
+
       {/* Assignments Table */}
-      <AssignmentsTable 
-        assignments={convertedAssignments} 
-        onViewAssignment={handleViewAssignment} 
+      <AssignmentsTable
+        assignments={convertedAssignments}
+        onViewAssignment={handleViewAssignment}
       />
 
       {/* Assignment Dialog */}

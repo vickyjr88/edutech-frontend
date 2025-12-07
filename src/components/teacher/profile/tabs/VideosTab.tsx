@@ -1,33 +1,29 @@
-
+import { useState, useEffect } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Video } from "lucide-react";
+import { teacherVideosService } from '@/integrations/api/services/teacher-videos.service';
 
 interface VideosTabProps {
   teacher: any;
 }
 
 export default function VideosTab({ teacher }: VideosTabProps) {
-  // Mock data - in a real application, this would come from the teacher's profile
-  const videos = teacher.videos || [
-    {
-      id: "video1",
-      url: "https://www.youtube.com/embed/dQw4w9WgXcQ",
-      title: "Introduction to Chemistry",
-      description: "An overview of basic chemistry principles"
-    },
-    {
-      id: "video2",
-      url: "https://www.youtube.com/embed/dQw4w9WgXcQ",
-      title: "Physics Demonstration",
-      description: "Explaining Newton's laws with practical examples"
-    },
-    {
-      id: "video3",
-      url: "https://www.youtube.com/embed/dQw4w9WgXcQ",
-      title: "Biology Lesson",
-      description: "Exploring cell structure and function"
+  const [videos, setVideos] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (teacher?.id) {
+      loadVideos();
     }
-  ];
+  }, [teacher]);
+
+  const loadVideos = async () => {
+    try {
+      const response = await teacherVideosService.getVideos(teacher.id);
+      if (response.data) setVideos(response.data);
+    } catch (error) {
+      console.error('Failed to load videos:', error);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -35,8 +31,8 @@ export default function VideosTab({ teacher }: VideosTabProps) {
       
       {videos.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {videos.map((video: any) => (
-            <Card key={video.id} className="overflow-hidden">
+          {videos.map((video: any, index: number) => (
+            <Card key={index} className="overflow-hidden">
               <div className="aspect-video">
                 <iframe
                   src={video.url}

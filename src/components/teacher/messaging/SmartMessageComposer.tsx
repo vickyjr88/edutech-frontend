@@ -232,7 +232,6 @@ export const SmartMessageComposer: React.FC<SmartMessageComposerProps> = ({
     };
   }, [isOpen]);
 
-  // Mock AI insights based on selected recipients
   const aiInsights: AIInsights = useMemo(() => {
     const totalStudents = recipients.length;
     const whatsappPreferred = recipients.filter(s => s.preferredPlatform === 'whatsapp').length;
@@ -255,9 +254,8 @@ export const SmartMessageComposer: React.FC<SmartMessageComposerProps> = ({
       setSelectedGroups(prev => [...prev, groupId]);
       const group = SMART_GROUPS.find(g => g.id === groupId);
       if (group) {
-        // Mock adding students from group
-        const mockStudents = allStudents.slice(0, group.count);
-        setRecipients(prev => [...prev, ...mockStudents.filter(s => !prev.find(p => p.id === s.id))]);
+        const groupStudents = group.students;
+        setRecipients(prev => [...prev, ...groupStudents.filter(s => !prev.find(p => p.id === s.id))]);
       }
       // Auto-close accordion when a group is selected
       setAccordionValue("");

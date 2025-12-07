@@ -1,13 +1,13 @@
 
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { 
+import {
   CheckCircle,
   Clock,
   FileText,
   AlarmClock
 } from "lucide-react";
-import { Assignment } from "../data/mockAssignmentsData";
+import { Assignment } from "@/types/assignment";
 
 interface AssignmentStatisticsProps {
   assignments: Assignment[];
@@ -29,7 +29,7 @@ export const AssignmentStatistics = ({ assignments }: AssignmentStatisticsProps)
           </div>
         </CardContent>
       </Card>
-      
+
       <Card>
         <CardContent className="pt-6">
           <div className="text-center">
@@ -43,7 +43,7 @@ export const AssignmentStatistics = ({ assignments }: AssignmentStatisticsProps)
           </div>
         </CardContent>
       </Card>
-      
+
       <Card>
         <CardContent className="pt-6">
           <div className="text-center">
@@ -57,7 +57,7 @@ export const AssignmentStatistics = ({ assignments }: AssignmentStatisticsProps)
           </div>
         </CardContent>
       </Card>
-      
+
       <Card>
         <CardContent className="pt-6">
           <div className="text-center">

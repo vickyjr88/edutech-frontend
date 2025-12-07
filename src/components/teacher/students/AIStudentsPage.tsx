@@ -46,95 +46,6 @@ interface Student {
   performanceGrade?: number;
 }
 
-// Enhanced student data
-const studentsData: Student[] = [
-  {
-    id: "1",
-    name: "Emma Johnson",
-    avatar: "EJ",
-    email: "emma.j@example.com",
-    subjects: ["Math A", "Physics"],
-    attendance: 95,
-    assignments: "14/15",
-    status: "high-performer",
-    lastActive: "2 hours ago",
-    aiInsights: ["Consistently strong in problem-solving", "Leadership potential in group work"],
-    engagementScore: 96,
-    performanceGrade: 94
-  },
-  {
-    id: "2", 
-    name: "Alex Mboya",
-    avatar: "AM",
-    email: "alex.m@example.com",
-    subjects: ["Chemistry", "Biology"],
-    attendance: 90,
-    assignments: "10/12",
-    status: "normal",
-    lastActive: "1 day ago",
-    aiInsights: ["Good practical skills", "Needs support with theory"],
-    engagementScore: 87,
-    performanceGrade: 82
-  },
-  {
-    id: "3",
-    name: "Sophia Chen", 
-    avatar: "SC",
-    email: "sophia.c@example.com",
-    subjects: ["Literature", "History"],
-    attendance: 70,
-    assignments: "8/14",
-    status: "needs-attention",
-    lastActive: "2 weeks ago",
-    aiInsights: ["Declining engagement", "May need additional support"],
-    engagementScore: 65,
-    performanceGrade: 68
-  },
-  {
-    id: "4",
-    name: "Michael Torres",
-    avatar: "MT", 
-    email: "michael.t@example.com",
-    subjects: ["Math A", "Computer Science"],
-    attendance: 98,
-    assignments: "16/16",
-    status: "high-performer",
-    lastActive: "30 minutes ago",
-    aiInsights: ["Exceptional analytical skills", "Natural mentor to peers"],
-    engagementScore: 98,
-    performanceGrade: 96
-  },
-  {
-    id: "5",
-    name: "Aisha Patel",
-    avatar: "AP",
-    email: "aisha.p@example.com", 
-    subjects: ["Biology", "Chemistry"],
-    attendance: 92,
-    assignments: "11/13",
-    status: "normal",
-    lastActive: "4 hours ago",
-    aiInsights: ["Strong in practical work", "Benefits from visual learning"],
-    engagementScore: 91,
-    performanceGrade: 85
-  },
-  {
-    id: "6",
-    name: "David Kim",
-    avatar: "DK",
-    email: "david.k@example.com",
-    subjects: ["Physics", "Math A"], 
-    attendance: 45,
-    assignments: "3/12",
-    status: "inactive",
-    lastActive: "1 month ago",
-    aiInsights: ["Significant absence pattern", "Immediate intervention needed"],
-    engagementScore: 32,
-    performanceGrade: 41
-  }
-];
-
-
 interface AIStudentsPageProps {
   onViewProfile?: (studentId: string) => void;
   onEnrollStudents?: () => void;
@@ -297,7 +208,7 @@ const AIStudentsPage: React.FC<AIStudentsPageProps> = ({
     return studentsData.students.map(student => ({
       id: student.studentId,
       name: student.name,
-      email: `${student.name.toLowerCase().replace(' ', '.')}@example.com`, // Mock email for now
+      email: student.email || `${student.name.toLowerCase().replace(' ', '.')}@example.com`,
       subjects: student.subjects.map(s => s.name),
       attendance: student.attendance.percentage,
       assignments: `${student.assignments.completed}/${student.assignments.total}`,

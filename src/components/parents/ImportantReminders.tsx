@@ -1,36 +1,154 @@
 
+import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle2, Clock, AlertCircle, CalendarClock, BookOpen } from "lucide-react";
+import { CheckCircle2, Clock, AlertCircle, CalendarClock, BookOpen, Loader2, Bell } from "lucide-react";
+import { assignmentService } from "@/integrations/api/services/assignment.service";
+import { eventService } from "@/integrations/api/services/event.service";
+import { goalService } from "@/integrations/api/services/goal.service";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 
-// Mock data for important reminders
-const reminders = [
-  {
-    id: 1,
-    title: "Permission slip needed",
-    dueDate: "Today",
-    priority: "high",
-    type: "form"
-  },
-  {
-    id: 2,
-    title: "Math homework due",
-    child: "Noah",
-    dueDate: "Tomorrow",
-    priority: "medium",
-    type: "homework"
-  },
-  {
-    id: 3,
-    title: "Science project supplies",
-    child: "Emma",
-    dueDate: "This week",
-    priority: "medium",
-    type: "materials"
-  }
-];
+interface Reminder {
+  id: string;
+  title: string;
+  dueDate: string;
+  priority: "high" | "medium" | "low";
+  type: "homework" | "event" | "goal" | "form";
+  child?: string;
+}
 
 const ImportantReminders = () => {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const [reminders, setReminders] = useState<Reminder[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchReminders = async () => {
+      if (!user?.id) {
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        setIsLoading(true);
+        const now = new Date();
+        const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+
+        // Fetch assignments, events, and goals in parallel
+        const [assignmentsResponse, eventsResponse, goalsResponse] = await Promise.all([
+          assignmentService.getStudentAssignments(user.id).catch(() => ({ data: [] })),
+          eventService.getUserEvents(user.id).catch(() => ({ data: [] })),
+          goalService.getStudentGoals(user.id, { status: 'active' }).catch(() => ({ data: { goals: [] } }))
+        ]);
+
+        const aggregatedReminders: Reminder[] = [];
+
+        // Process assignments
+        if (assignmentsResponse.data) {
+          const assignments = Array.isArray(assignmentsResponse.data)
+            ? assignmentsResponse.data
+            : [];
+
+          assignments
+            .filter((a: any) => a.status === 'pending' && a.dueDate)
+            .forEach((assignment: any) => {
+              const dueDate = new Date(assignment.dueDate);
+              if (dueDate <= sevenDaysFromNow) {
+                const daysDiff = Math.ceil((dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+
+                aggregatedReminders.push({
+                  id: assignment._id || assignment.id,
+                  title: assignment.title || "Assignment due",
+                  dueDate: formatDueDate(dueDate),
+                  priority: daysDiff <= 1 ? "high" : daysDiff <= 3 ? "medium" : "low",
+                  type: "homework"
+                });
+              }
+            });
+        }
+
+        // Process events
+        if (eventsResponse.data) {
+          const events = Array.isArray(eventsResponse.data)
+            ? eventsResponse.data
+            : [];
+
+          events
+            .filter((e: any) => e.startDate)
+            .forEach((event: any) => {
+              const eventDate = new Date(event.startDate);
+              if (eventDate >= now && eventDate <= sevenDaysFromNow) {
+                const daysDiff = Math.ceil((eventDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+
+                aggregatedReminders.push({
+                  id: event._id || event.id,
+                  title: event.title || "Event",
+                  dueDate: formatDueDate(eventDate),
+                  priority: daysDiff <= 1 ? "high" : daysDiff <= 3 ? "medium" : "low",
+                  type: "event"
+                });
+              }
+            });
+        }
+
+        // Process goals
+        if (goalsResponse.data?.goals) {
+          goalsResponse.data.goals
+            .filter((g: any) => g.dueDate)
+            .forEach((goal: any) => {
+              const dueDate = new Date(goal.dueDate);
+              if (dueDate <= sevenDaysFromNow) {
+                const daysDiff = Math.ceil((dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+
+                aggregatedReminders.push({
+                  id: goal._id,
+                  title: `Goal: ${goal.name}`,
+                  dueDate: formatDueDate(dueDate),
+                  priority: daysDiff <= 1 ? "high" : daysDiff <= 3 ? "medium" : "low",
+                  type: "goal"
+                });
+              }
+            });
+        }
+
+        // Sort by priority and due date
+        aggregatedReminders.sort((a, b) => {
+          const priorityOrder = { high: 0, medium: 1, low: 2 };
+          return priorityOrder[a.priority] - priorityOrder[b.priority];
+        });
+
+        setReminders(aggregatedReminders.slice(0, 5)); // Show top 5 reminders
+      } catch (err) {
+        console.error("Failed to fetch reminders:", err);
+        setError("Failed to load reminders");
+        toast({
+          title: "Error",
+          description: "Failed to load reminders. Please try again.",
+          variant: "destructive"
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchReminders();
+  }, [user?.id, toast]);
+
+  const formatDueDate = (date: Date): string => {
+    const now = new Date();
+    const diffTime = date.getTime() - now.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays < 0) return "Overdue";
+    if (diffDays === 0) return "Today";
+    if (diffDays === 1) return "Tomorrow";
+    if (diffDays < 7) return `In ${diffDays} days`;
+    return date.toLocaleDateString();
+  };
+
   const getPriorityBadge = (priority: string) => {
     switch (priority) {
       case "high":
@@ -63,14 +181,59 @@ const ImportantReminders = () => {
     switch (type) {
       case "homework":
         return <BookOpen className="h-4 w-4 text-blue-500" />;
+      case "event":
+        return <CalendarClock className="h-4 w-4 text-purple-500" />;
+      case "goal":
+        return <AlertCircle className="h-4 w-4 text-green-500" />;
       case "form":
         return <AlertCircle className="h-4 w-4 text-red-500" />;
-      case "materials":
-        return <CalendarClock className="h-4 w-4 text-purple-500" />;
       default:
         return <AlertCircle className="h-4 w-4" />;
     }
   };
+
+  if (isLoading) {
+    return (
+      <Card className="col-span-2 border-2 border-amber-200">
+        <CardContent className="p-4">
+          <h2 className="text-lg font-bold mb-3">Important Reminders</h2>
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="h-6 w-6 animate-spin text-amber-500" />
+            <span className="ml-2 text-gray-600">Loading reminders...</span>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card className="col-span-2 border-2 border-amber-200">
+        <CardContent className="p-4">
+          <h2 className="text-lg font-bold mb-3">Important Reminders</h2>
+          <div className="text-center py-8 text-gray-500">
+            <AlertCircle className="h-12 w-12 mx-auto mb-2 opacity-50" />
+            <p>{error}</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (reminders.length === 0) {
+    return (
+      <Card className="col-span-2 border-2 border-amber-200">
+        <CardContent className="p-4">
+          <h2 className="text-lg font-bold mb-3">Important Reminders</h2>
+          <div className="text-center py-8 text-gray-500">
+            <Bell className="h-12 w-12 mx-auto mb-2 opacity-50" />
+            <p>No upcoming reminders</p>
+            <p className="text-sm mt-1">You're all caught up!</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="col-span-2 border-2 border-amber-200">
@@ -83,8 +246,8 @@ const ImportantReminders = () => {
         </div>
         <div className="space-y-2">
           {reminders.map((reminder) => (
-            <div 
-              key={reminder.id} 
+            <div
+              key={reminder.id}
               className="flex items-start p-2 rounded-md bg-amber-50 border border-amber-200"
             >
               <div className="p-2 bg-white rounded-md mr-3">

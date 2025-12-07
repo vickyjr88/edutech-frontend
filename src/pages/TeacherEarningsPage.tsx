@@ -16,10 +16,10 @@ const TeacherEarningsPage = () => {
   return (
     <div className="container mx-auto py-8 px-4">
       <div className="flex items-center mb-6">
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          className="mr-4" 
+        <Button
+          variant="ghost"
+          size="sm"
+          className="mr-4"
           onClick={() => navigate("/teacher-dashboard")}
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
@@ -28,9 +28,9 @@ const TeacherEarningsPage = () => {
         <h1 className="text-2xl font-bold">My Earnings</h1>
       </div>
 
-      <Tabs 
-        defaultValue="overview" 
-        value={activeTab} 
+      <Tabs
+        defaultValue="overview"
+        value={activeTab}
         onValueChange={setActiveTab}
         className="w-full"
       >
@@ -47,27 +47,27 @@ const TeacherEarningsPage = () => {
             <CreditCard className="h-4 w-4" />
             Payment Methods
           </TabsTrigger>
-          {/*<TabsTrigger value="insights" className="flex items-center gap-2">*/}
-          {/*  <TrendingUp className="h-4 w-4" />*/}
-          {/*  Earnings Insights*/}
-          {/*</TabsTrigger>*/}
+          <TabsTrigger value="insights" className="flex items-center gap-2">
+            <TrendingUp className="h-4 w-4" />
+            Earnings Insights
+          </TabsTrigger>
         </TabsList>
-        
+
         <TabsContent value="overview" className="space-y-6">
           <EarningsSummary />
         </TabsContent>
-        
+
         <TabsContent value="history" className="space-y-6">
           <EarningsHistory />
         </TabsContent>
-        
+
         <TabsContent value="payment-methods" className="space-y-6">
           <PaymentMethods />
         </TabsContent>
-        
-        {/*<TabsContent value="insights" className="space-y-6">*/}
-        {/*  <EarningsInsights />*/}
-        {/*</TabsContent>*/}
+
+        <TabsContent value="insights" className="space-y-6">
+          <EarningsInsights />
+        </TabsContent>
       </Tabs>
     </div>
   );
