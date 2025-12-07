@@ -81,7 +81,7 @@ export interface ParentResources {
 
 export const adminService = {
   // ==================== USERS ====================
-  
+
   /**
    * Get all users with filters
    */
@@ -95,7 +95,7 @@ export const adminService = {
     sortOrder?: 'asc' | 'desc';
   } = {}) {
     const queryParams = new URLSearchParams();
-    
+
     if (params.page) queryParams.append('page', params.page.toString());
     if (params.limit) queryParams.append('limit', params.limit.toString());
     if (params.search) queryParams.append('search', params.search);
@@ -103,7 +103,7 @@ export const adminService = {
     if (params.country) queryParams.append('country', params.country);
     if (params.sortBy) queryParams.append('sortBy', params.sortBy);
     if (params.sortOrder) queryParams.append('sortOrder', params.sortOrder);
-    
+
     return api.get<AdminUsersResponse>(`/admin/users?${queryParams.toString()}`);
   },
 
@@ -415,27 +415,7 @@ export const adminService = {
     }>(`/admin/audit-logs?${queryParams.toString()}`);
   },
 
-  /**
-   * Get dashboard statistics
-   */
-  async getDashboardStats() {
-    return api.get<{
-      users: {
-        total: number;
-        active: number;
-        inactive: number;
-        suspended: number;
-        newThisMonth: number;
-        byRole: Record<string, number>;
-      };
-      tickets: {
-        total: number;
-        open: number;
-        pending: number;
-        resolved: number;
-      };
-    }>('/admin/dashboard/stats');
-  },
+
 
   // ==================== SUPPORT TICKETS ====================
 
