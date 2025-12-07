@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  BookOpen, 
-  Target, 
-  FileText, 
+import {
+  BookOpen,
+  Target,
+  FileText,
   Plus,
   GraduationCap,
   CheckCircle,
@@ -39,15 +39,15 @@ import { toast } from 'sonner';
 const ClassFoundationStep = ({ form, onNext, isSaving, curricula, loadingCurricula }: any) => {
   const [materials, setMaterials] = useState(form.watch('materials') || []);
   const [resourceLinks, setResourceLinks] = useState(form.watch('resourceLinks') || []);
-  
+
   // Curriculum API state
   const [curriculumLevels, setCurriculumLevels] = useState<CurriculumLevel[]>([]);
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [selectedCurriculum, setSelectedCurriculum] = useState<Curriculum | null>(null);
-  
+
   // Floating objectives card state
   const [showObjectivesCard, setShowObjectivesCard] = useState(false);
-  
+
   // Accordion state for subjects
   const [subjectsAccordionOpen, setSubjectsAccordionOpen] = useState<string>('subjects');
   const selectedSubject = form.watch('subject');
@@ -100,7 +100,7 @@ const ClassFoundationStep = ({ form, onNext, isSaving, curricula, loadingCurricu
         description: 'American Education System'
       }
     };
-    
+
     return styles[curriculumCode as keyof typeof styles] || {
       gradient: 'bg-gradient-to-br from-kidato-indigo to-kidato-spindle',
       hoverGradient: 'hover:from-kidato-indigo-600 hover:to-kidato-spindle-400',
@@ -127,21 +127,21 @@ const ClassFoundationStep = ({ form, onNext, isSaving, curricula, loadingCurricu
     }
     return [];
   });
-  
+
   // File upload states
-  const [uploadingFiles, setUploadingFiles] = useState<{[key: string]: boolean}>({});
-  
+  const [uploadingFiles, setUploadingFiles] = useState<{ [key: string]: boolean }>({});
+
   // Handle extracted data from course outline upload
   const handleDataExtracted = (extractedData: any) => {
     // Populate form fields with extracted data
     if (extractedData.title) {
       form.setValue('title', extractedData.title);
     }
-    
+
     if (extractedData.description) {
       form.setValue('description', extractedData.description);
     }
-    
+
     if (extractedData.objectives && extractedData.objectives.length > 0) {
       // Convert objectives to the format expected by the component
       const formattedObjectives = extractedData.objectives.map((obj: any, index: number) => ({
@@ -151,7 +151,7 @@ const ClassFoundationStep = ({ form, onNext, isSaving, curricula, loadingCurricu
       setObjectives(formattedObjectives);
       updateObjectivesInForm(formattedObjectives);
     }
-    
+
     if (extractedData.materials && extractedData.materials.length > 0) {
       const formattedMaterials = extractedData.materials.map((material: any, index: number) => ({
         id: (Date.now() + index).toString(),
@@ -165,17 +165,17 @@ const ClassFoundationStep = ({ form, onNext, isSaving, curricula, loadingCurricu
       setMaterials(formattedMaterials);
       form.setValue('materials', formattedMaterials);
     }
-    
+
     if (extractedData.technicalRequirements && extractedData.technicalRequirements.length > 0) {
       const requirementsString = extractedData.technicalRequirements
         .map((req: any) => req.requirement || req)
         .join('\n');
       form.setValue('technicalRequirements', requirementsString);
     }
-    
+
     // Set curriculum if found in curricula data
     if (extractedData.curriculum) {
-      const matchingCurriculum = curricula.find(c => 
+      const matchingCurriculum = curricula.find(c =>
         c.name.toLowerCase().includes(extractedData.curriculum.toLowerCase()) ||
         c.code.toLowerCase().includes(extractedData.curriculum.toLowerCase())
       );
@@ -185,10 +185,10 @@ const ClassFoundationStep = ({ form, onNext, isSaving, curricula, loadingCurricu
         setCurriculumLevelsFromData(matchingCurriculum._id);
       }
     }
-    
+
     // Set grade level if found
     if (extractedData.gradeLevel && selectedCurriculum) {
-      const matchingLevel = curriculumLevels.find(level => 
+      const matchingLevel = curriculumLevels.find(level =>
         level.name.toLowerCase().includes(extractedData.gradeLevel.toLowerCase()) ||
         level.gradeRange.toLowerCase().includes(extractedData.gradeLevel.toLowerCase())
       );
@@ -197,11 +197,11 @@ const ClassFoundationStep = ({ form, onNext, isSaving, curricula, loadingCurricu
         setSubjectsFromData(selectedCurriculum._id, matchingLevel.code);
       }
     }
-    
+
     // Update number of lessons based on extracted lesson plans
     if (extractedData.lessonPlans && extractedData.lessonPlans.length > 0) {
       form.setValue('numberOfLessons', extractedData.lessonPlans.length);
-      
+
       // Also populate lesson plans in the form
       const formattedLessonPlans = extractedData.lessonPlans.map((lesson: any, index: number) => ({
         id: (Date.now() + index).toString(),
@@ -221,7 +221,7 @@ const ClassFoundationStep = ({ form, onNext, isSaving, curricula, loadingCurricu
       }));
       form.setValue('lessonPlans', formattedLessonPlans);
     }
-    
+
     toast.success('Course outline data has been extracted and populated in the form!');
   };
 
@@ -232,7 +232,7 @@ const ClassFoundationStep = ({ form, onNext, isSaving, curricula, loadingCurricu
       setCurriculumLevels([]);
       return;
     }
-    
+
     const curriculum = curricula.find(c => c._id === curriculumId || c.code === curriculumId);
     if (curriculum && curriculum.levels) {
       setCurriculumLevels(curriculum.levels);
@@ -247,22 +247,22 @@ const ClassFoundationStep = ({ form, onNext, isSaving, curricula, loadingCurricu
       setSubjects([]);
       return;
     }
-    
+
     const curriculum = curricula.find(c => c._id === curriculumId || c.code === curriculumId);
     if (!curriculum) {
       setSubjects([]);
       return;
     }
-    
+
     const level = curriculum.levels.find(l => l.code === levelId);
     if (!level || !level.subjects) {
       setSubjects([]);
       return;
     }
-    
+
     // Convert subjects to standardized format
     let subjectsList: Subject[] = [];
-    
+
     if (Array.isArray(level.subjects)) {
       // Simple array of subject names
       subjectsList = level.subjects.map((name, index) => ({
@@ -303,10 +303,10 @@ const ClassFoundationStep = ({ form, onNext, isSaving, curricula, loadingCurricu
         }
       });
     }
-    
+
     setSubjects(subjectsList);
   };
-  
+
   // Learning objectives functions
   const addObjective = () => {
     const newObjective = {
@@ -319,7 +319,7 @@ const ClassFoundationStep = ({ form, onNext, isSaving, curricula, loadingCurricu
   };
 
   const updateObjective = (id: number, text: string) => {
-    const updatedObjectives = objectives.map(obj => 
+    const updatedObjectives = objectives.map(obj =>
       obj.id === id ? { ...obj, text } : obj
     );
     setObjectives(updatedObjectives);
@@ -339,7 +339,7 @@ const ClassFoundationStep = ({ form, onNext, isSaving, curricula, loadingCurricu
       .join('\n');
     form.setValue('objectives', objectivesString);
   };
-  
+
   const addMaterial = () => {
     const newMaterial = {
       id: Date.now().toString(),
@@ -356,7 +356,7 @@ const ClassFoundationStep = ({ form, onNext, isSaving, curricula, loadingCurricu
   };
 
   const updateMaterial = (index: number, field: string, value: string) => {
-    const updatedMaterials = materials.map((material: any, i: number) => 
+    const updatedMaterials = materials.map((material: any, i: number) =>
       i === index ? { ...material, [field]: value } : material
     );
     setMaterials(updatedMaterials);
@@ -383,7 +383,7 @@ const ClassFoundationStep = ({ form, onNext, isSaving, curricula, loadingCurricu
   };
 
   const updateResourceLink = (index: number, field: string, value: string) => {
-    const updatedLinks = resourceLinks.map((link: any, i: number) => 
+    const updatedLinks = resourceLinks.map((link: any, i: number) =>
       i === index ? { ...link, [field]: value } : link
     );
     setResourceLinks(updatedLinks);
@@ -398,18 +398,18 @@ const ClassFoundationStep = ({ form, onNext, isSaving, curricula, loadingCurricu
 
   const handleFileUpload = async (fileType: string, files: File[]) => {
     if (files.length === 0) return;
-    
+
     setUploadingFiles(prev => ({ ...prev, [fileType]: true }));
-    
+
     try {
       const file = files[0];
       const fileName = file.name;
       form.setValue(fileType, fileName);
-      
+
       // If this is a course outline file, process it for data extraction
       if (fileType === 'courseOutlineFile') {
         const { data, error } = await fileUploadService.uploadAndProcessCourseOutline(file);
-        
+
         if (error) {
           toast.error('Failed to process course outline: ' + error.message);
         } else if (data) {
@@ -418,7 +418,7 @@ const ClassFoundationStep = ({ form, onNext, isSaving, curricula, loadingCurricu
           toast.success('Course outline processed successfully! Data has been extracted and populated in the form.');
         }
       }
-      
+
       setUploadingFiles(prev => ({ ...prev, [fileType]: false }));
     } catch (error) {
       console.error('File upload error:', error);
@@ -428,7 +428,7 @@ const ClassFoundationStep = ({ form, onNext, isSaving, curricula, loadingCurricu
   };
 
   const classTitle = form.watch('title');
-  
+
   return (
     <div className="space-y-8">
       <div className="text-center">
@@ -439,7 +439,7 @@ const ClassFoundationStep = ({ form, onNext, isSaving, curricula, loadingCurricu
         >
           <GraduationCap className="h-8 w-8 text-white" />
         </motion.div>
-        <motion.h2 
+        <motion.h2
           className="text-2xl font-bold text-gray-900 mb-2"
           initial={{ opacity: 1 }}
           animate={{ opacity: 1 }}
@@ -448,7 +448,7 @@ const ClassFoundationStep = ({ form, onNext, isSaving, curricula, loadingCurricu
         >
           {classTitle ? classTitle : "What's your class about?"}
         </motion.h2>
-        <motion.p 
+        <motion.p
           className="text-gray-600"
           initial={{ opacity: 1 }}
           animate={{ opacity: 1 }}
@@ -599,7 +599,7 @@ const ClassFoundationStep = ({ form, onNext, isSaving, curricula, loadingCurricu
                 />
               </div>
             </div>
-            
+
             {!form.watch('courseOutlineFile') && (
               <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
                 <div className="flex items-center gap-2">
@@ -609,7 +609,7 @@ const ClassFoundationStep = ({ form, onNext, isSaving, curricula, loadingCurricu
                 <p className="text-red-700 text-xs mt-1">Please upload a course outline document to continue</p>
               </div>
             )}
-            
+
             {/* AI Generation Hint */}
             {form.watch('courseOutlineFile') && (
               <div className="p-4 bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 rounded-lg">
@@ -628,7 +628,7 @@ const ClassFoundationStep = ({ form, onNext, isSaving, curricula, loadingCurricu
         </Card>
 
         {/* Basic Information Card */}
-            <Card className={`${selectedCurriculum ? `border-${getCurriculumStyling(selectedCurriculum.code).accentColor}-200` : 'border-kidato-blue-200'} shadow-lg`}>
+        <Card className={`${selectedCurriculum ? `border-${getCurriculumStyling(selectedCurriculum.code).accentColor}-200` : 'border-kidato-blue-200'} shadow-lg`}>
           <CardHeader className={`${selectedCurriculum ? `bg-gradient-to-r from-${getCurriculumStyling(selectedCurriculum.code).accentColor}-50 to-${getCurriculumStyling(selectedCurriculum.code).accentColor}-100` : 'bg-gradient-to-r from-kidato-blue-50 to-kidato-purple-50'} border-b`}>
             <CardTitle className="flex items-center gap-2">
               <BookOpen className={`h-5 w-5 ${selectedCurriculum ? `text-${getCurriculumStyling(selectedCurriculum.code).accentColor}-600` : 'text-kidato-blue'}`} />
@@ -641,7 +641,7 @@ const ClassFoundationStep = ({ form, onNext, isSaving, curricula, loadingCurricu
               )}
             </CardTitle>
             <CardDescription>
-              {selectedCurriculum 
+              {selectedCurriculum
                 ? `Create your ${selectedCurriculum.name} class with tailored settings`
                 : 'The essential details that define your class'
               }
@@ -687,7 +687,7 @@ const ClassFoundationStep = ({ form, onNext, isSaving, curricula, loadingCurricu
                       {curricula.map((curriculum: Curriculum) => {
                         const styling = getCurriculumStyling(curriculum.code);
                         const isSelected = field.value === curriculum._id;
-                        
+
                         return (
                           <motion.div
                             key={curriculum._id}
@@ -696,8 +696,8 @@ const ClassFoundationStep = ({ form, onNext, isSaving, curricula, loadingCurricu
                             transition={{ duration: 0.3 }}
                             className={`
                               relative p-6 rounded-xl cursor-pointer transition-all duration-300 
-                              ${isSelected 
-                                ? `bg-gradient-to-br ${styling.selectedGradient} ring-4 ring-white ring-opacity-60 shadow-2xl scale-105` 
+                              ${isSelected
+                                ? `bg-gradient-to-br ${styling.selectedGradient} ring-4 ring-white ring-opacity-60 shadow-2xl scale-105`
                                 : `${styling.gradient} ${styling.hoverGradient} hover:scale-105 shadow-lg hover:shadow-xl`
                               }
                               text-white group
@@ -716,7 +716,7 @@ const ClassFoundationStep = ({ form, onNext, isSaving, curricula, loadingCurricu
                           >
                             {/* Selection indicator */}
                             {isSelected && (
-                              <motion.div 
+                              <motion.div
                                 initial={{ scale: 0 }}
                                 animate={{ scale: 1 }}
                                 className="absolute -top-2 -right-2 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-lg"
@@ -724,22 +724,22 @@ const ClassFoundationStep = ({ form, onNext, isSaving, curricula, loadingCurricu
                                 <CheckCircle className="h-5 w-5 text-green-600" />
                               </motion.div>
                             )}
-                            
+
                             {/* Curriculum icon */}
                             <div className="text-3xl mb-3 transform group-hover:scale-110 transition-transform duration-300">
                               {styling.icon}
                             </div>
-                            
+
                             {/* Curriculum name */}
                             <h3 className="text-lg font-bold mb-2 group-hover:text-opacity-90">
                               {curriculum.name}
                             </h3>
-                            
+
                             {/* Description */}
                             <p className="text-sm opacity-90 group-hover:opacity-100 transition-opacity duration-300">
                               {styling.description}
                             </p>
-                            
+
                             {/* Curriculum code badge */}
                             <div className="absolute top-4 right-4 px-2 py-1 bg-white bg-opacity-20 rounded-md text-xs font-medium">
                               {curriculum.code}
@@ -749,10 +749,10 @@ const ClassFoundationStep = ({ form, onNext, isSaving, curricula, loadingCurricu
                       })}
                     </div>
                   )}
-                  
+
                   {/* Selected curriculum info */}
                   {selectedCurriculum && (
-                    <motion.div 
+                    <motion.div
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: 'auto' }}
                       className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg"
@@ -766,7 +766,7 @@ const ClassFoundationStep = ({ form, onNext, isSaving, curricula, loadingCurricu
                       </div>
                     </motion.div>
                   )}
-                  
+
                   <FormMessage />
                 </FormItem>
               )}
@@ -785,7 +785,7 @@ const ClassFoundationStep = ({ form, onNext, isSaving, curricula, loadingCurricu
                       <FormDescription className="mb-6">
                         British curriculum is organized by Key Stages. Select the appropriate stage for your class.
                       </FormDescription>
-                      
+
                       {curriculumLevels.length === 0 ? (
                         <div className="text-center py-8">
                           <p className="text-gray-500">No Key Stages available for this curriculum</p>
@@ -794,7 +794,7 @@ const ClassFoundationStep = ({ form, onNext, isSaving, curricula, loadingCurricu
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
                           {curriculumLevels.map((level) => {
                             const isSelected = field.value === level.code;
-                            
+
                             return (
                               <motion.div
                                 key={level.code}
@@ -803,8 +803,8 @@ const ClassFoundationStep = ({ form, onNext, isSaving, curricula, loadingCurricu
                                 transition={{ duration: 0.3 }}
                                 className={`
                                   relative p-5 rounded-lg cursor-pointer transition-all duration-300 border-2
-                                  ${isSelected 
-                                    ? 'bg-gradient-to-br from-indigo-500 to-blue-600 text-white border-indigo-300 shadow-lg scale-105' 
+                                  ${isSelected
+                                    ? 'bg-gradient-to-br from-indigo-500 to-blue-600 text-white border-indigo-300 shadow-lg scale-105'
                                     : 'bg-white border-indigo-200 hover:border-indigo-400 hover:shadow-md hover:scale-102'
                                   }
                                 `}
@@ -819,7 +819,7 @@ const ClassFoundationStep = ({ form, onNext, isSaving, curricula, loadingCurricu
                               >
                                 {/* Selection indicator */}
                                 {isSelected && (
-                                  <motion.div 
+                                  <motion.div
                                     initial={{ scale: 0 }}
                                     animate={{ scale: 1 }}
                                     className="absolute -top-2 -right-2 w-6 h-6 bg-white rounded-full flex items-center justify-center shadow-md"
@@ -827,7 +827,7 @@ const ClassFoundationStep = ({ form, onNext, isSaving, curricula, loadingCurricu
                                     <CheckCircle className="h-4 w-4 text-green-600" />
                                   </motion.div>
                                 )}
-                                
+
                                 {/* Key Stage info */}
                                 <h3 className={`text-base font-bold mb-2 ${isSelected ? 'text-white' : 'text-indigo-900'}`}>
                                   {level.name}
@@ -843,7 +843,7 @@ const ClassFoundationStep = ({ form, onNext, isSaving, curricula, loadingCurricu
                           })}
                         </div>
                       )}
-                      
+
                       <FormMessage />
                     </FormItem>
                   )}
@@ -858,20 +858,20 @@ const ClassFoundationStep = ({ form, onNext, isSaving, curricula, loadingCurricu
                       const selectedLevel = curriculumLevels.find(l => l.code === form.watch('curriculumLevel'));
                       const isIGCSE = selectedLevel?.code === 'key-stage-4';
                       const isALevels = selectedLevel?.code === 'a-levels';
-                      
+
                       // Get subjects based on level structure
                       const getSubjectsByCategory = () => {
                         if (!selectedLevel || !selectedLevel.subjects) return {};
-                        
+
                         if (Array.isArray(selectedLevel.subjects)) {
                           return { 'All Subjects': selectedLevel.subjects };
                         }
-                        
+
                         return selectedLevel.subjects;
                       };
-                      
+
                       const subjectCategories = getSubjectsByCategory();
-                      
+
                       return (
                         <motion.div
                           initial={{ opacity: 0, height: 0 }}
@@ -879,9 +879,9 @@ const ClassFoundationStep = ({ form, onNext, isSaving, curricula, loadingCurricu
                           transition={{ duration: 0.4 }}
                         >
                           <FormItem>
-                            <Accordion 
-                              type="single" 
-                              value={subjectsAccordionOpen} 
+                            <Accordion
+                              type="single"
+                              value={subjectsAccordionOpen}
                               onValueChange={setSubjectsAccordionOpen}
                               className="w-full"
                             >
@@ -906,119 +906,119 @@ const ClassFoundationStep = ({ form, onNext, isSaving, curricula, loadingCurricu
                                     {isALevels && "Choose from specialized A-Level subject areas."}
                                     {!isIGCSE && !isALevels && `Select the subject you'll be teaching in ${selectedLevel?.name}.`}
                                   </FormDescription>
-                                  
+
                                   <div className="space-y-6">
-                              {Object.entries(subjectCategories).map(([category, subjectList]) => (
-                                <div key={category}>
-                                  {Object.keys(subjectCategories).length > 1 && (
-                                    <h4 className="text-sm font-semibold text-gray-700 mb-3 uppercase tracking-wide">
-                                      {category === 'core' && '🔵 Core Subjects'}
-                                      {category === 'foundation' && '🟡 Foundation Subjects'}
-                                      {category === 'electives' && '🟢 Elective Subjects'}
-                                      {category === 'non-exam' && '⚪ Non-Exam Subjects'}
-                                      {category === 'stem' && '🔬 STEM Subjects'}
-                                      {category === 'humanities' && '📚 Humanities'}
-                                      {category === 'languages' && '🗣️ Languages'}
-                                      {category === 'arts' && '🎨 Arts'}
-                                      {category === 'business' && '💼 Business'}
-                                      {!['core', 'foundation', 'electives', 'non-exam', 'stem', 'humanities', 'languages', 'arts', 'business'].includes(category) && category}
-                                    </h4>
-                                  )}
-                                  
-                                  <div className="flex flex-wrap gap-3">
-                                    {(Array.isArray(subjectList) ? subjectList : []).map((subject, index) => {
-                                      const subjectId = `${category}-${index}`;
-                                      const isSelected = field.value === subject;
-                                      
-                                      // Category-specific styling
-                                      const getCategoryStyle = () => {
-                                        switch (category) {
-                                          case 'core':
-                                            return isSelected 
-                                              ? 'bg-blue-600 text-white border-blue-600' 
-                                              : 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100 hover:border-blue-300';
-                                          case 'foundation':
-                                            return isSelected 
-                                              ? 'bg-amber-600 text-white border-amber-600' 
-                                              : 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100 hover:border-amber-300';
-                                          case 'electives':
-                                            return isSelected 
-                                              ? 'bg-green-600 text-white border-green-600' 
-                                              : 'bg-green-50 text-green-700 border-green-200 hover:bg-green-100 hover:border-green-300';
-                                          case 'non-exam':
-                                            return isSelected 
-                                              ? 'bg-gray-600 text-white border-gray-600' 
-                                              : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100 hover:border-gray-300';
-                                          case 'stem':
-                                            return isSelected 
-                                              ? 'bg-purple-600 text-white border-purple-600' 
-                                              : 'bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100 hover:border-purple-300';
-                                          case 'humanities':
-                                            return isSelected 
-                                              ? 'bg-rose-600 text-white border-rose-600' 
-                                              : 'bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100 hover:border-rose-300';
-                                          case 'languages':
-                                            return isSelected 
-                                              ? 'bg-cyan-600 text-white border-cyan-600' 
-                                              : 'bg-cyan-50 text-cyan-700 border-cyan-200 hover:bg-cyan-100 hover:border-cyan-300';
-                                          case 'arts':
-                                            return isSelected 
-                                              ? 'bg-pink-600 text-white border-pink-600' 
-                                              : 'bg-pink-50 text-pink-700 border-pink-200 hover:bg-pink-100 hover:border-pink-300';
-                                          case 'business':
-                                            return isSelected 
-                                              ? 'bg-emerald-600 text-white border-emerald-600' 
-                                              : 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100 hover:border-emerald-300';
-                                          default:
-                                            return isSelected 
-                                              ? 'bg-indigo-600 text-white border-indigo-600' 
-                                              : 'bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100 hover:border-indigo-300';
-                                        }
-                                      };
-                                      
-                                      return (
-                                        <motion.button
-                                          key={subjectId}
-                                          type="button"
-                                          initial={{ opacity: 0, scale: 0.8 }}
-                                          animate={{ opacity: 1, scale: 1 }}
-                                          transition={{ duration: 0.2, delay: index * 0.05 }}
-                                          onClick={() => {
-                                            field.onChange(subject);
-                                            // Collapse accordion after selection
-                                            setTimeout(() => setSubjectsAccordionOpen(''), 300);
-                                          }}
-                                          className={`
+                                    {Object.entries(subjectCategories).map(([category, subjectList]) => (
+                                      <div key={category}>
+                                        {Object.keys(subjectCategories).length > 1 && (
+                                          <h4 className="text-sm font-semibold text-gray-700 mb-3 uppercase tracking-wide">
+                                            {category === 'core' && '🔵 Core Subjects'}
+                                            {category === 'foundation' && '🟡 Foundation Subjects'}
+                                            {category === 'electives' && '🟢 Elective Subjects'}
+                                            {category === 'non-exam' && '⚪ Non-Exam Subjects'}
+                                            {category === 'stem' && '🔬 STEM Subjects'}
+                                            {category === 'humanities' && '📚 Humanities'}
+                                            {category === 'languages' && '🗣️ Languages'}
+                                            {category === 'arts' && '🎨 Arts'}
+                                            {category === 'business' && '💼 Business'}
+                                            {!['core', 'foundation', 'electives', 'non-exam', 'stem', 'humanities', 'languages', 'arts', 'business'].includes(category) && category}
+                                          </h4>
+                                        )}
+
+                                        <div className="flex flex-wrap gap-3">
+                                          {(Array.isArray(subjectList) ? subjectList : []).map((subject, index) => {
+                                            const subjectId = `${category}-${index}`;
+                                            const isSelected = field.value === subject;
+
+                                            // Category-specific styling
+                                            const getCategoryStyle = () => {
+                                              switch (category) {
+                                                case 'core':
+                                                  return isSelected
+                                                    ? 'bg-blue-600 text-white border-blue-600'
+                                                    : 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100 hover:border-blue-300';
+                                                case 'foundation':
+                                                  return isSelected
+                                                    ? 'bg-amber-600 text-white border-amber-600'
+                                                    : 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100 hover:border-amber-300';
+                                                case 'electives':
+                                                  return isSelected
+                                                    ? 'bg-green-600 text-white border-green-600'
+                                                    : 'bg-green-50 text-green-700 border-green-200 hover:bg-green-100 hover:border-green-300';
+                                                case 'non-exam':
+                                                  return isSelected
+                                                    ? 'bg-gray-600 text-white border-gray-600'
+                                                    : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100 hover:border-gray-300';
+                                                case 'stem':
+                                                  return isSelected
+                                                    ? 'bg-purple-600 text-white border-purple-600'
+                                                    : 'bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100 hover:border-purple-300';
+                                                case 'humanities':
+                                                  return isSelected
+                                                    ? 'bg-rose-600 text-white border-rose-600'
+                                                    : 'bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100 hover:border-rose-300';
+                                                case 'languages':
+                                                  return isSelected
+                                                    ? 'bg-cyan-600 text-white border-cyan-600'
+                                                    : 'bg-cyan-50 text-cyan-700 border-cyan-200 hover:bg-cyan-100 hover:border-cyan-300';
+                                                case 'arts':
+                                                  return isSelected
+                                                    ? 'bg-pink-600 text-white border-pink-600'
+                                                    : 'bg-pink-50 text-pink-700 border-pink-200 hover:bg-pink-100 hover:border-pink-300';
+                                                case 'business':
+                                                  return isSelected
+                                                    ? 'bg-emerald-600 text-white border-emerald-600'
+                                                    : 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100 hover:border-emerald-300';
+                                                default:
+                                                  return isSelected
+                                                    ? 'bg-indigo-600 text-white border-indigo-600'
+                                                    : 'bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100 hover:border-indigo-300';
+                                              }
+                                            };
+
+                                            return (
+                                              <motion.button
+                                                key={subjectId}
+                                                type="button"
+                                                initial={{ opacity: 0, scale: 0.8 }}
+                                                animate={{ opacity: 1, scale: 1 }}
+                                                transition={{ duration: 0.2, delay: index * 0.05 }}
+                                                onClick={() => {
+                                                  field.onChange(subject);
+                                                  // Collapse accordion after selection
+                                                  setTimeout(() => setSubjectsAccordionOpen(''), 300);
+                                                }}
+                                                className={`
                                             px-4 py-2 rounded-full text-sm font-medium border-2 transition-all duration-200
                                             ${getCategoryStyle()}
                                             ${isSelected ? 'shadow-lg scale-105' : 'hover:scale-105 hover:shadow-md'}
                                           `}
-                                          whileHover={{ scale: 1.05 }}
-                                          whileTap={{ scale: 0.95 }}
-                                        >
-                                          {subject}
-                                          {isSelected && (
-                                            <motion.span
-                                              initial={{ scale: 0 }}
-                                              animate={{ scale: 1 }}
-                                              className="ml-2"
-                                            >
-                                              ✓
-                                            </motion.span>
-                                          )}
-                                        </motion.button>
-                                      );
-                                    })}
+                                                whileHover={{ scale: 1.05 }}
+                                                whileTap={{ scale: 0.95 }}
+                                              >
+                                                {subject}
+                                                {isSelected && (
+                                                  <motion.span
+                                                    initial={{ scale: 0 }}
+                                                    animate={{ scale: 1 }}
+                                                    className="ml-2"
+                                                  >
+                                                    ✓
+                                                  </motion.span>
+                                                )}
+                                              </motion.button>
+                                            );
+                                          })}
+                                        </div>
+                                      </div>
+                                    ))}
                                   </div>
-                                </div>
-                                      ))}
-                                    </div>
                                 </AccordionContent>
                               </AccordionItem>
                             </Accordion>
-                            
+
                             {field.value && (
-                              <motion.div 
+                              <motion.div
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 className="mt-4 p-4 bg-kidato-indigo-50 border border-kidato-indigo-200 rounded-lg"
@@ -1036,7 +1036,7 @@ const ClassFoundationStep = ({ form, onNext, isSaving, curricula, loadingCurricu
                                 </div>
                               </motion.div>
                             )}
-                            
+
                             <FormMessage />
                           </FormItem>
                         </motion.div>
@@ -1054,7 +1054,7 @@ const ClassFoundationStep = ({ form, onNext, isSaving, curricula, loadingCurricu
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-base font-semibold">Grade Level *</FormLabel>
-                      <Select 
+                      <Select
                         onValueChange={(value) => {
                           field.onChange(value);
                           const curriculumId = form.watch('curriculum');
@@ -1063,15 +1063,15 @@ const ClassFoundationStep = ({ form, onNext, isSaving, curricula, loadingCurricu
                           }
                           // Reset subject when level changes
                           form.setValue('subject', '');
-                        }} 
+                        }}
                         defaultValue={field.value}
                         disabled={false}
                       >
                         <FormControl>
                           <SelectTrigger className="h-12">
                             <SelectValue placeholder={
-                              !form.watch('curriculum') 
-                                ? "Select curriculum first" 
+                              !form.watch('curriculum')
+                                ? "Select curriculum first"
                                 : "Select grade level"
                             } />
                           </SelectTrigger>
@@ -1095,8 +1095,8 @@ const ClassFoundationStep = ({ form, onNext, isSaving, curricula, loadingCurricu
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-base font-semibold">Subject *</FormLabel>
-                      <Select 
-                        onValueChange={field.onChange} 
+                      <Select
+                        onValueChange={field.onChange}
                         defaultValue={field.value}
                         disabled={!form.watch('curriculum') || !form.watch('curriculumLevel')}
                       >
@@ -1104,7 +1104,7 @@ const ClassFoundationStep = ({ form, onNext, isSaving, curricula, loadingCurricu
                           <SelectTrigger className="h-12">
                             <SelectValue placeholder={
                               !form.watch('curriculum') || !form.watch('curriculumLevel')
-                                ? "Select curriculum and level first" 
+                                ? "Select curriculum and level first"
                                 : "Select subject"
                             } />
                           </SelectTrigger>
@@ -1132,7 +1132,7 @@ const ClassFoundationStep = ({ form, onNext, isSaving, curricula, loadingCurricu
                 const aiContext: DescriptionContext = {
                   title: form.watch("title"),
                   curriculum: selectedCurriculum?.name || selectedCurriculum?.code,
-                  curriculumLevel: curriculumLevels.find(l => 
+                  curriculumLevel: curriculumLevels.find(l =>
                     l.code === form.watch("curriculumLevel")
                   )?.name,
                   subject: form.watch("subject"),
@@ -1166,7 +1166,7 @@ const ClassFoundationStep = ({ form, onNext, isSaving, curricula, loadingCurricu
                       </div>
                     )}
                     <FormDescription>
-                      {selectedCurriculum 
+                      {selectedCurriculum
                         ? `Describe your ${selectedCurriculum.name} class to help parents and students understand the curriculum approach and what to expect`
                         : 'Help parents and students understand what to expect from your class'
                       }
@@ -1186,7 +1186,7 @@ const ClassFoundationStep = ({ form, onNext, isSaving, curricula, loadingCurricu
             <div>
               <div className="flex items-center justify-between mb-4">
                 <FormLabel className="text-base font-semibold">Learning Objectives *</FormLabel>
-                
+
                 {/* Class Objectives Preview Button with Floating Card */}
                 {objectives.length > 0 && (
                   <div className="relative">
@@ -1205,7 +1205,7 @@ const ClassFoundationStep = ({ form, onNext, isSaving, curricula, loadingCurricu
 
                     {/* Floating Objectives Card */}
                     {showObjectivesCard && (
-                      <Card 
+                      <Card
                         className="absolute top-full right-0 mt-2 w-96 z-50 shadow-xl border-2 border-purple-200 bg-white"
                         onMouseEnter={() => setShowObjectivesCard(true)}
                         onMouseLeave={() => setShowObjectivesCard(false)}
@@ -1221,7 +1221,7 @@ const ClassFoundationStep = ({ form, onNext, isSaving, curricula, loadingCurricu
                         </CardHeader>
                         <CardContent className="space-y-3 max-h-64 overflow-y-auto">
                           <p className="text-sm text-purple-700 font-medium">By the end of this class, students will be able to:</p>
-                          
+
                           {objectives.filter(obj => obj.text.trim()).map((objective, index) => (
                             <div
                               key={objective.id}
@@ -1236,8 +1236,8 @@ const ClassFoundationStep = ({ form, onNext, isSaving, curricula, loadingCurricu
                                     {objective.text}
                                   </p>
                                   <div className="flex items-center gap-2 mt-2">
-                                    <Badge 
-                                      variant="outline" 
+                                    <Badge
+                                      variant="outline"
                                       className="text-xs bg-purple-100 text-purple-700 border-purple-300"
                                     >
                                       Academic Goal
@@ -1247,7 +1247,7 @@ const ClassFoundationStep = ({ form, onNext, isSaving, curricula, loadingCurricu
                               </div>
                             </div>
                           ))}
-                          
+
                           {/* Summary */}
                           <div className="mt-4 pt-3 border-t border-purple-200">
                             <div className="grid grid-cols-2 gap-4 text-xs">
@@ -1271,11 +1271,11 @@ const ClassFoundationStep = ({ form, onNext, isSaving, curricula, loadingCurricu
                   </div>
                 )}
               </div>
-              
+
               <FormDescription className="mb-4">
                 What specific skills or knowledge will students gain? Add one objective at a time.
               </FormDescription>
-              
+
               <div className="space-y-4">
                 {objectives.map((objective, index) => (
                   <div key={objective.id} className="p-4 bg-purple-50 rounded-lg border-2 border-purple-200 shadow-sm">
@@ -1307,7 +1307,7 @@ const ClassFoundationStep = ({ form, onNext, isSaving, curricula, loadingCurricu
                     </div>
                   </div>
                 ))}
-                
+
                 <div className="p-4 bg-gradient-to-r from-purple-50 to-purple-100 rounded-lg border-2 border-dashed border-purple-300 hover:border-purple-400 transition-colors">
                   <div className="space-y-3">
                     <FormLabel className="text-sm font-medium text-purple-800 block">
@@ -1328,7 +1328,7 @@ const ClassFoundationStep = ({ form, onNext, isSaving, curricula, loadingCurricu
                     </p>
                   </div>
                 </div>
-                
+
                 {objectives.length === 0 && (
                   <div className="text-center py-8 border-2 border-dashed border-red-200 rounded-lg bg-red-50">
                     <Target className="h-8 w-8 text-red-400 mx-auto mb-2" />
@@ -1336,7 +1336,7 @@ const ClassFoundationStep = ({ form, onNext, isSaving, curricula, loadingCurricu
                     <p className="text-red-500 text-xs mt-1">Add at least one learning objective to continue</p>
                   </div>
                 )}
-                
+
                 {objectives.filter(obj => obj.text.trim()).length === 0 && objectives.length > 0 && (
                   <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
                     <p className="text-amber-800 text-sm font-medium">Please fill in all learning objectives</p>
@@ -1344,7 +1344,7 @@ const ClassFoundationStep = ({ form, onNext, isSaving, curricula, loadingCurricu
                   </div>
                 )}
               </div>
-              
+
               {objectives.length > 0 && (
                 <div className="mt-4 p-4 bg-blue-50 border-2 border-blue-200 rounded-lg">
                   <h4 className="text-sm font-semibold text-blue-800 mb-3 flex items-center gap-2">
@@ -1411,7 +1411,7 @@ const ClassFoundationStep = ({ form, onNext, isSaving, curricula, loadingCurricu
                           <X className="h-4 w-4" />
                         </Button>
                       </div>
-                      
+
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                           <label className="text-sm font-medium text-gray-700">Material Name *</label>
@@ -1478,7 +1478,7 @@ const ClassFoundationStep = ({ form, onNext, isSaving, curricula, loadingCurricu
 
             {/* Additional Resource Links */}
             <Separator />
-            
+
             <div>
               <div className="flex items-center justify-between mb-4">
                 <h4 className="font-semibold text-gray-900">Additional Resources</h4>
@@ -1510,7 +1510,7 @@ const ClassFoundationStep = ({ form, onNext, isSaving, curricula, loadingCurricu
                           <X className="h-4 w-4" />
                         </Button>
                       </div>
-                      
+
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                           <label className="text-sm font-medium text-gray-700">Resource Title *</label>
@@ -1575,12 +1575,12 @@ const ClassFoundationStep = ({ form, onNext, isSaving, curricula, loadingCurricu
             <div className="flex items-center gap-3 mb-2">
               <div className="relative">
                 <div className="w-12 h-12 bg-gradient-to-br from-kidato-indigo-600 to-kidato-indigo-700 rounded-xl flex items-center justify-center shadow-lg">
-                  <svg 
-                    viewBox="0 0 24 24" 
-                    className="h-6 w-6 text-white" 
+                  <svg
+                    viewBox="0 0 24 24"
+                    className="h-6 w-6 text-white"
                     fill="currentColor"
                   >
-                    <path d="M23.498 6.186a2.99 2.99 0 0 0-2.123-2.123C19.505 3.5 12 3.5 12 3.5s-7.505 0-9.375.563A2.99 2.99 0 0 0 .502 6.186C-.001 8.056-.001 12-.001 12s0 3.944.503 5.814a2.99 2.99 0 0 0 2.123 2.123C4.495 20.5 12 20.5 12 20.5s7.505 0 9.375-.563a2.99 2.99 0 0 0 2.123-2.123C23.999 15.944 23.999 12 23.999 12s0-3.944-.501-5.814zM9.75 15.568V8.432L15.5 12l-5.75 3.568z"/>
+                    <path d="M23.498 6.186a2.99 2.99 0 0 0-2.123-2.123C19.505 3.5 12 3.5 12 3.5s-7.505 0-9.375.563A2.99 2.99 0 0 0 .502 6.186C-.001 8.056-.001 12-.001 12s0 3.944.503 5.814a2.99 2.99 0 0 0 2.123 2.123C4.495 20.5 12 20.5 12 20.5s7.505 0 9.375-.563a2.99 2.99 0 0 0 2.123-2.123C23.999 15.944 23.999 12 23.999 12s0-3.944-.501-5.814zM9.75 15.568V8.432L15.5 12l-5.75 3.568z" />
                   </svg>
                 </div>
                 <div className="absolute -top-1 -right-1 w-4 h-4 bg-white rounded-full flex items-center justify-center">
@@ -1610,12 +1610,12 @@ const ClassFoundationStep = ({ form, onNext, isSaving, curricula, loadingCurricu
                   <FormControl>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                        <svg 
-                          viewBox="0 0 24 24" 
-                          className="h-5 w-5 text-kidato-indigo-500" 
+                        <svg
+                          viewBox="0 0 24 24"
+                          className="h-5 w-5 text-kidato-indigo-500"
                           fill="currentColor"
                         >
-                          <path d="M23.498 6.186a2.99 2.99 0 0 0-2.123-2.123C19.505 3.5 12 3.5 12 3.5s-7.505 0-9.375.563A2.99 2.99 0 0 0 .502 6.186C-.001 8.056-.001 12-.001 12s0 3.944.503 5.814a2.99 2.99 0 0 0 2.123 2.123C4.495 20.5 12 20.5 12 20.5s7.505 0 9.375-.563a2.99 2.99 0 0 0 2.123-2.123C23.999 15.944 23.999 12 23.999 12s0-3.944-.501-5.814zM9.75 15.568V8.432L15.5 12l-5.75 3.568z"/>
+                          <path d="M23.498 6.186a2.99 2.99 0 0 0-2.123-2.123C19.505 3.5 12 3.5 12 3.5s-7.505 0-9.375.563A2.99 2.99 0 0 0 .502 6.186C-.001 8.056-.001 12-.001 12s0 3.944.503 5.814a2.99 2.99 0 0 0 2.123 2.123C4.495 20.5 12 20.5 12 20.5s7.505 0 9.375-.563a2.99 2.99 0 0 0 2.123-2.123C23.999 15.944 23.999 12 23.999 12s0-3.944-.501-5.814zM9.75 15.568V8.432L15.5 12l-5.75 3.568z" />
                         </svg>
                       </div>
                       <Input
@@ -1683,7 +1683,7 @@ const ClassFoundationStep = ({ form, onNext, isSaving, curricula, loadingCurricu
             onClick={onNext}
             size="lg"
             className="bg-gradient-to-r from-kidato-indigo-500 to-kidato-orange-500 hover:from-kidato-indigo-600 hover:to-kidato-orange-600 text-white font-semibold px-8 py-3 rounded-xl shadow-lg transition-all duration-200 transform hover:scale-105"
-            disabled={isSaving || !form.watch('title') || !form.watch('curriculum') || !form.watch('curriculumLevel') || !form.watch('subject') || objectives.filter(obj => obj.text.trim()).length === 0 || !form.watch('courseOutlineFile')}
+            disabled={isSaving || !form.watch('title') || !form.watch('curriculum') || !form.watch('curriculumLevel') || !form.watch('subject') || objectives.filter((obj: any) => obj.text.trim()).length === 0}
           >
             {isSaving ? (
               <>

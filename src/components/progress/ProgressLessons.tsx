@@ -1,10 +1,9 @@
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import InProgressLessonsCard from "./InProgressLessonsCard";
 import AllLessonsCard from "./AllLessonsCard";
 import LessonReviewModal from "./LessonReviewModal";
 import JoinClassDialog from "@/components/dashboard/JoinClassDialog";
-import { getMockLessonsData } from "./lessonData";
 import { useToast } from "@/hooks/use-toast";
 import { useGetLessonPlans } from "@/hooks/use-class-service";
 interface ProgressLessonsProps {

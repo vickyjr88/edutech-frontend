@@ -12,45 +12,45 @@ interface AcademicClassContextType {
   form: UseFormReturn<ClassFormValues>;
   isSubmitting: boolean;
   setIsSubmitting: (value: boolean) => void;
-  
+
   // Step management
   currentStep: number;
   setCurrentStep: (step: number) => void;
   goToNextStep: () => void;
   goToPrevStep: () => void;
   canProceedToStep: (stepIndex: number) => boolean;
-  
+
   // Cohorts management
   cohorts: CohortData[];
   setCohorts: React.Dispatch<React.SetStateAction<CohortData[]>>;
   addCohort: () => void;
   removeCohort: (id: string) => void;
   updateCohort: (id: string, field: keyof CohortData, value: any) => void;
-  
+
   // Lesson plans management
   addLessonPlan: () => void;
   removeLessonPlan: (id: string) => void;
   updateLessonPlan: (id: string, field: string, value: string) => void;
-  
+
   // Class management
   classId: string | null;
   setClassId: React.Dispatch<React.SetStateAction<string | null>>;
-  
+
   // Auto-save functionality
   lastSaved: number;
   hasUnsavedChanges: boolean;
   saveToStorage: () => void;
   loadFromStorage: () => void;
   clearStorage: () => void;
-  
+
   // Completion tracking
   getStepCompletion: (stepIndex: number) => boolean;
   getOverallProgress: () => number;
-  
+
   // Submit handlers
   saveDraft: () => Promise<void>;
   publishClass: () => Promise<void>;
-  
+
   // Validation
   validateStep: (stepIndex: number) => boolean;
   getStepErrors: (stepIndex: number) => string[];
@@ -91,7 +91,7 @@ const stepValidation = {
   2: { // Schedule & Pricing step
     required: [],
     custom: (form: UseFormReturn<ClassFormValues>, cohorts: CohortData[]) => {
-      return cohorts.length >= 1 && cohorts.every(cohort => 
+      return cohorts.length >= 1 && cohorts.every(cohort =>
         cohort.name && cohort.price && cohort.numberOfLessons > 0
       );
     }
@@ -111,17 +111,17 @@ export const AcademicClassProvider = ({
 }: AcademicClassProviderProps) => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  
+
   // Core state
   const [currentStep, setCurrentStep] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [cohorts, setCohorts] = useState<CohortData[]>(initialCohorts);
   const [classId, setClassId] = useState<string | null>(initialClassId || null);
-  
+
   // Auto-save state
   const [lastSaved, setLastSaved] = useState<number>(0);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-  
+
   // Form setup
   const form = useForm<ClassFormValues>({
     resolver: zodResolver(classSchema),
@@ -151,7 +151,7 @@ export const AcademicClassProvider = ({
   // Auto-save functionality
   const saveToStorage = () => {
     if (typeof window === 'undefined') return;
-    
+
     const formData = {
       formValues: form.getValues(),
       cohorts,
@@ -159,33 +159,33 @@ export const AcademicClassProvider = ({
       classId,
       lastSaved: Date.now()
     };
-    
+
     localStorage.setItem(STORAGE_KEY, JSON.stringify(formData));
     localStorage.setItem(METADATA_KEY, JSON.stringify({
       lastSaved: formData.lastSaved,
       classId,
       hasData: true
     }));
-    
+
     setLastSaved(formData.lastSaved);
     setHasUnsavedChanges(false);
   };
 
   const loadFromStorage = () => {
     if (typeof window === 'undefined') return false;
-    
+
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (!saved) return false;
-      
+
       const data = JSON.parse(saved);
-      
+
       form.reset(data.formValues);
       setCohorts(data.cohorts || []);
       setCurrentStep(data.currentStep || 0);
       setClassId(data.classId || null);
       setLastSaved(data.lastSaved || 0);
-      
+
       return true;
     } catch (error) {
       console.error('Error loading from storage:', error);
@@ -195,7 +195,7 @@ export const AcademicClassProvider = ({
 
   const clearStorage = () => {
     if (typeof window === 'undefined') return;
-    
+
     localStorage.removeItem(STORAGE_KEY);
     localStorage.removeItem(METADATA_KEY);
     setLastSaved(0);
@@ -218,7 +218,7 @@ export const AcademicClassProvider = ({
   const canProceedToStep = (stepIndex: number) => {
     // Can always go to previous steps
     if (stepIndex <= currentStep) return true;
-    
+
     // Must complete current step to proceed
     return validateStep(currentStep);
   };
@@ -235,7 +235,7 @@ export const AcademicClassProvider = ({
         const value = values[field as keyof ClassFormValues];
         return !value || (typeof value === 'string' && value.trim() === '');
       });
-      
+
       if (missingFields.length > 0) return false;
     }
 
@@ -250,7 +250,7 @@ export const AcademicClassProvider = ({
   const getStepErrors = (stepIndex: number) => {
     const errors: string[] = [];
     const validation = stepValidation[stepIndex as keyof typeof stepValidation];
-    
+
     if (!validation) return errors;
 
     if (validation.required) {
@@ -314,7 +314,7 @@ export const AcademicClassProvider = ({
       maxStudents: 20,
       enrollmentDeadline: null
     };
-    
+
     setCohorts([...cohorts, newCohort]);
     setHasUnsavedChanges(true);
   };
@@ -341,7 +341,7 @@ export const AcademicClassProvider = ({
       description: '',
       duration: '60'
     };
-    
+
     form.setValue('lessonPlans', [...currentPlans, newPlan]);
     setHasUnsavedChanges(true);
   };
@@ -354,7 +354,7 @@ export const AcademicClassProvider = ({
 
   const updateLessonPlan = (id: string, field: string, value: string) => {
     const currentPlans = form.getValues('lessonPlans') || [];
-    const updatedPlans = currentPlans.map(plan => 
+    const updatedPlans = currentPlans.map(plan =>
       plan.id === id ? { ...plan, [field]: value } : plan
     );
     form.setValue('lessonPlans', updatedPlans);
@@ -364,13 +364,66 @@ export const AcademicClassProvider = ({
   // Submit handlers
   const saveDraft = async () => {
     setIsSubmitting(true);
-    
+
     try {
+      const {
+        status,
+        hasCohorts,
+        hasTeamTeaching,
+        objectives,
+        technicalRequirements,
+        materialsRequired,
+        assessmentMethods,
+        methodology,
+        strategy,
+        resourceLinks,
+        commitmentRequired,
+        ...validFormData
+      } = form.getValues();
+
+      // Helper to format objectives
+      const formattedObjectives = objectives && typeof objectives === 'string'
+        ? objectives.split('\n').filter(o => o.trim()).map(o => ({
+          text: o.trim(),
+          category: 'knowledge' as const
+        }))
+        : [];
+
+      // Helper to format technical requirements
+      const formattedTechReqs = technicalRequirements && typeof technicalRequirements === 'string'
+        ? technicalRequirements.split('\n').filter(r => r.trim()).map(r => ({
+          requirement: r.trim()
+        }))
+        : [];
+
+      // Helper to format lesson plans
+      const formattedLessonPlans = (validFormData.lessonPlans || []).map((plan: any, index: number) => ({
+        ...plan,
+        duration: Number(plan.duration) || 60,
+        lessonNumber: index + 1
+      }));
+
+      // Helper to format materials (extract only name as per DTO)
+      const formattedMaterials = (validFormData.materials || []).map((m: any) => ({
+        name: m.name
+      }));
+
       const formData = {
-        ...form.getValues(),
+        ...validFormData,
+        commitment: commitmentRequired,
+        objectives: formattedObjectives,
+        technicalRequirements: formattedTechReqs,
+        lessonPlans: formattedLessonPlans,
+        materials: formattedMaterials,
+        // Map file URLs
+        courseOutlineUrl: validFormData.courseOutlineFile,
+        schemeOfWorkUrl: validFormData.schemeOfWorkFile,
+        syllabusUrl: validFormData.syllabusFile,
+
         type: 'academic' as const,
         isPublished: false,
-        status: 'draft' as const
+        // Excluded fields: status, hasCohorts, hasTeamTeaching, materialsRequired,
+        // assessmentMethods, methodology, strategy, resourceLinks
       };
 
       const payload = {
@@ -378,15 +431,33 @@ export const AcademicClassProvider = ({
         teacher: user?.teacherId,
         enableMultipleCohorts: cohorts.length > 1,
         enableTeamTeaching: false,
-        cohorts: cohorts.map(cohort => ({
-          ...cohort,
-          daysOfWeek: cohort.repeatSchedule.daysOfWeek.map(day => day.toUpperCase()),
-          repeatPattern: cohort.repeatSchedule.pattern,
-          minimumStudents: cohort.minStudents,
-          maximumStudents: cohort.maxStudents,
-          price: Number(cohort.price) || 0,
-          discount: Number(cohort.discount) || 0
-        }))
+        cohorts: cohorts.map(cohort => {
+          // Destructure to remove frontend-only fields
+          const {
+            hasFlexibleSchedule,
+            lessonSchedules,
+            repeatSchedule,
+            id,
+            _id, // Exclude _id if it's new/temp, or keep if updating? 
+            // CreateClass usually creates new cohorts. UpdateClass might update. 
+            // If _id mocks a temp ID (Date.now()), exclude it. 
+            // Given validation IsMongoId, random string fails. 
+            ...validCohort
+          } = cohort;
+
+          return {
+            ...validCohort,
+            // Map keys
+            daysOfWeek: repeatSchedule.daysOfWeek.map(day => day.toLowerCase()),
+            repeatPattern: repeatSchedule.pattern === 'twice-weekly' ? 'bi_weekly' : repeatSchedule.pattern,
+            minimumStudents: cohort.minStudents,
+            maximumStudents: cohort.maxStudents,
+            price: Number(cohort.price) || 0,
+            discount: Number(cohort.discount) || 0,
+            // Include _id only if it looks like a valid MongoID (24 chars hex) which Date.now() is not
+            ...(_id && _id.length === 24 ? { _id } : {})
+          };
+        })
       };
 
       let response;
@@ -407,7 +478,7 @@ export const AcademicClassProvider = ({
 
       toast.success('Class saved as draft');
       clearStorage(); // Clear auto-save data after successful save
-      
+
     } catch (error) {
       console.error('Error saving draft:', error);
       toast.error('Failed to save class. Please try again.');
@@ -418,13 +489,66 @@ export const AcademicClassProvider = ({
 
   const publishClass = async () => {
     setIsSubmitting(true);
-    
+
     try {
+      const {
+        status,
+        hasCohorts,
+        hasTeamTeaching,
+        objectives,
+        technicalRequirements,
+        materialsRequired,
+        assessmentMethods,
+        methodology,
+        strategy,
+        resourceLinks,
+        commitmentRequired,
+        ...validFormData
+      } = form.getValues();
+
+      // Helper to format objectives
+      const formattedObjectives = objectives && typeof objectives === 'string'
+        ? objectives.split('\n').filter(o => o.trim()).map(o => ({
+          text: o.trim(),
+          category: 'knowledge' as const
+        }))
+        : [];
+
+      // Helper to format technical requirements
+      const formattedTechReqs = technicalRequirements && typeof technicalRequirements === 'string'
+        ? technicalRequirements.split('\n').filter(r => r.trim()).map(r => ({
+          requirement: r.trim()
+        }))
+        : [];
+
+      // Helper to format lesson plans
+      const formattedLessonPlans = (validFormData.lessonPlans || []).map((plan: any, index: number) => ({
+        ...plan,
+        duration: Number(plan.duration) || 60,
+        lessonNumber: index + 1
+      }));
+
+      // Helper to format materials (extract only name as per DTO)
+      const formattedMaterials = (validFormData.materials || []).map((m: any) => ({
+        name: m.name
+      }));
+
       const formData = {
-        ...form.getValues(),
+        ...validFormData,
+        commitment: commitmentRequired,
+        objectives: formattedObjectives,
+        technicalRequirements: formattedTechReqs,
+        lessonPlans: formattedLessonPlans,
+        materials: formattedMaterials,
+        // Map file URLs
+        courseOutlineUrl: validFormData.courseOutlineFile,
+        schemeOfWorkUrl: validFormData.schemeOfWorkFile,
+        syllabusUrl: validFormData.syllabusFile,
+
         type: 'academic' as const,
         isPublished: true,
-        status: 'published' as const
+        // Excluded fields: status, hasCohorts, hasTeamTeaching, materialsRequired,
+        // assessmentMethods, methodology, strategy, resourceLinks
       };
 
       const payload = {
@@ -432,15 +556,28 @@ export const AcademicClassProvider = ({
         teacher: user?.teacherId,
         enableMultipleCohorts: cohorts.length > 1,
         enableTeamTeaching: false,
-        cohorts: cohorts.map(cohort => ({
-          ...cohort,
-          daysOfWeek: cohort.repeatSchedule.daysOfWeek.map(day => day.toUpperCase()),
-          repeatPattern: cohort.repeatSchedule.pattern,
-          minimumStudents: cohort.minStudents,
-          maximumStudents: cohort.maxStudents,
-          price: Number(cohort.price) || 0,
-          discount: Number(cohort.discount) || 0
-        }))
+        cohorts: cohorts.map(cohort => {
+          // Destructure to remove frontend-only fields
+          const {
+            hasFlexibleSchedule,
+            lessonSchedules,
+            repeatSchedule,
+            id,
+            _id,
+            ...validCohort
+          } = cohort;
+
+          return {
+            ...validCohort,
+            daysOfWeek: repeatSchedule.daysOfWeek.map(day => day.toLowerCase()),
+            repeatPattern: repeatSchedule.pattern === 'twice-weekly' ? 'bi_weekly' : repeatSchedule.pattern,
+            minimumStudents: cohort.minStudents,
+            maximumStudents: cohort.maxStudents,
+            price: Number(cohort.price) || 0,
+            discount: Number(cohort.discount) || 0,
+            ...(_id && _id.length === 24 ? { _id } : {})
+          };
+        })
       };
 
       let response;
@@ -470,11 +607,11 @@ export const AcademicClassProvider = ({
 
       toast.success('Class published successfully!');
       clearStorage(); // Clear auto-save data after successful publish
-      
+
       if (onComplete && finalClassId) {
         onComplete(formData, finalClassId);
       }
-      
+
     } catch (error) {
       console.error('Error publishing class:', error);
       toast.error('Failed to publish class. Please try again.');
@@ -515,45 +652,45 @@ export const AcademicClassProvider = ({
     form,
     isSubmitting,
     setIsSubmitting,
-    
+
     // Step management
     currentStep,
     setCurrentStep,
     goToNextStep,
     goToPrevStep,
     canProceedToStep,
-    
+
     // Cohorts management
     cohorts,
     setCohorts,
     addCohort,
     removeCohort,
     updateCohort,
-    
+
     // Lesson plans management
     addLessonPlan,
     removeLessonPlan,
     updateLessonPlan,
-    
+
     // Class management
     classId,
     setClassId,
-    
+
     // Auto-save functionality
     lastSaved,
     hasUnsavedChanges,
     saveToStorage,
     loadFromStorage,
     clearStorage,
-    
+
     // Completion tracking
     getStepCompletion,
     getOverallProgress,
-    
+
     // Submit handlers
     saveDraft,
     publishClass,
-    
+
     // Validation
     validateStep,
     getStepErrors

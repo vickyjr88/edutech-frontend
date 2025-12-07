@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { 
+import {
   Brain,
   Users,
   BarChart3,
@@ -62,15 +62,15 @@ const EnhancedClassDetailPage: React.FC<EnhancedClassDetailPageProps> = ({
 
   // Get teacher data for enhanced analytics
   const { teacherId, loading: teacherIdLoading } = useTeacherId();
-  const { summaryData, loading: summaryLoading } = useTeacherSummary({ 
-    teacherId: teacherId || '', 
-    refreshInterval: 60000 
+  const { summaryData, loading: summaryLoading } = useTeacherSummary({
+    teacherId: teacherId || '',
+    refreshInterval: 60000
   });
   const { studentsData, loading: studentsLoading } = useTeacherStudents({
     teacherId: teacherId || '',
     refreshInterval: 60000
   });
-  
+
   // Find the current class in the teacher summary data
   const currentClassSummary = summaryData?.classes?.find(
     (cls: TeacherClassSummary) => cls.classId === classData?._id || cls.classId === classData?.id
@@ -79,7 +79,7 @@ const EnhancedClassDetailPage: React.FC<EnhancedClassDetailPageProps> = ({
   // Initialize enhanced context
   useEffect(() => {
     if (teacherIdLoading || summaryLoading || studentsLoading) return;
-    
+
     setIsLoading(true);
     try {
       // Pass class data, teacher summary data, and students data to enhancement function
@@ -89,7 +89,7 @@ const EnhancedClassDetailPage: React.FC<EnhancedClassDetailPageProps> = ({
         studentsData: studentsData
       });
       setContext(enhancedContext);
-      
+
       // Set initial tab based on mode
       if (enhancedContext.currentMode === 'teaching') {
         setActiveTab('live');
@@ -109,14 +109,14 @@ const EnhancedClassDetailPage: React.FC<EnhancedClassDetailPageProps> = ({
       const interval = setInterval(() => {
         setRefreshKey(prev => prev + 1);
       }, 30000); // Refresh every 30 seconds during live teaching
-      
+
       return () => clearInterval(interval);
     }
   }, [context?.currentMode]);
 
   const handleModeChange = (newMode: TeachingMode) => {
     if (!context) return;
-    
+
     const updatedContext = {
       ...context,
       currentMode: newMode,
@@ -130,7 +130,7 @@ const EnhancedClassDetailPage: React.FC<EnhancedClassDetailPageProps> = ({
 
   const handleActionClick = (actionId: string, data?: any) => {
     console.log('Action clicked:', actionId, data);
-    
+
     // Handle specific actions
     switch (actionId) {
       case 'zoomTest':
@@ -153,12 +153,12 @@ const EnhancedClassDetailPage: React.FC<EnhancedClassDetailPageProps> = ({
         setIsLessonModalOpen(true);
         break;
       case 'manageCohorts':
-        // Navigate to cohort management
-        console.log('Opening cohort management interface');
+        // Navigate to cohort management (Class Setup - Schedule Step)
+        window.location.href = `/teacher-class-setup/${classData?._id || classData?.id}?step=schedule`;
         break;
       case 'addStudent':
         // Open student enrollment
-        console.log('Opening student enrollment interface');
+        window.location.href = `/teacher-dashboard/students?enroll=true&classId=${classData?._id || classData?.id}`;
         break;
       case 'viewObjectives':
         // Handle class objectives view - could show modal or navigate to section
@@ -169,8 +169,8 @@ const EnhancedClassDetailPage: React.FC<EnhancedClassDetailPageProps> = ({
         console.log('Duplicating class with ID:', classData?.id);
         break;
       case 'aiOptimize':
-        // AI optimization suggestions
-        console.log('Opening AI optimization suggestions');
+        // AI optimization suggestions - Switch to Analytics tab where AI features live
+        setActiveTab('analytics');
         break;
       case 'editLesson':
         // Edit specific lesson
@@ -201,11 +201,11 @@ const EnhancedClassDetailPage: React.FC<EnhancedClassDetailPageProps> = ({
 
   const handleDismissWidget = (widgetId: string) => {
     if (!context) return;
-    
-    const updatedWidgets = context.sidebarWidgets.map(widget => 
+
+    const updatedWidgets = context.sidebarWidgets.map(widget =>
       widget.id === widgetId ? { ...widget, isVisible: false } : widget
     );
-    
+
     setContext({
       ...context,
       sidebarWidgets: updatedWidgets
@@ -218,14 +218,14 @@ const EnhancedClassDetailPage: React.FC<EnhancedClassDetailPageProps> = ({
     // For now, we'll just refresh the data to show the new lesson in the timeline
     setRefreshKey(prev => prev + 1);
     setIsLessonModalOpen(false);
-    const {id,
-      sequenceNumber, 
+    const { id,
+      sequenceNumber,
       teachingNotes,
       difficultyLevel,
       starterActivity,
       plenaryActivity,
       isCompleted,
-      ...payload} = lessonPlan;
+      ...payload } = lessonPlan;
     classService.addLessonPlan(classData?._id, {
       ...payload,
       lessonNumber: sequenceNumber ?? classData.lessonPlans.length + 1
@@ -237,15 +237,15 @@ const EnhancedClassDetailPage: React.FC<EnhancedClassDetailPageProps> = ({
     try {
       // Here you would call an API to update the lesson plan
       // For now, we'll just simulate the save and refresh the data
-      
+
       // Example API call (uncomment and modify as needed):
       // await classService.updateLessonPlan(classData?._id, editingLesson.id, lessonData);
-      
+
       // Close the dialog and refresh the timeline
       setIsEditDialogOpen(false);
       setEditingLesson(null);
       setRefreshKey(prev => prev + 1);
-      
+
       console.log('Lesson updated successfully');
     } catch (error) {
       console.error('Failed to save lesson:', error);
@@ -317,10 +317,10 @@ const EnhancedClassDetailPage: React.FC<EnhancedClassDetailPageProps> = ({
                 </div>
               </div>
             </div>
-            
+
             <div className="flex items-center gap-2">
               {context.header.nextSession.zoomRoomId && (
-                <Button 
+                <Button
                   className="bg-blue-600 hover:bg-blue-700"
                   onClick={() => window.open(`https://zoom.us/j/${context.header.nextSession.zoomRoomId}`, '_blank')}
                 >
@@ -329,7 +329,7 @@ const EnhancedClassDetailPage: React.FC<EnhancedClassDetailPageProps> = ({
                   <ExternalLink className="h-3 w-3 ml-1" />
                 </Button>
               )}
-              <Button 
+              <Button
                 variant="outline"
                 onClick={() => setRefreshKey(prev => prev + 1)}
               >
@@ -347,7 +347,7 @@ const EnhancedClassDetailPage: React.FC<EnhancedClassDetailPageProps> = ({
           {/* Main Content Area */}
           <div className="lg:col-span-3 space-y-6">
             {/* Smart Header */}
-            <SmartClassHeader 
+            <SmartClassHeader
               data={context.header}
               onModeChange={handleModeChange}
               onActionClick={handleActionClick}
@@ -490,7 +490,7 @@ const EnhancedClassDetailPage: React.FC<EnhancedClassDetailPageProps> = ({
                 Teaching Mode - Real-time Analytics Enabled
               </span>
             </div>
-            
+
             <div className="flex items-center gap-2">
               <Button variant="outline" size="sm" className="text-red-600 border-red-200 bg-white hover:bg-red-50">
                 📊 Quick Poll
@@ -582,8 +582,8 @@ const EnhancedClassDetailPage: React.FC<EnhancedClassDetailPageProps> = ({
 
       {/* Click outside to close menu */}
       {showEditMenu && (
-        <div 
-          className="fixed inset-0 z-40" 
+        <div
+          className="fixed inset-0 z-40"
           onClick={() => setShowEditMenu(false)}
         />
       )}

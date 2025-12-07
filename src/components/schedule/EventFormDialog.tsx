@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { format } from "date-fns";
-import { ScheduleEvent, addEvent, updateEvent } from "./mockScheduleData";
+import { ScheduleEvent } from "@/types/calendar";
 import { toast } from "@/hooks/use-toast";
 import {
   Sheet,
@@ -20,11 +20,12 @@ interface EventFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   eventToEdit?: ScheduleEvent;
+  onSave: (event: ScheduleEvent) => Promise<void | boolean>;
 }
 
-export const EventFormDialog = ({ open, onOpenChange, eventToEdit }: EventFormDialogProps) => {
+export const EventFormDialog = ({ open, onOpenChange, eventToEdit, onSave }: EventFormDialogProps) => {
   const isEditing = !!eventToEdit;
-  
+
   const [eventData, setEventData] = useState<Partial<ScheduleEvent>>(
     eventToEdit || {
       title: "",
@@ -36,12 +37,25 @@ export const EventFormDialog = ({ open, onOpenChange, eventToEdit }: EventFormDi
       duration: 1
     }
   );
+  useEffect(() => {
+    if (open) {
+      setEventData(eventToEdit || {
+        title: "",
+        date: format(new Date(), "yyyy-MM-dd'T'HH:mm"),
+        time: "",
+        location: "",
+        description: "",
+        type: "class",
+        duration: 1
+      });
+    }
+  }, [open, eventToEdit]);
 
   const handleChange = (field: keyof ScheduleEvent, value: any) => {
     setEventData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     // Validate required fields
     if (!eventData.title || !eventData.date) {
       toast({
@@ -53,31 +67,12 @@ export const EventFormDialog = ({ open, onOpenChange, eventToEdit }: EventFormDi
     }
 
     try {
-      if (isEditing && eventToEdit) {
-        // Update existing event
-        updateEvent({
-          ...eventToEdit,
-          ...eventData,
-        });
-        toast({
-          title: "Event updated",
-          description: "Your event has been updated successfully"
-        });
-      } else {
-        // Create new event
-        addEvent(eventData as ScheduleEvent);
-        toast({
-          title: "Event created",
-          description: "Your event has been created successfully"
-        });
-      }
+      await onSave(eventData as ScheduleEvent);
       onOpenChange(false);
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "There was a problem saving your event",
-        variant: "destructive"
-      });
+      console.error(error);
+      // Toast is handled by the parent or the hook usually, but we can leave a generic one here if needed, 
+      // but ideally the parent handles success/error feedback for the API call.
     }
   };
 
@@ -160,8 +155,8 @@ export const EventFormDialog = ({ open, onOpenChange, eventToEdit }: EventFormDi
 
           <div className="grid gap-2">
             <Label>Event Type</Label>
-            <RadioGroup 
-              value={eventData.type} 
+            <RadioGroup
+              value={eventData.type}
               onValueChange={(value) => handleChange("type", value)}
               className="flex flex-wrap gap-4"
             >

@@ -6,13 +6,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Home, BookOpen, Users, Calendar, User, Settings, LogOut, Edit, Phone, MapPin, Award, CheckCircle2, CircleDashed, Video, PlusCircle, Star, UserPlus, BookText, School, UsersRound, UserRound, ChevronLeft, Loader2, DollarSign, FileText, Badge, MessageCircle } from "lucide-react";
+import { Home, BookOpen, Users, Calendar, User, Settings, LogOut, Edit, Phone, MapPin, Award, CheckCircle2, CircleDashed, Video, PlusCircle, Star, UserPlus, BookText, School, UsersRound, UserRound, ChevronLeft, Loader2, DollarSign, FileText, Badge, MessageCircle, Filter, Plus, RefreshCw, ChevronDown } from "lucide-react";
 import { useIntercom } from "@/components/support";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import TeacherProfileForm from "@/components/teacher/TeacherProfileForm";
 import TeacherProfessionalProfileForm from "@/components/teacher/TeacherProfessionalProfileForm";
 import ClassSetupForm from "@/components/teacher/ClassSetupForm";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Badge as UiBadge } from "@/components/ui/badge";
 import EnhancedClassSetup from "@/components/teacher/class-setup/EnhancedClassSetup";
 import TeacherClassView from "@/components/teacher/class-view/TeacherClassView";
 import EnhancedClassDetailPage from "@/components/class-detail/EnhancedClassDetailPage";
@@ -25,13 +27,19 @@ import TeacherOnboardingDashboard from "@/components/teacher/TeacherOnboardingDa
 import TeacherCommandCenter from "@/components/teacher/TeacherCommandCenter";
 import { ZoomDashboard } from "@/components/teacher/zoom";
 import { GoogleCalendarDashboard } from "@/components/teacher/google-calendar";
+import { NotificationSettingsTab } from "@/components/teacher/settings/NotificationSettingsTab";
+import { IntegrationsTab } from "@/components/teacher/settings/IntegrationsTab";
 import { useAuth } from "@/contexts/AuthContext";
-import {teacherService} from "@/integrations/api/services/teacher.service.ts";
-import {classService} from "@/integrations/api/services/class.service.ts";
+import { teacherService } from "@/integrations/api/services/teacher.service.ts";
+import { classService } from "@/integrations/api/services/class.service.ts";
+import { googleCalendarService } from "@/integrations/api/services/google-calendar.service";
 import { useTeacherUpcomingSessions } from "@/hooks/useTeacherUpcomingSessions";
 import { useTeacherSummary } from "@/hooks/useTeacherSummary";
 import { UpcomingSession } from "@/types/activity";
 import { TeacherSummaryResponse } from "@/types/enhanced-classes";
+import { ScheduleCalendar } from "@/components/schedule/ScheduleCalendar";
+import { ScheduleEvent } from "@/types/calendar";
+import { format } from "date-fns";
 
 interface TeacherProfileData {
   contact: {
@@ -70,7 +78,7 @@ const getWeekDays = (date: Date = new Date()) => {
   const day = startOfWeek.getDay();
   const diff = startOfWeek.getDate() - day;
   startOfWeek.setDate(diff);
-  
+
   const days = [];
   for (let i = 0; i < 7; i++) {
     const currentDay = new Date(startOfWeek);
@@ -82,25 +90,25 @@ const getWeekDays = (date: Date = new Date()) => {
 
 const formatTime = (dateStr: string) => {
   const date = new Date(dateStr);
-  return date.toLocaleTimeString('en-US', { 
-    hour: 'numeric', 
-    minute: '2-digit', 
-    hour12: true 
+  return date.toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true
   });
 };
 
 const getSessionPosition = (startTime: string, duration: number) => {
   const startHour = new Date(startTime).getHours();
   const startMinute = new Date(startTime).getMinutes();
-  
+
   // Calculate position based on 9am start (index 0)
   const baseHour = 9;
   const hourOffset = startHour - baseHour;
   const minuteOffset = startMinute / 60;
-  
+
   const top = (hourOffset + minuteOffset) * 55; // 55px per hour
   const height = (duration / 60) * 55; // duration in minutes
-  
+
   return { top, height };
 };
 
@@ -121,12 +129,12 @@ const TeacherDashboard = () => {
   const { toast } = useToast();
   const { user, signOut, isLoading: authLoading } = useAuth();
   const { show } = useIntercom();
-  
+
   // Parse the active tab from the URL
   const getTabFromPath = () => {
     const path = location.pathname;
     const searchParams = new URLSearchParams(location.search);
-    
+
     // Check for integration parameters first
     if (searchParams.get('zoom') === 'connected') {
       return "zoom";
@@ -134,7 +142,7 @@ const TeacherDashboard = () => {
     if (searchParams.get('calendar') === 'connected') {
       return "calendar";
     }
-    
+
     if (path.includes('/teacher-dashboard/classes')) {
       if (location.search.includes('create=true')) {
         return "classes";
@@ -166,24 +174,84 @@ const TeacherDashboard = () => {
   const [hasClassesSetup, setHasClassesSetup] = useState(true);
   const [showCreateClassForm, setShowCreateClassForm] = useState(location.pathname.includes('/teacher-dashboard/classes') && location.search.includes('create=true'));
   const [classes, setClasses] = useState([]);
-  
+
   // Parse class ID from URL query parameters
   const getClassIdFromUrl = () => {
     const searchParams = new URLSearchParams(location.search);
     return searchParams.get('id');
   };
-  
+
   const [selectedClass, setSelectedClass] = useState<any>(null);
   const [activeClassTab, setActiveClassTab] = useState("basic");
   const [showEnrollStudents, setShowEnrollStudents] = useState(location.pathname.includes('/teacher-dashboard/students') && location.search.includes('enroll=true'));
   const [currentWeek, setCurrentWeek] = useState(new Date());
+
+  // Schedule state
+  const [scheduleView, setScheduleView] = useState<"day" | "week" | "month">("week");
+  const [quickSchedule, setQuickSchedule] = useState({
+    classId: "",
+    type: "Regular class",
+    date: "",
+    time: "",
+    duration: 1,
+    location: "",
+    repeat: false
+  });
+  const [isScheduling, setIsScheduling] = useState(false);
+
+  // Schedule filters
+  const [selectedEventTypes, setSelectedEventTypes] = useState<string[]>(['Classes', 'Hangouts', 'Birthdays', 'Achievements', 'Assignments']);
+
+  const handleEventTypeToggle = (type: string) => {
+    setSelectedEventTypes(prev =>
+      prev.includes(type)
+        ? prev.filter(t => t !== type)
+        : [...prev, type]
+    );
+  };
+
+  const getEventTypeColor = (type: string, isSelected: boolean) => {
+    if (!isSelected) return "bg-gray-100 text-gray-500 hover:bg-gray-200 border-transparent";
+    switch (type) {
+      case 'Classes': return "bg-blue-100 text-blue-700 border-blue-200";
+      case 'Hangouts': return "bg-green-100 text-green-700 border-green-200";
+      case 'Birthdays': return "bg-amber-100 text-amber-700 border-amber-200";
+      case 'Achievements': return "bg-purple-100 text-purple-700 border-purple-200";
+      case 'Assignments': return "bg-rose-100 text-rose-700 border-rose-200";
+      default: return "bg-gray-100 text-gray-700";
+    }
+  };
 
   // Teacher data hooks for schedule - only call when user is loaded and has teacherId
   const shouldFetchData = !authLoading && !!user?.teacherId;
   const { upcomingSessions, loading: sessionsLoading, error: sessionsError, refetch: refetchSessions } = useTeacherUpcomingSessions({
     teacherId: shouldFetchData ? user.teacherId : '',
   });
-  
+
+  // Map upcoming sessions to ScheduleEvents
+  // Map upcoming sessions to ScheduleEvents and apply filtering
+  const scheduleEvents: ScheduleEvent[] = upcomingSessions
+    .map(session => ({
+      id: session.id || session._id || Math.random().toString(),
+      title: session.title || session.className || "Class",
+      date: new Date(session.startTime),
+      time: format(new Date(session.startTime), "HH:mm"),
+      location: session.location || "Online",
+      description: session.topic,
+      type: (session.type as any) || "class",
+      duration: session.duration || 60,
+    }))
+    .filter(event => {
+      const typeMapping: Record<string, string> = {
+        'Classes': 'class',
+        'Hangouts': 'hangout',
+        'Birthdays': 'birthday',
+        'Achievements': 'achievement',
+        'Assignments': 'assignment'
+      };
+      return selectedEventTypes.some(t => typeMapping[t] === event.type);
+    });
+
   const { summaryData, loading: summaryLoading, error: summaryError, refetch: refetchSummary } = useTeacherSummary({
     teacherId: shouldFetchData ? user.teacherId : '',
   });
@@ -191,16 +259,47 @@ const TeacherDashboard = () => {
   // Prepare schedule data
   const weekDays = getWeekDays(currentWeek);
   const weekSessions = upcomingSessions.filter(session => {
+    // Basic type filtering - assume all sessions are Classes for now
+    if (!selectedEventTypes.includes('Classes')) return false;
+
     const sessionDate = new Date(session.startTime);
-    return weekDays.some(day => 
+    return weekDays.some(day =>
       day.toDateString() === sessionDate.toDateString()
     );
   });
 
+  const handleGoogleSync = async () => {
+    toast({ title: "Sync initiated", description: "Checking Google Calendar connection..." });
+    try {
+      const { data: statusData, error: statusError } = await googleCalendarService.getConnectionStatus();
+
+      if (statusError) {
+        throw statusError;
+      }
+
+      if (statusData?.connected) {
+        toast({ title: "Synced", description: "Schedule updated." });
+        refetchSessions();
+      } else {
+        toast({ title: "Connecting", description: "Redirecting to Google Calendar authorization..." });
+        const { data: authData, error: authError } = await googleCalendarService.getAuthUrl();
+
+        if (authError) throw authError;
+
+        if (authData?.authUrl) {
+          window.location.href = authData.authUrl;
+        }
+      }
+    } catch (error) {
+      console.error("Sync error:", error);
+      toast({ title: "Error", description: "Failed to sync with Google Calendar.", variant: "destructive" });
+    }
+  };
+
   // Update the active tab when URL changes
   useEffect(() => {
     setActiveTab(getTabFromPath());
-    
+
     // Load class details from URL if viewing a class
     if (getTabFromPath() === "viewClass") {
       const classId = getClassIdFromUrl();
@@ -266,7 +365,7 @@ const TeacherDashboard = () => {
       setIsLoading(false);
       return;
     }
-    
+
     setIsLoading(true);
     try {
 
@@ -280,7 +379,7 @@ const TeacherDashboard = () => {
           email: string;
           alternativePhone: string;
         };
-        
+
         type LocationType = {
           address: string;
           apartment: string;
@@ -293,25 +392,25 @@ const TeacherDashboard = () => {
             longitude: number;
           };
         };
-        
+
         type NextOfKinType = {
           name: string;
           relationship: string;
           phone: string;
         };
-        
+
         type CertificationType = {
           isCertified: boolean;
           details: string;
           year: string;
           institution: string;
         };
-        
+
         const contactData = data.contact as unknown as ContactType;
         const locationData = data.location as unknown as LocationType;
         const nextOfKinData = data.next_of_kin as unknown as NextOfKinType;
         const certificationData = data.certification as unknown as CertificationType;
-        
+
         const formattedData: TeacherProfileData = {
           contact: {
             phone: contactData?.phone || "",
@@ -342,7 +441,7 @@ const TeacherDashboard = () => {
             institution: certificationData?.institution || "",
           },
         };
-        
+
         setProfileData(formattedData);
         setHasProfile(true);
       }
@@ -357,12 +456,12 @@ const TeacherDashboard = () => {
 
   const handleProfileSubmit = async (profileData: TeacherProfileData) => {
     setIsSubmitting(true);
-    
+
     try {
       if (!user) throw new Error("User not authenticated");
 
       const { error } = await teacherService.updateProfile(user.teacherId,
-     {
+        {
           contact: profileData.contact,
           location: profileData.location,
           nextOfKin: profileData.nextOfKin,
@@ -373,18 +472,18 @@ const TeacherDashboard = () => {
 
       toast({
         title: hasProfile ? "Profile updated" : "Profile created",
-        description: hasProfile 
-          ? "Your teacher profile has been successfully updated." 
+        description: hasProfile
+          ? "Your teacher profile has been successfully updated."
           : "Your teacher profile has been successfully created.",
       });
-      
+
       setHasProfile(true);
       setProfileData(profileData);
       setIsEditing(false);
-      
+
       // Navigate to dashboard instead of setting state
       navigate("/teacher-dashboard");
-      
+
       fetchTeacherProfile();
     } catch (err: any) {
       console.error("Error saving profile:", err);
@@ -402,18 +501,18 @@ const TeacherDashboard = () => {
     if (!window.confirm("Are you sure you want to delete your profile? This action cannot be undone.")) {
       return;
     }
-    
+
     try {
       if (!user) throw new Error("User not authenticated");
-      
+
       const { error } = await teacherService.deleteProfile(user.teacherId);
       if (error) throw error;
-      
+
       toast({
         title: "Profile deleted",
         description: "Your teacher profile has been successfully deleted.",
       });
-      
+
       setHasProfile(false);
       setProfileData(null);
       setActiveTab("dashboard");
@@ -438,11 +537,11 @@ const TeacherDashboard = () => {
   };
 
   const [isProfessionalProfileLoading, setIsProfessionalProfileLoading] = useState(false);
-  
+
   const handleCompleteProfessionalProfile = () => {
     // Start loading animation
     setIsProfessionalProfileLoading(true);
-    
+
     // Simulate loading for a short period to show the animation
     setTimeout(() => {
       navigate("/teacher-dashboard/settings?professional=true");
@@ -485,7 +584,7 @@ const TeacherDashboard = () => {
   const handleCreateClass = () => {
     // Navigate to the dedicated class setup page instead of showing the form inline
     navigate("/teacher-class-setup");
-    
+
     // Keeping the old behavior as a fallback option
     // navigate("/teacher-dashboard/classes?create=true");
   };
@@ -495,7 +594,7 @@ const TeacherDashboard = () => {
       // Refresh classes from API instead of manually adding to the array
       fetchTeacherClasses();
     }
-    
+
     toast({
       title: "Class created successfully",
       description: "Your new class is now ready for students to enroll.",
@@ -509,12 +608,12 @@ const TeacherDashboard = () => {
       setIsLoading(false);
       return;
     }
-    
+
     setIsLoading(true);
     try {
-      
+
       const { data, error } = await classService.getTeacherClasses(user.teacherId);
-      
+
       if (error) {
         console.error("Error fetching teacher classes:", error);
         toast({
@@ -524,8 +623,10 @@ const TeacherDashboard = () => {
         });
       } else if (data) {
         console.log("Loaded teacher classes:", data);
-        setClasses(data);
-        
+        // Handle response where data might be wrapped in an object (as seen in recent API updates)
+        const classesList = Array.isArray(data) ? data : (data as any).classes || [];
+        setClasses(classesList);
+
         // Check if we have classes to determine setup status
         setHasClassesSetup(true);
       }
@@ -542,11 +643,11 @@ const TeacherDashboard = () => {
 
   const handleViewClass = (classItem: any) => {
     const classId = classItem._id || classItem.id;
-    
+
     // Option 1: Continue using the query parameter approach
     navigate(`/teacher-dashboard/classes?id=${classId}`);
     setActiveClassTab("basic");
-    
+
     // Option 2 (alternative): Use the dedicated route for the enhanced view
     // This would completely bypass the TeacherDashboard component's viewClass tab
     // navigate(`/teacher-class/${classId}`);
@@ -568,7 +669,7 @@ const TeacherDashboard = () => {
   const handleRequestReviews = () => {
     // Navigate to the students page
     navigate(`/teacher-dashboard/students`);
-    
+
     // Set a short timeout to allow the page to render
     setTimeout(() => {
       // Find and click the "Invite & Enroll" tab (which has value="invite")
@@ -582,15 +683,15 @@ const TeacherDashboard = () => {
   const handleDeleteClass = async (classItem: any) => {
     const classId = classItem._id || classItem.id;
     const className = classItem.title;
-    
+
     // Confirm deletion
     if (!confirm(`Are you sure you want to delete "${className}"? This action cannot be undone.`)) {
       return;
     }
-    
+
     try {
       const { error } = await classService.delete(classId);
-      
+
       if (error) {
         toast({
           title: "Error deleting class",
@@ -599,7 +700,7 @@ const TeacherDashboard = () => {
         });
         return;
       }
-      
+
       if (user && !authLoading) {
         // Refresh the classes list
         await fetchTeacherClasses();
@@ -628,7 +729,7 @@ const TeacherDashboard = () => {
       setIsLoadingProfile(false);
       return;
     }
-    
+
     setIsLoadingProfile(true);
     try {
       const { data, error } = await teacherService.getProfileById(user.teacherId);
@@ -642,6 +743,83 @@ const TeacherDashboard = () => {
     }
   };
 
+  const handleQuickSchedule = async () => {
+    if (!quickSchedule.classId || !quickSchedule.date || !quickSchedule.time) {
+      toast({
+        title: "Missing fields",
+        description: "Please fill in all required fields (Class, Date, Time).",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsScheduling(true);
+    try {
+      // 1. Fetch class details to ensure we have the correct ID and context
+      const { data: selectedClass, error } = await classService.getById(quickSchedule.classId);
+      if (error || !selectedClass) throw new Error(error?.message || "Class not found");
+
+      // 2. Construct Date object
+      const startDateTime = new Date(`${quickSchedule.date}T${quickSchedule.time}`);
+      const endDateTime = new Date(startDateTime.getTime() + quickSchedule.duration * 60 * 60 * 1000);
+
+      // 3. Prepare DaySchedule
+      const dayOfWeek = format(startDateTime, 'EEEE').toLowerCase();
+
+      // 4. Create a new "Session Cohort"
+      const newCohortData = {
+        name: `Session: ${quickSchedule.type} - ${format(startDateTime, 'MMM d')}`,
+        startDate: startDateTime,
+        endDate: endDateTime, // same day
+        repeatPattern: "custom",
+        weeklySchedule: [{
+          dayOfWeek: dayOfWeek,
+          startTime: quickSchedule.time,
+          endTime: format(endDateTime, 'HH:mm'),
+          isActive: true
+        }],
+        enrollment: {
+          minimumStudents: 1,
+          maximumStudents: 50, // default
+          currentStudents: 0
+        },
+        pricing: {
+          pricePerLesson: 0,
+          totalLessons: 1
+        },
+        classDates: [startDateTime],
+        createdBy: user?.teacherId
+      };
+
+      await classService.addCohort(selectedClass._id || (selectedClass as any).id, { cohort: newCohortData });
+
+      toast({
+        title: "Session Scheduled",
+        description: "The class session has been successfully added to your schedule.",
+      });
+
+      // Refresh data
+      refetchSessions();
+
+      // Reset form
+      setQuickSchedule({
+        ...quickSchedule,
+        date: "",
+        time: ""
+      });
+
+    } catch (error: any) {
+      console.error("Scheduling error:", error);
+      toast({
+        title: "Scheduling Failed",
+        description: error.message || "Could not add session. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsScheduling(false);
+    }
+  };
+
   const renderProfileView = () => {
     return (
       <div className="space-y-6">
@@ -650,9 +828,9 @@ const TeacherDashboard = () => {
           <CardHeader className="flex flex-row items-center space-y-0 pb-4">
             <div className="flex items-center space-x-4 flex-1">
               {comprehensiveProfile?.user?._signedProfileImage || comprehensiveProfile?._signedProfileImage ? (
-                <img 
-                  src={comprehensiveProfile?.user?._signedProfileImage || comprehensiveProfile?._signedProfileImage} 
-                  alt="Profile" 
+                <img
+                  src={comprehensiveProfile?.user?._signedProfileImage || comprehensiveProfile?._signedProfileImage}
+                  alt="Profile"
                   className="w-16 h-16 rounded-full object-cover border-2 border-gray-200"
                 />
               ) : (
@@ -720,8 +898,8 @@ const TeacherDashboard = () => {
                   <div className="aspect-video bg-gray-100 rounded-md overflow-hidden">
                     {comprehensiveProfile.introVideoUrl.includes('youtube.com') || comprehensiveProfile.introVideoUrl.includes('youtu.be') ? (
                       <iframe
-                        src={comprehensiveProfile.introVideoUrl.includes('embed') ? 
-                          comprehensiveProfile.introVideoUrl : 
+                        src={comprehensiveProfile.introVideoUrl.includes('embed') ?
+                          comprehensiveProfile.introVideoUrl :
                           `https://www.youtube.com/embed/${comprehensiveProfile.introVideoUrl.split('v=')[1]?.split('&')[0] || comprehensiveProfile.introVideoUrl.split('youtu.be/')[1]?.split('?')[0]}`
                         }
                         title="Introduction Video"
@@ -734,9 +912,9 @@ const TeacherDashboard = () => {
                       <div className="flex items-center justify-center h-full">
                         <div className="text-center">
                           <Video className="h-8 w-8 mx-auto text-gray-400 mb-2" />
-                          <a 
-                            href={comprehensiveProfile.introVideoUrl} 
-                            target="_blank" 
+                          <a
+                            href={comprehensiveProfile.introVideoUrl}
+                            target="_blank"
                             rel="noopener noreferrer"
                             className="text-blue-600 hover:underline"
                           >
@@ -859,11 +1037,11 @@ const TeacherDashboard = () => {
                     {comprehensiveProfile.education.slice(0, 3).map((edu: any, index: number) => (
                       <div key={index} className="border-l-2 border-blue-200 pl-3">
                         <p className="font-medium">
-                          {edu.degree || 'Degree'} 
+                          {edu.degree || 'Degree'}
                           {edu.fieldOfStudy && ` in ${edu.fieldOfStudy}`}
                         </p>
                         <p className="text-sm text-gray-600">
-                          {edu.institution || 'Institution'} 
+                          {edu.institution || 'Institution'}
                           {edu.year && ` • ${edu.year}`}
                         </p>
                       </div>
@@ -871,7 +1049,7 @@ const TeacherDashboard = () => {
                   </div>
                 </div>
               )}
-              
+
               {comprehensiveProfile?.experience?.length > 0 && (
                 <div>
                   <h4 className="font-medium mb-2">Teaching Experience</h4>
@@ -880,7 +1058,7 @@ const TeacherDashboard = () => {
                       <div key={index} className="border-l-2 border-green-200 pl-3">
                         <p className="font-medium">{exp.position || exp.title || 'Position'}</p>
                         <p className="text-sm text-gray-600">
-                          {exp.institution || exp.company || 'Institution'} 
+                          {exp.institution || exp.company || 'Institution'}
                           {(exp.duration || exp.years) && ` • ${exp.duration || exp.years}`}
                         </p>
                       </div>
@@ -915,14 +1093,14 @@ const TeacherDashboard = () => {
                   </div>
                 </div>
               )}
-              
+
               {comprehensiveProfile?.languages?.length > 0 && (
                 <div>
                   <h4 className="font-medium mb-2">Languages</h4>
                   <div className="flex flex-wrap gap-2">
                     {comprehensiveProfile.languages.slice(0, 4).map((lang: any, index: number) => (
                       <span key={index} className="px-2 py-1 bg-green-100 text-green-800 rounded-md text-sm">
-                        {typeof lang === 'string' ? lang : (lang.language || lang.name || 'Language')} 
+                        {typeof lang === 'string' ? lang : (lang.language || lang.name || 'Language')}
                         {lang.proficiency && ` (${lang.proficiency})`}
                       </span>
                     ))}
@@ -936,179 +1114,57 @@ const TeacherDashboard = () => {
     );
   };
 
-  const renderIntegrationsView = () => {
-    return (
-      <Card>
-        <CardHeader className="flex flex-row items-start justify-between">
-          <div>
-            <CardTitle>Integrations</CardTitle>
-            <CardDescription>
-              Connect your teaching tools and services
-            </CardDescription>
-          </div>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="flex items-center"
-            onClick={() => navigate("/teacher-dashboard/zoom")}
-          >
-            <Video className="mr-2 h-4 w-4" />
-            Manage Zoom
-          </Button>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Zoom Integration */}
-          <div className="border rounded-lg p-4 bg-white">
-            <div className="flex items-start">
-              <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center mr-4">
-                <Video className="h-5 w-5 text-blue-600" />
-              </div>
-              <div className="flex-1">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h3 className="font-medium">Zoom</h3>
-                    <p className="text-sm text-gray-500 mt-1">
-                      Host virtual classes and meetings
-                    </p>
-                  </div>
-                  <Badge className="bg-green-100 text-green-800 border-0">Connected</Badge>
-                </div>
-                <div className="mt-3 text-sm">
-                  <p className="text-gray-600">
-                    Your Zoom account is connected and ready to use for scheduling online classes.
-                  </p>
-                </div>
-                <div className="mt-3 flex gap-2">
-                  <Button size="sm" variant="outline" onClick={() => navigate("/teacher-dashboard/zoom")}>
-                    Configure
-                  </Button>
-                  <Button size="sm" variant="outline" className="text-blue-600">
-                    Create Meeting
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          {/* Google Calendar Integration */}
-          <div className="border rounded-lg p-4 bg-white">
-            <div className="flex items-start">
-              <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center mr-4">
-                <Calendar className="h-5 w-5 text-green-600" />
-              </div>
-              <div className="flex-1">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h3 className="font-medium">Google Calendar</h3>
-                    <p className="text-sm text-gray-500 mt-1">
-                      Sync your class schedule
-                    </p>
-                  </div>
-                  <Badge className="bg-gray-100 text-gray-800 border-0">Not Connected</Badge>
-                </div>
-                <div className="mt-3 text-sm">
-                  <p className="text-gray-600">
-                    Connect your Google Calendar to automatically sync class schedules and receive reminders.
-                  </p>
-                </div>
-                <div className="mt-3">
-                  <Button size="sm">
-                    Connect Calendar
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          
-          {/* Google Drive Integration */}
-          <div className="border rounded-lg p-4 bg-white">
-            <div className="flex items-start">
-              <div className="h-10 w-10 rounded-full bg-yellow-100 flex items-center justify-center mr-4">
-                <FileText className="h-5 w-5 text-yellow-600" />
-              </div>
-              <div className="flex-1">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h3 className="font-medium">Google Drive</h3>
-                    <p className="text-sm text-gray-500 mt-1">
-                      Manage and share class materials
-                    </p>
-                  </div>
-                  <Badge className="bg-gray-100 text-gray-800 border-0">Not Connected</Badge>
-                </div>
-                <div className="mt-3 text-sm">
-                  <p className="text-gray-600">
-                    Connect your Google Drive to easily upload, store, and share teaching materials with your students.
-                  </p>
-                </div>
-                <div className="mt-3">
-                  <Button size="sm">
-                    Connect Drive
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-        </CardContent>
-      </Card>
-    );
-  };
+
 
   return (
     <div className="flex min-h-screen bg-gray-50">
       <aside className="hidden md:flex flex-col w-64 bg-white border-r border-gray-200">
         <div className="p-6">
           <Link to="/">
-            <img 
-              src="/lovable-uploads/15671e94-4ac9-490c-95b6-aa4fe6bbc23c.png" 
-              alt="Kidato Logo" 
+            <img
+              src="/lovable-uploads/15671e94-4ac9-490c-95b6-aa4fe6bbc23c.png"
+              alt="Kidato Logo"
               className="h-8"
             />
           </Link>
         </div>
         <nav className="flex-1 px-4 py-6 space-y-1">
-          <Link 
+          <Link
             to="/teacher-dashboard"
-            className={`flex items-center px-4 py-3 text-sm font-medium rounded-md w-full text-left ${
-              activeTab === "dashboard" 
-                ? "bg-kidato-light-blue text-kidato-purple" 
-                : "text-gray-700 hover:bg-gray-100"
-            }`}
+            className={`flex items-center px-4 py-3 text-sm font-medium rounded-md w-full text-left ${activeTab === "dashboard"
+              ? "bg-kidato-light-blue text-kidato-purple"
+              : "text-gray-700 hover:bg-gray-100"
+              }`}
           >
             <Home className="mr-3 h-5 w-5" />
             Dashboard
           </Link>
-          <Link 
+          <Link
             to="/teacher-dashboard/classes"
-            className={`flex items-center px-4 py-3 text-sm font-medium rounded-md w-full text-left ${
-              activeTab === "classes" || activeTab === "viewClass"
-                ? "bg-kidato-light-blue text-kidato-purple" 
-                : "text-gray-700 hover:bg-gray-100"
-            }`}
+            className={`flex items-center px-4 py-3 text-sm font-medium rounded-md w-full text-left ${activeTab === "classes" || activeTab === "viewClass"
+              ? "bg-kidato-light-blue text-kidato-purple"
+              : "text-gray-700 hover:bg-gray-100"
+              }`}
           >
             <BookOpen className="mr-3 h-5 w-5" />
             My Classes
           </Link>
-          <Link 
+          <Link
             to="/teacher-dashboard/students"
-            className={`flex items-center px-4 py-3 text-sm font-medium rounded-md w-full text-left ${
-              activeTab === "students" || activeTab === "enrollment"
-                ? "bg-kidato-light-blue text-kidato-purple" 
-                : "text-gray-700 hover:bg-gray-100"
-            }`}
+            className={`flex items-center px-4 py-3 text-sm font-medium rounded-md w-full text-left ${activeTab === "students" || activeTab === "enrollment"
+              ? "bg-kidato-light-blue text-kidato-purple"
+              : "text-gray-700 hover:bg-gray-100"
+              }`}
           >
             <Users className="mr-3 h-5 w-5" />
             Students
           </Link>
-          <Link 
+          <Link
             to="/teacher-dashboard/schedule"
-            className={`flex items-center px-4 py-3 text-sm font-medium rounded-md w-full text-left ${
-              activeTab === "schedule" 
-                ? "bg-kidato-light-blue text-kidato-purple" 
-                : "text-gray-700 hover:bg-gray-100"
-            }`}
+            className={`flex items-center px-4 py-3 text-sm font-medium rounded-md w-full text-left ${activeTab === "schedule"
+              ? "bg-kidato-light-blue text-kidato-purple"
+              : "text-gray-700 hover:bg-gray-100"
+              }`}
           >
             <Calendar className="mr-3 h-5 w-5" />
             Schedule
@@ -1118,36 +1174,34 @@ const TeacherDashboard = () => {
             const hasEnrolledStudents = summaryData?.classes?.some(classItem => {
               return (classItem.enrolledStudents || 0) > 0;
             }) || false;
-            
+
             return hasEnrolledStudents && (
-              <Link 
+              <Link
                 to="/teacher-earnings"
-                className={`flex items-center px-4 py-3 text-sm font-medium rounded-md w-full text-left ${
-                  activeTab === "earnings" 
-                    ? "bg-kidato-light-blue text-kidato-purple" 
-                    : "text-gray-700 hover:bg-gray-100"
-                }`}
+                className={`flex items-center px-4 py-3 text-sm font-medium rounded-md w-full text-left ${activeTab === "earnings"
+                  ? "bg-kidato-light-blue text-kidato-purple"
+                  : "text-gray-700 hover:bg-gray-100"
+                  }`}
               >
                 <DollarSign className="mr-3 h-5 w-5" />
                 Earnings
               </Link>
             );
           })()}
-          <Link 
+          <Link
             to="/teacher-dashboard/settings"
-            className={`flex items-center px-4 py-3 text-sm font-medium rounded-md w-full text-left ${
-              activeTab === "settings" 
-                ? "bg-kidato-light-blue text-kidato-purple" 
-                : "text-gray-700 hover:bg-gray-100"
-            }`}
+            className={`flex items-center px-4 py-3 text-sm font-medium rounded-md w-full text-left ${activeTab === "settings"
+              ? "bg-kidato-light-blue text-kidato-purple"
+              : "text-gray-700 hover:bg-gray-100"
+              }`}
           >
             <Settings className="mr-3 h-5 w-5" />
             Settings
           </Link>
         </nav>
         <div className="p-4 border-t border-gray-200">
-          <Button 
-            variant="ghost" 
+          <Button
+            variant="ghost"
             className="w-full flex items-center justify-center"
             onClick={handleSignOut}
           >
@@ -1162,14 +1216,14 @@ const TeacherDashboard = () => {
           <div className="px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
             <h1 className="text-xl font-semibold text-gray-900">
               {activeTab === "dashboard" ? "" :
-               activeTab === "classes" ? (showCreateClassForm ? "Create New Class" : "") :
-               activeTab === "viewClass" ? "Class Details" :
-               activeTab === "students" ? "" :
-               activeTab === "enrollment" ? "Enroll Students" :
-               activeTab === "schedule" ? "Schedule" : 
-               isEditing ? "Update Your Profile" : 
-               showProfessionalForm ? "Complete Professional Profile" :
-               showClassSetupForm ? "Set Up Class Settings" : "Settings"}
+                activeTab === "classes" ? (showCreateClassForm ? "Create New Class" : "") :
+                  activeTab === "viewClass" ? "Class Details" :
+                    activeTab === "students" ? "" :
+                      activeTab === "enrollment" ? "Enroll Students" :
+                        activeTab === "schedule" ? "Schedule" :
+                          isEditing ? "Update Your Profile" :
+                            showProfessionalForm ? "Complete Professional Profile" :
+                              showClassSetupForm ? "Set Up Class Settings" : "Settings"}
             </h1>
             <div className="flex md:hidden">
               <Button variant="outline" size="sm">
@@ -1248,7 +1302,7 @@ const TeacherDashboard = () => {
                       <TabsTrigger value="integrations">Integrations</TabsTrigger>
                       <TabsTrigger value="notifications">Notifications</TabsTrigger>
                     </TabsList>
-                    
+
                     <TabsContent value="profile" className="space-y-4">
                       {isLoadingProfile ? (
                         <div className="flex items-center justify-center py-8">
@@ -1263,7 +1317,7 @@ const TeacherDashboard = () => {
                             <p className="text-sm text-gray-500 mb-6 max-w-md mx-auto">
                               Complete your teacher profile to be visible to students looking for tutors.
                             </p>
-                            <Button 
+                            <Button
                               onClick={handleEditProfile}
                               className="flex items-center gap-2 mx-auto"
                             >
@@ -1276,7 +1330,7 @@ const TeacherDashboard = () => {
                         <>
                           {renderProfileView()}
                           <div className="flex justify-end gap-3 mt-4">
-                            <Button 
+                            <Button
                               onClick={() => navigate("/teacher-profile")}
                               variant="outline"
                               className="flex items-center gap-2"
@@ -1284,7 +1338,7 @@ const TeacherDashboard = () => {
                               <User className="h-4 w-4" />
                               View Full Profile
                             </Button>
-                            <Button 
+                            <Button
                               onClick={handleEditProfile}
                               className="flex items-center gap-2"
                             >
@@ -1295,81 +1349,13 @@ const TeacherDashboard = () => {
                         </>
                       )}
                     </TabsContent>
-                    
+
                     <TabsContent value="integrations">
-                      {renderIntegrationsView()}
+                      <IntegrationsTab />
                     </TabsContent>
-                    
+
                     <TabsContent value="notifications">
-                      <Card>
-                        <CardHeader>
-                          <CardTitle>Notification Preferences</CardTitle>
-                          <CardDescription>
-                            Configure how and when you receive notifications
-                          </CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                          <div className="border rounded-md p-4">
-                            <div className="flex items-center justify-between mb-3">
-                              <div>
-                                <h3 className="font-medium">Email Notifications</h3>
-                                <p className="text-sm text-gray-500">Get notified about important updates via email</p>
-                              </div>
-                              <Switch id="email-notifications" />
-                            </div>
-                          </div>
-                          
-                          <div className="border rounded-md p-4">
-                            <div className="flex items-center justify-between mb-3">
-                              <div>
-                                <h3 className="font-medium">SMS Notifications</h3>
-                                <p className="text-sm text-gray-500">Receive text messages for urgent updates</p>
-                              </div>
-                              <Switch id="sms-notifications" />
-                            </div>
-                          </div>
-                          
-                          <div className="border rounded-md p-4">
-                            <div className="flex items-center justify-between mb-3">
-                              <div>
-                                <h3 className="font-medium">In-App Notifications</h3>
-                                <p className="text-sm text-gray-500">Show notifications within the platform</p>
-                              </div>
-                              <Switch id="in-app-notifications" defaultChecked />
-                            </div>
-                          </div>
-                          
-                          <div className="mt-6">
-                            <h3 className="font-medium mb-3">Notification Categories</h3>
-                            <div className="space-y-3">
-                              <div className="flex items-center space-x-2">
-                                <Checkbox id="notify-students" defaultChecked />
-                                <Label htmlFor="notify-students">Student enrollment updates</Label>
-                              </div>
-                              <div className="flex items-center space-x-2">
-                                <Checkbox id="notify-classes" defaultChecked />
-                                <Label htmlFor="notify-classes">Class schedule changes</Label>
-                              </div>
-                              <div className="flex items-center space-x-2">
-                                <Checkbox id="notify-payments" defaultChecked />
-                                <Label htmlFor="notify-payments">Payment notifications</Label>
-                              </div>
-                              <div className="flex items-center space-x-2">
-                                <Checkbox id="notify-messages" defaultChecked />
-                                <Label htmlFor="notify-messages">New messages</Label>
-                              </div>
-                              <div className="flex items-center space-x-2">
-                                <Checkbox id="notify-reviews" defaultChecked />
-                                <Label htmlFor="notify-reviews">Reviews and feedback</Label>
-                              </div>
-                              <div className="flex items-center space-x-2">
-                                <Checkbox id="notify-system" defaultChecked />
-                                <Label htmlFor="notify-system">System updates and maintenance</Label>
-                              </div>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
+                      <NotificationSettingsTab />
                     </TabsContent>
                   </Tabs>
                 </CardContent>
@@ -1492,7 +1478,7 @@ const TeacherDashboard = () => {
                       </div>
                     </div>
                   )}
-                  
+
                   {/* Error State */}
                   {(sessionsError || summaryError) && (
                     <div className="bg-red-50 border border-red-200 rounded-lg p-4">
@@ -1505,9 +1491,9 @@ const TeacherDashboard = () => {
                         <div>
                           <p className="text-sm font-medium text-red-800">Unable to load schedule data</p>
                           <p className="text-xs text-red-600">{sessionsError || summaryError}</p>
-                          <Button 
-                            size="sm" 
-                            variant="outline" 
+                          <Button
+                            size="sm"
+                            variant="outline"
                             className="mt-2 h-7 text-xs border-red-300 text-red-700 hover:bg-red-50"
                             onClick={() => {
                               refetchSessions();
@@ -1520,6 +1506,46 @@ const TeacherDashboard = () => {
                       </div>
                     </div>
                   )}
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                    <div className="flex items-center gap-2">
+                      <Button variant="outline" className="gap-2 bg-white" onClick={handleGoogleSync}>
+                        <RefreshCw className="h-4 w-4" />
+                        Sync with Google Calendar
+                      </Button>
+
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button variant="outline" className="gap-2 bg-white">
+                            <Filter className="h-4 w-4" />
+                            Filter
+                            <ChevronDown className="h-4 w-4 opacity-50" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-56" align="start">
+                          <div className="space-y-2">
+                            <h4 className="font-medium text-sm text-gray-900 border-b pb-2 mb-2">Event Types</h4>
+                            <div className="flex flex-wrap gap-2">
+                              {['Classes', 'Hangouts', 'Birthdays', 'Achievements', 'Assignments'].map(type => (
+                                <UiBadge
+                                  key={type}
+                                  variant="outline"
+                                  className={`cursor-pointer transition-colors border ${getEventTypeColor(type, selectedEventTypes.includes(type))}`}
+                                  onClick={() => handleEventTypeToggle(type)}
+                                >
+                                  {type}
+                                </UiBadge>
+                              ))}
+                            </div>
+                          </div>
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+
+                    <Button className="bg-indigo-600 hover:bg-indigo-700 gap-2">
+                      <Plus className="h-4 w-4" />
+                      Add Event
+                    </Button>
+                  </div>
                   <div className="flex flex-col lg:flex-row gap-6">
                     {/* Main calendar section */}
                     <div className="lg:w-2/3">
@@ -1535,703 +1561,649 @@ const TeacherDashboard = () => {
                             </CardDescription>
                           </div>
                           <div className="flex gap-2">
-                            <Button size="sm" variant="outline" className="text-xs">
+                            <Button
+                              size="sm"
+                              variant={scheduleView === 'day' ? "default" : "outline"}
+                              className={scheduleView === 'day' ? "bg-sky-600 text-xs" : "text-xs"}
+                              onClick={() => setScheduleView('day')}
+                            >
                               Day
                             </Button>
-                            <Button size="sm" variant="default" className="bg-sky-600 text-xs">
+                            <Button
+                              size="sm"
+                              variant={scheduleView === 'week' ? "default" : "outline"}
+                              className={scheduleView === 'week' ? "bg-sky-600 text-xs" : "text-xs"}
+                              onClick={() => setScheduleView('week')}
+                            >
                               Week
                             </Button>
-                            <Button size="sm" variant="outline" className="text-xs">
+                            <Button
+                              size="sm"
+                              variant={scheduleView === 'month' ? "default" : "outline"}
+                              className={scheduleView === 'month' ? "bg-sky-600 text-xs" : "text-xs"}
+                              onClick={() => setScheduleView('month')}
+                            >
                               Month
                             </Button>
                           </div>
                         </CardHeader>
                         <CardContent>
                           <div className="mt-2">
-                            {/* Calendar week view */}
-                            <div className="border rounded-md overflow-hidden">
-                              {/* Week navigation */}
-                              <div className="flex items-center justify-between px-4 py-2 bg-gray-50 border-b">
-                                <div className="flex items-center space-x-2">
-                                  <Button 
-                                    variant="ghost" 
-                                    size="icon" 
-                                    className="h-8 w-8"
-                                    onClick={() => {
-                                      const newWeek = new Date(currentWeek);
-                                      newWeek.setDate(currentWeek.getDate() - 7);
-                                      setCurrentWeek(newWeek);
-                                    }}
-                                  >
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-600">
-                                      <path d="m15 18-6-6 6-6"/>
-                                    </svg>
-                                  </Button>
-                                  <Button 
-                                    variant="ghost" 
-                                    size="sm" 
-                                    className="h-8 text-xs"
-                                    onClick={() => setCurrentWeek(new Date())}
-                                  >
-                                    Today
-                                  </Button>
-                                  <Button 
-                                    variant="ghost" 
-                                    size="icon" 
-                                    className="h-8 w-8"
-                                    onClick={() => {
-                                      const newWeek = new Date(currentWeek);
-                                      newWeek.setDate(currentWeek.getDate() + 7);
-                                      setCurrentWeek(newWeek);
-                                    }}
-                                  >
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-600">
-                                      <path d="m9 18 6-6-6-6"/>
-                                    </svg>
-                                  </Button>
-                                </div>
-                                <h3 className="text-sm font-medium">
-                                  {weekDays[0].toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - {weekDays[6].toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                                </h3>
-                                <div></div>
-                              </div>
-                              
-                              {/* Days of the week */}
-                              <div className="grid grid-cols-7 text-center border-b bg-gray-50">
-                                {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, i) => {
-                                  const currentDay = weekDays[i];
-                                  const isToday = currentDay.toDateString() === new Date().toDateString();
-                                  return (
-                                    <div key={i} className="py-2 text-xs font-medium">
-                                      <div>{day}</div>
-                                      <div className={`text-sm mt-1 ${isToday ? "h-6 w-6 rounded-full bg-sky-600 text-white flex items-center justify-center mx-auto" : ""}`}>
-                                        {currentDay.getDate()}
-                                      </div>
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                              
-                              {/* Time slots */}
-                              <div className="relative" style={{ height: "500px" }}>
-                                {/* Time markers */}
-                                <div className="absolute top-0 left-0 w-full h-full grid grid-cols-1 gap-0">
-                                  {[9, 10, 11, 12, 13, 14, 15, 16, 17].map((hour, i) => (
-                                    <div key={i} className="relative border-b border-gray-100">
-                                      <div className="absolute -top-2.5 left-1 text-xs text-gray-400 bg-white px-1">
-                                        {hour % 12 === 0 ? '12' : hour % 12}{hour >= 12 ? 'pm' : 'am'}
-                                      </div>
-                                    </div>
+                            <ScheduleCalendar
+                              view={scheduleView}
+                              events={scheduleEvents}
+                              onAddEvent={(date) => {
+                                if (date) {
+                                  setQuickSchedule(prev => ({
+                                    ...prev,
+                                    date: format(date, 'yyyy-MM-dd')
+                                  }));
+                                  // Scroll to quick schedule
+                                  const quickScheduleEl = document.getElementById('quick-schedule-card');
+                                  if (quickScheduleEl) quickScheduleEl.scrollIntoView({ behavior: 'smooth' });
+                                }
+                              }}
+                            />
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </div>
+
+                    {/* Side panel */}
+                    <div className="lg:w-1/3 space-y-6">
+                      {/* Quick add event */}
+                      <Card className="border-t-4 border-t-indigo-500" id="quick-schedule-card">
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-lg flex items-center text-gray-800">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 text-indigo-600">
+                              <path d="M8 2v4"></path>
+                              <path d="M16 2v4"></path>
+                              <rect width="18" height="18" x="3" y="4" rx="2"></rect>
+                              <path d="M3 10h18"></path>
+                              <path d="M12 16h6"></path>
+                              <path d="M12 14v4"></path>
+                            </svg>
+                            Quick Schedule
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="space-y-3">
+                            <div className="grid grid-cols-2 gap-3">
+                              <div>
+                                <Label htmlFor="class">Class</Label>
+                                <select
+                                  className="w-full mt-1 rounded-md border border-gray-300 px-3 py-2 text-sm"
+                                  value={quickSchedule.classId}
+                                  onChange={(e) => setQuickSchedule({ ...quickSchedule, classId: e.target.value })}
+                                >
+                                  <option value="">Select a class</option>
+                                  {(summaryData?.classes || []).map((cls: any) => (
+                                    <option key={cls.classId} value={cls.classId}>
+                                      {cls.title}
+                                    </option>
                                   ))}
-                                </div>
-                                
-                                {/* Week grid */}
-                                <div className="absolute top-0 left-8 right-0 h-full grid grid-cols-7 gap-0">
-                                  {/* Day columns with real sessions */}
-                                  {weekDays.map((day, dayIndex) => {
-                                    const daySessions = weekSessions.filter(session => 
-                                      new Date(session.startTime).toDateString() === day.toDateString()
-                                    );
-                                    
-                                    return (
-                                      <div key={dayIndex} className="relative border-l first:border-l-0 h-full">
-                                        {/* Real session events */}
-                                        {daySessions.map((session, sessionIndex) => {
-                                          const { top, height } = getSessionPosition(session.startTime, session.duration);
-                                          const colors = getSessionColor(sessionIndex);
-                                          const startTime = formatTime(session.startTime);
-                                          const endTime = formatTime(new Date(new Date(session.startTime).getTime() + session.duration * 60000).toISOString());
-                                          
-                                          return (
-                                            <div 
-                                              key={session.classId} 
-                                              className={`absolute left-1 right-1 rounded-md ${colors.bg} border ${colors.border} p-2 overflow-hidden cursor-pointer hover:shadow-sm transition-shadow`}
-                                              style={{ top: `${Math.max(0, top)}px`, height: `${Math.max(60, height)}px` }}
-                                              onClick={() => {
-                                                // Navigate to class view
-                                                navigate(`/teacher-dashboard/classes?id=${session.classId}`);
-                                              }}
-                                            >
-                                              <div className={`text-xs font-medium ${colors.text} truncate`}>{session.title}</div>
-                                              <div className={`text-xs ${colors.subtext}`}>{startTime} - {endTime}</div>
-                                              <div className={`text-xs ${colors.subtext} mt-1 truncate`}>{session.cohortName}</div>
-                                              <div className={`text-xs ${colors.subtext} truncate`}>{session.enrolledStudents} students</div>
-                                              {session.readiness && (
-                                                <div className={`text-xs ${colors.subtext} mt-1`}>
-                                                  Ready: {Math.round(session.readiness.overallReadiness || 0)}%
-                                                </div>
-                                              )}
-                                            </div>
-                                          );
-                                        })}
-                                        
-                                        {/* Show loading state */}
-                                        {sessionsLoading && dayIndex === 0 && (
-                                          <div className="absolute top-2 left-1 right-1 h-16 rounded-md bg-gray-100 border border-gray-200 p-2 flex items-center justify-center">
-                                            <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
-                                          </div>
-                                        )}
+                                </select>
+                              </div>
+                              <div>
+                                <Label htmlFor="type">Type</Label>
+                                <select
+                                  className="w-full mt-1 rounded-md border border-gray-300 px-3 py-2 text-sm"
+                                  value={quickSchedule.type}
+                                  onChange={(e) => setQuickSchedule({ ...quickSchedule, type: e.target.value })}
+                                >
+                                  <option>Regular class</option>
+                                  <option>Lab session</option>
+                                  <option>Review session</option>
+                                  <option>Test/Quiz</option>
+                                </select>
+                              </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-3">
+                              <div>
+                                <Label htmlFor="date">Date</Label>
+                                <Input
+                                  type="date"
+                                  id="date"
+                                  className="mt-1"
+                                  value={quickSchedule.date}
+                                  onChange={(e) => setQuickSchedule({ ...quickSchedule, date: e.target.value })}
+                                />
+                              </div>
+                              <div>
+                                <Label htmlFor="time">Time</Label>
+                                <Input
+                                  type="time"
+                                  id="time"
+                                  className="mt-1"
+                                  value={quickSchedule.time}
+                                  onChange={(e) => setQuickSchedule({ ...quickSchedule, time: e.target.value })}
+                                />
+                              </div>
+                            </div>
+
+                            <div>
+                              <Label htmlFor="duration">Duration</Label>
+                              <div className="flex items-center gap-2 mt-1">
+                                <Input
+                                  type="number"
+                                  id="duration"
+                                  className="w-20"
+                                  value={quickSchedule.duration}
+                                  onChange={(e) => setQuickSchedule({ ...quickSchedule, duration: Number(e.target.value) })}
+                                />
+                                <span className="text-sm text-gray-500">hours</span>
+                              </div>
+                            </div>
+
+                            <div>
+                              <Label htmlFor="location">Location</Label>
+                              <Input
+                                type="text"
+                                id="location"
+                                placeholder="Room, building, or online link"
+                                className="mt-1"
+                                value={quickSchedule.location}
+                                onChange={(e) => setQuickSchedule({ ...quickSchedule, location: e.target.value })}
+                              />
+                            </div>
+
+                            <div>
+                              <Label className="flex items-center gap-2">
+                                <input
+                                  type="checkbox"
+                                  className="rounded text-indigo-600"
+                                  checked={quickSchedule.repeat}
+                                  onChange={(e) => setQuickSchedule({ ...quickSchedule, repeat: e.target.checked })}
+                                />
+                                <span className="text-sm text-gray-700">Repeat weekly</span>
+                              </Label>
+                            </div>
+
+                            <div className="pt-2">
+                              <Button
+                                className="w-full bg-indigo-600 hover:bg-indigo-700"
+                                onClick={handleQuickSchedule}
+                                disabled={isScheduling}
+                              >
+                                {isScheduling ? (
+                                  <>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    Scheduling...
+                                  </>
+                                ) : (
+                                  <>
+                                    <PlusCircle className="mr-2 h-4 w-4" />
+                                    Add to Schedule
+                                  </>
+                                )}
+                              </Button>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      {/* Upcoming classes */}
+                      <Card className="border-t-4 border-t-emerald-500">
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-lg flex items-center text-gray-800">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 text-emerald-600">
+                              <circle cx="12" cy="12" r="10"></circle>
+                              <path d="M12 6v6l4 2"></path>
+                            </svg>
+                            Upcoming Classes
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="space-y-3">
+                            {sessionsLoading ? (
+                              <div className="flex items-center justify-center py-8">
+                                <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+                                <span className="ml-2 text-sm text-gray-500">Loading sessions...</span>
+                              </div>
+                            ) : upcomingSessions.length === 0 ? (
+                              <div className="text-center py-8">
+                                <Calendar className="w-12 h-12 text-gray-300 mx-auto mb-2" />
+                                <p className="text-gray-500 text-sm">No upcoming sessions</p>
+                                <p className="text-gray-400 text-xs mt-1">Schedule a class to get started</p>
+                              </div>
+                            ) : (
+                              upcomingSessions.slice(0, 3).map((session, index) => {
+                                const colors = getSessionColor(index);
+                                const startTime = formatTime(session.startTime);
+                                const endTime = formatTime(new Date(new Date(session.startTime).getTime() + session.duration * 60000).toISOString());
+                                const sessionDate = new Date(session.startTime);
+                                const isToday = sessionDate.toDateString() === new Date().toDateString();
+                                const isTomorrow = sessionDate.toDateString() === new Date(Date.now() + 24 * 60 * 60 * 1000).toDateString();
+                                const timeLeft = Math.max(0, sessionDate.getTime() - Date.now());
+                                const hoursLeft = Math.floor(timeLeft / (1000 * 60 * 60));
+                                const minutesLeft = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+
+                                let timeLabel = 'Upcoming';
+                                if (isToday) {
+                                  if (hoursLeft < 1) {
+                                    timeLabel = minutesLeft > 0 ? `${minutesLeft}m` : 'Starting soon';
+                                  } else {
+                                    timeLabel = `${hoursLeft}h ${minutesLeft}m`;
+                                  }
+                                } else if (isTomorrow) {
+                                  timeLabel = 'Tomorrow';
+                                } else {
+                                  timeLabel = sessionDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+                                }
+
+                                return (
+                                  <div key={session.classId} className={`${colors.bg} rounded-lg overflow-hidden border ${colors.border}`}>
+                                    <div className="p-3">
+                                      <div className="flex items-center justify-between">
+                                        <h4 className={`font-medium ${colors.text} truncate`}>{session.title}</h4>
+                                        <div className={`text-xs px-2 py-1 ${colors.bg.replace('100', '200')} rounded-full ${colors.subtext}`}>{timeLabel}</div>
                                       </div>
-                                    );
-                                  })}
-                                </div>
+                                      <div className="flex items-start mt-1">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`mr-1 ${colors.subtext} mt-0.5`}>
+                                          <circle cx="12" cy="12" r="10"></circle>
+                                          <path d="M12 6v6l4 2"></path>
+                                        </svg>
+                                        <div className={`text-sm ${colors.subtext}`}>{startTime} - {endTime}</div>
+                                      </div>
+                                      <div className="flex items-start mt-1">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`mr-1 ${colors.subtext} mt-0.5`}>
+                                          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                                          <circle cx="12" cy="10" r="3"></circle>
+                                        </svg>
+                                        <div className={`text-sm ${colors.subtext} truncate`}>{session.cohortName}</div>
+                                      </div>
+                                      <div className="flex items-start mt-1">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`mr-1 ${colors.subtext} mt-0.5`}>
+                                          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                          <circle cx="9" cy="7" r="4"></circle>
+                                          <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                                          <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                                        </svg>
+                                        <div className={`text-sm ${colors.subtext}`}>{session.enrolledStudents} students</div>
+                                      </div>
+                                      {session.readiness && (
+                                        <div className="flex items-start mt-1">
+                                          <CheckCircle2 className={`w-3.5 h-3.5 mr-1 ${colors.subtext} mt-0.5`} />
+                                          <div className={`text-sm ${colors.subtext}`}>Ready: {Math.round(session.readiness.overallReadiness || 0)}%</div>
+                                        </div>
+                                      )}
+                                    </div>
+                                    <div className={`flex items-center justify-end ${colors.bg.replace('100', '200')} px-3 py-2 text-xs`}>
+                                      <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        className="h-7 text-xs"
+                                        onClick={() => navigate(`/teacher-dashboard/classes?id=${session.classId}`)}
+                                      >
+                                        View
+                                      </Button>
+                                      {session.readiness && session.readiness.overallReadiness > 80 && (
+                                        <Button
+                                          size="sm"
+                                          className={`h-7 text-xs ml-2 ${colors.text.includes('blue') ? 'bg-blue-600 hover:bg-blue-700' : colors.text.includes('purple') ? 'bg-purple-600 hover:bg-purple-700' : colors.text.includes('green') ? 'bg-green-600 hover:bg-green-700' : 'bg-amber-600 hover:bg-amber-700'}`}
+                                          onClick={() => {
+                                            // Start class logic would go here
+                                            toast({ title: "Starting class", description: `Starting ${session.title}` });
+                                          }}
+                                        >
+                                          {hoursLeft < 1 ? 'Start Class' : 'Prepare'}
+                                        </Button>
+                                      )}
+                                    </div>
+                                  </div>
+                                );
+                              })
+                            )}
+
+                            {upcomingSessions.length > 3 && (
+                              <div className="pt-2 flex justify-center">
+                                <Button
+                                  variant="link"
+                                  className="text-emerald-600"
+                                  onClick={() => setActiveTab('schedule')}
+                                >
+                                  View all {upcomingSessions.length} upcoming sessions
+                                </Button>
+                              </div>
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </div>
+                  </div>
+
+                  {/* Schedule Insights & Critical Path */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {/* Teaching Insights */}
+                    <Card className="border-t-4 border-t-emerald-500">
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-lg flex items-center text-gray-800">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 text-emerald-600">
+                            <path d="M9 11H5a2 2 0 0 0-2 2v7c0 2 1 3 3 3h10c2 0 3-1 3-3v-7a2 2 0 0 0-2-2h-4"></path>
+                            <path d="M8 7V6a2 2 0 1 1 4 0v1"></path>
+                            <path d="M9 17v-7h6v7"></path>
+                            <path d="M8 17h8"></path>
+                          </svg>
+                          Smart Insights
+                        </CardTitle>
+                        <CardDescription>
+                          AI-powered recommendations for your schedule
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-4">
+                          {summaryData?.analytics?.insights?.slice(0, 3).map((insight, index) => (
+                            <div key={index} className="flex items-start space-x-3 p-3 bg-emerald-50 rounded-lg border border-emerald-100">
+                              <div className="w-2 h-2 bg-emerald-500 rounded-full mt-2 flex-shrink-0"></div>
+                              <div className="flex-1">
+                                <p className="text-sm text-emerald-800">{insight}</p>
+                              </div>
+                            </div>
+                          )) || (
+                              <div className="text-center py-4">
+                                <p className="text-gray-500 text-sm">Insights will appear as you teach more classes</p>
+                              </div>
+                            )}
+
+                          {/* Preparation Recommendations */}
+                          <div className="border-t pt-4">
+                            <h4 className="text-sm font-medium text-gray-800 mb-2">Preparation Recommendations</h4>
+                            <div className="space-y-2">
+                              {upcomingSessions.slice(0, 2).map((session, index) => {
+                                const readiness = session.readiness?.overallReadiness || 0;
+                                let recommendation = '';
+                                let color = 'text-green-600';
+
+                                if (readiness < 50) {
+                                  recommendation = 'Review lesson materials and prepare activities';
+                                  color = 'text-red-600';
+                                } else if (readiness < 80) {
+                                  recommendation = 'Check tech setup and review student progress';
+                                  color = 'text-amber-600';
+                                } else {
+                                  recommendation = 'All set! Consider bonus activities';
+                                  color = 'text-green-600';
+                                }
+
+                                return (
+                                  <div key={session.classId} className="text-xs">
+                                    <span className="font-medium text-gray-700">{session.title}:</span>
+                                    <span className={`ml-1 ${color}`}>{recommendation}</span>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* Critical Path */}
+                    <Card className="border-t-4 border-t-purple-500">
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-lg flex items-center text-gray-800">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 text-purple-600">
+                            <path d="M12 20h9"></path>
+                            <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path>
+                            <path d="M12 20h9"></path>
+                          </svg>
+                          Critical Path
+                        </CardTitle>
+                        <CardDescription>
+                          Key actions to stay ahead and deliver excellence
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-3">
+                          {/* Critical Actions */}
+                          <div className="bg-purple-50 rounded-lg p-3 border border-purple-100">
+                            <div className="flex items-center justify-between mb-2">
+                              <h4 className="text-sm font-medium text-purple-800">Next 24 Hours</h4>
+                              <div className="text-xs text-purple-600 bg-purple-100 px-2 py-1 rounded">
+                                {upcomingSessions.filter(s => new Date(s.startTime).getTime() - Date.now() < 24 * 60 * 60 * 1000).length} sessions
+                              </div>
+                            </div>
+                            <div className="space-y-1 text-xs text-purple-700">
+                              {upcomingSessions
+                                .filter(s => new Date(s.startTime).getTime() - Date.now() < 24 * 60 * 60 * 1000)
+                                .slice(0, 3)
+                                .map((session, index) => (
+                                  <div key={session.classId} className="flex items-center justify-between">
+                                    <span>{session.title}</span>
+                                    <span className={`px-1 rounded text-xs ${(session.readiness?.overallReadiness || 0) > 80
+                                      ? 'bg-green-100 text-green-600'
+                                      : (session.readiness?.overallReadiness || 0) > 50
+                                        ? 'bg-amber-100 text-amber-600'
+                                        : 'bg-red-100 text-red-600'
+                                      }`}>
+                                      {Math.round(session.readiness?.overallReadiness || 0)}%
+                                    </span>
+                                  </div>
+                                ))
+                              }
+                            </div>
+                          </div>
+
+                          {/* Weekly Goals */}
+                          <div className="bg-blue-50 rounded-lg p-3 border border-blue-100">
+                            <h4 className="text-sm font-medium text-blue-800 mb-2">Weekly Goals</h4>
+                            <div className="space-y-1 text-xs text-blue-700">
+                              <div className="flex items-center justify-between">
+                                <span>• Content delivery excellence</span>
+                                <CheckCircle2 className="w-3 h-3 text-green-500" />
+                              </div>
+                              <div className="flex items-center justify-between">
+                                <span>• Student engagement optimization</span>
+                                <div className="w-3 h-3 border border-blue-300 rounded-full"></div>
+                              </div>
+                              <div className="flex items-center justify-between">
+                                <span>• Research & preparation buffer</span>
+                                <div className="w-3 h-3 border border-blue-300 rounded-full"></div>
                               </div>
                             </div>
                           </div>
-                    </CardContent>
-                  </Card>
-                </div>
-                
-                {/* Side panel */}
-                <div className="lg:w-1/3 space-y-6">
-                  {/* Quick add event */}
-                  <Card className="border-t-4 border-t-indigo-500">
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-lg flex items-center text-gray-800">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 text-indigo-600">
-                          <path d="M8 2v4"></path>
-                          <path d="M16 2v4"></path>
-                          <rect width="18" height="18" x="3" y="4" rx="2"></rect>
-                          <path d="M3 10h18"></path>
-                          <path d="M12 16h6"></path>
-                          <path d="M12 14v4"></path>
+
+                          {/* Performance Metrics */}
+                          {summaryData?.analytics && (
+                            <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
+                              <h4 className="text-sm font-medium text-gray-800 mb-2">Performance Metrics</h4>
+                              <div className="grid grid-cols-2 gap-3 text-xs">
+                                <div className="text-center">
+                                  <div className="text-lg font-bold text-gray-800">{summaryData.analytics.overallPerformance?.averageEngagement || 0}%</div>
+                                  <div className="text-gray-600">Engagement</div>
+                                </div>
+                                <div className="text-center">
+                                  <div className="text-lg font-bold text-gray-800">{summaryData.analytics.classHealthScore || 0}%</div>
+                                  <div className="text-gray-600">Health Score</div>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  {/* Recurring schedules */}
+                  <Card className="border-t-4 border-t-amber-500">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-xl flex items-center text-gray-800">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 text-amber-600">
+                          <path d="M21 7v6h-6"></path>
+                          <path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3l3 2.7"></path>
                         </svg>
-                        Quick Schedule
+                        Recurring Schedules
                       </CardTitle>
+                      <CardDescription>
+                        Manage your weekly teaching patterns
+                      </CardDescription>
                     </CardHeader>
                     <CardContent>
-                      <div className="space-y-3">
-                        <div className="grid grid-cols-2 gap-3">
-                          <div>
-                            <Label htmlFor="class">Class</Label>
-                            <select className="w-full mt-1 rounded-md border border-gray-300 px-3 py-2 text-sm">
-                              <option value="">Select a class</option>
-                              {classes.map((cls: any) => (
-                                <option key={cls._id || cls.id} value={cls._id || cls.id}>
-                                  {cls.title}
-                                </option>
-                              ))}
-                            </select>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div className="border rounded-lg p-4 hover:shadow-md transition-shadow bg-blue-50 border-blue-200">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <h3 className="font-medium text-gray-900">Math Class - Grade 7</h3>
+                              <p className="text-sm text-gray-500 mt-1">Every Monday, Wednesday</p>
+                              <p className="text-sm text-gray-500">9:00 AM - 10:00 AM</p>
+                              <p className="text-sm text-gray-500">Room 203</p>
+                            </div>
+                            <div className="px-2 py-1 bg-blue-100 rounded-full text-xs text-blue-700">
+                              Weekly
+                            </div>
                           </div>
-                          <div>
-                            <Label htmlFor="type">Type</Label>
-                            <select className="w-full mt-1 rounded-md border border-gray-300 px-3 py-2 text-sm">
-                              <option>Regular class</option>
-                              <option>Lab session</option>
-                              <option>Review session</option>
-                              <option>Test/Quiz</option>
-                            </select>
+                          <div className="flex mt-4 justify-end gap-2">
+                            <Button size="sm" variant="outline" className="text-xs h-8">Edit</Button>
+                            <Button size="sm" variant="outline" className="text-xs h-8">Pause</Button>
                           </div>
                         </div>
-                        
-                        <div className="grid grid-cols-2 gap-3">
-                          <div>
-                            <Label htmlFor="date">Date</Label>
-                            <Input type="date" id="date" className="mt-1" />
+
+                        <div className="border rounded-lg p-4 hover:shadow-md transition-shadow bg-purple-50 border-purple-200">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <h3 className="font-medium text-gray-900">Science Lab - Grade 5</h3>
+                              <p className="text-sm text-gray-500 mt-1">Every Tuesday, Thursday</p>
+                              <p className="text-sm text-gray-500">1:00 PM - 2:00 PM</p>
+                              <p className="text-sm text-gray-500">Science Lab 4</p>
+                            </div>
+                            <div className="px-2 py-1 bg-purple-100 rounded-full text-xs text-purple-700">
+                              Weekly
+                            </div>
                           </div>
-                          <div>
-                            <Label htmlFor="time">Time</Label>
-                            <Input type="time" id="time" className="mt-1" />
+                          <div className="flex mt-4 justify-end gap-2">
+                            <Button size="sm" variant="outline" className="text-xs h-8">Edit</Button>
+                            <Button size="sm" variant="outline" className="text-xs h-8">Pause</Button>
                           </div>
                         </div>
-                        
-                        <div>
-                          <Label htmlFor="duration">Duration</Label>
-                          <div className="flex items-center gap-2 mt-1">
-                            <Input type="number" id="duration" defaultValue="1" className="w-20" />
-                            <span className="text-sm text-gray-500">hours</span>
-                          </div>
-                        </div>
-                        
-                        <div>
-                          <Label htmlFor="location">Location</Label>
-                          <Input type="text" id="location" placeholder="Room, building, or online link" className="mt-1" />
-                        </div>
-                        
-                        <div>
-                          <Label className="flex items-center gap-2">
-                            <input type="checkbox" className="rounded text-indigo-600" />
-                            <span className="text-sm text-gray-700">Repeat weekly</span>
-                          </Label>
-                        </div>
-                        
-                        <div className="pt-2">
-                          <Button className="w-full bg-indigo-600 hover:bg-indigo-700">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
-                              <circle cx="12" cy="12" r="10"></circle>
-                              <path d="M12 8v8"></path>
-                              <path d="M8 12h8"></path>
-                            </svg>
-                            Add to Schedule
+
+                        <div className="border rounded-lg p-4 border-dashed flex flex-col items-center justify-center text-center h-[152px]">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400 mb-2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <path d="M12 8v8"></path>
+                            <path d="M8 12h8"></path>
+                          </svg>
+                          <p className="text-sm text-gray-500 mb-2">Create a new recurring schedule</p>
+                          <Button size="sm" variant="outline" className="text-xs">
+                            Add Recurring Schedule
                           </Button>
                         </div>
                       </div>
                     </CardContent>
                   </Card>
-                  
-                  {/* Upcoming classes */}
+
+                  {/* Schedule analysis */}
                   <Card className="border-t-4 border-t-emerald-500">
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-lg flex items-center text-gray-800">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 text-emerald-600">
-                          <circle cx="12" cy="12" r="10"></circle>
-                          <path d="M12 6v6l4 2"></path>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-xl flex items-center text-gray-800">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 text-emerald-600">
+                          <path d="M3 3v18h18"></path>
+                          <path d="m19 9-5 5-4-4-3 3"></path>
                         </svg>
-                        Upcoming Classes
+                        Schedule Analytics
                       </CardTitle>
+                      <CardDescription>
+                        Insights to optimize your teaching schedule
+                      </CardDescription>
                     </CardHeader>
                     <CardContent>
-                      <div className="space-y-3">
-                        {sessionsLoading ? (
-                          <div className="flex items-center justify-center py-8">
-                            <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
-                            <span className="ml-2 text-sm text-gray-500">Loading sessions...</span>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div className="bg-gray-50 rounded-lg p-4 text-center">
+                          <h3 className="text-sm font-medium text-gray-500 mb-1">Weekly Teaching Hours</h3>
+                          <p className="text-3xl font-bold text-gray-900">8.5</p>
+                          <div className="flex justify-center items-center mt-2 text-green-600 text-sm">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1">
+                              <path d="m6 9 6 6 6-6"></path>
+                            </svg>
+                            <span>+2.5 from last week</span>
                           </div>
-                        ) : upcomingSessions.length === 0 ? (
-                          <div className="text-center py-8">
-                            <Calendar className="w-12 h-12 text-gray-300 mx-auto mb-2" />
-                            <p className="text-gray-500 text-sm">No upcoming sessions</p>
-                            <p className="text-gray-400 text-xs mt-1">Schedule a class to get started</p>
+                          <div className="h-2 bg-gray-200 rounded-full mt-3">
+                            <div className="h-2 bg-emerald-500 rounded-full" style={{ width: "85%" }}></div>
                           </div>
-                        ) : (
-                          upcomingSessions.slice(0, 3).map((session, index) => {
-                            const colors = getSessionColor(index);
-                            const startTime = formatTime(session.startTime);
-                            const endTime = formatTime(new Date(new Date(session.startTime).getTime() + session.duration * 60000).toISOString());
-                            const sessionDate = new Date(session.startTime);
-                            const isToday = sessionDate.toDateString() === new Date().toDateString();
-                            const isTomorrow = sessionDate.toDateString() === new Date(Date.now() + 24 * 60 * 60 * 1000).toDateString();
-                            const timeLeft = Math.max(0, sessionDate.getTime() - Date.now());
-                            const hoursLeft = Math.floor(timeLeft / (1000 * 60 * 60));
-                            const minutesLeft = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
-                            
-                            let timeLabel = 'Upcoming';
-                            if (isToday) {
-                              if (hoursLeft < 1) {
-                                timeLabel = minutesLeft > 0 ? `${minutesLeft}m` : 'Starting soon';
-                              } else {
-                                timeLabel = `${hoursLeft}h ${minutesLeft}m`;
-                              }
-                            } else if (isTomorrow) {
-                              timeLabel = 'Tomorrow';
-                            } else {
-                              timeLabel = sessionDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-                            }
-                            
-                            return (
-                              <div key={session.classId} className={`${colors.bg} rounded-lg overflow-hidden border ${colors.border}`}>
-                                <div className="p-3">
-                                  <div className="flex items-center justify-between">
-                                    <h4 className={`font-medium ${colors.text} truncate`}>{session.title}</h4>
-                                    <div className={`text-xs px-2 py-1 ${colors.bg.replace('100', '200')} rounded-full ${colors.subtext}`}>{timeLabel}</div>
-                                  </div>
-                                  <div className="flex items-start mt-1">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`mr-1 ${colors.subtext} mt-0.5`}>
-                                      <circle cx="12" cy="12" r="10"></circle>
-                                      <path d="M12 6v6l4 2"></path>
-                                    </svg>
-                                    <div className={`text-sm ${colors.subtext}`}>{startTime} - {endTime}</div>
-                                  </div>
-                                  <div className="flex items-start mt-1">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`mr-1 ${colors.subtext} mt-0.5`}>
-                                      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                                      <circle cx="12" cy="10" r="3"></circle>
-                                    </svg>
-                                    <div className={`text-sm ${colors.subtext} truncate`}>{session.cohortName}</div>
-                                  </div>
-                                  <div className="flex items-start mt-1">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`mr-1 ${colors.subtext} mt-0.5`}>
-                                      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                                      <circle cx="9" cy="7" r="4"></circle>
-                                      <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                                      <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-                                    </svg>
-                                    <div className={`text-sm ${colors.subtext}`}>{session.enrolledStudents} students</div>
-                                  </div>
-                                  {session.readiness && (
-                                    <div className="flex items-start mt-1">
-                                      <CheckCircle2 className={`w-3.5 h-3.5 mr-1 ${colors.subtext} mt-0.5`} />
-                                      <div className={`text-sm ${colors.subtext}`}>Ready: {Math.round(session.readiness.overallReadiness || 0)}%</div>
-                                    </div>
-                                  )}
-                                </div>
-                                <div className={`flex items-center justify-end ${colors.bg.replace('100', '200')} px-3 py-2 text-xs`}>
-                                  <Button 
-                                    size="sm" 
-                                    variant="ghost" 
-                                    className="h-7 text-xs"
-                                    onClick={() => navigate(`/teacher-dashboard/classes?id=${session.classId}`)}
-                                  >
-                                    View
-                                  </Button>
-                                  {session.readiness && session.readiness.overallReadiness > 80 && (
-                                    <Button 
-                                      size="sm" 
-                                      className={`h-7 text-xs ml-2 ${colors.text.includes('blue') ? 'bg-blue-600 hover:bg-blue-700' : colors.text.includes('purple') ? 'bg-purple-600 hover:bg-purple-700' : colors.text.includes('green') ? 'bg-green-600 hover:bg-green-700' : 'bg-amber-600 hover:bg-amber-700'}`}
-                                      onClick={() => {
-                                        // Start class logic would go here
-                                        toast({ title: "Starting class", description: `Starting ${session.title}` });
-                                      }}
-                                    >
-                                      {hoursLeft < 1 ? 'Start Class' : 'Prepare'}
-                                    </Button>
-                                  )}
-                                </div>
+                          <p className="text-xs text-gray-500 mt-1">85% of availability filled</p>
+                        </div>
+
+                        <div className="bg-gray-50 rounded-lg p-4 text-center">
+                          <h3 className="text-sm font-medium text-gray-500 mb-1">Busiest Day</h3>
+                          <p className="text-3xl font-bold text-gray-900">Wednesday</p>
+                          <p className="text-sm text-gray-500 mt-2">3 classes scheduled</p>
+                          <div className="grid grid-cols-7 gap-1 mt-3">
+                            {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => (
+                              <div
+                                key={i}
+                                className={`text-xs font-medium rounded-full h-6 flex items-center justify-center ${i === 3 ? 'bg-emerald-200 text-emerald-800' : 'bg-gray-200 text-gray-600'
+                                  }`}
+                              >
+                                {day}
                               </div>
-                            );
-                          })
-                        )}
-                        
-                        {upcomingSessions.length > 3 && (
-                          <div className="pt-2 flex justify-center">
-                            <Button 
-                              variant="link" 
-                              className="text-emerald-600"
-                              onClick={() => setActiveTab('schedule')}
-                            >
-                              View all {upcomingSessions.length} upcoming sessions
-                            </Button>
+                            ))}
                           </div>
-                        )}
+                        </div>
+
+                        <div className="bg-gray-50 rounded-lg p-4 text-center">
+                          <h3 className="text-sm font-medium text-gray-500 mb-1">Class Distribution</h3>
+                          <div className="flex justify-center mt-3">
+                            {/* Simple pie chart visualization */}
+                            <div className="relative w-24 h-24">
+                              <svg viewBox="0 0 36 36" className="w-full h-full">
+                                <path
+                                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                                  fill="none"
+                                  stroke="#E5E7EB"
+                                  strokeWidth="4"
+                                />
+                                <path
+                                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                                  fill="none"
+                                  stroke="#3B82F6"
+                                  strokeWidth="4"
+                                  strokeDasharray="25, 100"
+                                  strokeDashoffset="25"
+                                />
+                                <path
+                                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                                  fill="none"
+                                  stroke="#8B5CF6"
+                                  strokeWidth="4"
+                                  strokeDasharray="20, 100"
+                                  strokeDashoffset="0"
+                                />
+                                <path
+                                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                                  fill="none"
+                                  stroke="#10B981"
+                                  strokeWidth="4"
+                                  strokeDasharray="30, 100"
+                                  strokeDashoffset="50"
+                                />
+                              </svg>
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-3 gap-1 mt-3 text-xs">
+                            <div className="flex items-center">
+                              <span className="w-3 h-3 rounded-full bg-blue-500 mr-1"></span>
+                              <span className="text-gray-600">Math</span>
+                            </div>
+                            <div className="flex items-center">
+                              <span className="w-3 h-3 rounded-full bg-purple-500 mr-1"></span>
+                              <span className="text-gray-600">Science</span>
+                            </div>
+                            <div className="flex items-center">
+                              <span className="w-3 h-3 rounded-full bg-emerald-500 mr-1"></span>
+                              <span className="text-gray-600">English</span>
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     </CardContent>
                   </Card>
                 </div>
-              </div>
-              
-              {/* Schedule Insights & Critical Path */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Teaching Insights */}
-                <Card className="border-t-4 border-t-emerald-500">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-lg flex items-center text-gray-800">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 text-emerald-600">
-                        <path d="M9 11H5a2 2 0 0 0-2 2v7c0 2 1 3 3 3h10c2 0 3-1 3-3v-7a2 2 0 0 0-2-2h-4"></path>
-                        <path d="M8 7V6a2 2 0 1 1 4 0v1"></path>
-                        <path d="M9 17v-7h6v7"></path>
-                        <path d="M8 17h8"></path>
-                      </svg>
-                      Smart Insights
-                    </CardTitle>
-                    <CardDescription>
-                      AI-powered recommendations for your schedule
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      {summaryData?.analytics?.insights?.slice(0, 3).map((insight, index) => (
-                        <div key={index} className="flex items-start space-x-3 p-3 bg-emerald-50 rounded-lg border border-emerald-100">
-                          <div className="w-2 h-2 bg-emerald-500 rounded-full mt-2 flex-shrink-0"></div>
-                          <div className="flex-1">
-                            <p className="text-sm text-emerald-800">{insight}</p>
-                          </div>
-                        </div>
-                      )) || (
-                        <div className="text-center py-4">
-                          <p className="text-gray-500 text-sm">Insights will appear as you teach more classes</p>
-                        </div>
-                      )}
-                      
-                      {/* Preparation Recommendations */}
-                      <div className="border-t pt-4">
-                        <h4 className="text-sm font-medium text-gray-800 mb-2">Preparation Recommendations</h4>
-                        <div className="space-y-2">
-                          {upcomingSessions.slice(0, 2).map((session, index) => {
-                            const readiness = session.readiness?.overallReadiness || 0;
-                            let recommendation = '';
-                            let color = 'text-green-600';
-                            
-                            if (readiness < 50) {
-                              recommendation = 'Review lesson materials and prepare activities';
-                              color = 'text-red-600';
-                            } else if (readiness < 80) {
-                              recommendation = 'Check tech setup and review student progress';
-                              color = 'text-amber-600';
-                            } else {
-                              recommendation = 'All set! Consider bonus activities';
-                              color = 'text-green-600';
-                            }
-                            
-                            return (
-                              <div key={session.classId} className="text-xs">
-                                <span className="font-medium text-gray-700">{session.title}:</span>
-                                <span className={`ml-1 ${color}`}>{recommendation}</span>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-                
-                {/* Critical Path */}
-                <Card className="border-t-4 border-t-purple-500">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-lg flex items-center text-gray-800">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 text-purple-600">
-                        <path d="M12 20h9"></path>
-                        <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path>
-                        <path d="M12 20h9"></path>
-                      </svg>
-                      Critical Path
-                    </CardTitle>
-                    <CardDescription>
-                      Key actions to stay ahead and deliver excellence
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      {/* Critical Actions */}
-                      <div className="bg-purple-50 rounded-lg p-3 border border-purple-100">
-                        <div className="flex items-center justify-between mb-2">
-                          <h4 className="text-sm font-medium text-purple-800">Next 24 Hours</h4>
-                          <div className="text-xs text-purple-600 bg-purple-100 px-2 py-1 rounded">
-                            {upcomingSessions.filter(s => new Date(s.startTime).getTime() - Date.now() < 24 * 60 * 60 * 1000).length} sessions
-                          </div>
-                        </div>
-                        <div className="space-y-1 text-xs text-purple-700">
-                          {upcomingSessions
-                            .filter(s => new Date(s.startTime).getTime() - Date.now() < 24 * 60 * 60 * 1000)
-                            .slice(0, 3)
-                            .map((session, index) => (
-                              <div key={session.classId} className="flex items-center justify-between">
-                                <span>{session.title}</span>
-                                <span className={`px-1 rounded text-xs ${
-                                  (session.readiness?.overallReadiness || 0) > 80 
-                                    ? 'bg-green-100 text-green-600' 
-                                    : (session.readiness?.overallReadiness || 0) > 50 
-                                    ? 'bg-amber-100 text-amber-600' 
-                                    : 'bg-red-100 text-red-600'
-                                }`}>
-                                  {Math.round(session.readiness?.overallReadiness || 0)}%
-                                </span>
-                              </div>
-                            ))
-                          }
-                        </div>
-                      </div>
-                      
-                      {/* Weekly Goals */}
-                      <div className="bg-blue-50 rounded-lg p-3 border border-blue-100">
-                        <h4 className="text-sm font-medium text-blue-800 mb-2">Weekly Goals</h4>
-                        <div className="space-y-1 text-xs text-blue-700">
-                          <div className="flex items-center justify-between">
-                            <span>• Content delivery excellence</span>
-                            <CheckCircle2 className="w-3 h-3 text-green-500" />
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <span>• Student engagement optimization</span>
-                            <div className="w-3 h-3 border border-blue-300 rounded-full"></div>
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <span>• Research & preparation buffer</span>
-                            <div className="w-3 h-3 border border-blue-300 rounded-full"></div>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      {/* Performance Metrics */}
-                      {summaryData?.analytics && (
-                        <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
-                          <h4 className="text-sm font-medium text-gray-800 mb-2">Performance Metrics</h4>
-                          <div className="grid grid-cols-2 gap-3 text-xs">
-                            <div className="text-center">
-                              <div className="text-lg font-bold text-gray-800">{summaryData.analytics.overallPerformance?.averageEngagement || 0}%</div>
-                              <div className="text-gray-600">Engagement</div>
-                            </div>
-                            <div className="text-center">
-                              <div className="text-lg font-bold text-gray-800">{summaryData.analytics.classHealthScore || 0}%</div>
-                              <div className="text-gray-600">Health Score</div>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-              
-              {/* Recurring schedules */}
-              <Card className="border-t-4 border-t-amber-500">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-xl flex items-center text-gray-800">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 text-amber-600">
-                      <path d="M21 7v6h-6"></path>
-                      <path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3l3 2.7"></path>
-                    </svg>
-                    Recurring Schedules
-                  </CardTitle>
-                  <CardDescription>
-                    Manage your weekly teaching patterns
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <div className="border rounded-lg p-4 hover:shadow-md transition-shadow bg-blue-50 border-blue-200">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <h3 className="font-medium text-gray-900">Math Class - Grade 7</h3>
-                          <p className="text-sm text-gray-500 mt-1">Every Monday, Wednesday</p>
-                          <p className="text-sm text-gray-500">9:00 AM - 10:00 AM</p>
-                          <p className="text-sm text-gray-500">Room 203</p>
-                        </div>
-                        <div className="px-2 py-1 bg-blue-100 rounded-full text-xs text-blue-700">
-                          Weekly
-                        </div>
-                      </div>
-                      <div className="flex mt-4 justify-end gap-2">
-                        <Button size="sm" variant="outline" className="text-xs h-8">Edit</Button>
-                        <Button size="sm" variant="outline" className="text-xs h-8">Pause</Button>
-                      </div>
-                    </div>
-                    
-                    <div className="border rounded-lg p-4 hover:shadow-md transition-shadow bg-purple-50 border-purple-200">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <h3 className="font-medium text-gray-900">Science Lab - Grade 5</h3>
-                          <p className="text-sm text-gray-500 mt-1">Every Tuesday, Thursday</p>
-                          <p className="text-sm text-gray-500">1:00 PM - 2:00 PM</p>
-                          <p className="text-sm text-gray-500">Science Lab 4</p>
-                        </div>
-                        <div className="px-2 py-1 bg-purple-100 rounded-full text-xs text-purple-700">
-                          Weekly
-                        </div>
-                      </div>
-                      <div className="flex mt-4 justify-end gap-2">
-                        <Button size="sm" variant="outline" className="text-xs h-8">Edit</Button>
-                        <Button size="sm" variant="outline" className="text-xs h-8">Pause</Button>
-                      </div>
-                    </div>
-                    
-                    <div className="border rounded-lg p-4 border-dashed flex flex-col items-center justify-center text-center h-[152px]">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400 mb-2">
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <path d="M12 8v8"></path>
-                        <path d="M8 12h8"></path>
-                      </svg>
-                      <p className="text-sm text-gray-500 mb-2">Create a new recurring schedule</p>
-                      <Button size="sm" variant="outline" className="text-xs">
-                        Add Recurring Schedule
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-              
-              {/* Schedule analysis */}
-              <Card className="border-t-4 border-t-emerald-500">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-xl flex items-center text-gray-800">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 text-emerald-600">
-                      <path d="M3 3v18h18"></path>
-                      <path d="m19 9-5 5-4-4-3 3"></path>
-                    </svg>
-                    Schedule Analytics
-                  </CardTitle>
-                  <CardDescription>
-                    Insights to optimize your teaching schedule
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div className="bg-gray-50 rounded-lg p-4 text-center">
-                      <h3 className="text-sm font-medium text-gray-500 mb-1">Weekly Teaching Hours</h3>
-                      <p className="text-3xl font-bold text-gray-900">8.5</p>
-                      <div className="flex justify-center items-center mt-2 text-green-600 text-sm">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1">
-                          <path d="m6 9 6 6 6-6"></path>
-                        </svg>
-                        <span>+2.5 from last week</span>
-                      </div>
-                      <div className="h-2 bg-gray-200 rounded-full mt-3">
-                        <div className="h-2 bg-emerald-500 rounded-full" style={{ width: "85%" }}></div>
-                      </div>
-                      <p className="text-xs text-gray-500 mt-1">85% of availability filled</p>
-                    </div>
-                    
-                    <div className="bg-gray-50 rounded-lg p-4 text-center">
-                      <h3 className="text-sm font-medium text-gray-500 mb-1">Busiest Day</h3>
-                      <p className="text-3xl font-bold text-gray-900">Wednesday</p>
-                      <p className="text-sm text-gray-500 mt-2">3 classes scheduled</p>
-                      <div className="grid grid-cols-7 gap-1 mt-3">
-                        {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => (
-                          <div 
-                            key={i} 
-                            className={`text-xs font-medium rounded-full h-6 flex items-center justify-center ${
-                              i === 3 ? 'bg-emerald-200 text-emerald-800' : 'bg-gray-200 text-gray-600'
-                            }`}
-                          >
-                            {day}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                    
-                    <div className="bg-gray-50 rounded-lg p-4 text-center">
-                      <h3 className="text-sm font-medium text-gray-500 mb-1">Class Distribution</h3>
-                      <div className="flex justify-center mt-3">
-                        {/* Simple pie chart visualization */}
-                        <div className="relative w-24 h-24">
-                          <svg viewBox="0 0 36 36" className="w-full h-full">
-                            <path
-                              d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                              fill="none"
-                              stroke="#E5E7EB"
-                              strokeWidth="4"
-                            />
-                            <path
-                              d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                              fill="none"
-                              stroke="#3B82F6"
-                              strokeWidth="4"
-                              strokeDasharray="25, 100"
-                              strokeDashoffset="25"
-                            />
-                            <path
-                              d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                              fill="none"
-                              stroke="#8B5CF6"
-                              strokeWidth="4"
-                              strokeDasharray="20, 100"
-                              strokeDashoffset="0"
-                            />
-                            <path
-                              d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                              fill="none"
-                              stroke="#10B981"
-                              strokeWidth="4"
-                              strokeDasharray="30, 100"
-                              strokeDashoffset="50"
-                            />
-                          </svg>
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-3 gap-1 mt-3 text-xs">
-                        <div className="flex items-center">
-                          <span className="w-3 h-3 rounded-full bg-blue-500 mr-1"></span>
-                          <span className="text-gray-600">Math</span>
-                        </div>
-                        <div className="flex items-center">
-                          <span className="w-3 h-3 rounded-full bg-purple-500 mr-1"></span>
-                          <span className="text-gray-600">Science</span>
-                        </div>
-                        <div className="flex items-center">
-                          <span className="w-3 h-3 rounded-full bg-emerald-500 mr-1"></span>
-                          <span className="text-gray-600">English</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
               )}
             </>
           )}
 
           {!isLoading && activeTab === "viewClass" && selectedClass && (
-            <EnhancedClassDetailPage 
+            <EnhancedClassDetailPage
               classData={selectedClass}
               onBack={handleBackToClasses}
             />

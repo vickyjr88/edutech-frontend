@@ -52,7 +52,7 @@ export interface Cohort {
     discount: number;
     classDates: string[]; // Probably ISO date strings
     _id: string;
-  };
+};
 
 export interface ClassDetail extends Class {
     description: string;
@@ -189,7 +189,7 @@ export const classService = {
     getLessonPlans: (classId: string): Promise<ApiResponse<LessonPlan[]>> => {
         return api.get<LessonPlan[]>(`/classes/${classId}/lesson-plans`);
     },
-    
+
     addLessonPlan: (classId: string, lessonPlan: LessonPlan): Promise<ApiResponse<ClassDetail>> => {
         return api.post<ClassDetail>(`/classes/${classId}/lesson-plans`, lessonPlan);
     },
@@ -305,5 +305,13 @@ export const classService = {
 
     recalculateSchedules: (): Promise<ApiResponse<never>> => {
         return api.post<never>('/classes/recalculate-schedules', {});
+    },
+
+    addCohort: (classId: string, cohortData: any): Promise<ApiResponse<ClassDetail>> => {
+        return api.post<ClassDetail>(`/classes/${classId}/cohorts`, cohortData);
+    },
+
+    updateCohort: (classId: string, cohortId: string, cohortData: any): Promise<ApiResponse<ClassDetail>> => {
+        return api.patch<ClassDetail>(`/classes/${classId}/cohorts/${cohortId}`, cohortData);
     }
 };

@@ -15,7 +15,7 @@ interface TeacherRouteProps {
  * @param requireProfileComplete If true, redirect to profile setup if profile is incomplete
  */
 const TeacherRoute = ({ children, requireProfileComplete = true }: TeacherRouteProps) => {
-  const { user, isLoading, retryBackendUserFetch } = useAuth();
+  const { user, isLoading, retryBackendUserFetch, signOut } = useAuth();
   const location = useLocation();
   const [isProfileComplete, setIsProfileComplete] = useState<boolean | null>(null);
   const [isCheckingProfile, setIsCheckingProfile] = useState(true);
@@ -27,7 +27,7 @@ const TeacherRoute = ({ children, requireProfileComplete = true }: TeacherRouteP
         try {
           // Get the teacher profile
           const { data } = await teacherService.getProfileById(user.teacherId);
-          
+
           // Check if the profile is complete
           setIsProfileComplete(data?.isProfileComplete || false);
         } catch (error) {
@@ -67,44 +67,49 @@ const TeacherRoute = ({ children, requireProfileComplete = true }: TeacherRouteP
     return <Navigate to="/student-dashboard" replace />;
   }
 
-  // If teacher doesn't have teacherId, show error state with retry option
-  if (!user.teacherId) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4 text-center max-w-md">
-          <div className="text-red-500 text-4xl">⚠️</div>
-          <h2 className="text-xl font-semibold text-gray-800">Account Setup Incomplete</h2>
-          <p>{ JSON.stringify(user)}</p>
-          <p className="text-gray-600">
-            Your teacher account is missing required information. This may be a temporary issue.
-          </p>
-          <div className="flex gap-2">
-            <button 
-              onClick={retryBackendUserFetch}
-              disabled={isLoading}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
-            >
-              {isLoading ? 'Retrying...' : 'Retry Setup'}
-            </button>
-            <button 
-              onClick={() => window.location.reload()} 
-              className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700"
-            >
-              Refresh Page
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // if (!user.teacherId) {
+  //   return (
+  //     <div className="min-h-screen flex items-center justify-center">
+  //       <div className="flex flex-col items-center gap-4 text-center max-w-md">
+  //         <div className="text-red-500 text-4xl">⚠️</div>
+  //         <h2 className="text-xl font-semibold text-gray-800">Account Setup Incomplete</h2>
+  //         <p>{JSON.stringify(user)}</p>
+  //         <p className="text-gray-600">
+  //           Your teacher account is missing required information. This may be a temporary issue.
+  //         </p>
+  //         <div className="flex gap-2">
+  //           <button
+  //             onClick={retryBackendUserFetch}
+  //             disabled={isLoading}
+  //             className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+  //           >
+  //             {isLoading ? 'Retrying...' : 'Retry Setup'}
+  //           </button>
+  //           <button
+  //             onClick={() => window.location.reload()}
+  //             className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700"
+  //           >
+  //             Refresh Page
+  //           </button>
+  //           <button
+  //             onClick={() => signOut()}
+  //             className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+  //           >
+  //             Logout
+  //           </button>
+  //         </div>
+  //       </div>
+  //     </div>
+  //   );
+  // }
 
   // Redirect to profile setup if teacher profile is incomplete and the route requires completion
-  if (requireProfileComplete && isProfileComplete === false) {
-    // Don't redirect if we're already on the profile setup page
-    if (location.pathname !== '/teacher-profile-setup') {
-      return <Navigate to="/teacher-profile-setup" replace />;
-    }
-  }
+  // if (requireProfileComplete && isProfileComplete === false) {
+  //   // Don't redirect if we're already on the profile setup page
+  //   if (location.pathname !== '/teacher-profile-setup') {
+  //     return <Navigate to="/teacher-profile-setup" replace />;
+  //   }
+  // }
 
   // Do not redirect from profile setup page even if profile is complete
   // This allows users to edit their profile regardless of completion status

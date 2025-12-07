@@ -1,10 +1,10 @@
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import AssignmentDialog from "./AssignmentDialog";
 import { AssignmentStatistics } from "./components/AssignmentStatistics";
 import { AssignmentsTable } from "./components/AssignmentsTable";
-import { getMockAssignmentsData, Assignment } from "./data/mockAssignmentsData";
+import { Assignment } from "./data/mockAssignmentsData";
 import { useGetStudentCurrentEnrollments } from "@/hooks/use-enrollment-service";
 import { useGetStudentAssignmentsByClass } from "@/hooks/use-assignment-service";
 import { AssignmentType } from "@/integrations/api/services/assignment.service";

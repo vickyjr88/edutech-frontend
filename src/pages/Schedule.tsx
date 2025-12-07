@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar as CalendarIcon, Plus, Filter, ChevronDown, RefreshCw } from "lucide-react";
@@ -14,26 +13,122 @@ import { EventFormDialog } from "@/components/schedule/EventFormDialog";
 import { Toaster } from "@/components/ui/toaster";
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import { useEvents } from "@/hooks/useEvents";
+import { googleCalendarService } from "@/integrations/api/services/google-calendar.service";
+import { ScheduleEvent } from "@/types/calendar";
 
 const Schedule = () => {
   const { user } = useAuth();
+  const { events, createEvent, updateEvent, deleteEvent, refreshEvents } = useEvents();
   const [view, setView] = useState<"month" | "week" | "day">("day");
   const [showAddEventDialog, setShowAddEventDialog] = useState(false);
-  
-  const handleGoogleSync = () => {
-    toast({
-      title: "Sync initiated",
-      description: "Syncing with Google Calendar...",
-    });
-    
-    // Simulate syncing process
-    setTimeout(() => {
-      toast({
-        title: "Sync complete",
-        description: "Your schedule has been synced with Google Calendar",
-      });
-    }, 2000);
+  const [selectedEvent, setSelectedEvent] = useState<ScheduleEvent | undefined>(undefined);
+
+  const [selectedEventTypes, setSelectedEventTypes] = useState<string[]>(['Classes', 'Hangouts', 'Birthdays', 'Achievements', 'Assignments']);
+
+  const handleEventTypeToggle = (type: string) => {
+    setSelectedEventTypes(prev =>
+      prev.includes(type)
+        ? prev.filter(t => t !== type)
+        : [...prev, type]
+    );
   };
+
+  const getEventTypeColor = (type: string, isSelected: boolean) => {
+    if (!isSelected) return "bg-gray-100 text-gray-500 hover:bg-gray-200 border-transparent";
+    switch (type) {
+      case 'Classes': return "bg-blue-100 text-blue-700 hover:bg-blue-200 border-blue-200";
+      case 'Hangouts': return "bg-green-100 text-green-700 hover:bg-green-200 border-green-200";
+      case 'Birthdays': return "bg-amber-100 text-amber-700 hover:bg-amber-200 border-amber-200";
+      case 'Achievements': return "bg-purple-100 text-purple-700 hover:bg-purple-200 border-purple-200";
+      case 'Assignments': return "bg-rose-100 text-rose-700 hover:bg-rose-200 border-rose-200";
+      default: return "bg-gray-100 text-gray-700";
+    }
+  };
+
+  const handleGoogleSync = async () => {
+    toast({ title: "Sync initiated", description: "Checking Google Calendar connection..." });
+    try {
+      const { data: statusData, error: statusError } = await googleCalendarService.getConnectionStatus();
+
+      if (statusError) {
+        throw statusError;
+      }
+
+      if (statusData?.connected) {
+        toast({ title: "Synced", description: "Schedule updated." });
+        refreshEvents();
+      } else {
+        toast({ title: "Connecting", description: "Redirecting to Google Calendar authorization..." });
+        const { data: authData, error: authError } = await googleCalendarService.getAuthUrl();
+
+        if (authError) throw authError;
+
+        if (authData?.authUrl) {
+          window.location.href = authData.authUrl;
+        }
+      }
+    } catch (error) {
+      console.error("Sync error:", error);
+      toast({ title: "Error", description: "Failed to sync with Google Calendar.", variant: "destructive" });
+    }
+  };
+
+  const filteredEvents = events.filter(event => {
+    const typeMapping: Record<string, string> = {
+      'Classes': 'class',
+      'Hangouts': 'hangout',
+      'Birthdays': 'birthday',
+      'Achievements': 'achievement',
+      'Assignments': 'assignment'
+    };
+    return selectedEventTypes.some(t => typeMapping[t] === event.type);
+  });
+
+  const handleEditEvent = (event: ScheduleEvent) => {
+    setSelectedEvent(event);
+    setShowAddEventDialog(true);
+  };
+
+  const handleDeleteEvent = async (event: ScheduleEvent) => {
+    await deleteEvent(event.id);
+  };
+
+  const handleSaveEvent = async (event: ScheduleEvent) => {
+    if (selectedEvent) {
+      await updateEvent(event.id, event);
+    } else {
+      await createEvent(event);
+    }
+  };
+
+  const handleAddEvent = (date?: Date) => {
+    setSelectedEvent(undefined);
+    if (date) {
+      // Pre-fill date if provided (e.g. from clicking a slot)
+      // We'll handle this by passing initial values if EventFormDialog supported it, 
+      // but for now simple 'add' is fine, or we can set a temp state.
+      // Ideally EventFormDialog should be refactored to accept initialDate but we'll skip for now or rely on eventToEdit being null.
+      // Actually, let's create a temp object if date is passed to initialize the form
+      setSelectedEvent({
+        id: '',
+        title: '',
+        date: date.toISOString(),
+        time: '',
+        type: 'class',
+        duration: 1
+      } as ScheduleEvent); // Type assertion for partial initialization
+    }
+    setShowAddEventDialog(true);
+  }
+
+  // Handle dialog close to reset selected event
+  const onDialogChange = (open: boolean) => {
+    setShowAddEventDialog(open);
+    if (!open) {
+      setTimeout(() => setSelectedEvent(undefined), 300); // clear after animation
+    }
+  }
 
   return (
     <div className="flex min-h-screen bg-gradient-to-b from-blue-50 to-white">
@@ -50,9 +145,9 @@ const Schedule = () => {
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
               <h1 className="text-2xl font-bold text-gray-800">Schedule</h1>
               <div className="flex items-center gap-2">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
+                <Button
+                  variant="outline"
+                  size="sm"
                   className="flex items-center gap-2"
                   onClick={handleGoogleSync}
                 >
@@ -71,25 +166,30 @@ const Schedule = () => {
                     <div className="space-y-2">
                       <h4 className="font-medium">Event Types</h4>
                       <div className="flex flex-wrap gap-2">
-                        <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-200 cursor-pointer">Classes</Badge>
-                        <Badge className="bg-green-100 text-green-700 hover:bg-green-200 cursor-pointer">Hangouts</Badge>
-                        <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-200 cursor-pointer">Birthdays</Badge>
-                        <Badge className="bg-purple-100 text-purple-700 hover:bg-purple-200 cursor-pointer">Achievements</Badge>
-                        <Badge className="bg-rose-100 text-rose-700 hover:bg-rose-200 cursor-pointer">Assignments</Badge>
+                        {['Classes', 'Hangouts', 'Birthdays', 'Achievements', 'Assignments'].map(type => (
+                          <Badge
+                            key={type}
+                            variant="outline"
+                            className={`cursor-pointer transition-colors border ${getEventTypeColor(type, selectedEventTypes.includes(type))}`}
+                            onClick={() => handleEventTypeToggle(type)}
+                          >
+                            {type}
+                          </Badge>
+                        ))}
                       </div>
                     </div>
                   </PopoverContent>
                 </Popover>
-                <Button 
-                  size="sm" 
+                <Button
+                  size="sm"
                   className="bg-kidato-purple hover:bg-kidato-dark-blue"
-                  onClick={() => setShowAddEventDialog(true)}
+                  onClick={() => handleAddEvent()}
                 >
                   <Plus size={16} className="mr-1" /> Add Event
                 </Button>
               </div>
             </div>
-            
+
             {/* Full-width Calendar Area */}
             <div className="w-full">
               <Card className="border-2 border-blue-100">
@@ -109,7 +209,13 @@ const Schedule = () => {
                   </div>
                 </CardHeader>
                 <CardContent className="p-6">
-                  <ScheduleCalendar view={view} />
+                  <ScheduleCalendar
+                    view={view}
+                    events={filteredEvents}
+                    onEventClick={handleEditEvent}
+                    onAddEvent={handleAddEvent}
+                    onDeleteEvent={handleDeleteEvent}
+                  />
                 </CardContent>
               </Card>
             </div>
@@ -120,10 +226,12 @@ const Schedule = () => {
       {/* Kidato AI Mascot */}
       <KidatoMascot />
 
-      {/* Add Event Dialog */}
-      <EventFormDialog 
+      {/* Add/Edit Event Dialog */}
+      <EventFormDialog
         open={showAddEventDialog}
-        onOpenChange={setShowAddEventDialog}
+        onOpenChange={onDialogChange}
+        eventToEdit={selectedEvent}
+        onSave={handleSaveEvent}
       />
 
       {/* Toaster for notifications */}

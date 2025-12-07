@@ -101,6 +101,20 @@ export interface RecentActivity {
     timestamp: string;
 }
 
+export interface LeaderboardEntry {
+    id: string;
+    studentId: string;
+    userId: string;
+    rank: number;
+    name: string;
+    avatar?: string;
+    grade: string;
+    points: number;
+    achievements: number;
+    streak: number;
+    level: string;
+}
+
 export const studentService = {
     getProfile: (studentId: string): Promise<ApiResponse<Student>> => {
         return api.get<Student>(`/users/profile`);
@@ -132,5 +146,10 @@ export const studentService = {
 
     getRecentActivities: (userId: string): Promise<ApiResponse<RecentActivity[]>> => {
         return api.get<RecentActivity[]>(`/recent-activities/${userId}`);
+    },
+
+    getLeaderboard: (limit?: number): Promise<ApiResponse<LeaderboardEntry[]>> => {
+        const query = limit ? `?limit=${limit}` : '';
+        return api.get<LeaderboardEntry[]>(`/students/leaderboard${query}`);
     }
 };

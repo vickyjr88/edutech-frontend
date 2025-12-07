@@ -3,10 +3,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  BookOpen, 
-  PlusCircle, 
-  Loader2, 
+import {
+  BookOpen,
+  PlusCircle,
+  Loader2,
   Sparkles,
   CheckCircle2,
   Clock,
@@ -66,10 +66,10 @@ const TabbedClassesView: React.FC<TabbedClassesViewProps> = ({
   zoomConnected = false,
   calendarConnected = false,
   driveConnected = false,
-  onViewProfile = () => {},
-  onConnectZoom = () => {},
-  onConnectCalendar = () => {},
-  onConnectDrive = () => {}
+  onViewProfile = () => { },
+  onConnectZoom = () => { },
+  onConnectCalendar = () => { },
+  onConnectDrive = () => { }
 }) => {
   const [activeClassTab, setActiveClassTab] = useState<ClassStatus>('published');
   const [useEnhancedView, setUseEnhancedView] = useState(true);
@@ -77,8 +77,8 @@ const TabbedClassesView: React.FC<TabbedClassesViewProps> = ({
   // Categorize classes by status
   const categorizeClasses = () => {
     return {
-      published: classes.filter(c => c.status === 'published'),
-      draft: classes.filter(c => c.status === 'draft' || !c.status),
+      published: classes.filter(c => c.status === 'published' || (!c.status && c.isPublished === true)),
+      draft: classes.filter(c => c.status === 'draft' || (!c.status && !c.isPublished)),
       pending_review: classes.filter(c => c.status === 'pending_review'),
       archived: classes.filter(c => c.status === 'archived')
     };
@@ -100,7 +100,7 @@ const TabbedClassesView: React.FC<TabbedClassesViewProps> = ({
   const renderClassCard = (classItem: any) => {
     const classId = classItem._id || classItem.id;
     const currentEnrollment = classItem.enrollment?.current || 0;
-    
+
     // Debug: Log class data structure for published classes
     if (classItem.status === 'published') {
       console.log('Published class data:', {
@@ -112,7 +112,7 @@ const TabbedClassesView: React.FC<TabbedClassesViewProps> = ({
         enrollment: classItem.enrollment
       });
     }
-    
+
     const getStatusBadge = () => {
       if (classItem.status === 'pending_review') {
         return (
@@ -147,9 +147,9 @@ const TabbedClassesView: React.FC<TabbedClassesViewProps> = ({
     };
 
     return (
-      <Card 
-        key={classId} 
-        className="cursor-pointer kidato-card-hover group bg-white border border-athens-gray-200 hover:border-indigo-200" 
+      <Card
+        key={classId}
+        className="cursor-pointer kidato-card-hover group bg-white border border-athens-gray-200 hover:border-indigo-200"
         onClick={() => onViewClass(classItem)}
       >
         <CardHeader>
@@ -167,7 +167,7 @@ const TabbedClassesView: React.FC<TabbedClassesViewProps> = ({
           <p className="text-sm text-gray-500 line-clamp-2 mb-4">
             {classItem.description || "No description provided"}
           </p>
-          
+
           {/* Show additional info for published classes */}
           {classItem.status === 'published' && (
             <div className="mb-4 p-3 bg-indigo-50 border border-indigo-200 rounded-lg group-hover:bg-indigo-100 transition-colors duration-200">
@@ -180,13 +180,13 @@ const TabbedClassesView: React.FC<TabbedClassesViewProps> = ({
                   <DollarSign className="h-4 w-4 mr-1" />
                   {(() => {
                     // Try different price sources
-                    const price = classItem.price || 
-                                 classItem.cohorts?.[0]?.price || 
-                                 classItem.pricing?.amount ||
-                                 classItem.cost ||
-                                 0;
+                    const price = classItem.price ||
+                      classItem.cohorts?.[0]?.price ||
+                      classItem.pricing?.amount ||
+                      classItem.cost ||
+                      0;
                     const discount = classItem.discount || classItem.cohorts?.[0]?.discount || 0;
-                    
+
                     return (
                       <>
                         ${typeof price === 'string' ? price : price}
@@ -202,8 +202,8 @@ const TabbedClassesView: React.FC<TabbedClassesViewProps> = ({
               </div>
               <div className="flex justify-between text-xs text-indigo-700">
                 <span>
-                  {classItem.cohorts && classItem.cohorts.length > 0 
-                    ? `Cohort ${classItem.cohorts[0].name || 'A'} • ${classItem.cohorts[0].schedule || classItem.cohorts[0].startTime && classItem.cohorts[0].endTime ? `${classItem.cohorts[0].startTime}-${classItem.cohorts[0].endTime}` : 'Schedule TBD'}` 
+                  {classItem.cohorts && classItem.cohorts.length > 0
+                    ? `Cohort ${classItem.cohorts[0].name || 'A'} • ${classItem.cohorts[0].schedule || classItem.cohorts[0].startTime && classItem.cohorts[0].endTime ? `${classItem.cohorts[0].startTime}-${classItem.cohorts[0].endTime}` : 'Schedule TBD'}`
                     : 'Default Cohort • Schedule TBD'
                   }
                 </span>
@@ -214,7 +214,7 @@ const TabbedClassesView: React.FC<TabbedClassesViewProps> = ({
               </div>
             </div>
           )}
-          
+
           {/* Smart Alerts */}
           {classItem.status === 'published' && currentEnrollment === 0 && (
             <div className="mb-3 p-2 bg-sea-buckthorn-50 border border-sea-buckthorn-200 rounded-lg kidato-urgent-pulse">
@@ -224,7 +224,7 @@ const TabbedClassesView: React.FC<TabbedClassesViewProps> = ({
               </div>
             </div>
           )}
-          
+
           {classItem.status === 'draft' && (
             <div className="mb-3 p-2 bg-pigeon-post-50 border border-pigeon-post-200 rounded-lg">
               <div className="flex items-center text-sm text-pigeon-post-800">
@@ -274,8 +274,8 @@ const TabbedClassesView: React.FC<TabbedClassesViewProps> = ({
               <div className="flex gap-2">
                 {classItem.status === 'published' && (
                   <>
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       size="sm"
                       onClick={(e) => {
                         e.stopPropagation();
@@ -286,8 +286,8 @@ const TabbedClassesView: React.FC<TabbedClassesViewProps> = ({
                       <MessageCircle className="h-4 w-4 mr-1" />
                       Message
                     </Button>
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       size="sm"
                       onClick={(e) => {
                         e.stopPropagation();
@@ -301,8 +301,8 @@ const TabbedClassesView: React.FC<TabbedClassesViewProps> = ({
                   </>
                 )}
                 {classItem.status === 'draft' && (
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     size="sm"
                     onClick={(e) => {
                       e.stopPropagation();
@@ -315,8 +315,8 @@ const TabbedClassesView: React.FC<TabbedClassesViewProps> = ({
                   </Button>
                 )}
               </div>
-              <Button 
-                variant="ghost" 
+              <Button
+                variant="ghost"
                 size="sm"
                 onClick={(e) => {
                   e.stopPropagation();

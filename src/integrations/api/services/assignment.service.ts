@@ -84,6 +84,16 @@ export interface AssignmentFilters {
   limit?: number;
 }
 
+export interface PaginatedResponse<T> {
+  data: T[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrev: boolean;
+}
+
 export const assignmentService = {
   // Get assignments for a specific class
   getAssignmentsByClass: (classId: string, filters?: Partial<AssignmentFilters>): Promise<ApiResponse<Assignment[]>> => {
@@ -96,14 +106,14 @@ export const assignmentService = {
   },
 
   // Get assignments for the current student
-  getStudentAssignments: (filters?: AssignmentFilters): Promise<ApiResponse<StudentAssignment[]>> => {
-    return api.get<StudentAssignment[]>('/assignments/submissions/my-assignments', { params: filters });
+  getStudentAssignments: (filters?: AssignmentFilters): Promise<ApiResponse<PaginatedResponse<StudentAssignment>>> => {
+    return api.get<PaginatedResponse<StudentAssignment>>('/assignments/submissions/my-assignments', { params: filters });
   },
 
   // Get student assignments for a specific class
-  getStudentAssignmentsByClass: (classId: string, filters?: Partial<AssignmentFilters>): Promise<ApiResponse<StudentAssignment[]>> => {
-    return api.get<StudentAssignment[]>('/assignments/submissions/my-assignments', { 
-      params: { ...filters, classId } 
+  getStudentAssignmentsByClass: (classId: string, filters?: Partial<AssignmentFilters>): Promise<ApiResponse<PaginatedResponse<StudentAssignment>>> => {
+    return api.get<PaginatedResponse<StudentAssignment>>('/assignments/submissions/my-assignments', {
+      params: { ...filters, classId }
     });
   },
 
