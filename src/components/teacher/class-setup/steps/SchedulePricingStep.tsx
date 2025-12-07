@@ -11,6 +11,7 @@ import {
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { toast } from 'sonner';
 
 import { CohortData } from '../types';
 import CohortFormDialog from '../cohort-form/CohortFormDialog';
@@ -279,10 +280,15 @@ const SchedulePricingStep = ({ form, cohorts, setCohorts, onNext, onPrev, curric
                     </Button>
                     <Button
                         type="button"
-                        onClick={onNext}
+                        onClick={() => {
+                            if (cohorts.length === 0) {
+                                toast.error("Please add at least one cohort schedule.");
+                                return;
+                            }
+                            onNext();
+                        }}
                         size="lg"
                         className="bg-gradient-to-r from-kidato-indigo-500 to-kidato-orange-500 hover:from-kidato-indigo-600 hover:to-kidato-orange-600 text-white font-semibold px-8 py-3 rounded-xl shadow-lg transition-all duration-200 transform hover:scale-105"
-                        disabled={cohorts.length === 0}
                     >
                         Review & Publish
                         <ArrowRight className="ml-2 h-4 w-4" />

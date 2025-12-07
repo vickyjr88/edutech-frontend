@@ -1,22 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { 
-  Calendar, 
-  FileText, 
+import {
+  Calendar,
+  FileText,
   GraduationCap,
-  CheckCircle} from 'lucide-react';
+  CheckCircle
+} from 'lucide-react';
 
 import { Form } from '@/components/ui/form';
 import { Progress } from '@/components/ui/progress';
 
-import { ClassFormValues, CohortData, classSchema, Curriculum } from './types';
-import { useAuth } from '@/contexts/AuthContext';
+import { ClassFormValues, Curriculum } from './types';
+import { useAcademicClass } from './AcademicClassContext';
 import { platformService } from '@/integrations/api/services/platform.service';
 import { toast } from 'sonner';
 import ClassPreviewPage from './ClassPreviewPage';
 import ClassFoundationStep from './steps/ClassFoundationStep';
-import LessonPlanningStep from './steps/LessonPlaningStep';
+import LessonPlanningStep from './steps/LessonPlanningStep';
 import SchedulePricingStep from './steps/SchedulePricingStep';
 
 interface AcademicClassCreatorProps {
@@ -34,76 +33,24 @@ interface StepConfig {
 }
 
 const AcademicClassCreator: React.FC<AcademicClassCreatorProps> = ({
-  onSubmit,
-  initialValues,
-  classId
+  onSubmit, // now handled by context onComplete
+  initialValues, // now handled by context
+  classId: propClassId // now handled by context
 }) => {
-  const { } = useAuth();
-  const [currentStep, setCurrentStep] = useState(0);
-  const [cohorts, setCohorts] = useState<CohortData[]>([]);
-  const [createdClassId, setCreatedClassId] = useState<string | null>(classId || null);
-  const [isSaving, setIsSaving] = useState(false);
+  const {
+    form,
+    currentStep,
+    setCurrentStep,
+    cohorts,
+    setCohorts,
+    saveDraft,
+    publishClass,
+    isSubmitting,
+    classId
+  } = useAcademicClass();
+
   const [curricula, setCurricula] = useState<Curriculum[]>([]);
   const [loadingCurricula, setLoadingCurricula] = useState(true);
-  const [isPublishing, setIsPublishing] = useState(false);
-
-  const form = useForm<ClassFormValues>({
-    resolver: zodResolver(classSchema),
-    defaultValues: {
-      type: 'academic',
-      title: '',
-      curriculum: '',
-      curriculumLevel: '',
-      subject: '',
-      description: '',
-      objectives: '',
-      numberOfLessons: 8,
-      isPublic: true,
-      isPublished: false,
-      status: 'draft',
-      hasCohorts: false,
-      hasTeamTeaching: false,
-      lessonPlans: [],
-      // New media fields
-      introVideoUrl: '',
-      thumbnailUrl: '',
-      // Course documents
-      courseOutlineFile: '',
-      syllabusFile: '',
-      schemeOfWorkFile: '',
-      // Materials and resources
-      materials: [],
-      resourceLinks: [],
-      ...initialValues
-    }
-  });
-
-  const handlePublish = async () => {
-    setIsPublishing(true);
-    const formData = {
-      ...form.getValues(),
-      type: 'academic' as const,
-      isPublished: true,
-      status: 'published'
-    };
-    
-    try {
-      await onSubmit(formData);
-    } finally {
-      setIsPublishing(false);
-    }
-  };
-
-  const handleSaveDraft = async () => {
-    const formData = {
-      ...form.getValues(),
-      type: 'academic' as const,
-      isPublished: false,
-      status: 'draft'
-    };
-    
-    await onSubmit(formData);
-  };
 
   // Fetch curricula data
   useEffect(() => {
@@ -120,7 +67,7 @@ const AcademicClassCreator: React.FC<AcademicClassCreatorProps> = ({
         setLoadingCurricula(false);
       }
     };
-    
+
     void fetchCurricula();
   }, []);
 
@@ -160,32 +107,14 @@ const AcademicClassCreator: React.FC<AcademicClassCreatorProps> = ({
   const nextStep = async () => {
     if (currentStep < steps.length - 1) {
       // Save class to API after foundation step (step 0) before moving to lesson planning
-      if (currentStep === 0 && !createdClassId) {
-        setIsSaving(true);
+      if (currentStep === 0 && !classId) {
         try {
-          const formData = {
-            ...form.getValues(),
-            type: 'academic' as const,
-            isPublished: false,
-            status: 'draft'
-          };
-          
-          // Call the onSubmit function to create the class
-          try {
-            onSubmit(formData);
-            // Note: onSubmit returns void, so we can't get the class ID from it
-            // The classId would need to be passed as a prop or via a different mechanism
-          } catch (submitError) {
-            console.error('Submit error:', submitError);
-          }
-          
+          await saveDraft();
           setCurrentStep(currentStep + 1);
           toast.success('Class foundation saved! Moving to lesson planning...');
         } catch (error) {
           console.error('Error saving class:', error);
-          toast.error('Failed to save class. Please try again.');
-        } finally {
-          setIsSaving(false);
+          // Toast is handled in saveDraft
         }
       } else {
         setCurrentStep(currentStep + 1);
@@ -213,28 +142,26 @@ const AcademicClassCreator: React.FC<AcademicClassCreatorProps> = ({
                 Step {currentStep + 1} of {steps.length}
               </div>
             </div>
-            
+
             <Progress value={progress} className="h-2 mb-4" />
-            
+
             <div className="flex items-center gap-4">
               {steps.map((step, index) => (
                 <div
                   key={step.id}
-                  className={`flex items-center gap-2 ${
-                    index === currentStep 
-                      ? 'text-kidato-blue font-medium' 
-                      : index < currentStep 
-                      ? 'text-green-600' 
+                  className={`flex items-center gap-2 ${index === currentStep
+                    ? 'text-kidato-blue font-medium'
+                    : index < currentStep
+                      ? 'text-green-600'
                       : 'text-gray-400'
-                  }`}
+                    }`}
                 >
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm ${
-                    index === currentStep 
-                      ? 'bg-kidato-blue text-white' 
-                      : index < currentStep 
-                      ? 'bg-green-600 text-white' 
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm ${index === currentStep
+                    ? 'bg-kidato-blue text-white'
+                    : index < currentStep
+                      ? 'bg-green-600 text-white'
                       : 'bg-gray-200 text-gray-600'
-                  }`}>
+                    }`}>
                     {index < currentStep ? (
                       <CheckCircle className="h-4 w-4" />
                     ) : (
@@ -258,12 +185,10 @@ const AcademicClassCreator: React.FC<AcademicClassCreatorProps> = ({
             setCohorts={setCohorts}
             onNext={nextStep}
             onPrev={prevStep}
-            onSubmit={onSubmit}
-            onPublish={() => {
-              console.log('Publishing class...', form.getValues());
-            }}
-            isSaving={isSaving}
-            createdClassId={createdClassId}
+            onSubmit={saveDraft}
+            onPublish={publishClass}
+            isSaving={isSubmitting}
+            createdClassId={classId}
             curricula={curricula}
             loadingCurricula={loadingCurricula}
           />

@@ -1,16 +1,18 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Target, 
-  FileText, 
+import {
+  Target,
+  FileText,
   Plus,
   CheckCircle,
   ArrowRight,
-  ArrowLeft} from 'lucide-react';
+  ArrowLeft
+} from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { toast } from 'sonner';
 
 import { LessonFormRedesigned } from '../lesson-plans/LessonFormRedesigned';
 
@@ -70,7 +72,7 @@ const LessonPlanningStep = ({ form, onNext, onPrev, createdClassId }: any) => {
   };
 
   const updateLesson = (index: number, field: string, value: any) => {
-    const updatedLessons = lessons.map((lesson: any, i: number) => 
+    const updatedLessons = lessons.map((lesson: any, i: number) =>
       i === index ? { ...lesson, [field]: value } : lesson
     );
     setLessons(updatedLessons);
@@ -78,8 +80,8 @@ const LessonPlanningStep = ({ form, onNext, onPrev, createdClassId }: any) => {
   };
 
   const validateLessons = () => {
-    return lessons.length > 0 && lessons.every((lesson: any) => 
-      lesson.title && 
+    return lessons.length > 0 && lessons.every((lesson: any) =>
+      lesson.title &&
       lesson.description &&
       lesson.objectives &&
       lesson.objectives.length >= 1 &&
@@ -91,8 +93,49 @@ const LessonPlanningStep = ({ form, onNext, onPrev, createdClassId }: any) => {
   const selectedSubject = form.watch('subject');
   const selectedCurriculum = form.watch('curriculum');
 
+  const handleNext = () => {
+    if (lessons.length === 0) {
+      toast.error("Please add at least one lesson plan.");
+      return;
+    }
+
+    const invalidLessonIndex = lessons.findIndex((lesson: any) =>
+      !lesson.title ||
+      !lesson.description ||
+      !lesson.objectives ||
+      lesson.objectives.length === 0 ||
+      !lesson.objectives.every((obj: any) => obj.objective && obj.objective.trim().length > 0)
+    );
+
+    if (invalidLessonIndex !== -1) {
+      const lesson = lessons[invalidLessonIndex];
+      if (!lesson.title) {
+        toast.error(`Lesson ${invalidLessonIndex + 1} is missing a title.`);
+        return;
+      }
+      if (!lesson.description) {
+        toast.error(`Lesson ${invalidLessonIndex + 1} is missing Main Activity description.`);
+        return;
+      }
+      if (!lesson.objectives || lesson.objectives.length === 0) {
+        toast.error(`Lesson ${invalidLessonIndex + 1} requires at least one learning objective.`);
+        return;
+      }
+      if (!lesson.objectives.every((obj: any) => obj.objective && obj.objective.trim().length > 0)) {
+        toast.error(`Lesson ${invalidLessonIndex + 1} has empty objectives.`);
+        return;
+      }
+      // Fallback generic error
+      toast.error(`Lesson ${invalidLessonIndex + 1} is incomplete. Please fill all required fields.`);
+      return;
+    }
+
+    onNext();
+  };
+
   return (
     <div className="space-y-8">
+      {/* ... previous content ... */}
       <div className="text-center">
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
@@ -101,7 +144,7 @@ const LessonPlanningStep = ({ form, onNext, onPrev, createdClassId }: any) => {
         >
           <FileText className="h-8 w-8 text-white" />
         </motion.div>
-        
+
         <div className="space-y-3">
           <h2 className="text-2xl font-bold text-gray-900">
             Plan your lessons
@@ -111,10 +154,10 @@ const LessonPlanningStep = ({ form, onNext, onPrev, createdClassId }: any) => {
               </span>
             )}
           </h2>
-          
+
           <div className="space-y-2">
             <p className="text-gray-600">Structure your curriculum into comprehensive, engaging lessons</p>
-            
+
             {/* Context badges */}
             {(selectedSubject || selectedCurriculum) && (
               <div className="flex items-center justify-center gap-2">
@@ -214,10 +257,10 @@ const LessonPlanningStep = ({ form, onNext, onPrev, createdClassId }: any) => {
           </Button>
           <Button
             type="button"
-            onClick={onNext}
+            onClick={handleNext}
             size="lg"
             className="bg-gradient-to-r from-kidato-indigo-500 to-kidato-orange-500 hover:from-kidato-indigo-600 hover:to-kidato-orange-600 text-white font-semibold px-8 py-3 rounded-xl shadow-lg transition-all duration-200 transform hover:scale-105"
-            disabled={!validateLessons()}
+            disabled={lessons.length === 0}
           >
             Set Schedule & Pricing
             <ArrowRight className="ml-2 h-4 w-4" />

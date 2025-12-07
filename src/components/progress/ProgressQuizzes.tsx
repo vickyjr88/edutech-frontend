@@ -29,51 +29,6 @@ interface ProgressQuizzesProps {
   courseId?: string;
 }
 
-// Mock data for quizzes
-const getMockQuizzesData = () => {
-  return [
-    {
-      id: "quiz1",
-      title: "Numbers and Operations",
-      status: "completed",
-      completedDate: "Feb 1, 2025",
-      score: "9/10",
-      grade: "A",
-      timeSpent: "15 min",
-      passingScore: "70%"
-    },
-    {
-      id: "quiz2",
-      title: "Addition and Subtraction",
-      status: "completed",
-      completedDate: "Feb 8, 2025",
-      score: "8/10",
-      grade: "B",
-      timeSpent: "12 min",
-      passingScore: "70%"
-    },
-    {
-      id: "quiz3",
-      title: "Multiplication Tables",
-      status: "failed",
-      completedDate: "Feb 15, 2025",
-      score: "5/10",
-      grade: "F",
-      timeSpent: "18 min",
-      passingScore: "70%",
-      retakeAvailable: true
-    },
-    {
-      id: "quiz4",
-      title: "Division Problems",
-      status: "upcoming",
-      dueDate: "Feb 22, 2025",
-      estimatedDuration: "20 min",
-      passingScore: "70%"
-    },
-  ];
-};
-
 const ProgressQuizzes = ({ courseId }: ProgressQuizzesProps) => {
   const { user } = useAuth();
 

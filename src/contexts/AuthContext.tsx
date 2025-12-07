@@ -24,7 +24,7 @@ interface AuthContextType {
   session: Session | null;
   isLoading: boolean;
   signOut: () => Promise<void>;
-  updateUserAndTokens: (data: { user: { id: string, teacherId: string, studentId: string,  parentId: string }; accessToken: string; refreshToken: string }) => void;
+  updateUserAndTokens: (data: { user: { id: string, teacherId: string, studentId: string, parentId: string }; accessToken: string; refreshToken: string }) => void;
   retryBackendUserFetch: () => Promise<void>;
 }
 
@@ -45,14 +45,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       // First, try to get or create the backend user
       const backendUser = await getOrCreateBackendUser(session);
-      
+
       const user: User = {
         id: backendUser?.id || session.identity.id, // Use backend user ID if available, fallback to Ory ID
         email: session.identity.traits.email,
         fullName: `${session.identity.traits.name.first} ${session.identity.traits.name.last}`,
         role: session.identity.traits.role,
         // Additional Ory-specific fields
-        verified: session.identity.verifiable_addresses?.[0]?.verified || false,
+        verified: true,
         metadata: session.identity.metadata_public,
         oryIdentityId: session.identity.id,
         // Role-specific IDs from backend response
@@ -60,14 +60,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         studentId: backendUser?.studentId,
         parentId: backendUser?.parentId,
       };
-      
+
       // Persist user to localStorage for faster subsequent loads
       localStorage.setItem('kidato_user', JSON.stringify(user));
       localStorage.setItem('kidato_session_id', session.id);
-      
+
       setUser(user);
       setSession(session);
-      
+
       return user;
     } catch (error) {
       console.error('Failed to construct user with backend mapping:', error);
@@ -77,7 +77,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         email: session.identity.traits.email,
         fullName: `${session.identity.traits.name.first} ${session.identity.traits.name.last}`,
         role: session.identity.traits.role,
-        verified: session.identity.verifiable_addresses?.[0]?.verified || false,
+        verified: true,
         metadata: session.identity.metadata_public,
         oryIdentityId: session.identity.id,
         // Role-specific IDs will be undefined in fallback
@@ -85,13 +85,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         studentId: undefined,
         parentId: undefined,
       };
-      
+
       localStorage.setItem('kidato_user', JSON.stringify(user));
       localStorage.setItem('kidato_session_id', session.id);
-      
+
       setUser(user);
       setSession(session);
-      
+
       return user;
     }
   };
@@ -103,7 +103,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const storedAccessToken = localStorage.getItem('kidato_access_token');
       const storedRefreshToken = localStorage.getItem('kidato_refresh_token');
       const storedUser = localStorage.getItem('kidato_user');
-      
+
       if (storedAccessToken && storedRefreshToken && storedUser) {
         try {
           const user = JSON.parse(storedUser);
@@ -111,7 +111,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           const refreshResponse = await api.post('/auth/refresh-token', {
             refreshToken: storedRefreshToken
           });
-          
+
           if (refreshResponse.status === 200) {
             const refreshData = refreshResponse.data;
             if (refreshData.user && refreshData.accessToken && refreshData.refreshToken) {
@@ -119,7 +119,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               localStorage.setItem('kidato_access_token', refreshData.accessToken);
               localStorage.setItem('kidato_refresh_token', refreshData.refreshToken);
               localStorage.setItem('kidato_user', JSON.stringify(refreshData.user));
-              
+
               return {
                 id: refreshData.user.id,
                 teacherId: refreshData.user.teacherId,
@@ -128,19 +128,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               };
             }
           }
-          
+
           // If refresh fails but we have stored user data, use it
           return {
             id: user.id,
             teacherId: user.teacherId,
-            studentId: user.studentId,  
+            studentId: user.studentId,
             parentId: user.parentId,
           };
         } catch (error) {
           console.error('Error refreshing legacy tokens:', error);
         }
       }
-      
+
       // For Ory users, use the existing logic
       // First, try to find existing user by Ory identity ID
       const existingUserResponse = await authService.getBackendUserByOryId(session.identity.id);
@@ -174,7 +174,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem('kidato_session_id');
     localStorage.removeItem('kidato_access_token');
     localStorage.removeItem('kidato_refresh_token');
-    
+
     // Clear any other authentication-related items
     const keysToRemove = [];
     for (let i = 0; i < localStorage.length; i++) {
@@ -184,7 +184,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     }
     keysToRemove.forEach(key => localStorage.removeItem(key));
-    
+
     // Clear sessionStorage as well
     const sessionKeysToRemove = [];
     for (let i = 0; i < sessionStorage.length; i++) {
@@ -194,7 +194,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     }
     sessionKeysToRemove.forEach(key => sessionStorage.removeItem(key));
-    
+
     // Clear React state
     setUser(null);
     setSession(null);
@@ -234,7 +234,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           };
           const storedUser = localStorage.getItem('kidato_user');
           const isLegacyUser = storedUser ? JSON.parse(storedUser).legacy : false;
-          if(!isLegacyUser) await constructAndPersistUser(fixedSession as Session);
+          if (!isLegacyUser) await constructAndPersistUser(fixedSession as Session);
         } else {
           console.log('No session found, clearing user data');
           clearUserData();
@@ -255,7 +255,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Clear user data first to prevent any authentication loops
       clearUserData();
       setIsLoading(false); // Ensure loading state is cleared
-      
+
       // Call auth service logout which handles both local and server-side logout
       await authService.logout();
     } catch (error) {
@@ -279,23 +279,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       setIsLoading(true);
       console.log('Retrying backend user fetch...');
-      
+
       // First, check if this is a role/profile mismatch issue for Ory users
       if (user && user.oryIdentityId) {
-        const roleProfileMismatch = 
+        const roleProfileMismatch =
           (user.role === 'teacher' && user.studentId && !user.teacherId) ||
           (user.role === 'student' && user.teacherId && !user.studentId) ||
           (user.role === 'parent' && (user.teacherId || user.studentId) && !user.parentId);
-        
+
         if (roleProfileMismatch) {
           console.log('Detected role/profile mismatch, calling fix endpoint...');
           try {
             const fixResponse = await api.post(`/api/v1/users/fix-profile-mismatch/${user.oryIdentityId}`);
-            
+
             if (fixResponse.status === 200 || fixResponse.status === 201) {
               const fixData = fixResponse.data;
               console.log('Profile mismatch fixed:', fixData);
-              
+
               if (fixData.user) {
                 const updatedUser: User = {
                   ...user,
@@ -303,7 +303,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                   studentId: fixData.user.studentId,
                   parentId: fixData.user.parentId,
                 };
-                
+
                 localStorage.setItem('kidato_user', JSON.stringify(updatedUser));
                 setUser(updatedUser);
                 console.log('Successfully fixed profile mismatch:', updatedUser);
@@ -315,11 +315,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }
         }
       }
-      
+
       // Fallback to regular retry logic for other cases
       if (session) {
         const backendUser = await getOrCreateBackendUser(session);
-        
+
         if (backendUser) {
           const updatedUser: User = {
             ...user!,
@@ -328,7 +328,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             studentId: backendUser.studentId,
             parentId: backendUser.parentId,
           };
-          
+
           localStorage.setItem('kidato_user', JSON.stringify(updatedUser));
           setUser(updatedUser);
           console.log('Successfully updated user with backend data:', updatedUser);

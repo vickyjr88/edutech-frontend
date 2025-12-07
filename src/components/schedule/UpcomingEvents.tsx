@@ -1,33 +1,56 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CalendarClock } from "lucide-react";
+import { CalendarClock, Loader2 } from "lucide-react";
 import { format, isToday, isTomorrow, parseISO } from "date-fns";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { mockEvents, ScheduleEvent } from "./mockScheduleData";
+import { ScheduleEvent } from "./mockScheduleData";
 import { Separator } from "@/components/ui/separator";
 import { EventActions } from "./EventActions";
+import { useCurrentUpcomingSessions } from "@/hooks/use-student-service";
+import type { UpcomingSession } from "@/integrations/api/services/student.service";
 
 export function UpcomingEvents() {
-  const [events, setEvents] = useState<ScheduleEvent[]>([]);
+  const { data: upcomingSessionsResponse, isLoading } = useCurrentUpcomingSessions();
 
-  // Update events when mockEvents changes
-  useEffect(() => {
+  // Transform UpcomingSession data to ScheduleEvent format
+  const transformSessionToEvent = (session: UpcomingSession): ScheduleEvent => {
+    const startTime = new Date(session.startTime);
+    const endTime = new Date(startTime.getTime() + session.duration * 60 * 60 * 1000);
+
+    return {
+      id: parseInt(session.classId.substring(session.classId.length - 8), 16),
+      title: session.title,
+      date: session.startTime,
+      time: `${format(startTime, "h:mm a")} - ${format(endTime, "h:mm a")}`,
+      location: session.cohortName,
+      description: `${session.subject} with ${session.teacherName}`,
+      type: "class",
+      duration: session.duration,
+    };
+  };
+
+  // Process and sort events
+  const events = useMemo(() => {
+    if (!upcomingSessionsResponse?.data) return [];
+
+    const transformedEvents = upcomingSessionsResponse.data.map(transformSessionToEvent);
+
     // Sort events by date
-    const sortedEvents = [...mockEvents].sort((a, b) => {
+    const sortedEvents = transformedEvents.sort((a, b) => {
       return new Date(a.date).getTime() - new Date(b.date).getTime();
     });
-    
+
     // Get only upcoming events (today and future)
-    const upcomingEvents = sortedEvents.filter(event => {
+    const upcomingEvents = sortedEvents.filter((event) => {
       const eventDate = new Date(event.date);
       const now = new Date();
       return eventDate >= new Date(now.setHours(0, 0, 0, 0));
     });
-    
-    setEvents(upcomingEvents.slice(0, 8)); // Show first 8 upcoming events
-  }, [mockEvents]);
+
+    return upcomingEvents.slice(0, 8); // Show first 8 upcoming events
+  }, [upcomingSessionsResponse]);
 
   const formatEventDate = (dateStr: string) => {
     const date = parseISO(dateStr);
@@ -68,9 +91,13 @@ export function UpcomingEvents() {
       <CardContent className="p-4">
         <ScrollArea className="h-[calc(100vh-250px)]">
           <div className="space-y-1">
-            {events.length === 0 ? (
+            {isLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
+              </div>
+            ) : events.length === 0 ? (
               <div className="text-center py-8 text-gray-500">
-                No upcoming events
+                No upcoming sessions scheduled
               </div>
             ) : (
               events.map((event, index) => (

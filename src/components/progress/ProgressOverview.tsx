@@ -1,5 +1,5 @@
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { BookOpen, Star, Calendar, Users, CheckCircle, BookMarked, FileText, Award } from "lucide-react";
@@ -11,33 +11,6 @@ import { useAuth } from "@/contexts/AuthContext";
 interface ProgressOverviewProps {
   courseId?: string;
 }
-
-// Mock data to simulate a real API response
-const getMockCourseData = (courseId: string) => {
-  return {
-    id: courseId,
-    title: "Mathematics Fundamentals",
-    subject: "Mathematics",
-    description: "Master essential math concepts for academic success and problem-solving skills.",
-    overallProgress: 68,
-    nextClass: "Tuesday, 2:00 PM",
-    timeSpent: "12h 45m",
-    enrollmentDate: "January 15, 2025",
-    lessonsDone: 8,
-    lessonsTotal: 12,
-    quizzesDone: 4,
-    quizzesTotal: 6,
-    assignmentsDone: 5,
-    assignmentsTotal: 8,
-    grades: {
-      average: "B+",
-      highest: "A",
-      latest: "B"
-    },
-    teacherName: "Sarah Johnson",
-    rating: 4.7
-  };
-};
 
 const ProgressOverview = ({ courseId }: ProgressOverviewProps) => {
   const { user } = useAuth();

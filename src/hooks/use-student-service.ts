@@ -94,3 +94,11 @@ export const useRecentActivities = (userId: string) => {
     enabled: !!userId, // Only enable the query if userId is available
   });
 };
+
+export const useLeaderboard = (limit?: number) => {
+  return useQuery({
+    queryKey: ['leaderboard', limit],
+    queryFn: () => studentService.getLeaderboard(limit),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+};
