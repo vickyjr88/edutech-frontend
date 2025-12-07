@@ -3,17 +3,17 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { 
-  BookOpen, 
-  Clock, 
-  Plus, 
-  X, 
-  Target, 
-  Activity, 
-  CheckSquare, 
-  FileText, 
-  Video, 
-  Package, 
+import {
+  BookOpen,
+  Clock,
+  Plus,
+  X,
+  Target,
+  Activity,
+  CheckSquare,
+  FileText,
+  Video,
+  Package,
   Tag,
   Timer,
   Hash,
@@ -44,6 +44,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { cn } from "@/lib/utils";
+import { teacherService } from "@/integrations/api/services/teacher.service";
 
 // Types based on your existing LessonPlan interface
 interface CreateResourceLinkDto {
@@ -76,7 +77,7 @@ interface CreateLessonActivityDto {
 
 enum RequirementType {
   VIDEO = 'video',
-  ARTICLE = 'article', 
+  ARTICLE = 'article',
   WORKSHEET = 'worksheet',
   SURVEY = 'survey',
   MATERIALS = 'materials',
@@ -156,7 +157,7 @@ const LessonPlanCreatorModal: React.FC<LessonPlanCreatorModalProps> = ({
   const getInitialLessonPlan = () => {
     const baseTags = classContext ? [classContext.subject] : [];
     const contextualTitle = classContext ? `${classContext.subject} - ` : "";
-    
+
     return {
       id: `lesson-${Date.now()}`,
       title: contextualTitle,
@@ -230,7 +231,7 @@ const LessonPlanCreatorModal: React.FC<LessonPlanCreatorModalProps> = ({
 
   const updateObjective = (index: number, field: keyof CreateLessonObjectiveDto, value: any) => {
     const objectives = lessonPlan.objectives || [];
-    const updated = objectives.map((obj, i) => 
+    const updated = objectives.map((obj, i) =>
       i === index ? { ...obj, [field]: value } : obj
     );
     updateField("objectives", updated);
@@ -252,7 +253,7 @@ const LessonPlanCreatorModal: React.FC<LessonPlanCreatorModalProps> = ({
 
   const updateActivity = (index: number, field: keyof CreateLessonActivityDto, value: any) => {
     const activities = lessonPlan.activities || [];
-    const updated = activities.map((activity, i) => 
+    const updated = activities.map((activity, i) =>
       i === index ? { ...activity, [field]: value } : activity
     );
     updateField("activities", updated);
@@ -290,7 +291,7 @@ const LessonPlanCreatorModal: React.FC<LessonPlanCreatorModalProps> = ({
 
   const updateResourceLink = (index: number, field: keyof CreateResourceLinkDto, value: string) => {
     const resourceLinks = lessonPlan.resourceLinks || [];
-    const updated = resourceLinks.map((link, i) => 
+    const updated = resourceLinks.map((link, i) =>
       i === index ? { ...link, [field]: value } : link
     );
     updateField("resourceLinks", updated);
@@ -319,44 +320,18 @@ const LessonPlanCreatorModal: React.FC<LessonPlanCreatorModalProps> = ({
     setAiError(null);
 
     try {
-      // Mock AI generation - in real implementation, this would call an AI service
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      const lessonTitle = lessonPlan.title;
-      const lessonDuration = lessonPlan.duration || 60;
-      
-      // Calculate time allocation based on duration
-      const introTime = Math.max(5, Math.round(lessonDuration * 0.15));
-      const coreTime = Math.max(15, Math.round(lessonDuration * 0.45));
-      const practiceTime = Math.max(10, Math.round(lessonDuration * 0.25));
-      const wrapTime = Math.max(5, Math.round(lessonDuration * 0.15));
-      
-      const generatedPlan = `1. Introduction (${introTime} min) - Opening & Context Setting
-   - Welcome students and briefly review previous lesson connections
-   - Introduce today's topic: "${lessonTitle}"
-   - Share the lesson objectives with students
-   - Hook: Start with an engaging question or real-world example
+      const prompt = `Create a detailed lesson plan related to "${lessonPlan.title}". 
+      Duration: ${lessonPlan.duration || 60} minutes. 
+      Format: Breakdown into Introduction, Core Content, Guided Practice, and Wrap-up with timings.`;
 
-2. Core Content Delivery (${coreTime} min) - Main Teaching Phase
-   - Break down the key concepts step by step
-   - Use multiple teaching methods: visual aids, demonstrations, and interactive explanations
-   - Connect new information to students' prior knowledge
-   - Encourage questions and check for understanding throughout
+      const response = await teacherService.generateCustomClassDescription(prompt);
 
-3. Guided Practice (${practiceTime} min) - Students Apply with Support
-   - Provide structured activities where students practice the concepts
-   - Work through examples together as a class
-   - Offer immediate feedback and clarification
-   - Circulate to provide individual support where needed
+      if (response.data && response.data.data && response.data.data.description) {
+        updateField("description", response.data.data.description);
+      } else {
+        throw new Error("Failed to generate content");
+      }
 
-4. Wrap-up & Assessment (${wrapTime} min) - Consolidation
-   - Summarize the key points covered in today's lesson
-   - Quick formative assessment to check understanding
-   - Preview what's coming in the next lesson
-   - Address any final questions`;
-
-      updateField("description", generatedPlan);
-      
     } catch (error) {
       setAiError("Failed to generate lesson plan. Please try again.");
     } finally {
@@ -381,11 +356,11 @@ const LessonPlanCreatorModal: React.FC<LessonPlanCreatorModalProps> = ({
   return (
     <div className={cn("fixed inset-0 z-50", open ? "block" : "hidden")}>
       {/* Backdrop */}
-      <div 
+      <div
         className="fixed inset-0 bg-gradient-to-br from-kidato-indigo-900/80 via-black/60 to-kidato-purple-900/80 backdrop-blur-sm"
         onClick={() => onOpenChange(false)}
       />
-      
+
       {/* Modal Content */}
       <div className="fixed inset-0 flex items-center justify-center p-4 overflow-hidden">
         <div className="bg-gradient-to-br from-white via-kidato-indigo-50/50 to-white rounded-2xl shadow-2xl border w-[80vw] max-h-[90vh] flex flex-col overflow-hidden">
@@ -409,17 +384,17 @@ const LessonPlanCreatorModal: React.FC<LessonPlanCreatorModalProps> = ({
                   </p>
                 </div>
               </div>
-              
+
               <div className="flex items-center gap-3">
-                <Button 
+                <Button
                   onClick={handleSave}
                   className="bg-gradient-to-r from-kidato-indigo-600 to-kidato-purple-600 text-white hover:from-kidato-indigo-700 hover:to-kidato-purple-700 shadow-lg"
                 >
                   <Save className="h-4 w-4 mr-2" />
                   Save Lesson
                 </Button>
-                <Button 
-                  variant="ghost" 
+                <Button
+                  variant="ghost"
                   onClick={() => onOpenChange(false)}
                   className="text-kidato-gray-600 hover:text-kidato-gray-800"
                 >
@@ -432,11 +407,11 @@ const LessonPlanCreatorModal: React.FC<LessonPlanCreatorModalProps> = ({
           {/* Scrollable Content */}
           <div className="flex-1 overflow-y-auto">
             <div className="p-8">
-            <Tabs value={activeSection} onValueChange={setActiveSection}>
-              {/* Section Navigation */}
-              <div className="mb-8">
-                <TabsList className="grid w-full grid-cols-3 md:grid-cols-6 h-auto p-2 bg-kidato-gray-100 rounded-xl">
-                  {sections.map((section) => {
+              <Tabs value={activeSection} onValueChange={setActiveSection}>
+                {/* Section Navigation */}
+                <div className="mb-8">
+                  <TabsList className="grid w-full grid-cols-3 md:grid-cols-6 h-auto p-2 bg-kidato-gray-100 rounded-xl">
+                    {sections.map((section) => {
                       const Icon = section.icon;
                       const isCompleted = completionStatus[section.id as keyof typeof completionStatus];
                       return (
@@ -459,8 +434,8 @@ const LessonPlanCreatorModal: React.FC<LessonPlanCreatorModalProps> = ({
                   </TabsList>
                 </div>
 
-              {/* 1. TOPIC SECTION */}
-              <TabsContent value="topic" className="space-y-6">
+                {/* 1. TOPIC SECTION */}
+                <TabsContent value="topic" className="space-y-6">
                   <div className="space-y-6">
                     <div className="flex items-center gap-4">
                       <div className="flex items-center justify-center w-12 h-12 bg-gradient-to-br from-kidato-indigo-500 to-kidato-indigo-600 rounded-2xl shadow-lg">
@@ -481,7 +456,7 @@ const LessonPlanCreatorModal: React.FC<LessonPlanCreatorModalProps> = ({
                               Lesson Topic *
                             </Label>
                           </div>
-                          <Input 
+                          <Input
                             placeholder="e.g., 'Introduction to Photosynthesis' or 'Solving Quadratic Equations'"
                             value={lessonPlan.title || ""}
                             onChange={(e) => updateField("title", e.target.value)}
@@ -495,7 +470,7 @@ const LessonPlanCreatorModal: React.FC<LessonPlanCreatorModalProps> = ({
                               <Hash className="h-5 w-5 text-kidato-orange-600" />
                               <Label className="text-base font-semibold text-kidato-orange-800">Lesson #</Label>
                             </div>
-                            <Input 
+                            <Input
                               type="number"
                               placeholder="1"
                               value={lessonPlan.sequenceNumber || nextSequenceNumber}
@@ -503,7 +478,7 @@ const LessonPlanCreatorModal: React.FC<LessonPlanCreatorModalProps> = ({
                               className="h-12 text-lg font-semibold text-center border-2 border-kidato-orange-200 focus:border-kidato-orange-500 focus:ring-kidato-orange-500 rounded-xl bg-white shadow-sm"
                             />
                           </div>
-                          
+
                           <div className="space-y-4 p-5 bg-gradient-to-br from-kidato-spindle-50 to-white rounded-2xl border border-kidato-spindle-200 shadow-sm">
                             <div className="flex items-center gap-2">
                               <div className="w-5 h-5 bg-kidato-spindle-600 rounded-full flex items-center justify-center">
@@ -519,7 +494,7 @@ const LessonPlanCreatorModal: React.FC<LessonPlanCreatorModalProps> = ({
                                 { type: LessonType.ASSESSMENT, label: 'Assessment', icon: '📝' }
                               ].map(({ type, label, icon }) => {
                                 const isSelected = lessonPlan.type === type;
-                                
+
                                 return (
                                   <button
                                     key={type}
@@ -527,8 +502,8 @@ const LessonPlanCreatorModal: React.FC<LessonPlanCreatorModalProps> = ({
                                     onClick={() => updateField("type", type)}
                                     className={cn(
                                       "px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 transform hover:scale-105 active:scale-95 flex items-center gap-1",
-                                      isSelected 
-                                        ? 'bg-kidato-spindle-600 text-white shadow-md border-2 border-kidato-spindle-600' 
+                                      isSelected
+                                        ? 'bg-kidato-spindle-600 text-white shadow-md border-2 border-kidato-spindle-600'
                                         : 'bg-white text-kidato-spindle-700 border-2 border-kidato-spindle-200 hover:bg-kidato-spindle-50 hover:border-kidato-spindle-300'
                                     )}
                                   >
@@ -550,10 +525,10 @@ const LessonPlanCreatorModal: React.FC<LessonPlanCreatorModalProps> = ({
                                 const isSelected = lessonPlan.duration === minutes;
                                 const hours = Math.floor(minutes / 60);
                                 const remainingMinutes = minutes % 60;
-                                const displayText = minutes >= 60 
-                                  ? `${hours}h${remainingMinutes > 0 ? ` ${remainingMinutes}m` : ''}` 
+                                const displayText = minutes >= 60
+                                  ? `${hours}h${remainingMinutes > 0 ? ` ${remainingMinutes}m` : ''}`
                                   : `${minutes}m`;
-                                
+
                                 return (
                                   <button
                                     key={minutes}
@@ -561,8 +536,8 @@ const LessonPlanCreatorModal: React.FC<LessonPlanCreatorModalProps> = ({
                                     onClick={() => updateField("duration", minutes)}
                                     className={cn(
                                       "px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 transform hover:scale-105 active:scale-95",
-                                      isSelected 
-                                        ? 'bg-kidato-gray-600 text-white shadow-md border-2 border-kidato-gray-600' 
+                                      isSelected
+                                        ? 'bg-kidato-gray-600 text-white shadow-md border-2 border-kidato-gray-600'
                                         : 'bg-white text-kidato-gray-700 border-2 border-kidato-gray-200 hover:bg-kidato-gray-50 hover:border-kidato-gray-300'
                                     )}
                                   >
@@ -595,7 +570,7 @@ const LessonPlanCreatorModal: React.FC<LessonPlanCreatorModalProps> = ({
                       <CardContent className="p-6 space-y-6">
                         <div className="space-y-3">
                           <Label className="text-lg font-semibold text-purple-800">Prerequisites Knowledge</Label>
-                          <Textarea 
+                          <Textarea
                             placeholder="What knowledge or skills should students have before this lesson?"
                             className="resize-none border-2 border-purple-200 focus:border-purple-500 focus:ring-purple-500 rounded-xl bg-white min-h-[100px]"
                             value={lessonPlan.prerequisites || ""}
@@ -628,7 +603,7 @@ const LessonPlanCreatorModal: React.FC<LessonPlanCreatorModalProps> = ({
                               )}
                             </div>
                             <div className="flex items-center gap-2">
-                              <Input 
+                              <Input
                                 value={newTag}
                                 onChange={(e) => setNewTag(e.target.value)}
                                 placeholder="e.g., 'biology', 'interactive', 'beginner'"
@@ -670,7 +645,7 @@ const LessonPlanCreatorModal: React.FC<LessonPlanCreatorModalProps> = ({
                             {index + 1}
                           </div>
                           <div className="flex-1">
-                            <Input 
+                            <Input
                               value={objective.objective}
                               onChange={(e) => updateObjective(index, "objective", e.target.value)}
                               placeholder="Students will be able to..."
@@ -688,9 +663,9 @@ const LessonPlanCreatorModal: React.FC<LessonPlanCreatorModalProps> = ({
                           </Button>
                         </div>
                       ))}
-                      
+
                       <div className="flex items-center gap-3 p-4 bg-gradient-to-br from-kidato-indigo-50 to-white rounded-xl border-2 border-dashed border-kidato-indigo-300">
-                        <Input 
+                        <Input
                           value={newObjective}
                           onChange={(e) => setNewObjective(e.target.value)}
                           placeholder="Students will be able to..."
@@ -727,7 +702,7 @@ const LessonPlanCreatorModal: React.FC<LessonPlanCreatorModalProps> = ({
                       <CardContent className="p-6 space-y-6">
                         <div className="space-y-3">
                           <Label className="text-lg font-semibold text-orange-800">Starter Activity</Label>
-                          <Textarea 
+                          <Textarea
                             placeholder="How will you open the lesson? e.g., 'Quick review quiz', 'Think-pair-share question', 'Interesting fact or video'"
                             className="resize-none border-2 border-orange-200 focus:border-orange-500 focus:ring-orange-500 rounded-xl bg-white min-h-[120px]"
                             value={lessonPlan.starterActivity || ""}
@@ -778,7 +753,7 @@ const LessonPlanCreatorModal: React.FC<LessonPlanCreatorModalProps> = ({
                               )}
                             </Button>
                           </div>
-                          <Textarea 
+                          <Textarea
                             placeholder="Describe your step-by-step lesson flow:
 
 1. Opening (5 min) - Quick review of previous lesson...
@@ -823,13 +798,13 @@ const LessonPlanCreatorModal: React.FC<LessonPlanCreatorModalProps> = ({
                                 </CardHeader>
                                 <CardContent className="space-y-3">
                                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                                    <Input 
+                                    <Input
                                       value={activity.title}
                                       onChange={(e) => updateActivity(index, "title", e.target.value)}
                                       placeholder="Activity Name"
                                       className="bg-white"
                                     />
-                                    <Input 
+                                    <Input
                                       value={activity.description || ""}
                                       onChange={(e) => updateActivity(index, "description", e.target.value)}
                                       placeholder="What Students Do"
@@ -844,8 +819,8 @@ const LessonPlanCreatorModal: React.FC<LessonPlanCreatorModalProps> = ({
                                             onClick={() => updateActivity(index, "duration", minutes)}
                                             className={cn(
                                               "px-2 py-1 rounded text-xs font-medium transition-all",
-                                              activity.duration === minutes 
-                                                ? 'bg-blue-500 text-white shadow-md' 
+                                              activity.duration === minutes
+                                                ? 'bg-blue-500 text-white shadow-md'
                                                 : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
                                             )}
                                           >
@@ -855,7 +830,7 @@ const LessonPlanCreatorModal: React.FC<LessonPlanCreatorModalProps> = ({
                                       </div>
                                     </div>
                                   </div>
-                                  <Textarea 
+                                  <Textarea
                                     value={activity.instructions || ""}
                                     onChange={(e) => updateActivity(index, "instructions", e.target.value)}
                                     placeholder="Step-by-step instructions for students"
@@ -902,7 +877,7 @@ const LessonPlanCreatorModal: React.FC<LessonPlanCreatorModalProps> = ({
                             <Star className="h-5 w-5 text-purple-600" />
                             <Label className="text-base font-semibold text-purple-800">Plenary/Summary</Label>
                           </div>
-                          <Textarea 
+                          <Textarea
                             placeholder="How will you wrap up the lesson? e.g., 'Students share one thing they learned', 'Quick recap of key points'"
                             className="resize-none border-2 border-purple-200 focus:border-purple-500 focus:ring-purple-500 rounded-xl bg-white min-h-[100px]"
                             value={lessonPlan.plenaryActivity || ""}
@@ -918,7 +893,7 @@ const LessonPlanCreatorModal: React.FC<LessonPlanCreatorModalProps> = ({
                             <CheckSquare className="h-5 w-5 text-green-600" />
                             <Label className="text-base font-semibold text-green-800">Assessment Methods</Label>
                           </div>
-                          <Textarea 
+                          <Textarea
                             placeholder="How will you check understanding? e.g., 'Exit ticket', 'Quick quiz', 'Student explanations'"
                             className="resize-none border-2 border-green-200 focus:border-green-500 focus:ring-green-500 rounded-xl bg-white min-h-[100px]"
                             value={lessonPlan.assessmentCriteria || ""}
@@ -934,7 +909,7 @@ const LessonPlanCreatorModal: React.FC<LessonPlanCreatorModalProps> = ({
                             <Home className="h-5 w-5 text-blue-600" />
                             <Label className="text-base font-semibold text-blue-800">Student Next Steps</Label>
                           </div>
-                          <Textarea 
+                          <Textarea
                             placeholder="Homework, practice, or preparation tasks. e.g., 'Complete practice problems 1-10', 'Read chapter 5'"
                             className="resize-none border-2 border-blue-200 focus:border-blue-500 focus:ring-blue-500 rounded-xl bg-white min-h-[100px]"
                             value={lessonPlan.homework || ""}
@@ -950,7 +925,7 @@ const LessonPlanCreatorModal: React.FC<LessonPlanCreatorModalProps> = ({
                             <Lightbulb className="h-5 w-5 text-kidato-gray-600" />
                             <Label className="text-base font-semibold text-kidato-gray-800">Teacher Reflection Notes</Label>
                           </div>
-                          <Textarea 
+                          <Textarea
                             placeholder="Private reminders, challenges, backup plans. e.g., 'Check projector', 'Bring extra materials', 'Sarah needs extra help'"
                             className="resize-none border-2 border-kidato-gray-200 focus:border-kidato-gray-500 focus:ring-kidato-gray-500 rounded-xl bg-white min-h-[100px]"
                             value={lessonPlan.teachingNotes || ""}

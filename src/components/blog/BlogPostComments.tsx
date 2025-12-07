@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { blogService, BlogComment } from "@/integrations/api/services/blog.service";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -35,48 +36,38 @@ const BlogPostComments: React.FC<BlogPostCommentsProps> = ({ postId }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
-  // Mock comments data
-  const mockComments: Comment[] = [
-    {
-      id: "1",
-      author: {
-        name: "Sarah M.",
-        email: "sarah@example.com",
-        avatar: "/api/placeholder/40/40"
-      },
-      content: "This is exactly what I needed! Thank you for sharing such practical advice. I've been struggling with setting up a good learning environment for my 8-year-old.",
-      createdAt: new Date("2024-01-16"),
-      likes: 5,
-      replies: [
-        {
-          id: "2",
-          author: {
-            name: "Dr. Sarah Johnson",
-            email: "sarah.johnson@kidato.com"
-          },
-          content: "I'm so glad this was helpful! Feel free to reach out if you have any specific questions about your setup.",
-          createdAt: new Date("2024-01-16"),
-          likes: 2,
-          replies: []
-        }
-      ]
+  const mapApiComment = (c: BlogComment): Comment => ({
+    id: c._id || c.id || '',
+    author: {
+      name: c.author.name,
+      email: c.author.email,
+      avatar: c.author.avatar
     },
-    {
-      id: "3",
-      author: {
-        name: "Michael K.",
-        email: "michael@example.com"
-      },
-      content: "Great article! I especially appreciated the section on technology requirements. It's often overlooked but so important for success.",
-      createdAt: new Date("2024-01-15"),
-      likes: 3,
-      replies: []
+    content: c.content,
+    createdAt: new Date(c.createdAt),
+    likes: c.likes || 0,
+    replies: (c.replies || []).map(mapApiComment)
+  });
+
+  useEffect(() => {
+    const fetchComments = async () => {
+      try {
+        const response = await blogService.getComments(postId, 'approved'); // Default to approved for public
+        if (response.data) {
+          setComments(response.data.map(mapApiComment));
+        }
+      } catch (error) {
+        console.error('Failed to fetch comments', error);
+      }
+    };
+    if (postId) {
+      fetchComments();
     }
-  ];
+  }, [postId]);
 
   const handleSubmitComment = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!newComment.name || !newComment.email || !newComment.content) {
       toast({
         title: "Missing information",
@@ -87,31 +78,25 @@ const BlogPostComments: React.FC<BlogPostCommentsProps> = ({ postId }) => {
     }
 
     setIsSubmitting(true);
-    
+
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      const comment: Comment = {
-        id: Date.now().toString(),
+      await blogService.createComment({
+        postId,
         author: {
           name: newComment.name,
           email: newComment.email
         },
-        content: newComment.content,
-        createdAt: new Date(),
-        likes: 0,
-        replies: []
-      };
-      
-      setComments(prev => [comment, ...prev]);
+        content: newComment.content
+      });
+
       setNewComment({ name: "", email: "", content: "" });
-      
+
       toast({
         title: "Comment posted!",
         description: "Your comment has been submitted for review.",
       });
     } catch (error) {
+      console.error(error);
       toast({
         title: "Error posting comment",
         description: "Please try again later.",
@@ -141,9 +126,9 @@ const BlogPostComments: React.FC<BlogPostCommentsProps> = ({ postId }) => {
   };
 
   const handleLike = (commentId: string) => {
-    setComments(prev => 
-      prev.map(comment => 
-        comment.id === commentId 
+    setComments(prev =>
+      prev.map(comment =>
+        comment.id === commentId
           ? { ...comment, likes: comment.likes + 1 }
           : comment
       )
@@ -213,7 +198,7 @@ const BlogPostComments: React.FC<BlogPostCommentsProps> = ({ postId }) => {
                       {getInitials(comment.author.name)}
                     </AvatarFallback>
                   </Avatar>
-                  
+
                   <div className="flex-1">
                     <div className="flex items-center space-x-2 mb-2">
                       <h4 className="font-semibold text-gray-900">{comment.author.name}</h4>
@@ -224,9 +209,9 @@ const BlogPostComments: React.FC<BlogPostCommentsProps> = ({ postId }) => {
                         {formatDate(comment.createdAt)}
                       </span>
                     </div>
-                    
+
                     <p className="text-gray-700 mb-3">{comment.content}</p>
-                    
+
                     <div className="flex items-center space-x-4">
                       <Button
                         variant="ghost"

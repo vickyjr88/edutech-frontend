@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -16,6 +16,9 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useAuth } from "@/contexts/AuthContext";
+import { enrollmentService } from "@/integrations/api/services/enrollment.service";
+import { useToast } from "@/hooks/use-toast";
 
 const enrollmentSchema = z.object({
   studentName: z.string().min(2, { message: "Student name is required" }),
@@ -33,24 +36,30 @@ const enrollmentSchema = z.object({
 type EnrollmentFormValues = z.infer<typeof enrollmentSchema>;
 
 interface EnrollmentFormProps {
+  classId: string;
+  cohortId?: string;
   classTitle: string;
   classPrice: string;
   onSubmitSuccess: () => void;
 }
 
-const EnrollmentForm = ({ 
-  classTitle, 
-  classPrice, 
-  onSubmitSuccess 
+const EnrollmentForm = ({
+  classId,
+  cohortId,
+  classTitle,
+  classPrice,
+  onSubmitSuccess
 }: EnrollmentFormProps) => {
+  const { user } = useAuth();
+  const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
-  
+
   const form = useForm<EnrollmentFormValues>({
     resolver: zodResolver(enrollmentSchema),
     defaultValues: {
-      studentName: "",
-      parentEmail: "",
+      studentName: user?.fullName || "",
+      parentEmail: user?.email || "",
       parentPhone: "",
       paymentMethod: "credit",
       agreeToTerms: false,
@@ -58,21 +67,55 @@ const EnrollmentForm = ({
     },
   });
 
+  // Pre-fill form when user loads
+  useEffect(() => {
+    if (user) {
+      if (user.fullName) form.setValue('studentName', user.fullName);
+      if (user.email) form.setValue('parentEmail', user.email);
+    }
+  }, [user, form]);
+
   const onSubmit = async (data: EnrollmentFormValues) => {
+    if (!cohortId) {
+      toast({
+        title: "Error",
+        description: "No active cohort selected for enrollment.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsSubmitting(true);
-    
-    // Simulate API call
-    setTimeout(() => {
-      console.log("Enrollment data:", data);
-      setIsSubmitting(false);
+
+    try {
+      const { data: enrollment, error } = await enrollmentService.selfEnroll({
+        classId,
+        cohortId,
+      });
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      console.log("Enrollment successful:", enrollment);
       setIsSuccess(true);
-      
+
       // Reset form after success
       setTimeout(() => {
         form.reset();
         onSubmitSuccess();
       }, 1500);
-    }, 1000);
+
+    } catch (error: any) {
+      console.error("Enrollment error:", error);
+      toast({
+        title: "Enrollment Failed",
+        description: error.message || "Could not complete enrollment. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -84,7 +127,7 @@ const EnrollmentForm = ({
           </div>
           <h3 className="text-xl font-medium text-gray-900 mb-2">Enrollment Successful!</h3>
           <p className="text-gray-600 mb-4">
-            Thank you for enrolling in {classTitle}. We have sent a confirmation email with all the details.
+            Thank you for enrolling in {classTitle}. We have sent a confirmation email to {form.getValues().parentEmail} with all the details.
           </p>
         </div>
       ) : (
@@ -100,7 +143,7 @@ const EnrollmentForm = ({
                 <span className="font-medium">{classPrice}</span>
               </div>
             </div>
-            
+
             <FormField
               control={form.control}
               name="studentName"
@@ -114,7 +157,7 @@ const EnrollmentForm = ({
                 </FormItem>
               )}
             />
-            
+
             <FormField
               control={form.control}
               name="parentEmail"
@@ -128,7 +171,7 @@ const EnrollmentForm = ({
                 </FormItem>
               )}
             />
-            
+
             <FormField
               control={form.control}
               name="parentPhone"
@@ -142,7 +185,7 @@ const EnrollmentForm = ({
                 </FormItem>
               )}
             />
-            
+
             <FormField
               control={form.control}
               name="paymentMethod"
@@ -173,7 +216,7 @@ const EnrollmentForm = ({
                 </FormItem>
               )}
             />
-            
+
             <FormField
               control={form.control}
               name="additionalNotes"
@@ -191,7 +234,7 @@ const EnrollmentForm = ({
                 </FormItem>
               )}
             />
-            
+
             <FormField
               control={form.control}
               name="agreeToTerms"
@@ -212,9 +255,9 @@ const EnrollmentForm = ({
                 </FormItem>
               )}
             />
-            
-            <Button 
-              type="submit" 
+
+            <Button
+              type="submit"
               className="w-full"
               disabled={isSubmitting}
             >
