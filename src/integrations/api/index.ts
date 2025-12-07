@@ -9,32 +9,41 @@ export { googleCalendarService } from './services/google-calendar.service';
 export { cvService } from './services/cv.service';
 export { smsService } from './services/sms.service';
 export { enrollmentService } from './services/enrollment.service';
+export { teacherAnalyticsService } from './services/teacher-analytics.service';
+
 
 // Types
 export type { TeacherBalance, TeacherTransaction, TeacherTransactionsQuery } from './types/teacher-transactions.types';
 export type { Bank, TeacherBankAccount, AddBankAccountRequest, UpdateBankAccountRequest } from './types/bank-accounts.types';
-export type { 
-  TeacherPayoutPreferences, 
-  PayoutFrequency, 
-  PayoutRule, 
-  TeacherTier, 
-  PayoutRecommendation, 
-  PayoutAnalytics, 
+export type {
+  TeacherPayoutPreferences,
+  PayoutFrequency,
+  PayoutRule,
+  TeacherTier,
+  PayoutRecommendation,
+  PayoutAnalytics,
   UpdatePayoutPreferencesRequest,
   BackendPayoutPreferencesRequest
 } from './types/teacher-payout-preferences.types';
 export { PAYOUT_FREQUENCIES } from './types/teacher-payout-preferences.types';
 export { mapToBackendFormat, mapFromBackendFormat } from './types/teacher-payout-preferences.types';
-export type { 
-  TeacherRevenueSummaryResponse, 
-  RevenuePeriod, 
-  RevenueSummary, 
-  RevenueSummaryRequestParams 
+export type {
+  TeacherRevenueSummaryResponse,
+  RevenuePeriod,
+  RevenueSummary,
+  RevenueSummaryRequestParams
 } from './types/teacher-revenue-summary.types';
-export type { 
-  PrimaryBankAccount 
+export type {
+  PrimaryBankAccount
 } from './types/primary-bank-account.types';
-export type { 
-  ApiPayoutPreferencesResponse, 
-  ApiUpdatePayoutPreferencesRequest 
+export type {
+  ApiPayoutPreferencesResponse,
+  ApiUpdatePayoutPreferencesRequest
 } from './types/api-payout-preferences.types';
+export type {
+  TrendData,
+  TeacherTrends,
+  HistoricalTrendData,
+  TrendSummary,
+  TrendMetrics,
+} from './services/teacher-analytics.service';

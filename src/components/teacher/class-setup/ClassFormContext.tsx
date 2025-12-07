@@ -189,12 +189,12 @@ export const ClassFormProvider = ({
   const saveCurrentFormState = () => {
     const formValues = form.getValues();
     const teacherId = userAuth.user?.teacherId || null;
-    
+
     // Check if this is a new, mostly empty form that we shouldn't save
-    const isEmptyNewForm = !classId && 
-      (!formValues.title || formValues.title.trim() === "") && 
+    const isEmptyNewForm = !classId &&
+      (!formValues.title || formValues.title.trim() === "") &&
       (!formValues.subject || formValues.subject.trim() === "");
-    
+
     // Don't save empty new forms to prevent auto-completion issues
     if (isEmptyNewForm) {
       return;
@@ -347,7 +347,7 @@ export const ClassFormProvider = ({
   useEffect(() => {
     // Only auto-save if we have either an existing class ID or explicit user interaction has occurred
     const shouldAutoSave = hasUnsavedChanges && (classId || form.formState.dirtyFields.title);
-    
+
     if (shouldAutoSave) {
       const timeoutId = setTimeout(() => {
         saveCurrentFormState();
@@ -366,39 +366,39 @@ export const ClassFormProvider = ({
     try {
       // Transform the extracted course data to form values
       const mappedFormValues = mapCourseDataToFormValues(extractedData);
-      
+
       // Reset the form with the mapped values
       form.reset({
         ...form.getValues(),
         ...mappedFormValues
       });
-      
+
       // Update materials array if available
       if (mappedFormValues.materials) {
         // This will be handled by the form reset above
       }
-      
+
       // Update resource links if available
       if (mappedFormValues.resourceLinks) {
         // This will be handled by the form reset above
       }
-      
+
       // Show success notification
       toast.success('Course outline imported successfully!', {
         description: `${extractedData.lessonPlans.length} lesson plans and ${extractedData.objectives.length} objectives have been imported.`
       });
-      
+
       // Set imported state
       setCourseDataImported(true);
-      
+
       // Call callback if provided
       onCourseDataImported?.();
-      
+
       // Save the updated form state
       setTimeout(() => {
         saveCurrentFormState();
       }, 100);
-      
+
     } catch (error) {
       console.error('Error importing course data:', error);
       toast.error('Failed to import course outline', {
@@ -437,76 +437,11 @@ export const ClassFormProvider = ({
       setActiveTab("lessons");
 
       // Format data according to the backend DTO requirements
-
-      const formattedData = {
-        // Only include teacher field for new classes, not for updates
-        ...(classId ? {} : { teacher: userAuth.user?.teacherId || "default_teacher_id" }),
-        title: formValues.title,
-        type: formValues.type,
-        subject: formValues.subject,
-        curriculum: formValues.curriculum || undefined,
-        curriculumLevel: formValues.curriculumLevel || undefined,
-        gradeLevel: formValues.type === "academic" ? formValues.gradeLevel : undefined,
-        ageRange: formValues.type === "afterschool" ? formValues.ageRange : undefined,
-        description: formValues.description || undefined,
-        numberOfLessons: Number(formValues.numberOfLessons) || 1,
-        isPublic: formValues.isPublic,
-        enableMultipleCohorts: formValues.hasCohorts,
-        enableTeamTeaching: formValues.hasTeamTeaching,
-
-        // Format optional fields according to DTO
-        technicalRequirements: formValues.technicalRequirements ?
-          formValues.technicalRequirements.split('\n')
-            .filter(req => req.trim() !== '')
-            .map(req => ({ requirement: req.trim() })) :
-          undefined,
-
-        materials: formValues.materialsRequired ?
-          formValues.materialsRequired.split('\n')
-            .filter(mat => mat.trim() !== '')
-            .map(mat => ({ name: mat.trim() })) :
-          undefined,
-
-        commitment: formValues.commitmentRequired || undefined,
-
-        // Include existing lesson plans
-        lessonPlans: formValues.lessonPlans || [],
-        cohorts: cohorts.map(cohort => {
-          // Extract _id if it exists, and other fields we don't want to send directly
-          const { hasFlexibleSchedule, lessonSchedules, ...cohortData } = cohort;
-          
-          // Remove id field (but keep _id if it exists)
-          if (cohortData.id) {
-            delete cohortData.id;
-          }
-          
-          // Convert days of week format to uppercase for API
-          const daysOfWeek = cohort.repeatSchedule.daysOfWeek.map(day => 
-            day.toUpperCase()
-          );
-          
-          return {
-            // Include _id field only if it exists (for existing cohorts)
-            ...(cohort._id ? { _id: cohort._id } : {}),
-            name: cohortData.name,
-            isActive: cohortData.isActive,
-            startDate: cohortData.startDate,
-            endDate: cohortData.endDate,
-            startTime: cohortData.startTime,
-            endTime: cohortData.endTime,
-            repeatPattern: getApiRepeatPatternValue(cohort.repeatSchedule.pattern),
-            daysOfWeek,
-            repeatEvery: Number(cohort.repeatSchedule.repeatEvery) || 1, // Ensure repeatEvery is included as a number
-            customLessonTimes: hasFlexibleSchedule,
-            minimumStudents: cohortData.minStudents,
-            maximumStudents: cohortData.maxStudents,
-            enrollmentDeadline: cohortData.enrollmentDeadline,
-            price: Number(cohortData.price) || 0,
-            discount: Number(cohortData.discount) || 0
-          };
-        }),
-        teachingTeam: []
-      };
+      const formattedData = mapFormValuesToCreateClassDto(
+        formValues,
+        cohorts,
+        classId ? undefined : (userAuth.user?.teacherId || "default_teacher_id")
+      );
 
       // Generate a temporary client-side ID if creating a new class
       if (!classId) {
@@ -564,34 +499,34 @@ export const ClassFormProvider = ({
       setIsSubmitting(false);
     }
   };
-  
+
   const checkClassCompleteness = () => {
     const formValues = form.getValues();
     const missingItems: string[] = [];
-    
+
     const requiredBasicFields = ['title', 'subject', 'description'];
     const basicMissing = requiredBasicFields.filter(field => !formValues[field as keyof ClassFormValues]);
-    
+
     if (formValues.type === 'academic' && !formValues.gradeLevel) {
       basicMissing.push('gradeLevel');
     } else if (formValues.type === 'afterschool' && !formValues.ageRange) {
       basicMissing.push('ageRange');
     }
-    
+
     const basicInfoComplete = basicMissing.length === 0;
     if (!basicInfoComplete) {
       missingItems.push('Basic information (title, subject, description, etc.)');
     }
-    
-    const futureLessonPlans = formValues.lessonPlans.filter(lesson => 
+
+    const futureLessonPlans = formValues.lessonPlans.filter(lesson =>
       lesson.title && lesson.description
     );
-    
+
     const hasMinLessonPlans = futureLessonPlans.length >= 1;
     if (!hasMinLessonPlans) {
       missingItems.push(`At least 1 lesson plan (currently has ${futureLessonPlans.length})`);
     }
-    
+
     const hasMinCohorts = cohorts.length >= (formValues.hasCohorts ? 1 : 1);
     if (!hasMinCohorts) {
       missingItems.push('At least one cohort');
@@ -606,19 +541,19 @@ export const ClassFormProvider = ({
   };
 
   const calculateNumberOfLessons = (
-    startDate: Date | null, 
+    startDate: Date | null,
     endDate: Date | null,
     repeatSchedule: RepeatSchedule
   ): number => {
     if (!startDate || !endDate) return 0;
-    
+
     const millisecondsPerDay = 1000 * 60 * 60 * 24;
     const days = Math.round(Math.abs((endDate.getTime() - startDate.getTime()) / millisecondsPerDay));
-    
+
     const weeks = Math.ceil(days / 7);
-    
+
     let lessonsPerWeek = 0;
-    
+
     if (repeatSchedule.pattern === "weekly") {
       lessonsPerWeek = 1;
     } else if (repeatSchedule.pattern === "twice-weekly") {
@@ -626,17 +561,17 @@ export const ClassFormProvider = ({
     } else if (repeatSchedule.pattern === "custom") {
       lessonsPerWeek = repeatSchedule.daysOfWeek.length;
     }
-    
+
     return Math.ceil((weeks * lessonsPerWeek) / repeatSchedule.repeatEvery);
   };
-  
+
   const calculateEndDate = (
     startDate: Date | null,
     numberOfLessons: number,
     repeatSchedule: RepeatSchedule
   ): Date | null => {
     if (!startDate || numberOfLessons <= 0) return null;
-    
+
     let lessonsPerWeek = 0;
     if (repeatSchedule.pattern === "weekly") {
       lessonsPerWeek = 1;
@@ -645,11 +580,11 @@ export const ClassFormProvider = ({
     } else if (repeatSchedule.pattern === "custom") {
       lessonsPerWeek = repeatSchedule.daysOfWeek.length;
     }
-    
+
     if (lessonsPerWeek === 0) return null;
-    
+
     const weeksNeeded = Math.ceil(numberOfLessons / lessonsPerWeek) * repeatSchedule.repeatEvery;
-    
+
     return addWeeks(startDate, weeksNeeded);
   };
 
@@ -658,14 +593,14 @@ export const ClassFormProvider = ({
     const tempId = Date.now().toString();
     const cohortNumber = cohorts.length + 1;
     const classTitle = form.getValues().title || "Class";
-    
+
     if (!hasCohorts && cohorts.length > 0) {
       return;
     }
-    
-    setCohorts([...cohorts, { 
+
+    setCohorts([...cohorts, {
       id: tempId,  // Keep id for backward compatibility 
-      name: hasCohorts ? `${classTitle} Cohort ${cohortNumber}` : classTitle, 
+      name: hasCohorts ? `${classTitle} Cohort ${cohortNumber}` : classTitle,
       startDate: null,
       endDate: null,
       startTime: "",
@@ -689,11 +624,11 @@ export const ClassFormProvider = ({
 
   const removeCohort = (id: string) => {
     const hasCohorts = form.getValues().hasCohorts;
-    
+
     if (!hasCohorts && cohorts.length <= 1) {
       return;
     }
-    
+
     setCohorts(cohorts.filter(cohort => {
       // Check if this is the cohort to remove
       // First check _id (for existing cohorts from backend)
@@ -712,15 +647,15 @@ export const ClassFormProvider = ({
   const updateCohort = (id: string, field: keyof CohortData, value: any) => {
     setCohorts(cohorts.map(cohort => {
       // Check if we need to update this cohort
-      const isCohortMatch = 
+      const isCohortMatch =
         // Check _id for existing cohorts from backend
-        (cohort._id && cohort._id === id) || 
+        (cohort._id && cohort._id === id) ||
         // Check id for newly created cohorts
         (cohort.id && cohort.id === id);
-      
+
       if (isCohortMatch) {
         const updatedCohort = { ...cohort, [field]: value };
-        
+
         if (field === 'startDate') {
           updatedCohort.endDate = calculateEndDate(
             value,
@@ -728,33 +663,33 @@ export const ClassFormProvider = ({
             cohort.repeatSchedule
           );
         }
-        
+
         return updatedCohort;
       }
       return cohort;
     }));
   };
-  
+
   const updateRepeatSchedule = (cohortId: string, field: keyof RepeatSchedule, value: any) => {
     setCohorts(cohorts.map(cohort => {
       // Check if we need to update this cohort
-      const isCohortMatch = 
+      const isCohortMatch =
         // Check _id for existing cohorts from backend
-        (cohort._id && cohort._id === cohortId) || 
+        (cohort._id && cohort._id === cohortId) ||
         // Check id for newly created cohorts
         (cohort.id && cohort.id === cohortId);
-      
+
       if (isCohortMatch) {
         const updatedRepeatSchedule = { ...cohort.repeatSchedule, [field]: value };
-        
+
         const updatedEndDate = calculateEndDate(
           cohort.startDate,
           form.getValues().numberOfLessons,
           updatedRepeatSchedule
         );
-        
-        return { 
-          ...cohort, 
+
+        return {
+          ...cohort,
           repeatSchedule: updatedRepeatSchedule,
           endDate: updatedEndDate
         };
@@ -762,53 +697,53 @@ export const ClassFormProvider = ({
       return cohort;
     }));
   };
-  
+
   const toggleDayOfWeek = (cohortId: string, day: string) => {
     setCohorts(cohorts.map(cohort => {
       // Check if we need to update this cohort
-      const isCohortMatch = 
+      const isCohortMatch =
         // Check _id for existing cohorts from backend
-        (cohort._id && cohort._id === cohortId) || 
+        (cohort._id && cohort._id === cohortId) ||
         // Check id for newly created cohorts
         (cohort.id && cohort.id === cohortId);
-      
+
       if (isCohortMatch) {
         const daysOfWeek = [...cohort.repeatSchedule.daysOfWeek];
-        
+
         if (daysOfWeek.includes(day)) {
           const updatedDays = daysOfWeek.filter(d => d !== day);
           const finalDays = updatedDays.length > 0 ? updatedDays : daysOfWeek;
-          
-          const updatedRepeatSchedule = { 
-            ...cohort.repeatSchedule, 
-            daysOfWeek: finalDays 
+
+          const updatedRepeatSchedule = {
+            ...cohort.repeatSchedule,
+            daysOfWeek: finalDays
           };
-          
+
           const updatedEndDate = calculateEndDate(
             cohort.startDate,
             form.getValues().numberOfLessons,
             updatedRepeatSchedule
           );
-          
-          return { 
-            ...cohort, 
+
+          return {
+            ...cohort,
             repeatSchedule: updatedRepeatSchedule,
             endDate: updatedEndDate
           };
         } else {
-          const updatedRepeatSchedule = { 
-            ...cohort.repeatSchedule, 
-            daysOfWeek: [...daysOfWeek, day] 
+          const updatedRepeatSchedule = {
+            ...cohort.repeatSchedule,
+            daysOfWeek: [...daysOfWeek, day]
           };
-          
+
           const updatedEndDate = calculateEndDate(
             cohort.startDate,
             form.getValues().numberOfLessons,
             updatedRepeatSchedule
           );
-          
-          return { 
-            ...cohort, 
+
+          return {
+            ...cohort,
             repeatSchedule: updatedRepeatSchedule,
             endDate: updatedEndDate
           };
@@ -831,35 +766,35 @@ export const ClassFormProvider = ({
       }
       return false;
     });
-    
+
     if (!cohort) return;
-    
+
     const existingLessonNumbers = cohort.lessonSchedules.map(ls => ls.lessonNumber);
     let nextLessonNumber = 1;
     while (existingLessonNumbers.includes(nextLessonNumber)) {
       nextLessonNumber++;
     }
-    
+
     const newSchedule: LessonSchedule = {
       id: Date.now().toString(),
       lessonNumber: nextLessonNumber,
       time: "morning"
     };
-    
+
     const updatedCohort = {
       ...cohort,
       lessonSchedules: [...cohort.lessonSchedules, newSchedule]
     };
-    
+
     setCohorts(cohorts.map(c => {
-      const isCohortMatch = 
-        (c._id && c._id === cohortId) || 
+      const isCohortMatch =
+        (c._id && c._id === cohortId) ||
         (c.id && c.id === cohortId);
-      
+
       return isCohortMatch ? updatedCohort : c;
     }));
   };
-  
+
   const removeLessonSchedule = (cohortId: string, scheduleId: string) => {
     // Find cohort by either _id or id
     const cohort = cohorts.find(c => {
@@ -873,24 +808,24 @@ export const ClassFormProvider = ({
       }
       return false;
     });
-    
+
     if (!cohort) return;
-    
+
     const updatedCohort = {
       ...cohort,
       lessonSchedules: cohort.lessonSchedules.filter(schedule => schedule.id !== scheduleId)
     };
-    
+
     // Update cohort by either _id or id
     setCohorts(cohorts.map(c => {
-      const isCohortMatch = 
-        (c._id && c._id === cohortId) || 
+      const isCohortMatch =
+        (c._id && c._id === cohortId) ||
         (c.id && c.id === cohortId);
-      
+
       return isCohortMatch ? updatedCohort : c;
     }));
   };
-  
+
   const updateLessonSchedule = (cohortId: string, scheduleId: string, field: keyof LessonSchedule, value: any) => {
     // Find cohort by either _id or id
     const cohort = cohorts.find(c => {
@@ -904,24 +839,24 @@ export const ClassFormProvider = ({
       }
       return false;
     });
-    
+
     if (!cohort) return;
-    
-    const updatedSchedules = cohort.lessonSchedules.map(schedule => 
+
+    const updatedSchedules = cohort.lessonSchedules.map(schedule =>
       schedule.id === scheduleId ? { ...schedule, [field]: value } : schedule
     );
-    
+
     const updatedCohort = {
       ...cohort,
       lessonSchedules: updatedSchedules
     };
-    
+
     // Update cohort by either _id or id
     setCohorts(cohorts.map(c => {
-      const isCohortMatch = 
-        (c._id && c._id === cohortId) || 
+      const isCohortMatch =
+        (c._id && c._id === cohortId) ||
         (c.id && c.id === cohortId);
-      
+
       return isCohortMatch ? updatedCohort : c;
     }));
   };
@@ -936,7 +871,7 @@ export const ClassFormProvider = ({
   };
 
   const updateTeamMember = (id: string, field: "email" | "role", value: string) => {
-    setTeamMembers(teamMembers.map(member => 
+    setTeamMembers(teamMembers.map(member =>
       member.id === id ? { ...member, [field]: value } : member
     ));
   };
@@ -981,7 +916,7 @@ export const ClassFormProvider = ({
       }
 
       const formValues = form.getValues();
-      const {data: currentClass} = await classService.getById(classId)
+      const { data: currentClass } = await classService.getById(classId)
 
       if (!formValues.lessonPlans || formValues.lessonPlans.length === 0) {
         return false;
@@ -991,17 +926,17 @@ export const ClassFormProvider = ({
 
       // Format lesson plans according to the backend DTO requirements
       const lessonPlans = formValues.lessonPlans.map((lesson, index) => ({
-          title: lesson.title || "",
-          description: lesson.description || "",
-          duration: Number(lesson.duration) || 60,
-          lessonNumber: currentClass.lessonPlans.length + index + 1,
-          resourceFiles: lesson.resources ? 
-            (typeof lesson.resources === 'string' ? 
-              lesson.resources.split(',').map(r => r.trim()) : 
-              Array.isArray(lesson.resources) ? lesson.resources : 
+        title: lesson.title || "",
+        description: lesson.description || "",
+        duration: Number(lesson.duration) || 60,
+        lessonNumber: currentClass.lessonPlans.length + index + 1,
+        resourceFiles: lesson.resources ?
+          (typeof lesson.resources === 'string' ?
+            lesson.resources.split(',').map(r => r.trim()) :
+            Array.isArray(lesson.resources) ? lesson.resources :
               [lesson.resources]) :
-            undefined
-        }));
+          undefined
+      }));
 
       // Update the class with the lesson plans
       const { data, error } = await classService.bulkAddLessonPlan(classId, lessonPlans as any);
@@ -1131,11 +1066,11 @@ export const ClassFormProvider = ({
             title: lesson.title || "",
             description: lesson.description || "",
             duration: Number(lesson.duration) || 60,
-            resourceFiles: lesson.resources ? 
-              (typeof lesson.resources === 'string' ? 
-                lesson.resources.split(',').map(r => r.trim()) : 
-                Array.isArray(lesson.resources) ? lesson.resources : 
-                [lesson.resources]) :
+            resourceFiles: lesson.resources ?
+              (typeof lesson.resources === 'string' ?
+                lesson.resources.split(',').map(r => r.trim()) :
+                Array.isArray(lesson.resources) ? lesson.resources :
+                  [lesson.resources]) :
               undefined
           })),
 
@@ -1143,7 +1078,7 @@ export const ClassFormProvider = ({
         cohorts: cohorts.map(cohort => {
           // Extract _id if it exists, and other fields we don't want to send directly
           const { hasFlexibleSchedule, lessonSchedules, ...cohortData } = cohort;
-          
+
           // Remove id field (but keep _id if it exists)
           if (cohortData.id) {
             delete cohortData.id;
