@@ -6,13 +6,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Home, BookOpen, Users, Calendar, User, Settings, LogOut, Edit, Phone, MapPin, Award, CheckCircle2, CircleDashed, Video, PlusCircle, Star, UserPlus, BookText, School, UsersRound, UserRound, ChevronLeft, Loader2, DollarSign, FileText, Badge, MessageCircle } from "lucide-react";
+import { Home, BookOpen, Users, Calendar, User, Settings, LogOut, Edit, Phone, MapPin, Award, CheckCircle2, CircleDashed, Video, PlusCircle, Star, UserPlus, BookText, School, UsersRound, UserRound, ChevronLeft, Loader2, DollarSign, FileText, Badge, MessageCircle, Filter, Plus, RefreshCw, ChevronDown } from "lucide-react";
 import { useIntercom } from "@/components/support";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import TeacherProfileForm from "@/components/teacher/TeacherProfileForm";
 import TeacherProfessionalProfileForm from "@/components/teacher/TeacherProfessionalProfileForm";
 import ClassSetupForm from "@/components/teacher/ClassSetupForm";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Badge as UiBadge } from "@/components/ui/badge";
 import EnhancedClassSetup from "@/components/teacher/class-setup/EnhancedClassSetup";
 import TeacherClassView from "@/components/teacher/class-view/TeacherClassView";
 import EnhancedClassDetailPage from "@/components/class-detail/EnhancedClassDetailPage";
@@ -26,13 +28,18 @@ import TeacherCommandCenter from "@/components/teacher/TeacherCommandCenter";
 import { ZoomDashboard } from "@/components/teacher/zoom";
 import { GoogleCalendarDashboard } from "@/components/teacher/google-calendar";
 import { NotificationSettingsTab } from "@/components/teacher/settings/NotificationSettingsTab";
+import { IntegrationsTab } from "@/components/teacher/settings/IntegrationsTab";
 import { useAuth } from "@/contexts/AuthContext";
 import { teacherService } from "@/integrations/api/services/teacher.service.ts";
 import { classService } from "@/integrations/api/services/class.service.ts";
+import { googleCalendarService } from "@/integrations/api/services/google-calendar.service";
 import { useTeacherUpcomingSessions } from "@/hooks/useTeacherUpcomingSessions";
 import { useTeacherSummary } from "@/hooks/useTeacherSummary";
 import { UpcomingSession } from "@/types/activity";
 import { TeacherSummaryResponse } from "@/types/enhanced-classes";
+import { ScheduleCalendar } from "@/components/schedule/ScheduleCalendar";
+import { ScheduleEvent } from "@/types/calendar";
+import { format } from "date-fns";
 
 interface TeacherProfileData {
   contact: {
@@ -179,11 +186,71 @@ const TeacherDashboard = () => {
   const [showEnrollStudents, setShowEnrollStudents] = useState(location.pathname.includes('/teacher-dashboard/students') && location.search.includes('enroll=true'));
   const [currentWeek, setCurrentWeek] = useState(new Date());
 
+  // Schedule state
+  const [scheduleView, setScheduleView] = useState<"day" | "week" | "month">("week");
+  const [quickSchedule, setQuickSchedule] = useState({
+    classId: "",
+    type: "Regular class",
+    date: "",
+    time: "",
+    duration: 1,
+    location: "",
+    repeat: false
+  });
+  const [isScheduling, setIsScheduling] = useState(false);
+
+  // Schedule filters
+  const [selectedEventTypes, setSelectedEventTypes] = useState<string[]>(['Classes', 'Hangouts', 'Birthdays', 'Achievements', 'Assignments']);
+
+  const handleEventTypeToggle = (type: string) => {
+    setSelectedEventTypes(prev =>
+      prev.includes(type)
+        ? prev.filter(t => t !== type)
+        : [...prev, type]
+    );
+  };
+
+  const getEventTypeColor = (type: string, isSelected: boolean) => {
+    if (!isSelected) return "bg-gray-100 text-gray-500 hover:bg-gray-200 border-transparent";
+    switch (type) {
+      case 'Classes': return "bg-blue-100 text-blue-700 border-blue-200";
+      case 'Hangouts': return "bg-green-100 text-green-700 border-green-200";
+      case 'Birthdays': return "bg-amber-100 text-amber-700 border-amber-200";
+      case 'Achievements': return "bg-purple-100 text-purple-700 border-purple-200";
+      case 'Assignments': return "bg-rose-100 text-rose-700 border-rose-200";
+      default: return "bg-gray-100 text-gray-700";
+    }
+  };
+
   // Teacher data hooks for schedule - only call when user is loaded and has teacherId
   const shouldFetchData = !authLoading && !!user?.teacherId;
   const { upcomingSessions, loading: sessionsLoading, error: sessionsError, refetch: refetchSessions } = useTeacherUpcomingSessions({
     teacherId: shouldFetchData ? user.teacherId : '',
   });
+
+  // Map upcoming sessions to ScheduleEvents
+  // Map upcoming sessions to ScheduleEvents and apply filtering
+  const scheduleEvents: ScheduleEvent[] = upcomingSessions
+    .map(session => ({
+      id: session.id || session._id || Math.random().toString(),
+      title: session.title || session.className || "Class",
+      date: new Date(session.startTime),
+      time: format(new Date(session.startTime), "HH:mm"),
+      location: session.location || "Online",
+      description: session.topic,
+      type: (session.type as any) || "class",
+      duration: session.duration || 60,
+    }))
+    .filter(event => {
+      const typeMapping: Record<string, string> = {
+        'Classes': 'class',
+        'Hangouts': 'hangout',
+        'Birthdays': 'birthday',
+        'Achievements': 'achievement',
+        'Assignments': 'assignment'
+      };
+      return selectedEventTypes.some(t => typeMapping[t] === event.type);
+    });
 
   const { summaryData, loading: summaryLoading, error: summaryError, refetch: refetchSummary } = useTeacherSummary({
     teacherId: shouldFetchData ? user.teacherId : '',
@@ -192,11 +259,42 @@ const TeacherDashboard = () => {
   // Prepare schedule data
   const weekDays = getWeekDays(currentWeek);
   const weekSessions = upcomingSessions.filter(session => {
+    // Basic type filtering - assume all sessions are Classes for now
+    if (!selectedEventTypes.includes('Classes')) return false;
+
     const sessionDate = new Date(session.startTime);
     return weekDays.some(day =>
       day.toDateString() === sessionDate.toDateString()
     );
   });
+
+  const handleGoogleSync = async () => {
+    toast({ title: "Sync initiated", description: "Checking Google Calendar connection..." });
+    try {
+      const { data: statusData, error: statusError } = await googleCalendarService.getConnectionStatus();
+
+      if (statusError) {
+        throw statusError;
+      }
+
+      if (statusData?.connected) {
+        toast({ title: "Synced", description: "Schedule updated." });
+        refetchSessions();
+      } else {
+        toast({ title: "Connecting", description: "Redirecting to Google Calendar authorization..." });
+        const { data: authData, error: authError } = await googleCalendarService.getAuthUrl();
+
+        if (authError) throw authError;
+
+        if (authData?.authUrl) {
+          window.location.href = authData.authUrl;
+        }
+      }
+    } catch (error) {
+      console.error("Sync error:", error);
+      toast({ title: "Error", description: "Failed to sync with Google Calendar.", variant: "destructive" });
+    }
+  };
 
   // Update the active tab when URL changes
   useEffect(() => {
@@ -645,6 +743,83 @@ const TeacherDashboard = () => {
     }
   };
 
+  const handleQuickSchedule = async () => {
+    if (!quickSchedule.classId || !quickSchedule.date || !quickSchedule.time) {
+      toast({
+        title: "Missing fields",
+        description: "Please fill in all required fields (Class, Date, Time).",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsScheduling(true);
+    try {
+      // 1. Fetch class details to ensure we have the correct ID and context
+      const { data: selectedClass, error } = await classService.getById(quickSchedule.classId);
+      if (error || !selectedClass) throw new Error(error?.message || "Class not found");
+
+      // 2. Construct Date object
+      const startDateTime = new Date(`${quickSchedule.date}T${quickSchedule.time}`);
+      const endDateTime = new Date(startDateTime.getTime() + quickSchedule.duration * 60 * 60 * 1000);
+
+      // 3. Prepare DaySchedule
+      const dayOfWeek = format(startDateTime, 'EEEE').toLowerCase();
+
+      // 4. Create a new "Session Cohort"
+      const newCohortData = {
+        name: `Session: ${quickSchedule.type} - ${format(startDateTime, 'MMM d')}`,
+        startDate: startDateTime,
+        endDate: endDateTime, // same day
+        repeatPattern: "custom",
+        weeklySchedule: [{
+          dayOfWeek: dayOfWeek,
+          startTime: quickSchedule.time,
+          endTime: format(endDateTime, 'HH:mm'),
+          isActive: true
+        }],
+        enrollment: {
+          minimumStudents: 1,
+          maximumStudents: 50, // default
+          currentStudents: 0
+        },
+        pricing: {
+          pricePerLesson: 0,
+          totalLessons: 1
+        },
+        classDates: [startDateTime],
+        createdBy: user?.teacherId
+      };
+
+      await classService.addCohort(selectedClass._id || (selectedClass as any).id, { cohort: newCohortData });
+
+      toast({
+        title: "Session Scheduled",
+        description: "The class session has been successfully added to your schedule.",
+      });
+
+      // Refresh data
+      refetchSessions();
+
+      // Reset form
+      setQuickSchedule({
+        ...quickSchedule,
+        date: "",
+        time: ""
+      });
+
+    } catch (error: any) {
+      console.error("Scheduling error:", error);
+      toast({
+        title: "Scheduling Failed",
+        description: error.message || "Could not add session. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsScheduling(false);
+    }
+  };
+
   const renderProfileView = () => {
     return (
       <div className="space-y-6">
@@ -939,125 +1114,7 @@ const TeacherDashboard = () => {
     );
   };
 
-  const renderIntegrationsView = () => {
-    return (
-      <Card>
-        <CardHeader className="flex flex-row items-start justify-between">
-          <div>
-            <CardTitle>Integrations</CardTitle>
-            <CardDescription>
-              Connect your teaching tools and services
-            </CardDescription>
-          </div>
-          <Button
-            variant="outline"
-            size="sm"
-            className="flex items-center"
-            onClick={() => navigate("/teacher-dashboard/zoom")}
-          >
-            <Video className="mr-2 h-4 w-4" />
-            Manage Zoom
-          </Button>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Zoom Integration */}
-          <div className="border rounded-lg p-4 bg-white">
-            <div className="flex items-start">
-              <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center mr-4">
-                <Video className="h-5 w-5 text-blue-600" />
-              </div>
-              <div className="flex-1">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h3 className="font-medium">Zoom</h3>
-                    <p className="text-sm text-gray-500 mt-1">
-                      Host virtual classes and meetings
-                    </p>
-                  </div>
-                  <Badge className="bg-green-100 text-green-800 border-0">Connected</Badge>
-                </div>
-                <div className="mt-3 text-sm">
-                  <p className="text-gray-600">
-                    Your Zoom account is connected and ready to use for scheduling online classes.
-                  </p>
-                </div>
-                <div className="mt-3 flex gap-2">
-                  <Button size="sm" variant="outline" onClick={() => navigate("/teacher-dashboard/zoom")}>
-                    Configure
-                  </Button>
-                  <Button size="sm" variant="outline" className="text-blue-600">
-                    Create Meeting
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </div>
 
-          {/* Google Calendar Integration */}
-          <div className="border rounded-lg p-4 bg-white">
-            <div className="flex items-start">
-              <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center mr-4">
-                <Calendar className="h-5 w-5 text-green-600" />
-              </div>
-              <div className="flex-1">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h3 className="font-medium">Google Calendar</h3>
-                    <p className="text-sm text-gray-500 mt-1">
-                      Sync your class schedule
-                    </p>
-                  </div>
-                  <Badge className="bg-gray-100 text-gray-800 border-0">Not Connected</Badge>
-                </div>
-                <div className="mt-3 text-sm">
-                  <p className="text-gray-600">
-                    Connect your Google Calendar to automatically sync class schedules and receive reminders.
-                  </p>
-                </div>
-                <div className="mt-3">
-                  <Button size="sm">
-                    Connect Calendar
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-
-          {/* Google Drive Integration */}
-          <div className="border rounded-lg p-4 bg-white">
-            <div className="flex items-start">
-              <div className="h-10 w-10 rounded-full bg-yellow-100 flex items-center justify-center mr-4">
-                <FileText className="h-5 w-5 text-yellow-600" />
-              </div>
-              <div className="flex-1">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h3 className="font-medium">Google Drive</h3>
-                    <p className="text-sm text-gray-500 mt-1">
-                      Manage and share class materials
-                    </p>
-                  </div>
-                  <Badge className="bg-gray-100 text-gray-800 border-0">Not Connected</Badge>
-                </div>
-                <div className="mt-3 text-sm">
-                  <p className="text-gray-600">
-                    Connect your Google Drive to easily upload, store, and share teaching materials with your students.
-                  </p>
-                </div>
-                <div className="mt-3">
-                  <Button size="sm">
-                    Connect Drive
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-        </CardContent>
-      </Card>
-    );
-  };
 
   return (
     <div className="flex min-h-screen bg-gray-50">
@@ -1294,7 +1351,7 @@ const TeacherDashboard = () => {
                     </TabsContent>
 
                     <TabsContent value="integrations">
-                      {renderIntegrationsView()}
+                      <IntegrationsTab />
                     </TabsContent>
 
                     <TabsContent value="notifications">
@@ -1449,6 +1506,46 @@ const TeacherDashboard = () => {
                       </div>
                     </div>
                   )}
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                    <div className="flex items-center gap-2">
+                      <Button variant="outline" className="gap-2 bg-white" onClick={handleGoogleSync}>
+                        <RefreshCw className="h-4 w-4" />
+                        Sync with Google Calendar
+                      </Button>
+
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button variant="outline" className="gap-2 bg-white">
+                            <Filter className="h-4 w-4" />
+                            Filter
+                            <ChevronDown className="h-4 w-4 opacity-50" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-56" align="start">
+                          <div className="space-y-2">
+                            <h4 className="font-medium text-sm text-gray-900 border-b pb-2 mb-2">Event Types</h4>
+                            <div className="flex flex-wrap gap-2">
+                              {['Classes', 'Hangouts', 'Birthdays', 'Achievements', 'Assignments'].map(type => (
+                                <UiBadge
+                                  key={type}
+                                  variant="outline"
+                                  className={`cursor-pointer transition-colors border ${getEventTypeColor(type, selectedEventTypes.includes(type))}`}
+                                  onClick={() => handleEventTypeToggle(type)}
+                                >
+                                  {type}
+                                </UiBadge>
+                              ))}
+                            </div>
+                          </div>
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+
+                    <Button className="bg-indigo-600 hover:bg-indigo-700 gap-2">
+                      <Plus className="h-4 w-4" />
+                      Add Event
+                    </Button>
+                  </div>
                   <div className="flex flex-col lg:flex-row gap-6">
                     {/* Main calendar section */}
                     <div className="lg:w-2/3">
@@ -1464,148 +1561,49 @@ const TeacherDashboard = () => {
                             </CardDescription>
                           </div>
                           <div className="flex gap-2">
-                            <Button size="sm" variant="outline" className="text-xs">
+                            <Button
+                              size="sm"
+                              variant={scheduleView === 'day' ? "default" : "outline"}
+                              className={scheduleView === 'day' ? "bg-sky-600 text-xs" : "text-xs"}
+                              onClick={() => setScheduleView('day')}
+                            >
                               Day
                             </Button>
-                            <Button size="sm" variant="default" className="bg-sky-600 text-xs">
+                            <Button
+                              size="sm"
+                              variant={scheduleView === 'week' ? "default" : "outline"}
+                              className={scheduleView === 'week' ? "bg-sky-600 text-xs" : "text-xs"}
+                              onClick={() => setScheduleView('week')}
+                            >
                               Week
                             </Button>
-                            <Button size="sm" variant="outline" className="text-xs">
+                            <Button
+                              size="sm"
+                              variant={scheduleView === 'month' ? "default" : "outline"}
+                              className={scheduleView === 'month' ? "bg-sky-600 text-xs" : "text-xs"}
+                              onClick={() => setScheduleView('month')}
+                            >
                               Month
                             </Button>
                           </div>
                         </CardHeader>
                         <CardContent>
                           <div className="mt-2">
-                            {/* Calendar week view */}
-                            <div className="border rounded-md overflow-hidden">
-                              {/* Week navigation */}
-                              <div className="flex items-center justify-between px-4 py-2 bg-gray-50 border-b">
-                                <div className="flex items-center space-x-2">
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-8 w-8"
-                                    onClick={() => {
-                                      const newWeek = new Date(currentWeek);
-                                      newWeek.setDate(currentWeek.getDate() - 7);
-                                      setCurrentWeek(newWeek);
-                                    }}
-                                  >
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-600">
-                                      <path d="m15 18-6-6 6-6" />
-                                    </svg>
-                                  </Button>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="h-8 text-xs"
-                                    onClick={() => setCurrentWeek(new Date())}
-                                  >
-                                    Today
-                                  </Button>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-8 w-8"
-                                    onClick={() => {
-                                      const newWeek = new Date(currentWeek);
-                                      newWeek.setDate(currentWeek.getDate() + 7);
-                                      setCurrentWeek(newWeek);
-                                    }}
-                                  >
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-600">
-                                      <path d="m9 18 6-6-6-6" />
-                                    </svg>
-                                  </Button>
-                                </div>
-                                <h3 className="text-sm font-medium">
-                                  {weekDays[0].toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - {weekDays[6].toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                                </h3>
-                                <div></div>
-                              </div>
-
-                              {/* Days of the week */}
-                              <div className="grid grid-cols-7 text-center border-b bg-gray-50">
-                                {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, i) => {
-                                  const currentDay = weekDays[i];
-                                  const isToday = currentDay.toDateString() === new Date().toDateString();
-                                  return (
-                                    <div key={i} className="py-2 text-xs font-medium">
-                                      <div>{day}</div>
-                                      <div className={`text-sm mt-1 ${isToday ? "h-6 w-6 rounded-full bg-sky-600 text-white flex items-center justify-center mx-auto" : ""}`}>
-                                        {currentDay.getDate()}
-                                      </div>
-                                    </div>
-                                  );
-                                })}
-                              </div>
-
-                              {/* Time slots */}
-                              <div className="relative" style={{ height: "500px" }}>
-                                {/* Time markers */}
-                                <div className="absolute top-0 left-0 w-full h-full grid grid-cols-1 gap-0">
-                                  {[9, 10, 11, 12, 13, 14, 15, 16, 17].map((hour, i) => (
-                                    <div key={i} className="relative border-b border-gray-100">
-                                      <div className="absolute -top-2.5 left-1 text-xs text-gray-400 bg-white px-1">
-                                        {hour % 12 === 0 ? '12' : hour % 12}{hour >= 12 ? 'pm' : 'am'}
-                                      </div>
-                                    </div>
-                                  ))}
-                                </div>
-
-                                {/* Week grid */}
-                                <div className="absolute top-0 left-8 right-0 h-full grid grid-cols-7 gap-0">
-                                  {/* Day columns with real sessions */}
-                                  {weekDays.map((day, dayIndex) => {
-                                    const daySessions = weekSessions.filter(session =>
-                                      new Date(session.startTime).toDateString() === day.toDateString()
-                                    );
-
-                                    return (
-                                      <div key={dayIndex} className="relative border-l first:border-l-0 h-full">
-                                        {/* Real session events */}
-                                        {daySessions.map((session, sessionIndex) => {
-                                          const { top, height } = getSessionPosition(session.startTime, session.duration);
-                                          const colors = getSessionColor(sessionIndex);
-                                          const startTime = formatTime(session.startTime);
-                                          const endTime = formatTime(new Date(new Date(session.startTime).getTime() + session.duration * 60000).toISOString());
-
-                                          return (
-                                            <div
-                                              key={session.classId}
-                                              className={`absolute left-1 right-1 rounded-md ${colors.bg} border ${colors.border} p-2 overflow-hidden cursor-pointer hover:shadow-sm transition-shadow`}
-                                              style={{ top: `${Math.max(0, top)}px`, height: `${Math.max(60, height)}px` }}
-                                              onClick={() => {
-                                                // Navigate to class view
-                                                navigate(`/teacher-dashboard/classes?id=${session.classId}`);
-                                              }}
-                                            >
-                                              <div className={`text-xs font-medium ${colors.text} truncate`}>{session.title}</div>
-                                              <div className={`text-xs ${colors.subtext}`}>{startTime} - {endTime}</div>
-                                              <div className={`text-xs ${colors.subtext} mt-1 truncate`}>{session.cohortName}</div>
-                                              <div className={`text-xs ${colors.subtext} truncate`}>{session.enrolledStudents} students</div>
-                                              {session.readiness && (
-                                                <div className={`text-xs ${colors.subtext} mt-1`}>
-                                                  Ready: {Math.round(session.readiness.overallReadiness || 0)}%
-                                                </div>
-                                              )}
-                                            </div>
-                                          );
-                                        })}
-
-                                        {/* Show loading state */}
-                                        {sessionsLoading && dayIndex === 0 && (
-                                          <div className="absolute top-2 left-1 right-1 h-16 rounded-md bg-gray-100 border border-gray-200 p-2 flex items-center justify-center">
-                                            <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
-                                          </div>
-                                        )}
-                                      </div>
-                                    );
-                                  })}
-                                </div>
-                              </div>
-                            </div>
+                            <ScheduleCalendar
+                              view={scheduleView}
+                              events={scheduleEvents}
+                              onAddEvent={(date) => {
+                                if (date) {
+                                  setQuickSchedule(prev => ({
+                                    ...prev,
+                                    date: format(date, 'yyyy-MM-dd')
+                                  }));
+                                  // Scroll to quick schedule
+                                  const quickScheduleEl = document.getElementById('quick-schedule-card');
+                                  if (quickScheduleEl) quickScheduleEl.scrollIntoView({ behavior: 'smooth' });
+                                }
+                              }}
+                            />
                           </div>
                         </CardContent>
                       </Card>
@@ -1614,7 +1612,7 @@ const TeacherDashboard = () => {
                     {/* Side panel */}
                     <div className="lg:w-1/3 space-y-6">
                       {/* Quick add event */}
-                      <Card className="border-t-4 border-t-indigo-500">
+                      <Card className="border-t-4 border-t-indigo-500" id="quick-schedule-card">
                         <CardHeader className="pb-2">
                           <CardTitle className="text-lg flex items-center text-gray-800">
                             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 text-indigo-600">
@@ -1633,10 +1631,14 @@ const TeacherDashboard = () => {
                             <div className="grid grid-cols-2 gap-3">
                               <div>
                                 <Label htmlFor="class">Class</Label>
-                                <select className="w-full mt-1 rounded-md border border-gray-300 px-3 py-2 text-sm">
+                                <select
+                                  className="w-full mt-1 rounded-md border border-gray-300 px-3 py-2 text-sm"
+                                  value={quickSchedule.classId}
+                                  onChange={(e) => setQuickSchedule({ ...quickSchedule, classId: e.target.value })}
+                                >
                                   <option value="">Select a class</option>
-                                  {classes.map((cls: any) => (
-                                    <option key={cls._id || cls.id} value={cls._id || cls.id}>
+                                  {(summaryData?.classes || []).map((cls: any) => (
+                                    <option key={cls.classId} value={cls.classId}>
                                       {cls.title}
                                     </option>
                                   ))}
@@ -1644,7 +1646,11 @@ const TeacherDashboard = () => {
                               </div>
                               <div>
                                 <Label htmlFor="type">Type</Label>
-                                <select className="w-full mt-1 rounded-md border border-gray-300 px-3 py-2 text-sm">
+                                <select
+                                  className="w-full mt-1 rounded-md border border-gray-300 px-3 py-2 text-sm"
+                                  value={quickSchedule.type}
+                                  onChange={(e) => setQuickSchedule({ ...quickSchedule, type: e.target.value })}
+                                >
                                   <option>Regular class</option>
                                   <option>Lab session</option>
                                   <option>Review session</option>
@@ -1656,42 +1662,81 @@ const TeacherDashboard = () => {
                             <div className="grid grid-cols-2 gap-3">
                               <div>
                                 <Label htmlFor="date">Date</Label>
-                                <Input type="date" id="date" className="mt-1" />
+                                <Input
+                                  type="date"
+                                  id="date"
+                                  className="mt-1"
+                                  value={quickSchedule.date}
+                                  onChange={(e) => setQuickSchedule({ ...quickSchedule, date: e.target.value })}
+                                />
                               </div>
                               <div>
                                 <Label htmlFor="time">Time</Label>
-                                <Input type="time" id="time" className="mt-1" />
+                                <Input
+                                  type="time"
+                                  id="time"
+                                  className="mt-1"
+                                  value={quickSchedule.time}
+                                  onChange={(e) => setQuickSchedule({ ...quickSchedule, time: e.target.value })}
+                                />
                               </div>
                             </div>
 
                             <div>
                               <Label htmlFor="duration">Duration</Label>
                               <div className="flex items-center gap-2 mt-1">
-                                <Input type="number" id="duration" defaultValue="1" className="w-20" />
+                                <Input
+                                  type="number"
+                                  id="duration"
+                                  className="w-20"
+                                  value={quickSchedule.duration}
+                                  onChange={(e) => setQuickSchedule({ ...quickSchedule, duration: Number(e.target.value) })}
+                                />
                                 <span className="text-sm text-gray-500">hours</span>
                               </div>
                             </div>
 
                             <div>
                               <Label htmlFor="location">Location</Label>
-                              <Input type="text" id="location" placeholder="Room, building, or online link" className="mt-1" />
+                              <Input
+                                type="text"
+                                id="location"
+                                placeholder="Room, building, or online link"
+                                className="mt-1"
+                                value={quickSchedule.location}
+                                onChange={(e) => setQuickSchedule({ ...quickSchedule, location: e.target.value })}
+                              />
                             </div>
 
                             <div>
                               <Label className="flex items-center gap-2">
-                                <input type="checkbox" className="rounded text-indigo-600" />
+                                <input
+                                  type="checkbox"
+                                  className="rounded text-indigo-600"
+                                  checked={quickSchedule.repeat}
+                                  onChange={(e) => setQuickSchedule({ ...quickSchedule, repeat: e.target.checked })}
+                                />
                                 <span className="text-sm text-gray-700">Repeat weekly</span>
                               </Label>
                             </div>
 
                             <div className="pt-2">
-                              <Button className="w-full bg-indigo-600 hover:bg-indigo-700">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
-                                  <circle cx="12" cy="12" r="10"></circle>
-                                  <path d="M12 8v8"></path>
-                                  <path d="M8 12h8"></path>
-                                </svg>
-                                Add to Schedule
+                              <Button
+                                className="w-full bg-indigo-600 hover:bg-indigo-700"
+                                onClick={handleQuickSchedule}
+                                disabled={isScheduling}
+                              >
+                                {isScheduling ? (
+                                  <>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    Scheduling...
+                                  </>
+                                ) : (
+                                  <>
+                                    <PlusCircle className="mr-2 h-4 w-4" />
+                                    Add to Schedule
+                                  </>
+                                )}
                               </Button>
                             </div>
                           </div>

@@ -1,9 +1,9 @@
-
+import { ScheduleEvent } from "@/types/calendar";
 import { useState } from "react";
 import { MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { 
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -13,35 +13,29 @@ import {
   AlertDialogHeader,
   AlertDialogTitle
 } from "@/components/ui/alert-dialog";
-import { EventFormDialog } from "./EventFormDialog";
-import { ScheduleEvent, deleteEvent } from "./mockScheduleData";
-import { toast } from "@/hooks/use-toast";
 
 interface EventActionsProps {
   event: ScheduleEvent;
   className?: string;
+  onEdit?: (event: ScheduleEvent) => void;
+  onDelete?: (event: ScheduleEvent) => void;
 }
 
-export const EventActions = ({ event, className }: EventActionsProps) => {
-  const [showEditDialog, setShowEditDialog] = useState(false);
+export const EventActions = ({ event, className, onEdit, onDelete }: EventActionsProps) => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     try {
-      deleteEvent(event.id);
-      toast({
-        title: "Event deleted",
-        description: "The event has been deleted successfully"
-      });
+      if (onDelete) {
+        onDelete(event);
+      }
       setShowDeleteDialog(false);
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "There was a problem deleting the event",
-        variant: "destructive"
-      });
+      console.error(error);
     }
   };
+
+  if (!onEdit && !onDelete) return null;
 
   return (
     <>
@@ -53,11 +47,11 @@ export const EventActions = ({ event, className }: EventActionsProps) => {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuItem onClick={() => setShowEditDialog(true)}>
+          <DropdownMenuItem onClick={() => onEdit && onEdit(event)}>
             <Pencil className="mr-2 h-4 w-4" />
             <span>Edit</span>
           </DropdownMenuItem>
-          <DropdownMenuItem 
+          <DropdownMenuItem
             onClick={() => setShowDeleteDialog(true)}
             className="text-red-600 focus:text-red-600"
           >
@@ -67,20 +61,13 @@ export const EventActions = ({ event, className }: EventActionsProps) => {
         </DropdownMenuContent>
       </DropdownMenu>
 
-      {/* Edit Dialog */}
-      <EventFormDialog 
-        open={showEditDialog}
-        onOpenChange={setShowEditDialog}
-        eventToEdit={event}
-      />
-
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the event 
+              This action cannot be undone. This will permanently delete the event
               "{event.title}" from your schedule.
             </AlertDialogDescription>
           </AlertDialogHeader>

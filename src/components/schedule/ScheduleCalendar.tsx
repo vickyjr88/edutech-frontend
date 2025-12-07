@@ -8,11 +8,18 @@ import { addDays, format, startOfMonth, subDays, subMonths, addMonths } from "da
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
+import { ScheduleEvent } from "@/types/calendar";
+
 interface ScheduleCalendarProps {
   view: "month" | "week" | "day";
+  events: ScheduleEvent[];
+  onEventsChange?: () => void;
+  onEventClick?: (event: ScheduleEvent) => void;
+  onAddEvent?: (date?: Date) => void;
+  onDeleteEvent?: (event: ScheduleEvent) => void;
 }
 
-export function ScheduleCalendar({ view }: ScheduleCalendarProps) {
+export function ScheduleCalendar({ view, events, onEventClick, onAddEvent, onDeleteEvent }: ScheduleCalendarProps) {
   const [date, setDate] = useState<Date>(new Date());
   const [month, setMonth] = useState<Date>(new Date());
 
@@ -59,25 +66,25 @@ export function ScheduleCalendar({ view }: ScheduleCalendarProps) {
     <div className="space-y-4">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center space-x-2">
-          <Button 
-            variant="outline" 
-            size="icon" 
+          <Button
+            variant="outline"
+            size="icon"
             onClick={handlePrevious}
             className="h-8 w-8"
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
-          <Button 
-            variant="outline" 
-            size="sm" 
+          <Button
+            variant="outline"
+            size="sm"
             onClick={handleToday}
             className="h-8"
           >
             Today
           </Button>
-          <Button 
-            variant="outline" 
-            size="icon" 
+          <Button
+            variant="outline"
+            size="icon"
             onClick={handleNext}
             className="h-8 w-8"
           >
@@ -88,9 +95,10 @@ export function ScheduleCalendar({ view }: ScheduleCalendarProps) {
         <div className="w-28"></div>
       </div>
 
-      {view === "month" && <MonthView month={month} onDateSelect={setDate} />}
-      {view === "week" && <WeekView date={date} onDateSelect={setDate} />}
-      {view === "day" && <DayView date={date} />}
+
+      {view === "month" && <MonthView month={month} events={events} onDateSelect={setDate} onEventClick={onEventClick} />}
+      {view === "week" && <WeekView date={date} events={events} onDateSelect={setDate} onEventClick={onEventClick} />}
+      {view === "day" && <DayView date={date} events={events} onAddEvent={onAddEvent} onEventClick={onEventClick} onDeleteEvent={onDeleteEvent} />}
     </div>
   );
 }

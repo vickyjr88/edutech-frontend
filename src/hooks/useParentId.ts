@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { parentService } from '@/services/parent.service';
 
 interface UseParentIdReturn {
   parentId: string | null;
@@ -36,14 +37,14 @@ export const useParentId = (): UseParentIdReturn => {
 
   const fetchParentProfile = async () => {
     if (!user?.id) return;
-    
+
     setLoading(true);
     setError(null);
-    
+
     try {
-      // TODO: Implement parent service API call when parent service is available
-      setError('Parent profile service not implemented yet');
-      setParentId(null);
+      const profile = await parentService.getProfile();
+      setParentId(profile._id);
+      setError(null);
     } catch (err) {
       setError('Failed to fetch parent profile');
       setParentId(null);

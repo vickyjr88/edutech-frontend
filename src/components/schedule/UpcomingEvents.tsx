@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { CalendarClock, Loader2 } from "lucide-react";
 import { format, isToday, isTomorrow, parseISO } from "date-fns";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ScheduleEvent } from "./mockScheduleData";
+import { ScheduleEvent } from "@/types/calendar";
 import { Separator } from "@/components/ui/separator";
 import { EventActions } from "./EventActions";
 import { useCurrentUpcomingSessions } from "@/hooks/use-student-service";
@@ -112,8 +112,8 @@ export function UpcomingEvents() {
                       <Badge className={getEventBadgeClass(event.type)}>
                         {event.type.charAt(0).toUpperCase() + event.type.slice(1)}
                       </Badge>
-                      <EventActions 
-                        event={event} 
+                      <EventActions
+                        event={event}
                         className="opacity-0 group-hover:opacity-100 transition-opacity"
                       />
                     </div>

@@ -66,10 +66,10 @@ export default function UpcomingAssignments() {
       score: studentAssignment.grade ? `${studentAssignment.grade}%` : undefined,
       grade: studentAssignment.grade
         ? studentAssignment.grade >= 90 ? 'A'
-        : studentAssignment.grade >= 80 ? 'B'
-        : studentAssignment.grade >= 70 ? 'C'
-        : studentAssignment.grade >= 60 ? 'D'
-        : 'F'
+          : studentAssignment.grade >= 80 ? 'B'
+            : studentAssignment.grade >= 70 ? 'C'
+              : studentAssignment.grade >= 60 ? 'D'
+                : 'F'
         : undefined,
       feedback: studentAssignment.feedback,
       type: assignment.type === 'Group Project' ? 'group' : 'individual',
@@ -81,9 +81,9 @@ export default function UpcomingAssignments() {
 
   // Filter and transform assignments
   const assignments = useMemo(() => {
-    if (!studentAssignmentsResponse?.data) return [];
+    if (!studentAssignmentsResponse?.data?.data) return [];
 
-    return studentAssignmentsResponse.data
+    return studentAssignmentsResponse.data.data
       .map(transformAssignment)
       .filter(assignment =>
         assignment.status === "upcoming" ||
@@ -125,8 +125,8 @@ export default function UpcomingAssignments() {
             </div>
           ) : (
             assignments.map((assignment) => (
-              <div 
-                key={assignment.id} 
+              <div
+                key={assignment.id}
                 className="border rounded-md p-3"
               >
                 <div className="flex justify-between items-start mb-1">
@@ -140,8 +140,8 @@ export default function UpcomingAssignments() {
                   <span className="text-xs text-gray-500">
                     Due {assignment.dueDate}
                   </span>
-                  <Button 
-                    size="sm" 
+                  <Button
+                    size="sm"
                     variant="outline"
                     onClick={() => handleViewAssignment(assignment)}
                   >
