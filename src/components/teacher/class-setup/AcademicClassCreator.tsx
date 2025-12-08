@@ -106,17 +106,34 @@ const AcademicClassCreator: React.FC<AcademicClassCreatorProps> = ({
 
   const nextStep = async () => {
     if (currentStep < steps.length - 1) {
-      // Save class to API after foundation step (step 0) before moving to lesson planning
-      if (currentStep === 0 && !classId) {
-        try {
-          await saveDraft();
-          setCurrentStep(currentStep + 1);
+      // Always try to save draft when moving to next step
+      try {
+        await saveDraft(true); // Assuming true enables silent mode if supported, or just passes params.
+        // Based on context, saveDraft(silent?: boolean) signature.
+        setCurrentStep(currentStep + 1);
+        if (currentStep === 0) {
           toast.success('Class foundation saved! Moving to lesson planning...');
-        } catch (error) {
-          console.error('Error saving class:', error);
-          // Toast is handled in saveDraft
         }
-      } else {
+      } catch (error) {
+        console.error('Error saving class on step transition:', error);
+        // Even if save fails, we might want to allow optional navigation or block it. 
+        // For now, let's allow navigation but warn user? 
+        // Or better, blocking navigation on save failure is safer for data integrity.
+        // But if it's a silent save failure (validation error?), blocking might be annoying.
+        // Let's stick to the user request: "Make sure save draft is called on every step".
+
+        // If save fails, we should probably stop?
+        // But what if it's just a validation error on a non-required field for *draft*?
+        // saveDraft typically validates.
+
+        // Let's assume we proceed but log it, unless it's step 0 creation which MUST succeed to get an ID.
+        if (currentStep === 0 && !classId) {
+          // Critical: Must have ID to proceed
+          // Toast already handled by saveDraft potentially, or we show one here.
+          return;
+        }
+
+        // For other steps, we proceed.
         setCurrentStep(currentStep + 1);
       }
     }

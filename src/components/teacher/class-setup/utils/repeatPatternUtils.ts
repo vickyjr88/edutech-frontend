@@ -10,30 +10,28 @@
 export const getApiRepeatPatternValue = (pattern: string): string => {
   switch (pattern) {
     case "weekly":
-      return "Weekly";
+      return "weekly";
     case "twice-weekly":
-      return "Twice Weekly";
+      return "bi_weekly";
     case "custom":
-      return "Custom Schedule";
+      return "custom";
     default:
-      return "Weekly";
+      return "weekly";
   }
 };
 
 /**
  * Maps backend RepeatPattern enum values to internal pattern values
- * @param apiPattern - Backend pattern value ('Weekly', 'Twice Weekly', 'Custom Schedule')
+ * @param apiPattern - Backend pattern value ('weekly', 'bi_weekly', 'custom')
  * @returns Internal pattern value ('weekly', 'twice-weekly', 'custom')
  */
 export const getLocalRepeatPatternValue = (apiPattern: string): string => {
-  switch (apiPattern) {
-    case "Weekly":
-      return "weekly";
-    case "Twice Weekly":
-      return "twice-weekly";
-    case "Custom Schedule":
-      return "custom";
-    default:
-      return "weekly";
-  }
+  // Handle both old formats (Capitalized) and new formats (lowercase enum) just in case
+  const normalized = apiPattern?.toLowerCase();
+
+  if (normalized === "weekly" || normalized === "weekly") return "weekly";
+  if (normalized === "bi_weekly" || normalized === "twice weekly") return "twice-weekly";
+  if (normalized === "custom" || normalized === "custom schedule") return "custom";
+
+  return "weekly";
 };

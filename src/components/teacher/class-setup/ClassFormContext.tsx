@@ -15,6 +15,7 @@ import {
 import { getApiRepeatPatternValue, getLocalRepeatPatternValue } from "./utils/repeatPatternUtils";
 import { ExtractedCourseData } from "@/types/course-data";
 import { mapCourseDataToFormValues } from "@/utils/courseDataMapper";
+import { mapFormValuesToCreateClassDto } from "./utils/classMapper";
 import { toast } from "sonner";
 
 interface ClassFormContextType {
@@ -1059,54 +1060,64 @@ export const ClassFormProvider = ({
 
         commitment: data.commitmentRequired || undefined,
 
-        // Format lesson plans according to the LessonPlanDto
-        lessonPlans: data.lessonPlans
-          .filter(lesson => lesson.title && lesson.description)
-          .map(lesson => ({
-            title: lesson.title || "",
-            description: lesson.description || "",
-            duration: Number(lesson.duration) || 60,
-            resourceFiles: lesson.resources ?
-              (typeof lesson.resources === 'string' ?
-                lesson.resources.split(',').map(r => r.trim()) :
-                Array.isArray(lesson.resources) ? lesson.resources :
-                  [lesson.resources]) :
-              undefined
-          })),
+        // Format lesson plans - ONLY for new classes. For updates, lesson plans should be excluded from main payload 
+        // or handled via specific endpoints to avoid the "must be a mongodb id" error
+        ...(classId ? {} : {
+          lessonPlans: data.lessonPlans
+            .filter(lesson => lesson.title && lesson.description)
+            .map(lesson => ({
+              title: lesson.title || "",
+              description: lesson.description || "",
+              duration: Number(lesson.duration) || 60,
+              resourceFiles: lesson.resources ?
+                (typeof lesson.resources === 'string' ?
+                  lesson.resources.split(',').map(r => r.trim()) :
+                  Array.isArray(lesson.resources) ? lesson.resources :
+                    [lesson.resources]) :
+                undefined
+            }))
+        }),
 
         // Format cohorts according to the CohortDto
         cohorts: cohorts.map(cohort => {
-          // Extract _id if it exists, and other fields we don't want to send directly
-          const { hasFlexibleSchedule, lessonSchedules, ...cohortData } = cohort;
-
-          // Remove id field (but keep _id if it exists)
-          if (cohortData.id) {
-            delete cohortData.id;
-          }
-
-          // Convert days of week format if needed
-          const daysOfWeek = cohort.repeatSchedule.daysOfWeek.map(day =>
-            day.toUpperCase()
-          );
+          const daysOfWeek = (cohort.repeatSchedule?.daysOfWeek || []).map(day => day.toLowerCase());
 
           return {
-            // Include _id field only if it exists (for existing cohorts)
-            ...(cohort._id ? { _id: cohort._id } : {}),
-            name: cohortData.name,
-            isActive: cohortData.isActive,
-            startDate: cohortData.startDate,
-            endDate: cohortData.endDate,
-            startTime: cohortData.startTime,
-            endTime: cohortData.endTime,
-            repeatPattern: getApiRepeatPatternValue(cohort.repeatSchedule.pattern),
+            // Explicit whitelist of allowed fields
+            ...((cohort._id && cohort._id.length === 24) ? { _id: cohort._id } : {}),
+            name: cohort.name,
+            isActive: cohort.isActive ?? true,
+            startDate: cohort.startDate ? new Date(cohort.startDate) : undefined,
+            endDate: cohort.endDate ? new Date(cohort.endDate) : undefined,
+            startTime: cohort.startTime || "09:00",
+            endTime: cohort.endTime || "10:00",
+            repeatPattern: getApiRepeatPatternValue(cohort.repeatSchedule?.pattern || "weekly"),
             daysOfWeek,
-            repeatEvery: Number(cohort.repeatSchedule.repeatEvery) || 1, // Ensure repeatEvery is included as a number
-            customLessonTimes: hasFlexibleSchedule,
-            minimumStudents: cohortData.minStudents,
-            maximumStudents: cohortData.maxStudents,
-            enrollmentDeadline: cohortData.enrollmentDeadline,
-            price: Number(cohortData.price) || 0,
-            discount: Number(cohortData.discount) || 0
+            customLessonTimes: !!cohort.hasFlexibleSchedule,
+            minimumStudents: Number(cohort.minStudents) || 1,
+            maximumStudents: Number(cohort.maxStudents) || 20,
+            price: Number(cohort.price) || 0,
+            discount: Number(cohort.discount) || 0,
+            enrollmentDeadline: cohort.enrollmentDeadline ? new Date(cohort.enrollmentDeadline) : null,
+            createdBy: userAuth.user?.teacherId,
+            enrollment: {
+              minimumStudents: Number(cohort.minStudents) || 1,
+              maximumStudents: Number(cohort.maxStudents) || 20,
+              enrollmentDeadline: cohort.enrollmentDeadline ? new Date(cohort.enrollmentDeadline) : null,
+              allowWaitlist: true,
+              autoCloseEnrollment: false,
+              currentStudents: 0
+            },
+            pricing: {
+              pricePerLesson: 0,
+              totalLessons: Number(data.numberOfLessons) || 1,
+              discount: Number(cohort.discount) || 0
+            },
+            weeklySchedule: daysOfWeek.map(day => ({
+              dayOfWeek: day,
+              startTime: cohort.startTime || "09:00",
+              endTime: cohort.endTime || "10:00"
+            }))
           };
         }),
 

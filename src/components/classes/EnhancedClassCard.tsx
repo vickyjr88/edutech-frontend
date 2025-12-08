@@ -3,8 +3,8 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { 
-  Users, 
+import {
+  Users,
   TrendingUp,
   TrendingDown,
   Minus,
@@ -90,12 +90,12 @@ const EnhancedClassCard: React.FC<EnhancedClassCardProps> = ({
       if (timeLeft < 60) return 'Starting soon';
       if (timeLeft < 120) return 'In 1 hour';
       if (timeLeft < 1440) return `In ${Math.round(timeLeft / 60)} hours`;
-      
+
       const days = Math.round(timeLeft / 1440);
       if (days === 1) return 'Tomorrow';
       if (days < 7) return `In ${days} days`;
     }
-    
+
     // Fallback to calculating from startTime
     const sessionDate = new Date(startTime);
     const now = new Date();
@@ -109,7 +109,7 @@ const EnhancedClassCard: React.FC<EnhancedClassCardProps> = ({
     if (diffHours < 24) return `In ${diffHours} hours`;
     if (diffDays === 1) return 'Tomorrow';
     if (diffDays < 7) return `In ${diffDays} days`;
-    
+
     return formatDate(sessionDate);
   };
 
@@ -131,10 +131,10 @@ const EnhancedClassCard: React.FC<EnhancedClassCardProps> = ({
       { key: 'zoomSetup', label: 'Zoom Setup', ready: readiness?.zoomSetup },
       { key: 'studentsNotified', label: 'Students Notified', ready: readiness?.studentsNotified }
     ];
-    
+
     const ready = items.filter(item => item.ready);
     const pending = items.filter(item => !item.ready);
-    
+
     return { ready, pending, total: items.length };
   };
 
@@ -202,8 +202,8 @@ const EnhancedClassCard: React.FC<EnhancedClassCardProps> = ({
           </div>
           <div className="flex items-center gap-2">
             {classData.nextLesson && (
-              <Badge 
-                variant="outline" 
+              <Badge
+                variant="outline"
                 className={cn(
                   "text-xs",
                   getSessionUrgency(classData.nextLesson.scheduledDate.toISOString()) === 'critical' && "border-red-200 text-red-700",
@@ -215,7 +215,7 @@ const EnhancedClassCard: React.FC<EnhancedClassCardProps> = ({
                 {getSmartTimeDisplay(classData.nextLesson.scheduledDate.toISOString())}
               </Badge>
             )}
-            <Badge 
+            <Badge
               variant={classData.status === 'published' ? 'default' : 'secondary'}
               className="text-xs"
             >
@@ -252,15 +252,15 @@ const EnhancedClassCard: React.FC<EnhancedClassCardProps> = ({
                 <span className={cn(
                   "px-2 py-1 rounded text-xs font-medium",
                   classData.nextLesson.preparationStatus === 'ready' ? 'text-green-600 bg-green-50' :
-                  classData.nextLesson.preparationStatus === 'needs-prep' ? 'text-yellow-600 bg-yellow-50' :
-                  'text-red-600 bg-red-50'
+                    classData.nextLesson.preparationStatus === 'needs-prep' ? 'text-yellow-600 bg-yellow-50' :
+                      'text-red-600 bg-red-50'
                 )}>
-                  {classData.nextLesson.preparationStatus === 'ready' ? '100' : 
-                   classData.nextLesson.preparationStatus === 'needs-prep' ? '50' : '25'}% Ready
+                  {classData.nextLesson.preparationStatus === 'ready' ? '100' :
+                    classData.nextLesson.preparationStatus === 'needs-prep' ? '50' : '25'}% Ready
                 </span>
               </div>
             </div>
-            
+
             <div className="mb-3">
               <div className="flex items-center gap-2 mb-1">
                 <p className="text-base font-semibold text-gray-900">{classData.nextLesson.topic}</p>
@@ -322,7 +322,7 @@ const EnhancedClassCard: React.FC<EnhancedClassCardProps> = ({
               </span>
             </div>
           </div>
-          
+
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600 flex items-center gap-1">
@@ -349,7 +349,7 @@ const EnhancedClassCard: React.FC<EnhancedClassCardProps> = ({
               <span className="font-medium">{Math.round(classData.studentInsights.averagePerformance || 0)}%</span>
             </div>
             <Progress value={classData.studentInsights.averagePerformance || 0} className="h-2" />
-            
+
             <div className="flex items-center justify-between text-sm">
               <span className="text-gray-600">Completion Rate</span>
               <span className="font-medium">{Math.round(classData.momentum.completionRate || 0)}%</span>
@@ -381,11 +381,12 @@ const EnhancedClassCard: React.FC<EnhancedClassCardProps> = ({
         )}
 
         {/* Quick Actions */}
-        <div className="flex gap-2 pt-2 border-t">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="flex-1"
+        {/* Quick Actions */}
+        <div className="flex flex-wrap gap-2 pt-2 border-t mt-auto">
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex-grow md:flex-grow-0"
             onClick={(e) => {
               e.stopPropagation();
               onViewClass(classData);
@@ -394,11 +395,12 @@ const EnhancedClassCard: React.FC<EnhancedClassCardProps> = ({
             <Eye className="h-4 w-4 mr-1" />
             View
           </Button>
-          
+
           {onMessageStudents && (
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               size="sm"
+              className="flex-grow md:flex-grow-0"
               onClick={(e) => {
                 e.stopPropagation();
                 onMessageStudents(classData);
@@ -408,16 +410,17 @@ const EnhancedClassCard: React.FC<EnhancedClassCardProps> = ({
               Message
             </Button>
           )}
-          
+
           {onPrepareLesson && classData.nextLesson && (
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               size="sm"
               onClick={(e) => {
                 e.stopPropagation();
                 onPrepareLesson(classData);
               }}
               className={cn(
+                "flex-grow md:flex-grow-0",
                 classData.nextLesson.preparationStatus === 'critical' && "border-red-200 text-red-700 hover:bg-red-50"
               )}
             >
@@ -427,24 +430,25 @@ const EnhancedClassCard: React.FC<EnhancedClassCardProps> = ({
           )}
 
           {onCreateLessonPlan && (
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               size="sm"
               onClick={(e) => {
                 e.stopPropagation();
                 onCreateLessonPlan(classData);
               }}
-              className="border-blue-200 text-blue-700 hover:bg-blue-50"
+              className="border-blue-200 text-blue-700 hover:bg-blue-50 flex-grow md:flex-grow-0"
             >
               <BookOpen className="h-4 w-4 mr-1" />
-              Create Lesson
+              Plan
             </Button>
           )}
-          
+
           {onEditClass && (
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               size="sm"
+              className="ml-auto"
               onClick={(e) => {
                 e.stopPropagation();
                 onEditClass(classData);
