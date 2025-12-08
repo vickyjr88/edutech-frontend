@@ -32,6 +32,10 @@ export interface Class {
     status?: 'draft' | 'pending_review' | 'archived' | 'published';
     createdAt: string;
     updatedAt: string;
+    enrollment?: {
+        current: number;
+        capacity: number;
+    };
 }
 
 export interface Cohort {

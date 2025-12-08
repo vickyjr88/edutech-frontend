@@ -1,3 +1,4 @@
+"use client";
 import { useParams } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -16,7 +17,7 @@ const transformTeacherData = (apiTeacher: any): any => {
   // Extract subjects from teacher profile
   const extractSubjects = (): string[] => {
     const subjects: string[] = [];
-    
+
     if (Array.isArray(apiTeacher.subjects)) {
       apiTeacher.subjects.forEach((subject: any) => {
         if (subject.subject) {
@@ -24,7 +25,7 @@ const transformTeacherData = (apiTeacher: any): any => {
         }
       });
     }
-    
+
     return subjects.length > 0 ? subjects : ["General Education"];
   };
 
@@ -33,12 +34,12 @@ const transformTeacherData = (apiTeacher: any): any => {
     if (!apiTeacher.education || !Array.isArray(apiTeacher.education) || apiTeacher.education.length === 0) {
       return [];
     }
-    
+
     return apiTeacher.education.map((edu: any) => ({
       id: edu._id || edu.id || `edu-${Math.random().toString(36).substr(2, 9)}`,
       institution: edu.institutionName || edu.institution || "",
       degree: edu.degree || "",
-      dates: edu.startDate 
+      dates: edu.startDate
         ? `${new Date(edu.startDate).getFullYear()} - ${edu.endDate ? new Date(edu.endDate).getFullYear() : 'Present'}`
         : ""
     }));
@@ -49,7 +50,7 @@ const transformTeacherData = (apiTeacher: any): any => {
     if (!apiTeacher.certifications || !Array.isArray(apiTeacher.certifications) || apiTeacher.certifications.length === 0) {
       return [];
     }
-    
+
     return apiTeacher.certifications.map((cert: any) => ({
       id: cert._id || cert.id || `cert-${Math.random().toString(36).substr(2, 9)}`,
       name: cert.name || "",
@@ -88,7 +89,7 @@ const transformTeacherData = (apiTeacher: any): any => {
     if (!apiTeacher.methodologies || !Array.isArray(apiTeacher.methodologies)) {
       return [];
     }
-    
+
     return apiTeacher.methodologies.map((methodology: any) => ({
       id: methodology._id || `meth-${Math.random().toString(36).substr(2, 9)}`,
       methodology: methodology.name || "",
@@ -102,7 +103,7 @@ const transformTeacherData = (apiTeacher: any): any => {
     if (!apiTeacher.strategies || !Array.isArray(apiTeacher.strategies)) {
       return [];
     }
-    
+
     return apiTeacher.strategies.map((strategy: any) => ({
       id: strategy._id || `str-${Math.random().toString(36).substr(2, 9)}`,
       strategy: strategy.strategy || "",
@@ -116,7 +117,7 @@ const transformTeacherData = (apiTeacher: any): any => {
     if (!apiTeacher.languages || !Array.isArray(apiTeacher.languages)) {
       return [];
     }
-    
+
     return apiTeacher.languages.map((lang: any) => ({
       id: lang._id || `lang-${Math.random().toString(36).substr(2, 9)}`,
       language: lang.name || "",
@@ -130,7 +131,7 @@ const transformTeacherData = (apiTeacher: any): any => {
     if (!apiTeacher.skills || !Array.isArray(apiTeacher.skills)) {
       return [];
     }
-    
+
     return apiTeacher.skills.map((skill: any) => ({
       id: skill._id || `tech-${Math.random().toString(36).substr(2, 9)}`,
       skill: skill.name || "",
@@ -138,69 +139,37 @@ const transformTeacherData = (apiTeacher: any): any => {
       level: skill.isCertified ? "Advanced" : "Intermediate"
     }));
   };
-  
+
   // Get the user's full name
   const name = apiTeacher.user?.fullName || "Teacher";
-  
+
   // Format experience for display
   const formatExperience = () => {
     if (!apiTeacher.experience || !Array.isArray(apiTeacher.experience)) {
       return [];
     }
-    
+
     return apiTeacher.experience.map((exp: any) => ({
       id: exp._id || `exp-${Math.random().toString(36).substr(2, 9)}`,
       position: exp.position || "",
       institution: exp.institution || "",
-      dates: exp.startDate 
+      dates: exp.startDate
         ? `${new Date(exp.startDate).getFullYear()} - ${exp.isCurrentlyWorking ? 'Present' : (exp.endDate ? new Date(exp.endDate).getFullYear() : '')}`
         : "",
       description: exp.additionalDetails || ""
     }));
   };
 
-  // For now, we'll create mock data for classes and reviews
-  const mockClasses = [
-    {
-      id: "class1",
-      title: `${extractSubjects()[0] || "General"} Fundamentals`,
-      subject: extractSubjects()[0] || "Education",
-      level: "All Grades",
-      rating: 4.8,
-      imageSrc: "https://images.unsplash.com/photo-1610484826967-09c5720778c7?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
-      type: "academic"
-    },
-    {
-      id: "class2",
-      title: "Learning Skills Development",
-      subject: "Cross-disciplinary",
-      level: "All Grades",
-      rating: 4.7,
-      imageSrc: "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
-      type: "academic"
-    }
-  ];
-  
-  const mockReviews = [
-    {
-      id: "rev1",
-      reviewer: "Parent",
-      reviewerImage: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-1.2.1&auto=format&fit=crop&w=256&q=80",
-      rating: 5,
-      comment: "An exceptional teacher who really cares about the progress of students.",
-      date: "Recent"
-    }
-  ];
-  
+  // Return the transformed object
   return {
     id: apiTeacher._id || "",
     name,
-    imageSrc: apiTeacher.user?._signedProfileImage || "https://via.placeholder.com/150",
-    bio: apiTeacher.user?.bio || "Experienced educator passionate about student success.",
+    imageSrc: apiTeacher.user?._signedProfileImage || "",
+    bio: apiTeacher.user?.bio || "",
     position: extractPosition(),
     school: "Kidato Learning Platform",
     schoolStatus: "active",
-    rating: apiTeacher.rating || 5.0,
+    rating: apiTeacher.rating || 0,
     ratingCount: apiTeacher.totalReviews || 0,
     videoProfileUrl: apiTeacher.introVideoUrl || "",
     education: formatEducation(),
@@ -209,22 +178,22 @@ const transformTeacherData = (apiTeacher: any): any => {
     strategies: formatStrategies(),
     languages: formatLanguages(),
     certifications: formatCertifications(),
-    classes: mockClasses,
-    reviews: mockReviews,
+    classes: apiTeacher.classes || [],
+    reviews: apiTeacher.reviews || [],
     technicalSkills: formatTechnicalSkills(),
     subjects: extractSubjects(),
     location: formatLocation(),
-    hourlyRate: "$30-50/hour", // Default rate
-    availability: apiTeacher.availability ? 
-      `${apiTeacher.availability.days?.join(', ') || 'Flexible'} (${apiTeacher.availability.times?.morning ? 'Morning' : ''}${apiTeacher.availability.times?.afternoon ? ', Afternoon' : ''}${apiTeacher.availability.times?.evening ? ', Evening' : ''})` : 
-      "Flexible hours",
+    hourlyRate: apiTeacher.hourlyRate || "",
+    availability: apiTeacher.availability ?
+      `${apiTeacher.availability.days?.join(', ') || ''} (${apiTeacher.availability.times?.morning ? 'Morning ' : ''}${apiTeacher.availability.times?.afternoon ? 'Afternoon ' : ''}${apiTeacher.availability.times?.evening ? 'Evening' : ''})`.trim() :
+      "",
     stats: {
       studentsHelped: apiTeacher.totalStudents || 0,
       lessonsDelivered: apiTeacher.totalHours || 0,
       classesCreated: apiTeacher.totalClasses || 0,
-      successRate: 98 // Default success rate
+      successRate: apiTeacher.successRate || 0
     },
-    openToWork: true
+    openToWork: apiTeacher.openToWork || false
   };
 };
 
@@ -246,11 +215,11 @@ const TeacherProfilePage = () => {
       try {
         setLoading(true);
         const { data, error: apiError } = await teacherService.getProfileById(teacherId);
-        
+
         if (apiError) {
           throw new Error(apiError.message || "Failed to load teacher profile");
         }
-        
+
         if (!data) {
           throw new Error("No teacher data found");
         }
@@ -298,7 +267,7 @@ const TeacherProfilePage = () => {
             </Alert>
           </div>
         )}
-        
+
         {teacher && (
           <TeacherPublicProfile teacher={teacher} />
         )}

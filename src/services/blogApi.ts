@@ -1,112 +1,83 @@
 import { BlogPost, BlogComment, BlogCategory, BlogStats, BlogFilters, BlogListResponse } from '@/types/blog';
-
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
+import { api } from '@/integrations/api/client';
 
 class BlogApiService {
-  private async request<T>(
-    endpoint: string,
-    options: RequestInit = {}
-  ): Promise<T> {
-    const url = `${API_BASE_URL}/blog${endpoint}`;
-    
-    const defaultHeaders = {
-      'Content-Type': 'application/json',
-    };
-
-    const config: RequestInit = {
-      ...options,
-      headers: {
-        ...defaultHeaders,
-        ...options.headers,
-      },
-    };
-
-    try {
-      const response = await fetch(url, config);
-      
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
-      }
-
-      return await response.json();
-    } catch (error) {
-      console.error('API request failed:', error);
-      throw error;
-    }
-  }
-
   // Blog Posts
   async getPosts(filters: BlogFilters = {}): Promise<BlogListResponse> {
-    const params = new URLSearchParams();
-    
-    if (filters.category) params.append('category', filters.category);
-    if (filters.tag) params.append('tag', filters.tag);
-    if (filters.author) params.append('author', filters.author);
-    if (filters.search) params.append('search', filters.search);
-    if (filters.status) params.append('status', filters.status);
-    if (filters.sortBy) params.append('sortBy', filters.sortBy);
-    if (filters.sortOrder) params.append('sortOrder', filters.sortOrder);
-    if (filters.page) params.append('page', filters.page.toString());
-    if (filters.limit) params.append('limit', filters.limit.toString());
-    if (filters.isFeatured !== undefined) params.append('isFeatured', filters.isFeatured.toString());
-    if (filters.categories) params.append('categories', filters.categories.join(','));
-    if (filters.tags) params.append('tags', filters.tags.join(','));
+    const params: Record<string, any> = {};
 
-    const queryString = params.toString();
-    const endpoint = `/posts${queryString ? `?${queryString}` : ''}`;
-    
-    return this.request<BlogListResponse>(endpoint);
+    if (filters.category) params.category = filters.category;
+    if (filters.tag) params.tag = filters.tag;
+    if (filters.author) params.author = filters.author;
+    if (filters.search) params.search = filters.search;
+    if (filters.status) params.status = filters.status;
+    if (filters.sortBy) params.sortBy = filters.sortBy;
+    if (filters.sortOrder) params.sortOrder = filters.sortOrder;
+    if (filters.page) params.page = filters.page;
+    if (filters.limit) params.limit = filters.limit;
+    if (filters.isFeatured !== undefined) params.isFeatured = filters.isFeatured;
+    if (filters.categories && filters.categories.length > 0) params.categories = filters.categories.join(',');
+    if (filters.tags && filters.tags.length > 0) params.tags = filters.tags.join(',');
+
+    const { data, error } = await api.get<BlogListResponse>('/blog/posts', { params });
+
+    if (error) throw new Error(error.message);
+    if (!data) throw new Error('No data received');
+
+    return data;
   }
 
   async getPostBySlug(slug: string, incrementView = true): Promise<BlogPost> {
-    const params = new URLSearchParams();
-    if (incrementView) params.append('incrementView', 'true');
-    
-    const queryString = params.toString();
-    const endpoint = `/posts/${slug}${queryString ? `?${queryString}` : ''}`;
-    
-    return this.request<BlogPost>(endpoint);
+    const params = { incrementView };
+    const { data, error } = await api.get<BlogPost>(`/blog/posts/${slug}`, { params });
+
+    if (error) throw new Error(error.message);
+    if (!data) throw new Error('Post not found');
+
+    return this.mapPost(data);
   }
 
-  async createPost(postData: Partial<BlogPost>, token: string): Promise<BlogPost> {
-    return this.request<BlogPost>('/posts', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
-      body: JSON.stringify(postData),
-    });
+  async findPostById(id: string): Promise<BlogPost> {
+    const { data, error } = await api.get<BlogPost>(`/blog/posts/id/${id}`);
+
+    if (error) throw new Error(error.message);
+    if (!data) throw new Error('Post not found');
+
+    return this.mapPost(data);
   }
 
-  async updatePost(id: string, postData: Partial<BlogPost>, token: string): Promise<BlogPost> {
-    return this.request<BlogPost>(`/posts/${id}`, {
-      method: 'PUT',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
-      body: JSON.stringify(postData),
-    });
+  async createPost(postData: Partial<BlogPost>): Promise<BlogPost> {
+    const { data, error } = await api.post<BlogPost>('/blog/posts', postData);
+
+    if (error) throw new Error(error.message);
+    if (!data) throw new Error('Failed to create post');
+
+    return this.mapPost(data);
   }
 
-  async deletePost(id: string, token: string): Promise<void> {
-    return this.request<void>(`/posts/${id}`, {
-      method: 'DELETE',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
-    });
+  async updatePost(id: string, postData: Partial<BlogPost>): Promise<BlogPost> {
+    const { data, error } = await api.put<BlogPost>(`/blog/posts/${id}`, postData);
+
+    if (error) throw new Error(error.message);
+    if (!data) throw new Error('Failed to update post');
+
+    return this.mapPost(data);
+  }
+
+  async deletePost(id: string): Promise<void> {
+    const { error } = await api.delete<void>(`/blog/posts/${id}`);
+
+    if (error) throw new Error(error.message);
   }
 
   // Blog Comments
   async getComments(postId: string, status = 'approved'): Promise<BlogComment[]> {
-    const params = new URLSearchParams();
-    if (status) params.append('status', status);
-    
-    const queryString = params.toString();
-    const endpoint = `/posts/${postId}/comments${queryString ? `?${queryString}` : ''}`;
-    
-    return this.request<BlogComment[]>(endpoint);
+    const params = { status };
+    const { data, error } = await api.get<BlogComment[]>(`/blog/posts/${postId}/comments`, { params });
+
+    if (error) throw new Error(error.message);
+
+    return (data || []).map(this.mapComment);
   }
 
   async createComment(commentData: {
@@ -119,53 +90,86 @@ class BlogApiService {
     content: string;
     parentId?: string;
   }): Promise<BlogComment> {
-    return this.request<BlogComment>('/comments', {
-      method: 'POST',
-      body: JSON.stringify(commentData),
-    });
+    const { data, error } = await api.post<BlogComment>('/blog/comments', commentData);
+
+    if (error) throw new Error(error.message);
+    if (!data) throw new Error('Failed to create comment');
+
+    return this.mapComment(data);
   }
 
-  async updateComment(id: string, commentData: Partial<BlogComment>, token: string): Promise<BlogComment> {
-    return this.request<BlogComment>(`/comments/${id}`, {
-      method: 'PUT',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
-      body: JSON.stringify(commentData),
-    });
+  async updateComment(id: string, commentData: Partial<BlogComment>): Promise<BlogComment> {
+    const { data, error } = await api.put<BlogComment>(`/blog/comments/${id}`, commentData);
+
+    if (error) throw new Error(error.message);
+    if (!data) throw new Error('Failed to update comment');
+
+    return this.mapComment(data);
   }
 
-  async deleteComment(id: string, token: string): Promise<void> {
-    return this.request<void>(`/comments/${id}`, {
-      method: 'DELETE',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
-    });
+  async deleteComment(id: string): Promise<void> {
+    const { error } = await api.delete<void>(`/blog/comments/${id}`);
+
+    if (error) throw new Error(error.message);
   }
 
   // Blog Categories
   async getCategories(): Promise<BlogCategory[]> {
-    return this.request<BlogCategory[]>('/categories');
+    const { data, error } = await api.get<BlogCategory[]>('/blog/categories');
+
+    if (error) throw new Error(error.message);
+
+    return (data || []).map(this.mapCategory);
   }
 
   async getCategoryBySlug(slug: string): Promise<BlogCategory> {
-    return this.request<BlogCategory>(`/categories/${slug}`);
+    const { data, error } = await api.get<BlogCategory>(`/blog/categories/${slug}`);
+
+    if (error) throw new Error(error.message);
+    if (!data) throw new Error('Category not found');
+
+    return this.mapCategory(data);
   }
 
-  async createCategory(categoryData: Partial<BlogCategory>, token: string): Promise<BlogCategory> {
-    return this.request<BlogCategory>('/categories', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
-      body: JSON.stringify(categoryData),
-    });
+  async createCategory(categoryData: Partial<BlogCategory>): Promise<BlogCategory> {
+    const { data, error } = await api.post<BlogCategory>('/blog/categories', categoryData);
+
+    if (error) throw new Error(error.message);
+    if (!data) throw new Error('Failed to create category');
+
+    return this.mapCategory(data);
   }
 
   // Blog Stats
   async getStats(): Promise<BlogStats> {
-    return this.request<BlogStats>('/stats');
+    const { data, error } = await api.get<BlogStats>('/blog/stats');
+
+    if (error) throw new Error(error.message);
+    if (!data) throw new Error('Failed to fetch stats');
+
+    return data;
+  }
+
+  // Helpers to map _id to id
+  private mapPost(post: any): BlogPost {
+    return {
+      ...post,
+      id: post._id || post.id,
+    };
+  }
+
+  private mapComment(comment: any): BlogComment {
+    return {
+      ...comment,
+      id: comment._id || comment.id,
+    };
+  }
+
+  private mapCategory(category: any): BlogCategory {
+    return {
+      ...category,
+      id: category._id || category.id,
+    };
   }
 }
 

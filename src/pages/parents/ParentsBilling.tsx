@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { UnifiedPaymentForm, PaymentMethodCard, BillingHistory, AddPaymentMethodDialog } from "@/components/payments";
 import { PaymentMethod, Invoice } from "@/components/payments/types";
-// import hooks, but define mock fallback inside the component if hooks fail or return undefined
 import { useGetBillingDashboard, useGetPaymentMethods, useGetPaymentHistory, useDeletePaymentMethod, useUpdatePaymentMethod } from "@/hooks/use-parent-billing";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
@@ -31,16 +30,9 @@ const ParentsBilling = () => {
   const updatePaymentMethodMutation = useUpdatePaymentMethod();
 
   // Transform API data to component format
-  // Fallback to empty/default if data is missing
   const billingData = useMemo(() => {
     // If we have dashboard data, use it
-    const currentPlan = billingDashboard?.data?.currentPlan || {
-      name: "Standard Plan",
-      price: "$0/month",
-      status: "Active",
-      nextBilling: "N/A",
-      features: ["Access to all courses", "Progress tracking", "Parent dashboard"]
-    };
+    const currentPlan = billingDashboard?.data?.currentPlan || null;
 
     const methods = paymentMethodsData?.data || billingDashboard?.data?.paymentMethods || [];
     const invoices = paymentHistoryData?.data || billingDashboard?.data?.recentInvoices || [];

@@ -13,6 +13,7 @@ interface User {
   verified?: boolean;
   metadata?: any;
   oryIdentityId?: string;
+  phoneNumber?: string;
   // Role-specific IDs
   teacherId?: string;
   studentId?: string;
@@ -152,7 +153,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       // If user doesn't exist, create a new one
-      const newUserResponse = await authService.createBackendUserFromOry(session);
+      if (!session.identity) {
+        console.error("Session has no identity, cannot create backend user");
+        return null;
+      }
+      const newUserResponse = await authService.createBackendUserFromOry(session as any);
       if (newUserResponse?.user) {
         if (newUserResponse.accessToken && newUserResponse.refreshToken) {
           updateUserAndTokens(newUserResponse);

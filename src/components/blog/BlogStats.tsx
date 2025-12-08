@@ -4,11 +4,17 @@ import { TrendingUp, Users, BookOpen, MessageCircle } from "lucide-react";
 import { BlogStats as BlogStatsType } from "@/types/blog";
 import { blogApiService } from "@/services/blogApi";
 
-const BlogStats = () => {
-  const [stats, setStats] = useState<BlogStatsType | null>(null);
-  const [loading, setLoading] = useState(true);
+const BlogStats: React.FC<{ stats?: BlogStatsType | null }> = ({ stats: initialStats }) => {
+  const [stats, setStats] = useState<BlogStatsType | null>(initialStats || null);
+  const [loading, setLoading] = useState(!initialStats);
 
   useEffect(() => {
+    if (initialStats) {
+      setStats(initialStats);
+      setLoading(false);
+      return;
+    }
+
     const loadStats = async () => {
       try {
         const statsData = await blogApiService.getStats();
@@ -21,7 +27,7 @@ const BlogStats = () => {
     };
 
     loadStats();
-  }, []);
+  }, [initialStats]);
 
   if (loading) {
     return (
@@ -110,7 +116,7 @@ const BlogStats = () => {
             {popularCategories.map((category, index) => (
               <div key={index} className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
-                  <div 
+                  <div
                     className="w-3 h-3 rounded-full"
                     style={{ backgroundColor: category.color || '#3B82F6' }}
                   ></div>

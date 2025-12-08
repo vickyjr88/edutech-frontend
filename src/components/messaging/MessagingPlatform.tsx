@@ -1,5 +1,5 @@
-
 import { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -35,6 +35,7 @@ import {
 export default function MessagingPlatform() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const location = useLocation();
 
   // State for data
   const [channels, setChannels] = useState<Channel[]>([]);
@@ -43,7 +44,9 @@ export default function MessagingPlatform() {
 
   // State for UI
   const [newMessage, setNewMessage] = useState("");
-  const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
+  const [activeConversationId, setActiveConversationId] = useState<string | null>(
+    location.state?.conversationId || null
+  );
   const [activeConversationTitle, setActiveConversationTitle] = useState("Select a conversation");
   const [activeTab, setActiveTab] = useState("channels");
   const [isLoading, setIsLoading] = useState(true);
@@ -197,8 +200,8 @@ export default function MessagingPlatform() {
       {/* Left sidebar - Channels and DMs */}
       <div className="w-64 bg-gray-800 text-white flex flex-col">
         <div className="p-4 border-b border-gray-700">
-          <h2 className="text-lg font-semibold">Kidato Class</h2>
-          <p className="text-xs text-gray-400">Mathematics 101</p>
+          <h2 className="text-lg font-semibold">Messages</h2>
+          <p className="text-xs text-gray-400"> {user?.role ? `${user.role} Dashboard` : 'Kidato'} </p>
         </div>
 
         <Tabs

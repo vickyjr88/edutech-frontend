@@ -74,6 +74,9 @@ export interface BlogFilters {
   sortOrder?: 'asc' | 'desc';
   page?: number;
   limit?: number;
+  isFeatured?: boolean;
+  categories?: string[];
+  tags?: string[];
 }
 
 export interface BlogComment {

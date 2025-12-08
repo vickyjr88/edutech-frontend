@@ -11,25 +11,44 @@ import { blogApiService } from "@/services/blogApi";
 interface BlogFiltersProps {
   filters: BlogFiltersType;
   onFiltersChange: (filters: Partial<BlogFiltersType>) => void;
+  categories?: BlogCategory[];
+  stats?: any; // Using any or specific type if imported, but avoiding import circularity if possible or just rely on parent
 }
 
-const BlogFilters: React.FC<BlogFiltersProps> = ({ filters, onFiltersChange }) => {
-  const [categories, setCategories] = useState<BlogCategory[]>([]);
+const BlogFilters: React.FC<BlogFiltersProps> = ({ filters, onFiltersChange, categories: initialCategories, stats: initialStats }) => {
+  const [categories, setCategories] = useState<BlogCategory[]>(initialCategories || []);
   const [popularTags, setPopularTags] = useState<Array<{ tag: string; count: number }>>([]);
-  const [loadingFilters, setLoadingFilters] = useState(true);
+  const [loadingFilters, setLoadingFilters] = useState(!initialCategories);
 
   useEffect(() => {
+    if (initialStats?.topTags) {
+      setPopularTags(initialStats.topTags);
+    }
+
+    if (initialCategories && initialStats) {
+      setCategories(initialCategories);
+      setLoadingFilters(false);
+      return;
+    }
+
     let isMounted = true;
     const loadFilters = async () => {
       try {
         setLoadingFilters(true);
-        const [cats, stats] = await Promise.all([
-          blogApiService.getCategories(),
-          blogApiService.getStats(),
-        ]);
+        const promises = [];
+        if (!initialCategories) promises.push(blogApiService.getCategories());
+        else promises.push(Promise.resolve(initialCategories));
+
+        if (!initialStats) promises.push(blogApiService.getStats());
+        else promises.push(Promise.resolve(initialStats));
+
+        const [cats, stats] = await Promise.all(promises);
+
         if (!isMounted) return;
         setCategories(cats || []);
-        setPopularTags(stats?.topTags || []);
+        if (stats?.topTags) {
+          setPopularTags(stats.topTags);
+        }
       } catch (e) {
         console.error('Failed to load blog filters:', e);
       } finally {
@@ -38,7 +57,7 @@ const BlogFilters: React.FC<BlogFiltersProps> = ({ filters, onFiltersChange }) =
     };
     loadFilters();
     return () => { isMounted = false; };
-  }, []);
+  }, [initialCategories, initialStats]);
 
   const sortOptions = [
     { value: "publishedAt", label: "Latest" },
@@ -52,8 +71,8 @@ const BlogFilters: React.FC<BlogFiltersProps> = ({ filters, onFiltersChange }) =
   };
 
   const handleCategoryChange = (category: string) => {
-    onFiltersChange({ 
-      category: category === "all" ? undefined : category 
+    onFiltersChange({
+      category: category === "all" ? undefined : category
     });
   };
 
@@ -93,7 +112,7 @@ const BlogFilters: React.FC<BlogFiltersProps> = ({ filters, onFiltersChange }) =
                 />
               </div>
             </div>
-            
+
             <div className="flex gap-2">
               <Select value={filters.sortBy} onValueChange={handleSortChange}>
                 <SelectTrigger className="w-48">
@@ -107,7 +126,7 @@ const BlogFilters: React.FC<BlogFiltersProps> = ({ filters, onFiltersChange }) =
                   ))}
                 </SelectContent>
               </Select>
-              
+
               {hasActiveFilters && (
                 <Button
                   variant="outline"
@@ -181,8 +200,8 @@ const BlogFilters: React.FC<BlogFiltersProps> = ({ filters, onFiltersChange }) =
                 {filters.category && (
                   <Badge variant="default" className="flex items-center gap-1">
                     Category: {categories.find(c => c.slug === filters.category)?.name}
-                    <X 
-                      className="w-3 h-3 cursor-pointer" 
+                    <X
+                      className="w-3 h-3 cursor-pointer"
                       onClick={() => handleCategoryChange("all")}
                     />
                   </Badge>
@@ -190,8 +209,8 @@ const BlogFilters: React.FC<BlogFiltersProps> = ({ filters, onFiltersChange }) =
                 {filters.tag && (
                   <Badge variant="default" className="flex items-center gap-1">
                     Tag: {filters.tag}
-                    <X 
-                      className="w-3 h-3 cursor-pointer" 
+                    <X
+                      className="w-3 h-3 cursor-pointer"
                       onClick={() => onFiltersChange({ tag: undefined })}
                     />
                   </Badge>
@@ -199,8 +218,8 @@ const BlogFilters: React.FC<BlogFiltersProps> = ({ filters, onFiltersChange }) =
                 {filters.search && (
                   <Badge variant="default" className="flex items-center gap-1">
                     Search: {filters.search}
-                    <X 
-                      className="w-3 h-3 cursor-pointer" 
+                    <X
+                      className="w-3 h-3 cursor-pointer"
                       onClick={() => onFiltersChange({ search: undefined })}
                     />
                   </Badge>

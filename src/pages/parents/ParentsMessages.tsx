@@ -40,10 +40,6 @@ const ParentsMessages = () => {
         const dmsResponse = await messagingService.getDirectMessages();
 
         if (dmsResponse.data) {
-          // Filter to only those with conversationId (active conversations)
-          // Or we can show all and indicate "Start conversation"
-          // The mock showed ongoing conversations.
-
           const activeDMs = dmsResponse.data.filter(dm => dm.conversationId);
 
           const messagePreviews: MessagePreview[] = await Promise.all(
@@ -93,11 +89,8 @@ const ParentsMessages = () => {
   }, [user?.id]);
 
   const handleMessageClick = (dm: MessagePreview) => {
-    // Navigate to the full messaging platform
-    // Ideally passing the user ID or conversation ID to open it immediately
-    // Since /messaging is a general route, it might need state passing or query params
-    // For now, we redirect to /messaging
-    navigate('/messaging');
+    // Navigate to the full messaging platform with the conversation ID
+    navigate('/messaging', { state: { conversationId: dm.conversationId } });
   };
 
   const filteredMessages = messages.filter(msg =>

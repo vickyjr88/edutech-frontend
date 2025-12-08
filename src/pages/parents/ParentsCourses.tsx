@@ -103,18 +103,12 @@ const ParentsCourses = () => {
                         </div>
 
                         <div className="text-right space-y-2 flex-shrink-0 w-full md:w-auto flex flex-col items-end">
-                          {/* Price information isn't always in summary, showing generic or range if possible. 
-                            For now, we'll hide specific price if not available and rely on "View Details" */}
                           {course.discount > 0 && (
                             <Badge className="bg-green-100 text-green-700 hover:bg-green-200 mb-1">
                               {course.discount}% OFF
                             </Badge>
                           )}
 
-                          {/* 
-                            NOTE: Price isn't in Class interface, assuming check details.
-                            Mock showed "$50/class". 
-                        */}
                           <div className="text-sm text-gray-500 mb-2">
                             <span className="flex items-center justify-end gap-1">
                               <Users className="h-4 w-4" /> Open Enrollment

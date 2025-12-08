@@ -86,6 +86,12 @@ export interface EnhancedClass extends Class {
   performanceMetrics: PerformanceMetrics;
   objectives: LearningObjective[];
   alerts: SmartAlert[];
+  enrollment?: {
+    current: number;
+    capacity: number;
+  };
+  // Ensure id is present for UI compatibility
+  id: string;
 }
 
 export interface NextLessonPreview {

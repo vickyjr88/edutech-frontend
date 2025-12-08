@@ -127,12 +127,7 @@ export const useTeacherAnalytics = (): {
       }))
       .sort((a, b) => b.amount - a.amount);
 
-    // Mock student level breakdown as we lack this specific metadata in current types
-    const revenueByStudentLevel = [
-      { name: "Beginner", percentage: 40, amount: totalEarnings * 0.40 },
-      { name: "Intermediate", percentage: 35, amount: totalEarnings * 0.35 },
-      { name: "Advanced", percentage: 25, amount: totalEarnings * 0.25 }
-    ];
+
 
     // 4. Calculate Key Metrics
     const totalStudents = summaryData.totalStudents || 0;
@@ -223,17 +218,17 @@ export const useTeacherAnalytics = (): {
     }
 
     return {
-      averageClassPrice: Math.round(averageTransactionValue) || 50,
+      averageClassPrice: Math.round(averageTransactionValue),
       studentsPerClass: parseFloat(studentsPerClass.toFixed(1)),
-      studentRetentionRate: 85, // Placeholder
+      studentRetentionRate: 0, // Not available yet
       classesPerMonth: activeClasses,
       averageReview: parseFloat(averageReview.toFixed(1)),
-      repeatBookingRate: 72, // Placeholder
+      repeatBookingRate: 0, // Not available yet
 
       revenueBreakdown: {
         bySubject: revenueBySubject,
         byClassType: revenueByClassType,
-        byStudentLevel: revenueByStudentLevel
+        byStudentLevel: [] // Not available yet
       },
 
       totalEarnings,
