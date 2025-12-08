@@ -106,6 +106,12 @@ const AdminDashboard = () => {
       current: location.pathname.startsWith("/admin/teachers"),
     },
     {
+      name: "Classes",
+      href: "/admin/classes",
+      icon: BookOpen,
+      current: location.pathname.startsWith("/admin/classes"),
+    },
+    {
       name: "Students",
       href: "/admin/students",
       icon: UserCircle,
@@ -123,15 +129,20 @@ const AdminDashboard = () => {
       icon: MessageSquare,
       current: location.pathname.startsWith("/admin/tickets"),
     },
+    {
+      name: "Messages",
+      href: "/admin/messaging",
+      icon: MessageSquare,
+      current: location.pathname.startsWith("/admin/messaging"),
+    },
   ];
 
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Sidebar */}
       <div
-        className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform transition-transform duration-200 ease-in-out ${
-          sidebarOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
+        className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform transition-transform duration-200 ease-in-out ${sidebarOpen ? "translate-x-0" : "-translate-x-full"
+          }`}
       >
         {/* Sidebar Header */}
         <div className="flex items-center justify-between p-4 border-b">
@@ -166,11 +177,10 @@ const AdminDashboard = () => {
               <Link
                 key={item.name}
                 to={item.href}
-                className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                  item.current
-                    ? "bg-blue-50 text-blue-700"
-                    : "text-gray-700 hover:bg-gray-100"
-                }`}
+                className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${item.current
+                  ? "bg-blue-50 text-blue-700"
+                  : "text-gray-700 hover:bg-gray-100"
+                  }`}
               >
                 <Icon className="h-5 w-5" />
                 {item.name}
@@ -194,9 +204,8 @@ const AdminDashboard = () => {
 
       {/* Main Content */}
       <div
-        className={`transition-all duration-200 ease-in-out ${
-          sidebarOpen ? "lg:pl-64" : ""
-        }`}
+        className={`transition-all duration-200 ease-in-out ${sidebarOpen ? "lg:pl-64" : ""
+          }`}
       >
         {/* Top Bar */}
         <header className="bg-white shadow-sm border-b sticky top-0 z-40">

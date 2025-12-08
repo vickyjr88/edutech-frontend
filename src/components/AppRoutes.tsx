@@ -39,6 +39,7 @@ import ParentsSchedule from "../pages/parents/ParentsSchedule";
 import ParentsCourses from "../pages/parents/ParentsCourses";
 import ParentsTeachers from "../pages/parents/ParentsTeachers";
 import ParentsMessages from "../pages/parents/ParentsMessages";
+import ParentsMessagingPage from "../pages/parents/ParentsMessagingPage";
 import ParentsReports from "../pages/parents/ParentsReports";
 import ParentsProgress from "../pages/parents/ParentsProgress";
 import ParentsBilling from "../pages/parents/ParentsBilling";
@@ -83,6 +84,8 @@ import StudentsManagement from "../pages/admin/StudentsManagement";
 import ParentsManagement from "../pages/admin/ParentsManagement";
 import TicketsManagement from "../pages/admin/TicketsManagement";
 import AdminDashboardPage from "../pages/admin/AdminDashboardPage";
+import ClassesManagement from "../pages/admin/ClassesManagement";
+import AdminMessaging from "../pages/admin/AdminMessaging";
 
 const AppRoutes = () => {
   return (
@@ -158,6 +161,11 @@ const AppRoutes = () => {
         </TeacherRoute>
       } />
       <Route path="/teacher-dashboard/settings" element={
+        <TeacherRoute requireProfileComplete={true}>
+          <TeacherDashboard />
+        </TeacherRoute>
+      } />
+      <Route path="/teacher-dashboard/messaging" element={
         <TeacherRoute requireProfileComplete={true}>
           <TeacherDashboard />
         </TeacherRoute>
@@ -295,6 +303,11 @@ const AppRoutes = () => {
           <ParentsMessages />
         </ProtectedRoute>
       } />
+      <Route path="/parents-messaging" element={
+        <ProtectedRoute>
+          <ParentsMessagingPage />
+        </ProtectedRoute>
+      } />
       <Route path="/parents-reports" element={
         <ProtectedRoute>
           <ParentsReports />
@@ -341,9 +354,11 @@ const AppRoutes = () => {
         <Route path="inquiries" element={<InquiriesPage />} />
         <Route path="newsletter-subscribers" element={<NewsletterSubscribersPage />} />
         <Route path="teachers" element={<TeachersManagement />} />
+        <Route path="classes" element={<ClassesManagement />} />
         <Route path="students" element={<StudentsManagement />} />
         <Route path="parents" element={<ParentsManagement />} />
         <Route path="tickets" element={<TicketsManagement />} />
+        <Route path="messaging" element={<AdminMessaging />} />
       </Route>
 
       {/* Document Viewers - Public (uses signed URL for security) */}

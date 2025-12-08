@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
+import {
   Brain,
-  BookOpen, 
-  PlusCircle, 
-  Loader2, 
+  BookOpen,
+  PlusCircle,
+  Loader2,
   Sparkles,
   CheckCircle2,
   Clock,
@@ -111,15 +112,15 @@ const EnhancedClassesCommandCenter: React.FC<EnhancedClassesCommandCenterProps> 
     .filter(cls => {
       if (searchTerm) {
         return cls.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-               cls.subject.toLowerCase().includes(searchTerm.toLowerCase());
+          cls.subject.toLowerCase().includes(searchTerm.toLowerCase());
       }
       return true;
     })
     .filter(cls => {
       if (dashboardSettings.filters.needsAttention) {
         return cls.alerts.some(alert => alert.type === 'urgent') ||
-               cls.studentInsights.strugglingStudents > 0 ||
-               cls.preparationStatus === 'critical';
+          cls.studentInsights.strugglingStudents > 0 ||
+          cls.preparationStatus === 'critical';
       }
       return true;
     })
@@ -138,9 +139,9 @@ const EnhancedClassesCommandCenter: React.FC<EnhancedClassesCommandCenterProps> 
           break;
         case 'engagement':
           aValue = a.studentInsights.engagementLevel === 'high' ? 3 :
-                   a.studentInsights.engagementLevel === 'medium' ? 2 : 1;
+            a.studentInsights.engagementLevel === 'medium' ? 2 : 1;
           bValue = b.studentInsights.engagementLevel === 'high' ? 3 :
-                   b.studentInsights.engagementLevel === 'medium' ? 2 : 1;
+            b.studentInsights.engagementLevel === 'medium' ? 2 : 1;
           break;
         case 'next-lesson':
           aValue = a.nextLesson ? new Date(a.nextLesson.scheduledDate).getTime() : 0;
@@ -163,19 +164,23 @@ const EnhancedClassesCommandCenter: React.FC<EnhancedClassesCommandCenterProps> 
     return categorizedClasses[status]?.length || 0;
   };
 
+  const navigate = useNavigate();
+
+
+
   const handleCardAction = (action: string, classData: EnhancedClass) => {
     switch (action) {
       case 'view':
         onViewClass(classData);
         break;
       case 'message':
-        console.log('Message students for class:', classData.title);
+        navigate('/messaging');
         break;
       case 'prepare':
-        console.log('Prepare lesson for class:', classData.title);
+        navigate(`/teacher-class-setup/academic/${classData._id}`);
         break;
       case 'edit':
-        console.log('Edit class:', classData.title);
+        navigate(`/teacher-class-setup/academic/${classData._id}`);
         break;
       case 'create-lesson':
         setSelectedClassForLesson(classData);
@@ -266,7 +271,7 @@ const EnhancedClassesCommandCenter: React.FC<EnhancedClassesCommandCenterProps> 
       </TabsContent>
 
       <TabsContent value="recommendations">
-        <RecommendedClasses 
+        <RecommendedClasses
           onCreateClassFromRecommendation={onCreateClassFromRecommendation}
         />
       </TabsContent>
@@ -287,15 +292,15 @@ const EnhancedClassesCommandCenter: React.FC<EnhancedClassesCommandCenterProps> 
 
   const renderEnhancedClassGrid = (classes: EnhancedClass[]) => {
     const isLoadingData = isLoading || enhancedLoading || teacherIdLoading;
-    
+
     if (isLoadingData) {
       return (
         <div className="flex items-center justify-center py-12">
           <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
           <span className="ml-2 text-gray-600">
-            {teacherIdLoading ? 'Getting your profile...' : 
-             enhancedLoading ? 'Loading enhanced class data...' : 
-             'Loading your classes...'}
+            {teacherIdLoading ? 'Getting your profile...' :
+              enhancedLoading ? 'Loading enhanced class data...' :
+                'Loading your classes...'}
           </span>
         </div>
       );
@@ -318,11 +323,10 @@ const EnhancedClassesCommandCenter: React.FC<EnhancedClassesCommandCenterProps> 
     }
 
     return (
-      <div className={`grid gap-6 ${
-        dashboardSettings.layout === 'grid' 
-          ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' 
-          : 'grid-cols-1'
-      }`}>
+      <div className={`grid gap-6 ${dashboardSettings.layout === 'grid'
+        ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'
+        : 'grid-cols-1'
+        }`}>
         {classes.map(classData => (
           <EnhancedClassCard
             key={classData._id}
@@ -381,7 +385,7 @@ const EnhancedClassesCommandCenter: React.FC<EnhancedClassesCommandCenterProps> 
         <IconComponent className={`h-16 w-16 mx-auto mb-4 ${config.iconColor}`} />
         <h3 className="text-lg font-semibold text-gray-900 mb-2">{config.title}</h3>
         <p className="text-gray-600 mb-6 max-w-sm mx-auto">{config.description}</p>
-        
+
         {config.action && (
           <div className="space-y-2">
             <Button onClick={onCreateClass} className="mr-2">
@@ -417,7 +421,7 @@ const EnhancedClassesCommandCenter: React.FC<EnhancedClassesCommandCenterProps> 
             Your intelligent teaching hub with AI-powered insights and proactive guidance
           </p>
         </div>
-        
+
         <div className="flex items-center gap-2">
           <Button
             variant={viewMode === 'command-center' ? 'default' : 'outline'}
@@ -465,7 +469,7 @@ const EnhancedClassesCommandCenter: React.FC<EnhancedClassesCommandCenterProps> 
           {/*</TabsContent>*/}
 
           <TabsContent value="planning" className="mt-6">
-            <LessonPlanningHub 
+            <LessonPlanningHub
               classes={enhancedClasses}
               onCreateLesson={(classId) => console.log('Create lesson for:', classId)}
               onEditLesson={(lessonId) => console.log('Edit lesson:', lessonId)}
@@ -474,7 +478,7 @@ const EnhancedClassesCommandCenter: React.FC<EnhancedClassesCommandCenterProps> 
           </TabsContent>
 
           <TabsContent value="objectives" className="mt-6">
-            <ObjectiveTracker 
+            <ObjectiveTracker
               classes={enhancedClasses}
               onEditObjective={(objectiveId, classId) => console.log('Edit objective:', objectiveId, 'for class:', classId)}
               onCreateObjective={(classId) => console.log('Create objective for class:', classId)}
@@ -487,7 +491,7 @@ const EnhancedClassesCommandCenter: React.FC<EnhancedClassesCommandCenterProps> 
           {renderCommandCenterView()}
         </div>
       )}
-      
+
       {/* Lesson Plan Creator Modal */}
       <LessonPlanCreatorModal
         open={lessonPlanModalOpen}

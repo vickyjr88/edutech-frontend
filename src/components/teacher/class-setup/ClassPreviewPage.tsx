@@ -4,15 +4,15 @@ import { Button } from "@/components/ui/button";
 import { CohortData, TeamMember, curriculaMap, curriculumLevelMap, subjectsMap } from "./types";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { 
-  CheckCircle2, 
-  AlertTriangle, 
-  Clock, 
-  Calendar, 
-  Users, 
-  Book, 
-  BookOpen, 
-  User, 
+import {
+  CheckCircle2,
+  AlertTriangle,
+  Clock,
+  Calendar,
+  Users,
+  Book,
+  BookOpen,
+  User,
   Edit3,
   Star,
   MapPin,
@@ -42,10 +42,10 @@ interface ClassPreviewPageProps {
   isSubmitting: boolean;
   cohorts: CohortData[];
   teamMembers?: TeamMember[];
-  checkClassCompleteness?: () => { 
-    isComplete: boolean; 
-    basicInfoComplete: boolean; 
-    hasMinLessonPlans: boolean; 
+  checkClassCompleteness?: () => {
+    isComplete: boolean;
+    basicInfoComplete: boolean;
+    hasMinLessonPlans: boolean;
     hasMinCohorts: boolean;
     missingItems: string[];
   };
@@ -54,12 +54,12 @@ interface ClassPreviewPageProps {
   onSubmit?: (data: any) => void;
 }
 
-const ClassPreviewPage = ({ 
-  form, 
-  onPreviousTab, 
-  isSubmitting, 
-  cohorts, 
-  teamMembers, 
+const ClassPreviewPage = ({
+  form,
+  onPreviousTab,
+  isSubmitting,
+  cohorts,
+  teamMembers,
   checkClassCompleteness,
   onPublish,
   onSaveDraft
@@ -68,7 +68,7 @@ const ClassPreviewPage = ({
   const { user } = useAuth();
   const [isPublic, setIsPublic] = useState(form.getValues().isPublic);
   const [showPublishConfirm, setShowPublishConfirm] = useState(false);
-  
+
   const formValues = form.getValues();
   const completenessCheck = checkClassCompleteness ? checkClassCompleteness() : {
     isComplete: true,
@@ -77,15 +77,15 @@ const ClassPreviewPage = ({
     hasMinCohorts: true,
     missingItems: []
   };
-  
+
   // Quick stats calculation
   const totalLessons = formValues.lessonPlans?.length || 0;
   const totalDuration = formValues.lessonPlans?.reduce((acc: number, lesson: any) => {
     return acc + (parseInt(lesson.duration) || 60);
   }, 0) || 0;
   const totalCapacity = cohorts.reduce((acc, cohort) => acc + (cohort.maxStudents || 0), 0);
-  const avgPrice = cohorts.length > 0 
-    ? cohorts.reduce((acc, cohort) => acc + (parseFloat(cohort.price) || 0), 0) / cohorts.length 
+  const avgPrice = cohorts.length > 0
+    ? cohorts.reduce((acc, cohort) => acc + (parseFloat(cohort.price) || 0), 0) / cohorts.length
     : 0;
 
   const handlePublishClick = () => {
@@ -111,11 +111,13 @@ const ClassPreviewPage = ({
   };
 
   const handleSaveDraft = () => {
-    form.setValue("isPublic", isPublic);
+    form.setValue("isPublic", false); // draft is not public
     form.setValue("isPublished", false);
     form.setValue("status", "draft");
+    // Call the parent onSaveDraft with silent=false to show notifications
     if (onSaveDraft) {
-      onSaveDraft();
+      // @ts-ignore - The component receives a saveDraft function that accepts a boolean, but the prop type definitions might be loose
+      onSaveDraft(false);
     }
   };
 
@@ -135,8 +137,8 @@ const ClassPreviewPage = ({
             </div>
             <div className="flex items-center gap-3">
               <div className="flex items-center space-x-2">
-                <Switch 
-                  id="isPublic" 
+                <Switch
+                  id="isPublic"
                   checked={isPublic}
                   onCheckedChange={setIsPublic}
                 />
@@ -152,10 +154,10 @@ const ClassPreviewPage = ({
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          
+
           {/* Left Column - Student View Preview */}
           <div className="lg:col-span-2 space-y-6">
-            
+
             {/* Completeness Alert */}
             {!completenessCheck.isComplete ? (
               <Alert className="border-kidato-orange bg-kidato-orange/5">
@@ -241,8 +243,8 @@ const ClassPreviewPage = ({
                     {(Array.isArray(formValues.objectives)
                       ? formValues.objectives
                       : typeof formValues.objectives === 'string'
-                      ? formValues.objectives.split('\n')
-                      : []
+                        ? formValues.objectives.split('\n')
+                        : []
                     ).filter(Boolean).map((objective: string, index: number) => (
                       <div key={index} className="flex items-start gap-3">
                         <div className="w-6 h-6 bg-kidato-indigo/10 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
@@ -270,8 +272,8 @@ const ClassPreviewPage = ({
                 {formValues.lessonPlans && formValues.lessonPlans.length > 0 ? (
                   <div className="space-y-3">
                     {formValues.lessonPlans.slice(0, 4).map((lesson: any, index: number) => (
-                      <div 
-                        key={lesson.id} 
+                      <div
+                        key={lesson.id}
                         className="group border border-kidato-gray-200 rounded-lg p-4 hover:border-kidato-indigo/30 hover:bg-kidato-indigo/5 transition-all duration-200"
                       >
                         <div className="flex items-start justify-between">
@@ -305,7 +307,7 @@ const ClassPreviewPage = ({
                         </div>
                       </div>
                     ))}
-                    
+
                     {formValues.lessonPlans.length > 4 && (
                       <div className="text-center py-3">
                         <p className="text-kidato-gray-500 text-sm">
@@ -335,8 +337,8 @@ const ClassPreviewPage = ({
                 {cohorts.length > 0 ? (
                   <div className="space-y-4">
                     {cohorts.slice(0, 3).map((cohort) => (
-                      <div 
-                        key={cohort._id || cohort.id} 
+                      <div
+                        key={cohort._id || cohort.id}
                         className="border border-kidato-gray-200 rounded-lg p-4 bg-gradient-to-r from-kidato-orange/5 to-transparent"
                       >
                         <div className="flex items-start justify-between mb-3">
@@ -345,7 +347,7 @@ const ClassPreviewPage = ({
                             USD {parseFloat(cohort.price).toLocaleString()}
                           </Badge>
                         </div>
-                        
+
                         <div className="grid grid-cols-2 gap-4 text-sm">
                           {cohort.startDate && (
                             <div className="flex items-center gap-2">
@@ -355,7 +357,7 @@ const ClassPreviewPage = ({
                               </span>
                             </div>
                           )}
-                          
+
                           {cohort.startTime && cohort.endTime && (
                             <div className="flex items-center gap-2">
                               <Clock className="h-4 w-4 text-kidato-gray-400" />
@@ -364,18 +366,18 @@ const ClassPreviewPage = ({
                               </span>
                             </div>
                           )}
-                          
+
                           {cohort.repeatSchedule && (
                             <div className="flex items-center gap-2">
                               <Target className="h-4 w-4 text-kidato-gray-400" />
                               <span className="text-kidato-gray-600">
-                                {cohort.repeatSchedule.pattern === 'custom' 
+                                {cohort.repeatSchedule.pattern === 'custom'
                                   ? cohort.repeatSchedule.daysOfWeek.map(d => d.charAt(0).toUpperCase() + d.slice(1)).join(', ')
                                   : cohort.repeatSchedule.pattern === 'twice-weekly' ? 'Twice Weekly' : 'Weekly'}
                               </span>
                             </div>
                           )}
-                          
+
                           <div className="flex items-center gap-2">
                             <Users className="h-4 w-4 text-kidato-gray-400" />
                             <span className="text-kidato-gray-600">
@@ -385,7 +387,7 @@ const ClassPreviewPage = ({
                         </div>
                       </div>
                     ))}
-                    
+
                     {cohorts.length > 3 && (
                       <div className="text-center py-2">
                         <p className="text-kidato-gray-500 text-sm">
@@ -406,7 +408,7 @@ const ClassPreviewPage = ({
 
           {/* Right Column - Sidebar */}
           <div className="space-y-6">
-            
+
             {/* Pricing Display */}
             {avgPrice > 0 && (
               <Card className="bg-gradient-to-br from-kidato-orange/10 to-kidato-orange/5 border-kidato-orange/20">
@@ -460,25 +462,25 @@ const ClassPreviewPage = ({
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
+                <Button
+                  variant="ghost"
+                  size="sm"
                   className="w-full justify-start text-kidato-indigo hover:text-kidato-indigo hover:bg-kidato-indigo/5"
                 >
                   <FileText className="h-4 w-4 mr-2" />
                   Edit Basic Information
                 </Button>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
+                <Button
+                  variant="ghost"
+                  size="sm"
                   className="w-full justify-start text-kidato-indigo hover:text-kidato-indigo hover:bg-kidato-indigo/5"
                 >
                   <BookOpen className="h-4 w-4 mr-2" />
                   Modify Lesson Plans
                 </Button>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
+                <Button
+                  variant="ghost"
+                  size="sm"
                   className="w-full justify-start text-kidato-indigo hover:text-kidato-indigo hover:bg-kidato-indigo/5"
                 >
                   <Calendar className="h-4 w-4 mr-2" />
@@ -516,7 +518,7 @@ const ClassPreviewPage = ({
                   </>
                 )}
               </Button>
-              
+
               <Button
                 onClick={handleSaveDraft}
                 variant="outline"

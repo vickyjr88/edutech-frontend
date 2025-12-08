@@ -136,7 +136,7 @@ export interface ClassProgress {
 
 export const classService = {
     // Basic class operations
-    create: (classData: never): Promise<ApiResponse<ClassDetail>> => {
+    create: (classData: any): Promise<ApiResponse<ClassDetail>> => {
         return api.post<ClassDetail>('/classes', classData);
     },
 
@@ -148,11 +148,11 @@ export const classService = {
         return api.get<ClassDetail>(`/classes/${classId}`);
     },
 
-    update: (classId: string, data: never): Promise<ApiResponse<ClassDetail>> => {
+    update: (classId: string, data: any): Promise<ApiResponse<ClassDetail>> => {
         return api.patch<ClassDetail>(`/classes/${classId}`, data);
     },
 
-    delete: (classId: string): Promise<ApiResponse<never>> => {
+    delete: (classId: string): Promise<ApiResponse<any>> => {
         return api.delete(`/classes/${classId}`);
     },
 
@@ -185,8 +185,8 @@ export const classService = {
         return api.post<ClassDetail>(`/classes/${classId}/teaching-team/${teacherId}`, {});
     },
 
-    removeTeachingTeamMember: (classId: string, teacherId: string): Promise<ApiResponse<never>> => {
-        return api.delete<never>(`/classes/${classId}/teaching-team/${teacherId}`);
+    removeTeachingTeamMember: (classId: string, teacherId: string): Promise<ApiResponse<any>> => {
+        return api.delete<any>(`/classes/${classId}/teaching-team/${teacherId}`);
     },
 
     // Lesson plan operations
@@ -211,8 +211,8 @@ export const classService = {
         return api.patch<ClassDetail>(`/classes/${classId}/lesson-plans/${lessonPlanId}`, lessonPlan);
     },
 
-    removeLessonPlan: (classId: string, lessonIndex: number): Promise<ApiResponse<never>> => {
-        return api.delete<never>(`/classes/${classId}/lesson-plans/${lessonIndex}`);
+    removeLessonPlan: (classId: string, lessonIndex: number): Promise<ApiResponse<any>> => {
+        return api.delete<any>(`/classes/${classId}/lesson-plans/${lessonIndex}`);
     },
 
     markLessonComplete: (classId: string, lessonIndex: number): Promise<ApiResponse<ClassDetail>> => {
@@ -223,8 +223,8 @@ export const classService = {
         return api.post<ClassDetail>(`/classes/${classId}/lesson-plans/${lessonIndex}/resource-links`, resourceLink);
     },
 
-    removeResourceLink: (classId: string, lessonIndex: number, linkIndex: number): Promise<ApiResponse<never>> => {
-        return api.delete<never>(`/classes/${classId}/lesson-plans/${lessonIndex}/resource-links/${linkIndex}`);
+    removeResourceLink: (classId: string, lessonIndex: number, linkIndex: number): Promise<ApiResponse<any>> => {
+        return api.delete<any>(`/classes/${classId}/lesson-plans/${lessonIndex}/resource-links/${linkIndex}`);
     },
 
     // Class discovery and browsing
@@ -269,16 +269,16 @@ export const classService = {
     },
 
     // Student-focused operations
-    getCurrentClassesForStudent: (studentId: string): Promise<ApiResponse<never[]>> => {
-        return api.get<never[]>(`/classes/student/${studentId}/current`);
+    getCurrentClassesForStudent: (studentId: string): Promise<ApiResponse<any[]>> => {
+        return api.get<any[]>(`/classes/student/${studentId}/current`);
     },
 
-    getCompletedClassesForStudent: (studentId: string): Promise<ApiResponse<never[]>> => {
-        return api.get<never[]>(`/classes/student/${studentId}/completed`);
+    getCompletedClassesForStudent: (studentId: string): Promise<ApiResponse<any[]>> => {
+        return api.get<any[]>(`/classes/student/${studentId}/completed`);
     },
 
-    getMaterials: (classId: string): Promise<ApiResponse<never>> => {
-        return api.get<never>(`/classes/${classId}/materials`);
+    getMaterials: (classId: string): Promise<ApiResponse<any>> => {
+        return api.get<any>(`/classes/${classId}/materials`);
     },
 
     getProgress: (classId: string): Promise<ApiResponse<ClassProgress>> => {
@@ -286,8 +286,8 @@ export const classService = {
     },
 
     // Review operations
-    addReview: (classId: string, rating: number, comment?: string): Promise<ApiResponse<never>> => {
-        return api.post<never>(`/classes/${classId}/reviews`, { rating, comment });
+    addReview: (classId: string, rating: number, comment?: string): Promise<ApiResponse<any>> => {
+        return api.post<any>(`/classes/${classId}/reviews`, { rating, comment });
     },
 
     getReviews: (classId: string): Promise<ApiResponse<Review[]>> => {

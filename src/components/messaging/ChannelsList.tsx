@@ -8,14 +8,15 @@ interface ChannelsListProps {
   channels: Channel[];
   activeChannel: string;
   setActiveChannel: (channelId: string) => void;
+  onCreateChannel?: () => void;
 }
 
-export default function ChannelsList({ channels, activeChannel, setActiveChannel }: ChannelsListProps) {
+export default function ChannelsList({ channels, activeChannel, setActiveChannel, onCreateChannel }: ChannelsListProps) {
   return (
     <div className="py-2">
       <div className="px-3 flex justify-between items-center mb-1">
         <h3 className="text-xs font-semibold uppercase text-gray-400">Channels</h3>
-        <Button variant="ghost" size="icon" className="h-5 w-5 text-gray-400 hover:text-white">
+        <Button variant="ghost" size="icon" className="h-5 w-5 text-gray-400 hover:text-white" onClick={onCreateChannel}>
           <PlusCircle className="h-4 w-4" />
         </Button>
       </div>
@@ -27,8 +28,8 @@ export default function ChannelsList({ channels, activeChannel, setActiveChannel
               key={channel.id}
               variant="ghost"
               className={`w-full justify-start py-1 px-2 h-auto ${channel.id === activeChannel
-                  ? "bg-gray-700 text-white"
-                  : "text-gray-300 hover:text-white hover:bg-gray-700"
+                ? "bg-gray-700 text-white"
+                : "text-gray-300 hover:text-white hover:bg-gray-700"
                 }`}
               onClick={() => setActiveChannel(channel.id)}
             >

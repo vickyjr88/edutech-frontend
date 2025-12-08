@@ -90,7 +90,7 @@ const ParentsMessages = () => {
 
   const handleMessageClick = (dm: MessagePreview) => {
     // Navigate to the full messaging platform with the conversation ID
-    navigate('/messaging', { state: { conversationId: dm.conversationId } });
+    navigate('/parents-messaging', { state: { conversationId: dm.conversationId } });
   };
 
   const filteredMessages = messages.filter(msg =>

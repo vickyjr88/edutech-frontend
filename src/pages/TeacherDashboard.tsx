@@ -6,7 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Home, BookOpen, Users, Calendar, User, Settings, LogOut, Edit, Phone, MapPin, Award, CheckCircle2, CircleDashed, Video, PlusCircle, Star, UserPlus, BookText, School, UsersRound, UserRound, ChevronLeft, Loader2, DollarSign, FileText, Badge, MessageCircle, Filter, Plus, RefreshCw, ChevronDown } from "lucide-react";
+import { Home, BookOpen, Users, Calendar, User, Settings, LogOut, Edit, Phone, MapPin, Award, CheckCircle2, CircleDashed, Video, PlusCircle, Star, UserPlus, BookText, School, UsersRound, UserRound, ChevronLeft, Loader2, DollarSign, FileText, Badge, MessageCircle, Filter, Plus, RefreshCw, ChevronDown, MessageSquare } from "lucide-react";
+import MessagingPlatform from "@/components/messaging/MessagingPlatform";
 import { useIntercom } from "@/components/support";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -163,6 +164,8 @@ const TeacherDashboard = () => {
       return "calendar";
     } else if (path.includes('/teacher-dashboard/content')) {
       return "content";
+    } else if (path.includes('/teacher-dashboard/messaging')) {
+      return "messaging";
     }
     return "dashboard"; // Default tab
   };
@@ -1174,6 +1177,16 @@ const TeacherDashboard = () => {
             <Calendar className="mr-3 h-5 w-5" />
             Schedule
           </Link>
+          <Link
+            to="/teacher-dashboard/messaging"
+            className={`flex items-center px-4 py-3 text-sm font-medium rounded-md w-full text-left ${activeTab === "messaging"
+              ? "bg-kidato-light-blue text-kidato-purple"
+              : "text-gray-700 hover:bg-gray-100"
+              }`}
+          >
+            <MessageSquare className="mr-3 h-5 w-5" />
+            Messages
+          </Link>
           {/* Only show Earnings if teacher has classes with enrolled students */}
           {(() => {
             const hasEnrolledStudents = summaryData?.classes?.some(classItem => {
@@ -1461,6 +1474,12 @@ const TeacherDashboard = () => {
               ) : (
                 <EnrollStudentsPage />
               )}
+            </div>
+          )}
+
+          {!isLoading && !authLoading && activeTab === "messaging" && (
+            <div className="h-[calc(100vh-100px)]">
+              <MessagingPlatform />
             </div>
           )}
 

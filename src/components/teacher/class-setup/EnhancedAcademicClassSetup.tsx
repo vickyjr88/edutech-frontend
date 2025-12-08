@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  ArrowLeft, 
-  Save, 
-  Users, 
+import {
+  ArrowLeft,
+  Save,
+  Users,
   Calendar,
   CheckCircle,
   AlertCircle,
@@ -116,9 +116,9 @@ const ClassCompletionModal: React.FC<ClassCompletionModalProps> = ({
                 Invite Students
               </Button>
             </div>
-            
+
             <Separator />
-            
+
             <Button onClick={onCreateAnother} variant="ghost" className="w-full">
               Create Another Class
             </Button>
@@ -157,9 +157,9 @@ const QuickActions: React.FC<QuickActionsProps> = ({
             </AlertDescription>
           </Alert>
         )}
-        
+
         <Button
-          onClick={onSaveDraft}
+          onClick={() => onSaveDraft()}
           disabled={isSubmitting}
           variant="outline"
           className="w-full"
@@ -174,7 +174,7 @@ const QuickActions: React.FC<QuickActionsProps> = ({
               <Users className="mr-2 h-4 w-4" />
               Invite Students
             </Button>
-            
+
             <Button variant="outline" className="w-full">
               <Eye className="mr-2 h-4 w-4" />
               Preview Class
@@ -190,7 +190,7 @@ const EnhancedAcademicClassSetupContent: React.FC = () => {
   const navigate = useNavigate();
   const { classId: urlClassId } = useParams<{ classId?: string }>();
   const { user } = useAuth();
-  
+
   const [showCompletionModal, setShowCompletionModal] = useState(false);
   const [completedClassData, setCompletedClassData] = useState<ClassFormValues | null>(null);
   const [completedClassId, setCompletedClassId] = useState<string | null>(null);
@@ -258,9 +258,9 @@ const EnhancedAcademicClassSetupContent: React.FC = () => {
             lessonSchedules: [],
             hasFlexibleSchedule: cohort.customLessonTimes || false,
             repeatSchedule: {
-              pattern: cohort.repeatPattern === 'WEEKLY' ? 'weekly' as const : 
-                       cohort.repeatPattern === 'TWICE_WEEKLY' ? 'twice-weekly' as const : 
-                       'custom' as const,
+              pattern: cohort.repeatPattern === 'WEEKLY' ? 'weekly' as const :
+                cohort.repeatPattern === 'TWICE_WEEKLY' ? 'twice-weekly' as const :
+                  'custom' as const,
               daysOfWeek: cohort.daysOfWeek?.map((day: string) => day.toLowerCase()) || ['monday'],
               repeatEvery: cohort.repeatEvery || 1
             },
@@ -363,9 +363,9 @@ const EnhancedAcademicClassSetupContent: React.FC = () => {
                   Unsaved changes
                 </div>
               )}
-              
+
               <Button
-                onClick={saveDraft}
+                onClick={() => saveDraft()}
                 disabled={isSubmitting}
                 variant="outline"
                 size="sm"
@@ -398,7 +398,7 @@ const EnhancedAcademicClassSetupContent: React.FC = () => {
               onSaveDraft={saveDraft}
               isSubmitting={isSubmitting}
             />
-            
+
             {/* Progress Indicator */}
             <Card>
               <CardHeader className="pb-3">
@@ -412,7 +412,7 @@ const EnhancedAcademicClassSetupContent: React.FC = () => {
                     <span>{Math.round(getOverallProgress())}%</span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div 
+                    <div
                       className="bg-kidato-blue h-2 rounded-full transition-all duration-300"
                       style={{ width: `${getOverallProgress()}%` }}
                     ></div>

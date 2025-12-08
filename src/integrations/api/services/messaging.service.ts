@@ -68,21 +68,36 @@ export const messagingService = {
 
     // Get messages for a specific conversation (channel or DM)
     getMessages: (conversationId: string, page = 1, limit = 50): Promise<ApiResponse<{ messages: Message[], total: number }>> => {
-        return api.get<{ messages: Message[], total: number }>(`/messaging/conversations/${conversationId}/messages?page=${page}&limit=${limit}`);
+        return api.get<{ messages: Message[], total: number }>(`/messaging/channels/${conversationId}/messages?limit=${limit}`);
     },
 
     // Send a message to a conversation
     sendMessage: (conversationId: string, data: CreateMessageDto): Promise<ApiResponse<Message>> => {
-        return api.post<Message>(`/messaging/conversations/${conversationId}/messages`, data);
+        return api.post<Message>('/messaging/messages', { ...data, channelId: conversationId });
     },
 
     // Create a new DM conversation
     startDirectMessage: (userId: string): Promise<ApiResponse<{ conversationId: string }>> => {
-        return api.post<{ conversationId: string }>('/messaging/dms', { userId });
+        return api.post<{ conversationId: string }>('/messaging/direct-messages', { recipientId: userId });
     },
 
     // Mark conversation as read
     markAsRead: (conversationId: string): Promise<ApiResponse<void>> => {
         return api.post<void>(`/messaging/conversations/${conversationId}/read`);
+    },
+
+    // Create a new channel
+    createChannel: (data: { name: string; description?: string; type: 'public' | 'private' }): Promise<ApiResponse<Channel>> => {
+        return api.post<Channel>('/messaging/channels', data);
+    },
+
+    // Create a new group conversation
+    createGroupConversation: (userIds: string[], name?: string): Promise<ApiResponse<{ conversationId: string }>> => {
+        return api.post<{ conversationId: string }>('/messaging/conversations/group', { userIds, name });
+    },
+
+    // Search users for messaging
+    searchUsers: (query: string): Promise<ApiResponse<DirectMessageUser[]>> => {
+        return api.get<DirectMessageUser[]>(`/messaging/users/search?q=${encodeURIComponent(query)}`);
     }
 };

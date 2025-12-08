@@ -9,9 +9,10 @@ interface UsersListProps {
   users: DirectMessageUser[];
   onSelectUser?: (userId: string) => void;
   activeUserId?: string;
+  onNewConversation?: () => void;
 }
 
-export default function UsersList({ users, onSelectUser, activeUserId }: UsersListProps) {
+export default function UsersList({ users, onSelectUser, activeUserId, onNewConversation }: UsersListProps) {
   const getRoleColor = (role: string) => {
     switch (role) {
       case "Teacher": return "bg-blue-500";
@@ -25,7 +26,7 @@ export default function UsersList({ users, onSelectUser, activeUserId }: UsersLi
     <div className="py-2">
       <div className="px-3 flex justify-between items-center mb-1">
         <h3 className="text-xs font-semibold uppercase text-gray-400">Direct Messages</h3>
-        <Button variant="ghost" size="icon" className="h-5 w-5 text-gray-400 hover:text-white">
+        <Button variant="ghost" size="icon" className="h-5 w-5 text-gray-400 hover:text-white" onClick={onNewConversation}>
           <Plus className="h-4 w-4" />
         </Button>
       </div>
@@ -37,8 +38,8 @@ export default function UsersList({ users, onSelectUser, activeUserId }: UsersLi
               key={user.id}
               variant="ghost"
               className={`w-full justify-start py-1 px-2 h-auto ${activeUserId === user.id
-                  ? "bg-gray-700 text-white"
-                  : "text-gray-300 hover:text-white hover:bg-gray-700"
+                ? "bg-gray-700 text-white"
+                : "text-gray-300 hover:text-white hover:bg-gray-700"
                 }`}
               onClick={() => onSelectUser && onSelectUser(user.id)}
             >
@@ -51,7 +52,7 @@ export default function UsersList({ users, onSelectUser, activeUserId }: UsersLi
                   </Avatar>
                   <span
                     className={`absolute bottom-0 right-0 h-2 w-2 rounded-full border border-gray-800 ${user.status === 'online' ? 'bg-green-500' :
-                        user.status === 'away' ? 'bg-yellow-500' : 'bg-gray-400'
+                      user.status === 'away' ? 'bg-yellow-500' : 'bg-gray-400'
                       }`}
                   ></span>
                 </div>

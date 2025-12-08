@@ -13,7 +13,7 @@ export default defineConfig(({ mode }) => ({
     headers: {
       'X-Content-Type-Options': 'nosniff',
       'Referrer-Policy': 'strict-origin-when-cross-origin',
-      'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.intercomcdn.com https://kidato-images.s3.eu-west-1.amazonaws.com https://maps.googleapis.com https://cdn.gpteng.co https://js.stripe.com https://js.basistheory.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' http://127.0.0.1:* http://localhost:* https: wss:; frame-src 'self' https:",
+      'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.intercomcdn.com https://kidato-images.s3.eu-west-1.amazonaws.com https://maps.googleapis.com https://cdn.gpteng.co https://js.stripe.com https://js.basistheory.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' http://127.0.0.1:* http://localhost:* https: wss: ws:; frame-src 'self' https:",
     },
   },
   preview: {
@@ -24,7 +24,7 @@ export default defineConfig(({ mode }) => ({
       'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
       'X-Content-Type-Options': 'nosniff',
       'Referrer-Policy': 'strict-origin-when-cross-origin',
-      'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline' https://js.intercomcdn.com https://kidato-images.s3.eu-west-1.amazonaws.com https://maps.googleapis.com https://cdn.gpteng.co https://js.stripe.com https://js.basistheory.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' http://127.0.0.1:* http://localhost:* https: wss:; frame-src 'self' https:",
+      'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline' https://js.intercomcdn.com https://kidato-images.s3.eu-west-1.amazonaws.com https://maps.googleapis.com https://cdn.gpteng.co https://js.stripe.com https://js.basistheory.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' http://127.0.0.1:* http://localhost:* https: wss: ws:; frame-src 'self' https:",
     },
   },
   plugins: [
