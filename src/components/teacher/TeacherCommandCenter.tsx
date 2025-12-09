@@ -738,22 +738,11 @@ const TeacherCommandCenter: React.FC = () => {
         <CardContent>
           <div className="space-y-3">
             {successStories.length === 0 ? (
-              <>
-                <div className="p-3 border-l-4 border-green-500 bg-green-50">
-                  <div className="font-medium">Recent Win</div>
-                  <div className="text-sm text-gray-600">James solved his first calculus problem!</div>
-                </div>
-
-                <div className="p-3 border-l-4 border-blue-500 bg-blue-50">
-                  <div className="font-medium">Parent Feedback</div>
-                  <div className="text-sm text-gray-600">"Sarah's teaching style really connects with our daughter."</div>
-                </div>
-
-                <div className="p-3 border-l-4 border-purple-500 bg-purple-50">
-                  <div className="font-medium">Long-term Impact</div>
-                  <div className="text-sm text-gray-600">Emma improved from C to A this semester</div>
-                </div>
-              </>
+              <div className="text-center py-8 text-gray-500">
+                <Star className="w-12 h-12 mx-auto mb-2 text-gray-200" />
+                <p>No success stories recorded yet</p>
+                <p className="text-xs mt-1">Share your teaching wins here!</p>
+              </div>
             ) : (
               successStories.map((story, idx) => {
                 let borderColor = "border-green-500";
@@ -778,7 +767,7 @@ const TeacherCommandCenter: React.FC = () => {
               })
             )}
 
-            <Button variant="outline" size="sm" className="w-full" onClick={() => navigate('/teacher-dashboard/content')}>
+            <Button variant="outline" size="sm" className="w-full" onClick={() => navigate('/teacher-dashboard/content?subtab=stories')}>
               <Share2 className="w-4 h-4 mr-2" />
               Manage Success Stories
             </Button>

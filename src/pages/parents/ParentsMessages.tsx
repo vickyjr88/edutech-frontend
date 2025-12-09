@@ -50,8 +50,10 @@ const ParentsMessages = () => {
               if (dm.conversationId) {
                 try {
                   const msgsResp = await messagingService.getMessages(dm.conversationId, 1, 1);
-                  if (msgsResp.data && msgsResp.data.messages.length > 0) {
-                    const lastMsg = msgsResp.data.messages[0];
+                  const msgs = Array.isArray(msgsResp.data) ? msgsResp.data : (msgsResp.data as any)?.messages || [];
+
+                  if (msgs.length > 0) {
+                    const lastMsg = msgs[0];
                     lastMsgContent = lastMsg.content;
                     time = formatDistanceToNow(new Date(lastMsg.timestamp), { addSuffix: true });
                   }

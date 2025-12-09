@@ -125,11 +125,16 @@ export default function MessagingPlatform() {
       ]);
 
       if (channelsResp.data) {
-        setChannels(channelsResp.data);
+        const mappedChannels = channelsResp.data.map((c: any) => ({
+          ...c,
+          id: c.id || c._id
+        }));
+        setChannels(mappedChannels);
+
         // Set first channel as active if no active conversation and initial load
-        if (!activeConversationId && channelsResp.data.length > 0 && isLoading) {
-          setActiveConversationId(channelsResp.data[0].id);
-          setActiveConversationTitle(channelsResp.data[0].name);
+        if (!activeConversationId && mappedChannels.length > 0 && isLoading) {
+          setActiveConversationId(mappedChannels[0].id);
+          setActiveConversationTitle(mappedChannels[0].name);
           setActiveTab("channels");
         }
       }
@@ -163,7 +168,26 @@ export default function MessagingPlatform() {
         setIsLoadingMessages(true);
         const response = await messagingService.getMessages(activeConversationId);
         if (response.data) {
-          setMessages(response.data.messages);
+          const rawMsgs = Array.isArray(response.data) ? response.data : (response.data as any).messages || [];
+
+          // Map backend format to frontend interface
+          const mappedMsgs = rawMsgs.map((msg: any) => ({
+            id: msg.id || msg._id,
+            conversationId: msg.channel || activeConversationId,
+            content: msg.content,
+            timestamp: msg.createdAt || new Date().toISOString(),
+            createdAt: new Date(msg.createdAt || Date.now()),
+            author: {
+              id: msg.sender?.id || msg.sender?._id || 'unknown',
+              name: msg.sender?.fullName || 'Unknown User',
+              role: msg.sender?.role ? (msg.sender.role.charAt(0).toUpperCase() + msg.sender.role.slice(1)) : 'User',
+              avatar: msg.sender?.profileImage
+            },
+            reactions: msg.reactions || [],
+            attachments: msg.attachments || []
+          }));
+
+          setMessages(mappedMsgs);
           setTimeout(() => scrollToBottom(), 100);
         }
       } catch (error) {
@@ -182,6 +206,7 @@ export default function MessagingPlatform() {
     }
   };
 
+
   const handleSendMessage = async () => {
     if (!newMessage.trim() && !files) return;
     if (!activeConversationId) return;
@@ -198,16 +223,18 @@ export default function MessagingPlatform() {
         // Optimistic update
         const tempMsg: Message = {
           id: `temp-${Date.now()}`,
+          conversationId: activeConversationId,
           content: newMessage,
-          sender: {
+          author: {
             id: user?.id || 'me',
-            firstName: user?.fullName?.split(' ')[0] || 'Me',
-            lastName: user?.fullName?.split(' ')[1] || '',
-            avatar: user?.avatar
+            name: user?.fullName || 'Me',
+            role: user?.role ? (user.role.charAt(0).toUpperCase() + user.role.slice(1)) : 'User',
+            avatar: (user as any)?.profileImage || (user as any)?.avatar
           },
-          createdAt: new Date().toISOString(),
-          readBy: []
-        } as any;
+          timestamp: new Date().toISOString(),
+          createdAt: new Date(),
+          reactions: []
+        };
 
         setMessages(prev => [...prev, tempMsg]);
         setNewMessage("");
@@ -218,7 +245,23 @@ export default function MessagingPlatform() {
           content: newMessage
         });
         if (response.data) {
-          setMessages([...messages, response.data]);
+          const rawMsg: any = response.data;
+          const mappedMsg: Message = {
+            id: rawMsg.id || rawMsg._id,
+            conversationId: rawMsg.channel || activeConversationId,
+            content: rawMsg.content,
+            timestamp: rawMsg.createdAt || new Date().toISOString(),
+            createdAt: new Date(rawMsg.createdAt || Date.now()),
+            author: {
+              id: rawMsg.sender?.id || rawMsg.sender?._id || 'unknown',
+              name: rawMsg.sender?.fullName || 'Unknown User',
+              role: rawMsg.sender?.role ? (rawMsg.sender.role.charAt(0).toUpperCase() + rawMsg.sender.role.slice(1)) : 'User',
+              avatar: rawMsg.sender?.profileImage
+            },
+            reactions: rawMsg.reactions || [],
+            attachments: rawMsg.attachments || []
+          };
+          setMessages([...messages, mappedMsg]);
           setNewMessage("");
           setTimeout(() => scrollToBottom(), 100);
         }

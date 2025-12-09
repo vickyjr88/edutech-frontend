@@ -67,8 +67,8 @@ export const messagingService = {
     },
 
     // Get messages for a specific conversation (channel or DM)
-    getMessages: (conversationId: string, page = 1, limit = 50): Promise<ApiResponse<{ messages: Message[], total: number }>> => {
-        return api.get<{ messages: Message[], total: number }>(`/messaging/channels/${conversationId}/messages?limit=${limit}`);
+    getMessages: (conversationId: string, page = 1, limit = 50): Promise<ApiResponse<Message[]>> => {
+        return api.get<Message[]>(`/messaging/channels/${conversationId}/messages?limit=${limit}`);
     },
 
     // Send a message to a conversation
