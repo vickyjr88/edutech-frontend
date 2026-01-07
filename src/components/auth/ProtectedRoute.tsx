@@ -33,7 +33,13 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  // User is authenticated, render the protected content
+  // Redirect to complete-profile if user has 'default' role
+  // They must select their actual role before accessing protected content
+  if (user.role === 'default') {
+    return <Navigate to="/complete-profile" replace />;
+  }
+
+  // User is authenticated with a valid role, render the protected content
   return <>{children}</>;
 };
 

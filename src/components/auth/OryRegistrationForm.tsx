@@ -316,23 +316,27 @@ export const OryRegistrationForm: React.FC<OryRegistrationFormProps> = ({ onSucc
         });
 
         if (hasTraitFields && oidcSubmitNode) {
-          // Flow has trait fields - submit them to complete OIDC registration
-          // DO NOT include method or provider - that would restart OAuth!
-          console.log('Flow has trait fields, completing OIDC registration...');
+          // Ory OIDC flow requires re-authentication to complete registration
+          // We need to follow the OAuth redirect with the provider
+          console.log('Flow has trait fields, following OAuth redirect to complete registration...');
 
-          const submitData: Record<string, any> = {
+          // Store the selected role for after OAuth completes
+          sessionStorage.setItem('kidato_selected_role', formData.role);
+
+          // Submit with provider to trigger OAuth redirect
+          const submitData = {
+            provider: oidcSubmitNode.attributes.value,
+            method: 'oidc',
+            csrf_token: csrfToken,
+            // Include traits so they're available 
             'traits.email': formData.email,
             'traits.name.first': formData.firstName,
             'traits.name.last': formData.lastName,
             'traits.role': formData.role,
-            csrf_token: csrfToken,
-            // NOTE: We intentionally don't include 'method' or 'provider' here
-            // Including them causes Ory to think we want to restart OAuth (422 error)
           };
 
-          console.log('Submitting OIDC registration with traits only:', submitData);
+          console.log('Submitting OIDC with traits and provider:', submitData);
 
-          // Use direct fetch to avoid any modification by authService
           const response = await fetch(`${authService.oryProxyUrl}/self-service/registration?flow=${flow.id}`, {
             method: 'POST',
             headers: {
@@ -344,9 +348,16 @@ export const OryRegistrationForm: React.FC<OryRegistrationFormProps> = ({ onSucc
           });
 
           result = await response.json();
-          console.log('OIDC traits submission result:', result, 'Status:', response.status);
+          console.log('OIDC submission result:', result, 'Status:', response.status);
 
-          // Handle the result
+          // Handle OAuth redirect (expected for OIDC flows)
+          if (result.redirect_browser_to) {
+            console.log('Following OAuth redirect:', result.redirect_browser_to);
+            window.location.href = result.redirect_browser_to;
+            return;
+          }
+
+          // Handle the result if we got a session directly
           if (result.session) {
             toast({
               title: 'Account created!',
@@ -366,16 +377,6 @@ export const OryRegistrationForm: React.FC<OryRegistrationFormProps> = ({ onSucc
             return;
           }
 
-          // If still getting redirect, handle it
-          if (result.redirect_browser_to) {
-            console.log('Got redirect:', result.redirect_browser_to);
-            // Don't redirect - this would restart OAuth
-            // Instead, show an error
-            setFlowError('Registration could not be completed. Please try again.');
-            setIsLoading(false);
-            return;
-          }
-
           // Handle errors
           if (result.ui?.messages) {
             const errorMessage = result.ui.messages.map((msg: any) => msg.text).join('. ');
@@ -384,13 +385,9 @@ export const OryRegistrationForm: React.FC<OryRegistrationFormProps> = ({ onSucc
             return;
           }
 
-          // If we got here with result but no session, there might be an issue
-          if (!result.session) {
-            console.log('No session in result:', result);
-            setFlowError('Registration could not be completed. Please try again.');
-            setIsLoading(false);
-            return;
-          }
+          setFlowError('Registration could not be completed. Please try again.');
+          setIsLoading(false);
+          return;
         } else if (!hasTraitFields && oidcSubmitNode) {
           // Flow is in 'choose_method' state - we need to click "Continue" to restart OAuth
           // The traits will be populated by the Jsonnet mapper after OAuth completes

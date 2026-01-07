@@ -86,6 +86,7 @@ import TicketsManagement from "../pages/admin/TicketsManagement";
 import AdminDashboardPage from "../pages/admin/AdminDashboardPage";
 import ClassesManagement from "../pages/admin/ClassesManagement";
 import AdminMessaging from "../pages/admin/AdminMessaging";
+import CompleteProfile from "../pages/CompleteProfile";
 
 const AppRoutes = () => {
   return (
@@ -93,6 +94,7 @@ const AppRoutes = () => {
       <Route path="/" element={<Index />} />
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
+      <Route path="/complete-profile" element={<CompleteProfile />} />
       <Route path="/auth/recovery" element={<RecoveryPage />} />
       <Route path="/auth/verification" element={<VerificationPage />} />
       <Route path="/forgot-password" element={<RecoveryPage />} />

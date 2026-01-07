@@ -49,6 +49,11 @@ export const RoleBasedDashboardRouter: React.FC = () => {
         navigate('/parents-dashboard', { replace: true });
         break;
 
+      case 'default':
+        // User needs to select their role first
+        navigate('/complete-profile', { replace: true });
+        break;
+
       default:
         // Fallback to student dashboard for unknown roles
         console.warn(`Unknown user role: ${role}, defaulting to student dashboard`);
