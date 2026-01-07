@@ -296,13 +296,14 @@ export const OryRegistrationForm: React.FC<OryRegistrationFormProps> = ({ onSucc
       let result;
 
       if (isGoogleOAuthFlow) {
-        // Check if the flow is in 'choose_method' state (only has OIDC provider node, no trait fields)
+        // Check if the flow has trait input fields (not just the Continue button)
+        // Trait fields can be in group 'oidc', 'profile', or 'default'
         const hasTraitFields = flow.ui.nodes.some((node: any) =>
-          node.group === 'profile' ||
-          (node.group === 'default' && node.attributes?.name?.startsWith('traits.'))
+          node.attributes?.name?.startsWith('traits.') &&
+          node.attributes?.type !== 'submit'
         );
 
-        // Find the OIDC submit node
+        // Find the OIDC submit node (the "Continue" button)
         const oidcSubmitNode = flow.ui.nodes.find((node: any) =>
           node.group === 'oidc' && node.type === 'input' && node.attributes?.type === 'submit'
         );
@@ -311,9 +312,26 @@ export const OryRegistrationForm: React.FC<OryRegistrationFormProps> = ({ onSucc
           hasTraitFields,
           oidcSubmitNode,
           flowState: (flow as any).state,
+          formRole: formData.role,
         });
 
-        if (!hasTraitFields && oidcSubmitNode) {
+        if (hasTraitFields && oidcSubmitNode) {
+          // Flow has trait fields - we can submit them with the OIDC method
+          console.log('Flow has trait fields, submitting with OIDC provider...');
+
+          const submitData: Record<string, any> = {
+            'traits.email': formData.email,
+            'traits.name.first': formData.firstName,
+            'traits.name.last': formData.lastName,
+            'traits.role': formData.role,
+            csrf_token: csrfToken,
+            provider: oidcSubmitNode.attributes.value,  // e.g., "google-GKSjG7bn"
+            method: 'oidc',
+          };
+
+          console.log('Submitting OIDC registration with traits:', submitData);
+          result = await authService.submitRegistrationFlow(flow.id, submitData);
+        } else if (!hasTraitFields && oidcSubmitNode) {
           // Flow is in 'choose_method' state - we need to click "Continue" to restart OAuth
           // The traits will be populated by the Jsonnet mapper after OAuth completes
           console.log('Flow requires OAuth restart - clicking Continue...');
