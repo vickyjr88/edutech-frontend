@@ -230,6 +230,23 @@ export const OryRegistrationForm: React.FC<OryRegistrationFormProps> = ({ onSucc
       setIsGoogleOAuthFlow(true);  // Mark this as a Google OAuth flow
       console.log('Form populated with Google OAuth data:', updatedFormData);
 
+      // Debug: Log all flow nodes to understand the structure
+      console.log('=== OIDC Flow Debug ===');
+      console.log('Flow ID:', flow.id);
+      console.log('All nodes:', JSON.stringify(flow.ui.nodes, null, 2));
+      console.log('Flow messages:', flow.ui.messages);
+
+      // Find all available methods in the flow
+      const methods = new Set<string>();
+      flow.ui.nodes.forEach((node: any) => {
+        if (node.group) methods.add(node.group);
+      });
+      console.log('Available groups/methods:', Array.from(methods));
+
+      // Log OIDC specific nodes
+      const oidcNodes = flow.ui.nodes.filter((node: any) => node.group === 'oidc');
+      console.log('OIDC nodes:', JSON.stringify(oidcNodes, null, 2));
+
       toast({
         title: 'Complete your signup',
         description: 'Please select your role and review your information to complete registration with Google.',
@@ -279,17 +296,42 @@ export const OryRegistrationForm: React.FC<OryRegistrationFormProps> = ({ onSucc
       let result;
 
       if (isGoogleOAuthFlow) {
-        // For Google OAuth flow, submit with OIDC method (no password required)
+        // For Google OAuth flow continuation
+        // The flow already has OIDC context - we just need to submit the remaining required traits
         console.log('Submitting Google OAuth registration with role:', formData.role);
-        result = await authService.submitRegistrationFlow(flow.id, {
+        console.log('Current flow nodes:', flow.ui.nodes);
+
+        // Find any OIDC-related submit buttons or inputs
+        const oidcSubmitNode = flow.ui.nodes.find((node: any) =>
+          node.group === 'oidc' && node.type === 'input' && node.attributes?.type === 'submit'
+        );
+        console.log('OIDC submit node:', oidcSubmitNode);
+
+        // Build the form data - include ALL form fields that Ory expects
+        const submitData: Record<string, any> = {
           'traits.email': formData.email,
           'traits.name.first': formData.firstName,
           'traits.name.last': formData.lastName,
           'traits.role': formData.role,
           csrf_token: csrfToken,
-          method: 'oidc',
-          provider: 'google',
-        });
+        };
+
+        // If there's an OIDC submit node, use its value as the provider
+        if (oidcSubmitNode?.attributes?.value) {
+          submitData.provider = oidcSubmitNode.attributes.value;
+          submitData.method = 'oidc';
+        } else {
+          // Check for any oidc nodes that might indicate we need to use link method
+          const hasOidcNodes = flow.ui.nodes.some((node: any) => node.group === 'oidc');
+          if (hasOidcNodes) {
+            // Try using 'link' method for linking accounts
+            submitData.method = 'link';
+            submitData.link = 'google';
+          }
+        }
+
+        console.log('Final OIDC submit data:', submitData);
+        result = await authService.submitRegistrationFlow(flow.id, submitData);
       } else {
         // Normal password registration
         result = await authService.submitRegistrationFlow(flow.id, {
