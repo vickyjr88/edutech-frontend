@@ -86,6 +86,7 @@ import TicketsManagement from "../pages/admin/TicketsManagement";
 import AdminDashboardPage from "../pages/admin/AdminDashboardPage";
 import ClassesManagement from "../pages/admin/ClassesManagement";
 import AdminMessaging from "../pages/admin/AdminMessaging";
+import UsersManagement from "../pages/admin/UsersManagement";
 import CompleteProfile from "../pages/CompleteProfile";
 
 const AppRoutes = () => {
@@ -361,6 +362,7 @@ const AppRoutes = () => {
         <Route path="parents" element={<ParentsManagement />} />
         <Route path="tickets" element={<TicketsManagement />} />
         <Route path="messaging" element={<AdminMessaging />} />
+        <Route path="users" element={<UsersManagement />} />
       </Route>
 
       {/* Document Viewers - Public (uses signed URL for security) */}

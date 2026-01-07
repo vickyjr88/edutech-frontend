@@ -149,6 +149,21 @@ export const adminService = {
     return api.post<{ success: boolean; message: string }>(`/admin/users/${userId}/reactivate`);
   },
 
+  /**
+   * Permanently delete user (WARNING: Irreversible!)
+   */
+  async permanentDeleteUser(userId: string) {
+    return api.delete<{
+      message: string;
+      deletedRecords: {
+        user: boolean;
+        profile: boolean;
+        suspensions: number;
+        auditLogs: number;
+      };
+    }>(`/admin/users/${userId}/permanent`);
+  },
+
   // ==================== TEACHERS ====================
 
   /**

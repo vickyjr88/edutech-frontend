@@ -135,6 +135,12 @@ const AdminDashboard = () => {
       icon: MessageSquare,
       current: location.pathname.startsWith("/admin/messaging"),
     },
+    {
+      name: "All Users",
+      href: "/admin/users",
+      icon: Users,
+      current: location.pathname.startsWith("/admin/users"),
+    },
   ];
 
   return (
