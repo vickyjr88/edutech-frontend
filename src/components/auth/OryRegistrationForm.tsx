@@ -296,39 +296,97 @@ export const OryRegistrationForm: React.FC<OryRegistrationFormProps> = ({ onSucc
       let result;
 
       if (isGoogleOAuthFlow) {
-        // For Google OAuth flow continuation
-        // The flow already has OIDC context - we just need to submit the remaining required traits
-        console.log('Submitting Google OAuth registration with role:', formData.role);
-        console.log('Current flow nodes:', flow.ui.nodes);
+        // Check if the flow is in 'choose_method' state (only has OIDC provider node, no trait fields)
+        const hasTraitFields = flow.ui.nodes.some((node: any) =>
+          node.group === 'profile' ||
+          (node.group === 'default' && node.attributes?.name?.startsWith('traits.'))
+        );
 
-        // Find any OIDC-related submit buttons or inputs
+        // Find the OIDC submit node
         const oidcSubmitNode = flow.ui.nodes.find((node: any) =>
           node.group === 'oidc' && node.type === 'input' && node.attributes?.type === 'submit'
         );
-        console.log('OIDC submit node:', oidcSubmitNode);
 
-        // Build the form data - include ALL form fields that Ory expects
+        console.log('Flow state check:', {
+          hasTraitFields,
+          oidcSubmitNode,
+          flowState: (flow as any).state,
+        });
+
+        if (!hasTraitFields && oidcSubmitNode) {
+          // Flow is in 'choose_method' state - we need to click "Continue" to restart OAuth
+          // The traits will be populated by the Jsonnet mapper after OAuth completes
+          console.log('Flow requires OAuth restart - clicking Continue...');
+
+          const submitData = {
+            provider: oidcSubmitNode.attributes.value,
+            method: 'oidc',
+            csrf_token: csrfToken,
+          };
+
+          console.log('Submitting OIDC continuation:', submitData);
+
+          // This will redirect to Google OAuth again
+          const response = await fetch(`${authService.oryProxyUrl}/self-service/registration?flow=${flow.id}`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded',
+              'Accept': 'application/json',
+            },
+            credentials: 'include',
+            body: new URLSearchParams(submitData as any).toString(),
+          });
+
+          const result = await response.json();
+          console.log('OIDC continuation result:', result);
+
+          // Handle OAuth redirect
+          if (result.redirect_browser_to) {
+            window.location.href = result.redirect_browser_to;
+            return;
+          }
+
+          // If we got a session directly
+          if (result.session) {
+            toast({
+              title: 'Account created!',
+              description: 'Your account has been created successfully with Google.',
+            });
+
+            const userRole = result.session?.identity?.traits?.role;
+            if (userRole === 'teacher') {
+              window.location.href = '/teacher-profile-setup';
+            } else if (userRole === 'student') {
+              window.location.href = '/student-dashboard';
+            } else if (userRole === 'parent') {
+              window.location.href = '/parents-dashboard';
+            } else {
+              window.location.href = '/dashboard';
+            }
+            return;
+          }
+
+          // Handle errors
+          if (result.ui?.messages) {
+            const errorMessage = result.ui.messages.map((msg: any) => msg.text).join('. ');
+            setFlowError(errorMessage);
+          }
+
+          setIsLoading(false);
+          return;
+        }
+
+        // If we have trait fields, submit with traits
+        console.log('Submitting Google OAuth registration with traits');
         const submitData: Record<string, any> = {
           'traits.email': formData.email,
           'traits.name.first': formData.firstName,
           'traits.name.last': formData.lastName,
           'traits.role': formData.role,
           csrf_token: csrfToken,
+          method: 'oidc',
+          provider: 'google',
         };
-
-        // If there's an OIDC submit node, use its value as the provider
-        if (oidcSubmitNode?.attributes?.value) {
-          submitData.provider = oidcSubmitNode.attributes.value;
-          submitData.method = 'oidc';
-        } else {
-          // Check for any oidc nodes that might indicate we need to use link method
-          const hasOidcNodes = flow.ui.nodes.some((node: any) => node.group === 'oidc');
-          if (hasOidcNodes) {
-            // Try using 'link' method for linking accounts
-            submitData.method = 'link';
-            submitData.link = 'google';
-          }
-        }
 
         console.log('Final OIDC submit data:', submitData);
         result = await authService.submitRegistrationFlow(flow.id, submitData);
