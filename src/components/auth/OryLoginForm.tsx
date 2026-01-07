@@ -24,6 +24,7 @@ export const OryLoginForm: React.FC<OryLoginFormProps> = ({ onSuccess, redirectT
   const [errors, setErrors] = useState<any>({});
   const [flowError, setFlowError] = useState('');
   const [prefilledFields, setPrefilledFields] = useState<Set<string>>(new Set());
+  const [isAccountLinking, setIsAccountLinking] = useState(false); // For Google account linking flow
   const hasInitialized = useRef(false);
 
   const navigate = useNavigate();
@@ -33,9 +34,9 @@ export const OryLoginForm: React.FC<OryLoginFormProps> = ({ onSuccess, redirectT
   const getOAuthProviders = () => {
     if (!flow) return [];
     // Look for OAuth/OIDC provider nodes in the oidc group
-    return flow.ui.nodes.filter(node => 
-      node.group === 'oidc' && 
-      node.type === 'input' && 
+    return flow.ui.nodes.filter(node =>
+      node.group === 'oidc' &&
+      node.type === 'input' &&
       node.attributes.type === 'submit'
     );
   };
@@ -52,8 +53,8 @@ export const OryLoginForm: React.FC<OryLoginFormProps> = ({ onSuccess, redirectT
 
     try {
       // For OAuth providers, we need to find the specific provider node and submit it
-      const providerNode = flow.ui.nodes.find(node => 
-        node.group === 'oidc' && 
+      const providerNode = flow.ui.nodes.find(node =>
+        node.group === 'oidc' &&
         node.attributes.value === provider
       );
 
@@ -66,7 +67,7 @@ export const OryLoginForm: React.FC<OryLoginFormProps> = ({ onSuccess, redirectT
 
       // Extract CSRF token from flow
       const csrfToken = flow.ui.nodes.find(node => node.attributes.name === 'csrf_token')?.attributes.value;
-      
+
       // Submit the OAuth login using the provider node's attributes
       const formData = new URLSearchParams();
       formData.append('method', 'oidc');
@@ -104,17 +105,17 @@ export const OryLoginForm: React.FC<OryLoginFormProps> = ({ onSuccess, redirectT
           title: 'Welcome back!',
           description: 'You have successfully logged in with Google.',
         });
-        
-          const userRole = result.session?.identity?.traits?.role || result.user?.role;
-          if (userRole === 'teacher') {
-            window.location.href = '/teacher-dashboard';
-          } else if (userRole === 'student') {
-            window.location.href = '/student-dashboard';
-          } else if (userRole === 'parent') {
-            window.location.href = '/parents-dashboard';
-          } else {
-            window.location.href = '/dashboard';
-          }
+
+        const userRole = result.session?.identity?.traits?.role || result.user?.role;
+        if (userRole === 'teacher') {
+          window.location.href = '/teacher-dashboard';
+        } else if (userRole === 'student') {
+          window.location.href = '/student-dashboard';
+        } else if (userRole === 'parent') {
+          window.location.href = '/parents-dashboard';
+        } else {
+          window.location.href = '/dashboard';
+        }
       }
 
       // Handle flow errors
@@ -129,7 +130,7 @@ export const OryLoginForm: React.FC<OryLoginFormProps> = ({ onSuccess, redirectT
           }
         });
         setErrors(fieldErrors);
-        
+
         if (result.ui.messages) {
           const messages = result.ui.messages;
           const errorMessage = messages.map((msg: any) => msg.text).join('. ');
@@ -160,35 +161,35 @@ export const OryLoginForm: React.FC<OryLoginFormProps> = ({ onSuccess, redirectT
   const initializeFlow = async () => {
     try {
       setIsLoading(true);
-      
+
       // Check if there's a flow ID in the URL (from Google OAuth redirect)
       const urlParams = new URLSearchParams(window.location.search);
       const flowId = urlParams.get('flow');
-      
+
       let loginFlow: LoginFlow;
-      
+
       if (flowId) {
         // If flow ID exists, fetch the existing flow with pre-filled data
         console.log('Found flow ID in URL, fetching flow data:', flowId);
         loginFlow = await authService.getLoginFlow(flowId);
-        
+
         // Populate form with pre-filled data from Google OAuth
         populateFormFromFlow(loginFlow);
       } else {
         // Initialize new flow
         loginFlow = await authService.initializeLoginFlow();
       }
-      
+
       setFlow(loginFlow);
       setFlowError('');
-      
+
       // Clean up URL parameters after successful flow initialization
       if (flowId) {
         const url = new URL(window.location.href);
         url.searchParams.delete('flow');
         window.history.replaceState({}, document.title, url.pathname + url.search);
       }
-      
+
     } catch (error: any) {
       console.error('Failed to initialize login flow:', error);
       setFlowError('Failed to initialize login. Please try again.');
@@ -200,15 +201,27 @@ export const OryLoginForm: React.FC<OryLoginFormProps> = ({ onSuccess, redirectT
   // Helper function to populate form with pre-filled data from OAuth
   const populateFormFromFlow = (flow: LoginFlow) => {
     if (!flow.ui.nodes) return;
-    
+
     const prefilled = new Set<string>();
     let hasPrefilledData = false;
-    
+    let isAccountLinkingFlow = false;
+
+    // Check if this is an account linking flow (password field is present)
+    const hasPasswordField = flow.ui.nodes.some(
+      node => node.attributes?.name === 'password' && node.group === 'password'
+    );
+
+    // Check for OIDC link message in the flow
+    const hasLinkMessage = flow.ui.messages?.some(
+      msg => msg.text?.toLowerCase().includes('link') ||
+        msg.text?.toLowerCase().includes('existing')
+    );
+
     flow.ui.nodes.forEach(node => {
       if (node.attributes && node.attributes.value) {
         const fieldName = node.attributes.name;
         const fieldValue = node.attributes.value;
-        
+
         switch (fieldName) {
           case 'identifier':
             setEmail(fieldValue);
@@ -219,29 +232,46 @@ export const OryLoginForm: React.FC<OryLoginFormProps> = ({ onSuccess, redirectT
         }
       }
     });
-    
+
+    // Determine if this is account linking (existing user needs to enter password)
+    isAccountLinkingFlow = hasPrefilledData && hasPasswordField;
+
     if (hasPrefilledData) {
       setPrefilledFields(prefilled);
       console.log('Login form populated with Google OAuth data');
-      
-      // For Google OAuth flows with pre-filled email, we should auto-submit
-      // since the user has already been authenticated with Google
-      setTimeout(() => {
-        handleOAuthAutoLogin(flow);
-      }, 1000);
+      console.log('Is account linking flow:', isAccountLinkingFlow);
+
+      if (isAccountLinkingFlow) {
+        // This is an account linking flow - user needs to enter password
+        // Don't auto-submit, show helpful message instead
+        setIsAccountLinking(true);
+        setFlowError('');
+        toast({
+          title: 'Link your Google account',
+          description: 'An account with this email already exists. Enter your password to link your Google account for easier sign-in next time.',
+          duration: 8000,
+        });
+      } else {
+        setIsAccountLinking(false);
+        // No password required - this might be a new user or already linked account
+        // Try auto-submit for seamless login
+        setTimeout(() => {
+          handleOAuthAutoLogin(flow);
+        }, 1000);
+      }
     }
   };
 
   // Auto-submit login for OAuth flows with pre-filled data
   const handleOAuthAutoLogin = async (flow: LoginFlow) => {
     if (!prefilledFields.has('email') || isLoading) return;
-    
+
     console.log('Auto-submitting OAuth login with pre-filled email');
     setIsLoading(true);
-    
+
     try {
       const csrfToken = flow.ui.nodes.find(node => node.attributes.name === 'csrf_token')?.attributes.value;
-      
+
       const result = await authService.submitLoginFlow(flow.id, {
         identifier: email,
         csrf_token: csrfToken,
@@ -249,17 +279,17 @@ export const OryLoginForm: React.FC<OryLoginFormProps> = ({ onSuccess, redirectT
       });
 
       console.log('Auto-login result:', result);
-      
+
       if (result.data.session || result.data.legacy) {
         toast({
           title: 'Welcome back!',
           description: 'You have successfully logged in with Google.',
         });
-        
+
         // Handle role-based redirection
         const userRole = result.data.session?.identity?.traits?.role || result.data.user?.role;
         console.log('User role from OAuth auto-login:', userRole);
-        
+
         if (userRole === 'teacher') {
           window.location.href = '/teacher-dashboard';
         } else if (userRole === 'student') {
@@ -281,7 +311,7 @@ export const OryLoginForm: React.FC<OryLoginFormProps> = ({ onSuccess, redirectT
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!flow) {
       setFlowError('Login flow not initialized. Please refresh the page.');
       return;
@@ -293,7 +323,7 @@ export const OryLoginForm: React.FC<OryLoginFormProps> = ({ onSuccess, redirectT
     try {
       // Extract CSRF token from flow
       const csrfToken = flow.ui.nodes.find(node => node.attributes.name === 'csrf_token')?.attributes.value;
-      
+
       const result = await authService.submitLoginFlow(flow.id, {
         identifier: email,
         password,
@@ -310,35 +340,35 @@ export const OryLoginForm: React.FC<OryLoginFormProps> = ({ onSuccess, redirectT
           title: 'Welcome back!',
           description: 'You have successfully logged in.',
         });
-        
+
         console.log('About to navigate to /dashboard');
         // Force a hard redirect to bypass React Router navigation issues
-        
-          // Handle role-based redirection
-          const userRole = result.data.session?.identity?.traits?.role || result.data.user?.role;
 
-          console.log('User role:', userRole);
-          
-          if (userRole === 'teacher') {
-            window.location.href = '/teacher-dashboard';
-          } else if (userRole === 'student') {
-            window.location.href = '/student-dashboard';
-          } else if (userRole === 'parent') {
-            window.location.href = '/parents-dashboard';
-          } else {
-            window.location.href = '/dashboard';
-          }
+        // Handle role-based redirection
+        const userRole = result.data.session?.identity?.traits?.role || result.data.user?.role;
+
+        console.log('User role:', userRole);
+
+        if (userRole === 'teacher') {
+          window.location.href = '/teacher-dashboard';
+        } else if (userRole === 'student') {
+          window.location.href = '/student-dashboard';
+        } else if (userRole === 'parent') {
+          window.location.href = '/parents-dashboard';
+        } else {
+          window.location.href = '/dashboard';
+        }
       } else {
         console.log('No session found in result:', result);
         throw new Error('Login failed - no session returned');
       }
     } catch (error: any) {
       console.error('Login error:', error);
-      
+
       // Handle Ory validation errors from response
       if (error.response?.data?.ui) {
         const uiData = error.response.data.ui;
-        
+
         // Handle field-specific errors
         if (uiData.nodes) {
           const fieldErrors: any = {};
@@ -358,7 +388,7 @@ export const OryLoginForm: React.FC<OryLoginFormProps> = ({ onSuccess, redirectT
           const errorMessage = uiData.messages.map((msg: any) => msg.text).join('. ');
           setFlowError(errorMessage);
         }
-      } 
+      }
       // Handle direct error response (when Ory returns updated flow with errors)
       else if (error.ui?.messages) {
         const errorMessage = error.ui.messages.map((msg: any) => msg.text).join('. ');
@@ -410,8 +440,8 @@ export const OryLoginForm: React.FC<OryLoginFormProps> = ({ onSuccess, redirectT
           <AlertDescription>
             {flowError}
             {flowError.includes('initialize') && (
-              <Button 
-                variant="link" 
+              <Button
+                variant="link"
                 className="p-0 h-auto ml-2 text-destructive"
                 onClick={initializeFlow}
                 disabled={isLoading}
@@ -460,10 +490,16 @@ export const OryLoginForm: React.FC<OryLoginFormProps> = ({ onSuccess, redirectT
         </div>
       </div>
 
-      {!prefilledFields.has('email') && (
+      {/* Show password field if: not prefilled email OR this is account linking flow */}
+      {(!prefilledFields.has('email') || isAccountLinking) && (
         <div>
           <div className="flex items-center justify-between">
-            <Label htmlFor="password">Password</Label>
+            <Label htmlFor="password">
+              Password
+              {isAccountLinking && (
+                <span className="text-xs text-blue-600 ml-1">(to link your Google account)</span>
+              )}
+            </Label>
             <Button
               type="button"
               variant="link"
@@ -479,11 +515,12 @@ export const OryLoginForm: React.FC<OryLoginFormProps> = ({ onSuccess, redirectT
               name="password"
               type={showPassword ? 'text' : 'password'}
               autoComplete="current-password"
-              required={!prefilledFields.has('email')}
+              required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className={`block w-full pr-10 ${errors.password ? 'border-red-500' : ''}`}
               disabled={isLoading}
+              placeholder={isAccountLinking ? 'Enter your existing password' : ''}
             />
             <button
               type="button"
@@ -504,7 +541,8 @@ export const OryLoginForm: React.FC<OryLoginFormProps> = ({ onSuccess, redirectT
         </div>
       )}
 
-      {!prefilledFields.has('email') && (
+      {/* Show submit button if: not prefilled email OR this is account linking flow */}
+      {(!prefilledFields.has('email') || isAccountLinking) && (
         <div>
           <Button
             type="submit"
@@ -527,7 +565,7 @@ export const OryLoginForm: React.FC<OryLoginFormProps> = ({ onSuccess, redirectT
               <span className="bg-white px-2 text-muted-foreground">Or continue with</span>
             </div>
           </div>
-          
+
           <div className="space-y-2">
             {getOAuthProviders().length > 0 ? (
               getOAuthProviders().map((provider) => {

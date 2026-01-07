@@ -137,7 +137,7 @@ const AIClassHelper: React.FC<AIClassHelperProps> = ({ onApplyChanges, initialPr
   const generateClassContent = async () => {
     setIsGenerating(true);
     setCountdown(45);
-    
+
     // Start countdown timer
     countdownIntervalRef.current = setInterval(() => {
       setCountdown((prev) => {
@@ -150,29 +150,46 @@ const AIClassHelper: React.FC<AIClassHelperProps> = ({ onApplyChanges, initialPr
         return prev - 1;
       });
     }, 1000);
-    
+
     // Show initial toast for long operation
     toast.info('AI is generating your class... This may take up to 45 seconds.', {
       duration: 5000
     });
-    
+
     try {
       const response = await teacherService.generateCustomClass(prompt || selectedSuggestion || '');
-      
+
+      // Check for API error first
+      if (response.error) {
+        console.error('API Error:', response.error);
+        toast.error(response.error.message || 'Failed to generate class. Please try again.');
+        return;
+      }
+
       if (response.data) {
-        // API returns data nested under data.data
-        const actualData = response.data.data || response.data;
+        // API returns data with success flag
+        const responseData = response.data as any;
+
+        // Check if the backend indicated failure
+        if (responseData.success === false) {
+          console.error('Backend error:', responseData.error || responseData.message);
+          toast.error(responseData.error || responseData.message || 'Failed to generate class. Please try again.');
+          return;
+        }
+
+        // API returns data nested under data.data when using our wrapper
+        const actualData = responseData.data || responseData;
         const { generatedClass, createdClass } = actualData;
-        
+
         console.log('API Response:', response.data);
         console.log('Actual Data:', actualData);
         console.log('Generated Class:', generatedClass);
         console.log('Created Class:', createdClass);
-        
+
         // Show success message with safe property access
         const classTitle = generatedClass?.title || 'New Class';
         toast.success(`Class "${classTitle}" created in draft status.`);
-        
+
         // Navigate to the class setup page with the specific class ID
         if (createdClass?._id) {
           console.log('Navigating to:', `/teacher-class-setup/${createdClass._id}`);
@@ -180,7 +197,10 @@ const AIClassHelper: React.FC<AIClassHelperProps> = ({ onApplyChanges, initialPr
           window.location.href = `/teacher-class-setup/${createdClass._id}`;
         } else {
           console.error('No class ID found in response');
+          toast.warning('Class created but could not navigate to it. Please check your classes.');
         }
+      } else {
+        toast.error('No response from server. Please try again.');
       }
     } catch (error) {
       console.error('Error generating class:', error);
@@ -196,7 +216,7 @@ const AIClassHelper: React.FC<AIClassHelperProps> = ({ onApplyChanges, initialPr
 
   const handleApplyChange = (changeType: string) => {
     if (!aiResponse) return;
-    
+
     switch (changeType) {
       case 'title':
         onApplyChanges({ title: aiResponse.title });
@@ -219,7 +239,7 @@ const AIClassHelper: React.FC<AIClassHelperProps> = ({ onApplyChanges, initialPr
         });
         break;
     }
-    
+
     if (!appliedChanges.includes(changeType)) {
       setAppliedChanges([...appliedChanges, changeType]);
     }
@@ -236,7 +256,7 @@ const AIClassHelper: React.FC<AIClassHelperProps> = ({ onApplyChanges, initialPr
           Let AI help you create your class content quickly and easily
         </CardDescription>
       </CardHeader>
-      
+
       <CardContent className="pt-6">
         <div className="space-y-4">
           {!aiResponse ? (
@@ -250,7 +270,7 @@ const AIClassHelper: React.FC<AIClassHelperProps> = ({ onApplyChanges, initialPr
                   onChange={(e) => setPrompt(e.target.value)}
                 />
               </div>
-            
+
               <div>
                 <label className="block text-sm font-medium mb-1.5">Or choose from suggestions:</label>
                 <div className="flex flex-wrap gap-2">
@@ -307,7 +327,7 @@ const AIClassHelper: React.FC<AIClassHelperProps> = ({ onApplyChanges, initialPr
                 </div>
                 <p className="text-gray-700 mt-1 p-3 bg-blue-50 rounded-md">{aiResponse.title}</p>
               </motion.div>
-              
+
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -338,7 +358,7 @@ const AIClassHelper: React.FC<AIClassHelperProps> = ({ onApplyChanges, initialPr
                 </div>
                 <p className="text-gray-700 mt-1 p-3 bg-blue-50 rounded-md">{aiResponse.description}</p>
               </motion.div>
-              
+
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -369,7 +389,7 @@ const AIClassHelper: React.FC<AIClassHelperProps> = ({ onApplyChanges, initialPr
                 </div>
                 <pre className="text-gray-700 mt-1 p-3 bg-blue-50 rounded-md whitespace-pre-wrap font-sans">{aiResponse.objectives}</pre>
               </motion.div>
-              
+
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -416,7 +436,7 @@ const AIClassHelper: React.FC<AIClassHelperProps> = ({ onApplyChanges, initialPr
           )}
         </div>
       </CardContent>
-      
+
       <CardFooter className="flex justify-between border-t pt-4">
         {!aiResponse ? (
           <Button
@@ -428,7 +448,7 @@ const AIClassHelper: React.FC<AIClassHelperProps> = ({ onApplyChanges, initialPr
           >
             {isGenerating ? (
               <>
-                <motion.div 
+                <motion.div
                   className="h-4 w-4 border-2 border-current border-t-transparent rounded-full mr-2"
                   animate={{ rotate: 360 }}
                   transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
