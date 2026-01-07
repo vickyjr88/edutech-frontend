@@ -339,9 +339,19 @@ export const OryRegistrationForm: React.FC<OryRegistrationFormProps> = ({ onSucc
 
           const result = await response.json();
           console.log('OIDC continuation result:', result);
+          console.log('Response status:', response.status);
 
-          // Handle OAuth redirect
+          // Handle OAuth redirect - Ory returns 422 with redirect_browser_to for OAuth flows
+          // This is expected behavior, not an error!
           if (result.redirect_browser_to) {
+            console.log('Redirecting to OAuth provider:', result.redirect_browser_to);
+            window.location.href = result.redirect_browser_to;
+            return;
+          }
+
+          // Also check for error.redirect_browser_to (some Ory versions wrap it)
+          if (result.error?.id === 'browser_location_change_required' && result.redirect_browser_to) {
+            console.log('Redirecting to OAuth provider (from error):', result.redirect_browser_to);
             window.location.href = result.redirect_browser_to;
             return;
           }
@@ -366,10 +376,12 @@ export const OryRegistrationForm: React.FC<OryRegistrationFormProps> = ({ onSucc
             return;
           }
 
-          // Handle errors
+          // Handle errors (only if not a redirect)
           if (result.ui?.messages) {
             const errorMessage = result.ui.messages.map((msg: any) => msg.text).join('. ');
             setFlowError(errorMessage);
+          } else if (result.error?.message && result.error?.id !== 'browser_location_change_required') {
+            setFlowError(result.error.message);
           }
 
           setIsLoading(false);
