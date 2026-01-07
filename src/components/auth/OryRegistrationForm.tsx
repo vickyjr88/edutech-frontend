@@ -316,8 +316,9 @@ export const OryRegistrationForm: React.FC<OryRegistrationFormProps> = ({ onSucc
         });
 
         if (hasTraitFields && oidcSubmitNode) {
-          // Flow has trait fields - we can submit them with the OIDC method
-          console.log('Flow has trait fields, submitting with OIDC provider...');
+          // Flow has trait fields - submit them to complete OIDC registration
+          // DO NOT include method or provider - that would restart OAuth!
+          console.log('Flow has trait fields, completing OIDC registration...');
 
           const submitData: Record<string, any> = {
             'traits.email': formData.email,
@@ -325,12 +326,71 @@ export const OryRegistrationForm: React.FC<OryRegistrationFormProps> = ({ onSucc
             'traits.name.last': formData.lastName,
             'traits.role': formData.role,
             csrf_token: csrfToken,
-            provider: oidcSubmitNode.attributes.value,  // e.g., "google-GKSjG7bn"
-            method: 'oidc',
+            // NOTE: We intentionally don't include 'method' or 'provider' here
+            // Including them causes Ory to think we want to restart OAuth (422 error)
           };
 
-          console.log('Submitting OIDC registration with traits:', submitData);
-          result = await authService.submitRegistrationFlow(flow.id, submitData);
+          console.log('Submitting OIDC registration with traits only:', submitData);
+
+          // Use direct fetch to avoid any modification by authService
+          const response = await fetch(`${authService.oryProxyUrl}/self-service/registration?flow=${flow.id}`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded',
+              'Accept': 'application/json',
+            },
+            credentials: 'include',
+            body: new URLSearchParams(submitData as any).toString(),
+          });
+
+          result = await response.json();
+          console.log('OIDC traits submission result:', result, 'Status:', response.status);
+
+          // Handle the result
+          if (result.session) {
+            toast({
+              title: 'Account created!',
+              description: 'Your account has been created successfully with Google.',
+            });
+
+            const userRole = result.session?.identity?.traits?.role;
+            if (userRole === 'teacher') {
+              window.location.href = '/teacher-profile-setup';
+            } else if (userRole === 'student') {
+              window.location.href = '/student-dashboard';
+            } else if (userRole === 'parent') {
+              window.location.href = '/parents-dashboard';
+            } else {
+              window.location.href = '/dashboard';
+            }
+            return;
+          }
+
+          // If still getting redirect, handle it
+          if (result.redirect_browser_to) {
+            console.log('Got redirect:', result.redirect_browser_to);
+            // Don't redirect - this would restart OAuth
+            // Instead, show an error
+            setFlowError('Registration could not be completed. Please try again.');
+            setIsLoading(false);
+            return;
+          }
+
+          // Handle errors
+          if (result.ui?.messages) {
+            const errorMessage = result.ui.messages.map((msg: any) => msg.text).join('. ');
+            setFlowError(errorMessage);
+            setIsLoading(false);
+            return;
+          }
+
+          // If we got here with result but no session, there might be an issue
+          if (!result.session) {
+            console.log('No session in result:', result);
+            setFlowError('Registration could not be completed. Please try again.');
+            setIsLoading(false);
+            return;
+          }
         } else if (!hasTraitFields && oidcSubmitNode) {
           // Flow is in 'choose_method' state - we need to click "Continue" to restart OAuth
           // The traits will be populated by the Jsonnet mapper after OAuth completes
