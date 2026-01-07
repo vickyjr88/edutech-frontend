@@ -24,7 +24,7 @@ export const OryRegistrationForm: React.FC<OryRegistrationFormProps> = ({ onSucc
     password: '',
     firstName: '',
     lastName: '',
-    role: 'student',
+    role: '',  // Empty by default - user must select
   });
   const [showPassword, setShowPassword] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
@@ -32,15 +32,16 @@ export const OryRegistrationForm: React.FC<OryRegistrationFormProps> = ({ onSucc
   const [errors, setErrors] = useState<any>({});
   const [flowError, setFlowError] = useState('');
   const [prefilledFields, setPrefilledFields] = useState<Set<string>>(new Set());
+  const [isGoogleOAuthFlow, setIsGoogleOAuthFlow] = useState(false);  // Track if this is a Google OAuth signup
 
   const navigate = useNavigate();
 
   // Helper function to get OAuth providers from the registration flow
   const getOAuthProviders = () => {
     if (!flow) return [];
-    return flow.ui.nodes.filter(node => 
-      node.group === 'oidc' && 
-      node.type === 'input' && 
+    return flow.ui.nodes.filter(node =>
+      node.group === 'oidc' &&
+      node.type === 'input' &&
       node.attributes.type === 'submit'
     );
   };
@@ -58,7 +59,7 @@ export const OryRegistrationForm: React.FC<OryRegistrationFormProps> = ({ onSucc
     try {
       // Extract CSRF token from flow
       const csrfToken = flow.ui.nodes.find(node => node.attributes.name === 'csrf_token')?.attributes.value;
-      
+
       // Submit the OAuth registration using direct fetch
       const formData = new URLSearchParams();
       formData.append('method', 'oidc');
@@ -96,7 +97,7 @@ export const OryRegistrationForm: React.FC<OryRegistrationFormProps> = ({ onSucc
           title: 'Account created!',
           description: 'Your account has been created successfully with Google.',
         });
-        
+
         setTimeout(() => {
           const userRole = result.session?.identity?.traits?.role || result.user?.role;
           if (userRole === 'teacher') {
@@ -123,7 +124,7 @@ export const OryRegistrationForm: React.FC<OryRegistrationFormProps> = ({ onSucc
           }
         });
         setErrors(fieldErrors);
-        
+
         if (result.ui.messages) {
           const messages = result.ui.messages;
           const errorMessage = messages.map((msg: any) => msg.text).join('. ');
@@ -150,35 +151,35 @@ export const OryRegistrationForm: React.FC<OryRegistrationFormProps> = ({ onSucc
   const initializeFlow = async () => {
     try {
       setIsLoading(true);
-      
+
       // Check if there's a flow ID in the URL (from Google OAuth redirect)
       const urlParams = new URLSearchParams(window.location.search);
       const flowId = urlParams.get('flow');
-      
+
       let registrationFlow: RegistrationFlow;
-      
+
       if (flowId) {
         // If flow ID exists, fetch the existing flow with pre-filled data
         console.log('Found flow ID in URL, fetching flow data:', flowId);
         registrationFlow = await authService.getRegistrationFlow(flowId);
-        
+
         // Populate form with pre-filled data from Google OAuth
         populateFormFromFlow(registrationFlow);
       } else {
         // Initialize new flow
         registrationFlow = await authService.initializeRegistrationFlow(redirectTo);
       }
-      
+
       setFlow(registrationFlow);
       setFlowError('');
-      
+
       // Clean up URL parameters after successful flow initialization
       if (flowId) {
         const url = new URL(window.location.href);
         url.searchParams.delete('flow');
         window.history.replaceState({}, document.title, url.pathname + url.search);
       }
-      
+
     } catch (error: any) {
       console.error('Failed to initialize registration flow:', error);
       setFlowError('Failed to initialize registration. Please try again.');
@@ -190,16 +191,16 @@ export const OryRegistrationForm: React.FC<OryRegistrationFormProps> = ({ onSucc
   // Helper function to populate form with pre-filled data from OAuth
   const populateFormFromFlow = (flow: RegistrationFlow) => {
     if (!flow.ui.nodes) return;
-    
+
     const updatedFormData = { ...formData };
     const prefilled = new Set<string>();
     let hasPrefilledData = false;
-    
+
     flow.ui.nodes.forEach(node => {
       if (node.attributes && node.attributes.value) {
         const fieldName = node.attributes.name;
         const fieldValue = node.attributes.value;
-        
+
         switch (fieldName) {
           case 'traits.email':
             updatedFormData.email = fieldValue;
@@ -222,11 +223,18 @@ export const OryRegistrationForm: React.FC<OryRegistrationFormProps> = ({ onSucc
         }
       }
     });
-    
+
     if (hasPrefilledData) {
       setFormData(updatedFormData);
       setPrefilledFields(prefilled);
+      setIsGoogleOAuthFlow(true);  // Mark this as a Google OAuth flow
       console.log('Form populated with Google OAuth data:', updatedFormData);
+
+      toast({
+        title: 'Complete your signup',
+        description: 'Please select your role and review your information to complete registration with Google.',
+        duration: 6000,
+      });
     }
   };
 
@@ -235,7 +243,7 @@ export const OryRegistrationForm: React.FC<OryRegistrationFormProps> = ({ onSucc
       ...prev,
       [field]: value,
     }));
-    
+
     // Clear field error when user starts typing
     if (errors[field]) {
       setErrors((prev: any) => ({
@@ -247,7 +255,7 @@ export const OryRegistrationForm: React.FC<OryRegistrationFormProps> = ({ onSucc
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!flow) {
       setFlowError('Registration flow not initialized. Please refresh the page.');
       return;
@@ -267,15 +275,33 @@ export const OryRegistrationForm: React.FC<OryRegistrationFormProps> = ({ onSucc
 
     try {
       const csrfToken = flow.ui.nodes.find(node => node.attributes.name === 'csrf_token')?.attributes.value;
-      const result = await authService.submitRegistrationFlow(flow.id, {
-        'traits.email': formData.email,
-        password: formData.password,
-        'traits.name.first': formData.firstName,
-        'traits.name.last': formData.lastName,
-        'traits.role': formData.role,
-        csrf_token: csrfToken,
-        method: 'password',
-      });
+
+      let result;
+
+      if (isGoogleOAuthFlow) {
+        // For Google OAuth flow, submit with OIDC method (no password required)
+        console.log('Submitting Google OAuth registration with role:', formData.role);
+        result = await authService.submitRegistrationFlow(flow.id, {
+          'traits.email': formData.email,
+          'traits.name.first': formData.firstName,
+          'traits.name.last': formData.lastName,
+          'traits.role': formData.role,
+          csrf_token: csrfToken,
+          method: 'oidc',
+          provider: 'google',
+        });
+      } else {
+        // Normal password registration
+        result = await authService.submitRegistrationFlow(flow.id, {
+          'traits.email': formData.email,
+          password: formData.password,
+          'traits.name.first': formData.firstName,
+          'traits.name.last': formData.lastName,
+          'traits.role': formData.role,
+          csrf_token: csrfToken,
+          method: 'password',
+        });
+      }
 
       if (result.session || result.legacy) {
         toast({
@@ -288,7 +314,7 @@ export const OryRegistrationForm: React.FC<OryRegistrationFormProps> = ({ onSucc
         } else {
           // Handle role-based redirection
           const userRole = result.session?.identity?.traits?.role || result.user?.role;
-          
+
           if (userRole === 'teacher') {
             navigate('/teacher-profile-setup');
           } else if (userRole === 'student') {
@@ -304,11 +330,11 @@ export const OryRegistrationForm: React.FC<OryRegistrationFormProps> = ({ onSucc
       }
     } catch (error: any) {
       console.error('Registration error:', error);
-      
+
       // Handle Ory validation errors from response
       if (error.response?.data?.ui) {
         const uiData = error.response.data.ui;
-        
+
         // Handle field-specific errors
         if (uiData.nodes) {
           const fieldErrors: any = {};
@@ -328,7 +354,7 @@ export const OryRegistrationForm: React.FC<OryRegistrationFormProps> = ({ onSucc
           const errorMessage = uiData.messages.map((msg: any) => msg.text).join('. ');
           setFlowError(errorMessage);
         }
-      } 
+      }
       // Handle direct error response (when Ory returns updated flow with errors)
       else if (error.ui?.messages) {
         const errorMessage = error.ui.messages.map((msg: any) => msg.text).join('. ');
@@ -384,8 +410,8 @@ export const OryRegistrationForm: React.FC<OryRegistrationFormProps> = ({ onSucc
           <AlertDescription>
             {flowError}
             {flowError.includes('initialize') && (
-              <Button 
-                variant="link" 
+              <Button
+                variant="link"
                 className="p-0 h-auto ml-2 text-destructive"
                 onClick={initializeFlow}
                 disabled={isLoading}
@@ -478,40 +504,55 @@ export const OryRegistrationForm: React.FC<OryRegistrationFormProps> = ({ onSucc
         </div>
       </div>
 
-      <div>
-        <Label htmlFor="password">Password</Label>
-        <div className="mt-1 relative">
-          <Input
-            id="password"
-            name="password"
-            type={showPassword ? 'text' : 'password'}
-            autoComplete="new-password"
-            required
-            value={formData.password}
-            onChange={(e) => handleInputChange('password', e.target.value)}
-            className={`block w-full pr-10 ${errors.password ? 'border-red-500' : ''}`}
-            disabled={isLoading}
-          />
-          <button
-            type="button"
-            className="absolute inset-y-0 right-0 pr-3 flex items-center"
-            onClick={() => setShowPassword(!showPassword)}
-            disabled={isLoading}
-          >
-            {showPassword ? (
-              <EyeOff className="h-5 w-5 text-gray-400" />
-            ) : (
-              <Eye className="h-5 w-5 text-gray-400" />
-            )}
-          </button>
+      {/* Password field - only show for non-Google signups */}
+      {!isGoogleOAuthFlow && (
+        <div>
+          <Label htmlFor="password">Password</Label>
+          <div className="mt-1 relative">
+            <Input
+              id="password"
+              name="password"
+              type={showPassword ? 'text' : 'password'}
+              autoComplete="new-password"
+              required
+              value={formData.password}
+              onChange={(e) => handleInputChange('password', e.target.value)}
+              className={`block w-full pr-10 ${errors.password ? 'border-red-500' : ''}`}
+              disabled={isLoading}
+            />
+            <button
+              type="button"
+              className="absolute inset-y-0 right-0 pr-3 flex items-center"
+              onClick={() => setShowPassword(!showPassword)}
+              disabled={isLoading}
+            >
+              {showPassword ? (
+                <EyeOff className="h-5 w-5 text-gray-400" />
+              ) : (
+                <Eye className="h-5 w-5 text-gray-400" />
+              )}
+            </button>
+          </div>
+          {errors.password && (
+            <p className="mt-1 text-sm text-red-600">{errors.password}</p>
+          )}
+          <p className="mt-1 text-sm text-gray-500">
+            Password must be at least 8 characters
+          </p>
         </div>
-        {errors.password && (
-          <p className="mt-1 text-sm text-red-600">{errors.password}</p>
-        )}
-        <p className="mt-1 text-sm text-gray-500">
-          Password must be at least 8 characters
-        </p>
-      </div>
+      )}
+
+      {/* Show info for Google OAuth signup */}
+      {isGoogleOAuthFlow && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="flex items-center">
+            <GoogleIcon className="h-5 w-5 text-blue-600 mr-2" />
+            <p className="text-sm text-blue-800">
+              <strong>Signing up with Google</strong> - No password required. You'll use Google to sign in.
+            </p>
+          </div>
+        </div>
+      )}
 
       <div>
         <Label>I am joining as</Label>
@@ -522,9 +563,9 @@ export const OryRegistrationForm: React.FC<OryRegistrationFormProps> = ({ onSucc
         >
           {Object.entries(roleLabels).map(([value, label]) => (
             <div key={value} className="flex items-center space-x-2">
-              <RadioGroupItem 
-                value={value} 
-                id={value} 
+              <RadioGroupItem
+                value={value}
+                id={value}
                 name="traits.role"
                 disabled={isLoading}
               />
@@ -573,14 +614,17 @@ export const OryRegistrationForm: React.FC<OryRegistrationFormProps> = ({ onSucc
         <Button
           type="submit"
           className="w-full bg-kidato-purple hover:bg-kidato-dark-blue"
-          disabled={isLoading || !flow}
+          disabled={isLoading || !flow || !formData.role}
         >
-          {isLoading ? 'Creating account...' : 'Sign up'}
+          {isLoading ? 'Creating account...' : isGoogleOAuthFlow ? 'Complete Google Sign Up' : 'Sign up'}
         </Button>
+        {!formData.role && (
+          <p className="mt-1 text-sm text-amber-600 text-center">Please select your role above</p>
+        )}
       </div>
 
-      {/* Google OAuth Registration */}
-      {flow && (
+      {/* Google OAuth Registration - only show if NOT already in Google OAuth flow */}
+      {flow && !isGoogleOAuthFlow && (
         <>
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
@@ -590,7 +634,7 @@ export const OryRegistrationForm: React.FC<OryRegistrationFormProps> = ({ onSucc
               <span className="bg-white px-2 text-muted-foreground">Or sign up with</span>
             </div>
           </div>
-          
+
           {getOAuthProviders().length > 0 ? (
             <div className="space-y-2">
               {getOAuthProviders().map((provider) => {
