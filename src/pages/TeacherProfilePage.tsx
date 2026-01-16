@@ -2,207 +2,110 @@
 import { useParams } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import TeacherDetails from "@/components/teacher/TeacherDetails";
 import TeacherPublicProfile from "@/components/teacher/profile/TeacherPublicProfile";
 import { useEffect, useState } from "react";
-import { teacherService } from "@/integrations/api/services/teacher.service";
+import { MvpTeacherService, type MvpTeacherProfileResponse } from "@/integrations/api/services/mvp-teacher.service";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
-// Transform API teacher data to a format that works with our components
-const transformTeacherData = (apiTeacher: any): any => {
-  if (!apiTeacher) return null;
+const transformTeacherData = (fullData: any): any => {
+  if (!fullData) return null;
+  const apiTeacher = fullData.teacher || fullData;
+  const offerings = fullData.offerings || [];
+  const stats = fullData.stats || {};
 
-  // Extract subjects from teacher profile
-  const extractSubjects = (): string[] => {
-    const subjects: string[] = [];
-
-    if (Array.isArray(apiTeacher.subjects)) {
-      apiTeacher.subjects.forEach((subject: any) => {
-        if (subject.subject) {
-          subjects.push(subject.subject);
-        }
-      });
-    }
-
-    return subjects.length > 0 ? subjects : ["General Education"];
-  };
-
-  // Format education data
+  // ... previous logic for education and location ...
   const formatEducation = () => {
     if (!apiTeacher.education || !Array.isArray(apiTeacher.education) || apiTeacher.education.length === 0) {
       return [];
     }
 
-    return apiTeacher.education.map((edu: any) => ({
-      id: edu._id || edu.id || `edu-${Math.random().toString(36).substr(2, 9)}`,
-      institution: edu.institutionName || edu.institution || "",
-      degree: edu.degree || "",
-      dates: edu.startDate
-        ? `${new Date(edu.startDate).getFullYear()} - ${edu.endDate ? new Date(edu.endDate).getFullYear() : 'Present'}`
-        : ""
+    return apiTeacher.education.map((edu: any, index: number) => ({
+      id: `edu-${index}`,
+      institution: edu.institution,
+      degree: edu.degree,
+      dates: edu.year ? edu.year.toString() : "",
+      description: ""
     }));
   };
 
-  // Format certification data
-  const formatCertifications = () => {
-    if (!apiTeacher.certifications || !Array.isArray(apiTeacher.certifications) || apiTeacher.certifications.length === 0) {
-      return [];
-    }
-
-    return apiTeacher.certifications.map((cert: any) => ({
-      id: cert._id || cert.id || `cert-${Math.random().toString(36).substr(2, 9)}`,
-      name: cert.name || "",
-      issuer: cert.issuer || "",
-      date: cert.issueDate ? new Date(cert.issueDate).getFullYear().toString() : "",
-      isVerified: cert.isVerifiable || true
-    }));
-  };
-
-  // Extract position/role from experience or use a default
-  const extractPosition = (): string => {
-    if (apiTeacher.experience && Array.isArray(apiTeacher.experience) && apiTeacher.experience.length > 0) {
-      return apiTeacher.experience[0].position || "Educator";
-    }
-    return "Educator";
-  };
-
-  // Format location from the location object
   const formatLocation = (): string => {
     if (apiTeacher.location) {
-      if (typeof apiTeacher.location === 'string') {
-        return apiTeacher.location;
-      }
-      if (typeof apiTeacher.location === 'object') {
-        const loc = apiTeacher.location;
-        if (loc.city) {
-          return loc.county ? `${loc.city}, ${loc.county}` : loc.city;
-        }
-      }
+      const parts = [];
+      if (apiTeacher.location.city) parts.push(apiTeacher.location.city);
+      if (apiTeacher.location.estate) parts.push(apiTeacher.location.estate);
+      return parts.join(", ") || "Remote";
     }
     return "Remote";
   };
 
-  // Format methodologies
-  const formatMethodologies = () => {
-    if (!apiTeacher.methodologies || !Array.isArray(apiTeacher.methodologies)) {
-      return [];
-    }
+  // Map offerings to class grid format
+  const mappedClasses = offerings.map((o: any) => ({
+    id: o._id,
+    _id: o._id,
+    title: o.title,
+    description: o.description,
+    subject: o.subject,
+    level: o.gradeLevel || "All Levels",
+    duration: `${o.sessionDuration} mins`,
+    price: o.price,
+    imageSrc: "/placeholder.svg", // Use placeholder for now
+    type: o.type === 'course' ? 'academic' : 'after-school',
+    studentsEnrolled: 0,
+    rating: 0
+  }));
 
-    return apiTeacher.methodologies.map((methodology: any) => ({
-      id: methodology._id || `meth-${Math.random().toString(36).substr(2, 9)}`,
-      methodology: methodology.name || "",
-      description: methodology.description || "",
-      is_certified: methodology.isCertified || false
-    }));
-  };
-
-  // Format strategies
-  const formatStrategies = () => {
-    if (!apiTeacher.strategies || !Array.isArray(apiTeacher.strategies)) {
-      return [];
-    }
-
-    return apiTeacher.strategies.map((strategy: any) => ({
-      id: strategy._id || `str-${Math.random().toString(36).substr(2, 9)}`,
-      strategy: strategy.strategy || "",
-      description: strategy.description || "",
-      is_certified: strategy.isCertified || false
-    }));
-  };
-
-  // Format languages
-  const formatLanguages = () => {
-    if (!apiTeacher.languages || !Array.isArray(apiTeacher.languages)) {
-      return [];
-    }
-
-    return apiTeacher.languages.map((lang: any) => ({
-      id: lang._id || `lang-${Math.random().toString(36).substr(2, 9)}`,
-      language: lang.name || "",
-      description: lang.description || "",
-      isCertified: lang.isCertified || false
-    }));
-  };
-
-  // Format technical skills
-  const formatTechnicalSkills = () => {
-    if (!apiTeacher.skills || !Array.isArray(apiTeacher.skills)) {
-      return [];
-    }
-
-    return apiTeacher.skills.map((skill: any) => ({
-      id: skill._id || `tech-${Math.random().toString(36).substr(2, 9)}`,
-      skill: skill.name || "",
-      description: skill.description || "",
-      level: skill.isCertified ? "Advanced" : "Intermediate"
-    }));
-  };
-
-  // Get the user's full name
-  const name = apiTeacher.user?.fullName || "Teacher";
-
-  // Format experience for display
-  const formatExperience = () => {
-    if (!apiTeacher.experience || !Array.isArray(apiTeacher.experience)) {
-      return [];
-    }
-
-    return apiTeacher.experience.map((exp: any) => ({
-      id: exp._id || `exp-${Math.random().toString(36).substr(2, 9)}`,
-      position: exp.position || "",
-      institution: exp.institution || "",
-      dates: exp.startDate
-        ? `${new Date(exp.startDate).getFullYear()} - ${exp.isCurrentlyWorking ? 'Present' : (exp.endDate ? new Date(exp.endDate).getFullYear() : '')}`
-        : "",
-      description: exp.additionalDetails || ""
-    }));
-  };
-
-  // Return the transformed object
   return {
-    id: apiTeacher._id || "",
-    name,
-    imageSrc: apiTeacher.user?._signedProfileImage || "",
-    bio: apiTeacher.user?.bio || "",
-    position: extractPosition(),
-    school: "Kidato Learning Platform",
-    schoolStatus: "active",
+    id: apiTeacher.userId || apiTeacher._id || apiTeacher.id,
+    _id: apiTeacher.userId || apiTeacher._id || apiTeacher.id,
+    name: apiTeacher.fullName || "Teacher",
+    phoneNumber: apiTeacher.phoneNumber || "",
+    imageSrc: apiTeacher.profileImage || "",
+    role: "Professional Educator",
+    bio: apiTeacher.bio || "",
+    shortBio: apiTeacher.bio ? apiTeacher.bio.substring(0, 150) + "..." : "Professional Educator at Kidato",
+    position: "Educator",
     rating: apiTeacher.rating || 0,
     ratingCount: apiTeacher.totalReviews || 0,
     videoProfileUrl: apiTeacher.introVideoUrl || "",
     education: formatEducation(),
-    experience: formatExperience(),
-    methodologies: formatMethodologies(),
-    strategies: formatStrategies(),
-    languages: formatLanguages(),
-    certifications: formatCertifications(),
-    classes: apiTeacher.classes || [],
+    experience: [{
+      id: "exp-1",
+      institution: "Kidato Learning Platform",
+      position: "Senior Educator",
+      dates: `${apiTeacher.yearsOfExperience || 3}+ years`,
+      description: apiTeacher.bio || ""
+    }],
+    languages: apiTeacher.languages || [{ language: "English", level: "Native" }, { language: "Swahili", level: "Fluent" }],
+    offerings: offerings,
+    classes: mappedClasses,
     reviews: apiTeacher.reviews || [],
-    technicalSkills: formatTechnicalSkills(),
-    subjects: extractSubjects(),
-    location: formatLocation(),
-    hourlyRate: apiTeacher.hourlyRate || "",
-    availability: apiTeacher.availability ?
-      `${apiTeacher.availability.days?.join(', ') || ''} (${apiTeacher.availability.times?.morning ? 'Morning ' : ''}${apiTeacher.availability.times?.afternoon ? 'Afternoon ' : ''}${apiTeacher.availability.times?.evening ? 'Evening' : ''})`.trim() :
-      "",
+    methodologies: apiTeacher.methodologies || [],
+    strategies: apiTeacher.strategies || [],
+    certifications: apiTeacher.certifications || [],
     stats: {
-      studentsHelped: apiTeacher.totalStudents || 0,
-      lessonsDelivered: apiTeacher.totalHours || 0,
-      classesCreated: apiTeacher.totalClasses || 0,
-      successRate: apiTeacher.successRate || 0
+      studentsHelped: stats.totalStudents || 0,
+      lessonsDelivered: stats.completedBookings || (apiTeacher.yearsOfExperience ? apiTeacher.yearsOfExperience * 100 : 0),
+      classesCreated: offerings.length,
+      successRate: 100
     },
-    openToWork: apiTeacher.openToWork || false
+    subjects: apiTeacher.subjects?.length > 0 ? apiTeacher.subjects : (stats.subjects || []),
+    location: formatLocation(),
+    hourlyRate: stats.lowestPrice ? `$${stats.lowestPrice}/hr` : "Varies",
+    availability: "Mon-Fri, 8AM-5PM",
+    openToWork: true
   };
 };
 
 const TeacherProfilePage = () => {
   const { teacherId } = useParams<{ teacherId: string }>();
-  const { signOut, user } = useAuth();
+  const { user } = useAuth();
   const [teacher, setTeacher] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const showSidebar = !!user;
 
   useEffect(() => {
     const fetchTeacher = async () => {
@@ -214,17 +117,12 @@ const TeacherProfilePage = () => {
 
       try {
         setLoading(true);
-        const { data, error: apiError } = await teacherService.getProfileById(teacherId);
-
-        if (apiError) {
-          throw new Error(apiError.message || "Failed to load teacher profile");
-        }
+        const data = await MvpTeacherService.getTeacherDetails(teacherId);
 
         if (!data) {
           throw new Error("No teacher data found");
         }
 
-        // Transform API data to a format compatible with our components
         const transformedData = transformTeacherData(data);
         setTeacher(transformedData);
         setError(null);
@@ -243,19 +141,19 @@ const TeacherProfilePage = () => {
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col">
-        <Navbar />
-        <div className="flex-grow flex items-center justify-center">
+        {!showSidebar && <Navbar />}
+        <div className={`flex-grow flex items-center justify-center ${showSidebar ? "md:ml-64" : ""}`}>
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-kidato-purple"></div>
         </div>
-        <Footer />
+        {!showSidebar && <Footer />}
       </div>
     );
   }
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Navbar />
-      <main className="flex-grow pt-16 bg-gray-50">
+      {!showSidebar && <Navbar />}
+      <main className={`flex-grow bg-gray-50 ${showSidebar ? "md:ml-64 pt-6 px-6" : "pt-16"}`}>
         {error && (
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
             <Alert variant="destructive">
@@ -272,7 +170,7 @@ const TeacherProfilePage = () => {
           <TeacherPublicProfile teacher={teacher} />
         )}
       </main>
-      <Footer />
+      {!showSidebar && <Footer />}
     </div>
   );
 };

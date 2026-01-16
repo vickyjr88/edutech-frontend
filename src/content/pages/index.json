@@ -306,7 +306,7 @@
           "icon": "Heart",
           "link": {
             "text": "Find Tutors",
-            "href": "/parent-signup",
+            "href": "//signup?role=teacher",
             "variant": "primary"
           }
         },
@@ -317,7 +317,7 @@
           "icon": "Users",
           "link": {
             "text": "Start Learning",
-            "href": "/student-signup",
+            "href": "/signup?role=student",
             "variant": "primary"
           }
         }

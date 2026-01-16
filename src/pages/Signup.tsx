@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import AuthLayout from "@/components/auth/AuthLayout";
 import { OryRegistrationForm } from "@/components/auth/OryRegistrationForm";
@@ -7,7 +7,11 @@ import { teacherService } from "@/integrations/api";
 
 const SignUp = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user } = useAuth();
+
+  // Get role from query parameter (e.g., /signup?role=teacher)
+  const roleFromQuery = searchParams.get("role") as "teacher" | "student" | "parent" | null;
 
   // If user is already logged in, redirect them
   useEffect(() => {
@@ -41,13 +45,27 @@ const SignUp = () => {
     checkUserRedirect();
   }, [user, navigate]);
 
+  // Get appropriate title based on role
+  const getTitle = () => {
+    switch (roleFromQuery) {
+      case "teacher":
+        return "Create a Teacher Account";
+      case "student":
+        return "Create a Student Account";
+      case "parent":
+        return "Create a Parent Account";
+      default:
+        return "Create an account";
+    }
+  };
+
   return (
     <AuthLayout 
-      title="Create an account" 
+      title={getTitle()} 
       subtitle="Already have an account?"
       authType="signup"
     >
-      <OryRegistrationForm />
+      <OryRegistrationForm defaultRole={roleFromQuery || undefined} />
     </AuthLayout>
   );
 };

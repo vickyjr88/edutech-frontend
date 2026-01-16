@@ -9,13 +9,14 @@ interface TeacherQualificationsProps {
 
 const TeacherQualificationsSection: React.FC<TeacherQualificationsProps> = ({ teacher }) => {
   // Group certifications by type
-  const teachingCerts = teacher.certifications.filter((cert: any) => 
-    cert.name.toLowerCase().includes('teach') || 
-    cert.name.toLowerCase().includes('educat') || 
-    cert.issuer.toLowerCase().includes('educat')
+  const certifications = teacher.certifications || [];
+  const teachingCerts = certifications.filter((cert: any) =>
+    cert.name?.toLowerCase().includes('teach') ||
+    cert.name?.toLowerCase().includes('educat') ||
+    cert.issuer?.toLowerCase().includes('educat')
   );
-  
-  const specialtyCerts = teacher.certifications.filter((cert: any) => 
+
+  const specialtyCerts = certifications.filter((cert: any) =>
     !teachingCerts.includes(cert)
   );
 
@@ -111,7 +112,7 @@ const TeacherQualificationsSection: React.FC<TeacherQualificationsProps> = ({ te
               <div>
                 <h4 className="font-medium text-green-800">Identity Verified</h4>
                 <p className="text-gray-700 text-sm">
-                  {teacher.isProfileResume 
+                  {teacher.isProfileResume
                     ? "Your government-issued ID has been verified"
                     : `We've confirmed ${teacher.name.split(" ")[0]}'s government-issued ID`
                   }

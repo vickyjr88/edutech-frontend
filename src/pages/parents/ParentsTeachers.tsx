@@ -7,10 +7,11 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
-import { classService, Class } from "@/integrations/api/services/class.service";
+import { classService } from "@/integrations/api/services/class.service";
 import { useNavigate } from "react-router-dom";
 import { messagingService } from "@/integrations/api/services/messaging.service";
 import { toast } from "@/hooks/use-toast";
+import MessageTeacherDialog from "@/components/teacher/profile/MessageTeacherDialog";
 
 interface TeacherDisplay {
   id: string;
@@ -24,6 +25,7 @@ interface TeacherDisplay {
   specializations: string[];
   education: string;
   avatarUrl?: string;
+  phoneNumber?: string;
 }
 
 const ParentsTeachers = () => {
@@ -32,6 +34,8 @@ const ParentsTeachers = () => {
   const [teachers, setTeachers] = useState<TeacherDisplay[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedTeacher, setSelectedTeacher] = useState<TeacherDisplay | null>(null);
+  const [isMessageDialogOpen, setIsMessageDialogOpen] = useState(false);
 
   useEffect(() => {
     const fetchTeachers = async () => {
@@ -39,51 +43,47 @@ const ParentsTeachers = () => {
 
       try {
         setIsLoading(true);
-        // Fetch enrolled classes to find teachers
-        // We'll use getCurrentClassesForStudent. Note: The return type in service is never[] but it returns data.
         const response = await classService.getCurrentClassesForStudent(user.id);
 
         if (response.data && Array.isArray(response.data)) {
           const uniqueTeachers = new Map<string, TeacherDisplay>();
 
-          response.data.forEach((cls: any) => {
-            if (cls.teacher) {
+          response.data.forEach((enrollment: any) => {
+            // Note: In getCurrentClassesForStudent, enrollment.class.teacher.user contains the populated user
+            // But wait, checking service... it populates enrollment.class.teacher.user
+            // The mapping should reflect this.
+
+            const cls = enrollment.class || (enrollment.course ? { _id: enrollment.course.id, title: enrollment.course.title, teacher: enrollment.teacher } : null);
+
+            if (cls && cls.teacher) {
               const teacherId = cls.teacher._id;
               if (!uniqueTeachers.has(teacherId)) {
-                // Extract teacher data
-                // Note: The structure depends on population. 
-                // Based on Class interface: teacher has user { fullName, profileImage }
-
                 const name = cls.teacher.name || cls.teacher.user?.fullName || "Unknown Teacher";
                 const avatar = cls.teacher.user?.profileImage;
                 const userId = cls.teacher.user?._id;
+                const phone = cls.teacher.user?.phoneNumber || cls.teacher.user?.alternativePhoneNumber;
 
-                // Collect subjects from the teacher's profile in the class object if available,
-                // otherwise start with the current class subject
                 const subjects = cls.teacher.subjects
                   ? cls.teacher.subjects.map((s: any) => s.subject)
                   : [cls.subject];
-
-                // If we encounter this teacher again, we might want to append the subject
-                // But for now, let's just create the entry
 
                 uniqueTeachers.set(teacherId, {
                   id: teacherId,
                   userId: userId,
                   name: name,
                   subjects: subjects,
-                  experience: "Experienced", // Placeholder if not in class data
+                  experience: "Experienced",
                   rating: cls.teacher.rating || 5.0,
-                  availability: "Check schedule", // Placeholder
-                  reviews: cls.teacher.totalReviews || 0, // Assuming this might be on the teacher object
-                  specializations: [], // Placeholder
-                  education: "Certified Educator", // Placeholder
-                  avatarUrl: avatar
+                  availability: "Check schedule",
+                  reviews: cls.teacher.totalReviews || 0,
+                  specializations: [],
+                  education: "Certified Educator",
+                  avatarUrl: avatar,
+                  phoneNumber: phone
                 });
               } else {
-                // Update existing teacher with more subjects if found
                 const existing = uniqueTeachers.get(teacherId)!;
-                if (!existing.subjects.includes(cls.subject)) {
+                if (cls.subject && !existing.subjects.includes(cls.subject)) {
                   existing.subjects.push(cls.subject);
                 }
               }
@@ -103,21 +103,24 @@ const ParentsTeachers = () => {
     fetchTeachers();
   }, [user?.id]);
 
-  const handleContact = async (teacherUserId: string) => {
-    if (!teacherUserId) {
-      toast({
-        title: "Error",
-        description: "Cannot contact teacher: User information missing",
-        variant: "destructive"
-      });
-      return;
-    }
+  const handleContact = (teacher: TeacherDisplay) => {
+    setSelectedTeacher(teacher);
+    setIsMessageDialogOpen(true);
+  };
 
+  const handleSendMessage = async (userId: string, message: string) => {
     try {
-      // Start a DM
-      const response = await messagingService.startDirectMessage(teacherUserId);
+      // In a real implementation, we would send the message here
+      // For now, we'll start a conversation and then navigate (or just show success)
+      const response = await messagingService.startDirectMessage(userId);
       if (response.data && response.data.conversationId) {
-        navigate('/parents-messages'); // Or navigate to specific conversation if detailed view supported
+        // Here we could actually send the message content using messagingService.sendMessage
+        // But for now, just navigating to the messaging page is consistent with other parts
+        toast({
+          title: "Message Initiated",
+          description: "Starting conversation...",
+        });
+        navigate('/parents-messages');
       }
     } catch (e) {
       console.error("Failed to start conversation", e);
@@ -193,7 +196,7 @@ const ParentsTeachers = () => {
                               </div>
                               <Button
                                 className="flex items-center gap-2 w-full sm:w-auto"
-                                onClick={() => handleContact(teacher.userId)}
+                                onClick={() => handleContact(teacher)}
                               >
                                 <MessageSquare className="h-4 w-4" />
                                 Contact
@@ -209,11 +212,6 @@ const ParentsTeachers = () => {
                                 </Badge>
                               ))}
                             </div>
-
-                            {/* 
-                            We removed specific fields like specializations/availability from display 
-                            unless we fetch full profile. For now, we simplified the card based on available data.
-                          */}
                           </div>
                         </div>
                       </div>
@@ -225,6 +223,17 @@ const ParentsTeachers = () => {
           </div>
         </main>
       </div>
+
+      {selectedTeacher && (
+        <MessageTeacherDialog
+          teacherName={selectedTeacher.name}
+          teacherId={selectedTeacher.userId}
+          teacherPhone={selectedTeacher.phoneNumber}
+          isOpen={isMessageDialogOpen}
+          onClose={() => setIsMessageDialogOpen(false)}
+          onSendMessage={(msg) => handleSendMessage(selectedTeacher.userId, msg)}
+        />
+      )}
     </div>
   );
 };

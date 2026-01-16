@@ -15,6 +15,8 @@ export interface Class {
             fullName: string;
             profileImage?: string;
             bio?: string;
+            phoneNumber?: string;
+            alternativePhoneNumber?: string;
         };
         subjects?: {
             subject: string;
@@ -142,6 +144,10 @@ export const classService = {
 
     getAll: (): Promise<ApiResponse<Class[]>> => {
         return api.get<Class[]>('/classes');
+    },
+
+    getAllAdmin: (): Promise<ApiResponse<Class[]>> => {
+        return api.get<Class[]>('/classes/all');
     },
 
     getById: (classId: string): Promise<ApiResponse<ClassDetail>> => {

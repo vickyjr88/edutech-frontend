@@ -1,4 +1,4 @@
-export type ActivityType = 
+export type ActivityType =
   | 'new_enrollment'
   | 'progress_update'
   | 'completion'
@@ -106,6 +106,8 @@ export interface EnrolledClass {
 export interface Student {
   studentId: string;
   name: string;
+  email?: string; // Added for AIStudentsPage compatibility
+  avatar?: string; // Added for AIStudentsPage compatibility
   subjects: StudentSubject[];
   enrolledClasses: EnrolledClass[];
   attendance: StudentAttendance;

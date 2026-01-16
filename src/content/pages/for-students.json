@@ -19,12 +19,12 @@
       "subtitle": "Join thousands of students across Africa who are making friends, building confidence, and improving their grades with Kidato.",
       "primaryCTA": {
         "text": "Join Now",
-        "href": "/student-signup",
+        "href": "/signup?role=student",
         "variant": "primary"
       },
       "secondaryCTA": {
         "text": "See Classes",
-        "href": "/student-classes",
+        "href": "/all-classes",
         "variant": "outline"
       },
       "variant": "gradient"
@@ -250,7 +250,7 @@
       "description": "Join thousands of students who are learning, making friends, and having fun with Kidato!",
       "primaryCTA": {
         "text": "Get Started Today",
-        "href": "/student-signup",
+        "href": "/signup?role=student",
         "variant": "primary"
       },
       "variant": "gradient"

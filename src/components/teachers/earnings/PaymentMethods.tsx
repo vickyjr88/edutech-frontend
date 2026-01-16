@@ -1,23 +1,24 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
 } from "@/components/ui/select";
-import { 
-  CreditCard, 
-  Plus, 
-  Building2, 
-  Edit, 
-  Trash2, 
-  Check, 
-  X, 
+import {
+  CreditCard,
+  Plus,
+  Building2,
+  Edit,
+  Trash2,
+  Check,
+  X,
   AlertCircle,
   Shield,
   LockKeyhole,
@@ -40,7 +41,8 @@ import { Toggle } from "@/components/ui/toggle";
 import { useSupportedBanks } from "@/hooks/useSupportedBanks";
 import { useTeacherBankAccounts } from "@/hooks/useTeacherBankAccounts";
 import SuperTeacherPayoutPreferences from "./SuperTeacherPayoutPreferences";
-import type { TeacherBankAccount, AddBankAccountRequest } from "@/integrations/api";
+import type { TeacherBankAccount, AddBankAccountRequest, UpdateBankAccountRequest } from "@/integrations/api";
+import { MvpTeacherService, type MvpTeacherProfileResponse } from "@/integrations/api/services/mvp-teacher.service";
 
 interface PaymentMethodCardProps {
   account: TeacherBankAccount;
@@ -80,7 +82,7 @@ const getVerificationStatusColor = (status: string) => {
 
 const PaymentMethodCard = ({ account, onSetDefault, onEdit, onDelete, isSubmitting }: PaymentMethodCardProps) => {
   const last4 = account.maskedAccountNumber.slice(-4);
-  
+
   return (
     <Card className={`shadow-sm relative ${account.isPrimary ? 'border-blue-200' : ''}`}>
       {account.isPrimary && (
@@ -95,13 +97,13 @@ const PaymentMethodCard = ({ account, onSetDefault, onEdit, onDelete, isSubmitti
           <div className="h-10 w-10 rounded-md bg-blue-100 flex items-center justify-center mr-4">
             <Building2 className="h-5 w-5 text-blue-600" />
           </div>
-          
+
           <div className="flex-1">
             <h3 className="text-base font-medium">{account.bank.bankName}</h3>
             <p className="text-sm text-gray-500">
               Bank Account ending in {last4}
             </p>
-            
+
             <div className="mt-2 space-y-1">
               <div>
                 <span className="text-xs text-gray-500">Account Type: </span>
@@ -125,12 +127,12 @@ const PaymentMethodCard = ({ account, onSetDefault, onEdit, onDelete, isSubmitti
             </div>
           </div>
         </div>
-        
+
         <div className="mt-4 pt-4 border-t flex justify-end gap-2">
           {!account.isPrimary && (
-            <Button 
-              variant="outline" 
-              size="sm" 
+            <Button
+              variant="outline"
+              size="sm"
               onClick={() => onSetDefault(account._id)}
               disabled={isSubmitting}
             >
@@ -138,8 +140,8 @@ const PaymentMethodCard = ({ account, onSetDefault, onEdit, onDelete, isSubmitti
               Set as Primary
             </Button>
           )}
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             size="sm"
             onClick={() => onEdit(account)}
             disabled={isSubmitting}
@@ -147,8 +149,8 @@ const PaymentMethodCard = ({ account, onSetDefault, onEdit, onDelete, isSubmitti
             <Edit className="h-4 w-4 mr-1" />
             Edit
           </Button>
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             size="sm"
             className="text-red-600 hover:text-red-700"
             onClick={() => onDelete(account._id)}
@@ -164,25 +166,36 @@ const PaymentMethodCard = ({ account, onSetDefault, onEdit, onDelete, isSubmitti
 };
 
 const PaymentMethods = () => {
+  const navigate = useNavigate();
   // API hooks
+  const [profile, setProfile] = useState<MvpTeacherProfileResponse | null>(null);
+  const [profileLoading, setProfileLoading] = useState(true);
+
+  useEffect(() => {
+    MvpTeacherService.getCurrentProfile()
+      .then(setProfile)
+      .catch(console.error)
+      .finally(() => setProfileLoading(false));
+  }, []);
+
   const { banks, isLoading: banksLoading } = useSupportedBanks();
-  const { 
-    bankAccounts, 
-    isLoading: accountsLoading, 
+  const {
+    bankAccounts,
+    isLoading: accountsLoading,
     error: accountsError,
     refetch,
     addBankAccount,
     updateBankAccount,
     deleteBankAccount,
     setPrimaryAccount,
-    isSubmitting 
+    isSubmitting
   } = useTeacherBankAccounts();
 
   // Modal and form state
   const [showAddBankModal, setShowAddBankModal] = useState(false);
   const [editingAccount, setEditingAccount] = useState<TeacherBankAccount | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
-  
+
   // Form state for adding/editing bank account
   const [selectedBankId, setSelectedBankId] = useState("");
   const [accountType, setAccountType] = useState<'current' | 'savings' | 'business'>("current");
@@ -190,7 +203,7 @@ const PaymentMethods = () => {
   const [confirmAccountNumber, setConfirmAccountNumber] = useState("");
   const [accountName, setAccountName] = useState("");
   const [makeDefault, setMakeDefault] = useState(false);
-  
+
   // Reset form fields when dialog opens/closes
   const resetForm = () => {
     setSelectedBankId("");
@@ -201,7 +214,7 @@ const PaymentMethods = () => {
     setMakeDefault(false);
     setEditingAccount(null);
   };
-  
+
   // Populate form with existing data when editing
   const populateForm = (account: TeacherBankAccount) => {
     setSelectedBankId(account.bank._id);
@@ -210,7 +223,7 @@ const PaymentMethods = () => {
     setAccountName(account.accountHolderName);
     setMakeDefault(account.isPrimary);
   };
-  
+
   // Handle setting a method as default
   const handleSetDefault = async (accountId: string) => {
     const result = await setPrimaryAccount(accountId);
@@ -218,19 +231,19 @@ const PaymentMethods = () => {
       // Local state is updated by the hook
     }
   };
-  
+
   // Handle editing a payment method
   const handleEdit = (account: TeacherBankAccount) => {
     setEditingAccount(account);
     populateForm(account);
     setShowAddBankModal(true);
   };
-  
+
   // Handle deleting a payment method
   const handleDelete = (accountId: string) => {
     setDeleteConfirmId(accountId);
   };
-  
+
   // Confirm deletion of payment method
   const confirmDelete = async () => {
     if (deleteConfirmId) {
@@ -238,7 +251,7 @@ const PaymentMethods = () => {
         const success = await deleteBankAccount(deleteConfirmId);
         // Always close the modal regardless of API response
         setDeleteConfirmId(null);
-        
+
         if (success) {
           // Extra safety: refresh bank accounts to ensure UI consistency
           // Small delay to ensure state is clean before refresh
@@ -256,7 +269,7 @@ const PaymentMethods = () => {
       }
     }
   };
-  
+
   // Save new or edited bank account
   const handleSaveBank = async () => {
     // Validate form fields
@@ -264,12 +277,12 @@ const PaymentMethods = () => {
       // Show validation error in a real app
       return;
     }
-    
+
     if (accountNumber !== confirmAccountNumber) {
       // Show account number mismatch error in a real app
       return;
     }
-    
+
     if (editingAccount) {
       // Update existing account
       const updateData: UpdateBankAccountRequest = {
@@ -281,7 +294,7 @@ const PaymentMethods = () => {
         // Only update account number if provided (for security)
         ...(accountNumber && { accountNumber })
       };
-      
+
       const result = await updateBankAccount(editingAccount._id, updateData);
       if (result) {
         // If making this the default, set it as primary
@@ -298,17 +311,17 @@ const PaymentMethods = () => {
         accountHolderName: accountName,
         isPrimary: makeDefault || bankAccounts.length === 0
       };
-      
+
       const result = await addBankAccount(newAccountData);
       if (result) {
         // Hook will refresh the data automatically
       }
     }
-    
+
     resetForm();
     setShowAddBankModal(false);
   };
-  
+
   return (
     <div className="space-y-6">
       <Card className="shadow-sm">
@@ -326,9 +339,9 @@ const PaymentMethods = () => {
               Your banking information is securely stored and encrypted. We never share your financial details with third parties.
             </AlertDescription>
           </Alert>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {accountsLoading ? (
+            {accountsLoading || profileLoading ? (
               <div className="col-span-full flex items-center justify-center py-8">
                 <Loader2 className="h-6 w-6 animate-spin mr-2" />
                 <span>Loading payment methods...</span>
@@ -341,29 +354,73 @@ const PaymentMethods = () => {
                   <AlertDescription>{accountsError}</AlertDescription>
                 </Alert>
               </div>
-            ) : bankAccounts.length === 0 ? (
-              <div className="col-span-full text-center py-8 text-gray-500">
-                No payment methods added yet
-              </div>
             ) : (
-              bankAccounts.map((account) => (
-                <PaymentMethodCard
-                  key={account._id}
-                  account={account}
-                  onSetDefault={handleSetDefault}
-                  onEdit={handleEdit}
-                  onDelete={handleDelete}
-                  isSubmitting={isSubmitting}
-                />
-              ))
+              <>
+                {profile?.payoutDetails?.mpesaNumber && (
+                  <Card className="shadow-sm relative border-green-200">
+                    <div className="absolute top-0 right-0 mt-4 mr-4">
+                      <span className="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
+                        Mobile Money
+                      </span>
+                    </div>
+                    <CardContent className="p-6">
+                      <div className="flex items-start">
+                        <div className="h-10 w-10 rounded-md bg-green-100 flex items-center justify-center mr-4">
+                          <span className="font-bold text-green-600">M</span>
+                        </div>
+
+                        <div className="flex-1">
+                          <h3 className="text-base font-medium">M-PESA</h3>
+                          <p className="text-sm text-gray-500">
+                            {profile.payoutDetails.mpesaNumber}
+                          </p>
+
+                          <div className="mt-2 text-xs text-gray-500 flex items-center gap-1">
+                            <CheckCircle2 className="h-3 w-3 text-green-500" />
+                            Active from Profile
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="mt-4 pt-4 border-t flex justify-end">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => navigate('/teacher-profile-setup')}
+                        >
+                          <Edit className="h-4 w-4 mr-1" />
+                          Edit
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {bankAccounts.length === 0 && !profile?.payoutDetails?.mpesaNumber ? (
+                  <div className="col-span-full text-center py-8 text-gray-500">
+                    No payment methods added yet
+                  </div>
+                ) : (
+                  bankAccounts.map((account) => (
+                    <PaymentMethodCard
+                      key={account._id}
+                      account={account}
+                      onSetDefault={handleSetDefault}
+                      onEdit={handleEdit}
+                      onDelete={handleDelete}
+                      isSubmitting={isSubmitting}
+                    />
+                  ))
+                )}
+              </>
             )}
-            
+
             <Card className="shadow-sm border-dashed h-full flex items-center justify-center">
               <CardContent className="text-center py-8">
-                <Button 
-                  variant="outline" 
-                  size="lg" 
-                  className="rounded-full h-16 w-16 mb-4" 
+                <Button
+                  variant="outline"
+                  size="lg"
+                  className="rounded-full h-16 w-16 mb-4"
                   onClick={() => {
                     resetForm();
                     setShowAddBankModal(true);
@@ -387,10 +444,10 @@ const PaymentMethods = () => {
           </div>
         </CardContent>
       </Card>
-      
+
       {/* Super Teacher Payout Preferences */}
       <SuperTeacherPayoutPreferences />
-      
+
       {/*<Card className="shadow-sm">*/}
       {/*  <CardHeader className="pb-2">*/}
       {/*    <CardTitle>Tax Information</CardTitle>*/}
@@ -431,7 +488,7 @@ const PaymentMethods = () => {
       {/*    </div>*/}
       {/*  </CardContent>*/}
       {/*</Card>*/}
-      
+
       {/* Add/Edit Bank Account Dialog */}
       <Dialog open={showAddBankModal} onOpenChange={setShowAddBankModal}>
         <DialogContent className="sm:max-w-[525px]">
@@ -441,7 +498,7 @@ const PaymentMethods = () => {
               Connect your bank account to receive your earnings
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="space-y-4 py-2">
             <div className="space-y-2">
               <Label htmlFor="bank-select">Bank</Label>
@@ -461,12 +518,12 @@ const PaymentMethods = () => {
                 </SelectContent>
               </Select>
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="account-type">Account Type</Label>
               <Select
                 value={accountType}
-                onValueChange={setAccountType}
+                onValueChange={(val: any) => setAccountType(val)}
               >
                 <SelectTrigger id="account-type">
                   <SelectValue placeholder="Select account type" />
@@ -478,8 +535,8 @@ const PaymentMethods = () => {
                 </SelectContent>
               </Select>
             </div>
-            
-            
+
+
             <div className="space-y-2">
               <Label htmlFor="account-number">Account Number</Label>
               <div className="relative">
@@ -494,7 +551,7 @@ const PaymentMethods = () => {
                 <LockKeyhole className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               </div>
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="confirm-account-number">Confirm Account Number</Label>
               <div className="relative">
@@ -509,7 +566,7 @@ const PaymentMethods = () => {
                 <LockKeyhole className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               </div>
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="account-name">Account Holder Name</Label>
               <Input
@@ -519,7 +576,7 @@ const PaymentMethods = () => {
                 placeholder="Your full name as it appears on your account"
               />
             </div>
-            
+
             <div className="flex items-center space-x-2 pt-2">
               <input
                 type="checkbox"
@@ -533,15 +590,15 @@ const PaymentMethods = () => {
               </Label>
             </div>
           </div>
-          
+
           <div className="border-t mt-2 pt-4 text-xs text-gray-500 flex items-start space-x-2">
             <Shield className="h-4 w-4 text-gray-400 mt-0.5 flex-shrink-0" />
             <p>
-              Your banking information is securely stored and encrypted according to industry standards. 
+              Your banking information is securely stored and encrypted according to industry standards.
               We use this information only to process your payouts.
             </p>
           </div>
-          
+
           <DialogFooter>
             <Button
               variant="outline"
@@ -561,7 +618,7 @@ const PaymentMethods = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      
+
       {/* Delete Confirmation Dialog */}
       <Dialog open={deleteConfirmId !== null} onOpenChange={(open) => !open && setDeleteConfirmId(null)}>
         <DialogContent className="sm:max-w-[425px]">
@@ -571,7 +628,7 @@ const PaymentMethods = () => {
               Are you sure you want to remove this payment method? This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="py-4">
             <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
@@ -581,7 +638,7 @@ const PaymentMethods = () => {
               </AlertDescription>
             </Alert>
           </div>
-          
+
           <DialogFooter>
             <Button
               variant="outline"

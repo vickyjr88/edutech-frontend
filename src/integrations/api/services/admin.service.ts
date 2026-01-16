@@ -581,4 +581,218 @@ export const adminService = {
       };
     }>(`/admin/dashboard/stats`);
   },
+
+  // ==================== BOOKING MANAGEMENT ====================
+
+  // Get all bookings with filters
+  getBookings: async (params?: {
+    status?: 'pending' | 'confirmed' | 'completed' | 'cancelled';
+    teacherId?: string;
+    parentId?: string;
+    isPaid?: boolean;
+    fromDate?: string;
+    toDate?: string;
+    search?: string;
+    page?: number;
+    limit?: number;
+    sortBy?: string;
+    sortOrder?: 'asc' | 'desc';
+  }) => {
+    return api.get<{
+      bookings: Array<{
+        _id: string;
+        parentId: {
+          _id: string;
+          fullName: string;
+          email: string;
+          phoneNumber: string;
+        };
+        teacherId: {
+          _id: string;
+          fullName: string;
+          email: string;
+          phoneNumber: string;
+        };
+        offeringId: {
+          _id: string;
+          title: string;
+          subject: string;
+          deliveryMode: string;
+        };
+        studentName: string;
+        studentAge?: number;
+        studentGrade?: string;
+        notes?: string;
+        scheduledDate: string;
+        scheduledTime: string;
+        duration: number;
+        price: number;
+        currency: string;
+        status: string;
+        isPaid: boolean;
+        paidAt?: string;
+        paymentRef?: string;
+        confirmationCode: string;
+        isManualBooking?: boolean;
+        hasDispute?: boolean;
+        adminNotes?: string;
+        createdAt: string;
+        updatedAt: string;
+        payment?: {
+          _id: string;
+          amount: number;
+          status: string;
+          paymentMethod: string;
+          paystackReference?: string;
+        };
+      }>;
+      total: number;
+      page: number;
+      totalPages: number;
+      limit: number;
+    }>(`/admin/bookings`, { params });
+  },
+
+  // Get booking statistics
+  getBookingStats: async () => {
+    return api.get<{
+      totalBookings: number;
+      totalRevenue: number;
+      byStatus: {
+        pending: number;
+        confirmed: number;
+        completed: number;
+        cancelled: number;
+      };
+      byPaymentStatus: {
+        paid: number;
+        unpaid: number;
+      };
+      recentBookings: number;
+      averageBookingValue: number;
+      disputedBookings: number;
+      manualBookings: number;
+    }>(`/admin/bookings/stats`);
+  },
+
+  // Get booking details
+  getBookingDetails: async (bookingId: string) => {
+    return api.get<{
+      _id: string;
+      parentId: {
+        _id: string;
+        fullName: string;
+        email: string;
+        phoneNumber: string;
+      };
+      teacherId: {
+        _id: string;
+        fullName: string;
+        email: string;
+        phoneNumber: string;
+      };
+      offeringId: {
+        _id: string;
+        title: string;
+        description: string;
+        subject: string;
+        curriculum: string;
+        gradeLevel: string;
+        price: number;
+        sessionDuration: number;
+        deliveryMode: string;
+      };
+      studentName: string;
+      studentAge?: number;
+      studentGrade?: string;
+      notes?: string;
+      scheduledDate: string;
+      scheduledTime: string;
+      duration: number;
+      price: number;
+      currency: string;
+      status: string;
+      isPaid: boolean;
+      paidAt?: string;
+      paymentRef?: string;
+      confirmationCode: string;
+      isManualBooking?: boolean;
+      hasDispute?: boolean;
+      disputeTicketId?: string;
+      adminNotes?: string;
+      createdByAdmin?: string;
+      cancelledBy?: string;
+      cancellationReason?: string;
+      cancelledAt?: string;
+      completedAt?: string;
+      createdAt: string;
+      updatedAt: string;
+      payment?: {
+        _id: string;
+        amount: number;
+        status: string;
+        paymentMethod: string;
+        paystackReference?: string;
+        gatewayResponse?: any;
+      };
+    }>(`/admin/bookings/${bookingId}`);
+  },
+
+  // Create manual booking
+  createManualBooking: async (data: {
+    parentId: string;
+    teacherId: string;
+    offeringId: string;
+    studentName: string;
+    studentAge?: number;
+    studentGrade?: string;
+    notes?: string;
+    scheduledDate: string;
+    scheduledTime: string;
+    markAsPaid?: boolean;
+    adminNotes?: string;
+  }) => {
+    return api.post<{
+      _id: string;
+      confirmationCode: string;
+      status: string;
+      isPaid: boolean;
+    }>(`/admin/bookings`, data);
+  },
+
+  // Update booking
+  updateBooking: async (bookingId: string, data: {
+    status?: 'pending' | 'confirmed' | 'completed' | 'cancelled';
+    scheduledDate?: string;
+    scheduledTime?: string;
+    isPaid?: boolean;
+    adminNotes?: string;
+  }) => {
+    return api.patch(`/admin/bookings/${bookingId}`, data);
+  },
+
+  // Resolve dispute
+  resolveDispute: async (bookingId: string, data: {
+    resolution: 'REFUND' | 'RESCHEDULE' | 'CREDIT' | 'NO_ACTION';
+    resolutionNotes: string;
+    refundAmount?: number;
+  }) => {
+    return api.post(`/admin/bookings/${bookingId}/resolve-dispute`, data);
+  },
+
+  // ==================== OFFERINGS ====================
+
+  /**
+   * Get all teacher offerings
+   */
+  async getOfferings() {
+    return api.get<any[]>('/admin/offerings');
+  },
+
+  /**
+   * Get offering by ID
+   */
+  async getOffering(id: string) {
+    return api.get<any>(`/admin/offerings/${id}`);
+  },
 };

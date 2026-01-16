@@ -2,8 +2,9 @@ import React, { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { teacherService } from "@/integrations/api/services/teacher.service";
+import MvpTeacherService from "@/integrations/api/services/mvp-teacher.service";
 import TeacherPublicProfile from "@/components/teacher/profile/TeacherPublicProfile";
-import { Edit } from "lucide-react";
+import { Edit, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 
@@ -140,11 +141,11 @@ const TeacherProfileResume: React.FC = () => {
   // Helper function to safely get year from date string
   const formatYear = (dateStr: string): string => {
     if (!dateStr) return '';
-    
+
     try {
       // If it's already just a year (4 digits), return it as is
       if (/^\d{4}$/.test(dateStr)) return dateStr;
-      
+
       const date = new Date(dateStr);
       return isNaN(date.getTime()) ? '' : date.getFullYear().toString();
     } catch (e) {
@@ -193,16 +194,17 @@ const TeacherProfileResume: React.FC = () => {
     // Transform profile data into the format expected by TeacherPublicProfile
     // Prepare the profile image URL, ensuring it's a valid path or null
     // Check for _signedProfileImage first, then try other options
-    const profileImageUrl = profile.user?._signedProfileImage && profile.user._signedProfileImage.trim() !== '' 
-      ? profile.user._signedProfileImage
-      : profile.profileImage && profile.profileImage.trim() !== '' 
-        ? profile.profileImage 
+    const userWithSignedImage = profile.user as any;
+    const profileImageUrl = userWithSignedImage?._signedProfileImage && userWithSignedImage._signedProfileImage.trim() !== ''
+      ? userWithSignedImage._signedProfileImage
+      : profile.profileImage && profile.profileImage.trim() !== ''
+        ? profile.profileImage
         : profile.user?.avatar && profile.user.avatar.trim() !== ''
           ? profile.user.avatar
           : null;
-          
+
     console.log("Using profile image URL:", profileImageUrl);
-    
+
     return {
       id: profile.id,
       name: profile.user?.fullName || 'Teacher',
@@ -212,31 +214,31 @@ const TeacherProfileResume: React.FC = () => {
       shortBio: profile.user?.bio?.substring(0, 120) + (profile.user?.bio && profile.user.bio.length > 120 ? '...' : '') || 'Professional educator',
       rating: profile.rating || 4.5,
       ratingCount: profile.reviewCount || 0,
-      location: profile.location?.city ? 
-        `${profile.location.city}${profile.location.county ? `, ${profile.location.county}` : ''}` : 
+      location: profile.location?.city ?
+        `${profile.location.city}${profile.location.county ? `, ${profile.location.county}` : ''}` :
         'Location not specified',
       openToWork: true,
       hourlyRate: 'Contact for rates',
-      availability: profile.availability?.days?.length ? 
-        `${profile.availability.days.join(', ')}` : 
+      availability: profile.availability?.days?.length ?
+        `${profile.availability.days.join(', ')}` :
         'Contact for availability',
       languages: formattedLanguages,
       stats: {
         studentsHelped: 50, // Default stats since we don't have this data
         lessonsDelivered: 150,
-        classesCreated: profile.classCount || 0,
+        classesCreated: (profile as any).classCount || 0,
         successRate: 98
       },
       experience: (profile.experience || []).map((exp, index) => ({
         id: exp.id || `exp-${index}`,
         position: exp.position || '',
         institution: exp.company || '',
-        dates: exp.isCurrent 
+        dates: exp.isCurrent
           ? `${formatYear(exp.startDate)} - Present`
           : `${formatYear(exp.startDate)} - ${exp.endDate ? formatYear(exp.endDate) : ''}`,
         description: exp.description || ''
       })),
-      
+
       education: (profile.education || []).map((edu, index) => ({
         id: edu.id || `edu-${index}`,
         degree: `${edu.degree} in ${edu.field}` || '',
@@ -250,10 +252,10 @@ const TeacherProfileResume: React.FC = () => {
         id: cert.id || `cert-${index}`,
         name: cert.name || '',
         issuer: cert.issuingOrganization || 'Unknown Organization',
-        date: cert.issueDate 
-          ? formatYear(cert.issueDate) 
-          : cert.expirationDate 
-            ? `Until ${formatYear(cert.expirationDate)}` 
+        date: cert.issueDate
+          ? formatYear(cert.issueDate)
+          : cert.expirationDate
+            ? `Until ${formatYear(cert.expirationDate)}`
             : 'No date provided',
         isVerified: true
       })),
@@ -287,14 +289,73 @@ const TeacherProfileResume: React.FC = () => {
       }
 
       try {
-        const { data, error } = await teacherService.getProfileById(user?.teacherId);
-        if (error) {
-          console.error("Error fetching teacher profile:", error);
-        } else {
-          setProfile(data);
-          calculateProfileCompletion(data);
-          setTransformedData(transformProfileData(data));
+        // Use MVP service to get the profile, which returns the flattened MVP structure
+        const data = await MvpTeacherService.getCurrentProfile();
+
+        if (!data) {
+          console.error("No profile returned");
+          setLoading(false);
+          return;
         }
+
+        // Map MVP response to TeacherProfile interface if needed, or use as is if compatible
+        // The MVP response is flat, similar to what transformProfileData expects for some fields, 
+        // but transformProfileData expects 'user' object for name/bio/etc.
+
+        // MVP response has: fullName, bio, profileImage at root.
+        // TeacherProfile interface expects: user: { fullName, bio, avatar }, profileImage.
+
+        // We need to adapt the MVP response to the shape expected by transformProfileData
+        // OR update transformProfileData to handle MVP response.
+
+        // It's easier to adapt the response here to match TeacherProfile interface locally:
+        const adaptedProfile: any = {
+          id: data.id,
+          user: {
+            id: data.userId,
+            fullName: data.fullName,
+            email: data.email,
+            phoneNumber: data.phoneNumber,
+            bio: data.bio,
+            avatar: data.profileImage, // transformProfileData checks user.avatar too
+          },
+          profileImage: data.profileImage,
+          introVideoUrl: data.introVideoUrl,
+          location: {
+            city: data.location?.city,
+            county: data.location?.road, // Mapping road to county/address for display
+            address: data.location?.estate
+          },
+          // MVP data arrays directly map or need slight mapping
+          subjects: data.subjects?.map((s: string) => ({ name: s, isAcademic: true })) || [],
+          education: data.education, // { degree, institution, year } may need mapping to { startYear, endYear } etc. 
+          // Note: transformProfileData expects education: { degree, field, institution, startYear, endYear ... }
+          // MVP has { degree, institution, year }
+
+          experience: isNaN(Number(data.yearsOfExperience)) ? [] : [{
+            id: 'exp-1',
+            position: 'Teacher',
+            company: 'Various',
+            startDate: new Date().getFullYear() - Number(data.yearsOfExperience),
+            isCurrent: true,
+            description: `${data.yearsOfExperience} years of experience`
+          }], // Synthetic experience from yearsOfExperience
+
+          methodologies: [], // Not in MVP form yet?
+          strategies: [],
+          languages: [],
+          skills: [],
+          rating: 5.0,
+          reviewCount: 0,
+          createdAt: data.createdAt,
+          updatedAt: data.updatedAt,
+          isProfileComplete: data.isProfileComplete
+        };
+
+        setProfile(adaptedProfile);
+        calculateProfileCompletion(adaptedProfile);
+        setTransformedData(transformProfileData(adaptedProfile));
+
       } catch (err) {
         console.error("Error in profile fetch:", err);
       } finally {
@@ -307,7 +368,7 @@ const TeacherProfileResume: React.FC = () => {
 
   const calculateProfileCompletion = (profile: TeacherProfile) => {
     if (!profile) return;
-    
+
     // Define sections and their weights
     const sections = [
       { key: 'user', weight: 15, completed: !!profile.user?.fullName && !!profile.user?.email },
@@ -337,7 +398,7 @@ const TeacherProfileResume: React.FC = () => {
 
   const getInitials = (name: string | undefined) => {
     if (!name) return "U";
-    
+
     return name
       .split(' ')
       .map(word => word[0] || '')
@@ -349,7 +410,7 @@ const TeacherProfileResume: React.FC = () => {
     if (!dateStr) return 'Present';
     // Check if it's just a year
     if (dateStr.length === 4) return dateStr;
-    
+
     try {
       const date = new Date(dateStr);
       if (isNaN(date.getTime())) return dateStr; // If invalid date, return original
@@ -404,18 +465,18 @@ const TeacherProfileResume: React.FC = () => {
           </div>
           <div className="flex items-center space-x-2">
             <span className="text-sm font-medium text-gray-600">Profile Completion: {completionPercentage}%</span>
-            <Progress 
+            <Progress
               value={completionPercentage}
               className="w-32 h-2.5 bg-gray-200"
               indicatorClassName={
-                completionPercentage >= 80 ? 'bg-green-500' : 
-                completionPercentage >= 50 ? 'bg-yellow-500' : 'bg-red-500'
+                completionPercentage >= 80 ? 'bg-green-500' :
+                  completionPercentage >= 50 ? 'bg-yellow-500' : 'bg-red-500'
               }
             />
           </div>
           <div>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               size="sm"
               className="flex items-center gap-1.5"
               onClick={() => navigate("/teacher-profile-setup")}
@@ -429,7 +490,7 @@ const TeacherProfileResume: React.FC = () => {
 
       {/* Public teacher profile with our data */}
       {transformedData && (
-        <TeacherPublicProfile 
+        <TeacherPublicProfile
           teacher={transformedData}
           isOwnProfile={true}
           hideBookingActions={true}
@@ -441,12 +502,12 @@ const TeacherProfileResume: React.FC = () => {
       <div className="bg-white border-t py-6 mt-10 sticky bottom-0 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row justify-between items-center gap-4">
           <div className="flex items-center gap-2">
-            <Progress 
+            <Progress
               value={completionPercentage}
               className="w-20 h-2.5 bg-gray-200"
               indicatorClassName={
-                completionPercentage >= 80 ? 'bg-green-500' : 
-                completionPercentage >= 50 ? 'bg-yellow-500' : 'bg-red-500'
+                completionPercentage >= 80 ? 'bg-green-500' :
+                  completionPercentage >= 50 ? 'bg-yellow-500' : 'bg-red-500'
               }
             />
             <span className="text-sm font-medium text-gray-600">Profile: {completionPercentage}% complete</span>

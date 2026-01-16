@@ -23,7 +23,15 @@ const TeacherRoute = ({ children, requireProfileComplete = true }: TeacherRouteP
   useEffect(() => {
     // Check if user is a teacher and get profile status
     const checkTeacherProfile = async () => {
-      if (!isLoading && user && user.role === 'teacher' && user.teacherId) {
+      if (!isLoading && user && user.role === 'teacher') {
+        // New teacher without teacherId yet - profile is definitely not complete
+        if (!user.teacherId) {
+          console.log('Teacher without teacherId - profile not complete');
+          setIsProfileComplete(false);
+          setIsCheckingProfile(false);
+          return;
+        }
+
         try {
           // Get the teacher profile
           const { data } = await teacherService.getProfileById(user.teacherId);

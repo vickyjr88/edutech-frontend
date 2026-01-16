@@ -16,6 +16,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { classService, ClassDetail } from '@/integrations/api/services/class.service';
+import { adminService } from '@/integrations/api/services/admin.service';
 import { useToast } from "@/hooks/use-toast";
 import {
     DropdownMenu,
@@ -26,10 +27,11 @@ import {
 
 interface ClassDetailsProps {
     classId: string;
+    type: 'class' | 'offering';
     onBack: () => void;
 }
 
-const ClassDetails = ({ classId, onBack }: ClassDetailsProps) => {
+const ClassDetails = ({ classId, type, onBack }: ClassDetailsProps) => {
     const [classData, setClassData] = useState<ClassDetail | null>(null);
     const [loading, setLoading] = useState(true);
     const { toast } = useToast();
@@ -41,15 +43,37 @@ const ClassDetails = ({ classId, onBack }: ClassDetailsProps) => {
     const fetchClassDetails = async () => {
         setLoading(true);
         try {
-            const response = await classService.getById(classId);
-            if (response.data) {
-                setClassData(response.data);
+            if (type === 'class') {
+                const response = await classService.getById(classId);
+                if (response.data) {
+                    setClassData(response.data);
+                }
+            } else {
+                const response = await adminService.getOffering(classId);
+                if (response.data) {
+                    const offering = response.data;
+                    // Normalize offering to ClassDetail structure for display
+                    setClassData({
+                        ...offering,
+                        teacher: {
+                            user: offering.teacherId,
+                            name: offering.teacherId?.fullName
+                        },
+                        status: offering.isActive ? 'published' : 'draft',
+                        rating: offering.rating || 0,
+                        totalReviews: offering.totalReviews || 0,
+                        enrollment: {
+                            current: offering.totalBookings || 0,
+                            capacity: 0 // Not applicable for offerings in same way
+                        }
+                    } as any);
+                }
             }
         } catch (error) {
             console.error("Error fetching class details:", error);
             toast({
                 title: "Error",
-                description: "Failed to load class details",
+                description: "Failed to load details",
                 variant: "destructive"
             });
         } finally {

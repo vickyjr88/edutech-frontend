@@ -26,10 +26,11 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { classService, Class } from '@/integrations/api/services/class.service';
+import { adminService } from '@/integrations/api/services/admin.service';
 import { useToast } from "@/hooks/use-toast";
 
 interface ClassesListProps {
-    onViewClass: (classId: string) => void;
+    onViewClass: (classId: string, type: 'class' | 'offering') => void;
 }
 
 const ClassesList = ({ onViewClass }: ClassesListProps) => {
@@ -60,11 +61,41 @@ const ClassesList = ({ onViewClass }: ClassesListProps) => {
     const fetchClasses = async () => {
         setLoading(true);
         try {
-            const response = await classService.getAll();
-            if (response.data) {
-                setClasses(response.data);
-                setFilteredClasses(response.data);
+            // Fetch both traditional classes and MVP offerings
+            const [classesResponse, offeringsResponse] = await Promise.all([
+                classService.getAllAdmin(),
+                adminService.getOfferings()
+            ]);
+
+            let combinedData: any[] = [];
+
+            if (classesResponse.data) {
+                combinedData = [...combinedData, ...classesResponse.data.map(c => ({
+                    ...c,
+                    type: 'class'
+                }))];
             }
+
+            if (offeringsResponse.data) {
+                combinedData = [...combinedData, ...offeringsResponse.data.map(o => ({
+                    ...o,
+                    type: 'offering',
+                    // Normalize teacher data for offerings
+                    teacher: {
+                        user: {
+                            fullName: o.teacherId?.fullName || "Unknown Teacher"
+                        }
+                    },
+                    // Normalize status for offerings
+                    status: o.isActive ? 'published' : 'draft'
+                }))];
+            }
+
+            // Sort by createdAt descending
+            combinedData.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+            setClasses(combinedData);
+            setFilteredClasses(combinedData);
         } catch (error) {
             console.error("Error fetching classes:", error);
             toast({
@@ -147,6 +178,11 @@ const ClassesList = ({ onViewClass }: ClassesListProps) => {
                                                 <BookOpen className="h-4 w-4" />
                                             </div>
                                             <span>{cls.title}</span>
+                                            {cls.type === 'offering' && (
+                                                <Badge variant="outline" className="ml-2 bg-blue-50 text-blue-700 border-blue-200">
+                                                    Offering
+                                                </Badge>
+                                            )}
                                         </div>
                                     </TableCell>
                                     <TableCell>
@@ -168,7 +204,7 @@ const ClassesList = ({ onViewClass }: ClassesListProps) => {
                                             </DropdownMenuTrigger>
                                             <DropdownMenuContent align="end">
                                                 <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                                <DropdownMenuItem onClick={() => onViewClass(cls._id)}>
+                                                <DropdownMenuItem onClick={() => onViewClass(cls._id, cls.type as any)}>
                                                     <Eye className="mr-2 h-4 w-4" />
                                                     View Details
                                                 </DropdownMenuItem>

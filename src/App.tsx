@@ -8,7 +8,13 @@ import { BrowserRouter } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { IntercomProvider } from "@/components/support";
 import { intercomConfig } from "@/components/support/IntercomConfig";
-import AppRoutes from "./components/AppRoutes";
+import MVPAppRoutes from "./components/MVPAppRoutes";
+import Layout from "@/components/Layout";
+import { isMVPMode } from "@/config/features";
+
+// Use MVP routes if in MVP mode, otherwise use full routes
+// For now, we're always in MVP mode
+const AppRoutes = MVPAppRoutes;
 
 // Create a client
 const queryClient = new QueryClient();
@@ -20,19 +26,23 @@ const App = () => {
         <BrowserRouter>
           <AuthProvider>
             {intercomConfig ? (
-              <IntercomProvider 
+              <IntercomProvider
                 config={intercomConfig}
                 autoboot={true}
               >
                 <TooltipProvider>
-                  <AppRoutes />
+                  <Layout>
+                    <AppRoutes />
+                  </Layout>
                   <Toaster />
                   <Sonner />
                 </TooltipProvider>
               </IntercomProvider>
             ) : (
               <TooltipProvider>
-                <AppRoutes />
+                <Layout>
+                  <AppRoutes />
+                </Layout>
                 <Toaster />
                 <Sonner />
               </TooltipProvider>

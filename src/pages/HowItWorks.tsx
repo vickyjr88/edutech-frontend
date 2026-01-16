@@ -21,10 +21,10 @@ const HowItWorks = () => {
             </p>
             <div className="flex flex-wrap justify-center gap-4">
               <Button size="lg" className="bg-white text-kidato-purple hover:bg-gray-100">
-                <Link to="/signup">Create Account</Link>
+                <Link to="/signup?role=teacher">Create Account</Link>
               </Button>
               <Button size="lg" variant="outline" className="bg-kidato-dark-blue hover:bg-white border-white text-white hover:bg-white/10">
-                <Link to="/contact">Ask Questions</Link>
+                <Link to="/contact-us">Ask Questions</Link>
               </Button>
             </div>
           </div>
@@ -130,7 +130,7 @@ const HowItWorks = () => {
                 </div>
                 <div className="text-center mt-8">
                   <Button className="bg-kidato-orange hover:bg-orange-600 text-white">
-                    <Link to="/parent-signup">Get Started as a Parent</Link>
+                    <Link to="/signup?role=parent">Get Started as a Parent</Link>
                   </Button>
                 </div>
               </TabsContent>
@@ -172,7 +172,7 @@ const HowItWorks = () => {
                 </div>
                 <div className="text-center mt-8">
                   <Button className="bg-green-600 hover:bg-green-700 text-white">
-                    <Link to="/student-signup">Get Started as a Student</Link>
+                    <Link to="/signup?role=student">Get Started as a Student</Link>
                   </Button>
                 </div>
               </TabsContent>
@@ -365,7 +365,7 @@ const HowItWorks = () => {
             <div className="text-center mt-10">
               <p className="text-gray-600 mb-4">Still have questions? Our support team is here to help.</p>
               <Button className="bg-kidato-purple hover:bg-kidato-dark-blue text-white">
-                <Link to="/contact">Contact Support</Link>
+                <Link to="/contact-us">Contact Support</Link>
               </Button>
             </div>
           </div>
@@ -380,10 +380,10 @@ const HowItWorks = () => {
             </p>
             <div className="flex flex-wrap justify-center gap-4">
               <Button size="lg" className="bg-white text-kidato-purple hover:bg-gray-100">
-                <Link to="/signup">Create Free Account</Link>
+                <Link to="/signup?role=student">Create Free Account</Link>
               </Button>
-              <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10">
-                <Link to="/find-tutors">Browse Teachers</Link>
+              <Button size="lg" variant="outline" className="bg-kidato-purple hover:bg-kidato-dark-blue text-white">
+                <Link to="/teachers">Browse Teachers</Link>
               </Button>
             </div>
           </div>

@@ -14,9 +14,9 @@ const TeacherExperienceSection: React.FC<TeacherExperienceSectionProps> = ({ tea
           <Briefcase className="mr-2 h-5 w-5 text-kidato-purple" />
           Work Experience
         </h3>
-        
+
         <div className="space-y-6">
-          {teacher.experience.map((exp: any) => (
+          {(teacher.experience || []).map((exp: any) => (
             <div key={exp.id} className="relative pl-8 border-l-2 border-gray-200 pb-6 last:pb-0">
               <div className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-kidato-purple"></div>
               <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-4">
@@ -40,9 +40,9 @@ const TeacherExperienceSection: React.FC<TeacherExperienceSectionProps> = ({ tea
           <GraduationCap className="mr-2 h-5 w-5 text-kidato-purple" />
           Education
         </h3>
-        
+
         <div className="space-y-6">
-          {teacher.education.map((edu: any) => (
+          {(teacher.education || []).map((edu: any) => (
             <div key={edu.id} className="relative pl-8 border-l-2 border-gray-200 pb-6 last:pb-0">
               <div className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-kidato-purple"></div>
               <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-4">
@@ -64,9 +64,9 @@ const TeacherExperienceSection: React.FC<TeacherExperienceSectionProps> = ({ tea
             <Award className="mr-2 h-5 w-5 text-kidato-purple" />
             Achievements & Awards
           </h3>
-          
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {teacher.achievements.map((achievement: any) => (
+            {(teacher.achievements || []).map((achievement: any) => (
               <div key={achievement.id} className="bg-orange-50 rounded-lg p-4 border border-orange-100">
                 <div className="flex items-start">
                   <div className="p-2 bg-orange-100 rounded-full mr-3">

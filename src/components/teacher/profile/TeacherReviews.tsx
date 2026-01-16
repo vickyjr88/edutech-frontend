@@ -18,12 +18,24 @@ interface TeacherReviewsProps {
   reviews: Review[];
 }
 
-const TeacherReviews: React.FC<TeacherReviewsProps> = ({ reviews }) => {
+const TeacherReviews: React.FC<TeacherReviewsProps> = ({ reviews = [] }) => {
   const [expanded, setExpanded] = useState(false);
+
+  if (!reviews || reviews.length === 0) {
+    return (
+      <div className="bg-white rounded-xl shadow-md p-8 text-center">
+        <MessageSquare className="mx-auto h-12 w-12 text-gray-300 mb-4" />
+        <h3 className="text-lg font-medium text-gray-900">No reviews yet</h3>
+        <p className="text-gray-500">This teacher hasn't received any reviews from students yet.</p>
+      </div>
+    );
+  }
+
   const displayedReviews = expanded ? reviews : reviews.slice(0, 3);
-  
-  const averageRating = reviews.reduce((acc, review) => acc + review.rating, 0) / reviews.length;
-  
+
+  const totalRating = reviews.reduce((acc, review) => acc + (review.rating || 0), 0);
+  const averageRating = reviews.length > 0 ? totalRating / reviews.length : 0;
+
   const ratings = {
     5: reviews.filter(r => r.rating === 5).length,
     4: reviews.filter(r => r.rating === 4).length,
@@ -47,13 +59,12 @@ const TeacherReviews: React.FC<TeacherReviewsProps> = ({ reviews }) => {
               <div className="text-4xl font-bold text-kidato-purple">{averageRating.toFixed(1)}</div>
               <div className="flex justify-center my-2">
                 {[1, 2, 3, 4, 5].map((star) => (
-                  <Star 
-                    key={star} 
-                    className={`h-5 w-5 ${
-                      star <= Math.round(averageRating) 
-                        ? 'text-yellow-500 fill-yellow-500' 
+                  <Star
+                    key={star}
+                    className={`h-5 w-5 ${star <= Math.round(averageRating)
+                        ? 'text-yellow-500 fill-yellow-500'
                         : 'text-gray-300'
-                    }`} 
+                      }`}
                   />
                 ))}
               </div>
@@ -66,7 +77,7 @@ const TeacherReviews: React.FC<TeacherReviewsProps> = ({ reviews }) => {
                 <div key={rating} className="flex items-center text-sm">
                   <div className="w-10 text-right mr-2">{rating} stars</div>
                   <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
-                    <div 
+                    <div
                       className="h-full bg-yellow-500"
                       style={{ width: `${(ratings[rating as keyof typeof ratings] / reviews.length) * 100}%` }}
                     ></div>
@@ -108,13 +119,12 @@ const TeacherReviews: React.FC<TeacherReviewsProps> = ({ reviews }) => {
                       </div>
                       <div className="flex items-center my-1">
                         {[1, 2, 3, 4, 5].map((star) => (
-                          <Star 
-                            key={star} 
-                            className={`h-4 w-4 ${
-                              star <= review.rating 
-                                ? 'text-yellow-500 fill-yellow-500' 
+                          <Star
+                            key={star}
+                            className={`h-4 w-4 ${star <= review.rating
+                                ? 'text-yellow-500 fill-yellow-500'
                                 : 'text-gray-300'
-                            }`} 
+                              }`}
                           />
                         ))}
                       </div>
@@ -127,8 +137,8 @@ const TeacherReviews: React.FC<TeacherReviewsProps> = ({ reviews }) => {
 
             {reviews.length > 3 && (
               <div className="mt-6 text-center">
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   onClick={() => setExpanded(!expanded)}
                   className="border-kidato-purple text-kidato-purple hover:bg-blue-50"
                 >

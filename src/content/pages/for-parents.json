@@ -20,12 +20,12 @@
       "subtitle": "Trusted by thousands of parents across Africa to provide quality, accessible education that fits your family's needs.",
       "primaryCTA": {
         "text": "Find a Tutor",
-        "href": "/find-tutors",
+        "href": "/teachers",
         "variant": "primary"
       },
       "secondaryCTA": {
         "text": "Explore Classes",
-        "href": "/explore-classes",
+        "href": "/all-classes",
         "variant": "outline"
       },
       "variant": "gradient"
@@ -160,7 +160,7 @@
           ],
           "cta": {
             "text": "Find a Tutor",
-            "href": "/find-tutors"
+            "href": "/teachers"
           },
           "note": "$15-35 per hour"
         },
@@ -270,7 +270,7 @@
       "description": "Join thousands of parents who trust Kidato to nurture their children's educational journey.",
       "primaryCTA": {
         "text": "Create Free Account",
-        "href": "/parent-signup",
+        "href": "/signup?role=parent",
         "variant": "primary"
       },
       "variant": "gradient"

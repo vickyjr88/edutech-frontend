@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { BookOpen, Calendar, Check, Clock, Globe, MapPin, MessageSquare, Play, Star, Video as VideoIcon } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -7,12 +8,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from '@
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 
-// Moved inside the component function
+// Section components
 import TeacherHighlights from './TeacherHighlights';
 import TeacherReviews from './TeacherReviews';
-import TeacherBookingDialog from './TeacherBookingDialog';
-
-// Section components
 import TeacherAboutSection from './public-profile/TeacherAboutSection';
 import TeacherExperienceSection from './public-profile/TeacherExperienceSection';
 import TeacherClassesSection from './public-profile/TeacherClassesSection';
@@ -26,21 +24,25 @@ interface TeacherPublicProfileProps {
   hideReviewsSection?: boolean;
 }
 
-const TeacherPublicProfile: React.FC<TeacherPublicProfileProps> = ({ 
+const TeacherPublicProfile: React.FC<TeacherPublicProfileProps> = ({
   teacher,
   isOwnProfile = false,
   hideBookingActions = false,
   hideReviewsSection = false
 }) => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('about');
-  const [showBookingDialog, setShowBookingDialog] = useState(false);
   const [showMessageDialog, setShowMessageDialog] = useState(false);
   const [showVideoDialog, setShowVideoDialog] = useState(false);
-  
+
+  const handleBookSession = () => {
+    navigate(`/book/${teacher.id || teacher._id}`);
+  };
+
   // Helper function to format video URLs for embedding
   const formatVideoUrl = (url: string): string => {
     if (!url) return '';
-    
+
     try {
       // Handle YouTube URLs
       if (url.includes('youtube.com/watch')) {
@@ -48,24 +50,24 @@ const TeacherPublicProfile: React.FC<TeacherPublicProfileProps> = ({
         const videoId = new URL(url).searchParams.get('v');
         if (videoId) return `https://www.youtube.com/embed/${videoId}`;
       }
-      
+
       // Handle youtu.be short links
       if (url.includes('youtu.be/')) {
         const videoId = url.split('youtu.be/')[1]?.split('?')[0];
         if (videoId) return `https://www.youtube.com/embed/${videoId}`;
       }
-      
+
       // Handle Vimeo URLs
       if (url.includes('vimeo.com/')) {
         const videoId = url.split('vimeo.com/')[1]?.split('?')[0];
         if (videoId) return `https://player.vimeo.com/video/${videoId}`;
       }
-      
+
       // If it's already an embed URL, return as is
       if (url.includes('/embed/') || url.includes('/player/')) {
         return url;
       }
-      
+
       // Default fallback - return the original URL
       return url;
     } catch (error) {
@@ -82,25 +84,25 @@ const TeacherPublicProfile: React.FC<TeacherPublicProfileProps> = ({
         {teacher.videoProfileUrl || teacher.introVideoUrl ? (
           <div className="relative w-full h-80 sm:h-96 overflow-hidden">
             {/* Video Thumbnail or Background Overlay */}
-            <div 
-              className="absolute inset-0 bg-cover bg-center" 
-              style={{ 
+            <div
+              className="absolute inset-0 bg-cover bg-center"
+              style={{
                 backgroundColor: 'var(--kidato-purple-primary)',
-                backgroundImage: teacher.coverImage && teacher.coverImage !== '/placeholder.svg' 
+                backgroundImage: teacher.coverImage && teacher.coverImage !== '/placeholder.svg'
                   ? `url(${teacher.coverImage})`
                   : 'linear-gradient(135deg, var(--kidato-purple-primary) 0%, var(--kidato-purple-light) 100%)',
                 filter: 'blur(4px)',
                 transform: 'scale(1.05)'
               }}
             ></div>
-            
+
             {/* Dark Overlay */}
             <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/50 to-black/70"></div>
-            
+
             {/* Video Preview Button */}
             <div className="absolute inset-0 flex items-center justify-center p-6">
               <div className="text-center w-full max-w-lg">
-                <div 
+                <div
                   onClick={() => setShowVideoDialog(true)}
                   className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center cursor-pointer mx-auto mb-4 hover:bg-white/30 transition-all border-2 border-white group"
                 >
@@ -110,8 +112,8 @@ const TeacherPublicProfile: React.FC<TeacherPublicProfileProps> = ({
                 </div>
                 <h3 className="text-white text-lg md:text-xl font-medium mb-3 drop-shadow-md">Watch Intro Video</h3>
                 <p className="text-white/90 text-sm md:text-base mx-auto drop-shadow-md px-4 leading-relaxed">
-                  {teacher.isProfileResume 
-                    ? "Preview how your introduction video appears to potential students on your public profile" 
+                  {teacher.isProfileResume
+                    ? "Preview how your introduction video appears to potential students on your public profile"
                     : `Learn more about ${teacher.name.split(' ')[0]}'s teaching style, philosophy and approach to education`}
                 </p>
               </div>
@@ -119,22 +121,22 @@ const TeacherPublicProfile: React.FC<TeacherPublicProfileProps> = ({
           </div>
         ) : (
           // Regular Cover Image (no video)
-          <div 
-            className="w-full h-64 bg-cover bg-center relative" 
-            style={{ 
+          <div
+            className="w-full h-64 bg-cover bg-center relative"
+            style={{
               backgroundColor: '#0063C9', // Kidato blue shade
-              backgroundImage: teacher.coverImage && teacher.coverImage !== '/placeholder.svg' 
+              backgroundImage: teacher.coverImage && teacher.coverImage !== '/placeholder.svg'
                 ? `url(${teacher.coverImage})`
                 : 'linear-gradient(135deg, #0063C9 0%, #3484E5 100%)'
             }}
           >
             <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
-            
+
             {/* Show "Add Intro Video" button for profile owner */}
             {teacher.isProfileResume && (
               <div className="absolute inset-0 flex items-center justify-center">
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   className="bg-white/10 backdrop-blur-sm text-white border-white hover:bg-white/20 hover:text-white"
                   onClick={() => alert("Upload video functionality would go here")}
                 >
@@ -154,10 +156,10 @@ const TeacherPublicProfile: React.FC<TeacherPublicProfileProps> = ({
           <div className="flex-shrink-0 mr-8">
             <div className="w-36 h-36 rounded-full border-4 border-white overflow-hidden shadow-xl bg-white">
               {teacher.imageSrc ? (
-                <img 
-                  src={teacher.imageSrc} 
+                <img
+                  src={teacher.imageSrc}
                   alt={teacher.name}
-                  className="w-full h-full object-cover" 
+                  className="w-full h-full object-cover"
                   onError={(e) => {
                     console.log("Image error, using fallback");
                     // @ts-ignore - target exists on the event
@@ -187,7 +189,7 @@ const TeacherPublicProfile: React.FC<TeacherPublicProfileProps> = ({
                 <p className="text-gray-600 mt-1">{teacher.position}</p>
                 <p className="text-gray-500 text-sm mt-1">{teacher.shortBio}</p>
               </div>
-              
+
               <div className="mt-4 md:mt-0 flex flex-col items-start md:items-end">
                 <div className="flex items-center mb-2">
                   <div className="flex items-center mr-3">
@@ -226,22 +228,21 @@ const TeacherPublicProfile: React.FC<TeacherPublicProfileProps> = ({
             {/* Action Buttons */}
             {!hideBookingActions && (
               <div className="flex flex-wrap gap-3 mt-6">
-                <Button 
-                  onClick={() => setShowBookingDialog(true)}
+                <Button
+                  onClick={handleBookSession}
                   className="bg-kidato-purple hover:bg-blue-700"
                 >
                   <Calendar className="w-4 h-4 mr-2" />
                   Book a Session
                 </Button>
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   onClick={() => setShowMessageDialog(true)}
                   className="border-kidato-purple text-kidato-purple hover:bg-blue-50"
                 >
                   <MessageSquare className="w-4 h-4 mr-2" />
                   Contact Teacher
                 </Button>
-                {/* Video button removed - now shown prominently in the header */}
               </div>
             )}
           </div>
@@ -257,13 +258,13 @@ const TeacherPublicProfile: React.FC<TeacherPublicProfileProps> = ({
                     {teacher.isProfileResume ? "Your Video Introduction" : `${teacher.name}'s Video Profile`}
                   </DialogTitle>
                   <p className="text-gray-400 text-sm mt-1">
-                    {teacher.isProfileResume ? 
-                      "This is how your introduction video appears to students" : 
+                    {teacher.isProfileResume ?
+                      "This is how your introduction video appears to students" :
                       "Learn about teaching philosophy and expertise"
                     }
                   </p>
                 </div>
-                <button 
+                <button
                   onClick={() => setShowVideoDialog(false)}
                   className="rounded-full w-8 h-8 flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 transition-colors"
                 >
@@ -273,7 +274,7 @@ const TeacherPublicProfile: React.FC<TeacherPublicProfileProps> = ({
                   </svg>
                 </button>
               </div>
-              
+
               <div className="aspect-video w-full bg-black">
                 <iframe
                   src={formatVideoUrl(teacher.introVideoUrl || teacher.videoProfileUrl)}
@@ -283,11 +284,11 @@ const TeacherPublicProfile: React.FC<TeacherPublicProfileProps> = ({
                   className="w-full h-full"
                 ></iframe>
               </div>
-              
+
               {teacher.isProfileResume && (
                 <div className="p-4 bg-gray-800">
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     className="w-full bg-blue-600 hover:bg-blue-700 text-white border-none"
                     onClick={() => {
                       setShowVideoDialog(false);
@@ -307,12 +308,8 @@ const TeacherPublicProfile: React.FC<TeacherPublicProfileProps> = ({
           isOpen={showMessageDialog}
           onOpenChange={setShowMessageDialog}
           teacherName={teacher.name}
-          teacherId={teacher._id} // Assuming teacher._id is the teacherId
-        />
-        <TeacherBookingDialog 
-          isOpen={showBookingDialog} 
-          onClose={() => setShowBookingDialog(false)}
-          teacher={teacher}
+          teacherId={teacher.id || teacher._id}
+          teacherPhone={teacher.phoneNumber}
         />
 
         {/* Key Info Section */}
@@ -338,8 +335,8 @@ const TeacherPublicProfile: React.FC<TeacherPublicProfileProps> = ({
               <div>
                 <h3 className="font-medium">Languages</h3>
                 <p className="text-gray-600">
-                  {teacher.languages.slice(0, 2).map((lang: any) => lang.language).join(', ')}
-                  {teacher.languages.length > 2 && ` +${teacher.languages.length - 2} more`}
+                  {teacher.languages?.slice(0, 2).map((lang: any) => lang.language).join(', ') || "English"}
+                  {(teacher.languages?.length || 0) > 2 && ` +${teacher.languages.length - 2} more`}
                 </p>
               </div>
             </div>
@@ -348,10 +345,10 @@ const TeacherPublicProfile: React.FC<TeacherPublicProfileProps> = ({
 
         {/* Teacher Highlights */}
         <div className="mb-8">
-          <TeacherHighlights 
+          <TeacherHighlights
             title="Expertise & Qualifications"
             methodologies={teacher.methodologies || []}
-            strategies={teacher.strategies || []} 
+            strategies={teacher.strategies || []}
             certifications={teacher.certifications || []}
             teacher={teacher}
           />
@@ -402,15 +399,15 @@ const TeacherPublicProfile: React.FC<TeacherPublicProfileProps> = ({
               Book a session today and take the first step towards educational success with personalized guidance.
             </p>
             <div className="flex flex-wrap justify-center gap-4">
-              <Button 
-                onClick={() => setShowBookingDialog(true)}
+              <Button
+                onClick={handleBookSession}
                 size="lg"
                 className="bg-kidato-purple hover:bg-blue-700"
               >
                 Book a Session Now
               </Button>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 onClick={() => setShowMessageDialog(true)}
                 size="lg"
                 className="border-kidato-purple text-kidato-purple hover:bg-blue-50"

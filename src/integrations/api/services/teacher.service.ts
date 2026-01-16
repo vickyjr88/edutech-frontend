@@ -954,4 +954,17 @@ export const teacherService = {
     getTeacherCertifications: (teacherId: string): Promise<ApiResponse<any[]>> => {
         return api.get<any[]>(`/teachers/${teacherId}/certifications`);
     },
+
+    // Teacher Approval Methods (Admin only)
+    getPendingTeachers: (): Promise<ApiResponse<TeacherProfile[]>> => {
+        return api.get<TeacherProfile[]>('/teachers/pending');
+    },
+
+    approveTeacher: (teacherId: string, comments?: string): Promise<ApiResponse<TeacherProfile>> => {
+        return api.post<TeacherProfile>(`/teachers/${teacherId}/approve`, { comments });
+    },
+
+    rejectTeacher: (teacherId: string, reason: string): Promise<ApiResponse<TeacherProfile>> => {
+        return api.post<TeacherProfile>(`/teachers/${teacherId}/reject`, { reason });
+    },
 };

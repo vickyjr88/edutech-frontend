@@ -156,7 +156,7 @@
           ],
           "cta": {
             "text": "Request for a Meeting",
-            "href": "/contact-sales"
+            "href": "/contact-us"
           },
           "note": "10% revenue share on all transactions. + $39/month per additional teacher"
         }
@@ -168,7 +168,7 @@
       "description": "Our B2B plans offer custom pricing, dedicated support, and enterprise features for larger educational institutions.",
       "primaryCTA": {
         "text": "Talk to Sales",
-        "href": "/contact-sales",
+        "href": "/contact-us",
         "variant": "outline"
       },
       "variant": "highlighted"

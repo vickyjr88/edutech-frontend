@@ -11,32 +11,33 @@ interface TeacherHighlightsProps {
   teacher?: any;
 }
 
-export default function TeacherHighlights({ 
-  title, 
-  methodologies = [], 
-  strategies = [], 
-  certifications = [], 
-  teacher 
+export default function TeacherHighlights({
+  title,
+  methodologies = [],
+  strategies = [],
+  certifications = [],
+  teacher
 }: TeacherHighlightsProps) {
   // Extract relevant information from teacher data or use props directly
-  const subjectCount = methodologies.length + strategies.length;
-  
+  // Use the subjects array from teacher data if available
+  const subjectCount = teacher?.subjects?.length || ((methodologies || []).length + (strategies || []).length);
+
   // Calculate experience years correctly from teacher experience data
   const calculateExperienceYears = (): number => {
     if (!teacher?.experience || !Array.isArray(teacher.experience) || teacher.experience.length === 0) {
       return 3; // Default value if no experience data
     }
-    
+
     let totalYears = 0;
     const currentYear = new Date().getFullYear();
-    
+
     // Calculate years for each experience entry
     teacher.experience.forEach((exp: any) => {
       if (!exp.startDate) return; // Skip entries without start date
-      
+
       const startYear = new Date(exp.startDate).getFullYear();
       let endYear;
-      
+
       if (exp.isCurrentlyWorking) {
         endYear = currentYear;
       } else if (exp.endDate) {
@@ -45,13 +46,13 @@ export default function TeacherHighlights({
         // If no end date and not currently working, assume 1 year
         endYear = startYear + 1;
       }
-      
+
       totalYears += (endYear - startYear);
     });
-    
+
     return totalYears > 0 ? totalYears : 3; // Ensure at least some experience
   };
-  
+
   const experienceYears = calculateExperienceYears();
   const studentCount = teacher?.stats?.studentsHelped || Math.floor(Math.random() * 500) + 50; // Use stats or placeholder
 

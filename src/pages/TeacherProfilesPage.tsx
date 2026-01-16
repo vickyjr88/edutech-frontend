@@ -50,21 +50,22 @@ const TeacherProfilesPage = () => {
       try {
         setLoading(true);
         const { data, error } = await teacherService.getAllProfiles(user?.studentId);
-        
+
         if (error) {
           throw new Error(error.message || "Failed to fetch teachers");
         }
-        
+
         if (!data) {
           throw new Error("No data returned from API");
         }
 
-        // Filter to only include teachers with complete profiles
-        const completeProfiles = data.filter(teacher => teacher.isProfileComplete);
-        
+        // MVP: Show all teachers (including those with incomplete profiles)
+        // In production, you might want to filter by isProfileComplete
+        // const completeProfiles = data.filter(teacher => teacher.isProfileComplete);
+
         // Transform data to match our component's expected format
-        const formattedTeachers = completeProfiles.map(transformTeacherData);
-        
+        const formattedTeachers = data.map(transformTeacherData);
+
         setTeachers(formattedTeachers);
         setFilteredTeachers(formattedTeachers);
         setError(null);
@@ -84,11 +85,11 @@ const TeacherProfilesPage = () => {
   // Transform API teacher data to our component format
   const transformTeacherData = (apiTeacher: any): Teacher => {
     console.log("Processing teacher data:", apiTeacher);
-    
+
     // Extract subjects from teacher profile
     const extractSubjects = (): string[] => {
       const subjects: string[] = [];
-      
+
       if (Array.isArray(apiTeacher.subjects)) {
         apiTeacher.subjects.forEach((subject: any) => {
           if (subject.subject) {
@@ -96,7 +97,7 @@ const TeacherProfilesPage = () => {
           }
         });
       }
-      
+
       return subjects.length > 0 ? subjects : ["General Education"];
     };
 
@@ -105,12 +106,12 @@ const TeacherProfilesPage = () => {
       if (!apiTeacher.education || !Array.isArray(apiTeacher.education) || apiTeacher.education.length === 0) {
         return [];
       }
-      
+
       return apiTeacher.education.map((edu: any) => ({
         id: edu._id || edu.id || `edu-${Math.random().toString(36).substr(2, 9)}`,
         institution: edu.institutionName || edu.institution || "",
         degree: edu.degree || "",
-        dates: edu.startDate 
+        dates: edu.startDate
           ? `${new Date(edu.startDate).getFullYear()} - ${edu.endDate ? new Date(edu.endDate).getFullYear() : 'Present'}`
           : ""
       }));
@@ -121,7 +122,7 @@ const TeacherProfilesPage = () => {
       if (!apiTeacher.certifications || !Array.isArray(apiTeacher.certifications) || apiTeacher.certifications.length === 0) {
         return [];
       }
-      
+
       return apiTeacher.certifications.map((cert: any) => ({
         id: cert._id || cert.id || `cert-${Math.random().toString(36).substr(2, 9)}`,
         name: cert.name || "",
@@ -165,9 +166,9 @@ const TeacherProfilesPage = () => {
 
     // Get the user's full name
     const name = apiTeacher.user?.fullName || "Teacher";
-    
+
     return {
-      id: apiTeacher._id || "",
+      id: apiTeacher.user?._id || apiTeacher.userId || apiTeacher._id || "",
       urlName: generateUrlName(name),
       name,
       position: extractPosition(),
@@ -188,13 +189,13 @@ const TeacherProfilesPage = () => {
       setFilteredTeachers(teachers);
       return;
     }
-    
-    const results = teachers.filter(teacher => 
+
+    const results = teachers.filter(teacher =>
       teacher.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       teacher.subjects.some(subject => subject.toLowerCase().includes(searchTerm.toLowerCase())) ||
       teacher.position.toLowerCase().includes(searchTerm.toLowerCase()) ||
       teacher.location.toLowerCase().includes(searchTerm.toLowerCase()))
-    ;
+      ;
     setFilteredTeachers(results);
   }, [searchTerm, teachers]);
 
@@ -209,7 +210,7 @@ const TeacherProfilesPage = () => {
               Discover our community of passionate educators ready to guide your learning journey
             </p>
           </div>
-          
+
           {/* Search bar */}
           <div className="mb-8 max-w-lg mx-auto">
             <div className="relative flex items-center">
@@ -223,7 +224,7 @@ const TeacherProfilesPage = () => {
               />
             </div>
           </div>
-          
+
           {/* Error message */}
           {error && (
             <Alert variant="destructive" className="mb-8">
@@ -234,7 +235,7 @@ const TeacherProfilesPage = () => {
               </AlertDescription>
             </Alert>
           )}
-          
+
           {/* Loading state */}
           {loading ? (
             <div className="flex justify-center items-center py-20">
@@ -246,16 +247,16 @@ const TeacherProfilesPage = () => {
               {filteredTeachers.length > 0 ? (
                 <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
                   {filteredTeachers.map((teacher) => (
-                    <div 
-                      key={teacher.id} 
+                    <div
+                      key={teacher.id}
                       className="bg-white overflow-hidden shadow rounded-lg transition-transform hover:shadow-lg hover:-translate-y-1"
                     >
                       <Link to={`/teacher/${teacher.id}`}>
                         <div className="relative h-64">
-                          <img 
+                          <img
                             className="w-full h-full object-cover"
-                            src={teacher.imageSrc} 
-                            alt={teacher.name} 
+                            src={teacher.imageSrc}
+                            alt={teacher.name}
                             onError={(e) => {
                               const target = e.target as HTMLImageElement;
                               target.src = "https://via.placeholder.com/300x200?text=Teacher+Image";
@@ -278,8 +279,8 @@ const TeacherProfilesPage = () => {
                           <p className="text-sm text-gray-600 mb-3 line-clamp-2">{teacher.bio}</p>
                           <div className="flex flex-wrap gap-1 mb-3">
                             {teacher.subjects.slice(0, 3).map((subject, i) => (
-                              <Badge 
-                                key={i} 
+                              <Badge
+                                key={i}
                                 variant="secondary"
                                 className="bg-blue-100 text-blue-800 hover:bg-blue-200"
                               >
@@ -320,7 +321,7 @@ const TeacherProfilesPage = () => {
                 <div className="text-center py-10">
                   <h3 className="text-lg font-medium text-gray-900">No teachers found</h3>
                   <p className="mt-1 text-sm text-gray-500">
-                    {searchTerm 
+                    {searchTerm
                       ? "Try adjusting your search criteria."
                       : "There are no teachers with completed profiles available right now."}
                   </p>

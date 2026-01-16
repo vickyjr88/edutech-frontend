@@ -159,12 +159,12 @@ const ForParents = () => {
                             </p>
                             <div className="space-x-4">
                                 <Button size="lg" className="bg-white text-kidato-orange hover:bg-gray-100">
-                                    <Link to="/find-tutors">
+                                    <Link to="/teachers">
                                         {heroSection?.type === 'hero' && heroSection.primaryCTA ? heroSection.primaryCTA.text : 'Find a Tutor'}
                                     </Link>
                                 </Button>
                                 <Button size="lg" variant="outline" className="bg-kidato-orange  border-white text-white hover:bg-white/10">
-                                    <Link to="/explore-classes">
+                                    <Link to="/all-classes">
                                         {heroSection?.type === 'hero' && heroSection.secondaryCTA ? heroSection.secondaryCTA.text : 'Explore Classes'}
                                     </Link>
                                 </Button>
@@ -223,7 +223,7 @@ const ForParents = () => {
 
                         <div className="text-center mt-12">
                             <Button size="lg" className="bg-kidato-orange hover:bg-orange-600 text-white">
-                                <Link to="/parent-signup">Get Started Today</Link>
+                                <Link to="/signup?role=teacher">Get Started Today</Link>
                             </Button>
                         </div>
                     </div>
@@ -484,7 +484,7 @@ const ForParents = () => {
                         <div className="text-center mt-10">
                             <p className="text-gray-600 mb-4">Still have questions? We're here to help.</p>
                             <Button variant="outline" className="border-kidato-orange text-kidato-orange hover:bg-orange-50">
-                                <Link to="/contact">Contact Support</Link>
+                                <Link to="/contact-us">Contact Support</Link>
                             </Button>
                         </div>
                     </div>
@@ -499,7 +499,7 @@ const ForParents = () => {
                             {ctaSection?.type === 'cta' ? ctaSection.description : 'Join thousands of parents who trust Kidato to nurture their children\'s educational journey.'}
                         </p>
                         <Button size="lg" className="bg-white text-kidato-orange hover:bg-gray-100">
-                            <Link to="/parent-signup">
+                            <Link to="/signup?role=parent">
                                 {ctaSection?.type === 'cta' && ctaSection.primaryCTA ? ctaSection.primaryCTA.text : 'Create Free Account'}
                             </Link>
                         </Button>

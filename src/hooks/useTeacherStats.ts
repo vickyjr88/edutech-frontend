@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { teacherService } from '@/integrations/api/services/teacher.service';
+import MvpTeacherService from '@/integrations/api/services/mvp-teacher.service';
 import { TeacherStatsData } from '@/types/activity';
 
 interface UseTeacherStatsParams {
@@ -23,24 +23,23 @@ export const useTeacherStats = ({
   const [error, setError] = useState<string | null>(null);
 
   const fetchData = async () => {
-    if (!teacherId) {
-      setError('No teacher ID provided');
-      setLoading(false);
-      return;
-    }
-    
     try {
       setError(null);
-      const response = await teacherService.getTeacherStats(teacherId);
 
-      if (response.error) {
-        setError(response.error.message || 'Failed to fetch stats data');
-        return;
-      }
+      const stats = await MvpTeacherService.getDashboardStats();
 
-      if (response.data) {
-        setStatsData(response.data);
-      }
+      const response: TeacherStatsData = {
+        totalStudents: stats.totalStudents || 0,
+        totalClasses: stats.activeOfferings || 0,
+        totalHoursCompleted: 120, // Mock
+        totalHoursScheduled: 150, // Mock
+        averageRating: 4.8, // Mock
+        completionRate: 92, // Mock
+        activeCohorts: stats.activeOfferings || 0
+      };
+
+      setStatsData(response);
+
     } catch (err) {
       console.error('Error fetching teacher stats data:', err);
       setError(err instanceof Error ? err.message : 'Unknown error occurred');
@@ -50,14 +49,12 @@ export const useTeacherStats = ({
   };
 
   useEffect(() => {
-    if (teacherId) {
-      fetchData();
-    }
+    fetchData();
   }, [teacherId]);
 
   // Set up auto-refresh
   useEffect(() => {
-    if (!teacherId || !refreshInterval) return;
+    if (!refreshInterval) return;
 
     const interval = setInterval(fetchData, refreshInterval);
     return () => clearInterval(interval);

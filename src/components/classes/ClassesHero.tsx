@@ -1,5 +1,6 @@
 
 import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 import HeroStats from "./HeroStats";
 
 const ClassesHero = () => {
@@ -13,15 +14,16 @@ const ClassesHero = () => {
               Explore live, interactive classes taught by Africa's top educators designed to inspire and challenge your child.
             </p>
             <div className="space-x-4">
-              <Button size="lg" className="bg-white text-kidato-purple hover:bg-gray-100">
-                Start Learning Today
+              <Button size="lg" className="bg-white text-kidato-purple hover:bg-gray-100" asChild>
+                <Link to="/signup?role=student">Start Learning Today</Link>
               </Button>
               <Button 
                 size="lg" 
                 variant="outline" 
                 className="bg-kidato-dark-blue border-2 border-white text-white hover:bg-white hover:text-white transition-colors duration-300"
+                asChild
               >
-                Learn More
+                <Link to="/how-it-works">Learn More</Link>
               </Button>
             </div>
           </div>

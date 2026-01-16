@@ -29,14 +29,14 @@ const UserRoles = ({ content }: UserRolesProps) => {
       title: "For Parents",
       description: "Find qualified tutors to support your child's educational journey with personalized attention and care.",
       icon: "Heart",
-      link: { text: "Find Tutors", href: "/parent-signup", variant: "primary" as const }
+      link: { text: "Find Tutors", href: "/signup?role=teacher", variant: "primary" as const }
     },
     {
       id: "students",
       title: "For Students",
       description: "Learn at your own pace, make friends with peers across Africa, and have fun while developing your skills.",
       icon: "Users",
-      link: { text: "Start Learning", href: "/student-signup", variant: "primary" as const }
+      link: { text: "Start Learning", href: "/signup?role=student", variant: "primary" as const }
     }
   ];
 

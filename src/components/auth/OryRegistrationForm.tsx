@@ -15,16 +15,17 @@ import { GoogleIcon } from '@/components/ui/icons';
 interface OryRegistrationFormProps {
   onSuccess?: () => void;
   redirectTo?: string;
+  defaultRole?: 'teacher' | 'student' | 'parent';
 }
 
-export const OryRegistrationForm: React.FC<OryRegistrationFormProps> = ({ onSuccess, redirectTo }) => {
+export const OryRegistrationForm: React.FC<OryRegistrationFormProps> = ({ onSuccess, redirectTo, defaultRole }) => {
   const [flow, setFlow] = useState<RegistrationFlow | null>(null);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
     firstName: '',
     lastName: '',
-    role: '',  // Empty by default - user must select
+    role: defaultRole || '',  // Use defaultRole if provided
   });
   const [showPassword, setShowPassword] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
@@ -33,8 +34,17 @@ export const OryRegistrationForm: React.FC<OryRegistrationFormProps> = ({ onSucc
   const [flowError, setFlowError] = useState('');
   const [prefilledFields, setPrefilledFields] = useState<Set<string>>(new Set());
   const [isGoogleOAuthFlow, setIsGoogleOAuthFlow] = useState(false);  // Track if this is a Google OAuth signup
+  const [rolePreselected, setRolePreselected] = useState(!!defaultRole);  // Track if role was preselected via URL
 
   const navigate = useNavigate();
+
+  // Update form data when defaultRole changes
+  useEffect(() => {
+    if (defaultRole) {
+      setFormData(prev => ({ ...prev, role: defaultRole }));
+      setRolePreselected(true);
+    }
+  }, [defaultRole]);
 
   // Helper function to get OAuth providers from the registration flow
   const getOAuthProviders = () => {
@@ -93,13 +103,27 @@ export const OryRegistrationForm: React.FC<OryRegistrationFormProps> = ({ onSucc
 
       // If we get a session directly
       if (result.session || result.legacy) {
+        const session = result.session;
+        const userRole = session?.identity?.traits?.role || result.user?.role;
+
+        // Persist user to localStorage immediately
+        const userData = {
+          id: session?.identity?.id || '',
+          email: session?.identity?.traits?.email || '',
+          fullName: `${session?.identity?.traits?.name?.first || ''} ${session?.identity?.traits?.name?.last || ''}`,
+          role: userRole,
+          verified: true,
+          oryIdentityId: session?.identity?.id,
+        };
+        localStorage.setItem('kidato_user', JSON.stringify(userData));
+        localStorage.setItem('kidato_session_id', session?.id || '');
+
         toast({
           title: 'Account created!',
           description: 'Your account has been created successfully with Google.',
         });
 
         setTimeout(() => {
-          const userRole = result.session?.identity?.traits?.role || result.user?.role;
           if (userRole === 'teacher') {
             window.location.href = '/teacher-profile-setup';
           } else if (userRole === 'student') {
@@ -491,6 +515,50 @@ export const OryRegistrationForm: React.FC<OryRegistrationFormProps> = ({ onSucc
       }
 
       if (result.session || result.legacy) {
+        // Get user role for routing
+        const session = result.session;
+        const userRole = session?.identity?.traits?.role || result.user?.role || formData.role;
+
+        // Construct user object from session
+        const userData = {
+          id: session?.identity?.id || '',
+          email: session?.identity?.traits?.email || formData.email,
+          fullName: `${session?.identity?.traits?.name?.first || formData.firstName} ${session?.identity?.traits?.name?.last || formData.lastName}`,
+          role: userRole,
+          verified: true,
+          oryIdentityId: session?.identity?.id,
+        };
+
+        // Persist user to localStorage immediately so AuthContext picks it up
+        localStorage.setItem('kidato_user', JSON.stringify(userData));
+        localStorage.setItem('kidato_session_id', session?.id || '');
+
+        // Try to create backend user (async, don't block navigation)
+        try {
+          const backendResponse = await authService.createBackendUserFromOry(session as any);
+          if (backendResponse?.user) {
+            // Update user with backend IDs
+            const updatedUser = {
+              ...userData,
+              id: backendResponse.user.id || userData.id,
+              teacherId: backendResponse.user.teacherId,
+              studentId: backendResponse.user.studentId,
+              parentId: backendResponse.user.parentId,
+            };
+            localStorage.setItem('kidato_user', JSON.stringify(updatedUser));
+
+            // Store tokens if provided
+            if (backendResponse.accessToken) {
+              localStorage.setItem('kidato_access_token', backendResponse.accessToken);
+            }
+            if (backendResponse.refreshToken) {
+              localStorage.setItem('kidato_refresh_token', backendResponse.refreshToken);
+            }
+          }
+        } catch (backendError) {
+          console.warn('Could not create backend user during registration, will retry on next page load:', backendError);
+        }
+
         toast({
           title: 'Account created!',
           description: 'Your account has been created successfully.',
@@ -499,17 +567,16 @@ export const OryRegistrationForm: React.FC<OryRegistrationFormProps> = ({ onSucc
         if (onSuccess) {
           onSuccess();
         } else {
-          // Handle role-based redirection
-          const userRole = result.session?.identity?.traits?.role || result.user?.role;
-
+          // Handle role-based redirection with window.location for full page reload
+          // This ensures AuthContext re-initializes with the new user data
           if (userRole === 'teacher') {
-            navigate('/teacher-profile-setup');
+            window.location.href = '/teacher-profile-setup';
           } else if (userRole === 'student') {
-            navigate('/student-dashboard');
+            window.location.href = '/student-dashboard';
           } else if (userRole === 'parent') {
-            navigate('/parents-dashboard');
+            window.location.href = '/parents-dashboard';
           } else {
-            navigate('/dashboard');
+            window.location.href = '/dashboard';
           }
         }
       } else {
@@ -743,9 +810,17 @@ export const OryRegistrationForm: React.FC<OryRegistrationFormProps> = ({ onSucc
 
       <div>
         <Label>I am joining as</Label>
+        {rolePreselected && (
+          <p className="text-xs text-gray-500 mt-1">
+            Role preselected. You can change it if needed.
+          </p>
+        )}
         <RadioGroup
           value={formData.role}
-          onValueChange={(value) => handleInputChange('role', value)}
+          onValueChange={(value) => {
+            handleInputChange('role', value);
+            setRolePreselected(false);  // Clear preselected state when user changes
+          }}
           className="mt-2 grid grid-cols-3 gap-4"
         >
           {Object.entries(roleLabels).map(([value, label]) => (

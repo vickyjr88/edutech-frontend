@@ -78,12 +78,12 @@ const ForStudents = () => {
               </p>
               <div className="space-x-4">
                 <Button size="lg" className="bg-white text-kidato-purple hover:bg-gray-100">
-                  <Link to={heroSection?.type === 'hero' && heroSection.primaryCTA ? heroSection.primaryCTA.href : '/student-signup'}>
+                  <Link to={heroSection?.type === 'hero' && heroSection.primaryCTA ? heroSection.primaryCTA.href : '/signup?role=student'}>
                     {heroSection?.type === 'hero' && heroSection.primaryCTA ? heroSection.primaryCTA.text : 'Join Now'}
                   </Link>
                 </Button>
                 <Button size="lg" variant="outline" className="bg-kidato-dark-blue border-white text-white hover:text-white hover:bg-white/10">
-                  <Link to={heroSection?.type === 'hero' && heroSection.secondaryCTA ? heroSection.secondaryCTA.href : '/student-classes'}>
+                  <Link to={heroSection?.type === 'hero' && heroSection.secondaryCTA ? heroSection.secondaryCTA.href : '/all-classes'}>
                     {heroSection?.type === 'hero' && heroSection.secondaryCTA ? heroSection.secondaryCTA.text : 'See Classes'}
                   </Link>
                 </Button>
@@ -233,7 +233,7 @@ const ForStudents = () => {
                 </ul>
                 <div className="mt-8">
                   <Button size="lg" className="bg-kidato-purple hover:bg-kidato-dark-blue text-white">
-                    <Link to="/student-signup">Join Kidato Today</Link>
+                    <Link to="/signup?role=student">Join Kidato Today</Link>
                   </Button>
                 </div>
               </div>
@@ -336,7 +336,7 @@ const ForStudents = () => {
               {ctaSection?.type === 'cta' ? ctaSection.description : 'Join thousands of students who are learning, making friends, and having fun with Kidato!'}
             </p>
             <Button size="lg" className="bg-white text-kidato-purple hover:bg-gray-100">
-              <Link to={ctaSection?.type === 'cta' && ctaSection.primaryCTA ? ctaSection.primaryCTA.href : '/student-signup'}>
+              <Link to={ctaSection?.type === 'cta' && ctaSection.primaryCTA ? ctaSection.primaryCTA.href : '/signup?role=student'}>
                 {ctaSection?.type === 'cta' && ctaSection.primaryCTA ? ctaSection.primaryCTA.text : 'Get Started Today'}
               </Link>
             </Button>

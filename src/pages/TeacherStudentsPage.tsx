@@ -20,10 +20,12 @@ const TeacherStudentsPage: React.FC = () => {
   };
 
   return (
-    <AIStudentsPage 
-      onViewProfile={handleViewProfile}
-      onEnrollStudents={handleEnrollStudents}
-    />
+    <div className="md:ml-64 bg-[#ededf4] min-h-screen">
+      <AIStudentsPage
+        onViewProfile={handleViewProfile}
+        onEnrollStudents={handleEnrollStudents}
+      />
+    </div>
   );
 };
 

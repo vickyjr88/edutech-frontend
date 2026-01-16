@@ -37,6 +37,50 @@ export interface BillingDashboard {
   totalSpent?: number;
 }
 
+export interface Child {
+  _id: string;
+  fullName: string;
+  email?: string;
+  dateOfBirth?: string;
+  grade?: string;
+  school?: string;
+  role: 'student';
+}
+
+export interface ParentProfile {
+  _id: string;
+  user: {
+    _id: string;
+    fullName: string;
+    email: string;
+    phoneNumber?: string;
+    bio?: string;
+    address?: string;
+    city?: string;
+    country?: string;
+  };
+  children: Child[];
+  contactNumber?: string;
+  preferredContactMethod?: string;
+  receiveProgressReports: boolean;
+  receiveNotifications: boolean;
+}
+
+export interface UpdateParentProfileDto {
+  contactNumber?: string;
+  preferredContactMethod?: string;
+  receiveProgressReports?: boolean;
+  receiveNotifications?: boolean;
+}
+
+export interface CreateChildDto {
+  fullName: string;
+  email?: string;
+  dateOfBirth?: string;
+  grade?: string;
+  school?: string;
+}
+
 export const parentService = {
   /**
    * Get billing dashboard data
@@ -99,5 +143,59 @@ export const parentService = {
    */
   payForEnrollment: (data: any): Promise<ApiResponse<any>> => {
     return api.post<any>('/billing/pay-enrollment', data);
+  },
+
+  /**
+   * Create current parent profile
+   */
+  createProfile: (data: any): Promise<ApiResponse<ParentProfile>> => {
+    return api.post<ParentProfile>('/parents', data);
+  },
+
+  /**
+   * Get current parent profile
+   */
+  getProfile: (): Promise<ApiResponse<ParentProfile>> => {
+    return api.get<ParentProfile>('/parents/profile');
+  },
+
+  /**
+   * Update parent profile
+   */
+  updateProfile: (parentId: string, data: UpdateParentProfileDto): Promise<ApiResponse<ParentProfile>> => {
+    return api.patch<ParentProfile>(`/parents/${parentId}`, data);
+  },
+
+  /**
+   * Get children
+   */
+  getChildren: (): Promise<ApiResponse<Child[]>> => {
+    return api.get<ParentProfile>('/parents/profile').then(response => {
+      return {
+        ...response,
+        data: response.data?.children || []
+      };
+    });
+  },
+
+  /**
+   * Create a child user and add to parent profile
+   */
+  createChild: (data: CreateChildDto): Promise<ApiResponse<Child>> => {
+    return api.post<Child>('/users/create-child', data);
+  },
+
+  /**
+   * Add existing child to parent profile
+   */
+  addChild: (parentId: string, childId: string): Promise<ApiResponse<ParentProfile>> => {
+    return api.post<ParentProfile>(`/parents/${parentId}/children/${childId}`, {});
+  },
+
+  /**
+   * Remove child from parent profile
+   */
+  removeChild: (parentId: string, childId: string): Promise<ApiResponse<ParentProfile>> => {
+    return api.delete<ParentProfile>(`/parents/${parentId}/children/${childId}`);
   },
 };

@@ -3,9 +3,11 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { user, isLoading } = useAuth();
 
   return (
     <nav className="bg-white shadow-sm fixed w-full z-10">
@@ -70,16 +72,27 @@ const Navbar = () => {
           </div>
           
           <div className="hidden md:flex items-center">
-            <Link to="/login">
-              <Button variant="outline" className="mr-3">
-                Log in
-              </Button>
-            </Link>
-            <Link to="/signup">
-              <Button className="bg-kidato-purple hover:bg-kidato-dark-blue button-hover-effect">
-                Sign up
-              </Button>
-            </Link>
+            {!isLoading && user ? (
+              <div className="flex items-center space-x-2">
+                <span className="text-sm text-gray-700">Welcome, {user.fullName.split(' ')[0]}</span>
+                <div className="h-8 w-8 rounded-full bg-kidato-purple text-white flex items-center justify-center font-semibold text-sm">
+                  {user.fullName.charAt(0).toUpperCase()}
+                </div>
+              </div>
+            ) : (
+              <>
+                <Link to="/login">
+                  <Button variant="outline" className="mr-3">
+                    Log in
+                  </Button>
+                </Link>
+                <Link to="/signup?role=student">
+                  <Button className="bg-kidato-purple hover:bg-kidato-dark-blue button-hover-effect">
+                    Sign up
+                  </Button>
+                </Link>
+              </>
+            )}
           </div>
           <div className="flex items-center md:hidden">
             <button
@@ -153,24 +166,41 @@ const Navbar = () => {
               Contact Us
             </Link>
             <div className="flex flex-col px-3 py-2 space-y-2">
-              <Link 
-                to="/login" 
-                className="w-full"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                <Button variant="outline" className="w-full">
-                  Log in
-                </Button>
-              </Link>
-              <Link 
-                to="/signup" 
-                className="w-full"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                <Button className="w-full bg-kidato-purple hover:bg-kidato-dark-blue">
-                  Sign up
-                </Button>
-              </Link>
+              {!isLoading && user ? (
+                <div className="px-3 py-2">
+                  <div className="flex items-center space-x-3 mb-2">
+                    <div className="h-10 w-10 rounded-full bg-kidato-purple text-white flex items-center justify-center font-semibold">
+                      {user.fullName.charAt(0).toUpperCase()}
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-900">{user.fullName}</p>
+                      <p className="text-xs text-kidato-purple capitalize">{user.role}</p>
+                    </div>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-2">Use the sidebar to access dashboard, profile, and more options.</p>
+                </div>
+              ) : (
+                <>
+                  <Link
+                    to="/login"
+                    className="w-full"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <Button variant="outline" className="w-full">
+                      Log in
+                    </Button>
+                  </Link>
+                  <Link
+                    to="/signup?role=student"
+                    className="w-full"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <Button className="w-full bg-kidato-purple hover:bg-kidato-dark-blue">
+                      Sign up
+                    </Button>
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         </div>

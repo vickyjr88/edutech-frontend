@@ -103,13 +103,25 @@ const AdminDashboard = () => {
       name: "Teachers",
       href: "/admin/teachers",
       icon: GraduationCap,
-      current: location.pathname.startsWith("/admin/teachers"),
+      current: location.pathname === "/admin/teachers" && !location.search,
+    },
+    {
+      name: "Teacher Approvals",
+      href: "/admin/teacher-approvals",
+      icon: GraduationCap,
+      current: location.pathname.startsWith("/admin/teacher-approvals"),
     },
     {
       name: "Classes",
       href: "/admin/classes",
       icon: BookOpen,
       current: location.pathname.startsWith("/admin/classes"),
+    },
+    {
+      name: "Bookings",
+      href: "/admin/bookings",
+      icon: List,
+      current: location.pathname.startsWith("/admin/bookings"),
     },
     {
       name: "Students",
@@ -147,7 +159,7 @@ const AdminDashboard = () => {
     <div className="min-h-screen bg-gray-50">
       {/* Sidebar */}
       <div
-        className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform transition-transform duration-200 ease-in-out ${sidebarOpen ? "translate-x-0" : "-translate-x-full"
+        className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform transition-transform duration-200 ease-in-out flex flex-col ${sidebarOpen ? "translate-x-0" : "-translate-x-full"
           }`}
       >
         {/* Sidebar Header */}
@@ -176,7 +188,7 @@ const AdminDashboard = () => {
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 p-4 space-y-2">
+        <nav className="flex-1 p-4 space-y-2 overflow-y-auto custom-scrollbar">
           {navigation.map((item) => {
             const Icon = item.icon;
             return (

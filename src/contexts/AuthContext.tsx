@@ -14,6 +14,8 @@ interface User {
   metadata?: any;
   oryIdentityId?: string;
   phoneNumber?: string;
+  alternativePhoneNumber?: string;
+  bio?: string;
   // Role-specific IDs
   teacherId?: string;
   studentId?: string;
@@ -60,6 +62,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         teacherId: backendUser?.teacherId,
         studentId: backendUser?.studentId,
         parentId: backendUser?.parentId,
+        // Basic info
+        phoneNumber: backendUser?.phoneNumber,
+        alternativePhoneNumber: backendUser?.alternativePhoneNumber,
+        bio: backendUser?.bio,
       };
 
       // Persist user to localStorage for faster subsequent loads
@@ -215,6 +221,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       user.teacherId = newUserData.teacherId;
       user.studentId = newUserData.studentId;
       user.parentId = newUserData.parentId;
+      user.phoneNumber = newUserData.phoneNumber;
+      user.alternativePhoneNumber = newUserData.alternativePhoneNumber;
+      user.bio = newUserData.bio;
+      user.fullName = newUserData.fullName || user.fullName;
       setUser(user);
       localStorage.setItem('kidato_user', JSON.stringify(user));
     }
@@ -307,6 +317,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                   teacherId: fixData.user.teacherId,
                   studentId: fixData.user.studentId,
                   parentId: fixData.user.parentId,
+                  phoneNumber: fixData.user.phoneNumber,
+                  alternativePhoneNumber: fixData.user.alternativePhoneNumber,
+                  bio: fixData.user.bio,
                 };
 
                 localStorage.setItem('kidato_user', JSON.stringify(updatedUser));

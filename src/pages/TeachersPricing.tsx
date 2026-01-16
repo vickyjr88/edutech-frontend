@@ -115,7 +115,7 @@ const TeachersPricing = () => {
       ],
       revenueShare: "10% revenue share on all transactions",
       cta: "Request for a Meeting",
-      link: "/contact-sales",
+      link: "/contact-us",
       icon: Building2
     }
   ];

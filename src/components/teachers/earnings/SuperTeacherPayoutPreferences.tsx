@@ -3,15 +3,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
 } from "@/components/ui/select";
-import { 
-  DollarSign, 
+import {
+  DollarSign,
   Loader2,
   AlertCircle,
   CheckCircle2
@@ -30,7 +30,7 @@ const SuperTeacherPayoutPreferences = () => {
   } = useTeacherPayoutPreferences();
 
   // Local state for form
-  const [selectedPeriod, setSelectedPeriod] = useState<'monthly' | 'weekly' | 'biweekly' | 'daily' | 'instant'>('monthly');
+  const [selectedPeriod, setSelectedPeriod] = useState<string>('monthly');
   const [minimumAmount, setMinimumAmount] = useState(50);
   const [automaticPayouts, setAutomaticPayouts] = useState(true);
   const [payoutDay, setPayoutDay] = useState(1);
@@ -39,7 +39,11 @@ const SuperTeacherPayoutPreferences = () => {
   // Update local state when preferences load
   useEffect(() => {
     if (preferences) {
-      setSelectedPeriod(preferences.period);
+      if (!preferences.autoPayoutEnabled) {
+        setSelectedPeriod('manual');
+      } else {
+        setSelectedPeriod(preferences.period);
+      }
       setMinimumAmount(preferences.minimumPayoutAmount);
       setAutomaticPayouts(preferences.autoPayoutEnabled);
       setPayoutDay(preferences.payoutDay || 1);
@@ -49,6 +53,7 @@ const SuperTeacherPayoutPreferences = () => {
 
   // Available periods for payout
   const availablePeriods = [
+    { value: 'manual', label: 'Manual', description: 'Custom payout schedule (Manual payouts only)' },
     { value: 'monthly', label: 'Monthly', description: 'Once per month' },
     { value: 'biweekly', label: 'Bi-weekly', description: 'Every two weeks' },
     { value: 'weekly', label: 'Weekly', description: 'Once per week' },
@@ -58,10 +63,22 @@ const SuperTeacherPayoutPreferences = () => {
 
   // Save preferences
   const handleSavePreferences = async () => {
+    let periodToSend = selectedPeriod;
+    let autoPayoutEnabledToSend = automaticPayouts;
+
+    if (selectedPeriod === 'manual') {
+      periodToSend = 'monthly'; // Default valid enum
+      autoPayoutEnabledToSend = false;
+    } else {
+      // If valid schedule selected, ensure auto is enabled unless specifically unchecked (though we hide the checkbox if manual)
+      // For MVP, selecting a schedule implies auto-payout
+      autoPayoutEnabledToSend = true;
+    }
+
     const updateData: ApiUpdatePayoutPreferencesRequest = {
-      period: selectedPeriod,
+      period: periodToSend as any,
       minimumPayoutAmount: minimumAmount,
-      autoPayoutEnabled: automaticPayouts,
+      autoPayoutEnabled: autoPayoutEnabledToSend,
       payoutDay: payoutDay,
       suspendPayouts: suspendPayouts
     };
@@ -87,10 +104,10 @@ const SuperTeacherPayoutPreferences = () => {
         <CardHeader className="pb-4">
           <CardTitle className="flex items-center gap-2">
             <DollarSign className="h-5 w-5 text-green-600" />
-            Payout Configuration
+            Payout Settings
           </CardTitle>
           <CardDescription>
-            Configure your advanced payout settings
+            Your current payout configuration
           </CardDescription>
         </CardHeader>
 
@@ -105,9 +122,9 @@ const SuperTeacherPayoutPreferences = () => {
         <CardContent className="space-y-6">
           {/* Payout Period */}
           <div className="space-y-3">
-            <Label htmlFor="payout-period">Payout Frequency</Label>
-            <Select 
-              value={selectedPeriod} 
+            <Label htmlFor="payout-period">Payment Schedule</Label>
+            <Select
+              value={selectedPeriod}
               onValueChange={(value) => setSelectedPeriod(value as typeof selectedPeriod)}
             >
               <SelectTrigger id="payout-period" className="w-full">
@@ -150,39 +167,42 @@ const SuperTeacherPayoutPreferences = () => {
             </div>
 
             {/* Payout Day */}
-            <div className="space-y-3">
-              <Label htmlFor="payout-day">Payout Day</Label>
-              <Select 
-                value={payoutDay.toString()} 
-                onValueChange={(value) => setPayoutDay(Number(value))}
-              >
-                <SelectTrigger id="payout-day">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {selectedPeriod === 'monthly' ? (
-                    Array.from({ length: 28 }, (_, i) => i + 1).map(day => (
-                      <SelectItem key={day} value={day.toString()}>
-                        {day}{day === 1 ? 'st' : day === 2 ? 'nd' : day === 3 ? 'rd' : 'th'} of month
-                      </SelectItem>
-                    ))
-                  ) : selectedPeriod === 'weekly' || selectedPeriod === 'biweekly' ? (
-                    ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((day, index) => (
-                      <SelectItem key={index + 1} value={(index + 1).toString()}>
-                        {day}
-                      </SelectItem>
-                    ))
-                  ) : (
-                    <SelectItem value="1">Day 1</SelectItem>
-                  )}
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-gray-500">
-                {selectedPeriod === 'monthly' ? 'Day of the month for payouts' : 
-                 selectedPeriod === 'weekly' || selectedPeriod === 'biweekly' ? 'Day of the week for payouts' :
-                 'Preferred day for payouts'}
-              </p>
-            </div>
+            {/* Payout Day - Only show if not manual */}
+            {selectedPeriod !== 'manual' && (
+              <div className="space-y-3">
+                <Label htmlFor="payout-day">Payout Day</Label>
+                <Select
+                  value={payoutDay.toString()}
+                  onValueChange={(value) => setPayoutDay(Number(value))}
+                >
+                  <SelectTrigger id="payout-day">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {selectedPeriod === 'monthly' ? (
+                      Array.from({ length: 28 }, (_, i) => i + 1).map(day => (
+                        <SelectItem key={day} value={day.toString()}>
+                          {day}{day === 1 ? 'st' : day === 2 ? 'nd' : day === 3 ? 'rd' : 'th'} of month
+                        </SelectItem>
+                      ))
+                    ) : selectedPeriod === 'weekly' || selectedPeriod === 'biweekly' ? (
+                      ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((day, index) => (
+                        <SelectItem key={index + 1} value={(index + 1).toString()}>
+                          {day}
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <SelectItem value="1">Day 1</SelectItem>
+                    )}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-gray-500">
+                  {selectedPeriod === 'monthly' ? 'Day of the month for payouts' :
+                    selectedPeriod === 'weekly' || selectedPeriod === 'biweekly' ? 'Day of the week for payouts' :
+                      'Preferred day for payouts'}
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Additional Settings */}
@@ -208,28 +228,30 @@ const SuperTeacherPayoutPreferences = () => {
           </div>
 
           {/* Automatic Payouts Checkbox */}
-          <div className="flex items-center py-4">
-            <input
-              type="checkbox"
-              id="automatic-payouts"
-              checked={automaticPayouts}
-              onChange={(e) => setAutomaticPayouts(e.target.checked)}
-              className="h-5 w-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-2"
-            />
-            <div className="ml-4">
-              <Label htmlFor="automatic-payouts" className="text-base font-medium cursor-pointer">
-                Automatic Payouts
-              </Label>
-              <p className="text-sm text-gray-500 mt-1">
-                Automatically transfer earnings based on your settings
-              </p>
+          {selectedPeriod !== 'manual' && (
+            <div className="flex items-center py-4">
+              <input
+                type="checkbox"
+                id="automatic-payouts"
+                checked={automaticPayouts}
+                onChange={(e) => setAutomaticPayouts(e.target.checked)}
+                className="h-5 w-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-2"
+              />
+              <div className="ml-4">
+                <Label htmlFor="automatic-payouts" className="text-base font-medium cursor-pointer">
+                  Automatic Payouts
+                </Label>
+                <p className="text-sm text-gray-500 mt-1">
+                  Automatically transfer earnings based on your settings
+                </p>
+              </div>
             </div>
-          </div>
+          )}
 
 
           {/* Save Button */}
           <div className="pt-4 border-t">
-            <Button 
+            <Button
               onClick={handleSavePreferences}
               disabled={isUpdating}
               className="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700"
