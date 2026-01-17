@@ -114,6 +114,13 @@ export const eventService = {
   },
 
   /**
+   * Get events for a user (parent/teacher) - aggregates events from all their students
+   */
+  getUserEvents: (userId: string, limit: number = 20): Promise<ApiResponse<StudentEvent[]>> => {
+    return api.get<StudentEvent[]>(`/users/${userId}/events?limit=${limit}`);
+  },
+
+  /**
    * Get event counts grouped by type
    */
   getByType: (studentId: string): Promise<ApiResponse<Record<string, number>>> => {
