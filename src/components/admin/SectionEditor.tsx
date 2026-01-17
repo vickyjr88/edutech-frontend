@@ -72,37 +72,52 @@ const SectionEditor = ({ sections, onChange }: SectionEditorProps) => {
     onChange(updatedSections);
   };
 
-  // Start editing
+  // Start editing - use deep clone to avoid reference issues with nested objects
   const handleStartEdit = (index: number) => {
+    console.log('[SectionEditor] Starting edit for section', index, sections[index]);
     setEditingIndex(index);
-    setEditingSection({ ...sections[index] });
+    // Deep clone to ensure nested objects (like callToAction) are properly isolated
+    const clonedSection = JSON.parse(JSON.stringify(sections[index]));
+    console.log('[SectionEditor] Cloned section:', clonedSection);
+    setEditingSection(clonedSection);
   };
 
-  // Save edit
-  const handleSaveEdit = () => {
-    if (editingIndex !== null && editingSection) {
-      const updatedSections = [...sections];
-      updatedSections[editingIndex] = editingSection;
-      onChange(updatedSections);
-      setEditingIndex(null);
-      setEditingSection(null);
-    }
-  };
-
-  // Cancel edit
-  const handleCancelEdit = () => {
+  // Close edit panel (changes are now auto-saved)
+  const handleCloseEdit = () => {
+    console.log('[SectionEditor] Closing edit panel');
     setEditingIndex(null);
     setEditingSection(null);
   };
 
-  // Update section field
+  // Cancel edit - revert changes
+  const handleCancelEdit = () => {
+    console.log('[SectionEditor] Cancelling edit - reverting changes');
+    setEditingIndex(null);
+    setEditingSection(null);
+  };
+
+  // Update section field - NOW IMMEDIATELY PROPAGATES TO PARENT
   const updateSectionField = (
     section: Section,
     setter: (s: Section) => void,
     field: string,
     value: any
   ) => {
-    setter({ ...section, [field]: value });
+    console.log('[SectionEditor] Updating field:', field, 'to:', value);
+    const updatedSection = { ...section, [field]: value };
+    console.log('[SectionEditor] Updated section:', updatedSection);
+
+    // Update local editing state
+    setter(updatedSection);
+
+    // IMMEDIATELY propagate to parent sections array
+    if (editingIndex !== null) {
+      const updatedSections = sections.map((s, idx) =>
+        idx === editingIndex ? JSON.parse(JSON.stringify(updatedSection)) : s
+      );
+      console.log('[SectionEditor] Auto-saving to parent sections:', JSON.stringify(updatedSections[editingIndex], null, 2));
+      onChange(updatedSections);
+    }
   };
 
   // Render section preview
@@ -161,12 +176,13 @@ const SectionEditor = ({ sections, onChange }: SectionEditorProps) => {
               ) : (
                 <>
                   <Button
-                    variant="ghost"
+                    variant="default"
                     size="sm"
-                    onClick={handleSaveEdit}
+                    onClick={handleCloseEdit}
+                    className="bg-green-600 hover:bg-green-700"
                   >
                     <Save className="h-4 w-4 mr-1" />
-                    Save
+                    Done
                   </Button>
                   <Button
                     variant="ghost"
@@ -174,7 +190,7 @@ const SectionEditor = ({ sections, onChange }: SectionEditorProps) => {
                     onClick={handleCancelEdit}
                   >
                     <X className="h-4 w-4 mr-1" />
-                    Cancel
+                    Close
                   </Button>
                 </>
               )}
@@ -182,63 +198,164 @@ const SectionEditor = ({ sections, onChange }: SectionEditorProps) => {
           </div>
         </CardHeader>
         {isEditing && (
-          <CardContent className="space-y-3">
+          <CardContent className="space-y-4">
             {/* Render all fields as editable */}
-            {Object.entries(currentSection).map(([key, value]) => (
-              <div key={key}>
-                <Label htmlFor={`${index}-${key}`} className="capitalize">
-                  {key}
-                </Label>
-                {typeof value === "string" && value.length > 100 ? (
-                  <Textarea
-                    id={`${index}-${key}`}
-                    value={value}
-                    onChange={(e) =>
-                      updateSectionField(
-                        currentSection,
-                        setEditingSection,
-                        key,
-                        e.target.value
-                      )
-                    }
-                    rows={3}
-                  />
-                ) : typeof value === "object" ? (
-                  <Textarea
-                    id={`${index}-${key}`}
-                    value={JSON.stringify(value, null, 2)}
-                    onChange={(e) => {
-                      try {
-                        const parsed = JSON.parse(e.target.value);
-                        updateSectionField(
-                          currentSection,
-                          setEditingSection,
-                          key,
-                          parsed
-                        );
-                      } catch {
-                        // Invalid JSON, don't update
+            {Object.entries(currentSection).map(([key, value]) => {
+              // Helper function to detect CTA-like objects
+              const isCTAField = (fieldKey: string, fieldValue: any): boolean => {
+                if (typeof fieldValue !== 'object' || fieldValue === null || Array.isArray(fieldValue)) {
+                  return false;
+                }
+                // Check if key contains CTA or callToAction
+                const ctaKeyPatterns = ['cta', 'calltoaction', 'primarycta', 'secondarycta'];
+                const keyLower = fieldKey.toLowerCase();
+                const matchesKey = ctaKeyPatterns.some(pattern => keyLower.includes(pattern));
+                // Also check if object has text + (link OR href)
+                const hasTextAndLink = 'text' in fieldValue && ('link' in fieldValue || 'href' in fieldValue);
+                return matchesKey || hasTextAndLink;
+              };
+
+              // Render CTA editor for CTA-like fields
+              const renderCTAEditor = (fieldKey: string, fieldValue: any) => {
+                const linkField = 'href' in fieldValue ? 'href' : 'link';
+                const labelName = fieldKey
+                  .replace(/([A-Z])/g, ' $1')
+                  .replace(/^./, str => str.toUpperCase())
+                  .trim();
+
+                return (
+                  <div key={fieldKey} className="border rounded-lg p-4 bg-blue-50">
+                    <Label className="text-sm font-semibold mb-3 block">{labelName}</Label>
+                    <div className="space-y-3">
+                      <div>
+                        <Label htmlFor={`${index}-${fieldKey}-text`} className="text-xs text-gray-600">Button Text</Label>
+                        <Input
+                          id={`${index}-${fieldKey}-text`}
+                          value={fieldValue.text || ''}
+                          onChange={(e) => {
+                            const updated = { ...fieldValue, text: e.target.value };
+                            updateSectionField(currentSection, setEditingSection, fieldKey, updated);
+                          }}
+                          placeholder="e.g., Get Started"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor={`${index}-${fieldKey}-link`} className="text-xs text-gray-600">Link URL</Label>
+                        <Input
+                          id={`${index}-${fieldKey}-link`}
+                          value={fieldValue[linkField] || ''}
+                          onChange={(e) => {
+                            const updated = { ...fieldValue, [linkField]: e.target.value };
+                            updateSectionField(currentSection, setEditingSection, fieldKey, updated);
+                          }}
+                          placeholder="e.g., /register"
+                        />
+                      </div>
+                      {fieldValue.variant !== undefined && (
+                        <div>
+                          <Label htmlFor={`${index}-${fieldKey}-variant`} className="text-xs text-gray-600">Variant</Label>
+                          <Input
+                            id={`${index}-${fieldKey}-variant`}
+                            value={fieldValue.variant || ''}
+                            onChange={(e) => {
+                              const updated = { ...fieldValue, variant: e.target.value };
+                              updateSectionField(currentSection, setEditingSection, fieldKey, updated);
+                            }}
+                            placeholder="e.g., primary, secondary, outline"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              };
+
+              // Special handling for CTA-like objects
+              if (isCTAField(key, value)) {
+                return renderCTAEditor(key, value);
+              }
+
+              // Handle arrays of items (features, benefits, etc.)
+              if (Array.isArray(value)) {
+                return (
+                  <div key={key} className="border rounded-lg p-4 bg-gray-50">
+                    <Label className="text-sm font-semibold mb-2 block capitalize">{key} ({value.length} items)</Label>
+                    <Textarea
+                      id={`${index}-${key}`}
+                      value={JSON.stringify(value, null, 2)}
+                      onChange={(e) => {
+                        try {
+                          const parsed = JSON.parse(e.target.value);
+                          if (Array.isArray(parsed)) {
+                            updateSectionField(currentSection, setEditingSection, key, parsed);
+                          }
+                        } catch {
+                          // Invalid JSON during typing, don't update state
+                        }
+                      }}
+                      className="font-mono text-sm"
+                      rows={Math.min(10, Math.max(5, value.length * 2))}
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Edit as JSON array</p>
+                  </div>
+                );
+              }
+
+              // Handle other objects
+              if (typeof value === 'object' && value !== null) {
+                return (
+                  <div key={key} className="border rounded-lg p-4 bg-gray-50">
+                    <Label className="text-sm font-semibold mb-2 block capitalize">{key}</Label>
+                    <Textarea
+                      id={`${index}-${key}`}
+                      value={JSON.stringify(value, null, 2)}
+                      onChange={(e) => {
+                        try {
+                          const parsed = JSON.parse(e.target.value);
+                          updateSectionField(currentSection, setEditingSection, key, parsed);
+                        } catch {
+                          // Invalid JSON during typing, don't update state
+                        }
+                      }}
+                      className="font-mono text-sm"
+                      rows={5}
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Edit as JSON object</p>
+                  </div>
+                );
+              }
+
+              // Handle long strings with textarea
+              if (typeof value === 'string' && value.length > 100) {
+                return (
+                  <div key={key}>
+                    <Label htmlFor={`${index}-${key}`} className="capitalize">{key}</Label>
+                    <Textarea
+                      id={`${index}-${key}`}
+                      value={value}
+                      onChange={(e) =>
+                        updateSectionField(currentSection, setEditingSection, key, e.target.value)
                       }
-                    }}
-                    className="font-mono text-sm"
-                    rows={5}
-                  />
-                ) : (
+                      rows={3}
+                    />
+                  </div>
+                );
+              }
+
+              // Handle simple strings and other primitives with input
+              return (
+                <div key={key}>
+                  <Label htmlFor={`${index}-${key}`} className="capitalize">{key}</Label>
                   <Input
                     id={`${index}-${key}`}
-                    value={value?.toString() || ""}
+                    value={value?.toString() || ''}
                     onChange={(e) =>
-                      updateSectionField(
-                        currentSection,
-                        setEditingSection,
-                        key,
-                        e.target.value
-                      )
+                      updateSectionField(currentSection, setEditingSection, key, e.target.value)
                     }
                   />
-                )}
-              </div>
-            ))}
+                </div>
+              );
+            })}
           </CardContent>
         )}
       </Card>

@@ -15,6 +15,9 @@ import {
   UserCircle,
   Activity,
   BarChart3,
+  DollarSign,
+  Calendar,
+  TrendingDown,
 } from 'lucide-react';
 import { adminService } from '@/integrations/api/services/admin.service';
 import { cn } from '@/lib/utils';
@@ -74,6 +77,41 @@ const AdminDashboardPage = () => {
       completed: rawStats?.enrollments?.completed || 0,
       pending: rawStats?.enrollments?.pending || 0,
     },
+    offerings: {
+      total: rawStats?.offerings?.total || 0,
+      active: rawStats?.offerings?.active || 0,
+      inactive: rawStats?.offerings?.inactive || 0,
+    },
+    bookings: {
+      total: rawStats?.bookings?.total || 0,
+      recent: rawStats?.bookings?.recent || 0,
+      byStatus: rawStats?.bookings?.byStatus || {
+        pending: 0,
+        confirmed: 0,
+        completed: 0,
+        cancelled: 0,
+      },
+      disputed: rawStats?.bookings?.disputed || 0,
+      manual: rawStats?.bookings?.manual || 0,
+    },
+    revenue: {
+      totalRevenue: rawStats?.revenue?.totalRevenue || 0,
+      paidRevenue: rawStats?.revenue?.paidRevenue || 0,
+      unpaidRevenue: rawStats?.revenue?.unpaidRevenue || 0,
+      averageBookingValue: rawStats?.revenue?.averageBookingValue || 0,
+      platformFeesCollected: rawStats?.revenue?.platformFeesCollected || 0,
+      platformFeeRate: rawStats?.revenue?.platformFeeRate || 0.15,
+      currency: rawStats?.revenue?.currency || 'KES',
+    },
+    payments: {
+      successRate: rawStats?.payments?.successRate || '0',
+      totalAttempts: rawStats?.payments?.totalAttempts || 0,
+      successfulPayments: rawStats?.payments?.successfulPayments || 0,
+      failedPayments: rawStats?.payments?.failedPayments || 0,
+    },
+    bookingsBySubject: rawStats?.bookingsBySubject || [],
+    popularOfferings: rawStats?.popularOfferings || [],
+    teacherPerformance: rawStats?.teacherPerformance || [],
     activity: {
       recentActions: rawStats?.activity?.recentActions || 0,
       activeSuspensions: rawStats?.activity?.activeSuspensions || 0,
@@ -114,19 +152,70 @@ const AdminDashboardPage = () => {
         <p className="text-gray-500 mt-1">Welcome to your admin dashboard</p>
       </div>
 
-      {/* Overview Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      {/* Overview Cards - Top Row with 5 Cards */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-gray-600">
-              Total Users
+              Total Bookings
             </CardTitle>
-            <Users className="h-4 w-4 text-gray-500" />
+            <Calendar className="h-4 w-4 text-gray-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.overview.totalUsers}</div>
+            <div className="text-2xl font-bold">{stats.bookings.total}</div>
             <p className="text-xs text-gray-500 mt-1">
-              +{stats.users.newThisWeek} this week
+              +{stats.bookings.recent} this week
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-gray-600">
+              Total Revenue (GMV)
+            </CardTitle>
+            <DollarSign className="h-4 w-4 text-gray-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {stats.revenue.currency} {Math.round(stats.revenue.totalRevenue).toLocaleString()}
+            </div>
+            <p className="text-xs text-gray-500 mt-1">
+              Avg: {stats.revenue.currency} {Math.round(stats.revenue.averageBookingValue).toLocaleString()}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-gray-600">
+              Platform Fees
+            </CardTitle>
+            <TrendingUp className="h-4 w-4 text-gray-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-green-600">
+              {stats.revenue.currency} {Math.round(stats.revenue.platformFeesCollected).toLocaleString()}
+            </div>
+            <p className="text-xs text-gray-500 mt-1">
+              {(stats.revenue.platformFeeRate * 100).toFixed(0)}% commission
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-gray-600">
+              Payment Success
+            </CardTitle>
+            <CheckCircle className="h-4 w-4 text-gray-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-green-600">
+              {stats.payments.successRate}%
+            </div>
+            <p className="text-xs text-gray-500 mt-1">
+              {stats.payments.successfulPayments} / {stats.payments.totalAttempts} attempts
             </p>
           </CardContent>
         </Card>
@@ -142,36 +231,6 @@ const AdminDashboardPage = () => {
             <div className="text-2xl font-bold">{stats.overview.totalTeachers}</div>
             <p className="text-xs text-gray-500 mt-1">
               {stats.users.byRole.teacher || 0} active
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">
-              Total Students
-            </CardTitle>
-            <UserCircle className="h-4 w-4 text-gray-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.overview.totalStudents}</div>
-            <p className="text-xs text-gray-500 mt-1">
-              {stats.users.byRole.student || 0} active
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">
-              Active Tickets
-            </CardTitle>
-            <MessageSquare className="h-4 w-4 text-gray-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.overview.activeTickets}</div>
-            <p className="text-xs text-gray-500 mt-1">
-              {stats.tickets.urgent} urgent
             </p>
           </CardContent>
         </Card>
@@ -317,47 +376,55 @@ const AdminDashboardPage = () => {
           </CardContent>
         </Card>
 
-        {/* Classes & Enrollments */}
+        {/* Offerings & Bookings */}
         <Card>
           <CardHeader>
-            <CardTitle>Classes & Enrollments</CardTitle>
+            <CardTitle>Offerings & Bookings</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               <div>
                 <div className="flex items-center gap-2 mb-2">
                   <BookOpen className="h-5 w-5 text-blue-600" />
-                  <span className="text-sm font-medium">Classes</span>
+                  <span className="text-sm font-medium">Offerings</span>
                 </div>
                 <div className="space-y-2">
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-gray-600">Total</span>
-                    <span className="font-semibold">{stats.classes.total}</span>
+                    <span className="font-semibold">{stats.offerings.total}</span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-gray-600">Active</span>
-                    <span className="font-semibold text-green-600">{stats.classes.active}</span>
+                    <span className="font-semibold text-green-600">{stats.offerings.active}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Inactive</span>
+                    <span className="font-semibold text-gray-600">{stats.offerings.inactive}</span>
                   </div>
                 </div>
               </div>
 
               <div className="pt-3 border-t">
                 <div className="flex items-center gap-2 mb-2">
-                  <Activity className="h-5 w-5 text-purple-600" />
-                  <span className="text-sm font-medium">Enrollments</span>
+                  <Calendar className="h-5 w-5 text-purple-600" />
+                  <span className="text-sm font-medium">Bookings</span>
                 </div>
                 <div className="space-y-2">
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-gray-600">Total</span>
-                    <span className="font-semibold">{stats.enrollments.total}</span>
+                    <span className="font-semibold">{stats.bookings.total}</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">Enrolled</span>
-                    <span className="font-semibold text-green-600">{stats.enrollments.enrolled}</span>
+                    <span className="text-sm text-gray-600">Confirmed</span>
+                    <span className="font-semibold text-green-600">{stats.bookings.byStatus.confirmed}</span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-gray-600">Completed</span>
-                    <span className="font-semibold text-blue-600">{stats.enrollments.completed}</span>
+                    <span className="font-semibold text-blue-600">{stats.bookings.byStatus.completed}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Disputed</span>
+                    <span className="font-semibold text-red-600">{stats.bookings.disputed}</span>
                   </div>
                 </div>
               </div>
@@ -439,6 +506,98 @@ const AdminDashboardPage = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Bookings by Subject */}
+      {stats.bookingsBySubject && stats.bookingsBySubject.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Bookings by Subject</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {stats.bookingsBySubject.map((subject: any, index: number) => (
+                <div key={index} className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="bg-blue-100 p-2 rounded-lg">
+                      <BookOpen className="h-4 w-4 text-blue-600" />
+                    </div>
+                    <div>
+                      <p className="font-medium">{subject._id || 'Unknown'}</p>
+                      <p className="text-xs text-gray-500">
+                        {stats.revenue.currency} {Math.round(subject.revenue || 0).toLocaleString()} revenue
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xl font-bold">{subject.count}</p>
+                    <p className="text-xs text-gray-500">bookings</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Analytics Row - Popular Offerings and Teacher Performance */}
+      <div className="grid gap-6 md:grid-cols-2">
+        {/* Popular Offerings */}
+        {stats.popularOfferings && stats.popularOfferings.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Popular Offerings</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {stats.popularOfferings.map((offering: any, index: number) => (
+                  <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div>
+                      <p className="font-medium">{offering.title}</p>
+                      <p className="text-xs text-gray-500">{offering.subject}</p>
+                      <p className="text-xs text-gray-500">
+                        {offering.teacherName} • {stats.revenue.currency} {Math.round(offering.price || 0).toLocaleString()}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-lg font-bold text-blue-600">{offering.bookingCount}</p>
+                      <p className="text-xs text-gray-500">bookings</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Teacher Performance Metrics */}
+        {stats.teacherPerformance && stats.teacherPerformance.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Top Performing Teachers</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {stats.teacherPerformance.map((teacher: any, index: number) => (
+                  <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div>
+                      <p className="font-medium">{teacher.teacherName}</p>
+                      <p className="text-xs text-gray-500">
+                        {teacher.totalBookings} bookings • {teacher.completionRate}% completion
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-lg font-bold text-green-600">
+                        {stats.revenue.currency} {Math.round(teacher.totalRevenue || 0).toLocaleString()}
+                      </p>
+                      <p className="text-xs text-gray-500">revenue</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </div>
     </div>
   );
 };

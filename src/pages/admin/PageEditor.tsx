@@ -48,12 +48,13 @@ const PageEditor = () => {
       const pageData = await cmsApiService.getPage(pageSlug);
       setPage(pageData);
 
-      // Populate form
+      // Populate form - deep clone sections to avoid reference issues
       setTitle(pageData.metadata.title);
       setDescription(pageData.metadata.description);
       setKeywords(pageData.metadata.keywords.join(", "));
       setPageSlug(pageData.slug);
-      setSections(pageData.sections || []);
+      // Deep clone sections to prevent mutation issues
+      setSections(JSON.parse(JSON.stringify(pageData.sections || [])));
     } catch (error: any) {
       toast({
         title: "Error loading page",
@@ -81,18 +82,22 @@ const PageEditor = () => {
     try {
       setSaving(true);
 
-      const data = {
+      // Build payload with current state values
+      const payload = {
         metadata: {
           title,
           description,
           keywords: keywords.split(",").map((k) => k.trim()).filter(Boolean),
         },
-        sections,
+        sections: JSON.parse(JSON.stringify(sections)), // Deep clone to ensure clean data
         ...(isEditMode && changeLog ? { changeLog } : {}),
       };
 
+      // Debug: Log the payload being sent
+      console.log('[PageEditor] Saving page with payload:', JSON.stringify(payload, null, 2));
+
       if (isEditMode) {
-        await cmsApiService.updatePage(slug!, data);
+        await cmsApiService.updatePage(slug!, payload);
         toast({
           title: "Page updated",
           description: "Changes saved as draft",
@@ -101,7 +106,7 @@ const PageEditor = () => {
       } else {
         const created = await cmsApiService.createPage({
           slug: pageSlug,
-          ...data,
+          ...payload,
         });
         toast({
           title: "Page created",
@@ -135,25 +140,29 @@ const PageEditor = () => {
     try {
       setSaving(true);
 
-      const data = {
+      // Build payload with current state values
+      const payload = {
         metadata: {
           title,
           description,
           keywords: keywords.split(",").map((k) => k.trim()).filter(Boolean),
         },
-        sections,
+        sections: JSON.parse(JSON.stringify(sections)), // Deep clone to ensure clean data
         ...(isEditMode && changeLog ? { changeLog } : {}),
       };
+
+      // Debug: Log the payload being sent
+      console.log('[PageEditor] Publishing page with payload:', JSON.stringify(payload, null, 2));
 
       let targetSlug = pageSlug;
 
       if (isEditMode) {
-        await cmsApiService.updatePage(slug!, data);
+        await cmsApiService.updatePage(slug!, payload);
         targetSlug = slug!;
       } else {
         const created = await cmsApiService.createPage({
           slug: pageSlug,
-          ...data,
+          ...payload,
         });
         targetSlug = created.slug;
       }
