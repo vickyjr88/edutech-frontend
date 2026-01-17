@@ -99,6 +99,7 @@ import BlogTagsList from "../pages/admin/BlogTagsList";
 import InquiriesPage from "../pages/admin/InquiriesPage";
 import NewsletterSubscribersPage from "../pages/admin/NewsletterSubscribersPage";
 import BloggersList from "../pages/admin/BloggersList";
+import TeachingConfigManagement from "../pages/admin/TeachingConfigManagement";
 
 // Auth Guards
 import ProtectedRoute from "./auth/ProtectedRoute";
@@ -443,6 +444,9 @@ const MVPAppRoutes = () => {
 
           {/* Inquiries */}
           <Route path="inquiries" element={<InquiriesPage />} />
+
+          {/* Teaching Config */}
+          <Route path="teaching-config" element={<TeachingConfigManagement />} />
         </Route>
       )}
 

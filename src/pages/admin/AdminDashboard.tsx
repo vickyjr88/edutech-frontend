@@ -21,6 +21,7 @@ import {
   UsersRound,
   MessageSquare,
   LayoutDashboard,
+  Settings,
 } from "lucide-react";
 
 /**
@@ -152,6 +153,12 @@ const AdminDashboard = () => {
       href: "/admin/users",
       icon: Users,
       current: location.pathname.startsWith("/admin/users"),
+    },
+    {
+      name: "Teaching Config",
+      href: "/admin/teaching-config",
+      icon: Settings,
+      current: location.pathname.startsWith("/admin/teaching-config"),
     },
   ];
 

@@ -11,6 +11,7 @@ import ClassesGrid from "@/components/classes/ClassesGrid";
 import ClassesPagination from "@/components/classes/ClassesPagination";
 import { api } from "@/integrations/api/client";
 import { Loader2 } from "lucide-react";
+import useTeachingConfig from "@/hooks/use-teaching-config";
 
 // Offering type from /mvp/offerings endpoint
 interface Offering {
@@ -50,8 +51,8 @@ const subjectImages: Record<string, string> = {
 // Helper to map Offering to ClassItemProps
 const mapOfferingToCardProps = (offering: Offering, index: number): ClassItemProps => {
   // Format price with currency
-  const priceString = offering.price > 0 
-    ? `${offering.currency} ${offering.price}/${offering.type === 'monthly-package' ? 'month' : 'session'}` 
+  const priceString = offering.price > 0
+    ? `${offering.currency} ${offering.price}/${offering.type === 'monthly-package' ? 'month' : 'session'}`
     : "Free";
 
   // Format session info
@@ -59,8 +60,11 @@ const mapOfferingToCardProps = (offering: Offering, index: number): ClassItemPro
     ? `${offering.sessionsPerMonth} sessions/month • ${offering.sessionDuration} min each`
     : `${offering.sessionDuration} min session`;
 
-  // Get image based on subject
-  const imageSrc = subjectImages[offering.subject] || subjectImages["default"];
+  // Get image based on subject (case-insensitive lookup)
+  const subjectKey = Object.keys(subjectImages).find(
+    key => key.toLowerCase() === offering.subject?.toLowerCase()
+  ) || "default";
+  const imageSrc = subjectImages[subjectKey];
 
   return {
     title: offering.title,
@@ -76,8 +80,6 @@ const mapOfferingToCardProps = (offering: Offering, index: number): ClassItemPro
   };
 };
 
-const subjects = ["All Subjects", "Mathematics", "Physics", "Chemistry", "Biology", "English", "Science", "History", "Computer Science"];
-const grades = ["All Grades", "Grade 1", "Grade 2", "Grade 3", "Grade 4", "Grade 5", "Grade 6", "Grade 7", "Grade 8", "Grade 9", "Grade 10", "Grade 11", "Grade 12"];
 const sortOptions = ["Recommended", "Price: Low to High", "Price: High to Low", "Rating: High to Low", "Newest First"];
 
 const AllClasses = () => {
@@ -95,6 +97,12 @@ const AllClasses = () => {
   const [showFeaturedOnly, setShowFeaturedOnly] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const classesPerPage = 8;
+
+  // Use dynamic teaching config
+  const { subjects: rawSubjects, gradeLevels: rawGrades } = useTeachingConfig();
+
+  const subjects = ["All Subjects", ...rawSubjects.map(s => s.label)];
+  const grades = ["All Grades", ...rawGrades.map(g => g.label)];
 
   // Fetch offerings on mount
   useEffect(() => {
@@ -136,9 +144,11 @@ const AllClasses = () => {
       classItem.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
       classItem.teacher.toLowerCase().includes(searchTerm.toLowerCase());
 
-    const matchesSubject = selectedSubject === "All Subjects" || classItem.subject === selectedSubject;
+    const matchesSubject = selectedSubject === "All Subjects" ||
+      classItem.subject.toLowerCase() === selectedSubject.toLowerCase();
 
-    const matchesGrade = selectedGrade === "All Grades" || classItem.level.includes(selectedGrade);
+    const matchesGrade = selectedGrade === "All Grades" ||
+      classItem.level.toLowerCase().includes(selectedGrade.toLowerCase());
 
     // Extract numeric price from string like "KES 500/month" or "KES 100/session"
     const priceMatch = classItem.price.match(/\d+/);
@@ -156,7 +166,7 @@ const AllClasses = () => {
       const match = priceStr.match(/\d+/);
       return match ? parseInt(match[0]) : 0;
     };
-    
+
     switch (sortBy) {
       case "Price: Low to High":
         return getPriceNum(a.price) - getPriceNum(b.price);

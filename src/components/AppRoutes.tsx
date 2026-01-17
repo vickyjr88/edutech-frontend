@@ -83,6 +83,7 @@ import TeachersManagement from "../pages/admin/TeachersManagement";
 import StudentsManagement from "../pages/admin/StudentsManagement";
 import ParentsManagement from "../pages/admin/ParentsManagement";
 import TicketsManagement from "../pages/admin/TicketsManagement";
+import TeachingConfigManagement from "../pages/admin/TeachingConfigManagement";
 import AdminDashboardPage from "../pages/admin/AdminDashboardPage";
 import ClassesManagement from "../pages/admin/ClassesManagement";
 import AdminMessaging from "../pages/admin/AdminMessaging";
@@ -363,6 +364,7 @@ const AppRoutes = () => {
         <Route path="tickets" element={<TicketsManagement />} />
         <Route path="messaging" element={<AdminMessaging />} />
         <Route path="users" element={<UsersManagement />} />
+        <Route path="teaching-config" element={<TeachingConfigManagement />} />
       </Route>
 
       {/* Document Viewers - Public (uses signed URL for security) */}

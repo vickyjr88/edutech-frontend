@@ -143,6 +143,7 @@ export const MvpTeacherService = {
         }
 
         return mvpApiClient.post<{ profileImage: string }>('/teacher-profiles/upload-photo', {
+            base64Image: cleanBase64,
             mimeType,
         });
     },

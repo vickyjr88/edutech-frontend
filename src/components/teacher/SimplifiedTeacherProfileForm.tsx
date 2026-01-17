@@ -21,6 +21,8 @@ import { toast } from 'sonner';
 import { Loader2, Upload, X, Plus } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { MvpTeacherService } from '@/integrations/api/services/mvp-teacher.service';
+import useTeachingConfig from '@/hooks/use-teaching-config';
+import { MultiSelectAutocomplete } from '@/components/ui/multi-select-autocomplete';
 
 // Validation Schema
 const profileSchema = z.object({
@@ -54,9 +56,10 @@ const profileSchema = z.object({
 type ProfileFormData = z.infer<typeof profileSchema>;
 
 // Mock data for dropdowns (will come from API in production)
-const CURRICULUMS = ['IGCSE', 'KCSE', 'IB', 'A-Level', '8-4-4', 'CBC'];
-const SUBJECTS = ['Mathematics', 'Physics', 'Chemistry', 'Biology', 'English', 'Kiswahili', 'History', 'Geography', 'Computer Science'];
-const GRADE_LEVELS = ['Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6', 'Form 1', 'Form 2', 'Form 3', 'Form 4'];
+// Mock data for dropdowns (will come from API in production)
+// const CURRICULUMS = ['IGCSE', 'KCSE', 'IB', 'A-Level', '8-4-4', 'CBC'];
+// const SUBJECTS = ['Mathematics', 'Physics', 'Chemistry', 'Biology', 'English', 'Kiswahili', 'History', 'Geography', 'Computer Science'];
+// const GRADE_LEVELS = ['Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6', 'Form 1', 'Form 2', 'Form 3', 'Form 4'];
 
 interface Education {
   degree: string;
@@ -73,6 +76,9 @@ interface Certification {
 export default function SimplifiedTeacherProfileForm() {
   const { user } = useAuth();
   const navigate = useNavigate();
+
+  // Load teaching config
+  const { curricula, subjects: subjectOptions, gradeLevels: gradeLevelOptions, isLoading: isConfigLoading } = useTeachingConfig();
 
   const [profilePhoto, setProfilePhoto] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string>('');
@@ -505,19 +511,14 @@ export default function SimplifiedTeacherProfileForm() {
             {/* Curriculums */}
             <div>
               <Label>Curriculum(s) * (Select all that apply)</Label>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mt-2">
-                {CURRICULUMS.map((curriculum) => (
-                  <div key={curriculum} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={`curriculum-${curriculum}`}
-                      checked={selectedCurriculums.includes(curriculum)}
-                      onCheckedChange={() => toggleSelection('curriculums', curriculum)}
-                    />
-                    <Label htmlFor={`curriculum-${curriculum}`} className="cursor-pointer">
-                      {curriculum}
-                    </Label>
-                  </div>
-                ))}
+              <div className="mt-2">
+                <MultiSelectAutocomplete
+                  options={curricula}
+                  selectedValues={selectedCurriculums}
+                  onChange={(values) => setValue('curriculums', values, { shouldValidate: true })}
+                  placeholder="Select curricula..."
+                  emptyMessage="No curricula found."
+                />
               </div>
               {errors.curriculums && (
                 <p className="text-sm text-red-500 mt-1">{errors.curriculums.message}</p>
@@ -527,19 +528,14 @@ export default function SimplifiedTeacherProfileForm() {
             {/* Subjects */}
             <div>
               <Label>Subject(s) * (Select all that apply)</Label>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mt-2">
-                {SUBJECTS.map((subject) => (
-                  <div key={subject} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={`subject-${subject}`}
-                      checked={selectedSubjects.includes(subject)}
-                      onCheckedChange={() => toggleSelection('subjects', subject)}
-                    />
-                    <Label htmlFor={`subject-${subject}`} className="cursor-pointer">
-                      {subject}
-                    </Label>
-                  </div>
-                ))}
+              <div className="mt-2">
+                <MultiSelectAutocomplete
+                  options={subjectOptions}
+                  selectedValues={selectedSubjects}
+                  onChange={(values) => setValue('subjects', values, { shouldValidate: true })}
+                  placeholder="Select subjects..."
+                  emptyMessage="No subjects found."
+                />
               </div>
               {errors.subjects && (
                 <p className="text-sm text-red-500 mt-1">{errors.subjects.message}</p>
@@ -549,19 +545,14 @@ export default function SimplifiedTeacherProfileForm() {
             {/* Grade Levels */}
             <div>
               <Label>Grade Level(s) * (Select all that apply)</Label>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-2">
-                {GRADE_LEVELS.map((grade) => (
-                  <div key={grade} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={`grade-${grade}`}
-                      checked={selectedGradeLevels.includes(grade)}
-                      onCheckedChange={() => toggleSelection('gradeLevels', grade)}
-                    />
-                    <Label htmlFor={`grade-${grade}`} className="cursor-pointer">
-                      {grade}
-                    </Label>
-                  </div>
-                ))}
+              <div className="mt-2">
+                <MultiSelectAutocomplete
+                  options={gradeLevelOptions}
+                  selectedValues={selectedGradeLevels}
+                  onChange={(values) => setValue('gradeLevels', values, { shouldValidate: true })}
+                  placeholder="Select grade levels..."
+                  emptyMessage="No grade levels found."
+                />
               </div>
               {errors.gradeLevels && (
                 <p className="text-sm text-red-500 mt-1">{errors.gradeLevels.message}</p>
