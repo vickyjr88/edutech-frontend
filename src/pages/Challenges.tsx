@@ -24,7 +24,7 @@ const Challenges = () => {
   const [isTrackingOpen, setIsTrackingOpen] = useState(false);
   const [selectedGoal, setSelectedGoal] = useState<any>(null);
   const { toast } = useToast();
-  
+
   const questChallenges = [
     {
       id: "st1",
@@ -66,7 +66,7 @@ const Challenges = () => {
       questMode: "individual"
     }
   ];
-  
+
   const longTermQuests = [
     {
       id: "lt1",
@@ -108,7 +108,7 @@ const Challenges = () => {
       questMode: "group"
     }
   ];
-  
+
   const groupQuests = [
     {
       id: "g1",
@@ -153,28 +153,28 @@ const Challenges = () => {
       members: ["John Doe", "Alex Brown", "Lisa Chang", "Michael Scott"]
     }
   ];
-  
+
   const handleCreateGoal = (values: any) => {
     console.log("New quest created:", values);
-    const message = values.questMode === "group" 
-      ? `Your new group quest "${values.title}" has been created successfully.` 
+    const message = values.questMode === "group"
+      ? `Your new group quest "${values.title}" has been created successfully.`
       : `Your new quest "${values.title}" has been created successfully.`;
-    
+
     toast({
       title: "Quest Created",
       description: message,
     });
-    
+
     if (values.questMode === "group") {
       console.log("Group quest created - would send invites to members");
     }
   };
-  
+
   const handleEditGoal = (goal: any) => {
     setSelectedGoal(goal);
     setIsTrackingOpen(true);
   };
-  
+
   const handleUpdateGoal = (goalId: string, progress: number, notes: string, timeSpent?: string) => {
     console.log("Quest updated:", { goalId, progress, notes, timeSpent });
     toast({
@@ -191,7 +191,7 @@ const Challenges = () => {
       orange: "text-orange-600",
       yellow: "text-yellow-600"
     };
-    
+
     return colorMap[color] || "text-blue-600";
   };
 
@@ -210,8 +210,8 @@ const Challenges = () => {
       </div>
       <div className="flex items-center gap-3">
         <p className={`font-bold ${getProgressColorClass(goal.color)}`}>{goal.progress}%</p>
-        <Button 
-          variant="outline" 
+        <Button
+          variant="outline"
           size="sm"
           className="flex items-center gap-1 border-blue-300 hover:bg-blue-100"
           onClick={() => handleEditGoal(goal)}
@@ -222,7 +222,7 @@ const Challenges = () => {
       </div>
     </li>
   );
-  
+
   const renderGroupMemberInitials = (member: string) => {
     const initials = member.split(' ').map(n => n[0]).join('');
     return (
@@ -231,7 +231,7 @@ const Challenges = () => {
       </div>
     );
   };
-  
+
   const renderGroupQuestItem = (quest: any) => (
     <li key={quest.id} className="flex flex-col p-3 bg-blue-50 rounded-lg">
       <div className="flex justify-between items-center mb-2">
@@ -246,8 +246,8 @@ const Challenges = () => {
         </div>
         <div className="flex items-center gap-3">
           <p className={`font-bold ${getProgressColorClass(quest.color)}`}>{quest.progress}%</p>
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             size="sm"
             className="flex items-center gap-1 border-blue-300 hover:bg-blue-100"
             onClick={() => handleEditGoal(quest)}
@@ -267,34 +267,32 @@ const Challenges = () => {
   );
 
   return (
-    <div className="flex min-h-screen bg-gradient-to-b from-blue-50 to-white">
-      <StudentSidebar />
-
+    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white md:ml-64 transition-all duration-300">
       <div className="flex-1 flex flex-col">
         <StudentDashboardHeader userName={userName} />
-        
+
         <main className="p-4 sm:p-6 flex-1 overflow-y-auto">
           <div className="max-w-7xl mx-auto">
             <div className="flex justify-between items-center mb-6">
               <h1 className="text-2xl font-bold text-gray-800">Quests & Challenges</h1>
-              <Button 
-                onClick={() => setIsGoalFormOpen(true)} 
+              <Button
+                onClick={() => setIsGoalFormOpen(true)}
                 className="bg-kidato-purple hover:bg-kidato-dark-blue rounded-xl flex items-center gap-2"
               >
                 <Plus className="h-4 w-4" />
                 Create New Quest
               </Button>
             </div>
-            
+
             <LearningProgress onEditGoal={handleEditGoal} />
-            
+
             <Tabs defaultValue="all" className="mt-8">
               <TabsList className="grid grid-cols-3 mb-6">
                 <TabsTrigger value="all">All Quests</TabsTrigger>
                 <TabsTrigger value="individual">Individual Quests</TabsTrigger>
                 <TabsTrigger value="group">Group Quests</TabsTrigger>
               </TabsList>
-              
+
               <TabsContent value="all">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <Card>
@@ -308,7 +306,7 @@ const Challenges = () => {
                       <ul className="space-y-4">
                         {questChallenges.map(renderGoalItem)}
                         <li className="mt-4">
-                          <Button 
+                          <Button
                             variant="outline"
                             onClick={() => setIsGoalFormOpen(true)}
                             className="w-full border-dashed border-gray-300 hover:border-blue-300 hover:bg-blue-50 text-gray-500 hover:text-blue-500 flex items-center justify-center gap-2"
@@ -320,7 +318,7 @@ const Challenges = () => {
                       </ul>
                     </CardContent>
                   </Card>
-                  
+
                   <Card>
                     <CardHeader className="bg-gradient-to-r from-blue-50 to-purple-50 pb-2">
                       <CardTitle className="text-lg font-bold flex items-center">
@@ -332,7 +330,7 @@ const Challenges = () => {
                       <ul className="space-y-4">
                         {longTermQuests.map(renderGoalItem)}
                         <li className="mt-4">
-                          <Button 
+                          <Button
                             variant="outline"
                             onClick={() => setIsGoalFormOpen(true)}
                             className="w-full border-dashed border-gray-300 hover:border-blue-300 hover:bg-blue-50 text-gray-500 hover:text-blue-500 flex items-center justify-center gap-2"
@@ -345,7 +343,7 @@ const Challenges = () => {
                     </CardContent>
                   </Card>
                 </div>
-                
+
                 <Card className="mt-6">
                   <CardHeader className="bg-gradient-to-r from-blue-50 to-purple-50 pb-2">
                     <CardTitle className="text-lg font-bold flex items-center">
@@ -357,7 +355,7 @@ const Challenges = () => {
                     <ul className="space-y-4">
                       {groupQuests.map(renderGroupQuestItem)}
                       <li className="mt-4">
-                        <Button 
+                        <Button
                           variant="outline"
                           onClick={() => setIsGoalFormOpen(true)}
                           className="w-full border-dashed border-gray-300 hover:border-blue-300 hover:bg-blue-50 text-gray-500 hover:text-blue-500 flex items-center justify-center gap-2"
@@ -371,7 +369,7 @@ const Challenges = () => {
                   </CardContent>
                 </Card>
               </TabsContent>
-              
+
               <TabsContent value="individual">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <Card>
@@ -385,7 +383,7 @@ const Challenges = () => {
                       <ul className="space-y-4">
                         {questChallenges.filter(quest => quest.questMode === "individual").map(renderGoalItem)}
                         <li className="mt-4">
-                          <Button 
+                          <Button
                             variant="outline"
                             onClick={() => setIsGoalFormOpen(true)}
                             className="w-full border-dashed border-gray-300 hover:border-blue-300 hover:bg-blue-50 text-gray-500 hover:text-blue-500 flex items-center justify-center gap-2"
@@ -397,7 +395,7 @@ const Challenges = () => {
                       </ul>
                     </CardContent>
                   </Card>
-                  
+
                   <Card>
                     <CardHeader className="bg-gradient-to-r from-blue-50 to-purple-50 pb-2">
                       <CardTitle className="text-lg font-bold flex items-center">
@@ -409,7 +407,7 @@ const Challenges = () => {
                       <ul className="space-y-4">
                         {longTermQuests.filter(quest => quest.questMode === "individual").map(renderGoalItem)}
                         <li className="mt-4">
-                          <Button 
+                          <Button
                             variant="outline"
                             onClick={() => setIsGoalFormOpen(true)}
                             className="w-full border-dashed border-gray-300 hover:border-blue-300 hover:bg-blue-50 text-gray-500 hover:text-blue-500 flex items-center justify-center gap-2"
@@ -423,7 +421,7 @@ const Challenges = () => {
                   </Card>
                 </div>
               </TabsContent>
-              
+
               <TabsContent value="group">
                 <Card>
                   <CardHeader className="bg-gradient-to-r from-blue-50 to-purple-50 pb-2">
@@ -437,7 +435,7 @@ const Challenges = () => {
                       {groupQuests.map(renderGroupQuestItem)}
                       {longTermQuests.filter(quest => quest.questMode === "group").map(renderGoalItem)}
                       <li className="mt-4">
-                        <Button 
+                        <Button
                           variant="outline"
                           onClick={() => setIsGoalFormOpen(true)}
                           className="w-full border-dashed border-gray-300 hover:border-blue-300 hover:bg-blue-50 text-gray-500 hover:text-blue-500 flex items-center justify-center gap-2"
@@ -457,14 +455,14 @@ const Challenges = () => {
       </div>
 
       <KidatoMascot />
-      
-      <GoalFormDialog 
-        isOpen={isGoalFormOpen} 
-        setIsOpen={setIsGoalFormOpen} 
+
+      <GoalFormDialog
+        isOpen={isGoalFormOpen}
+        setIsOpen={setIsGoalFormOpen}
         onSubmit={handleCreateGoal}
       />
-      
-      <GoalTrackingDialog 
+
+      <GoalTrackingDialog
         isOpen={isTrackingOpen}
         setIsOpen={setIsTrackingOpen}
         goal={selectedGoal}

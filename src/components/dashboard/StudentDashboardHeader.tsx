@@ -20,10 +20,10 @@ interface StudentDashboardHeaderProps {
 export default function StudentDashboardHeader({ userName }: StudentDashboardHeaderProps) {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
-  
+
   // Get the signed profile image if available
   const profileImage = user?.signedProfileImage || user?.profileImage || user?.profilePicture;
-  
+
   return (
     <header className="bg-white shadow-sm rounded-b-xl sticky top-0 z-10">
       <div className="px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
@@ -83,7 +83,7 @@ export default function StudentDashboardHeader({ userName }: StudentDashboardHea
               <DropdownMenuLabel className="bg-blue-50 font-bold">My Account</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
-                <Link to="/profile" className="cursor-pointer hover:bg-blue-50 focus:bg-blue-50 flex items-center">
+                <Link to="/student-profile" className="cursor-pointer hover:bg-blue-50 focus:bg-blue-50 flex items-center">
                   <User className="mr-2 h-4 w-4" />
                   <span>Profile</span>
                 </Link>
@@ -95,7 +95,7 @@ export default function StudentDashboardHeader({ userName }: StudentDashboardHea
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem 
+              <DropdownMenuItem
                 className="cursor-pointer hover:bg-red-50 hover:text-red-500 focus:bg-red-50 focus:text-red-500 flex items-center"
                 onClick={async () => {
                   await signOut();

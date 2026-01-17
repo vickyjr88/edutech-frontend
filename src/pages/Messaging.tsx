@@ -15,9 +15,9 @@ const Messaging = () => {
     // Redirect based on role if not a student
     if (user) {
       if (user.role === 'teacher') {
-        navigate('/teacher-dashboard/messaging');
+        navigate('/teacher/messages');
       } else if (user.role === 'parent') {
-        navigate('/parents-messaging');
+        navigate('/parent/messages');
       } else if (user.role === 'admin') {
         navigate('/admin/messaging');
       }
@@ -30,9 +30,7 @@ const Messaging = () => {
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
-      <StudentSidebar />
-
+    <div className="min-h-screen bg-gray-50 md:ml-64 transition-all duration-300">
       {/* Main Content */}
       <div className="flex-1">
         {/* Top Nav */}

@@ -183,8 +183,7 @@ const GroupWork = () => {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen bg-gradient-to-b from-blue-50 to-white">
-        <StudentSidebar />
+      <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white md:ml-64 transition-all duration-300">
         <div className="flex-1 flex flex-col">
           <StudentDashboardHeader userName={user?.fullName || "Student"} />
           <main className="p-4 sm:p-6 flex-1 flex items-center justify-center">
@@ -199,9 +198,7 @@ const GroupWork = () => {
   }
 
   return (
-    <div className="flex min-h-screen bg-gradient-to-b from-blue-50 to-white">
-      <StudentSidebar />
-
+    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white md:ml-64 transition-all duration-300">
       <div className="flex-1 flex flex-col">
         <StudentDashboardHeader userName={user?.fullName || "Student"} />
 

@@ -26,6 +26,18 @@ export interface MvpEducation {
     year: number;
 }
 
+export interface MvpExperience {
+    position: string;
+    institution: string;
+    dates: string;
+    description?: string;
+}
+
+export interface MvpLanguage {
+    language: string;
+    level: string;
+}
+
 export interface CreateMvpTeacherProfileRequest {
     fullName: string;
     phoneNumber: string;
@@ -38,6 +50,8 @@ export interface CreateMvpTeacherProfileRequest {
     yearsOfExperience: number;
     payoutDetails: MvpPayoutDetails;
     education?: MvpEducation[];
+    experience?: MvpExperience[];
+    languages?: MvpLanguage[];
 }
 
 export interface UpdateMvpTeacherProfileRequest {
@@ -52,6 +66,8 @@ export interface UpdateMvpTeacherProfileRequest {
     yearsOfExperience?: number;
     payoutDetails?: MvpPayoutDetails;
     education?: MvpEducation[];
+    experience?: MvpExperience[];
+    languages?: MvpLanguage[];
 }
 
 export interface MvpTeacherProfileResponse {
@@ -70,6 +86,8 @@ export interface MvpTeacherProfileResponse {
     yearsOfExperience: number;
     payoutDetails: MvpPayoutDetails;
     education: MvpEducation[];
+    experience: MvpExperience[];
+    languages: MvpLanguage[];
     isProfileComplete: boolean;
     approvalStatus: 'pending' | 'approved' | 'rejected';
     createdAt: string;
@@ -206,6 +224,13 @@ export const MvpTeacherService = {
      */
     getTeacherDetails: async (teacherId: string): Promise<any> => {
         return mvpApiClient.get<any>(`/teachers/${teacherId}`);
+    },
+
+    /**
+     * Get offering stats for a teacher
+     */
+    getOfferingStats: async (teacherId: string): Promise<any[]> => {
+        return mvpApiClient.get<any[]>(`/teachers/${teacherId}/offering-stats`);
     },
 };
 

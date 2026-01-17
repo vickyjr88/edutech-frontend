@@ -29,11 +29,13 @@ const Layout = ({ children }: LayoutProps) => {
       p.startsWith('/teacher-students') ||
       p.startsWith('/teacher-resources') ||
       p.startsWith('/teacher-profile') ||
+      p.startsWith('/teacher/messages') ||
       p.startsWith('/teacher-class')) return true;
 
     // Parent Dashboard Routes
     if (p.startsWith('/parents-dashboard') ||
       p.startsWith('/parents/') ||
+      p.startsWith('/parent/') ||
       p.startsWith('/parent-profile')) return true;
 
     // Student Dashboard Routes

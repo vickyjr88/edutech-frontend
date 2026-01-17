@@ -9,11 +9,46 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
+const subjectImages: Record<string, string> = {
+  "Mathematics": "https://images.unsplash.com/photo-1635070041078-e363dbe005cb?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+  "Physics": "https://images.unsplash.com/photo-1636466497217-26a8cbeaf0aa?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+  "Chemistry": "https://images.unsplash.com/photo-1532094349884-543bc11b234d?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+  "Biology": "https://images.unsplash.com/photo-1530026405186-ed1f139313f8?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+  "English": "https://images.unsplash.com/photo-1455390582262-044cdead277a?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+  "Science": "https://images.unsplash.com/photo-1567306226416-28f0efdc88ce?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+  "History": "https://images.unsplash.com/photo-1580060839134-75a5edca2e99?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+  "Computer Science": "https://images.unsplash.com/photo-1515879218367-8466d910aaa4?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+  "default": "https://images.unsplash.com/photo-1580582932707-520aed937b7b?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80"
+};
+
+const formatAvailabilityString = (availability: any) => {
+  if (!availability?.weeklySchedule) return null;
+
+  const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+  const shortDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+  const activeDays = days.reduce((acc: string[], day, index) => {
+    if (availability.weeklySchedule[day]?.isActive) {
+      acc.push(shortDays[index]);
+    }
+    return acc;
+  }, []);
+
+  if (activeDays.length === 0) return "Currently unavailable";
+  if (activeDays.length === 7) return "Daily, 09:00 - 17:00";
+  // Check for Mon-Fri pattern
+  const isWeekdays = activeDays.length === 5 && activeDays[0] === 'Mon' && activeDays[4] === 'Fri';
+  if (isWeekdays) return "Mon - Fri, 09:00 - 17:00";
+
+  return `${activeDays.join(', ')}`;
+};
+
 const transformTeacherData = (fullData: any): any => {
   if (!fullData) return null;
   const apiTeacher = fullData.teacher || fullData;
   const offerings = fullData.offerings || [];
   const stats = fullData.stats || {};
+  const availability = fullData.availability;
 
   // ... previous logic for education and location ...
   const formatEducation = () => {
@@ -41,20 +76,27 @@ const transformTeacherData = (fullData: any): any => {
   };
 
   // Map offerings to class grid format
-  const mappedClasses = offerings.map((o: any) => ({
-    id: o._id,
-    _id: o._id,
-    title: o.title,
-    description: o.description,
-    subject: o.subject,
-    level: o.gradeLevel || "All Levels",
-    duration: `${o.sessionDuration} mins`,
-    price: o.price,
-    imageSrc: "/placeholder.svg", // Use placeholder for now
-    type: o.type === 'course' ? 'academic' : 'after-school',
-    studentsEnrolled: 0,
-    rating: 0
-  }));
+  const mappedClasses = offerings.map((o: any) => {
+    // Get image based on subject (case-insensitive)
+    const subjectKey = Object.keys(subjectImages).find(
+      key => key.toLowerCase() === o.subject?.toLowerCase()
+    ) || "default";
+
+    return {
+      id: o._id,
+      _id: o._id,
+      title: o.title,
+      description: o.description,
+      subject: o.subject,
+      level: o.gradeLevel || "All Levels",
+      duration: `${o.sessionDuration} mins`,
+      price: o.price,
+      imageSrc: subjectImages[subjectKey],
+      type: o.type === 'course' ? 'academic' : 'after-school',
+      studentsEnrolled: o.studentsEnrolled || 0, // Feature built: Track enrollments per offering
+      rating: 0 // Feature to be built: Offering ratings
+    };
+  });
 
   return {
     id: apiTeacher.userId || apiTeacher._id || apiTeacher.id,
@@ -70,14 +112,8 @@ const transformTeacherData = (fullData: any): any => {
     ratingCount: apiTeacher.totalReviews || 0,
     videoProfileUrl: apiTeacher.introVideoUrl || "",
     education: formatEducation(),
-    experience: [{
-      id: "exp-1",
-      institution: "Kidato Learning Platform",
-      position: "Senior Educator",
-      dates: `${apiTeacher.yearsOfExperience || 3}+ years`,
-      description: apiTeacher.bio || ""
-    }],
-    languages: apiTeacher.languages || [{ language: "English", level: "Native" }, { language: "Swahili", level: "Fluent" }],
+    experience: apiTeacher.experience || [],
+    languages: apiTeacher.languages || [],
     offerings: offerings,
     classes: mappedClasses,
     reviews: apiTeacher.reviews || [],
@@ -86,26 +122,23 @@ const transformTeacherData = (fullData: any): any => {
     certifications: apiTeacher.certifications || [],
     stats: {
       studentsHelped: stats.totalStudents || 0,
-      lessonsDelivered: stats.completedBookings || (apiTeacher.yearsOfExperience ? apiTeacher.yearsOfExperience * 100 : 0),
+      lessonsDelivered: stats.completedBookings || 0,
       classesCreated: offerings.length,
-      successRate: 100
+      successRate: stats.successRate || 0
     },
     subjects: apiTeacher.subjects?.length > 0 ? apiTeacher.subjects : (stats.subjects || []),
     location: formatLocation(),
     hourlyRate: stats.lowestPrice ? `$${stats.lowestPrice}/hr` : "Varies",
-    availability: "Mon-Fri, 8AM-5PM",
+    availability: formatAvailabilityString(availability) || "Contact for schedule",
     openToWork: true
   };
 };
 
 const TeacherProfilePage = () => {
   const { teacherId } = useParams<{ teacherId: string }>();
-  const { user } = useAuth();
   const [teacher, setTeacher] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  const showSidebar = !!user;
 
   useEffect(() => {
     const fetchTeacher = async () => {
@@ -117,10 +150,25 @@ const TeacherProfilePage = () => {
 
       try {
         setLoading(true);
-        const data = await MvpTeacherService.getTeacherDetails(teacherId);
+        const [data, offeringStats] = await Promise.all([
+          MvpTeacherService.getTeacherDetails(teacherId),
+          MvpTeacherService.getOfferingStats(teacherId).catch(() => [])
+        ]);
 
         if (!data) {
           throw new Error("No teacher data found");
+        }
+
+        // Merge offering stats into offerings
+        if (data.offerings && offeringStats.length > 0) {
+          data.offerings = data.offerings.map((o: any) => {
+            const stat = offeringStats.find((s: any) => s.offeringId === o._id);
+            return {
+              ...o,
+              studentsEnrolled: stat?.studentsEnrolled || 0,
+              // rating is Mock/Future
+            };
+          });
         }
 
         const transformedData = transformTeacherData(data);
@@ -141,19 +189,19 @@ const TeacherProfilePage = () => {
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col">
-        {!showSidebar && <Navbar />}
-        <div className={`flex-grow flex items-center justify-center ${showSidebar ? "md:ml-64" : ""}`}>
+        <Navbar />
+        <div className="flex-grow flex items-center justify-center pt-16">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-kidato-purple"></div>
         </div>
-        {!showSidebar && <Footer />}
+        <Footer />
       </div>
     );
   }
 
   return (
     <div className="min-h-screen flex flex-col">
-      {!showSidebar && <Navbar />}
-      <main className={`flex-grow bg-gray-50 ${showSidebar ? "md:ml-64 pt-6 px-6" : "pt-16"}`}>
+      <Navbar />
+      <main className="flex-grow bg-gray-50 pt-16">
         {error && (
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
             <Alert variant="destructive">
@@ -170,9 +218,10 @@ const TeacherProfilePage = () => {
           <TeacherPublicProfile teacher={teacher} />
         )}
       </main>
-      {!showSidebar && <Footer />}
+      <Footer />
     </div>
   );
 };
 
 export default TeacherProfilePage;
+

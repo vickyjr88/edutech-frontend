@@ -36,9 +36,7 @@ const Courses = () => {
   );
 
   return (
-    <div className="flex min-h-screen bg-gradient-to-b from-blue-50 to-white">
-      <StudentSidebar />
-
+    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white md:ml-64 transition-all duration-300">
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
         {/* Top Nav */}

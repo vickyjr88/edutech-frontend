@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import PageWrapper from "@/components/PageWrapper";
+import TeacherProfileSettings from "@/components/teacher/settings/TeacherProfileSettings";
 
 const Settings = () => {
   const { user } = useAuth();
@@ -107,6 +108,12 @@ const Settings = () => {
                       </Select>
                     </div>
                   </div>
+
+                  {user?.role === 'teacher' && (
+                    <div className="mt-6">
+                      <TeacherProfileSettings />
+                    </div>
+                  )}
                   <Separator />
                   <div className="flex justify-end">
                     <Button onClick={handleSaveSettings}>Save Changes</Button>

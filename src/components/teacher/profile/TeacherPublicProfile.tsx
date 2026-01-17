@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { teacherFeatures, reviewFeatures } from '@/config/features';
 
 // Section components
 import TeacherHighlights from './TeacherHighlights';
@@ -191,13 +192,15 @@ const TeacherPublicProfile: React.FC<TeacherPublicProfileProps> = ({
               </div>
 
               <div className="mt-4 md:mt-0 flex flex-col items-start md:items-end">
-                <div className="flex items-center mb-2">
-                  <div className="flex items-center mr-3">
-                    <Star className="w-5 h-5 text-yellow-500 fill-yellow-500" />
-                    <span className="ml-1 font-semibold">{teacher.rating}</span>
+                {reviewFeatures.teacherRatings && (
+                  <div className="flex items-center mb-2">
+                    <div className="flex items-center mr-3">
+                      <Star className="w-5 h-5 text-yellow-500 fill-yellow-500" />
+                      <span className="ml-1 font-semibold">{teacher.rating}</span>
+                    </div>
+                    <span className="text-gray-500 text-sm">({teacher.ratingCount} reviews)</span>
                   </div>
-                  <span className="text-gray-500 text-sm">({teacher.ratingCount} reviews)</span>
-                </div>
+                )}
                 <div className="flex items-center text-sm text-gray-600">
                   <MapPin className="w-4 h-4 mr-1" />
                   <span>{teacher.location}</span>
@@ -219,10 +222,12 @@ const TeacherPublicProfile: React.FC<TeacherPublicProfileProps> = ({
                 <p className="text-xl font-bold text-kidato-purple">{teacher.stats.classesCreated}</p>
                 <p className="text-xs text-gray-500">Classes Created</p>
               </div>
-              <div className="text-center">
-                <p className="text-xl font-bold text-kidato-purple">{teacher.stats.successRate}%</p>
-                <p className="text-xs text-gray-500">Success Rate</p>
-              </div>
+              {teacherFeatures.successRate && (
+                <div className="text-center">
+                  <p className="text-xl font-bold text-kidato-purple">{teacher.stats.successRate}%</p>
+                  <p className="text-xs text-gray-500">Success Rate</p>
+                </div>
+              )}
             </div>
 
             {/* Action Buttons */}
@@ -335,7 +340,7 @@ const TeacherPublicProfile: React.FC<TeacherPublicProfileProps> = ({
               <div>
                 <h3 className="font-medium">Languages</h3>
                 <p className="text-gray-600">
-                  {teacher.languages?.slice(0, 2).map((lang: any) => lang.language).join(', ') || "English"}
+                  {teacher.languages?.slice(0, 2).map((lang: any) => lang.language).join(', ') || "Not specified"}
                   {(teacher.languages?.length || 0) > 2 && ` +${teacher.languages.length - 2} more`}
                 </p>
               </div>

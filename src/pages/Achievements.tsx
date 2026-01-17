@@ -12,7 +12,7 @@ import { BookOpen, Award, Loader2 } from "lucide-react";
 import { useGetAllAchievements, useCurrentStudentAchievements, useCurrentRecentAchievements } from "@/hooks/use-achievement-service";
 import { useLeaderboard } from "@/hooks/use-student-service";
 import { useStudentId } from "@/hooks/useStudentId";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/contexts/AuthContext";
 import type { AchievementType } from "@/components/achievements/AchievementsList";
 import type { LeaderboardEntryType } from "@/components/achievements/LeaderboardTable";
 import type { Achievement, StudentAchievement } from "@/integrations/api/services/achievement.service";
@@ -70,10 +70,10 @@ const Achievements = () => {
       unlocked: !!studentAchievement,
       date: studentAchievement
         ? new Date(studentAchievement.earnedAt).toLocaleDateString('en-US', {
-            month: 'long',
-            day: 'numeric',
-            year: 'numeric',
-          })
+          month: 'long',
+          day: 'numeric',
+          year: 'numeric',
+        })
         : undefined,
     };
   };
@@ -177,9 +177,8 @@ const Achievements = () => {
   // Loading state
   if (isLoadingAll || isLoadingStudent) {
     return (
-      <div className="flex min-h-screen bg-gradient-to-b from-blue-50 to-white">
-        <StudentSidebar />
-        <div className="flex-1 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white md:ml-64 transition-all duration-300">
+        <div className="flex-1 flex items-center justify-center min-h-screen">
           <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
         </div>
       </div>
@@ -187,9 +186,7 @@ const Achievements = () => {
   }
 
   return (
-    <div className="flex min-h-screen bg-gradient-to-b from-blue-50 to-white">
-      <StudentSidebar />
-
+    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white md:ml-64 transition-all duration-300">
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
         {/* Top Nav */}
@@ -201,11 +198,11 @@ const Achievements = () => {
             <div className="flex justify-between items-center mb-6">
               <h1 className="text-2xl font-bold text-gray-800">Achievements</h1>
             </div>
-            
+
             <div className="space-y-6">
               {/* Achievement Summary */}
               <AchievementsSummary {...summaryData} />
-              
+
               <Tabs defaultValue="all" className="space-y-6">
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
                   <TabsList>
@@ -213,18 +210,18 @@ const Achievements = () => {
                     <TabsTrigger value="recent">Recently Earned</TabsTrigger>
                     <TabsTrigger value="leaderboard">Leaderboard</TabsTrigger>
                   </TabsList>
-                  
+
                   {/* Filter buttons */}
                   <div className="flex gap-2 ml-auto">
-                    <Button 
-                      size="sm" 
+                    <Button
+                      size="sm"
                       variant={filter === "all" ? "default" : "outline"}
                       onClick={() => setFilter("all")}
                     >
                       All Categories
                     </Button>
-                    <Button 
-                      size="sm" 
+                    <Button
+                      size="sm"
                       variant={filter === "academic" ? "default" : "outline"}
                       onClick={() => setFilter("academic")}
                       className="flex items-center gap-1"
@@ -232,8 +229,8 @@ const Achievements = () => {
                       <BookOpen className="h-4 w-4" />
                       Academic
                     </Button>
-                    <Button 
-                      size="sm" 
+                    <Button
+                      size="sm"
                       variant={filter === "non-academic" ? "default" : "outline"}
                       onClick={() => setFilter("non-academic")}
                       className="flex items-center gap-1"
@@ -243,7 +240,7 @@ const Achievements = () => {
                     </Button>
                   </div>
                 </div>
-                
+
                 <TabsContent value="all" className="space-y-6">
                   {allAchievements.length > 0 ? (
                     <AchievementsList achievements={getFilteredAchievements(allAchievements)} />

@@ -25,7 +25,7 @@ export default function TeacherHighlights({
   // Calculate experience years correctly from teacher experience data
   const calculateExperienceYears = (): number => {
     if (!teacher?.experience || !Array.isArray(teacher.experience) || teacher.experience.length === 0) {
-      return 3; // Default value if no experience data
+      return 0; // Default value if no experience data
     }
 
     let totalYears = 0;
@@ -50,11 +50,11 @@ export default function TeacherHighlights({
       totalYears += (endYear - startYear);
     });
 
-    return totalYears > 0 ? totalYears : 3; // Ensure at least some experience
+    return totalYears > 0 ? totalYears : 0; // Ensure at least some experience
   };
 
   const experienceYears = calculateExperienceYears();
-  const studentCount = teacher?.stats?.studentsHelped || Math.floor(Math.random() * 500) + 50; // Use stats or placeholder
+  const studentCount = teacher?.stats?.studentsHelped || 0; // Use stats or 0
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">

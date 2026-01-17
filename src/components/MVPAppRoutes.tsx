@@ -45,6 +45,7 @@ import TeacherDashboard from "../pages/TeacherDashboard";
 import SimplifiedTeacherDashboardPage from "../pages/SimplifiedTeacherDashboard"; // MVP: Simplified dashboard
 import TeacherProfilesPage from "../pages/TeacherProfilesPage";
 import TeacherProfilePage from "../pages/TeacherProfilePage";
+import TeacherPersonalProfile from "../pages/TeacherPersonalProfile";
 import TeachersPricing from "../pages/TeachersPricing";
 import TeacherProfileJourney from "../pages/TeacherProfileJourney";
 import SimplifiedTeacherProfile from "../pages/SimplifiedTeacherProfile"; // MVP: Simplified profile form
@@ -56,6 +57,7 @@ import TeacherOfferingsPage from "../pages/TeacherOfferingsPage"; // MVP: Offeri
 import TeacherAvailabilityPage from "../pages/TeacherAvailabilityPage"; // MVP: Availability calendar
 import TeacherResourcesPage from "../pages/TeacherResourcesPage"; // MVP: Resources
 import TeacherStudentsPage from "../pages/TeacherStudentsPage"; // MVP: Students
+import TeacherMessagingPage from "../pages/TeacherMessagingPage";
 
 // Parent Pages
 import ParentsDashboard from "../pages/ParentsDashboard";
@@ -66,6 +68,18 @@ import ChildDashboard from "../pages/parents/ChildDashboard";
 import ParentProfile from "../pages/parents/ParentProfile"; // MVP: Parent profile
 import ParentsChildren from "../pages/parents/ParentsChildren"; // MVP: My children page
 import ParentsSchedule from "../pages/parents/ParentsSchedule"; // MVP: Schedule page
+import ParentMessaging from "../pages/parents/ParentMessaging";
+
+// Student Pages
+import Dashboard from "../pages/Dashboard";
+import Profile from "../pages/Profile";
+import Courses from "../pages/Courses";
+import Schedule from "../pages/Schedule";
+import Achievements from "../pages/Achievements";
+import Messaging from "../pages/Messaging";
+import CourseProgress from "../pages/CourseProgress";
+import Challenges from "../pages/Challenges";
+import GroupWork from "../pages/GroupWork";
 
 // Class/Offering Pages
 import AllClasses from "../pages/AllClasses";
@@ -236,6 +250,16 @@ const MVPAppRoutes = () => {
         }
       />
 
+      {/* Teacher Personal Profile Preview */}
+      <Route
+        path="/teacher-profile/preview"
+        element={
+          <TeacherRoute requireProfileComplete={true}>
+            <TeacherPersonalProfile />
+          </TeacherRoute>
+        }
+      />
+
       {/* Class Setup (Simplified for MVP) */}
       <Route
         path="/teacher-class-setup"
@@ -312,6 +336,99 @@ const MVPAppRoutes = () => {
         }
       />
 
+
+      {/* ===== STUDENT ROUTES (MVP) ===== */}
+
+      <Route
+        path="/student-dashboard"
+        element={
+          <ProtectedRoute>
+            <Dashboard />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/student-profile"
+        element={
+          <ProtectedRoute>
+            <Profile />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/student/classes"
+        element={
+          <ProtectedRoute>
+            <Courses />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/student/schedule"
+        element={
+          <ProtectedRoute>
+            <Schedule />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/student/achievements"
+        element={
+          <ProtectedRoute>
+            <Achievements />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/student/messages"
+        element={
+          <ProtectedRoute>
+            <Messaging />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/student/classes/progress/:courseId"
+        element={
+          <ProtectedRoute>
+            <CourseProgress />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/student/challenges"
+        element={
+          <ProtectedRoute>
+            <Challenges />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/student/group-work"
+        element={
+          <ProtectedRoute>
+            <GroupWork />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/teacher/messages"
+        element={
+          <TeacherRoute>
+            <TeacherMessagingPage />
+          </TeacherRoute>
+        }
+      />
+
       {/* ===== PARENT ROUTES - MVP uses simplified version ===== */}
 
       <Route
@@ -367,6 +484,15 @@ const MVPAppRoutes = () => {
         element={
           <ProtectedRoute>
             <ParentProfile />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/parent/messages"
+        element={
+          <ProtectedRoute>
+            <ParentMessaging />
           </ProtectedRoute>
         }
       />

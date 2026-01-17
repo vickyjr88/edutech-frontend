@@ -36,6 +36,7 @@ export const features = {
     availability: true,
     dashboard: true,
     earnings: true,
+    successRate: false, // Hidden in MVP
   },
 
   parent: {

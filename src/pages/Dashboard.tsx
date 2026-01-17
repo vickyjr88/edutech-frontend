@@ -20,20 +20,20 @@ const Dashboard = () => {
   const [isTrackingOpen, setIsTrackingOpen] = useState(false);
   const [selectedGoal, setSelectedGoal] = useState<any>(null);
   const { toast } = useToast();
-  
+
   const handleEditGoal = (goal: any) => {
     setSelectedGoal(goal);
     setIsTrackingOpen(true);
   };
-  
+
   const handleUpdateGoal = (goalId: string, progress: number, notes: string, timeSpent?: string) => {
     console.log("Quest updated:", { goalId, progress, notes, timeSpent });
-    
+
     const isGroupQuest = selectedGoal?.questMode === "group";
-    const progressMessage = isGroupQuest 
+    const progressMessage = isGroupQuest
       ? `Your group quest progress has been updated to ${progress}%. ${timeSpent ? `Time spent: ${timeSpent}` : ''}`
       : `Your quest progress has been updated to ${progress}%. ${timeSpent ? `Time spent: ${timeSpent}` : ''}`;
-    
+
     toast({
       title: "Progress Updated",
       description: progressMessage,
@@ -41,16 +41,14 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="flex min-h-screen bg-gradient-to-b from-blue-50 to-white">
-      <StudentSidebar />
-
+    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white md:ml-64 transition-all duration-300">
       <div className="flex-1 flex flex-col overflow-y-auto">
         <StudentDashboardHeader userName={user?.fullName || "Student"} />
 
         <main className="p-4 sm:p-6 flex-1">
           <div className="max-w-7xl mx-auto">
             <StudentStatCards />
-            
+
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
               <div className="lg:col-span-2">
                 <CurrentClasses />
@@ -60,11 +58,11 @@ const Dashboard = () => {
                 <UpcomingAssignments />
               </div>
             </div>
-            
+
             {/*<div className="mt-6">*/}
             {/*  <LearningProgress onEditGoal={handleEditGoal} />*/}
             {/*</div>*/}
-            
+
             {/*<div className="flex justify-center mt-8 mb-4">*/}
             {/*  <div className="inline-flex items-center gap-2 bg-blue-50 px-4 py-2 rounded-full text-blue-600 text-sm">*/}
             {/*    <Rocket className="h-4 w-4" />*/}
@@ -77,8 +75,8 @@ const Dashboard = () => {
       </div>
 
       <KidatoMascot />
-      
-      <GoalTrackingDialog 
+
+      <GoalTrackingDialog
         isOpen={isTrackingOpen}
         setIsOpen={setIsTrackingOpen}
         goal={selectedGoal}

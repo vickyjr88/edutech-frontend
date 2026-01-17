@@ -1,0 +1,23 @@
+
+import { useState } from "react";
+import TeacherDashboardHeader from "@/components/teacher/TeacherDashboardHeader";
+import MessagingPlatform from "@/components/messaging/MessagingPlatform";
+import { useAuth } from "@/contexts/AuthContext";
+
+const TeacherMessagingPage = () => {
+    const { user } = useAuth();
+    const [userName] = useState(user?.fullName || "Teacher");
+
+    return (
+        <div className="min-h-screen bg-gray-50 md:ml-64 transition-all duration-300">
+            <div className="flex-1 flex flex-col">
+                <TeacherDashboardHeader userName={userName} />
+                <main className="p-6 flex-1">
+                    <MessagingPlatform />
+                </main>
+            </div>
+        </div>
+    );
+}
+
+export default TeacherMessagingPage;

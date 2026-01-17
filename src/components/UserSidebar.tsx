@@ -55,12 +55,14 @@ const UserSidebar = () => {
         { name: "Earnings", href: "/teacher-earnings", icon: DollarSign },
         { name: "Students", href: "/teacher-students", icon: Users },
         { name: "Resources", href: "/teacher-resources", icon: FileText },
+        { name: "Messages", href: "/teacher/messages", icon: MessageSquare },
       ],
       parent: [
         { name: "My Children", href: "/parents-dashboard/children", icon: Users },
         { name: "Classes", href: "/parents-dashboard/courses", icon: BookOpen },
         { name: "Billing", href: "/parents-dashboard/billing", icon: DollarSign },
         { name: "Schedule", href: "/parents-dashboard/schedule", icon: Calendar },
+        { name: "Messages", href: "/parent/messages", icon: MessageSquare },
       ],
       student: [
         { name: "My Classes", href: "/student/classes", icon: BookOpen },

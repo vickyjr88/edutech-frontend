@@ -156,7 +156,7 @@ const ParentDashboardHeader = ({ parentName }: ParentDashboardHeaderProps) => {
           variant="ghost"
           size="icon"
           className="text-blue-600"
-          onClick={() => navigate('/parents-messages')}
+          onClick={() => navigate('/parent/messages')}
         >
           <MessageSquare className="h-5 w-5" />
         </Button>

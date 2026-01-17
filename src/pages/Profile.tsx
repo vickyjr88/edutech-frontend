@@ -16,7 +16,7 @@ const Profile = () => {
   const { data: response, refetch } = useGetProfileById(user.studentId || user.id);
   const profile = response?.data;
   const fullName = user.fullName;
-  
+
   const nameInitials = useMemo(() => {
     return getUserInitials(fullName);
   }, [fullName]);
@@ -24,9 +24,7 @@ const Profile = () => {
   const [isEditing, setIsEditing] = useState(false);
 
   return (
-    <div className="flex min-h-screen bg-gradient-to-b from-blue-50 to-white">
-      <StudentSidebar />
-
+    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white md:ml-64 transition-all duration-300">
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
         {/* Top Nav */}
@@ -38,7 +36,7 @@ const Profile = () => {
             <div className="flex justify-between items-center mb-6">
               <h1 className="text-2xl font-bold text-gray-800">Student Profile</h1>
             </div>
-            
+
             {/* Profile Content */}
             <Card className="mb-6 border-2 border-blue-100">
               <CardHeader className="bg-gradient-to-r from-blue-50 to-purple-50 pb-2">
@@ -65,45 +63,45 @@ const Profile = () => {
                       Edit Profile
                     </Button>
                   </div>
-                  
+
                   <div className="w-full md:w-2/3">
-                  {isEditing ? (
-                    <EditProfileForm
-                      profile={profile}
-                      onClose={() => {
-                        setIsEditing(false)
-                        refetch()
-                      }}
-                    />
-                  ) : (
-                  <>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="p-4 bg-blue-50 rounded-lg">
-                        <h3 className="font-medium text-gray-700 mb-1">Email</h3>
-                        <p>{user.email}</p>
-                      </div>
-                      <div className="p-4 bg-blue-50 rounded-lg">
-                        <h3 className="font-medium text-gray-700 mb-1">School</h3>
-                        <p>{profile?.school}</p>
-                      </div>
-                      <div className="p-4 bg-blue-50 rounded-lg">
-                        <h3 className="font-medium text-gray-700 mb-1">Interests</h3>
-                        <p>{profile?.interests?.join(", ")}</p>
-                      </div>
-                      <div className="p-4 bg-blue-50 rounded-lg">
-                        <h3 className="font-medium text-gray-700 mb-1">Joined</h3>
-                        <p>{profile ? formatDate(profile.createdAt, "MMMM yyyy") : ""}</p>
-                      </div>
-                    </div>
-                    
-                    <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-                      <h3 className="font-medium text-gray-700 mb-2">About Me</h3>
-                      <p className="text-gray-600">
-                        {profile?.aboutMe}
-                      </p>
-                    </div>
-                    </>)
-                  }
+                    {isEditing ? (
+                      <EditProfileForm
+                        profile={profile}
+                        onClose={() => {
+                          setIsEditing(false)
+                          refetch()
+                        }}
+                      />
+                    ) : (
+                      <>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="p-4 bg-blue-50 rounded-lg">
+                            <h3 className="font-medium text-gray-700 mb-1">Email</h3>
+                            <p>{user.email}</p>
+                          </div>
+                          <div className="p-4 bg-blue-50 rounded-lg">
+                            <h3 className="font-medium text-gray-700 mb-1">School</h3>
+                            <p>{profile?.school}</p>
+                          </div>
+                          <div className="p-4 bg-blue-50 rounded-lg">
+                            <h3 className="font-medium text-gray-700 mb-1">Interests</h3>
+                            <p>{profile?.interests?.join(", ")}</p>
+                          </div>
+                          <div className="p-4 bg-blue-50 rounded-lg">
+                            <h3 className="font-medium text-gray-700 mb-1">Joined</h3>
+                            <p>{profile ? formatDate(profile.createdAt, "MMMM yyyy") : ""}</p>
+                          </div>
+                        </div>
+
+                        <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+                          <h3 className="font-medium text-gray-700 mb-2">About Me</h3>
+                          <p className="text-gray-600">
+                            {profile?.aboutMe}
+                          </p>
+                        </div>
+                      </>)
+                    }
                   </div>
                 </div>
               </CardContent>

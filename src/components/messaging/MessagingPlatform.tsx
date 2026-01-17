@@ -114,11 +114,10 @@ export default function MessagingPlatform() {
     }
   }, [socket, activeConversationId]);
 
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
+
   const fetchData = useCallback(async () => {
     try {
-      // Don't show full loading on refresh, only initial
-      if (channels.length === 0) setIsLoading(true);
-
       const [channelsResp, dmsResp] = await Promise.all([
         messagingService.getChannels(),
         messagingService.getDirectMessages()
@@ -130,13 +129,6 @@ export default function MessagingPlatform() {
           id: c.id || c._id
         }));
         setChannels(mappedChannels);
-
-        // Set first channel as active if no active conversation and initial load
-        if (!activeConversationId && mappedChannels.length > 0 && isLoading) {
-          setActiveConversationId(mappedChannels[0].id);
-          setActiveConversationTitle(mappedChannels[0].name);
-          setActiveTab("channels");
-        }
       }
 
       if (dmsResp.data) {
@@ -151,13 +143,24 @@ export default function MessagingPlatform() {
       });
     } finally {
       setIsLoading(false);
+      setIsInitialLoad(false);
     }
-  }, [activeConversationId, channels.length, isLoading, toast]);
+  }, [toast]);
 
-  // Initial data fetch
+  // Initial data fetch - run only once on mount
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  // Automatically select first channel if none selected and data loaded
+  useEffect(() => {
+    if (!activeConversationId && channels.length > 0 && !isInitialLoad) {
+      const firstChannel = channels[0];
+      setActiveConversationId(firstChannel.id);
+      setActiveConversationTitle(firstChannel.name);
+      setActiveTab("channels");
+    }
+  }, [channels, activeConversationId, isInitialLoad]);
 
   // Fetch messages when active conversation changes
   useEffect(() => {
