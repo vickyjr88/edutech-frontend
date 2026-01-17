@@ -2,8 +2,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import StudentDashboardHeader from "@/components/dashboard/StudentDashboardHeader";
-import StudentSidebar from "@/components/dashboard/StudentSidebar";
 import MessagingPlatform from "@/components/messaging/MessagingPlatform";
 
 const Messaging = () => {
@@ -30,17 +28,8 @@ const Messaging = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 md:ml-64 transition-all duration-300">
-      {/* Main Content */}
-      <div className="flex-1">
-        {/* Top Nav */}
-        <StudentDashboardHeader userName={userName} />
-
-        {/* Content */}
-        <main className="p-6">
-          <MessagingPlatform />
-        </main>
-      </div>
+    <div className="p-6">
+      <MessagingPlatform />
     </div>
   );
 }

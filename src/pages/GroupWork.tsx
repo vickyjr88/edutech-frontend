@@ -6,8 +6,6 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { CalendarDays, Clock, Users, Target, MessageSquare, UserPlus, Loader2 } from "lucide-react";
-import StudentDashboardHeader from "@/components/dashboard/StudentDashboardHeader";
-import StudentSidebar from "@/components/dashboard/StudentSidebar";
 import KidatoMascot from "@/components/dashboard/KidatoMascot";
 import CreateGroupDialog from "@/components/groups/CreateGroupDialog";
 import GroupDetails from "@/components/groups/GroupDetails";
@@ -181,28 +179,10 @@ const GroupWork = () => {
     </div>
   );
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white md:ml-64 transition-all duration-300">
-        <div className="flex-1 flex flex-col">
-          <StudentDashboardHeader userName={user?.fullName || "Student"} />
-          <main className="p-4 sm:p-6 flex-1 flex items-center justify-center">
-            <div className="text-center">
-              <Loader2 className="h-8 w-8 animate-spin text-kidato-purple mx-auto mb-2" />
-              <p className="text-gray-600">Loading groups...</p>
-            </div>
-          </main>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white md:ml-64 transition-all duration-300">
-      <div className="flex-1 flex flex-col">
-        <StudentDashboardHeader userName={user?.fullName || "Student"} />
-
-        <main className="p-4 sm:p-6 flex-1 overflow-y-auto">
+    <div className="bg-gradient-to-b from-blue-50 to-white min-h-screen p-4 sm:p-6 transition-all duration-300">
+      <div className="flex-1 flex flex-col overflow-y-auto">
+        <main className="flex-1">
           <div className="max-w-7xl mx-auto">
             <div className="flex flex-wrap justify-between items-center mb-6">
               <div>

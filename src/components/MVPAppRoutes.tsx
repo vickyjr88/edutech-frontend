@@ -130,6 +130,9 @@ import OrySettingsPage from "../pages/OrySettingsPage";
 import PaymentPage from "../pages/PaymentPage";
 import PaymentCallbackPage from "../pages/PaymentCallbackPage";
 
+// Notifications
+import NotificationsPage from "../pages/NotificationsPage";
+
 const MVPAppRoutes = () => {
   return (
     <Routes>
@@ -206,6 +209,16 @@ const MVPAppRoutes = () => {
         element={
           <ProtectedRoute>
             <OrySettingsPage />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Notifications */}
+      <Route
+        path="/notifications"
+        element={
+          <ProtectedRoute>
+            <NotificationsPage />
           </ProtectedRoute>
         }
       />

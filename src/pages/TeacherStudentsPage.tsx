@@ -20,7 +20,7 @@ const TeacherStudentsPage: React.FC = () => {
   };
 
   return (
-    <div className="md:ml-64 bg-[#ededf4] min-h-screen">
+    <div className="bg-[#ededf4] min-h-screen">
       <AIStudentsPage
         onViewProfile={handleViewProfile}
         onEnrollStudents={handleEnrollStudents}

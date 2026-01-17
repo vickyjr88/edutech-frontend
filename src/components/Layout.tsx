@@ -7,6 +7,9 @@ interface LayoutProps {
   children: ReactNode;
 }
 
+import TopBar from "./TopBar";
+import { cn } from "@/lib/utils";
+
 const Layout = ({ children }: LayoutProps) => {
   const { user } = useAuth();
   const location = useLocation();
@@ -18,7 +21,7 @@ const Layout = ({ children }: LayoutProps) => {
 
     // Explicitly allow sidebar on these path prefixes
     if (p.startsWith('/dashboard')) return true;
-    if (p.startsWith('/admin')) return true;
+
     if (p.startsWith('/settings')) return true;
 
     // Teacher Dashboard Routes
@@ -41,16 +44,26 @@ const Layout = ({ children }: LayoutProps) => {
     // Student Dashboard Routes
     if (p.startsWith('/student')) return true;
 
+    // Notifications
+    if (p.startsWith('/notifications')) return true;
+
     return false;
   };
 
   const showSidebar = shouldShowSidebar();
 
   return (
-    <>
+    <div className="min-h-screen bg-gray-50">
       {showSidebar && <UserSidebar />}
-      {children}
-    </>
+      {showSidebar && <TopBar />}
+
+      <main className={cn(
+        "transition-all duration-300",
+        showSidebar ? "sm:ml-64 pt-16" : ""
+      )}>
+        {children}
+      </main>
+    </div>
   );
 };
 

@@ -18,7 +18,7 @@ const TeacherProfileJourney: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50/50 to-white py-8 px-4 sm:px-6 md:ml-64">
+    <div className="min-h-screen bg-gradient-to-b from-blue-50/50 to-white py-8 px-4 sm:px-6">
       <div className="max-w-screen-xl mx-auto">
 
         <ProfileJourney

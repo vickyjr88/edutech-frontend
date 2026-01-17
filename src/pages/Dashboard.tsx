@@ -3,8 +3,6 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Sparkles, Rocket } from "lucide-react";
-import StudentDashboardHeader from "@/components/dashboard/StudentDashboardHeader";
-import StudentSidebar from "@/components/dashboard/StudentSidebar";
 import StudentStatCards from "@/components/dashboard/StudentStatCards";
 import CurrentClasses from "@/components/dashboard/CurrentClasses";
 import UpcomingAssignments from "@/components/dashboard/UpcomingAssignments";
@@ -41,37 +39,19 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white md:ml-64 transition-all duration-300">
-      <div className="flex-1 flex flex-col overflow-y-auto">
-        <StudentDashboardHeader userName={user?.fullName || "Student"} />
+    <div className="bg-gradient-to-b from-blue-50 to-white min-h-screen p-4 sm:p-6">
+      <div className="max-w-7xl mx-auto">
+        <StudentStatCards />
 
-        <main className="p-4 sm:p-6 flex-1">
-          <div className="max-w-7xl mx-auto">
-            <StudentStatCards />
-
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
-              <div className="lg:col-span-2">
-                <CurrentClasses />
-              </div>
-              <div className="space-y-6">
-                <RecentActivity />
-                <UpcomingAssignments />
-              </div>
-            </div>
-
-            {/*<div className="mt-6">*/}
-            {/*  <LearningProgress onEditGoal={handleEditGoal} />*/}
-            {/*</div>*/}
-
-            {/*<div className="flex justify-center mt-8 mb-4">*/}
-            {/*  <div className="inline-flex items-center gap-2 bg-blue-50 px-4 py-2 rounded-full text-blue-600 text-sm">*/}
-            {/*    <Rocket className="h-4 w-4" />*/}
-            {/*    <span>Ready for more learning adventures!</span>*/}
-            {/*    <Sparkles className="h-4 w-4" />*/}
-            {/*  </div>*/}
-            {/*</div>*/}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+          <div className="lg:col-span-2">
+            <CurrentClasses />
           </div>
-        </main>
+          <div className="space-y-6">
+            <RecentActivity />
+            <UpcomingAssignments />
+          </div>
+        </div>
       </div>
 
       <KidatoMascot />

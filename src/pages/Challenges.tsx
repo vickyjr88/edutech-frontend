@@ -3,8 +3,6 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Target, Trophy, Plus, BarChart2, Users, Sparkles } from "lucide-react";
-import StudentDashboardHeader from "@/components/dashboard/StudentDashboardHeader";
-import StudentSidebar from "@/components/dashboard/StudentSidebar";
 import KidatoMascot from "@/components/dashboard/KidatoMascot";
 import LearningProgress from "@/components/dashboard/LearningProgress";
 import GoalFormDialog from "@/components/dashboard/GoalFormDialog";
@@ -267,11 +265,9 @@ const Challenges = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white md:ml-64 transition-all duration-300">
-      <div className="flex-1 flex flex-col">
-        <StudentDashboardHeader userName={userName} />
-
-        <main className="p-4 sm:p-6 flex-1 overflow-y-auto">
+    <div className="bg-gradient-to-b from-blue-50 to-white min-h-screen p-4 sm:p-6 transition-all duration-300">
+      <div className="flex-1 flex flex-col overflow-y-auto">
+        <main className="flex-1">
           <div className="max-w-7xl mx-auto">
             <div className="flex justify-between items-center mb-6">
               <h1 className="text-2xl font-bold text-gray-800">Quests & Challenges</h1>

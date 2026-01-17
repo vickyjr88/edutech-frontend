@@ -71,10 +71,17 @@ export interface PaginatedNotifications {
 export const notificationService = {
     async getNotifications(
         query: NotificationQuery = {},
-    ): Promise<NotificationPreferences> {
-        const response = await api.get<PaginatedNotifications>('/notifications/me', { params: query });
+    ): Promise<PaginatedNotifications> {
+        const response: any = await api.get<any>('/notifications/me', { params: query });
         if (response.error) throw new Error(response.error.message);
-        return response.data as any;
+
+        // Map backend response { data, meta } to frontend interface
+        return {
+            notifications: response.data.data,
+            total: response.data.meta.total,
+            page: response.data.meta.page,
+            totalPages: response.data.meta.totalPages
+        };
     },
 
     async getStats(): Promise<NotificationStats> {

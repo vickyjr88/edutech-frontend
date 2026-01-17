@@ -14,7 +14,7 @@ const TeacherEarningsPage = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="md:ml-64 bg-gray-50 min-h-screen">
+    <div className="bg-gray-50 min-h-screen">
       <div className="container mx-auto py-8 px-4">
         <div className="flex items-center mb-6">
           <Button

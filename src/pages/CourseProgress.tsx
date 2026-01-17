@@ -2,8 +2,6 @@
 import { useParams } from "react-router-dom";
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import StudentDashboardHeader from "@/components/dashboard/StudentDashboardHeader";
-import StudentSidebar from "@/components/dashboard/StudentSidebar";
 import KidatoMascot from "@/components/dashboard/KidatoMascot";
 import { ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -21,14 +19,9 @@ const CourseProgress = () => {
   const validCourseId = courseId && courseId !== 'undefined' ? courseId : undefined;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white md:ml-64 transition-all duration-300">
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col">
-        {/* Top Nav */}
-        <StudentDashboardHeader userName={userName} />
-
-        {/* Content */}
-        <main className="p-4 sm:p-6 flex-1 overflow-y-auto">
+    <div className="bg-gradient-to-b from-blue-50 to-white min-h-screen p-4 sm:p-6 transition-all duration-300">
+      <div className="flex-1 flex flex-col overflow-y-auto">
+        <main className="flex-1">
           <div className="max-w-7xl mx-auto">
             <div className="mb-6">
               <Link to="/student/classes">

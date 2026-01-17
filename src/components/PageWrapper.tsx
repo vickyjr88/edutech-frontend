@@ -18,7 +18,6 @@ const PageWrapper = ({ children, className }: PageWrapperProps) => {
     <div
       className={cn(
         "transition-all duration-300",
-        user && "md:pl-64", // Add left padding when user is logged in (sidebar is visible)
         className
       )}
     >

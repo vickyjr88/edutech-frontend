@@ -29,7 +29,7 @@ export default function TeacherResourcesPage() {
     };
 
     return (
-        <div className="p-6 space-y-6 md:ml-64 bg-gray-50 min-h-screen">
+        <div className="p-6 space-y-6 bg-gray-50 min-h-screen">
             <div className="flex justify-between items-center">
                 <div>
                     <h1 className="text-3xl font-bold">Resources</h1>

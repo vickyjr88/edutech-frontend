@@ -203,7 +203,7 @@ const TeacherPersonalProfile = () => {
     }
 
     return (
-        <div className="flex flex-col md:ml-64 min-h-screen bg-gray-50">
+        <div className="flex flex-col min-h-screen bg-gray-50">
             {error && (
                 <div className="p-4">
                     <Alert variant="destructive">
