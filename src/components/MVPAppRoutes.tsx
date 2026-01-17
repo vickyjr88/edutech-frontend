@@ -98,6 +98,7 @@ import UsersManagement from "../pages/admin/UsersManagement";
 import BookingsManagement from "../pages/admin/BookingsManagement";
 import TicketsManagement from "../pages/admin/TicketsManagement";
 import AdminMessaging from "../pages/admin/AdminMessaging";
+import AdminReportsPage from "../pages/admin/AdminReportsPage";
 
 // Admin CMS & Content (Kept for marketing)
 import PagesList from "../pages/admin/PagesList";
@@ -573,6 +574,9 @@ const MVPAppRoutes = () => {
 
           {/* Teaching Config */}
           <Route path="teaching-config" element={<TeachingConfigManagement />} />
+
+          {/* Reports */}
+          <Route path="reports" element={<AdminReportsPage />} />
         </Route>
       )}
 

@@ -795,4 +795,28 @@ export const adminService = {
   async getOffering(id: string) {
     return api.get<any>(`/admin/offerings/${id}`);
   },
+
+  // ==================== EXPORTS ====================
+
+  /**
+   * Export Bookings CSV
+   */
+  async exportBookings() {
+    return api.get<Blob>('/admin/export/bookings', { responseType: 'blob' });
+  },
+
+  /**
+   * Export Teachers CSV
+   */
+  async exportTeachers() {
+    return api.get<Blob>('/admin/export/teachers', { responseType: 'blob' });
+  },
+
+  /**
+   * Export Revenue CSV
+   */
+  async exportRevenue() {
+    return api.get<Blob>('/admin/export/revenue', { responseType: 'blob' });
+  },
 };
+

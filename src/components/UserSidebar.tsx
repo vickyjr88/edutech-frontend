@@ -75,6 +75,7 @@ const UserSidebar = () => {
         { name: "Teachers", href: "/admin/teachers", icon: User },
         { name: "Classes", href: "/admin/classes", icon: BookOpen },
         { name: "Inquiries", href: "/admin/inquiries", icon: MessageSquare },
+        { name: "Reports & Exports", href: "/admin/reports", icon: FileText },
       ],
     };
 
