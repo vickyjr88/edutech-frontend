@@ -3,12 +3,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { 
-  TrendingUp, 
-  TrendingDown, 
-  DollarSign, 
-  Users, 
-  Calendar, 
+import {
+  TrendingUp,
+  TrendingDown,
+  DollarSign,
+  Users,
+  Calendar,
   Clock,
   DownloadCloud
 } from "lucide-react";
@@ -35,7 +35,7 @@ const EarningsSummary = () => {
   const revenueParams = useMemo((): RevenueSummaryRequestParams => {
     const now = new Date();
     const endDate = now.toISOString().split('T')[0]; // Today in YYYY-MM-DD format
-    
+
     let startDate: string;
     let limit: number;
     let groupBy: 'month' | 'quarter' | 'year';
@@ -76,7 +76,7 @@ const EarningsSummary = () => {
   }, [timeframe]);
 
   const { data: revenueSummary, isLoading: revenueLoading } = useTeacherRevenueSummary(revenueParams);
-  
+
   // Payout preferences and primary bank account
   const { preferences: payoutPreferences, isLoading: payoutLoading } = useTeacherPayoutPreferences();
   const { data: primaryBankAccount, isLoading: bankAccountLoading, error: bankAccountError } = useTeacherPrimaryBankAccount();
@@ -101,42 +101,42 @@ const EarningsSummary = () => {
   // Calculate earnings from summary data
   const calculateEarningsFromSummary = () => {
     if (!summaryData) return { totalStudents: 0, activeClasses: 0 };
-    
+
     const totalStudents = summaryData.classes.reduce((total, classItem) => {
       return total + (classItem.enrolledStudents || 0);
     }, 0);
-    
-    const activeClasses = summaryData.classes.filter(classItem => 
+
+    const activeClasses = summaryData.classes.filter(classItem =>
       classItem.enrolledStudents > 0
     ).length;
-    
+
     return { totalStudents, activeClasses };
   };
 
   const { totalStudents, activeClasses } = calculateEarningsFromSummary();
   const isLoading = balanceLoading || summaryLoading || transactionsLoading;
-  
+
   // Helper functions for payout settings
   const getPaymentScheduleInfo = () => {
     if (payoutLoading || !payoutPreferences) {
       return { frequency: 'Loading...', description: 'Loading payment schedule...', nextPayout: null };
     }
-    
+
     // Handle case where no payout preferences are set up
     if (!payoutPreferences.period) {
-      return { 
-        frequency: 'Not configured', 
+      return {
+        frequency: 'Not configured',
         description: 'Set up your payout schedule',
         nextPayout: null
       };
     }
-    
+
     const period = payoutPreferences.period;
     const frequencyName = period.charAt(0).toUpperCase() + period.slice(1);
     const payoutDay = payoutPreferences.payoutDay;
     const isAutoEnabled = payoutPreferences.autoPayoutEnabled;
     const isSuspended = payoutPreferences.suspendPayouts;
-    
+
     let description: string;
 
 
@@ -150,7 +150,7 @@ const EarningsSummary = () => {
           description = 'Monthly payouts';
         }
         break;
-        
+
       case 'weekly':
       case 'biweekly':
         if (payoutDay && payoutDay >= 1 && payoutDay <= 7) {
@@ -162,27 +162,27 @@ const EarningsSummary = () => {
           description = period === 'biweekly' ? 'Bi-weekly payouts' : 'Weekly payouts';
         }
         break;
-        
+
       case 'daily':
         description = 'Daily payouts (business days)';
         break;
-        
+
       case 'instant':
         description = 'Instant payouts available';
         break;
-        
+
       default:
         description = 'Custom payout schedule';
         break;
     }
-    
+
     // Add status indicators
     if (isSuspended) {
       description += ' (Currently suspended)';
     } else if (!isAutoEnabled) {
       description += ' (Manual payouts only)';
     }
-    
+
     // Format next payout date
     let nextPayout = null;
     if (payoutPreferences.nextScheduledPayout && !isSuspended && isAutoEnabled) {
@@ -193,30 +193,30 @@ const EarningsSummary = () => {
         year: 'numeric'
       });
     }
-    
+
     return {
       frequency: frequencyName,
       description,
       nextPayout,
       minimumAmount: payoutPreferences.minimumPayoutAmount,
-      currency: payoutPreferences.currency || 'USD'
+      currency: payoutPreferences.currency || 'KES'
     };
   };
-  
+
   const getPrimaryBankAccount = () => {
     if (bankAccountLoading) {
       return { loading: true };
     }
-    
+
     if (bankAccountError || !primaryBankAccount) {
-      return { 
-        empty: true, 
-        bankName: 'No Bank Account', 
+      return {
+        empty: true,
+        bankName: 'No Bank Account',
         accountNumber: 'Not set up',
         verificationStatus: null
       };
     }
-    
+
     return {
       bankName: primaryBankAccount.bank.bankName,
       accountNumber: primaryBankAccount.maskedAccountNumber,
@@ -246,7 +246,7 @@ const EarningsSummary = () => {
       </div>
     );
   }
-  
+
   return (
     <div className="space-y-6">
       {/* Main metrics cards */}
@@ -265,7 +265,7 @@ const EarningsSummary = () => {
             </div>
           </CardContent>
         </Card>
-        
+
         <Card className="bg-white shadow-sm">
           <CardContent className="p-6">
             <div className="flex justify-between items-start">
@@ -280,7 +280,7 @@ const EarningsSummary = () => {
             </div>
           </CardContent>
         </Card>
-        
+
         <Card className="bg-white shadow-sm">
           <CardContent className="p-6">
             <div className="flex justify-between items-start">
@@ -295,7 +295,7 @@ const EarningsSummary = () => {
             </div>
           </CardContent>
         </Card>
-        
+
         <Card className="bg-white shadow-sm">
           <CardContent className="p-6">
             <div className="flex justify-between items-start">
@@ -311,7 +311,7 @@ const EarningsSummary = () => {
           </CardContent>
         </Card>
       </div>
-      
+
       {/* Revenue Chart Card */}
       <Card className="shadow-sm">
         <CardHeader className="pb-2">
@@ -320,8 +320,8 @@ const EarningsSummary = () => {
               <CardTitle>Revenue Trend</CardTitle>
               <CardDescription>Your earnings over time</CardDescription>
             </div>
-            <Select 
-              value={timeframe} 
+            <Select
+              value={timeframe}
               onValueChange={setTimeframe}
             >
               <SelectTrigger className="w-28 h-8">
@@ -349,9 +349,9 @@ const EarningsSummary = () => {
                 <div className="w-full h-full flex items-end justify-between px-2">
                   {revenueSummary.periods.map((period, index) => (
                     <div key={period.period} className="flex flex-col items-center">
-                      <div 
-                        className="w-12 bg-blue-500 rounded-t-sm" 
-                        style={{ 
+                      <div
+                        className="w-12 bg-blue-500 rounded-t-sm"
+                        style={{
                           height: `${Math.max((period.earnings / revenueSummary.summary.peakEarnings) * 200, 8)}px`,
                           backgroundColor: `hsl(${210 + index * 10}, 80%, 60%)`
                         }}
@@ -369,11 +369,10 @@ const EarningsSummary = () => {
             </div>
             <div className="flex justify-between items-center mt-6">
               <div className="flex items-center">
-                <div className={`rounded-full p-1.5 mr-2 ${
-                  revenueSummary && revenueSummary.summary.growthRate >= 0 
-                    ? 'bg-green-100' 
+                <div className={`rounded-full p-1.5 mr-2 ${revenueSummary && revenueSummary.summary.growthRate >= 0
+                    ? 'bg-green-100'
                     : 'bg-red-100'
-                }`}>
+                  }`}>
                   {revenueSummary && revenueSummary.summary.growthRate >= 0 ? (
                     <TrendingUp className="h-4 w-4 text-green-600" />
                   ) : (
@@ -399,7 +398,7 @@ const EarningsSummary = () => {
           </div>
         </CardContent>
       </Card>
-      
+
       {/* Pending Transactions Card */}
       <Card className="shadow-sm">
         <CardHeader className="pb-2">
@@ -429,17 +428,15 @@ const EarningsSummary = () => {
                         })}
                       </td>
                       <td className="py-3">{transaction.description}</td>
-                      <td className={`py-3 text-right font-medium ${
-                        transaction.transactionType === 'earning' ? 'text-green-600' : 'text-gray-600'
-                      }`}>
+                      <td className={`py-3 text-right font-medium ${transaction.transactionType === 'earning' ? 'text-green-600' : 'text-gray-600'
+                        }`}>
                         {transaction.transactionType === 'earning' ? '+' : ''}${transaction.amount.toFixed(2)}
                       </td>
                       <td className="py-3 text-right">
-                        <span className={`px-2 py-1 rounded-full text-xs ${
-                          transaction.status === 'completed' ? 'bg-green-100 text-green-800' : 
-                          transaction.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                          'bg-gray-100 text-gray-800'
-                        }`}>
+                        <span className={`px-2 py-1 rounded-full text-xs ${transaction.status === 'completed' ? 'bg-green-100 text-green-800' :
+                            transaction.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                              'bg-gray-100 text-gray-800'
+                          }`}>
                           {transaction.status}
                         </span>
                       </td>
@@ -460,7 +457,7 @@ const EarningsSummary = () => {
           </div>
         </CardContent>
       </Card>
-      
+
       {/* Payout Settings Summary */}
       <Card className="shadow-sm">
         <CardHeader className="pb-2">
@@ -504,9 +501,8 @@ const EarningsSummary = () => {
             <div>
               <h4 className="text-sm font-medium mb-2">Primary Payment Method</h4>
               <div className="flex items-center space-x-4 mb-4">
-                <div className={`rounded-full p-2 ${
-                  getPrimaryBankAccount().empty ? 'bg-yellow-100' : 'bg-gray-100'
-                }`}>
+                <div className={`rounded-full p-2 ${getPrimaryBankAccount().empty ? 'bg-yellow-100' : 'bg-gray-100'
+                  }`}>
                   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={
                     getPrimaryBankAccount().empty ? 'text-yellow-600' : 'text-gray-600'
                   }>
@@ -527,20 +523,18 @@ const EarningsSummary = () => {
                           {getPrimaryBankAccount().empty ? 'No Payment Method' : 'Bank Account'}
                         </p>
                         {!getPrimaryBankAccount().empty && getPrimaryBankAccount().verificationStatus && (
-                          <span className={`px-1.5 py-0.5 rounded-full text-xs ${
-                            getPrimaryBankAccount().verificationStatus === 'verified' ? 'bg-green-100 text-green-700' :
-                            getPrimaryBankAccount().verificationStatus === 'pending' ? 'bg-yellow-100 text-yellow-700' :
-                            'bg-red-100 text-red-700'
-                          }`}>
+                          <span className={`px-1.5 py-0.5 rounded-full text-xs ${getPrimaryBankAccount().verificationStatus === 'verified' ? 'bg-green-100 text-green-700' :
+                              getPrimaryBankAccount().verificationStatus === 'pending' ? 'bg-yellow-100 text-yellow-700' :
+                                'bg-red-100 text-red-700'
+                            }`}>
                             {getPrimaryBankAccount().verificationStatus}
                           </span>
                         )}
                       </div>
-                      <p className={`text-xs ${
-                        getPrimaryBankAccount().empty ? 'text-yellow-600' : 'text-gray-500'
-                      }`}>
-                        {getPrimaryBankAccount().empty 
-                          ? 'Set up your bank account' 
+                      <p className={`text-xs ${getPrimaryBankAccount().empty ? 'text-yellow-600' : 'text-gray-500'
+                        }`}>
+                        {getPrimaryBankAccount().empty
+                          ? 'Set up your bank account'
                           : `${getPrimaryBankAccount().bankName} ${getPrimaryBankAccount().accountNumber}`
                         }
                       </p>

@@ -24,7 +24,7 @@ interface StripePaymentFormProps {
 
 const StripePaymentForm: React.FC<StripePaymentFormProps> = ({
   amount,
-  currency = 'USD',
+  currency = 'KES',
   onSuccess,
   onError,
   title = 'Payment Information',

@@ -1,10 +1,10 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { 
-  BasisTheoryProvider, 
+import {
+  BasisTheoryProvider,
   CardNumberElement,
   CardExpirationDateElement,
   CardVerificationCodeElement,
-  useBasisTheory 
+  useBasisTheory
 } from '@basis-theory/react-elements';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -24,7 +24,7 @@ interface CardPaymentFormProps {
 
 const CardPaymentForm: React.FC<CardPaymentFormProps> = ({
   amount,
-  currency = 'USD',
+  currency = 'KES',
   onSuccess,
   onError,
   title = 'Payment Information',
@@ -72,7 +72,7 @@ const CardPaymentForm: React.FC<CardPaymentFormProps> = ({
       // Create tokenize request according to Basis Theory documentation
       const tokenizeResponse = await bt.tokenize({
         number: cardNumberRef.current,
-        expiration_month: cardExpiryRef.current, 
+        expiration_month: cardExpiryRef.current,
         expiration_year: cardExpiryRef.current,
         cvc: cardCvcRef.current
       });
@@ -81,7 +81,7 @@ const CardPaymentForm: React.FC<CardPaymentFormProps> = ({
         throw new Error('Failed to tokenize card - no fingerprint received');
       }
 
-      console.log('Tokenization successful:', { 
+      console.log('Tokenization successful:', {
         fingerprint: tokenizeResponse.fingerprint,
         last4: tokenizeResponse.data?.last4
       });
@@ -157,11 +157,11 @@ const CardPaymentForm: React.FC<CardPaymentFormProps> = ({
                       color: '#9CA3AF',
                     },
                   },
-                  invalid: { 
+                  invalid: {
                     color: '#EF4444',
                     borderColor: '#EF4444',
                   },
-                  complete: { 
+                  complete: {
                     color: '#059669',
                     borderColor: '#059669',
                   },
@@ -195,11 +195,11 @@ const CardPaymentForm: React.FC<CardPaymentFormProps> = ({
                         color: '#9CA3AF',
                       },
                     },
-                    invalid: { 
+                    invalid: {
                       color: '#EF4444',
                       borderColor: '#EF4444',
                     },
-                    complete: { 
+                    complete: {
                       color: '#059669',
                       borderColor: '#059669',
                     },
@@ -232,11 +232,11 @@ const CardPaymentForm: React.FC<CardPaymentFormProps> = ({
                         color: '#9CA3AF',
                       },
                     },
-                    invalid: { 
+                    invalid: {
                       color: '#EF4444',
                       borderColor: '#EF4444',
                     },
-                    complete: { 
+                    complete: {
                       color: '#059669',
                       borderColor: '#059669',
                     },
@@ -299,7 +299,7 @@ const CardPaymentWrapper: React.FC<CardPaymentWrapperProps> = ({
 }) => {
   console.log('CardPaymentWrapper apiKey:', apiKey);
   const { bt } = useBasisTheory(apiKey);
-  
+
   if (!apiKey) {
     return (
       <div className="p-4 border border-red-200 rounded-md bg-red-50">
@@ -307,7 +307,7 @@ const CardPaymentWrapper: React.FC<CardPaymentWrapperProps> = ({
       </div>
     );
   }
-  
+
   return (
     <BasisTheoryProvider bt={bt}>
       <CardPaymentForm {...props} />

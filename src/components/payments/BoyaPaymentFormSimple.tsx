@@ -1,10 +1,10 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { 
-  BasisTheoryProvider, 
+import {
+  BasisTheoryProvider,
   CardNumberElement,
   CardExpirationDateElement,
   CardVerificationCodeElement,
-  useBasisTheory 
+  useBasisTheory
 } from '@basis-theory/react-elements';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -49,25 +49,25 @@ class BasisTheoryManager {
         await new Promise(resolve => setTimeout(resolve, 100));
         attempts++;
       }
-      
+
       if (!(window as any).BasisTheory) {
         throw new Error('BasisTheory SDK not loaded after 5 seconds');
       }
-      
+
       // Initialize BT with environment-appropriate options
       const environment = (window as any).BT_ENVIRONMENT || 'development';
       const enableLogging = (window as any).BT_DEV_MODE || false;
-      
+
       this.btInstance = await (window as any).BasisTheory.init(apiKey, {
         environment,
         enableLogging,
         elements: true
       });
-      
+
       this.isInitialized = true;
-      
+
       return this.btInstance;
-      
+
     } catch (error) {
       this.initPromise = null; // Reset so we can try again
       throw error;
@@ -91,7 +91,7 @@ interface BoyaPaymentFormSimpleProps {
 
 const BoyaPaymentFormSimple: React.FC<BoyaPaymentFormSimpleProps> = ({
   amount,
-  currency = 'USD',
+  currency = 'KES',
   customer,
   customerId,
   description = 'Payment',
@@ -107,7 +107,7 @@ const BoyaPaymentFormSimple: React.FC<BoyaPaymentFormSimpleProps> = ({
   const cardExpiryRef = useRef<any>();
   const cardCvcRef = useRef<any>();
   const [isLoading, setIsLoading] = useState(false);
-  
+
   const [error, setError] = useState<string>('');
   const [cardholder, setCardholder] = useState(customer?.name || '');
   const [cardBrand, setCardBrand] = useState();
@@ -131,12 +131,12 @@ const BoyaPaymentFormSimple: React.FC<BoyaPaymentFormSimpleProps> = ({
       const tokenizeResponse = await bt.tokenize({
         number: cardNumberRef.current,
         expiration_month: cardExpiryRef.current,
-        expiration_year: cardExpiryRef.current,  
+        expiration_year: cardExpiryRef.current,
         cvc: cardCvcRef.current
       });
 
       const cardToken = tokenizeResponse.number;
-      
+
       if (!cardToken) {
         throw new Error('Failed to tokenize card - no card token received');
       }
@@ -169,7 +169,7 @@ const BoyaPaymentFormSimple: React.FC<BoyaPaymentFormSimpleProps> = ({
 
     } catch (err: any) {
       let errorMessage = 'Payment failed. Please try again.';
-      
+
       // Handle Boya API errors
       if (err.userMessage) {
         errorMessage = err.userMessage;
@@ -178,7 +178,7 @@ const BoyaPaymentFormSimple: React.FC<BoyaPaymentFormSimpleProps> = ({
       } else if (err.message) {
         errorMessage = err.message;
       }
-      
+
       setError(errorMessage);
       onError?.(errorMessage, err.boyaError);
     } finally {
@@ -241,10 +241,10 @@ const BoyaPaymentFormSimple: React.FC<BoyaPaymentFormSimpleProps> = ({
                         color: '#9CA3AF',
                       },
                     },
-                    invalid: { 
+                    invalid: {
                       color: '#EF4444',
                     },
-                    complete: { 
+                    complete: {
                       color: '#059669',
                     },
                   }}
@@ -276,10 +276,10 @@ const BoyaPaymentFormSimple: React.FC<BoyaPaymentFormSimpleProps> = ({
                           color: '#9CA3AF',
                         },
                       },
-                      invalid: { 
+                      invalid: {
                         color: '#EF4444',
                       },
-                      complete: { 
+                      complete: {
                         color: '#059669',
                       },
                     }}
@@ -310,10 +310,10 @@ const BoyaPaymentFormSimple: React.FC<BoyaPaymentFormSimpleProps> = ({
                           color: '#9CA3AF',
                         },
                       },
-                      invalid: { 
+                      invalid: {
                         color: '#EF4444',
                       },
-                      complete: { 
+                      complete: {
                         color: '#059669',
                       },
                     }}
@@ -378,8 +378,8 @@ const BoyaPaymentWrapperSimple: React.FC<BoyaPaymentWrapperSimpleProps> = ({
 }) => {
   const [btInstance, setBtInstance] = useState<any>(null);
   const [initError, setInitError] = useState<string>('');
-  
-  
+
+
   // Initialize BasisTheory using singleton manager
   useEffect(() => {
     const initializeBT = async () => {
@@ -391,12 +391,12 @@ const BoyaPaymentWrapperSimple: React.FC<BoyaPaymentWrapperSimpleProps> = ({
         setInitError(error instanceof Error ? error.message : 'Initialization failed');
       }
     };
-    
+
     if (apiKey) {
       initializeBT();
     }
   }, [apiKey]);
-  
+
   if (!apiKey) {
     return (
       <div className="p-4 border border-red-200 rounded-md bg-red-50">
@@ -404,7 +404,7 @@ const BoyaPaymentWrapperSimple: React.FC<BoyaPaymentWrapperSimpleProps> = ({
       </div>
     );
   }
-  
+
   // Check if the key format is correct for Elements
   if (apiKey.includes('_pvt_')) {
     return (
@@ -413,7 +413,7 @@ const BoyaPaymentWrapperSimple: React.FC<BoyaPaymentWrapperSimpleProps> = ({
       </div>
     );
   }
-  
+
   if (initError) {
     return (
       <div className="p-4 border border-red-200 rounded-md bg-red-50">
@@ -421,7 +421,7 @@ const BoyaPaymentWrapperSimple: React.FC<BoyaPaymentWrapperSimpleProps> = ({
       </div>
     );
   }
-  
+
   if (!btInstance) {
     return (
       <div className="p-4 border border-gray-200 rounded-md bg-gray-50">
@@ -429,8 +429,8 @@ const BoyaPaymentWrapperSimple: React.FC<BoyaPaymentWrapperSimpleProps> = ({
       </div>
     );
   }
-  
-  
+
+
   return (
     <BasisTheoryProvider bt={btInstance}>
       <BoyaPaymentFormSimple {...props} />

@@ -1,10 +1,10 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { 
-  BasisTheoryProvider, 
+import {
+  BasisTheoryProvider,
   CardNumberElement,
   CardExpirationDateElement,
   CardVerificationCodeElement,
-  useBasisTheory 
+  useBasisTheory
 } from '@basis-theory/react-elements';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -30,7 +30,7 @@ interface BoyaPaymentFormProps {
 
 const BoyaPaymentForm: React.FC<BoyaPaymentFormProps> = ({
   amount,
-  currency = 'USD',
+  currency = 'KES',
   customer,
   customerId,
   description = 'Payment',
@@ -84,7 +84,7 @@ const BoyaPaymentForm: React.FC<BoyaPaymentFormProps> = ({
         type: 'card',
         data: {
           number: cardNumberRef.current,
-          expiration_month: cardExpiryRef.current, 
+          expiration_month: cardExpiryRef.current,
           expiration_year: cardExpiryRef.current,
           cvc: cardCvcRef.current
         }
@@ -131,9 +131,9 @@ const BoyaPaymentForm: React.FC<BoyaPaymentFormProps> = ({
 
     } catch (err: any) {
       console.error('Payment processing error:', err);
-      
+
       let errorMessage = 'Payment failed. Please try again.';
-      
+
       // Handle Boya API errors
       if (err.userMessage) {
         errorMessage = err.userMessage;
@@ -142,7 +142,7 @@ const BoyaPaymentForm: React.FC<BoyaPaymentFormProps> = ({
       } else if (err.message) {
         errorMessage = err.message;
       }
-      
+
       setError(errorMessage);
       onError?.(errorMessage, err.boyaError);
     } finally {
@@ -207,11 +207,11 @@ const BoyaPaymentForm: React.FC<BoyaPaymentFormProps> = ({
                       color: '#9CA3AF',
                     },
                   },
-                  invalid: { 
+                  invalid: {
                     color: '#EF4444',
                     borderColor: '#EF4444',
                   },
-                  complete: { 
+                  complete: {
                     color: '#059669',
                     borderColor: '#059669',
                   },
@@ -245,11 +245,11 @@ const BoyaPaymentForm: React.FC<BoyaPaymentFormProps> = ({
                         color: '#9CA3AF',
                       },
                     },
-                    invalid: { 
+                    invalid: {
                       color: '#EF4444',
                       borderColor: '#EF4444',
                     },
-                    complete: { 
+                    complete: {
                       color: '#059669',
                       borderColor: '#059669',
                     },
@@ -282,11 +282,11 @@ const BoyaPaymentForm: React.FC<BoyaPaymentFormProps> = ({
                         color: '#9CA3AF',
                       },
                     },
-                    invalid: { 
+                    invalid: {
                       color: '#EF4444',
                       borderColor: '#EF4444',
                     },
-                    complete: { 
+                    complete: {
                       color: '#059669',
                       borderColor: '#059669',
                     },
@@ -356,7 +356,7 @@ const BoyaPaymentWrapper: React.FC<BoyaPaymentWrapperProps> = ({
       </div>
     );
   }
-  
+
   return (
     <BasisTheoryProvider apiKey={apiKey}>
       <BoyaPaymentForm {...props} />

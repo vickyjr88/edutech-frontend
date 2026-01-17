@@ -74,10 +74,10 @@ class BoyaPaymentService {
       (error) => {
         if (error.response?.data) {
           const boyaError: BoyaErrorResponse = error.response.data;
-          
+
           // Create a more user-friendly error message
           let userMessage = boyaError.message || 'Payment failed';
-          
+
           // Handle specific error cases
           if (boyaError.message?.includes('insufficient funds')) {
             userMessage = 'Your card has insufficient funds. Please try a different card.';
@@ -86,7 +86,7 @@ class BoyaPaymentService {
           } else if (boyaError.message?.includes('expired')) {
             userMessage = 'Your card has expired. Please use a valid card.';
           }
-          
+
           error.userMessage = userMessage;
           error.boyaError = boyaError;
         }
@@ -161,8 +161,8 @@ class BoyaPaymentService {
    * Check if payment requires 3D Secure authentication
    */
   requires3DSecure(response: BoyaPaymentResponse): boolean {
-    return response.status === 'requires_action' && 
-           response.next_action?.type === 'redirect_to_url';
+    return response.status === 'requires_action' &&
+      response.next_action?.type === 'redirect_to_url';
   }
 
   /**
@@ -178,7 +178,7 @@ class BoyaPaymentService {
   /**
    * Convert amount to cents for API
    */
-  static toCents(amount: number, currency: string = 'USD'): number {
+  static toCents(amount: number, currency: string = 'KES'): number {
     // Most currencies use 2 decimal places
     return Math.round(amount * 100);
   }
@@ -186,7 +186,7 @@ class BoyaPaymentService {
   /**
    * Convert amount from cents to decimal
    */
-  static fromCents(amountInCents: number, currency: string = 'USD'): number {
+  static fromCents(amountInCents: number, currency: string = 'KES'): number {
     return amountInCents / 100;
   }
 }

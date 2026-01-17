@@ -1,11 +1,11 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { BasisTheory } from '@basis-theory/basis-theory-js';
-import { 
-  BasisTheoryProvider, 
+import {
+  BasisTheoryProvider,
   CardNumberElement,
   CardExpirationDateElement,
   CardVerificationCodeElement,
-  useBasisTheory 
+  useBasisTheory
 } from '@basis-theory/react-elements';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -31,7 +31,7 @@ interface BoyaPaymentFormFixedProps {
 
 const BoyaPaymentFormFixed: React.FC<BoyaPaymentFormFixedProps> = ({
   amount,
-  currency = 'USD',
+  currency = 'KES',
   customer,
   customerId,
   description = 'Payment',
@@ -46,7 +46,7 @@ const BoyaPaymentFormFixed: React.FC<BoyaPaymentFormFixedProps> = ({
   const cardNumberRef = useRef<any>();
   const cardExpiryRef = useRef<any>();
   const cardCvcRef = useRef<any>();
-  
+
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>('');
   const [cardholder, setCardholder] = useState(customer?.name || '');
@@ -88,7 +88,7 @@ const BoyaPaymentFormFixed: React.FC<BoyaPaymentFormFixedProps> = ({
       });
 
       console.log('Token response:', token);
-      
+
       if (!token || !token.fingerprint) {
         throw new Error('Failed to create token - no fingerprint received');
       }
@@ -130,9 +130,9 @@ const BoyaPaymentFormFixed: React.FC<BoyaPaymentFormFixedProps> = ({
 
     } catch (err: any) {
       console.error('Payment processing error:', err);
-      
+
       let errorMessage = 'Payment failed. Please try again.';
-      
+
       // Handle Boya API errors
       if (err.userMessage) {
         errorMessage = err.userMessage;
@@ -141,7 +141,7 @@ const BoyaPaymentFormFixed: React.FC<BoyaPaymentFormFixedProps> = ({
       } else if (err.message) {
         errorMessage = err.message;
       }
-      
+
       setError(errorMessage);
       onError?.(errorMessage, err.boyaError);
     } finally {
@@ -165,10 +165,10 @@ const BoyaPaymentFormFixed: React.FC<BoyaPaymentFormFixedProps> = ({
         color: '#9CA3AF',
       },
     },
-    invalid: { 
+    invalid: {
       color: '#EF4444',
     },
-    complete: { 
+    complete: {
       color: '#059669',
     },
   };
@@ -318,7 +318,7 @@ const BoyaPaymentWrapperFixed: React.FC<BoyaPaymentWrapperFixedProps> = ({
       </div>
     );
   }
-  
+
   return (
     <BasisTheoryProvider apiKey={apiKey}>
       <BoyaPaymentFormFixed {...props} />

@@ -27,7 +27,7 @@ interface UnifiedPaymentFormProps {
 
 const UnifiedPaymentForm: React.FC<UnifiedPaymentFormProps> = ({
   amount,
-  currency = 'USD',
+  currency = 'KES',
   customer,
   customerId,
   paymentDescription,
@@ -51,7 +51,7 @@ const UnifiedPaymentForm: React.FC<UnifiedPaymentFormProps> = ({
   const handlePaymentError = (error: string, boyaError?: any) => {
     console.error(`${currentProvider} payment error:`, error);
     setErrorCount(prev => prev + 1);
-    
+
     // If using Boya and it fails, try Stripe as fallback (but only for non-Boya specific errors)
     if (currentProvider === 'boya' && stripePublishableKey && errorCount < 2 && !boyaError) {
       console.log('Falling back to Stripe payment processing...');
@@ -59,7 +59,7 @@ const UnifiedPaymentForm: React.FC<UnifiedPaymentFormProps> = ({
       setHasError(true);
       return;
     }
-    
+
     // If we're using Stripe and it fails, try Basis Theory as fallback
     if (currentProvider === 'stripe' && basisTheoryApiKey && errorCount < 2) {
       console.log('Falling back to Basis Theory payment processing...');
@@ -67,7 +67,7 @@ const UnifiedPaymentForm: React.FC<UnifiedPaymentFormProps> = ({
       setHasError(true);
       return;
     }
-    
+
     // If we're using Basis Theory and it fails, try Stripe as fallback
     if (currentProvider === 'basis-theory' && stripePublishableKey && errorCount < 2) {
       console.log('Falling back to Stripe payment processing...');
@@ -75,7 +75,7 @@ const UnifiedPaymentForm: React.FC<UnifiedPaymentFormProps> = ({
       setHasError(true);
       return;
     }
-    
+
     // If all fail or only one provider is available, report the error
     onError?.(error, boyaError);
   };
