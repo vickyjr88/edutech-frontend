@@ -20,7 +20,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import { Calendar, Search, Filter, Eye, TrendingUp, DollarSign } from 'lucide-react';
+import { Calendar, Search, Filter, Eye, TrendingUp, DollarSign, Download } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface BookingsListProps {
@@ -31,7 +31,10 @@ const BookingsList = ({ onViewBooking }: BookingsListProps) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState<string>('all');
     const [paymentFilter, setPaymentFilter] = useState<string>('all');
+    const [teacherFilter, setTeacherFilter] = useState<string>('all');
+    const [parentFilter, setParentFilter] = useState<string>('all');
     const [currentPage, setCurrentPage] = useState(1);
+    const [isLoadingExport, setIsLoadingExport] = useState(false);
     const pageSize = 20;
 
     // Fetch bookings statistics
@@ -39,13 +42,33 @@ const BookingsList = ({ onViewBooking }: BookingsListProps) => {
         queryKey: ['bookingStats'],
         queryFn: async () => {
             const response = await adminService.getBookingStats();
-            return response.data;
+            const data = response.data as any;
+            // Handle potential nested data structure
+            return data?.data || data || {};
         },
+    });
+
+    // Fetch teachers for filter
+    const { data: teachersData } = useQuery({
+        queryKey: ['adminTeachersList'],
+        queryFn: async () => {
+            const response = await adminService.getTeachers({ limit: 100 });
+            return response.data;
+        }
+    });
+
+    // Fetch parents for filter
+    const { data: parentsData } = useQuery({
+        queryKey: ['adminParentsList'],
+        queryFn: async () => {
+            const response = await adminService.getParents({ limit: 100 });
+            return response.data;
+        }
     });
 
     // Fetch bookings list
     const { data: bookingsData, isLoading } = useQuery({
-        queryKey: ['adminBookings', currentPage, searchTerm, statusFilter, paymentFilter],
+        queryKey: ['adminBookings', currentPage, searchTerm, statusFilter, paymentFilter, teacherFilter, parentFilter],
         queryFn: async () => {
             const params: any = {
                 page: currentPage,
@@ -56,14 +79,106 @@ const BookingsList = ({ onViewBooking }: BookingsListProps) => {
             if (statusFilter !== 'all') params.status = statusFilter;
             if (paymentFilter === 'paid') params.isPaid = true;
             if (paymentFilter === 'unpaid') params.isPaid = false;
+            if (teacherFilter !== 'all') params.teacherId = teacherFilter;
+            if (parentFilter !== 'all') params.parentId = parentFilter;
 
             const response = await adminService.getBookings(params);
-            return response.data;
+            const data = response.data;
+
+            // Client-side fallback filtering for status if backend ignores it
+            if (data?.bookings && statusFilter !== 'all') {
+                const filtered = data.bookings.filter((b: any) =>
+                    b.status?.toLowerCase() === statusFilter.toLowerCase()
+                );
+
+                // Only override if the filtered set is smaller than original 
+                // (meaning backend returned some non-matching items)
+                if (filtered.length < data.bookings.length) {
+                    data.bookings = filtered;
+                    data.total = filtered.length;
+                }
+            }
+
+            return data;
         },
     });
 
+    const handleExport = async () => {
+        setIsLoadingExport(true);
+        try {
+            const params: any = { limit: 1000 };
+
+            if (searchTerm) params.search = searchTerm;
+            if (statusFilter !== 'all') params.status = statusFilter;
+            if (paymentFilter === 'paid') params.isPaid = true;
+            if (paymentFilter === 'unpaid') params.isPaid = false;
+            if (teacherFilter !== 'all') params.teacherId = teacherFilter;
+            if (parentFilter !== 'all') params.parentId = parentFilter;
+
+            const response = await adminService.getBookings(params);
+            const bookings = response.data.bookings;
+
+            // Define CSV headers
+            const headers = [
+                'Booking ID',
+                'Confirmation Code',
+                'Status',
+                'Date',
+                'Time',
+                'Duration (mins)',
+                'Teacher',
+                'Parent',
+                'Student',
+                'Offering',
+                'Amount',
+                'Currency',
+                'Payment Status',
+                'Payment Ref'
+            ];
+
+            // Convert data to CSV format
+            const csvData = bookings.map(b => [
+                b._id,
+                b.confirmationCode,
+                b.status,
+                b.scheduledDate ? format(new Date(b.scheduledDate), 'yyyy-MM-dd') : '',
+                b.scheduledTime,
+                b.duration,
+                b.teacherId?.fullName || '',
+                b.parentId?.fullName || '',
+                b.studentName || '',
+                b.offeringId?.title || '',
+                b.price,
+                b.currency,
+                b.isPaid ? 'Paid' : 'Unpaid',
+                b.paymentRef || ''
+            ]);
+
+            // Create CSV content
+            const csvContent = [
+                headers.join(','),
+                ...csvData.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+            ].join('\n');
+
+            // Trigger download
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', `bookings_export_${format(new Date(), 'yyyy-MM-dd')}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        } catch (error) {
+            console.error('Export failed:', error);
+        } finally {
+            setIsLoadingExport(false);
+        }
+    };
+
     const getStatusBadgeVariant = (status: string) => {
-        switch (status) {
+        switch (status?.toLowerCase()) {
             case 'confirmed':
                 return 'default';
             case 'completed':
@@ -98,9 +213,9 @@ const BookingsList = ({ onViewBooking }: BookingsListProps) => {
                             <Calendar className="h-4 w-4 text-muted-foreground" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold">{statsData.totalBookings}</div>
+                            <div className="text-2xl font-bold">{bookingsData?.total || statsData.total || 0}</div>
                             <p className="text-xs text-muted-foreground">
-                                {statsData.recentBookings} in last 7 days
+                                {statsData.byStatus?.confirmed || 0} confirmed
                             </p>
                         </CardContent>
                     </Card>
@@ -112,10 +227,10 @@ const BookingsList = ({ onViewBooking }: BookingsListProps) => {
                         </CardHeader>
                         <CardContent>
                             <div className="text-2xl font-bold">
-                                KES {(statsData.totalRevenue || 0).toLocaleString()}
+                                KES {(statsData.revenue?.total || 0).toLocaleString()}
                             </div>
                             <p className="text-xs text-muted-foreground">
-                                Avg: KES {(statsData.averageBookingValue || 0).toFixed(0)}
+                                {(statsData.revenue?.currency || 'KES')}
                             </p>
                         </CardContent>
                     </Card>
@@ -126,9 +241,9 @@ const BookingsList = ({ onViewBooking }: BookingsListProps) => {
                             <TrendingUp className="h-4 w-4 text-muted-foreground" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold">{statsData.byPaymentStatus?.paid || 0}</div>
+                            <div className="text-2xl font-bold">{statsData.byPayment?.paid || 0}</div>
                             <p className="text-xs text-muted-foreground">
-                                {statsData.byPaymentStatus?.unpaid || 0} unpaid
+                                {statsData.byPayment?.unpaid || 0} unpaid
                             </p>
                         </CardContent>
                     </Card>
@@ -139,9 +254,9 @@ const BookingsList = ({ onViewBooking }: BookingsListProps) => {
                             <Filter className="h-4 w-4 text-muted-foreground" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold">{statsData.disputedBookings}</div>
+                            <div className="text-2xl font-bold">{statsData.disputes?.active || 0}</div>
                             <p className="text-xs text-muted-foreground">
-                                {statsData.manualBookings} manual bookings
+                                {statsData.manual || 0} manual bookings
                             </p>
                         </CardContent>
                     </Card>
@@ -151,19 +266,27 @@ const BookingsList = ({ onViewBooking }: BookingsListProps) => {
             {/* Filters */}
             <Card>
                 <CardHeader>
-                    <CardTitle>All Bookings</CardTitle>
-                    <CardDescription>
-                        Filter and search through all system bookings
-                    </CardDescription>
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <CardTitle>All Bookings</CardTitle>
+                            <CardDescription>
+                                Filter and search through all system bookings
+                            </CardDescription>
+                        </div>
+                        <Button variant="outline" onClick={handleExport} disabled={isLoadingExport}>
+                            <Download className="mr-2 h-4 w-4" />
+                            {isLoadingExport ? 'Exporting...' : 'Export to CSV'}
+                        </Button>
+                    </div>
                 </CardHeader>
                 <CardContent>
-                    <div className="flex flex-col gap-4 md:flex-row md:items-end">
-                        <div className="flex-1">
+                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 items-end">
+                        <div className="col-span-1 lg:col-span-1">
                             <label className="text-sm font-medium mb-2 block">Search</label>
                             <div className="relative">
                                 <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                                 <Input
-                                    placeholder="Search by confirmation code or student name..."
+                                    placeholder="Search..."
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
                                     className="pl-9"
@@ -171,7 +294,7 @@ const BookingsList = ({ onViewBooking }: BookingsListProps) => {
                             </div>
                         </div>
 
-                        <div className="w-full md:w-[180px]">
+                        <div className="w-full">
                             <label className="text-sm font-medium mb-2 block">Status</label>
                             <Select value={statusFilter} onValueChange={setStatusFilter}>
                                 <SelectTrigger>
@@ -179,15 +302,51 @@ const BookingsList = ({ onViewBooking }: BookingsListProps) => {
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="all">All Statuses</SelectItem>
-                                    <SelectItem value="pending">Pending</SelectItem>
-                                    <SelectItem value="confirmed">Confirmed</SelectItem>
-                                    <SelectItem value="completed">Completed</SelectItem>
-                                    <SelectItem value="cancelled">Cancelled</SelectItem>
+                                    <SelectItem value="PENDING">Pending</SelectItem>
+                                    <SelectItem value="CONFIRMED">Confirmed</SelectItem>
+                                    <SelectItem value="COMPLETED">Completed</SelectItem>
+                                    <SelectItem value="CANCELLED">Cancelled</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
 
-                        <div className="w-full md:w-[180px]">
+                        <div className="w-full">
+                            <label className="text-sm font-medium mb-2 block">Teacher</label>
+                            <Select value={teacherFilter} onValueChange={setTeacherFilter}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="All Teachers" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">All Teachers</SelectItem>
+                                    {teachersData?.teachers?.map((teacher) => (
+                                        <SelectItem key={teacher._id} value={teacher._id}>
+                                            {teacher.fullName}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        <div className="w-full">
+                            <label className="text-sm font-medium mb-2 block">Parent</label>
+                            <Select value={parentFilter} onValueChange={setParentFilter}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="All Parents" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">All Parents</SelectItem>
+                                    {parentsData?.parents?.map((parent) => (
+                                        <SelectItem key={parent._id} value={parent._id}>
+                                            {parent.fullName}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
+
+                    <div className="mt-4 grid gap-4 md:grid-cols-4 items-end border-t pt-4">
+                        <div className="w-full">
                             <label className="text-sm font-medium mb-2 block">Payment</label>
                             <Select value={paymentFilter} onValueChange={setPaymentFilter}>
                                 <SelectTrigger>
@@ -277,14 +436,16 @@ const BookingsList = ({ onViewBooking }: BookingsListProps) => {
                                             </TableCell>
                                             <TableCell>
                                                 <Badge variant={getStatusBadgeVariant(booking.status)}>
-                                                    {booking.status}
+                                                    {booking.status?.charAt(0).toUpperCase() + booking.status?.slice(1).toLowerCase()}
                                                 </Badge>
                                             </TableCell>
                                             <TableCell>
                                                 {booking.isPaid ? (
-                                                    <Badge variant="secondary">Paid</Badge>
+                                                    <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-200">Paid</Badge>
+                                                ) : booking.payment?.status === 'failed' ? (
+                                                    <Badge variant="destructive">Failed</Badge>
                                                 ) : (
-                                                    <Badge variant="outline">Unpaid</Badge>
+                                                    <Badge variant="outline" className="text-yellow-600 border-yellow-200 bg-yellow-50">Pending</Badge>
                                                 )}
                                             </TableCell>
                                             <TableCell className="text-right">
