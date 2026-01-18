@@ -11,6 +11,7 @@ import { toast } from '@/components/ui/use-toast';
 import { authService } from '@/services/auth.service';
 import { RegistrationFlow } from '@ory/client-fetch';
 import { GoogleIcon } from '@/components/ui/icons';
+import { LinkedInLoginButton } from './LinkedInLoginButton';
 
 interface OryRegistrationFormProps {
   onSuccess?: () => void;
@@ -928,6 +929,9 @@ export const OryRegistrationForm: React.FC<OryRegistrationFormProps> = ({ onSucc
               Sign up with Google
             </Button>
           )}
+
+          {/* LinkedIn Signup Button */}
+          <LinkedInLoginButton mode="signup" className="mt-2" />
         </>
       )}
     </form>

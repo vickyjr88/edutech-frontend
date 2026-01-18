@@ -1,27 +1,20 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation } from "react-router-dom";
 import { io, Socket } from "socket.io-client";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import {
   MessageCircle,
   Users,
-  Send,
-  Search,
-  PlusCircle,
   Hash,
-  Bell,
-  FileText,
-  Paperclip,
-  Image,
-  Smile,
   Settings,
   Loader2
 } from "lucide-react";
 import MessageItem from "./MessageItem";
+import MessageInput from "./MessageInput";
+import ChannelHeader from "./ChannelHeader";
 import ChannelsList from "./ChannelsList";
 import UsersList from "./UsersList";
 import CreateChannelDialog from "./CreateChannelDialog";
@@ -32,7 +25,9 @@ import {
   messagingService,
   Channel,
   DirectMessageUser,
-  Message
+  Message,
+  ChannelMember,
+  PinnedMessage
 } from "@/integrations/api/services/messaging.service";
 
 export default function MessagingPlatform() {
@@ -51,7 +46,6 @@ export default function MessagingPlatform() {
   const [messages, setMessages] = useState<Message[]>([]);
 
   // UI State
-  const [newMessage, setNewMessage] = useState("");
   const [activeConversationId, setActiveConversationId] = useState<string | null>(
     location.state?.conversationId || null
   );
@@ -59,11 +53,13 @@ export default function MessagingPlatform() {
   const [activeTab, setActiveTab] = useState("channels");
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
-  const [files, setFiles] = useState<FileList | null>(null);
 
   // Dialog State
   const [createChannelOpen, setCreateChannelOpen] = useState(false);
   const [newConversationOpen, setNewConversationOpen] = useState(false);
+  const [channelMembers, setChannelMembers] = useState<ChannelMember[]>([]);
+  const [pinnedMessages, setPinnedMessages] = useState<PinnedMessage[]>([]);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
 
   // Initialize Socket connection
   useEffect(() => {
@@ -164,16 +160,23 @@ export default function MessagingPlatform() {
 
   // Fetch messages when active conversation changes
   useEffect(() => {
-    const fetchMessages = async () => {
+    const fetchConversationData = async () => {
       if (!activeConversationId) return;
 
       try {
         setIsLoadingMessages(true);
-        const response = await messagingService.getMessages(activeConversationId);
-        if (response.data) {
-          const rawMsgs = Array.isArray(response.data) ? response.data : (response.data as any).messages || [];
 
-          // Map backend format to frontend interface
+        // Fetch messages, members, pinned messages, and notification settings in parallel
+        const [messagesResp, membersResp, pinnedResp, notifResp] = await Promise.all([
+          messagingService.getMessages(activeConversationId),
+          messagingService.getChannelMembers(activeConversationId).catch(() => ({ data: [] })),
+          messagingService.getPinnedMessages(activeConversationId).catch(() => ({ data: [] })),
+          messagingService.getNotificationSettings(activeConversationId).catch(() => ({ data: { notificationsEnabled: true } }))
+        ]);
+
+        if (messagesResp.data) {
+          const rawMsgs = Array.isArray(messagesResp.data) ? messagesResp.data : (messagesResp.data as any).messages || [];
+
           const mappedMsgs = rawMsgs.map((msg: any) => ({
             id: msg.id || msg._id,
             conversationId: msg.channel || activeConversationId,
@@ -193,14 +196,26 @@ export default function MessagingPlatform() {
           setMessages(mappedMsgs);
           setTimeout(() => scrollToBottom(), 100);
         }
+
+        if (membersResp.data) {
+          setChannelMembers(membersResp.data);
+        }
+
+        if (pinnedResp.data) {
+          setPinnedMessages(pinnedResp.data);
+        }
+
+        if (notifResp.data) {
+          setNotificationsEnabled(notifResp.data.notificationsEnabled);
+        }
       } catch (error) {
-        console.error("Failed to fetch messages:", error);
+        console.error("Failed to fetch conversation data:", error);
       } finally {
         setIsLoadingMessages(false);
       }
     };
 
-    fetchMessages();
+    fetchConversationData();
   }, [activeConversationId]);
 
   const scrollToBottom = () => {
@@ -209,44 +224,18 @@ export default function MessagingPlatform() {
     }
   };
 
-
-  const handleSendMessage = async () => {
-    if (!newMessage.trim() && !files) return;
+  const handleSendMessage = async (content: string, attachments?: File[]) => {
+    if (!content.trim() && (!attachments || attachments.length === 0)) return;
     if (!activeConversationId) return;
 
     try {
-      if (socket && isConnected) {
-        // Use Socket
-        socket.emit('message:send', {
-          channelId: activeConversationId,
-          content: newMessage,
-          type: 'text'
-        });
-
-        // Optimistic update
-        const tempMsg: Message = {
-          id: `temp-${Date.now()}`,
-          conversationId: activeConversationId,
-          content: newMessage,
-          author: {
-            id: user?.id || 'me',
-            name: user?.fullName || 'Me',
-            role: user?.role ? (user.role.charAt(0).toUpperCase() + user.role.slice(1)) : 'User',
-            avatar: (user as any)?.profileImage || (user as any)?.avatar
-          },
-          timestamp: new Date().toISOString(),
-          createdAt: new Date(),
-          reactions: []
-        };
-
-        setMessages(prev => [...prev, tempMsg]);
-        setNewMessage("");
-        setTimeout(() => scrollToBottom(), 100);
-      } else {
-        // Fallback to REST
-        const response = await messagingService.sendMessage(activeConversationId, {
-          content: newMessage
-        });
+      // If there are attachments, use the file upload endpoint
+      if (attachments && attachments.length > 0) {
+        const response = await messagingService.sendMessageWithAttachments(
+          activeConversationId,
+          content,
+          attachments
+        );
         if (response.data) {
           const rawMsg: any = response.data;
           const mappedMsg: Message = {
@@ -265,7 +254,56 @@ export default function MessagingPlatform() {
             attachments: rawMsg.attachments || []
           };
           setMessages([...messages, mappedMsg]);
-          setNewMessage("");
+          setTimeout(() => scrollToBottom(), 100);
+        }
+        return;
+      }
+
+      // No attachments - use socket or REST
+      if (socket && isConnected) {
+        socket.emit('message:send', {
+          channelId: activeConversationId,
+          content: content,
+          type: 'text'
+        });
+
+        const tempMsg: Message = {
+          id: `temp-${Date.now()}`,
+          conversationId: activeConversationId,
+          content: content,
+          author: {
+            id: user?.id || 'me',
+            name: user?.fullName || 'Me',
+            role: user?.role ? (user.role.charAt(0).toUpperCase() + user.role.slice(1)) : 'User',
+            avatar: (user as any)?.profileImage || (user as any)?.avatar
+          },
+          timestamp: new Date().toISOString(),
+          createdAt: new Date(),
+          reactions: []
+        };
+
+        setMessages(prev => [...prev, tempMsg]);
+        setTimeout(() => scrollToBottom(), 100);
+      } else {
+        const response = await messagingService.sendMessage(activeConversationId, { content });
+        if (response.data) {
+          const rawMsg: any = response.data;
+          const mappedMsg: Message = {
+            id: rawMsg.id || rawMsg._id,
+            conversationId: rawMsg.channel || activeConversationId,
+            content: rawMsg.content,
+            timestamp: rawMsg.createdAt || new Date().toISOString(),
+            createdAt: new Date(rawMsg.createdAt || Date.now()),
+            author: {
+              id: rawMsg.sender?.id || rawMsg.sender?._id || 'unknown',
+              name: rawMsg.sender?.fullName || 'Unknown User',
+              role: rawMsg.sender?.role ? (rawMsg.sender.role.charAt(0).toUpperCase() + rawMsg.sender.role.slice(1)) : 'User',
+              avatar: rawMsg.sender?.profileImage
+            },
+            reactions: rawMsg.reactions || [],
+            attachments: rawMsg.attachments || []
+          };
+          setMessages([...messages, mappedMsg]);
           setTimeout(() => scrollToBottom(), 100);
         }
       }
@@ -279,12 +317,50 @@ export default function MessagingPlatform() {
     }
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage();
+  const handleToggleNotifications = async () => {
+    if (!activeConversationId) return;
+
+    try {
+      const newValue = !notificationsEnabled;
+      await messagingService.updateNotificationSettings(activeConversationId, newValue);
+      setNotificationsEnabled(newValue);
+      toast({
+        title: newValue ? "Notifications enabled" : "Notifications muted",
+        description: newValue ? "You will receive notifications for this conversation" : "You won't receive notifications for this conversation"
+      });
+    } catch (error) {
+      console.error("Failed to update notification settings:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update notification settings",
+        variant: "destructive"
+      });
     }
   };
+
+  const handleSearch = async (query: string) => {
+    if (!activeConversationId || !query.trim()) return;
+
+    try {
+      const response = await messagingService.searchMessages(activeConversationId, query);
+      if (response.data && response.data.length > 0) {
+        toast({
+          title: `Found ${response.data.length} results`,
+          description: `Search results for "${query}"`
+        });
+        // TODO: Highlight or scroll to search results
+      } else {
+        toast({
+          title: "No results found",
+          description: `No messages matching "${query}"`
+        });
+      }
+    } catch (error) {
+      console.error("Search failed:", error);
+    }
+  };
+
+
 
   const handleChannelSelect = (channelId: string) => {
     const channel = channels.find(c => c.id === channelId);
@@ -421,36 +497,15 @@ export default function MessagingPlatform() {
       {/* Main content - Messages */}
       <div className="flex-1 flex flex-col bg-white">
         {/* Chat header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b">
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-500">
-              {activeTab === "channels" ? (
-                <Hash className="h-5 w-5" />
-              ) : (
-                <Users className="h-5 w-5" />
-              )}
-            </div>
-            <div>
-              <h2 className="font-semibold text-lg text-gray-800">
-                {activeConversationTitle}
-              </h2>
-            </div>
-          </div>
-          <div className="flex items-center space-x-1">
-            <Button variant="ghost" size="icon" className="text-gray-500 hover:bg-gray-100">
-              <Bell className="h-5 w-5" />
-            </Button>
-            <Button variant="ghost" size="icon" className="text-gray-500 hover:bg-gray-100">
-              <Users className="h-5 w-5" />
-            </Button>
-            <Button variant="ghost" size="icon" className="text-gray-500 hover:bg-gray-100">
-              <Search className="h-5 w-5" />
-            </Button>
-            <Button variant="ghost" size="icon" className="text-gray-500 hover:bg-gray-100">
-              <FileText className="h-5 w-5" />
-            </Button>
-          </div>
-        </div>
+        <ChannelHeader
+          title={activeConversationTitle}
+          isChannel={activeTab === "channels"}
+          members={channelMembers}
+          pinnedMessages={pinnedMessages}
+          onToggleNotifications={handleToggleNotifications}
+          notificationsEnabled={notificationsEnabled}
+          onSearch={handleSearch}
+        />
 
         {/* Messages area */}
         <div
@@ -480,52 +535,12 @@ export default function MessagingPlatform() {
         </div>
 
         {/* Message input area */}
-        <div className="p-4 border-t bg-gray-50">
-          <div className="max-w-4xl mx-auto flex items-end gap-2 bg-white rounded-xl border shadow-sm p-2">
-
-            {/* Action Buttons Group */}
-            <div className="flex items-center gap-1 pb-1 pl-1">
-              <Button variant="ghost" size="icon" className="h-9 w-9 text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-full">
-                <PlusCircle className="h-5 w-5" />
-              </Button>
-              <Button variant="ghost" size="icon" className="h-9 w-9 text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-full">
-                <Paperclip className="h-5 w-5" />
-              </Button>
-              <Button variant="ghost" size="icon" className="h-9 w-9 text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-full">
-                <Image className="h-5 w-5" />
-              </Button>
-            </div>
-
-            {/* Input Field */}
-            <div className="flex-1 py-1">
-              <Input
-                placeholder={`Message ${activeConversationTitle}`}
-                className="border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 px-2 py-2 text-base shadow-none"
-                value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
-                onKeyDown={handleKeyDown}
-                disabled={!activeConversationId}
-              />
-            </div>
-
-            {/* Send Buttons Group */}
-            <div className="flex items-center gap-1 pb-1 pr-1">
-              <Button variant="ghost" size="icon" className="h-9 w-9 text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-full">
-                <Smile className="h-5 w-5" />
-              </Button>
-              <Button
-                onClick={handleSendMessage}
-                disabled={(!newMessage.trim() && !files) || isLoadingMessages || !activeConversationId}
-                className="h-9 w-9 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm flex items-center justify-center p-0 ml-1"
-              >
-                <Send className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-          <div className="text-center mt-2">
-            <p className="text-xs text-gray-400">Press Enter to send, Shift + Enter for new line</p>
-          </div>
-        </div>
+        <MessageInput
+          placeholder={`Message ${activeConversationTitle}`}
+          onSendMessage={handleSendMessage}
+          disabled={!activeConversationId}
+          isLoading={isLoadingMessages}
+        />
       </div>
 
       {/* Right sidebar - Member list */}

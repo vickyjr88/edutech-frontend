@@ -9,6 +9,7 @@ import { toast } from '@/components/ui/use-toast';
 import { authService } from '@/services/auth.service';
 import { LoginFlow } from '@ory/client-fetch';
 import { GoogleIcon } from '@/components/ui/icons';
+import { LinkedInLoginButton } from './LinkedInLoginButton';
 
 interface OryLoginFormProps {
   onSuccess?: () => void;
@@ -596,6 +597,9 @@ export const OryLoginForm: React.FC<OryLoginFormProps> = ({ onSuccess, redirectT
                 Continue with Google
               </Button>
             )}
+
+            {/* LinkedIn Login Button */}
+            <LinkedInLoginButton mode="login" className="mt-2" />
           </div>
         </>
       )}

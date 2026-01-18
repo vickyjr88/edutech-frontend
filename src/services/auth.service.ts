@@ -46,7 +46,20 @@ interface Session {
         last: string;
       };
       role: string;
+      // LinkedIn OAuth fields
+      picture?: string;
+      linkedin_id?: string;
     };
+    verifiable_addresses?: Array<{
+      id: string;
+      value: string;
+      verified: boolean;
+      via: string;
+      status: string;
+      created_at: string;
+      updated_at: string;
+    }>;
+    metadata_public?: Record<string, any>;
   };
   expires_at: string;
 }
@@ -185,7 +198,7 @@ class AuthService {
               localStorage.setItem('kidato_user', JSON.stringify(legacyResponse.user));
               localStorage.setItem('kidato_access_token', legacyResponse.accessToken);
               localStorage.setItem('kidato_refresh_token', legacyResponse.refreshToken);
-              const resp =  {
+              const resp = {
                 data: {
                   user: {
                     id: legacyResponse.user.id,
@@ -224,21 +237,21 @@ class AuthService {
       const isLegacyUser = storedUser ? JSON.parse(storedUser).legacy : false;
       if (session && !isLegacyUser) {
         const backendUser = await this.getBackendUserByOryId(session.identity.id);
-        return { 
-          data: { 
-            user: { 
-              id: backendUser?.user?.id || session.identity.id, 
-              email: session.identity.traits.email, 
-              fullName: `${session.identity.traits.name.first} ${session.identity.traits.name.last}`, 
+        return {
+          data: {
+            user: {
+              id: backendUser?.user?.id || session.identity.id,
+              email: session.identity.traits.email,
+              fullName: `${session.identity.traits.name.first} ${session.identity.traits.name.last}`,
               role: session.identity.traits.role,
               teacherId: backendUser?.user?.teacherId,
               studentId: backendUser?.user?.studentId,
               parentId: backendUser?.user?.parentId,
-            }, 
+            },
             session: session,
             accessToken: backendUser?.accessToken,
             refreshToken: backendUser?.refreshToken,
-          } 
+          }
         };
       }
       // throw new Error('No session returned from Ory login');
@@ -351,7 +364,7 @@ class AuthService {
           console.log('No Ory session found (401)');
           return null;
         }
-        
+
         // For other errors, try to get error details
         let errorMessage = `Failed to fetch session with status ${response.status}`;
         try {
@@ -360,19 +373,19 @@ class AuthService {
         } catch (parseError) {
           // If we can't parse error response, use the default message
         }
-        
+
         console.error('Error fetching session:', errorMessage);
         return null;
       }
-      
+
       const sessionData = await response.json();
-      
+
       // Validate session data structure
       if (!sessionData || !sessionData.identity || !sessionData.identity.traits) {
         console.error('Invalid session data structure received from Ory');
         return null;
       }
-      
+
       return sessionData;
     } catch (error) {
       console.error('Error fetching current session from Ory:', error);
@@ -409,10 +422,10 @@ class AuthService {
           });
         }
       }
-      
+
       // Force clear any remaining session data
       this.clearLocalSession();
-      
+
       // Navigate to login page after clearing everything
       window.location.href = '/login';
     } catch (error) {
@@ -428,7 +441,7 @@ class AuthService {
     localStorage.removeItem('kidato_user');
     localStorage.removeItem('kidato_access_token');
     localStorage.removeItem('kidato_refresh_token');
-    
+
     // Clear any other session-related items
     const keysToRemove = [];
     for (let i = 0; i < localStorage.length; i++) {
@@ -438,7 +451,7 @@ class AuthService {
       }
     }
     keysToRemove.forEach(key => localStorage.removeItem(key));
-    
+
     // Clear sessionStorage as well
     const sessionKeysToRemove = [];
     for (let i = 0; i < sessionStorage.length; i++) {
@@ -599,7 +612,7 @@ class AuthService {
       // Attempt Ory login flow
       const flow = await this.initializeLoginFlow();
       const csrfToken = flow.ui.nodes.find(node => node.attributes.name === 'csrf_token')?.attributes.value;
-      
+
       // submitLoginFlow now returns AuthResponse directly
       const authResponse = await this.submitLoginFlow(flow.id, {
         identifier: credentials.email,
@@ -619,16 +632,16 @@ class AuthService {
         if (authResponse.data.session && !isLegacyUser) {
           const session = authResponse.data.session;
           const backendUser = await this.getBackendUserByOryId(session.identity.id);
-          this.setSession({ 
-            user: { 
-              id: backendUser?.user?.id || session.identity.id, 
-              email: session.identity.traits.email, 
-              fullName: `${session.identity.traits.name.first} ${session.identity.traits.name.last}`, 
+          this.setSession({
+            user: {
+              id: backendUser?.user?.id || session.identity.id,
+              email: session.identity.traits.email,
+              fullName: `${session.identity.traits.name.first} ${session.identity.traits.name.last}`,
               role: session.identity.traits.role,
               teacherId: backendUser?.user?.teacherId,
               studentId: backendUser?.user?.studentId,
               parentId: backendUser?.user?.parentId,
-            }, 
+            },
             token: backendUser?.accessToken || '', // Assuming token is required for session
             refreshToken: backendUser?.refreshToken || '', // Assuming refreshToken is required
             expiresAt: this.calculateExpiryTime(24), // Assuming 24 hour token
@@ -676,21 +689,21 @@ class AuthService {
       if (session) {
         // Get backend user to include role-specific IDs
         const backendUser = await this.createBackendUserFromOry(session);
-        return { 
-          data: { 
-            user: { 
-              id: backendUser?.user?.id || session.identity.id, 
-              email: session.identity.traits.email, 
-              fullName: `${session.identity.traits.name.first} ${session.identity.traits.name.last}`, 
+        return {
+          data: {
+            user: {
+              id: backendUser?.user?.id || session.identity.id,
+              email: session.identity.traits.email,
+              fullName: `${session.identity.traits.name.first} ${session.identity.traits.name.last}`,
               role: session.identity.traits.role,
               teacherId: backendUser?.user?.teacherId,
               studentId: backendUser?.user?.studentId,
               parentId: backendUser?.user?.parentId,
-            }, 
+            },
             session: session,
             accessToken: backendUser?.accessToken,
             refreshToken: backendUser?.refreshToken,
-          } 
+          }
         };
       }
 
@@ -745,7 +758,7 @@ class AuthService {
           },
         }
       );
-      
+
       // If we get tokens, persist them for legacy API compatibility
       return response.data;
     } catch (error) {
@@ -783,12 +796,12 @@ class AuthService {
   // Helper methods for session management compatibility
   setSession(sessionData: { user: any; token: string; refreshToken: string; expiresAt?: number }) {
     const { user, token, refreshToken, expiresAt } = sessionData;
-    
+
     // Store in localStorage for persistence
     localStorage.setItem('kidato_user', JSON.stringify(user));
     localStorage.setItem('kidato_access_token', token);
     localStorage.setItem('kidato_refresh_token', refreshToken);
-    
+
     if (expiresAt) {
       localStorage.setItem('kidato_session_expires_at', expiresAt.toString());
     }
@@ -802,7 +815,7 @@ class AuthService {
   isSessionExpired(): boolean {
     const expiresAt = localStorage.getItem('kidato_session_expires_at');
     if (!expiresAt) return false;
-    
+
     try {
       const expiry = parseInt(expiresAt, 10);
       return Date.now() > expiry;
@@ -817,7 +830,7 @@ class AuthService {
     const user = localStorage.getItem('kidato_user');
     const token = localStorage.getItem('kidato_access_token');
     const refreshToken = localStorage.getItem('kidato_refresh_token');
-    
+
     if (!user || !token || !refreshToken) {
       return null;
     }
@@ -838,6 +851,212 @@ class AuthService {
   // Alias for getCurrentSession for backward compatibility
   getSession() {
     return this.getCurrentSession();
+  }
+
+  // ============================================
+  // LinkedIn OAuth Methods
+  // ============================================
+
+  /**
+   * Initiate LinkedIn OAuth login flow
+   * This redirects the user to LinkedIn for authentication
+   * @param returnTo - URL to return to after authentication
+   */
+  async initiateLinkedInLogin(returnTo?: string): Promise<void> {
+    try {
+      // Store the return URL for after OAuth completion
+      if (returnTo) {
+        sessionStorage.setItem('kidato_post_oauth_redirect', returnTo);
+      }
+
+      // Initialize a login flow to get the LinkedIn provider URL
+      const flow = await this.initializeLoginFlow(returnTo);
+
+      // Find the LinkedIn OIDC provider node
+      const linkedinNode = flow.ui.nodes.find(
+        (node: any) =>
+          node.group === 'oidc' &&
+          (node.attributes?.value === 'linkedin' ||
+            node.attributes?.provider === 'linkedin' ||
+            node.meta?.label?.text?.toLowerCase().includes('linkedin'))
+      );
+
+      if (!linkedinNode) {
+        throw new Error('LinkedIn sign-in is not configured. Please contact support.');
+      }
+
+      // Get the CSRF token
+      const csrfNode = flow.ui.nodes.find(
+        (node: any) => node.attributes?.name === 'csrf_token'
+      );
+      const csrfToken = csrfNode?.attributes?.value;
+
+      // Submit the flow to initiate LinkedIn OAuth
+      const formData = new URLSearchParams({
+        csrf_token: csrfToken || '',
+        provider: 'linkedin',
+        method: 'oidc',
+      });
+
+      // Redirect to initiate the OAuth flow
+      window.location.href = `${this.oryProxyUrl}/self-service/login?flow=${flow.id}&method=oidc&provider=linkedin`;
+    } catch (error: any) {
+      console.error('Failed to initiate LinkedIn login:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Initiate LinkedIn OAuth registration flow
+   * This redirects the user to LinkedIn for sign up
+   * @param returnTo - URL to return to after registration
+   */
+  async initiateLinkedInSignup(returnTo?: string): Promise<void> {
+    try {
+      // Store that this is a signup flow
+      sessionStorage.setItem('kidato_oauth_flow_type', 'signup');
+      if (returnTo) {
+        sessionStorage.setItem('kidato_post_oauth_redirect', returnTo);
+      }
+
+      // Initialize a registration flow
+      const flow = await this.initializeRegistrationFlow(returnTo);
+
+      // Find the LinkedIn OIDC provider node
+      const linkedinNode = flow.ui.nodes.find(
+        (node: any) =>
+          node.group === 'oidc' &&
+          (node.attributes?.value === 'linkedin' ||
+            node.attributes?.provider === 'linkedin' ||
+            node.meta?.label?.text?.toLowerCase().includes('linkedin'))
+      );
+
+      if (!linkedinNode) {
+        throw new Error('LinkedIn sign-up is not configured. Please contact support.');
+      }
+
+      // Redirect to initiate the OAuth registration flow
+      window.location.href = `${this.oryProxyUrl}/self-service/registration?flow=${flow.id}&method=oidc&provider=linkedin`;
+    } catch (error: any) {
+      console.error('Failed to initiate LinkedIn signup:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Handle OAuth callback and populate user profile from LinkedIn data
+   * This is called after LinkedIn redirects back to the app
+   */
+  async handleLinkedInCallback(): Promise<AuthResponse> {
+    try {
+      // Get the current session (which should be set by Ory after OAuth completion)
+      const session = await this.getCurrentSession();
+
+      if (!session) {
+        throw new Error('No session found after LinkedIn authentication');
+      }
+
+      // Extract LinkedIn profile data from session traits
+      const traits = session.identity.traits;
+      const linkedInData = {
+        email: traits.email,
+        firstName: traits.name?.first || '',
+        lastName: traits.name?.last || '',
+        profilePicture: traits.picture || null,
+        linkedInId: traits.linkedin_id || session.identity.id,
+        role: traits.role || 'parent',
+      };
+
+      // Check if user exists in backend, if not create one
+      let backendUser;
+      try {
+        backendUser = await this.getBackendUserByOryId(session.identity.id);
+      } catch (e) {
+        // User doesn't exist, create one with LinkedIn profile data
+        backendUser = await this.createBackendUserFromLinkedIn(session, linkedInData);
+      }
+
+      if (backendUser) {
+        // Set the session
+        this.setSession({
+          user: {
+            id: backendUser?.user?.id || session.identity.id,
+            email: linkedInData.email,
+            fullName: `${linkedInData.firstName} ${linkedInData.lastName}`.trim(),
+            role: backendUser?.user?.role || linkedInData.role,
+            teacherId: backendUser?.user?.teacherId,
+            studentId: backendUser?.user?.studentId,
+            parentId: backendUser?.user?.parentId,
+            profileImage: linkedInData.profilePicture,
+          },
+          token: backendUser?.accessToken || '',
+          refreshToken: backendUser?.refreshToken || '',
+          expiresAt: this.calculateExpiryTime(24),
+        });
+
+        return {
+          data: {
+            user: {
+              id: backendUser?.user?.id || session.identity.id,
+              email: linkedInData.email,
+              fullName: `${linkedInData.firstName} ${linkedInData.lastName}`.trim(),
+              role: backendUser?.user?.role || linkedInData.role,
+              teacherId: backendUser?.user?.teacherId,
+              studentId: backendUser?.user?.studentId,
+              parentId: backendUser?.user?.parentId,
+            },
+            session: session,
+            accessToken: backendUser?.accessToken,
+            refreshToken: backendUser?.refreshToken,
+          },
+        };
+      }
+
+      throw new Error('Failed to create or retrieve user account from LinkedIn');
+    } catch (error: any) {
+      console.error('LinkedIn callback error:', error);
+      return { error };
+    }
+  }
+
+  /**
+   * Create backend user from LinkedIn OAuth session
+   * Includes profile data from LinkedIn
+   */
+  async createBackendUserFromLinkedIn(session: Session, linkedInData: {
+    email: string;
+    firstName: string;
+    lastName: string;
+    profilePicture: string | null;
+    linkedInId: string;
+    role: string;
+  }) {
+    try {
+      const response = await axios.post(
+        `${import.meta.env.VITE_API_URL}/users/from-linkedin`,
+        {
+          oryIdentityId: session.identity.id,
+          email: linkedInData.email,
+          fullName: `${linkedInData.firstName} ${linkedInData.lastName}`.trim(),
+          role: linkedInData.role,
+          linkedInId: linkedInData.linkedInId,
+          profileImage: linkedInData.profilePicture,
+          provider: 'linkedin',
+        },
+        {
+          withCredentials: true,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      return response.data;
+    } catch (error) {
+      console.error('Error creating backend user from LinkedIn:', error);
+      // Fallback to regular Ory user creation
+      return this.createBackendUserFromOry(session);
+    }
   }
 }
 
