@@ -68,48 +68,61 @@ const AuditLogViewer = ({ userId, limit = 50 }: AuditLogViewerProps) => {
 
   // Get icon for action type
   const getActionIcon = (action: string) => {
-    switch (action) {
-      case 'USER_CREATED':
-        return <UserPlus className="h-4 w-4" />;
-      case 'USER_UPDATED':
-        return <Edit className="h-4 w-4" />;
-      case 'USER_DELETED':
-        return <Trash2 className="h-4 w-4" />;
-      case 'USER_SUSPENDED':
-        return <Shield className="h-4 w-4" />;
-      case 'USER_UNSUSPENDED':
-        return <Shield className="h-4 w-4" />;
-      case 'USER_ACTIVATED':
-        return <User className="h-4 w-4" />;
-      case 'USER_DEACTIVATED':
-        return <User className="h-4 w-4" />;
-      case 'PASSWORD_RESET':
-        return <Lock className="h-4 w-4" />;
-      case 'EMAIL_SENT':
-        return <Mail className="h-4 w-4" />;
-      default:
-        return <AlertCircle className="h-4 w-4" />;
-    }
+    const upperAction = action.toUpperCase();
+
+    // User Management
+    if (upperAction.includes('CREATED') || upperAction.includes('REGISTERED')) return <UserPlus className="h-4 w-4" />;
+    if (upperAction.includes('UPDATED')) return <Edit className="h-4 w-4" />;
+    if (upperAction.includes('DELETED')) return <Trash2 className="h-4 w-4" />;
+    if (upperAction.includes('SUSPENDED')) return <Shield className="h-4 w-4" />;
+    if (upperAction.includes('ACTIVATED') || upperAction.includes('DEACTIVATED')) return <User className="h-4 w-4" />;
+
+    // Authentication
+    if (upperAction.includes('LOGIN') || upperAction.includes('LOGOUT')) return <User className="h-4 w-4" />;
+    if (upperAction.includes('PASSWORD')) return <Lock className="h-4 w-4" />;
+    if (upperAction.includes('EMAIL') || upperAction.includes('VERIFIED')) return <Mail className="h-4 w-4" />;
+
+    // Default
+    return <AlertCircle className="h-4 w-4" />;
   };
 
   // Get color for action type
   const getActionColor = (action: string): string => {
-    switch (action) {
-      case 'USER_CREATED':
-      case 'USER_ACTIVATED':
-      case 'USER_UNSUSPENDED':
-        return 'bg-green-100 text-green-700 border-green-200';
-      case 'USER_SUSPENDED':
-      case 'USER_DELETED':
-        return 'bg-red-100 text-red-700 border-red-200';
-      case 'USER_UPDATED':
-      case 'PASSWORD_RESET':
-        return 'bg-blue-100 text-blue-700 border-blue-200';
-      case 'USER_DEACTIVATED':
-        return 'bg-gray-100 text-gray-700 border-gray-200';
-      default:
-        return 'bg-purple-100 text-purple-700 border-purple-200';
+    const upperAction = action.toUpperCase();
+
+    // Positive actions - green
+    if (upperAction.includes('CREATED') || upperAction.includes('REGISTERED') ||
+        upperAction.includes('ACTIVATED') || upperAction.includes('UNSUSPENDED') ||
+        upperAction.includes('LOGIN') && !upperAction.includes('FAILED') ||
+        upperAction.includes('VERIFIED') || upperAction.includes('COMPLETED') ||
+        upperAction.includes('CONFIRMED')) {
+      return 'bg-green-100 text-green-700 border-green-200';
     }
+
+    // Negative actions - red
+    if (upperAction.includes('DELETED') || upperAction.includes('SUSPENDED') ||
+        upperAction.includes('FAILED') || upperAction.includes('CANCELLED')) {
+      return 'bg-red-100 text-red-700 border-red-200';
+    }
+
+    // Update actions - blue
+    if (upperAction.includes('UPDATED') || upperAction.includes('PASSWORD') ||
+        upperAction.includes('CHANGED')) {
+      return 'bg-blue-100 text-blue-700 border-blue-200';
+    }
+
+    // Deactivated actions - gray
+    if (upperAction.includes('DEACTIVATED')) {
+      return 'bg-gray-100 text-gray-700 border-gray-200';
+    }
+
+    // Payment actions - yellow/amber
+    if (upperAction.includes('PAYMENT') || upperAction.includes('BOOKING')) {
+      return 'bg-amber-100 text-amber-700 border-amber-200';
+    }
+
+    // Default - purple
+    return 'bg-purple-100 text-purple-700 border-purple-200';
   };
 
   // Format action name for display
@@ -154,17 +167,53 @@ const AuditLogViewer = ({ userId, limit = 50 }: AuditLogViewerProps) => {
             <SelectTrigger className="w-48">
               <SelectValue placeholder="Filter by action" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="max-h-[400px]">
               <SelectItem value="all">All Actions</SelectItem>
-              <SelectItem value="USER_CREATED">User Created</SelectItem>
-              <SelectItem value="USER_UPDATED">User Updated</SelectItem>
-              <SelectItem value="USER_DELETED">User Deleted</SelectItem>
-              <SelectItem value="USER_SUSPENDED">User Suspended</SelectItem>
-              <SelectItem value="USER_UNSUSPENDED">User Unsuspended</SelectItem>
-              <SelectItem value="USER_ACTIVATED">User Activated</SelectItem>
-              <SelectItem value="USER_DEACTIVATED">User Deactivated</SelectItem>
-              <SelectItem value="PASSWORD_RESET">Password Reset</SelectItem>
-              <SelectItem value="EMAIL_SENT">Email Sent</SelectItem>
+
+              {/* User Management */}
+              <SelectItem value="user_created">User Created</SelectItem>
+              <SelectItem value="user_registered">User Registered</SelectItem>
+              <SelectItem value="user_updated">User Updated</SelectItem>
+              <SelectItem value="user_deleted">User Deleted</SelectItem>
+              <SelectItem value="user_activated">User Activated</SelectItem>
+              <SelectItem value="user_deactivated">User Deactivated</SelectItem>
+              <SelectItem value="user_suspended">User Suspended</SelectItem>
+              <SelectItem value="user_unsuspended">User Unsuspended</SelectItem>
+
+              {/* Authentication */}
+              <SelectItem value="user_login">User Login</SelectItem>
+              <SelectItem value="user_login_failed">Login Failed</SelectItem>
+              <SelectItem value="user_logout">User Logout</SelectItem>
+              <SelectItem value="password_reset">Password Reset</SelectItem>
+              <SelectItem value="password_changed">Password Changed</SelectItem>
+
+              {/* Profile */}
+              <SelectItem value="profile_created">Profile Created</SelectItem>
+              <SelectItem value="profile_updated">Profile Updated</SelectItem>
+              <SelectItem value="teacher_profile_updated">Teacher Profile Updated</SelectItem>
+              <SelectItem value="student_profile_updated">Student Profile Updated</SelectItem>
+              <SelectItem value="parent_profile_updated">Parent Profile Updated</SelectItem>
+
+              {/* Offerings */}
+              <SelectItem value="offering_created">Offering Created</SelectItem>
+              <SelectItem value="offering_updated">Offering Updated</SelectItem>
+              <SelectItem value="offering_deleted">Offering Deleted</SelectItem>
+
+              {/* Bookings */}
+              <SelectItem value="booking_created">Booking Created</SelectItem>
+              <SelectItem value="booking_updated">Booking Updated</SelectItem>
+              <SelectItem value="booking_cancelled">Booking Cancelled</SelectItem>
+              <SelectItem value="booking_confirmed">Booking Confirmed</SelectItem>
+              <SelectItem value="booking_completed">Booking Completed</SelectItem>
+
+              {/* Parent-Child */}
+              <SelectItem value="child_added">Child Added</SelectItem>
+              <SelectItem value="parent_student_associated">Parent-Student Associated</SelectItem>
+
+              {/* Payments */}
+              <SelectItem value="payment_initiated">Payment Initiated</SelectItem>
+              <SelectItem value="payment_completed">Payment Completed</SelectItem>
+              <SelectItem value="payment_failed">Payment Failed</SelectItem>
             </SelectContent>
           </Select>
         </div>

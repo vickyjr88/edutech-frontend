@@ -95,6 +95,7 @@ import ParentsManagement from "../pages/admin/ParentsManagement";
 import StudentsManagement from "../pages/admin/StudentsManagement";
 import ClassesManagement from "../pages/admin/ClassesManagement";
 import UsersManagement from "../pages/admin/UsersManagement";
+import UserDetailsPage from "../pages/admin/UserDetailsPage";
 import AuditLogsManagement from "../pages/admin/AuditLogsManagement";
 import BookingsManagement from "../pages/admin/BookingsManagement";
 import TicketsManagement from "../pages/admin/TicketsManagement";
@@ -542,6 +543,7 @@ const MVPAppRoutes = () => {
 
           {/* User Management */}
           <Route path="users" element={<UsersManagement />} />
+          <Route path="users/:userId" element={<UserDetailsPage />} />
           <Route path="audit-logs" element={<AuditLogsManagement />} />
           <Route path="teachers" element={<TeachersManagement />} />
           <Route path="teacher-approvals" element={<TeacherApprovalPage />} />
