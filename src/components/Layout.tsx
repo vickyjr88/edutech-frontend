@@ -33,6 +33,7 @@ const Layout = ({ children }: LayoutProps) => {
       p.startsWith('/teacher-resources') ||
       p.startsWith('/teacher-profile') ||
       p.startsWith('/teacher/messages') ||
+      p.startsWith('/teacher/bookings') ||
       p.startsWith('/teacher-class')) return true;
 
     // Parent Dashboard Routes

@@ -58,6 +58,7 @@ import TeacherAvailabilityPage from "../pages/TeacherAvailabilityPage"; // MVP: 
 import TeacherResourcesPage from "../pages/TeacherResourcesPage"; // MVP: Resources
 import TeacherStudentsPage from "../pages/TeacherStudentsPage"; // MVP: Students
 import TeacherMessagingPage from "../pages/TeacherMessagingPage";
+import TeacherBookingsPage from "../pages/TeacherBookingsPage";
 
 // Parent Pages
 import ParentsDashboard from "../pages/ParentsDashboard";
@@ -320,6 +321,16 @@ const MVPAppRoutes = () => {
         element={
           <TeacherRoute requireProfileComplete={true}>
             <TeacherOfferingsPage />
+          </TeacherRoute>
+        }
+      />
+
+      {/* Teacher Bookings (MVP) - Added */}
+      <Route
+        path="/teacher/bookings"
+        element={
+          <TeacherRoute requireProfileComplete={true}>
+            <TeacherBookingsPage />
           </TeacherRoute>
         }
       />

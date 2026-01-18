@@ -75,6 +75,33 @@ const MvpBookingService = {
     completeBooking: async (id: string): Promise<Booking> => {
         return mvpApiClient.post<Booking>(`/bookings/${id}/complete`, {});
     },
+
+    /**
+     * Accept a booking request
+     */
+    acceptBooking: async (id: string): Promise<Booking> => {
+        return mvpApiClient.post<Booking>(`/bookings/${id}/accept`, {});
+    },
+
+    /**
+     * Get teacher's bookings with filters
+     */
+    getTeacherBookings: async (filters?: { status?: BookingStatus; startDate?: string; endDate?: string }): Promise<Booking[]> => {
+        const params = new URLSearchParams();
+        if (filters?.status) params.append('status', filters.status);
+        if (filters?.startDate) params.append('startDate', filters.startDate);
+        if (filters?.endDate) params.append('endDate', filters.endDate);
+
+        const queryString = params.toString() ? `?${params.toString()}` : '';
+        return mvpApiClient.get<Booking[]>(`/bookings/teacher-bookings${queryString}`);
+    },
+
+    /**
+     * Get upcoming bookings for teacher
+     */
+    getTeacherUpcomingBookings: async (): Promise<Booking[]> => {
+        return mvpApiClient.get<Booking[]>('/bookings/teacher-upcoming');
+    },
 };
 
 export default MvpBookingService;

@@ -40,8 +40,13 @@ import {
   MicOff,
   ScreenShare,
   UserCheck,
-  TrendingDown
+  TrendingDown,
+  Eye,
+  Check,
+  X
 } from 'lucide-react';
+import MvpBookingService, { Booking } from '@/integrations/api/services/mvp-booking.service';
+import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from '@/contexts/AuthContext';
 import { useTeacherRecentActivity } from '@/hooks/useTeacherRecentActivity';
 import { useTeacherStudents } from '@/hooks/useTeacherStudents';
@@ -111,6 +116,38 @@ const TeacherCommandCenter: React.FC = () => {
   const [classProgress, setClassProgress] = useState(0);
   const [isStartingEarly, setIsStartingEarly] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const { toast } = useToast();
+  const [mvpBookings, setMvpBookings] = useState<Booking[]>([]);
+
+  useEffect(() => {
+    if (user?.teacherId) {
+      MvpBookingService.getTeacherUpcomingBookings()
+        .then(setMvpBookings)
+        .catch(console.error);
+    }
+  }, [user?.teacherId]);
+
+  const handleAcceptBooking = async (id: string) => {
+    try {
+      await MvpBookingService.acceptBooking(id);
+      toast({
+        title: "Booking Accepted",
+        description: "The booking has been confirmed.",
+      });
+      // Refresh bookings
+      const data = await MvpBookingService.getTeacherUpcomingBookings();
+      setMvpBookings(data);
+    } catch (error) {
+      console.error("Error accepting booking:", error);
+      toast({
+        title: "Action Failed",
+        description: "Could not accept booking. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const pendingBookings = mvpBookings.filter(b => b.status === 'pending');
 
   // Fetch real dashboard data
   const { activities, dashboardData, loading, error, refetch } = useTeacherRecentActivity({
@@ -241,6 +278,15 @@ const TeacherCommandCenter: React.FC = () => {
                 <span>Next: {formatTimeLeft(statsData.nextUpcomingClassSession.timeLeft)}</span>
               </div>
             )}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-gray-600 hover:text-gray-900"
+              onClick={() => window.open(`/teachers/${user?.teacherId}`, '_blank')}
+            >
+              <Eye className="w-4 h-4 mr-1" />
+              Preview Storefront
+            </Button>
           </div>
 
           <div className="flex items-center space-x-3">
@@ -453,6 +499,47 @@ const TeacherCommandCenter: React.FC = () => {
 
   const UpcomingSessionsOverview = () => (
     <div className="space-y-6">
+      {/* Pending Bookings Section */}
+      {pendingBookings.length > 0 && (
+        <Card className="border-orange-200 bg-orange-50">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center space-x-2 text-orange-800 text-lg">
+              <AlertCircle className="w-5 h-5" />
+              <span>Pending Request{pendingBookings.length > 1 ? 's' : ''}</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {pendingBookings.map(booking => (
+                <div key={booking._id} className="flex items-center justify-between p-4 bg-white rounded-lg border border-orange-100 shadow-sm">
+                  <div>
+                    <div className="font-medium text-gray-900">{booking.studentName}</div>
+                    <div className="text-sm text-gray-600 mt-0.5">
+                      <span className="font-medium text-orange-600">{(booking.offeringId as any)?.title || 'Class'}</span>
+                      <span className="mx-2">•</span>
+                      {new Date(booking.scheduledDate).toLocaleDateString()} at {booking.scheduledTime}
+                    </div>
+                    <div className="text-xs text-gray-500 mt-1 flex items-center">
+                      <span className="bg-gray-100 px-2 py-0.5 rounded text-gray-600">
+                        Parent: {(booking as any).parentId?.fullName || 'Parent'}
+                      </span>
+                    </div>
+                  </div>
+                  <Button
+                    size="sm"
+                    className="bg-orange-500 hover:bg-orange-600 text-white shadow-sm"
+                    onClick={() => handleAcceptBooking(booking._id)}
+                  >
+                    <Check className="w-4 h-4 mr-1" />
+                    Accept
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Upcoming Sessions Timeline */}
       <Card>
         <CardHeader>

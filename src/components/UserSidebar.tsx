@@ -51,6 +51,7 @@ const UserSidebar = () => {
     const roleSpecificItems: Record<string, SidebarItem[]> = {
       teacher: [
         { name: "My Offerings", href: "/teacher-offerings", icon: BookOpen },
+        { name: "Bookings", href: "/teacher/bookings", icon: Calendar },
         { name: "Availability", href: "/teacher-availability", icon: Calendar },
         { name: "Earnings", href: "/teacher-earnings", icon: DollarSign },
         { name: "Students", href: "/teacher-students", icon: Users },

@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import MvpTeacherService from '@/integrations/api/services/mvp-teacher.service';
+import MvpBookingService from '@/integrations/api/services/mvp-booking.service';
 import { useAuth } from '@/contexts/AuthContext';
 import { format, parseISO } from 'date-fns';
 
@@ -75,6 +76,7 @@ export default function SimplifiedTeacherDashboard() {
     totalResources: 0,
   });
   const [upcomingBookings, setUpcomingBookings] = useState<Booking[]>([]);
+  const [pendingBookings, setPendingBookings] = useState<Booking[]>([]);
 
   useEffect(() => {
     loadDashboardData();
@@ -118,6 +120,7 @@ export default function SimplifiedTeacherDashboard() {
       });
 
       setUpcomingBookings(mappedBookings);
+      setPendingBookings(mappedBookings.filter(b => b.status === 'pending'));
 
     } catch (error) {
       console.error('Error loading dashboard data:', error);
@@ -128,6 +131,25 @@ export default function SimplifiedTeacherDashboard() {
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleAcceptBooking = async (id: string) => {
+    try {
+      await MvpBookingService.acceptBooking(id);
+      toast({
+        title: "Booking Accepted",
+        description: "The booking has been confirmed.",
+      });
+      // Refresh data
+      loadDashboardData();
+    } catch (error) {
+      console.error("Error accepting booking:", error);
+      toast({
+        variant: "destructive",
+        title: "Action Failed",
+        description: "Could not accept booking. Please try again.",
+      });
     }
   };
 
@@ -205,6 +227,18 @@ export default function SimplifiedTeacherDashboard() {
             <Settings className="h-4 w-4 mr-2" />
             Settings
           </Link>
+        </Button>
+      </div>
+
+      {/* Storefront Preview */}
+      <div className="flex justify-end -mt-4">
+        <Button
+          variant="link"
+          className="text-gray-500 hover:text-blue-600 flex items-center gap-1"
+          onClick={() => window.open(`/teacher/${user?.id}`, '_blank')}
+        >
+          <Eye className="w-4 h-4" />
+          Preview Public Storefront
         </Button>
       </div>
 
@@ -288,6 +322,66 @@ export default function SimplifiedTeacherDashboard() {
         </CardContent>
       </Card>
 
+      {/* Pending Bookings Section */}
+      {
+        pendingBookings.length > 0 && (
+          <Card className="border-orange-200 bg-orange-50">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-orange-800">
+                <Clock className="h-5 w-5" />
+                Pending Requests
+              </CardTitle>
+              <CardDescription className="text-orange-700">
+                You have new booking requests waiting for approval
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {pendingBookings.map((booking) => (
+                  <div
+                    key={booking._id}
+                    className="flex items-center justify-between p-4 bg-white rounded-lg border border-orange-100 shadow-sm"
+                  >
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-orange-100 rounded-lg">
+                          <Users className="h-5 w-5 text-orange-600" />
+                        </div>
+                        <div>
+                          <h4 className="font-medium text-gray-900">{booking.offeringTitle}</h4>
+                          <div className="text-sm text-gray-600">
+                            <p>Student: {booking.studentName}</p>
+                            {booking.parentName && <p className="text-xs text-gray-500">Parent: {booking.parentName}</p>}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-4">
+                      <div className="text-right mr-4">
+                        <p className="text-sm font-medium">
+                          {format(parseISO(booking.scheduledAt), 'EEE, MMM d')}
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          {format(parseISO(booking.scheduledAt), 'h:mm a')} • {booking.duration} min
+                        </p>
+                      </div>
+                      <Button
+                        size="sm"
+                        className="bg-orange-600 hover:bg-orange-700 text-white"
+                        onClick={() => handleAcceptBooking(booking._id)}
+                      >
+                        Accept Request
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )
+      }
+
       {/* Upcoming Bookings */}
       <Card>
         <CardHeader>
@@ -362,49 +456,51 @@ export default function SimplifiedTeacherDashboard() {
       </Card>
 
       {/* Getting Started Card (if no offerings) */}
-      {stats.activeOfferings === 0 && (
-        <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200">
-          <CardHeader>
-            <CardTitle className="text-blue-900">Get Started</CardTitle>
-            <CardDescription className="text-blue-700">
-              Complete these steps to start accepting students
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              <div className="flex items-center gap-3 p-3 bg-white rounded-lg">
-                <div className="p-2 bg-green-100 rounded-full">
-                  <Plus className="h-5 w-5 text-green-600" />
+      {
+        stats.activeOfferings === 0 && (
+          <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200">
+            <CardHeader>
+              <CardTitle className="text-blue-900">Get Started</CardTitle>
+              <CardDescription className="text-blue-700">
+                Complete these steps to start accepting students
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                <div className="flex items-center gap-3 p-3 bg-white rounded-lg">
+                  <div className="p-2 bg-green-100 rounded-full">
+                    <Plus className="h-5 w-5 text-green-600" />
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="font-medium">Create your first offering</h4>
+                    <p className="text-sm text-gray-600">
+                      Add a lesson, package, or course you want to teach
+                    </p>
+                  </div>
+                  <Button size="sm" asChild>
+                    <Link to="/teacher-offerings">Start</Link>
+                  </Button>
                 </div>
-                <div className="flex-1">
-                  <h4 className="font-medium">Create your first offering</h4>
-                  <p className="text-sm text-gray-600">
-                    Add a lesson, package, or course you want to teach
-                  </p>
-                </div>
-                <Button size="sm" asChild>
-                  <Link to="/teacher-offerings">Start</Link>
-                </Button>
-              </div>
 
-              <div className="flex items-center gap-3 p-3 bg-white rounded-lg">
-                <div className="p-2 bg-blue-100 rounded-full">
-                  <Clock className="h-5 w-5 text-blue-600" />
+                <div className="flex items-center gap-3 p-3 bg-white rounded-lg">
+                  <div className="p-2 bg-blue-100 rounded-full">
+                    <Clock className="h-5 w-5 text-blue-600" />
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="font-medium">Set your availability</h4>
+                    <p className="text-sm text-gray-600">
+                      Let parents know when you're available to teach
+                    </p>
+                  </div>
+                  <Button size="sm" variant="outline" asChild>
+                    <Link to="/teacher-availability">Set Times</Link>
+                  </Button>
                 </div>
-                <div className="flex-1">
-                  <h4 className="font-medium">Set your availability</h4>
-                  <p className="text-sm text-gray-600">
-                    Let parents know when you're available to teach
-                  </p>
-                </div>
-                <Button size="sm" variant="outline" asChild>
-                  <Link to="/teacher-availability">Set Times</Link>
-                </Button>
               </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-    </div>
+            </CardContent>
+          </Card>
+        )
+      }
+    </div >
   );
 }
