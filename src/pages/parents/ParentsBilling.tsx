@@ -135,7 +135,32 @@ const ParentsBilling = () => {
                           </td>
                           <td className="py-4 text-right">
                             {payment.status.toLowerCase() === 'success' && (
-                              <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-8 w-8 p-0"
+                                onClick={async () => {
+                                  try {
+                                    toast({
+                                      title: "Generating Receipt",
+                                      description: "Please wait while we generate your receipt...",
+                                    });
+                                    const response = await mpesaPaymentService.downloadReceipt(payment.transactionRef);
+                                    if (response.receiptPdfUrl) {
+                                      window.open(response.receiptPdfUrl, '_blank');
+                                    } else {
+                                      throw new Error("Receipt URL not found");
+                                    }
+                                  } catch (error) {
+                                    console.error("Download failed:", error);
+                                    toast({
+                                      title: "Download Failed",
+                                      description: "Could not download receipt. Please try again.",
+                                      variant: "destructive",
+                                    });
+                                  }
+                                }}
+                              >
                                 <Download className="h-4 w-4 text-gray-400 hover:text-kidato-purple" />
                               </Button>
                             )}
