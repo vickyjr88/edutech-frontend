@@ -88,6 +88,7 @@ import AdminDashboardPage from "../pages/admin/AdminDashboardPage";
 import ClassesManagement from "../pages/admin/ClassesManagement";
 import AdminMessaging from "../pages/admin/AdminMessaging";
 import UsersManagement from "../pages/admin/UsersManagement";
+import AdminParentStudentAssociations from "../pages/admin/AdminParentStudentAssociations";
 import CompleteProfile from "../pages/CompleteProfile";
 
 const AppRoutes = () => {
@@ -365,6 +366,7 @@ const AppRoutes = () => {
         <Route path="messaging" element={<AdminMessaging />} />
         <Route path="users" element={<UsersManagement />} />
         <Route path="teaching-config" element={<TeachingConfigManagement />} />
+        <Route path="associations" element={<AdminParentStudentAssociations />} />
       </Route>
 
       {/* Document Viewers - Public (uses signed URL for security) */}

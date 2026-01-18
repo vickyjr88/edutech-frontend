@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -24,8 +25,17 @@ import {
   CheckCircle,
   XCircle,
   History,
+  ExternalLink,
 } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { adminService } from '@/integrations/api/services/admin.service';
+import { teachingConfigService } from '@/integrations/api/services/teaching-config.service';
 import { useToast } from '@/hooks/use-toast';
 import {
   AlertDialog,
@@ -40,6 +50,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import SuspendUserModal from '@/components/admin/users/SuspendUserModal';
 import AuditLogViewer from '@/components/admin/users/AuditLogViewer';
+import ManageAssociations from '@/components/admin/users/ManageAssociations';
 
 interface StudentDetailsProps {
   studentId: string;
@@ -52,6 +63,7 @@ const StudentDetails = ({ studentId, onBack }: StudentDetailsProps) => {
   const [suspendModalOpen, setSuspendModalOpen] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   // Fetch student details and resources
   const { data: studentResponse, isLoading } = useQuery({
@@ -59,7 +71,8 @@ const StudentDetails = ({ studentId, onBack }: StudentDetailsProps) => {
     queryFn: () => adminService.getStudentById(studentId),
   });
 
-  const student = studentResponse?.data;
+  const rawStudent = studentResponse?.data;
+  const student = (rawStudent as any)?.data || rawStudent;
 
   // Fetch student's resources (enrollments, achievements, progress)
   const { data: resourcesResponse } = useQuery({
@@ -68,7 +81,52 @@ const StudentDetails = ({ studentId, onBack }: StudentDetailsProps) => {
     enabled: !!studentId,
   });
 
-  const enrollments = resourcesResponse?.data?.enrollments || [];
+  const resources = resourcesResponse?.data?.studentProfile || resourcesResponse?.data || {};
+  const enrollments = resources?.enrollments || [];
+  const parents = resources?.parents || [];
+  const enrolledClasses = resources?.enrolledClasses || 0;
+
+  // Birthday Countdown
+  const birthdayCountdown = useMemo(() => {
+    if (!resources?.dateOfBirth) return null;
+    const dob = new Date(resources.dateOfBirth);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const currentYear = today.getFullYear();
+    const nextBirthday = new Date(dob);
+    nextBirthday.setFullYear(currentYear);
+    nextBirthday.setHours(0, 0, 0, 0);
+
+    if (nextBirthday < today) {
+      nextBirthday.setFullYear(currentYear + 1);
+    }
+
+    const diffTime = nextBirthday.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays >= 0 && diffDays <= 30) {
+      return (
+        <span className="text-xs font-semibold text-orange-600 bg-orange-100 px-2 py-0.5 rounded-full w-fit mt-1 block">
+          🎂 {diffDays === 0 ? 'Today!' : `${diffDays} days to birthday!`}
+        </span>
+      );
+    }
+    return null;
+  }, [resources?.dateOfBirth]);
+
+  // Fetch active grade levels
+  const { data: gradeLevelsResponse } = useQuery({
+    queryKey: ['activeGradeLevels'],
+    queryFn: () => teachingConfigService.getActiveGradeLevels(),
+  });
+  const gradeLevels = gradeLevelsResponse?.data || [];
+
+  // Fetch active curricula
+  const { data: curriculaResponse } = useQuery({
+    queryKey: ['activeCurricula'],
+    queryFn: () => teachingConfigService.getActiveCurricula(),
+  });
+  const curricula = curriculaResponse?.data || [];
 
   // Update student mutation
   const updateMutation = useMutation({
@@ -160,7 +218,12 @@ const StudentDetails = ({ studentId, onBack }: StudentDetailsProps) => {
   };
 
   const handleEdit = () => {
-    setFormData(student);
+    setFormData({
+      ...student,
+      gradeLevel: resources.grade || student?.gradeLevel,
+      curriculum: resources.curriculum,
+      dateOfBirth: resources.dateOfBirth,
+    });
     setIsEditing(true);
   };
 
@@ -175,6 +238,8 @@ const StudentDetails = ({ studentId, onBack }: StudentDetailsProps) => {
       fullName: formData.fullName,
       phoneNumber: formData.phoneNumber,
       gradeLevel: formData.gradeLevel,
+      curriculum: formData.curriculum,
+      dateOfBirth: formData.dateOfBirth,
     };
     updateMutation.mutate(allowedFields);
   };
@@ -442,14 +507,77 @@ const StudentDetails = ({ studentId, onBack }: StudentDetailsProps) => {
                 <div className="space-y-2">
                   <Label>Grade Level</Label>
                   {isEditing ? (
-                    <Input
+                    <Select
                       value={formData.gradeLevel || ''}
+                      onValueChange={(value) =>
+                        setFormData({ ...formData, gradeLevel: value })
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select active grade" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {gradeLevels.map((grade: any) => (
+                          <SelectItem key={grade.code} value={grade.code}>
+                            {grade.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <div className="text-gray-700">
+                      {resources.grade || student?.gradeLevel || 'N/A'}
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Curriculum</Label>
+                  {isEditing ? (
+                    <Select
+                      value={formData.curriculum || ''}
+                      onValueChange={(value) =>
+                        setFormData({ ...formData, curriculum: value })
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select active curriculum" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {curricula.map((curr: any) => (
+                          <SelectItem key={curr.code} value={curr.code}>
+                            {curr.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <div className="text-gray-700">
+                      {resources.curriculum || 'N/A'}
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Date of Birth</Label>
+                  {isEditing ? (
+                    <Input
+                      type="date"
+                      value={formData.dateOfBirth ? new Date(formData.dateOfBirth).toISOString().split('T')[0] : ''}
                       onChange={(e) =>
-                        setFormData({ ...formData, gradeLevel: e.target.value })
+                        setFormData({ ...formData, dateOfBirth: e.target.value })
                       }
                     />
                   ) : (
-                    <div className="text-gray-700">{student?.gradeLevel || 'N/A'}</div>
+                    <div className="flex flex-col gap-1">
+                      <div className="flex items-center gap-2 text-gray-700">
+                        <Calendar className="h-4 w-4 text-gray-400" />
+                        {resources.dateOfBirth
+                          ? new Date(resources.dateOfBirth).toLocaleDateString()
+                          : 'N/A'}
+                      </div>
+                      {birthdayCountdown}
+                    </div>
                   )}
                 </div>
 
@@ -471,7 +599,7 @@ const StudentDetails = ({ studentId, onBack }: StudentDetailsProps) => {
         <TabsContent value="enrollments">
           <Card>
             <CardHeader>
-              <CardTitle>Student's Enrollments</CardTitle>
+              <CardTitle>Student's Enrollments ({enrollments.length})</CardTitle>
             </CardHeader>
             <CardContent>
               {enrollments && enrollments.length > 0 ? (
@@ -481,14 +609,57 @@ const StudentDetails = ({ studentId, onBack }: StudentDetailsProps) => {
                       <div className="flex justify-between items-start">
                         <div>
                           <h4 className="font-medium">{enrollment.className}</h4>
-                          <p className="text-sm text-gray-500">{enrollment.teacherName}</p>
+                          <p className="text-sm text-gray-500">
+                            Teacher: {enrollment.teacherName}
+                            {enrollment.teacherId && (
+                              <Button
+                                variant="link"
+                                size="sm"
+                                className="h-auto p-0 ml-2"
+                                onClick={() => navigate(`/admin/teachers?id=${enrollment.teacherId}`)}
+                              >
+                                <ExternalLink className="h-3 w-3 mr-1" />
+                                View
+                              </Button>
+                            )}
+                          </p>
+                          {enrollment.subject && (
+                            <p className="text-xs text-gray-500">Subject: {enrollment.subject}</p>
+                          )}
                           <div className="flex gap-4 mt-2 text-sm text-gray-600">
-                            <span>Progress: {enrollment.progress}%</span>
-                            <span>Attendance: {enrollment.attendance}%</span>
-                            <span>Grade: {enrollment.grade}</span>
+                            {enrollment.sessionDate && (
+                              <span>Session: {new Date(enrollment.sessionDate).toLocaleDateString()}</span>
+                            )}
+                            {enrollment.price > 0 && (
+                              <span>Price: KES {enrollment.price.toLocaleString()}</span>
+                            )}
+                            {enrollment.paymentStatus && (
+                              <Badge
+                                variant={enrollment.paymentStatus === 'paid' ? 'default' : 'secondary'}
+                                className={enrollment.paymentStatus === 'paid' ? 'bg-green-600' : ''}
+                              >
+                                {enrollment.paymentStatus}
+                              </Badge>
+                            )}
                           </div>
+                          <p className="text-xs text-gray-400 mt-1">
+                            Booked: {enrollment.createdAt ? new Date(enrollment.createdAt).toLocaleDateString() : 'N/A'}
+                          </p>
                         </div>
-                        <Badge>{enrollment.status}</Badge>
+                        <Badge
+                          variant={
+                            enrollment.status === 'completed'
+                              ? 'default'
+                              : enrollment.status === 'confirmed'
+                                ? 'secondary'
+                                : enrollment.status === 'cancelled'
+                                  ? 'destructive'
+                                  : 'outline'
+                          }
+                          className={enrollment.status === 'completed' ? 'bg-green-600' : ''}
+                        >
+                          {enrollment.status}
+                        </Badge>
                       </div>
                     </div>
                   ))}
@@ -510,24 +681,75 @@ const StudentDetails = ({ studentId, onBack }: StudentDetailsProps) => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-gray-500 text-center py-8">Progress data will appear here</p>
+              <div className="space-y-4">
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="p-4 bg-blue-50 rounded-lg text-center">
+                    <p className="text-2xl font-bold text-blue-600">{enrolledClasses}</p>
+                    <p className="text-sm text-gray-600">Enrolled Classes</p>
+                  </div>
+                  <div className="p-4 bg-green-50 rounded-lg text-center">
+                    <p className="text-2xl font-bold text-green-600">{resources?.completedClasses || 0}</p>
+                    <p className="text-sm text-gray-600">Completed</p>
+                  </div>
+                  <div className="p-4 bg-purple-50 rounded-lg text-center">
+                    <p className="text-2xl font-bold text-purple-600">{resources?.activeEnrollments || 0}</p>
+                    <p className="text-sm text-gray-600">Active</p>
+                  </div>
+                </div>
+                {resources?.learningStreak > 0 && (
+                  <div className="p-4 border rounded-lg">
+                    <p className="text-sm text-gray-600">Learning Streak</p>
+                    <p className="text-xl font-bold">{resources.learningStreak} days 🔥</p>
+                  </div>
+                )}
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
 
         {/* Parent Info Tab */}
-        <TabsContent value="parent">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <User className="h-5 w-5" />
-                Parent Information
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-gray-500 text-center py-8">Parent information will appear here</p>
-            </CardContent>
-          </Card>
+        <TabsContent value="parent" className="space-y-4">
+          {/* Associated Parents with Navigation */}
+          {parents.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <User className="h-5 w-5" />
+                  Associated Parents
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  {parents.map((parent: any) => (
+                    <div
+                      key={parent.id}
+                      className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50"
+                    >
+                      <div>
+                        <p className="font-medium">{parent.fullName || 'N/A'}</p>
+                        <p className="text-sm text-muted-foreground">{parent.email || '-'}</p>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => navigate(`/admin/parents?id=${parent.id}`)}
+                      >
+                        <ExternalLink className="h-4 w-4 mr-1" />
+                        View Parent
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Manage Associations */}
+          <ManageAssociations
+            userId={studentId}
+            userType="student"
+            userName={student?.fullName || 'Student'}
+          />
         </TabsContent>
 
         {/* Activity History Tab */}

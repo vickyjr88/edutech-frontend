@@ -818,5 +818,96 @@ export const adminService = {
   async exportRevenue() {
     return api.get<Blob>('/admin/export/revenue', { responseType: 'blob' });
   },
+
+  // ==================== PARENT-STUDENT ASSOCIATIONS ====================
+
+  /**
+   * Get all parent-student associations
+   */
+  async getAllAssociations() {
+    return api.get<{
+      parents: Array<{
+        parentId: string;
+        parentUser: any;
+        children: any[];
+        childrenCount: number;
+      }>;
+      students: Array<{
+        studentId: string;
+        studentUser: any;
+        parents: any[];
+        parentsCount: number;
+      }>;
+      totalParents: number;
+      totalStudents: number;
+    }>('/admin/associations');
+  },
+
+  /**
+   * Get students for a specific parent
+   */
+  async getStudentsForParent(parentUserId: string) {
+    return api.get<{
+      parentUserId: string;
+      students: any[];
+      count: number;
+    }>(`/admin/associations/parent/${parentUserId}/students`);
+  },
+
+  /**
+   * Get parents for a specific student
+   */
+  async getParentsForStudent(studentUserId: string) {
+    return api.get<{
+      studentUserId: string;
+      parents: any[];
+      count: number;
+    }>(`/admin/associations/student/${studentUserId}/parents`);
+  },
+
+  /**
+   * Associate a parent with a student
+   */
+  async associateParentWithStudent(parentUserId: string, studentUserId: string) {
+    return api.post<{
+      message: string;
+      parentUserId: string;
+      studentUserId: string;
+    }>('/admin/associations', { parentUserId, studentUserId });
+  },
+
+  /**
+   * Remove association between a parent and a student
+   */
+  async disassociateParentFromStudent(parentUserId: string, studentUserId: string) {
+    return api.delete<{
+      message: string;
+      parentUserId: string;
+      studentUserId: string;
+    }>('/admin/associations', { data: { parentUserId, studentUserId } });
+  },
+
+  /**
+   * Get available students for a parent (not yet associated)
+   */
+  async getAvailableStudentsForParent(parentUserId: string) {
+    return api.get<{
+      parentUserId: string;
+      availableStudents: any[];
+      count: number;
+    }>(`/admin/associations/available-students/${parentUserId}`);
+  },
+
+  /**
+   * Get available parents for a student (not yet associated)
+   */
+  async getAvailableParentsForStudent(studentUserId: string) {
+    return api.get<{
+      studentUserId: string;
+      availableParents: any[];
+      count: number;
+    }>(`/admin/associations/available-parents/${studentUserId}`);
+  },
 };
+
 

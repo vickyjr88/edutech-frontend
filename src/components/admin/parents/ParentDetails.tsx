@@ -22,6 +22,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import SuspendUserModal from '@/components/admin/users/SuspendUserModal';
 import AuditLogViewer from '@/components/admin/users/AuditLogViewer';
+import ManageAssociations from '@/components/admin/users/ManageAssociations';
 
 interface ParentDetailsProps {
   parentId: string;
@@ -43,14 +44,17 @@ const ParentDetails = ({ parentId, onBack }: ParentDetailsProps) => {
 
   const parent = parentResponse?.data;
 
-  // Fetch parent's resources (children, payment methods)
+  // Fetch parent's resources (children, payments)
   const { data: resourcesResponse } = useQuery({
     queryKey: ['adminParentResources', parentId],
     queryFn: () => adminService.getParentResources(parentId),
     enabled: !!parentId,
   });
 
-  const children = resourcesResponse?.data?.children || [];
+  const resources = resourcesResponse?.data?.parentProfile || resourcesResponse?.data || {};
+  const children = resources?.children || [];
+  const payments = resources?.payments || [];
+  const totalPayments = resources?.totalPayments || 0;
 
   const updateMutation = useMutation({
     mutationFn: (data: any) => adminService.updateParent(parentId, data),
@@ -312,7 +316,7 @@ const ParentDetails = ({ parentId, onBack }: ParentDetailsProps) => {
               <CardContent>
                 <div className="flex items-center gap-2">
                   <DollarSign className="h-5 w-5 text-green-600" />
-                  <span className="text-2xl font-bold">KES 0</span>
+                  <span className="text-2xl font-bold">KES {totalPayments.toLocaleString()}</span>
                 </div>
               </CardContent>
             </Card>
@@ -386,38 +390,77 @@ const ParentDetails = ({ parentId, onBack }: ParentDetailsProps) => {
         </TabsContent>
 
         <TabsContent value="children">
-          <Card>
-            <CardHeader>
-              <CardTitle>Children</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {children && children.length > 0 ? (
-                <div className="space-y-3">
-                  {children.map((child: any) => (
-                    <div key={child.id} className="p-4 border rounded-lg hover:bg-gray-50">
-                      <h4 className="font-medium">{child.fullName}</h4>
-                      <p className="text-sm text-gray-500">{child.gradeLevel}</p>
-                      <div className="flex gap-4 mt-2 text-sm text-gray-600">
-                        <span>Classes: {child.totalClasses}</span>
-                        <span>Progress: {child.progress}%</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-gray-500 text-center py-8">No children found</p>
-              )}
-            </CardContent>
-          </Card>
+          <ManageAssociations
+            userId={parentId}
+            userType="parent"
+            userName={parent?.fullName || 'Parent'}
+          />
         </TabsContent>
 
         <TabsContent value="payments">
           <Card>
             <CardHeader>
-              <CardTitle>Payment History</CardTitle>
+              <CardTitle>Payment History ({payments.length})</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-gray-500 text-center py-8">No payment history available</p>
+              {payments.length > 0 ? (
+                <div className="space-y-3">
+                  {payments.map((payment: any) => (
+                    <div
+                      key={payment.id}
+                      className="p-4 border rounded-lg hover:bg-gray-50"
+                    >
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium">
+                              KES {payment.amount?.toLocaleString() || '0'}
+                            </span>
+                            <Badge
+                              variant={
+                                payment.status === 'success'
+                                  ? 'default'
+                                  : payment.status === 'pending'
+                                    ? 'secondary'
+                                    : 'destructive'
+                              }
+                              className={payment.status === 'success' ? 'bg-green-600' : ''}
+                            >
+                              {payment.status}
+                            </Badge>
+                          </div>
+                          <p className="text-sm text-gray-500 mt-1">
+                            {payment.paymentMethod === 'mpesa' ? 'M-PESA' : payment.paymentMethod?.toUpperCase() || 'Unknown'}
+                          </p>
+                          {payment.studentName && (
+                            <p className="text-sm text-gray-600 mt-1">
+                              For: {payment.studentName}
+                            </p>
+                          )}
+                          <p className="text-xs text-gray-400 mt-1">
+                            Ref: {payment.transactionRef}
+                          </p>
+                        </div>
+                        <div className="text-right text-sm text-gray-500">
+                          {payment.paidAt ? (
+                            <>
+                              <p>Paid on</p>
+                              <p>{new Date(payment.paidAt).toLocaleDateString()}</p>
+                            </>
+                          ) : (
+                            <>
+                              <p>Created</p>
+                              <p>{new Date(payment.createdAt).toLocaleDateString()}</p>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-gray-500 text-center py-8">No payment history available</p>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

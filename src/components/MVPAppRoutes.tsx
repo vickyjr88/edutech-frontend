@@ -115,6 +115,7 @@ import InquiriesPage from "../pages/admin/InquiriesPage";
 import NewsletterSubscribersPage from "../pages/admin/NewsletterSubscribersPage";
 import BloggersList from "../pages/admin/BloggersList";
 import TeachingConfigManagement from "../pages/admin/TeachingConfigManagement";
+import AdminParentStudentAssociations from "../pages/admin/AdminParentStudentAssociations";
 
 // Auth Guards
 import ProtectedRoute from "./auth/ProtectedRoute";
@@ -587,6 +588,9 @@ const MVPAppRoutes = () => {
 
           {/* Teaching Config */}
           <Route path="teaching-config" element={<TeachingConfigManagement />} />
+
+          {/* Parent-Student Associations */}
+          <Route path="associations" element={<AdminParentStudentAssociations />} />
 
           {/* Reports */}
           <Route path="reports" element={<AdminReportsPage />} />

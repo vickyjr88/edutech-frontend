@@ -161,6 +161,12 @@ const AdminDashboard = () => {
       current: location.pathname.startsWith("/admin/teaching-config"),
     },
     {
+      name: "Associations",
+      href: "/admin/associations",
+      icon: UsersRound,
+      current: location.pathname.startsWith("/admin/associations"),
+    },
+    {
       name: "Reports & Exports",
       href: "/admin/reports",
       icon: FileText,
