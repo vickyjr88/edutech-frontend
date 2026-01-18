@@ -16,7 +16,7 @@ const Login = () => {
   const location = useLocation();
   const { user } = useAuth();
   const state = location.state as LocationState;
-  const from = state?.from?.pathname || "/dashboard";
+  const from = state?.from?.pathname;
 
   // If user is already logged in, check if we need to redirect
   useEffect(() => {

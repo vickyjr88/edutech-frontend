@@ -26,6 +26,7 @@ import {
 import { Switch } from '@/components/ui/switch';
 import { Plus, Edit, Trash2, DollarSign, Clock, BookOpen, Package } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useConfirmationDialog } from '@/components/ui/confirmation-dialog';
 import { mvpApiClient } from '@/integrations/api/mvp-client';
 import MvpOfferingService, { Offering as ServiceOffering } from '@/integrations/api/services/mvp-offering.service';
 
@@ -68,6 +69,7 @@ interface Offering extends OfferingFormValues {
 
 export default function OfferingsManager() {
   const { toast } = useToast();
+  const { confirm, ConfirmDialog } = useConfirmationDialog();
   const [offerings, setOfferings] = useState<Offering[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -169,28 +171,33 @@ export default function OfferingsManager() {
     setShowForm(true);
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this offering?')) {
-      return;
-    }
+  const handleDelete = async (id: string, title: string) => {
+    confirm({
+      title: 'Delete Offering',
+      description: `Are you sure you want to delete "${title}"? This action cannot be undone.`,
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+      variant: 'destructive',
+      onConfirm: async () => {
+        try {
+          await MvpOfferingService.deleteOffering(id);
 
-    try {
-      await MvpOfferingService.deleteOffering(id);
+          setOfferings(prev => prev.filter(o => o._id !== id));
 
-      setOfferings(prev => prev.filter(o => o._id !== id));
-
-      toast({
-        title: 'Offering deleted',
-        description: 'The offering has been deleted successfully.',
-      });
-    } catch (error) {
-      console.error('Error deleting offering:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to delete offering. Please try again.',
-      });
-    }
+          toast({
+            title: 'Offering deleted',
+            description: 'The offering has been deleted successfully.',
+          });
+        } catch (error) {
+          console.error('Error deleting offering:', error);
+          toast({
+            variant: 'destructive',
+            title: 'Error',
+            description: 'Failed to delete offering. Please try again.',
+          });
+        }
+      },
+    });
   };
 
   const toggleActive = async (id: string, isActive: boolean) => {
@@ -256,6 +263,7 @@ export default function OfferingsManager() {
 
   return (
     <div className="space-y-6">
+      <ConfirmDialog />
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
@@ -594,7 +602,7 @@ export default function OfferingsManager() {
                     <Button
                       size="sm"
                       variant="destructive"
-                      onClick={() => handleDelete(offering._id)}
+                      onClick={() => handleDelete(offering._id, offering.title)}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>

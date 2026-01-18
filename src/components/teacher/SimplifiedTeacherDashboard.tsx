@@ -44,6 +44,7 @@ interface Booking {
   scheduledAt: string;
   duration: number;
   status: 'confirmed' | 'pending' | 'completed' | 'cancelled';
+  parentName?: string;
 }
 
 const getStatusColor = (status: string) => {
@@ -108,6 +109,7 @@ export default function SimplifiedTeacherDashboard() {
         return {
           _id: booking._id,
           studentName: booking.studentName,
+          parentName: booking.parentName || booking.parentId?.fullName || booking.parent?.user?.fullName || 'Parent',
           offeringTitle: booking.offeringId?.title || 'Unknown Class',
           scheduledAt,
           duration: booking.duration,
@@ -331,7 +333,10 @@ export default function SimplifiedTeacherDashboard() {
                       </div>
                       <div>
                         <h4 className="font-medium">{booking.offeringTitle}</h4>
-                        <p className="text-sm text-gray-600">with {booking.studentName}</p>
+                        <div className="text-sm text-gray-600">
+                          <p>Student: {booking.studentName}</p>
+                          {booking.parentName && <p className="text-xs text-gray-500">Parent: {booking.parentName}</p>}
+                        </div>
                       </div>
                     </div>
                   </div>

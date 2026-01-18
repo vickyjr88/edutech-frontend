@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Link } from "react-router-dom";
 
 export interface ClassItemProps {
+  id?: string;
   title: string;
   subject: string;
   level: string;
@@ -19,16 +20,17 @@ export interface ClassItemProps {
 const ClassCard = ({ classItem }: { classItem: ClassItemProps }) => {
   // Convert the title to a URL-friendly slug
   const slug = classItem.title.toLowerCase().replace(/\s+/g, '-');
-  
+  const linkTo = classItem.id ? `/class/${classItem.id}` : `/class/${slug}`;
+
   return (
-    <Link to={`/class/${slug}`}>
-      <Card className={`overflow-hidden transition-all duration-300 ${classItem.featured 
-        ? 'border-2 border-kidato-orange shadow-md' 
+    <Link to={linkTo}>
+      <Card className={`overflow-hidden transition-all duration-300 ${classItem.featured
+        ? 'border-2 border-kidato-orange shadow-md'
         : 'hover:shadow-md border border-gray-100'}`}>
         <div className="relative h-48 overflow-hidden">
-          <img 
-            src={classItem.imageSrc} 
-            alt={classItem.title} 
+          <img
+            src={classItem.imageSrc}
+            alt={classItem.title}
             className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
           />
           {classItem.featured && (

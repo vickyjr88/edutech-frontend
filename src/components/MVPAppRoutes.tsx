@@ -185,6 +185,7 @@ const MVPAppRoutes = () => {
       <Route path="/book/:teacherId" element={<BookingPage />} />
       <Route path="/all-classes" element={<AllClasses />} />
       <Route path="/class/:id" element={<ClassDetailsPage />} />
+      <Route path="/offerings/:id" element={<ClassDetailsPage />} />
 
       {/* ===== PROTECTED ROUTES ===== */}
 

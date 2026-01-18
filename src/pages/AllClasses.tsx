@@ -76,7 +76,8 @@ const mapOfferingToCardProps = (offering: Offering, index: number): ClassItemPro
     imageSrc,
     spots: offering.isActive ? "Available" : "Unavailable",
     price: priceString,
-    featured: index < 3 // First 3 are featured
+    featured: index < 3, // First 3 are featured
+    id: offering._id
   };
 };
 

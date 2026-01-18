@@ -291,6 +291,11 @@ export const OryLoginForm: React.FC<OryLoginFormProps> = ({ onSuccess, redirectT
         const userRole = result.data.session?.identity?.traits?.role || result.data.user?.role;
         console.log('User role from OAuth auto-login:', userRole);
 
+        if (redirectTo) {
+          window.location.href = redirectTo;
+          return;
+        }
+
         if (userRole === 'teacher') {
           window.location.href = '/teacher-dashboard';
         } else if (userRole === 'student') {
@@ -349,6 +354,11 @@ export const OryLoginForm: React.FC<OryLoginFormProps> = ({ onSuccess, redirectT
         const userRole = result.data.session?.identity?.traits?.role || result.data.user?.role;
 
         console.log('User role:', userRole);
+
+        if (redirectTo) {
+          window.location.href = redirectTo;
+          return;
+        }
 
         if (userRole === 'teacher') {
           window.location.href = '/teacher-dashboard';

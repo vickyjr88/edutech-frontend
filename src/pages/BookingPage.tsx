@@ -35,6 +35,7 @@ type BookingStep = 'offering' | 'child' | 'datetime' | 'confirm';
 const BookingPage = () => {
     const { teacherId } = useParams<{ teacherId: string }>();
     const navigate = useNavigate();
+    const location = useLocation();
     const { user } = useAuth();
 
     const [step, setStep] = useState<BookingStep>('offering');

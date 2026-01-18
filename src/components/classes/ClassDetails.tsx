@@ -2,8 +2,11 @@ import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Heart } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { useClassById } from "@/hooks/use-class-service";
+import { classService } from "@/integrations/api/services/class.service";
+import MvpOfferingService from "@/integrations/api/services/mvp-offering.service";
 import { ClassItemProps } from "@/components/common/ClassCard";
 import { Button } from "@/components/ui/button";
 import {
@@ -23,9 +26,35 @@ const ClassDetails = () => {
   const [isEnrollmentOpen, setIsEnrollmentOpen] = useState(false);
   const [isBookmarked, setIsBookmarked] = useState(false);
 
+
+  // Determine if we have a probable ID or a slug
+  const isSlug = id && !/^[0-9a-fA-F]{24}$/.test(id);
+
+  // If it's a slug, we need to resolve it to an ID first
+  const { data: allClasses } = useQuery({
+    queryKey: ['allClassesForSlug'],
+    queryFn: () => classService.getAll(),
+    enabled: !!isSlug
+  });
+
+  const resolvedId = isSlug
+    ? allClasses?.data?.find((c: any) => c.title.toLowerCase().replace(/\s+/g, '-') === id)?._id
+    : id;
+
   // Fetch class details
-  const { data: response, isLoading, error } = useClassById(id || "");
+  const { data: response, isLoading: isClassLoading, error: classError } = useClassById(resolvedId || "");
+
+  // Also try to fetch as an offering (MVP compatibility)
+  const { data: offering, isLoading: isOfferingLoading, error: offeringError } = useQuery({
+    queryKey: ['offering', resolvedId],
+    queryFn: () => MvpOfferingService.getOffering(resolvedId || ""),
+    enabled: !!resolvedId && !response,
+    retry: false
+  });
+
   const classDetail = response?.data;
+  const isLoading = (isClassLoading && isOfferingLoading) || (isSlug && !resolvedId && !allClasses);
+  const error = classError && offeringError;
 
   const handleBookmark = () => {
     setIsBookmarked(!isBookmarked);
@@ -39,7 +68,10 @@ const ClassDetails = () => {
     );
   }
 
-  if (error || !classDetail) {
+  // Use either classDetail OR offering
+  const displayItem = (classDetail || offering) as any;
+
+  if ((!classDetail && !offering) || (classError && offeringError)) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 text-center">
         <h2 className="text-2xl font-bold text-gray-900">Class not found</h2>
@@ -56,28 +88,30 @@ const ClassDetails = () => {
 
   // Detect if user is a teacher viewing their own class
   const isTeacherViewingOwnClass = user?.role === 'teacher' &&
-    (classDetail.teacher?._id === user?.teacherId || classDetail.teacher?.user?._id === user?.id);
+    (displayItem.teacher?._id === user?.teacherId || displayItem.teacher?.user?._id === user?.id);
 
   if (isTeacherViewingOwnClass) {
     return <TeacherClassView classId={id} />;
   }
 
   // Helper to format simplified class item for display
-  const activeCohort = classDetail.cohorts?.[0]; // Assuming first cohort for simplified view
+  // Adapt for both ClassDetail and Offering shapes
+  const activeCohort = classDetail?.cohorts?.[0];
+
   const classItem = {
-    title: classDetail.title,
-    subject: classDetail.subject,
-    level: classDetail.gradeLevel,
-    teacher: classDetail.teacher?.user?.fullName || classDetail.teacher?.name || "Unknown Teacher",
-    rating: classDetail.rating || 0,
+    title: displayItem.title,
+    subject: displayItem.subject || displayItem.curriculum,
+    level: displayItem.gradeLevel || displayItem.level,
+    teacher: displayItem.teacher?.user?.fullName || displayItem.teacher?.name || "Expert Teacher",
+    rating: displayItem.rating || 5.0,
     time: activeCohort
       ? `${activeCohort.daysOfWeek.join(' & ')}, ${activeCohort.startTime}`
-      : "Schedule TBA",
-    imageSrc: classDetail.media?.thumbnailUrl || "https://images.unsplash.com/photo-1580582932707-520aed937b7b?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+      : (displayItem.sessionDuration ? `${displayItem.sessionDuration} mins / session` : "Flexible Schedule"),
+    imageSrc: displayItem.media?.thumbnailUrl || "https://images.unsplash.com/photo-1580582932707-520aed937b7b?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
     spots: activeCohort
       ? `${activeCohort.maximumStudents - activeCohort.currentStudents} spots left`
       : "Open",
-    price: activeCohort ? `$${activeCohort.price}/class` : "Price Varies"
+    price: activeCohort ? `$${activeCohort.price}/class` : (displayItem.price ? `$${displayItem.price}` : "Price Varies")
   };
 
   // Student/parent view
@@ -109,7 +143,7 @@ const ClassDetails = () => {
                 classId={id || ""}
                 cohortId={activeCohort?._id}
                 classTitle={classItem.title}
-                classPrice={classItem.price}
+                classPrice={classItem.price} // using string with currency, might fallback to raw number from offering
                 onSubmitSuccess={() => setIsEnrollmentOpen(false)}
               />
             </DialogContent>
@@ -128,7 +162,7 @@ const ClassDetails = () => {
 
       <div className="text-center p-12 border border-dashed rounded-lg">
         <p className="text-gray-600">Student view - Full details would appear here.</p>
-        <p className="text-gray-500 mt-2 text-sm">{classDetail.summary || classDetail.description}</p>
+        <p className="text-gray-500 mt-2 text-sm">{displayItem.summary || displayItem.description}</p>
       </div>
     </div>
   );

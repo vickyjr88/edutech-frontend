@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Home, BookOpen, Users, Calendar, User, Settings, LogOut, Edit, Phone, MapPin, Award, CheckCircle2, CircleDashed, Video, PlusCircle, Star, UserPlus, BookText, School, UsersRound, UserRound, ChevronLeft, Loader2, DollarSign, FileText, Badge, MessageCircle, Filter, Plus, RefreshCw, ChevronDown, MessageSquare } from "lucide-react";
+import { Home, BookOpen, Users, Calendar, User, Settings, LogOut, Edit, Phone, MapPin, Award, CheckCircle2, CircleDashed, Video, PlusCircle, Star, UserPlus, BookText, School, UsersRound, UserRound, ChevronLeft, Loader2, DollarSign, FileText, Badge, MessageCircle, Filter, Plus, RefreshCw, ChevronDown, MessageSquare, PenSquare } from "lucide-react";
 import MessagingPlatform from "@/components/messaging/MessagingPlatform";
 import { useIntercom } from "@/components/support";
 import { useToast } from "@/hooks/use-toast";
@@ -33,6 +33,9 @@ import { NotificationSettingsTab } from "@/components/teacher/settings/Notificat
 import { IntegrationsTab } from "@/components/teacher/settings/IntegrationsTab";
 import { AvailabilityManager } from "@/components/teacher/content/AvailabilityManager";
 import { ContentManager } from "@/components/teacher/content/ContentManager";
+import TeacherBlogList from "@/components/teacher/blog/TeacherBlogList";
+import TeacherBlogEditor from "@/components/teacher/blog/TeacherBlogEditor";
+import { useConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import { useAuth } from "@/contexts/AuthContext";
 import { teacherService } from "@/integrations/api/services/teacher.service.ts";
 import { classService } from "@/integrations/api/services/class.service.ts";
@@ -133,6 +136,7 @@ const TeacherDashboard = () => {
   const { toast } = useToast();
   const { user, signOut, isLoading: authLoading } = useAuth();
   const { show } = useIntercom();
+  const { confirm, ConfirmDialog } = useConfirmationDialog();
 
   // Parse the active tab from the URL
   const getTabFromPath = () => {
@@ -166,6 +170,10 @@ const TeacherDashboard = () => {
       return "content";
     } else if (path.includes('/teacher-dashboard/messaging')) {
       return "messaging";
+    } else if (path.includes('/teacher-dashboard/blog/new') || path.includes('/teacher-dashboard/blog/edit')) {
+      return "blogEditor";
+    } else if (path.includes('/teacher-dashboard/blog')) {
+      return "blog";
     }
     return "dashboard"; // Default tab
   };
@@ -506,32 +514,37 @@ const TeacherDashboard = () => {
   };
 
   const handleProfileDelete = async () => {
-    if (!window.confirm("Are you sure you want to delete your profile? This action cannot be undone.")) {
-      return;
-    }
+    confirm({
+      title: "Delete Profile",
+      description: "Are you sure you want to delete your profile? This action cannot be undone.",
+      confirmText: "Delete",
+      cancelText: "Cancel",
+      variant: "destructive",
+      onConfirm: async () => {
+        try {
+          if (!user) throw new Error("User not authenticated");
 
-    try {
-      if (!user) throw new Error("User not authenticated");
+          const { error } = await teacherService.deleteProfile(user.teacherId);
+          if (error) throw error;
 
-      const { error } = await teacherService.deleteProfile(user.teacherId);
-      if (error) throw error;
+          toast({
+            title: "Profile deleted",
+            description: "Your teacher profile has been successfully deleted.",
+          });
 
-      toast({
-        title: "Profile deleted",
-        description: "Your teacher profile has been successfully deleted.",
-      });
-
-      setHasProfile(false);
-      setProfileData(null);
-      setActiveTab("dashboard");
-    } catch (err: any) {
-      console.error("Error deleting profile:", err);
-      toast({
-        title: "Error",
-        description: err.message || "An error occurred while deleting your profile",
-        variant: "destructive"
-      });
-    }
+          setHasProfile(false);
+          setProfileData(null);
+          setActiveTab("dashboard");
+        } catch (err: any) {
+          console.error("Error deleting profile:", err);
+          toast({
+            title: "Error",
+            description: err.message || "An error occurred while deleting your profile",
+            variant: "destructive"
+          });
+        }
+      },
+    });
   };
 
   const handleEditProfile = () => {
@@ -692,40 +705,44 @@ const TeacherDashboard = () => {
     const classId = classItem._id || classItem.id;
     const className = classItem.title;
 
-    // Confirm deletion
-    if (!confirm(`Are you sure you want to delete "${className}"? This action cannot be undone.`)) {
-      return;
-    }
+    confirm({
+      title: "Delete Class",
+      description: `Are you sure you want to delete "${className}"? This action cannot be undone.`,
+      confirmText: "Delete",
+      cancelText: "Cancel",
+      variant: "destructive",
+      onConfirm: async () => {
+        try {
+          const { error } = await classService.delete(classId);
 
-    try {
-      const { error } = await classService.delete(classId);
+          if (error) {
+            toast({
+              title: "Error deleting class",
+              description: error.message || "Failed to delete class. Please try again.",
+              variant: "destructive",
+            });
+            return;
+          }
 
-      if (error) {
-        toast({
-          title: "Error deleting class",
-          description: error.message || "Failed to delete class. Please try again.",
-          variant: "destructive",
-        });
-        return;
-      }
+          if (user && !authLoading) {
+            // Refresh the classes list
+            await fetchTeacherClasses();
+          }
 
-      if (user && !authLoading) {
-        // Refresh the classes list
-        await fetchTeacherClasses();
-      }
-
-      toast({
-        title: "Class deleted",
-        description: `"${className}" has been deleted successfully.`,
-      });
-    } catch (error) {
-      console.error('Error deleting class:', error);
-      toast({
-        title: "Error deleting class",
-        description: "Failed to delete class. Please try again.",
-        variant: "destructive",
-      });
-    }
+          toast({
+            title: "Class deleted",
+            description: `"${className}" has been deleted successfully.`,
+          });
+        } catch (error) {
+          console.error('Error deleting class:', error);
+          toast({
+            title: "Error deleting class",
+            description: "Failed to delete class. Please try again.",
+            variant: "destructive",
+          });
+        }
+      },
+    });
   };
 
   const [comprehensiveProfile, setComprehensiveProfile] = useState<any>(null);
@@ -1126,6 +1143,7 @@ const TeacherDashboard = () => {
 
   return (
     <div className="flex min-h-screen bg-gray-50">
+      <ConfirmDialog />
       <aside className="hidden md:flex flex-col w-64 bg-white border-r border-gray-200">
         <div className="p-6">
           <Link to="/">
@@ -1215,6 +1233,16 @@ const TeacherDashboard = () => {
           >
             <BookText className="mr-3 h-5 w-5" />
             Content
+          </Link>
+          <Link
+            to="/teacher-dashboard/blog"
+            className={`flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors ${activeTab === "blog" || activeTab === "blogEditor"
+              ? "bg-kidato-purple/10 text-kidato-purple"
+              : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+              }`}
+          >
+            <PenSquare className="mr-3 h-5 w-5" />
+            Blog
           </Link>
           <Link
             to="/teacher-dashboard/settings"
@@ -1682,6 +1710,14 @@ const TeacherDashboard = () => {
             <div className="max-w-7xl mx-auto">
               <GoogleCalendarDashboard />
             </div>
+          )}
+
+          {!isLoading && activeTab === "blog" && (
+            <TeacherBlogList />
+          )}
+
+          {!isLoading && activeTab === "blogEditor" && (
+            <TeacherBlogEditor />
           )}
         </main>
       </div>

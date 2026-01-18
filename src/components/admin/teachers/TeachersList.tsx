@@ -34,6 +34,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { adminService } from '@/integrations/api/services/admin.service';
 import { useToast } from '@/hooks/use-toast';
+import { useConfirmationDialog } from '@/components/ui/confirmation-dialog';
 
 interface TeachersListProps {
   onViewTeacher: (teacherId: string) => void;
@@ -48,6 +49,7 @@ const TeachersList = ({ onViewTeacher, onAddTeacher }: TeachersListProps) => {
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
   const queryClient = useQueryClient();
+  const { confirm, ConfirmDialog } = useConfirmationDialog();
   const { toast } = useToast();
 
   // Fetch teachers list with advanced query
@@ -133,9 +135,23 @@ const TeachersList = ({ onViewTeacher, onAddTeacher }: TeachersListProps) => {
       return;
     }
 
-    if (confirm(`Are you sure you want to ${action} ${selectedTeachers.size} teacher(s)?`)) {
-      bulkActionMutation.mutate(action);
-    }
+    const actionLabels = {
+      activate: 'Activate',
+      deactivate: 'Deactivate',
+      suspend: 'Suspend',
+      delete: 'Delete',
+    };
+
+    confirm({
+      title: `${actionLabels[action]} Teachers`,
+      description: `Are you sure you want to ${action} ${selectedTeachers.size} teacher(s)? This action may affect their access to the platform.`,
+      confirmText: actionLabels[action],
+      cancelText: 'Cancel',
+      variant: action === 'delete' ? 'destructive' : 'default',
+      onConfirm: () => {
+        bulkActionMutation.mutate(action);
+      },
+    });
   };
 
   const handleExport = () => {
