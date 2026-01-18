@@ -4,11 +4,19 @@ import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
-import { Search, MapPin, BookOpen, Star, Award, GraduationCap, AlertCircle } from "lucide-react";
+import { Search, MapPin, BookOpen, Star, Award, GraduationCap, AlertCircle, Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { teacherService, TeacherProfile } from "@/integrations/api/services/teacher.service";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useAuth } from "@/contexts/AuthContext";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface Teacher {
   id: string;
@@ -18,6 +26,8 @@ interface Teacher {
   imageSrc: string;
   bio: string;
   subjects: string[];
+  curriculums: string[];
+  gradeLevels: string[];
   rating: number;
   ratingCount: number;
   location: string;
@@ -39,17 +49,59 @@ interface Teacher {
 const TeacherProfilesPage = () => {
   const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
+  const [subjectFilter, setSubjectFilter] = useState("all");
+  const [curriculumFilter, setCurriculumFilter] = useState("all");
+  const [gradeFilter, setGradeFilter] = useState("all");
+  const [availDay, setAvailDay] = useState("all");
+  const [availStart, setAvailStart] = useState("");
+  const [availEnd, setAvailEnd] = useState("");
+
   const [teachers, setTeachers] = useState<Teacher[]>([]);
-  const [filteredTeachers, setFilteredTeachers] = useState<Teacher[]>([]);
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch teachers with complete profiles
+  // Filter options
+  const [activeCurricula, setActiveCurricula] = useState<any[]>([]);
+  const [activeSubjects, setActiveSubjects] = useState<any[]>([]);
+  const [activeGradeLevels, setActiveGradeLevels] = useState<any[]>([]);
+
+  // Fetch filter options
+  useEffect(() => {
+    const fetchConfigs = async () => {
+      try {
+        const [curriculaRes, subjectsRes, gradesRes] = await Promise.all([
+          teacherService.getActiveCurricula(),
+          teacherService.getActiveSubjects(),
+          teacherService.getActiveGradeLevels()
+        ]);
+
+        if (curriculaRes.data) setActiveCurricula(curriculaRes.data);
+        if (subjectsRes.data) setActiveSubjects(subjectsRes.data);
+        if (gradesRes.data) setActiveGradeLevels(gradesRes.data);
+      } catch (e) {
+        console.error("Failed to fetch teaching configs", e);
+      }
+    };
+    fetchConfigs();
+  }, []);
+
+  // Fetch teachers with filters
   useEffect(() => {
     const fetchTeachers = async () => {
       try {
         setLoading(true);
-        const { data, error } = await teacherService.getAllProfiles(user?.studentId);
+        const filters = {
+          search: searchTerm,
+          subject: subjectFilter,
+          curriculum: curriculumFilter,
+          grade: gradeFilter,
+          availabilityDay: availDay,
+          availabilityStart: availStart,
+          availabilityEnd: availEnd
+        };
+
+        const { data, error } = await teacherService.getAllProfiles(user?.studentId, filters);
 
         if (error) {
           throw new Error(error.message || "Failed to fetch teachers");
@@ -59,47 +111,81 @@ const TeacherProfilesPage = () => {
           throw new Error("No data returned from API");
         }
 
-        // MVP: Show all teachers (including those with incomplete profiles)
-        // In production, you might want to filter by isProfileComplete
-        // const completeProfiles = data.filter(teacher => teacher.isProfileComplete);
-
         // Transform data to match our component's expected format
         const formattedTeachers = data.map(transformTeacherData);
 
         setTeachers(formattedTeachers);
-        setFilteredTeachers(formattedTeachers);
         setError(null);
       } catch (err) {
         console.error("Error fetching teachers:", err);
         setError(err instanceof Error ? err.message : "An unknown error occurred");
         setTeachers([]);
-        setFilteredTeachers([]);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchTeachers();
-  }, [user?.studentId]);
+    // Debounce search term
+    const timeoutId = setTimeout(() => {
+      fetchTeachers();
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
+  }, [user?.studentId, searchTerm, subjectFilter, curriculumFilter, gradeFilter, availDay, availStart, availEnd]);
 
   // Transform API teacher data to our component format
   const transformTeacherData = (apiTeacher: any): Teacher => {
     console.log("Processing teacher data:", apiTeacher);
 
-    // Extract subjects from teacher profile
-    const extractSubjects = (): string[] => {
-      const subjects: string[] = [];
+    // Extract subjects, curriculums, and grades from teacher profile
+    const extractTeachingInfo = () => {
+      const subjects: Set<string> = new Set();
+      const curriculums: Set<string> = new Set();
+      const gradeLevels: Set<string> = new Set();
 
+      // Handle mvpData nested structure (primary source for new profiles)
+      if (apiTeacher.mvpData) {
+        if (Array.isArray(apiTeacher.mvpData.curriculums)) {
+          apiTeacher.mvpData.curriculums.forEach((c: any) => { if (c) curriculums.add(String(c)); });
+        }
+        if (Array.isArray(apiTeacher.mvpData.gradeLevels)) {
+          apiTeacher.mvpData.gradeLevels.forEach((g: any) => { if (g) gradeLevels.add(String(g)); });
+        }
+        if (Array.isArray(apiTeacher.mvpData.subjects)) {
+          apiTeacher.mvpData.subjects.forEach((s: any) => { if (s) subjects.add(String(s)); });
+        }
+      }
+
+      // Handle root level arrays (fallback/legacy)
+      if (Array.isArray(apiTeacher.curriculums)) {
+        apiTeacher.curriculums.forEach((c: any) => { if (c) curriculums.add(String(c)); });
+      }
+
+      if (Array.isArray(apiTeacher.gradeLevels)) {
+        apiTeacher.gradeLevels.forEach((g: any) => { if (g) gradeLevels.add(String(g)); });
+      }
+
+      // Handle subjects at root (could be string[] or object[])
       if (Array.isArray(apiTeacher.subjects)) {
         apiTeacher.subjects.forEach((subject: any) => {
-          if (subject.subject) {
-            subjects.push(subject.subject);
+          if (typeof subject === 'string') {
+            subjects.add(subject);
+          } else if (typeof subject === 'object' && subject !== null) {
+            if (subject.subject) subjects.add(subject.subject);
+            if (subject.curriculum) curriculums.add(subject.curriculum);
+            if (subject.gradeLevel) gradeLevels.add(subject.gradeLevel);
           }
         });
       }
 
-      return subjects.length > 0 ? subjects : ["General Education"];
+      return {
+        subjects: subjects.size > 0 ? Array.from(subjects) : ["General Education"],
+        curriculums: Array.from(curriculums),
+        gradeLevels: Array.from(gradeLevels)
+      };
     };
+
+    const teachingInfo = extractTeachingInfo();
 
     // Format education data
     const formatEducation = () => {
@@ -174,7 +260,9 @@ const TeacherProfilesPage = () => {
       position: extractPosition(),
       imageSrc: apiTeacher.user?._signedProfileImage || "https://via.placeholder.com/150",
       bio: apiTeacher.user?.bio || "Experienced educator passionate about student success.",
-      subjects: extractSubjects(),
+      subjects: teachingInfo.subjects,
+      curriculums: teachingInfo.curriculums,
+      gradeLevels: teachingInfo.gradeLevels,
       rating: apiTeacher.rating || 5.0,
       ratingCount: apiTeacher.totalReviews || 0,
       location: formatLocation(),
@@ -183,21 +271,7 @@ const TeacherProfilesPage = () => {
     };
   };
 
-  // Filter teachers based on search term
-  useEffect(() => {
-    if (!searchTerm) {
-      setFilteredTeachers(teachers);
-      return;
-    }
 
-    const results = teachers.filter(teacher =>
-      teacher.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      teacher.subjects.some(subject => subject.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      teacher.position.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      teacher.location.toLowerCase().includes(searchTerm.toLowerCase()))
-      ;
-    setFilteredTeachers(results);
-  }, [searchTerm, teachers]);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -211,17 +285,118 @@ const TeacherProfilesPage = () => {
             </p>
           </div>
 
-          {/* Search bar */}
-          <div className="mb-8 max-w-lg mx-auto">
-            <div className="relative flex items-center">
-              <Search className="absolute left-3 text-gray-400" size={20} />
-              <input
-                type="text"
-                placeholder="Search by name, subject, or location..."
-                className="pl-10 pr-4 py-2 w-full border rounded-lg focus:ring-2 focus:ring-kidato-purple focus:border-transparent"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
+          {/* Search bar and filters */}
+          <div className="mb-8 max-w-5xl mx-auto">
+            <div className="flex flex-col gap-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-3 text-gray-400" size={20} />
+                <Input
+                  type="text"
+                  placeholder="Search by name, subject, or location..."
+                  className="pl-10"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <Select value={curriculumFilter} onValueChange={setCurriculumFilter}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="All Curricula" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Curricula</SelectItem>
+                    {activeCurricula.map((c) => (
+                      <SelectItem key={c.code || c.name} value={c.name}>
+                        {c.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                <Select value={subjectFilter} onValueChange={setSubjectFilter}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="All Subjects" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Subjects</SelectItem>
+                    {activeSubjects.length > 0 ? (
+                      activeSubjects.map((s) => (
+                        <SelectItem key={s.code || s.name} value={s.name}>
+                          {s.name}
+                        </SelectItem>
+                      ))
+                    ) : (
+                      // Fallback to dynamic subjects if config fetch failed/empty
+                      Array.from(new Set(teachers.flatMap(t => t.subjects)))
+                        .sort()
+                        .map((subject) => (
+                          <SelectItem key={subject} value={subject}>
+                            {subject}
+                          </SelectItem>
+                        ))
+                    )}
+                  </SelectContent>
+                </Select>
+
+                <Select value={gradeFilter} onValueChange={setGradeFilter}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="All Grades" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Grades</SelectItem>
+                    {activeGradeLevels.map((g) => (
+                      <SelectItem key={g.code || g.name} value={g.name}>
+                        {g.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Availability Filter */}
+              <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-100 mt-4">
+                <h3 className="text-sm font-medium text-gray-700 mb-3 flex items-center">
+                  <Clock className="w-4 h-4 mr-2" />
+                  Availability
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <Select value={availDay} onValueChange={setAvailDay}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select Day" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Any Day</SelectItem>
+                      <SelectItem value="monday">Monday</SelectItem>
+                      <SelectItem value="tuesday">Tuesday</SelectItem>
+                      <SelectItem value="wednesday">Wednesday</SelectItem>
+                      <SelectItem value="thursday">Thursday</SelectItem>
+                      <SelectItem value="friday">Friday</SelectItem>
+                      <SelectItem value="saturday">Saturday</SelectItem>
+                      <SelectItem value="sunday">Sunday</SelectItem>
+                    </SelectContent>
+                  </Select>
+
+                  <div>
+                    <Input
+                      type="time"
+                      value={availStart}
+                      onChange={(e) => setAvailStart(e.target.value)}
+                      className="bg-gray-50"
+                    />
+                    <span className="text-[10px] text-gray-400 mt-1 block">Start Time</span>
+                  </div>
+                  <div>
+                    <Input
+                      type="time"
+                      value={availEnd}
+                      onChange={(e) => setAvailEnd(e.target.value)}
+                      className="bg-gray-50"
+                    />
+                    <span className="text-[10px] text-gray-400 mt-1 block">End Time</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -244,9 +419,9 @@ const TeacherProfilesPage = () => {
           ) : (
             <>
               {/* Teacher grid */}
-              {filteredTeachers.length > 0 ? (
+              {teachers.length > 0 ? (
                 <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
-                  {filteredTeachers.map((teacher) => (
+                  {teachers.map((teacher) => (
                     <div
                       key={teacher.id}
                       className="bg-white overflow-hidden shadow rounded-lg transition-transform hover:shadow-lg hover:-translate-y-1"

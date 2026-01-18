@@ -7,7 +7,7 @@ import {
     EducationItem,
     ExperienceItem, LanguageItem, MethodologyItem, StrategyItem, TechnicalSkillItem
 } from "@/components/teacher/professional-profile";
-import {formatDateForDatabase} from "@/components/teacher/professional-profile/utils/educationUtils.ts";
+import { formatDateForDatabase } from "@/components/teacher/professional-profile/utils/educationUtils.ts";
 import type { TeacherSummaryResponse } from '@/types/enhanced-classes';
 import type { TeacherStudentsData } from '@/types/activity';
 import type { TeacherBalance, TeacherTransaction, TeacherTransactionsQuery } from '../types/teacher-transactions.types';
@@ -23,7 +23,7 @@ export interface BaseEntity {
     createdAt: string;
     updatedAt: string;
     __v: number;
-  }
+}
 // Certification interface for API calls
 export interface TeacherCertification {
     _id?: string;
@@ -50,7 +50,7 @@ export interface Subject extends BaseEntity {
     isCertified: boolean;
     isAcademic: boolean;
     resources: string[];
-  }
+}
 
 export interface TeacherProfile {
     id: string;
@@ -63,7 +63,7 @@ export interface TeacherProfile {
         alternativePhoneNumber?: string;
         bio?: string;
         profileImage?: string;
-    legal_id:{id_type:string,id:string,country:string};
+        legal_id: { id_type: string, id: string, country: string };
         _signedProfileImage?: string;
         [key: string]: any;
     };
@@ -121,7 +121,7 @@ export interface Experience {
     };
     additionalDetails?: string;
 }
-export interface TeachingStrategy{
+export interface TeachingStrategy {
     id?: string;
     teacherProfile?: string;
     name: string;
@@ -227,8 +227,30 @@ export const teacherService = {
         return api.post<TeacherProfile>('/teachers', data);
     },
 
-    getAllProfiles: (studentId?: string): Promise<ApiResponse<TeacherProfile[]>> => {
-        const params = studentId ? { studentId } : {};
+    getAllProfiles: (
+        studentId?: string,
+        filters?: {
+            search?: string;
+            subject?: string;
+            curriculum?: string;
+            grade?: string;
+            availabilityDay?: string;
+            availabilityStart?: string;
+            availabilityEnd?: string;
+        }
+    ): Promise<ApiResponse<TeacherProfile[]>> => {
+        const params: any = studentId ? { studentId } : {};
+
+        if (filters) {
+            if (filters.search) params.search = filters.search;
+            if (filters.subject && filters.subject !== 'all') params.subject = filters.subject;
+            if (filters.curriculum && filters.curriculum !== 'all') params.curriculum = filters.curriculum;
+            if (filters.grade && filters.grade !== 'all') params.grade = filters.grade;
+            if (filters.availabilityDay && filters.availabilityDay !== 'all') params.availabilityDay = filters.availabilityDay;
+            if (filters.availabilityStart) params.availabilityStart = filters.availabilityStart;
+            if (filters.availabilityEnd) params.availabilityEnd = filters.availabilityEnd;
+        }
+
         return api.get<TeacherProfile[]>('/teachers', { params });
     },
 
@@ -259,23 +281,23 @@ export const teacherService = {
             if (!dateStr) return "";
             // Remove any existing -01 day that might have been added incorrectly
             const cleaned = dateStr.replace(/-01-01$/, "-01");
-            
+
             // Ensure we have a YYYY-MM format
             const dateMatch = cleaned.match(/^(\d{4}-\d{2})(?:-\d{2})?$/);
             if (dateMatch) {
                 return `${dateMatch[1]}-01`;
             }
-            
+
             // If it's in another format, use formatDateForDatabase
             return formatDateForDatabase(dateStr);
         };
-        
+
         const normalizedData = {
             ...data,
             startDate: normalizeDate(data.startDate as string),
             endDate: data.endDate ? normalizeDate(data.endDate as string) : null
         };
-        
+
         return api.post<Education>(`/teachers/${data.teacherProfile}/education`, normalizedData);
     },
 
@@ -295,17 +317,17 @@ export const teacherService = {
             if (!dateStr) return "";
             // Remove any existing -01 day that might have been added incorrectly
             const cleaned = dateStr.replace(/-01-01$/, "-01");
-            
+
             // Ensure we have a YYYY-MM format
             const dateMatch = cleaned.match(/^(\d{4}-\d{2})(?:-\d{2})?$/);
             if (dateMatch) {
                 return `${dateMatch[1]}-01`;
             }
-            
+
             // If it's in another format, use formatDateForDatabase
             return formatDateForDatabase(dateStr);
         };
-        
+
         return api.patch<Education>(`/teachers/${educationData.teacherProfile}/education/${id}`, {
             institutionType: educationData.institutionType,
             institutionName: educationData.institution,
@@ -330,13 +352,13 @@ export const teacherService = {
             if (!dateStr) return "";
             // Remove any existing -01 day that might have been added incorrectly
             const cleaned = dateStr.replace(/-01-01$/, "-01");
-            
+
             // Ensure we have a YYYY-MM format
             const dateMatch = cleaned.match(/^(\d{4}-\d{2})(?:-\d{2})?$/);
             if (dateMatch) {
                 return `${dateMatch[1]}-01`;
             }
-            
+
             // If it's in another format, use formatDateForDatabase
             return formatDateForDatabase(dateStr);
         };
@@ -360,17 +382,17 @@ export const teacherService = {
             if (!dateStr) return "";
             // Remove any existing -01 day that might have been added incorrectly
             const cleaned = dateStr.replace(/-01-01$/, "-01");
-            
+
             // Ensure we have a YYYY-MM format
             const dateMatch = cleaned.match(/^(\d{4}-\d{2})(?:-\d{2})?$/);
             if (dateMatch) {
                 return `${dateMatch[1]}-01`;
             }
-            
+
             // If it's in another format, use formatDateForDatabase
             return formatDateForDatabase(dateStr);
         };
-        
+
         const normalizedData = {
             ...data,
             startDate: normalizeDate(data.startDate as string),
@@ -409,17 +431,17 @@ export const teacherService = {
             if (!dateStr) return "";
             // Remove any existing -01 day that might have been added incorrectly
             const cleaned = dateStr.replace(/-01-01$/, "-01");
-            
+
             // Ensure we have a YYYY-MM format
             const dateMatch = cleaned.match(/^(\d{4}-\d{2})(?:-\d{2})?$/);
             if (dateMatch) {
                 return `${dateMatch[1]}-01`;
             }
-            
+
             // If it's in another format, use formatDateForDatabase
             return formatDateForDatabase(dateStr);
         };
-        
+
         const normalizedData = {
             ...data,
             startDate: data.startDate ? normalizeDate(data.startDate as string) : undefined,
@@ -451,13 +473,13 @@ export const teacherService = {
             if (!dateStr) return "";
             // Remove any existing -01 day that might have been added incorrectly
             const cleaned = dateStr.replace(/-01-01$/, "-01");
-            
+
             // Ensure we have a YYYY-MM format
             const dateMatch = cleaned.match(/^(\d{4}-\d{2})(?:-\d{2})?$/);
             if (dateMatch) {
                 return `${dateMatch[1]}-01`;
             }
-            
+
             // If it's in another format, use formatDateForDatabase
             return formatDateForDatabase(dateStr);
         };
@@ -558,40 +580,40 @@ export const teacherService = {
     getTeacherAfterSchoolSubjects: (teacherId: string): Promise<ApiResponse<any[]>> => {
         return api.get<any[]>(`/teachers/${teacherId}/subjects?isAcademic=false`);
     },
-    addAcademicSubject: (teacherProfileId: string,data: Partial<AcademicSubjectItem>): Promise<ApiResponse<any>> => {
+    addAcademicSubject: (teacherProfileId: string, data: Partial<AcademicSubjectItem>): Promise<ApiResponse<any>> => {
         return api.post<any[]>(`/teachers/${teacherProfileId}/subjects`,
-            {teacherProfile:teacherProfileId,...data});
+            { teacherProfile: teacherProfileId, ...data });
     },
-    updateAcademicSubject: (teacherProfileId: string,data: Partial<AcademicSubjectItem>): Promise<ApiResponse<any>> => {
+    updateAcademicSubject: (teacherProfileId: string, data: Partial<AcademicSubjectItem>): Promise<ApiResponse<any>> => {
         return api.patch<any[]>(`/teachers/${teacherProfileId}/subjects/${data._id}`,
-            {teacherProfile:teacherProfileId,...data});
+            { teacherProfile: teacherProfileId, ...data });
     },
-    deleteAcademicSubject: (teacherId,id: string): Promise<ApiResponse<any>> => {
+    deleteAcademicSubject: (teacherId, id: string): Promise<ApiResponse<any>> => {
         return api.delete<any[]>(`/teachers/${teacherId}/subjects/${id}`);
     },
-    addOutOfSchoolSubject: (teacherProfileId: string,data: Partial<AfterSchoolSubjectItem>): Promise<ApiResponse<any>> => {
+    addOutOfSchoolSubject: (teacherProfileId: string, data: Partial<AfterSchoolSubjectItem>): Promise<ApiResponse<any>> => {
         return api.post<any[]>(`/teachers/${teacherProfileId}/subjects`,
-            {teacherProfile:teacherProfileId,...data,isAcademic:false});
+            { teacherProfile: teacherProfileId, ...data, isAcademic: false });
     },
-    updateOutOfSchoolSubject: (teacherProfileId: string,data: Partial<AfterSchoolSubjectItem>): Promise<ApiResponse<any>> => {
+    updateOutOfSchoolSubject: (teacherProfileId: string, data: Partial<AfterSchoolSubjectItem>): Promise<ApiResponse<any>> => {
         // Create a copy of data without the _id field
-        const dataToSend = {...data, isAcademic: false};
+        const dataToSend = { ...data, isAcademic: false };
         delete dataToSend._id;
-        
+
         console.log(`API call to update subject ${data._id} for teacher ${teacherProfileId}`);
         console.log("Data being sent to API:", dataToSend);
-        
+
         return api.patch<any[]>(`/teachers/${teacherProfileId}/subjects/${data._id}/`,
             dataToSend);
     },
-    deleteOutOfSchoolSubject: (teacherId:string,_id: string): Promise<ApiResponse<any>> => {
+    deleteOutOfSchoolSubject: (teacherId: string, _id: string): Promise<ApiResponse<any>> => {
         return api.delete<any[]>(`/teachers/${teacherId}/subjects/${_id}/?isAcademic=false`);
     },
     //teacher teaching strategies
     getTeachingStrategies: (teacherId: string): Promise<ApiResponse<any[]>> => {
         return api.get<any[]>(`/teachers/${teacherId}/strategy`);
     },
-    getTeachingStrategy: (teacherId: string, id:string): Promise<ApiResponse<any[]>> => {
+    getTeachingStrategy: (teacherId: string, id: string): Promise<ApiResponse<any[]>> => {
         return api.get<any[]>(`/teachers/${teacherId}/strategy/${id}`);
     },
     addTeachingStrategy: (teacherId: string, teachingStrategy: Partial<StrategyItem>): Promise<ApiResponse<any[]>> => {
@@ -621,7 +643,7 @@ export const teacherService = {
     getLanguageExpertise: (teacherId: string): Promise<ApiResponse<LanguageItem[]>> => {
         return api.get<any[]>(`/teachers/${teacherId}/languages`);
     },
-    addLanguageExpertise: (teacherId: string, language: LanguageItem)=> {
+    addLanguageExpertise: (teacherId: string, language: LanguageItem) => {
         delete language._id;
         return api.post<any>(`/teachers/${teacherId}/languages`,
             {
@@ -640,7 +662,7 @@ export const teacherService = {
     deleteLanguageExpertise: (teacherId: string, id: string): Promise<ApiResponse<LanguageItem>> => {
         return api.delete<LanguageItem>(`/teachers/${teacherId}/languages/${id}`);
     },
-    getTechnicalSkills:  (teacherId: string): Promise<ApiResponse<any[]>> => {
+    getTechnicalSkills: (teacherId: string): Promise<ApiResponse<any[]>> => {
         return api.get<string[]>(`/teachers/${teacherId}/skills`);
     },
     addTechnicalSkills: (teacherId: string, skill: TechnicalSkillItem): Promise<ApiResponse<any>> => {
@@ -684,7 +706,7 @@ export const teacherService = {
     deleteTeachingMethodology: (teacherId: string, methodologyId: string): Promise<ApiResponse<any>> => {
         return api.delete<string[]>(`/teachers/${teacherId}/methodologies/${methodologyId}`);
     },
-    
+
     // Certification Management
     getCertifications: (teacherId: string): Promise<ApiResponse<CertificationItem[]>> => {
         return api.get<CertificationItem[]>(`/teachers/${teacherId}/certifications`, {
@@ -704,26 +726,26 @@ export const teacherService = {
             if (!dateStr) return "";
             // Remove any existing -01 day that might have been added incorrectly
             const cleaned = dateStr.replace(/-01-01$/, "-01");
-            
+
             // Ensure we have a YYYY-MM format
             const dateMatch = cleaned.match(/^(\d{4}-\d{2})(?:-\d{2})?$/);
             if (dateMatch) {
                 return `${dateMatch[1]}-01`;
             }
-            
+
             // If it's in another format, use formatDateForDatabase
             return formatDateForDatabase(dateStr);
         };
-        
+
         const normalizedData = {
             ...certification,
             teacherProfile: teacherId,
             ...(certification.issueDate && { issueDate: normalizeDate(certification.issueDate as string) }),
             ...(certification.expiryDate && { expiryDate: normalizeDate(certification.expiryDate as string) })
         };
-        
+
         delete normalizedData._id;
-        
+
         return api.post<CertificationItem>(`/teachers/${teacherId}/certifications`, normalizedData);
     },
 
@@ -733,32 +755,32 @@ export const teacherService = {
             if (!dateStr) return "";
             // Remove any existing -01 day that might have been added incorrectly
             const cleaned = dateStr.replace(/-01-01$/, "-01");
-            
+
             // Ensure we have a YYYY-MM format
             const dateMatch = cleaned.match(/^(\d{4}-\d{2})(?:-\d{2})?$/);
             if (dateMatch) {
                 return `${dateMatch[1]}-01`;
             }
-            
+
             // If it's in another format, use formatDateForDatabase
             return formatDateForDatabase(dateStr);
         };
-        
+
         const updateData = {
             ...certification,
             issueDate: certification.issueDate ? normalizeDate(certification.issueDate as string) : "",
             expiryDate: certification.expiryDate ? normalizeDate(certification.expiryDate as string) : null
         };
-        
+
         delete updateData._id;
-        
+
         return api.patch<CertificationItem>(`/teachers/${teacherId}/certifications/${certification._id}`, updateData);
     },
 
     deleteCertification: (teacherId: string, certificationId: string): Promise<ApiResponse<{ success: boolean }>> => {
         return api.delete<{ success: boolean }>(`/teachers/${teacherId}/certifications/${certificationId}`);
     },
-    
+
     // File uploads for verification documents
     uploadVerificationFile: (teacherId: string, documentType: 'background_check' | 'government_id', base64File: string): Promise<ApiResponse<{ fileUrl: string }>> => {
         // The API requires a base64 encoded string of the file
@@ -767,12 +789,12 @@ export const teacherService = {
             base64File
         });
     },
-    
+
     // Get signed URL for temporary document access
     getDocumentSignedUrl: (teacherId: string, documentType: 'background_check' | 'government_id'): Promise<ApiResponse<{ signedUrl: string }>> => {
         return api.get<{ signedUrl: string }>(`/teachers/${teacherId}/documents/${documentType}/signed-url`);
     },
-    
+
     // Get signed URL for document viewing
     getDocumentViewUrl: (teacherId: string, documentType: 'background_check' | 'government_id'): Promise<string> => {
         return new Promise(async (resolve, reject) => {
@@ -789,17 +811,17 @@ export const teacherService = {
             }
         });
     },
-    
+
     updateVerificationStatus: (teacherId: string, updates: { backgroundCheckFile?: string, governmentIdFile?: string }): Promise<ApiResponse<TeacherProfile>> => {
         return api.patch<TeacherProfile>(`/teachers/${teacherId}`, updates);
     },
-    
+
     // Upload profile photo
-    uploadProfilePhoto: (teacherId: string, base64File: string, mimeType: string): Promise<ApiResponse<{ 
+    uploadProfilePhoto: (teacherId: string, base64File: string, mimeType: string): Promise<ApiResponse<{
         fileUrl: string;
         signedUrl: string;
     }>> => {
-        return api.post<{ 
+        return api.post<{
             fileUrl: string;
             signedUrl: string;
         }>(`/teachers/${teacherId}/profile-photo`, {
@@ -809,11 +831,11 @@ export const teacherService = {
     },
 
     // Document Upload Methods
-    uploadDocument: (teacherId: string, base64File: string, documentType: 'background_check' | 'government_id'): Promise<ApiResponse<{ 
+    uploadDocument: (teacherId: string, base64File: string, documentType: 'background_check' | 'government_id'): Promise<ApiResponse<{
         fileUrl: string;
         signedUrl: string;
     }>> => {
-        return api.post<{ 
+        return api.post<{
             fileUrl: string;
             signedUrl: string;
         }>(`/teachers/${teacherId}/documents`, {
@@ -966,5 +988,18 @@ export const teacherService = {
 
     rejectTeacher: (teacherId: string, reason: string): Promise<ApiResponse<TeacherProfile>> => {
         return api.post<TeacherProfile>(`/teachers/${teacherId}/reject`, { reason });
+    },
+
+    // Teaching Configuration Endpoints (Public)
+    getActiveCurricula: (): Promise<ApiResponse<any[]>> => {
+        return api.get<any[]>('/teaching-config/curricula/active');
+    },
+
+    getActiveSubjects: (): Promise<ApiResponse<any[]>> => {
+        return api.get<any[]>('/teaching-config/subjects/active');
+    },
+
+    getActiveGradeLevels: (): Promise<ApiResponse<any[]>> => {
+        return api.get<any[]>('/teaching-config/grade-levels/active');
     },
 };
