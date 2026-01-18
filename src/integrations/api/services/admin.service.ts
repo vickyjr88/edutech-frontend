@@ -53,15 +53,21 @@ export interface AdminUsersResponse {
 }
 
 export interface TeacherResources {
-  user: AdminUser;
-  teacherProfile: any;
+  profileId?: string;
+  bio?: string;
   classes: any[];
   students: any[];
+  history?: any[];
   earnings: {
     total: number;
     pending: number;
     paid: number;
   };
+  totalClasses: number;
+  totalStudents: number;
+  totalEarnings: number;
+  user?: AdminUser;
+  teacherProfile?: any;
 }
 
 export interface StudentResources {

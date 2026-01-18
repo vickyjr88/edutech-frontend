@@ -22,6 +22,7 @@ import {
   MessageSquare,
   LayoutDashboard,
   Settings,
+  History,
 } from "lucide-react";
 
 /**
@@ -165,6 +166,12 @@ const AdminDashboard = () => {
       href: "/admin/associations",
       icon: UsersRound,
       current: location.pathname.startsWith("/admin/associations"),
+    },
+    {
+      name: "Audit Logs",
+      href: "/admin/audit-logs",
+      icon: History,
+      current: location.pathname.startsWith("/admin/audit-logs"),
     },
     {
       name: "Reports & Exports",

@@ -40,6 +40,14 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import SuspendUserModal from '@/components/admin/users/SuspendUserModal';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import AuditLogViewer from '@/components/admin/users/AuditLogViewer';
 
 interface TeacherDetailsProps {
@@ -67,12 +75,13 @@ const TeacherDetails = ({ teacherId, onBack }: TeacherDetailsProps) => {
     enabled: !!teacherId,
   });
 
-  // Extract data from API client wrapper (same as StudentDetails)
-  const teacher = teacherResponse?.data;
+  // Extract data from API client wrapper
+  const rawTeacher = teacherResponse?.data;
+  const teacher = (rawTeacher as any)?.data || rawTeacher;
   const teacherProfile = teacher?.teacherProfile;
 
-  // Extract resources data
-  const resourcesData = resourcesResponse?.data?.data;
+  // Extract resources data - API returns data directly, not nested in data.data
+  const resourcesData = resourcesResponse?.data;
   const teacherClasses = resourcesData?.classes || [];
   const teacherStudents = resourcesData?.students || [];
   const teacherEarnings = resourcesData?.earnings || { total: 0, pending: 0, paid: 0 };
@@ -333,12 +342,12 @@ const TeacherDetails = ({ teacherId, onBack }: TeacherDetailsProps) => {
                       password will be generated and you'll need to communicate it to the teacher.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction onClick={handleResetPassword}>
-                        Reset Password
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleResetPassword}>
+                      Reset Password
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
                 </AlertDialogContent>
               </AlertDialog>
               <Button onClick={handleEdit}>
@@ -544,7 +553,7 @@ const TeacherDetails = ({ teacherId, onBack }: TeacherDetailsProps) => {
                   placeholder="Teacher bio..."
                 />
               ) : (
-                <p className="text-gray-700">{teacherProfile?.bio || 'No bio available'}</p>
+                <p className="text-gray-700">{resourcesData?.bio || teacher?.bio || 'No bio available'}</p>
               )}
             </CardContent>
           </Card>
@@ -662,9 +671,47 @@ const TeacherDetails = ({ teacherId, onBack }: TeacherDetailsProps) => {
               <CardTitle>Payment History</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-gray-500 text-center py-8">
-                No payment history available
-              </p>
+              {resourcesData?.history && resourcesData.history.length > 0 ? (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Description</TableHead>
+                      <TableHead>Student</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead className="text-right">Amount</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {resourcesData.history.map((tx: any) => (
+                      <TableRow key={tx.id}>
+                        <TableCell>
+                          {new Date(tx.date).toLocaleDateString()}
+                        </TableCell>
+                        <TableCell>{tx.description}</TableCell>
+                        <TableCell>{tx.student}</TableCell>
+                        <TableCell>
+                          <span
+                            className={`px-2 py-1 rounded text-xs ${tx.status === 'Paid'
+                                ? 'bg-green-100 text-green-700'
+                                : 'bg-yellow-100 text-yellow-700'
+                              }`}
+                          >
+                            {tx.status}
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          KES {tx.amount.toLocaleString()}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              ) : (
+                <p className="text-gray-500 text-center py-8">
+                  No payment history available
+                </p>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
