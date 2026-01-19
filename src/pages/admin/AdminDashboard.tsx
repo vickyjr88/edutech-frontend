@@ -120,6 +120,12 @@ const AdminDashboard = () => {
       current: location.pathname.startsWith("/admin/classes"),
     },
     {
+      name: "Custom Requests",
+      href: "/admin/custom-requests",
+      icon: BookOpen,
+      current: location.pathname.startsWith("/admin/custom-requests"),
+    },
+    {
       name: "Bookings",
       href: "/admin/bookings",
       icon: List,

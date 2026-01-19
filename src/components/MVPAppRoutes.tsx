@@ -59,6 +59,7 @@ import TeacherResourcesPage from "../pages/TeacherResourcesPage"; // MVP: Resour
 import TeacherStudentsPage from "../pages/TeacherStudentsPage"; // MVP: Students
 import TeacherMessagingPage from "../pages/TeacherMessagingPage";
 import TeacherBookingsPage from "../pages/TeacherBookingsPage";
+import TeacherCustomClassRequests from "../pages/teacher/TeacherCustomClassRequests";
 
 // Parent Pages
 import ParentsDashboard from "../pages/ParentsDashboard";
@@ -102,6 +103,7 @@ import BookingsManagement from "../pages/admin/BookingsManagement";
 import TicketsManagement from "../pages/admin/TicketsManagement";
 import AdminMessaging from "../pages/admin/AdminMessaging";
 import AdminReportsPage from "../pages/admin/AdminReportsPage";
+import AdminCustomClassRequests from "../pages/admin/AdminCustomClassRequests";
 
 // Admin CMS & Content (Kept for marketing)
 import PagesList from "../pages/admin/PagesList";
@@ -365,6 +367,16 @@ const MVPAppRoutes = () => {
         }
       />
 
+      {/* Teacher Custom Class Requests (MVP) */}
+      <Route
+        path="/teacher/custom-requests"
+        element={
+          <TeacherRoute requireProfileComplete={true}>
+            <TeacherCustomClassRequests />
+          </TeacherRoute>
+        }
+      />
+
 
       {/* ===== STUDENT ROUTES (MVP) ===== */}
 
@@ -610,6 +622,9 @@ const MVPAppRoutes = () => {
 
           {/* Reports */}
           <Route path="reports" element={<AdminReportsPage />} />
+
+          {/* Custom Class Requests (MVP) */}
+          <Route path="custom-requests" element={<AdminCustomClassRequests />} />
         </Route>
       )}
 

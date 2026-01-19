@@ -14,8 +14,10 @@ import {
   Award,
   Bell,
   MessageSquare,
+
   FileText,
-  Home
+  Home,
+  Star
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
@@ -52,6 +54,7 @@ const UserSidebar = () => {
       teacher: [
         { name: "My Offerings", href: "/teacher-offerings", icon: BookOpen },
         { name: "Bookings", href: "/teacher/bookings", icon: Calendar },
+        { name: "Custom Requests", href: "/teacher/custom-requests", icon: Star },
         { name: "Availability", href: "/teacher-availability", icon: Calendar },
         { name: "Earnings", href: "/teacher-earnings", icon: DollarSign },
         { name: "Students", href: "/teacher-students", icon: Users },
@@ -75,6 +78,7 @@ const UserSidebar = () => {
         { name: "Users", href: "/admin/users", icon: Users },
         { name: "Teachers", href: "/admin/teachers", icon: User },
         { name: "Classes", href: "/admin/classes", icon: BookOpen },
+        { name: "Custom Requests", href: "/admin/custom-requests", icon: Star },
         { name: "Inquiries", href: "/admin/inquiries", icon: MessageSquare },
         { name: "Reports & Exports", href: "/admin/reports", icon: FileText },
       ],
