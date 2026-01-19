@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { useParams, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import {
     Calendar,
     Clock,
@@ -28,6 +28,8 @@ import { MvpTeacherService } from '@/integrations/api/services/mvp-teacher.servi
 import { MvpParentService, Child } from '@/integrations/api/services/mvp-parent.service';
 import MvpBookingService from '@/integrations/api/services/mvp-booking.service';
 import MvpAvailabilityService from '@/integrations/api/services/mvp-availability.service';
+import { classService } from '@/integrations/api/services/class.service';
+import MvpOfferingService from '@/integrations/api/services/mvp-offering.service';
 import { useAuth } from '@/contexts/AuthContext';
 
 type BookingStep = 'offering' | 'child' | 'datetime' | 'confirm';
@@ -37,6 +39,8 @@ const BookingPage = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const { user } = useAuth();
+    const [searchParams] = useSearchParams();
+    const offeringIdParam = searchParams.get('offeringId');
 
     const [step, setStep] = useState<BookingStep>('offering');
     const [loading, setLoading] = useState(true);
@@ -51,6 +55,7 @@ const BookingPage = () => {
     const [availableSlots, setAvailableSlots] = useState<string[]>([]);
     const [bookingLoading, setBookingLoading] = useState(false);
     const [slotsLoading, setSlotsLoading] = useState(false);
+    const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
     useEffect(() => {
         if (teacherId) {
@@ -73,13 +78,94 @@ const BookingPage = () => {
     const loadTeacherData = async () => {
         try {
             setLoading(true);
-            const data = await MvpTeacherService.getTeacherDetails(teacherId!);
-            setTeacher(data);
+            setErrorMsg(null);
+
+            // First, try to fetch as a Teacher ID
+            try {
+                const data = await MvpTeacherService.getTeacherDetails(teacherId!);
+                if (data && data._id) {
+                    setTeacher(data);
+                    checkPreSelectedOffering(data, offeringIdParam);
+                    return;
+                }
+            } catch (err) {
+                console.log("Not a teacher ID, trying as offering ID...");
+            }
+
+            // If param is not a teacher ID, maybe it's a Class/Offering ID?
+            // This supports /book/:classId url structure
+            let offeringOrClass = null;
+            let lookupError = "";
+
+            try {
+                offeringOrClass = await MvpOfferingService.getOffering(teacherId!).catch(() => null);
+            } catch (e) {
+                // ignore
+            }
+
+            if (!offeringOrClass) {
+                try {
+                    const res = await classService.getById(teacherId!);
+                    offeringOrClass = res.data;
+                } catch (e) {
+                    lookupError = e instanceof Error ? e.message : "Lookup failed";
+                }
+            }
+
+            if (offeringOrClass) {
+                const realTeacherId = (offeringOrClass as any).teacher?._id
+                    || (offeringOrClass as any).teacher
+                    || (offeringOrClass as any).teacherId;
+
+                if (!realTeacherId) {
+                    console.error("No teacher ID in:", offeringOrClass);
+                    throw new Error("No teacher found for this class/offering. Object: " + JSON.stringify(offeringOrClass));
+                }
+
+                const teacherData = await MvpTeacherService.getTeacherDetails(realTeacherId);
+
+                // Inject the offering if it's not in the list (e.g. mixed Class/Offering types)
+                const existingOffering = teacherData.offerings?.find((o: any) => o._id === offeringOrClass._id);
+                if (!existingOffering) {
+                    // Normalize class to offering format if needed
+                    const normalizedOffering = {
+                        _id: offeringOrClass._id,
+                        title: offeringOrClass.title,
+                        description: (offeringOrClass as any).description || (offeringOrClass as any).summary,
+                        subject: offeringOrClass.subject,
+                        type: (offeringOrClass as any).type || 'one-time',
+                        price: (offeringOrClass as any).price || (offeringOrClass as any).cohorts?.[0]?.price || 0,
+                        sessionDuration: (offeringOrClass as any).sessionDuration || 60,
+                        // Add other fields as necessary
+                    };
+                    teacherData.offerings = [...(teacherData.offerings || []), normalizedOffering];
+                    setSelectedOffering(normalizedOffering);
+                } else {
+                    setSelectedOffering(existingOffering);
+                }
+
+                setTeacher(teacherData);
+                setStep('child'); // Auto-advance
+            } else {
+                throw new Error("Invalid ID provided. Could not find Teacher, Class, or Offering. " + lookupError);
+            }
+
         } catch (error) {
-            console.error('Failed to load teacher data:', error);
-            toast.error('Failed to load teacher details');
+            console.error('Failed to load teacher/class data:', error);
+            const msg = error instanceof Error ? error.message : "Unknown error";
+            setErrorMsg(msg);
+            toast.error('Failed to load booking details');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const checkPreSelectedOffering = (teacherData: any, offeringId: string | null) => {
+        if (!offeringId) return;
+        const offering = teacherData.offerings?.find((o: any) => o._id === offeringId);
+        if (offering) {
+            setSelectedOffering(offering);
+            setStep('child');
         }
     };
 
@@ -95,7 +181,9 @@ const BookingPage = () => {
     const loadAvailableSlots = async () => {
         try {
             setSlotsLoading(true);
-            const slots = await MvpAvailabilityService.getAvailableSlots(teacherId!, selectedDate);
+            // Use the REAL teacher ID from the state, not the URL param (which might be class ID)
+            const activeTeacherId = teacher?._id || teacherId;
+            const slots = await MvpAvailabilityService.getAvailableSlots(activeTeacherId!, selectedDate);
             setAvailableSlots(slots);
         } catch (error) {
             console.error('Failed to load slots:', error);
@@ -128,7 +216,7 @@ const BookingPage = () => {
 
             const booking = await MvpBookingService.createBooking({
                 offeringId: selectedOffering._id,
-                teacherId: teacherId!,
+                teacherId: teacher._id, // Use real teacher ID, not URL param which can be class ID
                 studentName: selectedChild.fullName,
                 studentGrade: selectedChild.gradeLevel,
                 scheduledDate: selectedDate,
@@ -162,8 +250,15 @@ const BookingPage = () => {
             <div className="min-h-screen flex items-center justify-center bg-gray-50">
                 <Card className="max-w-md w-full p-8 text-center">
                     <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-                    <h2 className="text-2xl font-bold mb-2">Teacher Not Found</h2>
-                    <p className="text-gray-600 mb-6">We couldn't find the teacher you're looking for.</p>
+                    <h2 className="text-2xl font-bold mb-2">Teacher or Class Not Found</h2>
+                    <p className="text-gray-600 mb-6">We couldn't find the booking details you're looking for.</p>
+                    {errorMsg && (
+                        <div className="text-red-500 text-xs mb-4 bg-red-50 p-3 rounded text-left overflow-auto max-h-40 border border-red-100">
+                            <p className="font-bold mb-1">Debug Info:</p>
+                            <p className="whitespace-pre-wrap">{errorMsg}</p>
+                            <p className="text-[10px] mt-2 text-gray-400 font-mono">ID: {teacherId}</p>
+                        </div>
+                    )}
                     <Button onClick={() => navigate('/teachers')} className="bg-kidato-purple">
                         Browse Teachers
                     </Button>
