@@ -71,6 +71,7 @@ import ParentProfile from "../pages/parents/ParentProfile"; // MVP: Parent profi
 import ParentsChildren from "../pages/parents/ParentsChildren"; // MVP: My children page
 import ParentsSchedule from "../pages/parents/ParentsSchedule"; // MVP: Schedule page
 import ParentMessaging from "../pages/parents/ParentMessaging";
+import WishlistPage from "../pages/WishlistPage";
 
 // Student Pages
 import Dashboard from "../pages/Dashboard";
@@ -138,6 +139,7 @@ import PaymentCallbackPage from "../pages/PaymentCallbackPage";
 
 // Notifications
 import NotificationsPage from "../pages/NotificationsPage";
+import UserSupportPage from "../pages/UserSupportPage";
 
 const MVPAppRoutes = () => {
   return (
@@ -226,6 +228,16 @@ const MVPAppRoutes = () => {
         element={
           <ProtectedRoute>
             <NotificationsPage />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Support (New) */}
+      <Route
+        path="/support"
+        element={
+          <ProtectedRoute>
+            <UserSupportPage />
           </ProtectedRoute>
         }
       />
@@ -525,6 +537,14 @@ const MVPAppRoutes = () => {
         element={
           <ProtectedRoute>
             <ParentProfile />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/parents-dashboard/wishlist"
+        element={
+          <ProtectedRoute>
+            <WishlistPage />
           </ProtectedRoute>
         }
       />

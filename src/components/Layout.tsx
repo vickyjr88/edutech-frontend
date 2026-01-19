@@ -49,6 +49,9 @@ const Layout = ({ children }: LayoutProps) => {
     // Notifications
     if (p.startsWith('/notifications')) return true;
 
+    // Support
+    if (p.startsWith('/support')) return true;
+
     return false;
   };
 

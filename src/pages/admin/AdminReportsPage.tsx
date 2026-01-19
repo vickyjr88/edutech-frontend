@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { FileDown, Loader2, Users, BookOpen, DollarSign } from 'lucide-react';
+import { FileDown, Loader2, Users, BookOpen, DollarSign, Heart } from 'lucide-react';
 import { adminService } from '@/integrations/api/services/admin.service';
 import { useToast } from '@/hooks/use-toast';
 
@@ -11,7 +11,7 @@ export default function AdminReportsPage() {
     const { toast } = useToast();
     const [loading, setLoading] = useState<string | null>(null);
 
-    const handleDownload = async (type: 'bookings' | 'teachers' | 'revenue') => {
+    const handleDownload = async (type: 'bookings' | 'teachers' | 'revenue' | 'wishlists') => {
         setLoading(type);
         try {
             let response: any;
@@ -29,6 +29,10 @@ export default function AdminReportsPage() {
                 case 'revenue':
                     response = await adminService.exportRevenue();
                     filename = `revenue-export-${new Date().toISOString().split('T')[0]}.csv`;
+                    break;
+                case 'wishlists':
+                    response = await adminService.exportWishlists();
+                    filename = `wishlists-export-${new Date().toISOString().split('T')[0]}.csv`;
                     break;
             }
 
@@ -146,6 +150,33 @@ export default function AdminReportsPage() {
                             className="w-full"
                         >
                             {loading === 'revenue' ? (
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            ) : (
+                                <FileDown className="mr-2 h-4 w-4" />
+                            )}
+                            Export CSV
+                        </Button>
+                    </CardFooter>
+                </Card>
+
+                {/* Wishlist Report */}
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                            <Heart className="h-5 w-5 text-pink-600" />
+                            Wishlist Report
+                        </CardTitle>
+                        <CardDescription>
+                            Export data on what users have added to their wishlists to identify popular courses.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardFooter>
+                        <Button
+                            onClick={() => handleDownload('wishlists')}
+                            disabled={loading === 'wishlists'}
+                            className="w-full"
+                        >
+                            {loading === 'wishlists' ? (
                                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                             ) : (
                                 <FileDown className="mr-2 h-4 w-4" />

@@ -23,6 +23,7 @@ import {
   TrendingUp,
   Edit,
   Eye,
+  HelpCircle,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import MvpTeacherService from '@/integrations/api/services/mvp-teacher.service';
@@ -201,6 +202,14 @@ export default function SimplifiedTeacherDashboard() {
       bgColor: 'bg-rose-100',
       path: '/teacher-resources',
       description: 'Manage materials'
+    },
+    {
+      title: 'Support',
+      icon: HelpCircle,
+      color: 'text-teal-600',
+      bgColor: 'bg-teal-100',
+      path: '/support',
+      description: 'Get help'
     }
   ];
 

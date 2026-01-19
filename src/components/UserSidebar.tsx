@@ -17,7 +17,9 @@ import {
 
   FileText,
   Home,
-  Star
+  Star,
+  Heart,
+  HelpCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
@@ -60,19 +62,23 @@ const UserSidebar = () => {
         { name: "Students", href: "/teacher-students", icon: Users },
         { name: "Resources", href: "/teacher-resources", icon: FileText },
         { name: "Messages", href: "/teacher/messages", icon: MessageSquare },
+        { name: "Support", href: "/support", icon: HelpCircle },
       ],
       parent: [
         { name: "My Children", href: "/parents-dashboard/children", icon: Users },
         { name: "Classes", href: "/parents-dashboard/courses", icon: BookOpen },
+        { name: "Wishlist", href: "/parents-dashboard/wishlist", icon: Heart },
         { name: "Billing", href: "/parents-dashboard/billing", icon: DollarSign },
         { name: "Schedule", href: "/parents-dashboard/schedule", icon: Calendar },
         { name: "Messages", href: "/parent/messages", icon: MessageSquare },
+        { name: "Support", href: "/support", icon: HelpCircle },
       ],
       student: [
         { name: "My Classes", href: "/student/classes", icon: BookOpen },
         { name: "Schedule", href: "/student/schedule", icon: Calendar },
         { name: "Achievements", href: "/student/achievements", icon: Award },
         { name: "Messages", href: "/student/messages", icon: MessageSquare },
+        { name: "Support", href: "/support", icon: HelpCircle },
       ],
       admin: [
         { name: "Users", href: "/admin/users", icon: Users },

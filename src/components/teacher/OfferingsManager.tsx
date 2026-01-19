@@ -94,10 +94,23 @@ export default function OfferingsManager() {
 
   const offeringType = watch('type');
 
-  // Load offerings on mount
+  // Fetch stats separately
+  const [stats, setStats] = useState<any[]>([]);
+
+  // Load offerings and stats on mount
   useEffect(() => {
     loadOfferings();
+    loadStats();
   }, []);
+
+  const loadStats = async () => {
+    try {
+      const statsData = await MvpOfferingService.getMyOfferingStats();
+      setStats(statsData);
+    } catch (e) {
+      console.error("Failed to load offering stats", e);
+    }
+  };
 
   const loadOfferings = async () => {
     try {
@@ -120,6 +133,10 @@ export default function OfferingsManager() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const getStatsForOffering = (id: string) => {
+    return stats.find(s => s.offeringId === id) || { bookingsCount: 0, wishlistCount: 0, earnings: 0 };
   };
 
   const onSubmit = async (data: OfferingFormValues) => {
@@ -546,6 +563,22 @@ export default function OfferingsManager() {
                 <p className="text-sm text-gray-600 mb-4 line-clamp-2">
                   {offering.description}
                 </p>
+
+                {/* Stats Section */}
+                <div className="grid grid-cols-3 gap-2 mb-4 mt-2 p-3 bg-gray-50 rounded-md">
+                  <div className="text-center">
+                    <p className="text-[10px] text-gray-500 uppercase tracking-wider">Bookings</p>
+                    <p className="font-bold text-gray-800 text-sm">{getStatsForOffering(offering._id).bookingsCount}</p>
+                  </div>
+                  <div className="text-center border-l border-gray-200">
+                    <p className="text-[10px] text-gray-500 uppercase tracking-wider">Wishlist</p>
+                    <p className="font-bold text-gray-800 text-sm">{getStatsForOffering(offering._id).wishlistCount}</p>
+                  </div>
+                  <div className="text-center border-l border-gray-200">
+                    <p className="text-[10px] text-gray-500 uppercase tracking-wider">Earnings</p>
+                    <p className="font-bold text-gray-800 text-sm">KES {getStatsForOffering(offering._id).earnings}</p>
+                  </div>
+                </div>
 
                 <div className="space-y-2 mb-4">
                   <div className="flex items-center justify-between text-sm">

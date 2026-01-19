@@ -825,6 +825,10 @@ export const adminService = {
     return api.get<Blob>('/admin/export/revenue', { responseType: 'blob' });
   },
 
+  exportWishlists: async () => {
+    return api.get('/admin/reports/wishlists', { responseType: 'blob' });
+  },
+
   // ==================== PARENT-STUDENT ASSOCIATIONS ====================
 
   /**

@@ -17,6 +17,13 @@ export const userService = {
   },
 
   /**
+   * Get user wishlist
+   */
+  getWishlist: (): Promise<ApiResponse<any[]>> => {
+    return api.get<any[]>('/users/wishlist');
+  },
+
+  /**
    * Add class to wishlist
    */
   addToWishlist: (classId: string): Promise<ApiResponse<any>> => {

@@ -81,6 +81,13 @@ const MvpOfferingService = {
     toggleActive: async (id: string, isActive: boolean): Promise<Offering> => {
         return mvpApiClient.patch<Offering>(`/offerings/${id}/toggle`, { isActive });
     },
+
+    /**
+     * Get offering stats for current teacher
+     */
+    getMyOfferingStats: async (): Promise<any[]> => {
+        return mvpApiClient.get<any[]>('/my-offerings/stats');
+    },
 };
 
 export default MvpOfferingService;

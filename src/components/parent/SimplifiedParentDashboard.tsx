@@ -25,6 +25,8 @@ import {
   Settings,
   User,
   Edit,
+  Heart,
+  HelpCircle,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { mvpApiClient } from '@/integrations/api/mvp-client';
@@ -213,6 +215,18 @@ export default function SimplifiedParentDashboard() {
               className="h-auto py-4 flex flex-col items-center gap-2"
               asChild
             >
+              <Link to="/parents-dashboard/wishlist">
+                <Heart className="h-6 w-6" />
+                <span className="text-sm font-medium">My Wishlist</span>
+                <span className="text-xs text-gray-500">Saved classes</span>
+              </Link>
+            </Button>
+
+            <Button
+              variant="outline"
+              className="h-auto py-4 flex flex-col items-center gap-2"
+              asChild
+            >
               <Link to="/parents-dashboard/courses">
                 <BookOpen className="h-6 w-6" />
                 <span className="text-sm font-medium">My Bookings</span>
@@ -229,6 +243,18 @@ export default function SimplifiedParentDashboard() {
                 <DollarSign className="h-6 w-6" />
                 <span className="text-sm font-medium">Payment History</span>
                 <span className="text-xs text-gray-500">View transactions</span>
+              </Link>
+            </Button>
+
+            <Button
+              variant="outline"
+              className="h-auto py-4 flex flex-col items-center gap-2"
+              asChild
+            >
+              <Link to="/support">
+                <HelpCircle className="h-6 w-6" />
+                <span className="text-sm font-medium">Support</span>
+                <span className="text-xs text-gray-500">Get help</span>
               </Link>
             </Button>
           </div>

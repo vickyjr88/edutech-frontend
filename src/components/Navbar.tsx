@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Menu, X, LogOut, User as UserIcon, Settings, LayoutDashboard } from "lucide-react";
+import { Menu, X, LogOut, User as UserIcon, Settings, LayoutDashboard, HelpCircle } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -133,6 +133,12 @@ const Navbar = () => {
                     <DropdownMenuItem className="cursor-pointer">
                       <Settings className="mr-2 h-4 w-4" />
                       <span>Settings</span>
+                    </DropdownMenuItem>
+                  </Link>
+                  <Link to="/support">
+                    <DropdownMenuItem className="cursor-pointer">
+                      <HelpCircle className="mr-2 h-4 w-4" />
+                      <span>Support</span>
                     </DropdownMenuItem>
                   </Link>
                   <DropdownMenuSeparator />
