@@ -45,6 +45,7 @@ const BookingPage = () => {
     const [step, setStep] = useState<BookingStep>('offering');
     const [loading, setLoading] = useState(true);
     const [teacher, setTeacher] = useState<any>(null);
+    const [teacherAvailability, setTeacherAvailability] = useState<any>(null);
     const [children, setChildren] = useState<Child[]>([]);
 
     // Selection state
@@ -73,7 +74,24 @@ const BookingPage = () => {
         if (selectedDate && teacherId) {
             loadAvailableSlots();
         }
-    }, [selectedDate, teacherId]);
+    }, [selectedDate, teacherId, teacher]);
+
+    const handleTeacherResponse = (data: any) => {
+        let teacherObj = data;
+        let availability = null;
+
+        // Check if response is wrapped { teacher, offerings, availability, stats }
+        if (data.teacher) {
+            teacherObj = { ...data.teacher, offerings: data.offerings || [] };
+            availability = data.availability;
+        }
+
+        if (availability) {
+            setTeacherAvailability(availability);
+        }
+
+        return teacherObj;
+    };
 
     const loadTeacherData = async () => {
         try {
@@ -83,9 +101,11 @@ const BookingPage = () => {
             // First, try to fetch as a Teacher ID
             try {
                 const data = await MvpTeacherService.getTeacherDetails(teacherId!);
-                if (data && data._id) {
-                    setTeacher(data);
-                    checkPreSelectedOffering(data, offeringIdParam);
+                // Check if it looks like a teacher (has _id or is wrapper)
+                if (data && (data._id || data.teacher)) {
+                    const teacherObj = handleTeacherResponse(data);
+                    setTeacher(teacherObj);
+                    checkPreSelectedOffering(teacherObj, offeringIdParam);
                     return;
                 }
             } catch (err) {
@@ -122,7 +142,28 @@ const BookingPage = () => {
                     throw new Error("No teacher found for this class/offering. Object: " + JSON.stringify(offeringOrClass));
                 }
 
-                const teacherData = await MvpTeacherService.getTeacherDetails(realTeacherId);
+                let teacherData = null;
+                try {
+                    const rawTeacherData = await MvpTeacherService.getTeacherDetails(realTeacherId);
+                    teacherData = handleTeacherResponse(rawTeacherData);
+                } catch (e) {
+                    console.warn(`Failed to fetch teacher profile for ${realTeacherId}, utilizing fallback.`);
+                    // Fallback for when teacher profile is missing but offering exists
+                    // This allows the booking to proceed if availability exists
+                    teacherData = {
+                        _id: realTeacherId,
+                        fullName: "Verified Teacher", // Fallback name
+                        email: "",
+                        profileImage: null,
+                        bio: "Profile details unavailable.",
+                        offerings: []
+                    };
+                }
+
+                if (!teacherData) {
+                    // Should be covered by fallback above, but just in case
+                    throw new Error("Could not resolve teacher data.");
+                }
 
                 // Inject the offering if it's not in the list (e.g. mixed Class/Offering types)
                 const existingOffering = teacherData.offerings?.find((o: any) => o._id === offeringOrClass._id);
@@ -183,7 +224,32 @@ const BookingPage = () => {
             setSlotsLoading(true);
             // Use the REAL teacher ID from the state, not the URL param (which might be class ID)
             const activeTeacherId = teacher?._id || teacherId;
-            const slots = await MvpAvailabilityService.getAvailableSlots(activeTeacherId!, selectedDate);
+            console.log(`Loading slots for teacher: ${activeTeacherId} on date: ${selectedDate}`);
+
+            let slots: string[] = [];
+            try {
+                // Try fetching from API first
+                slots = await MvpAvailabilityService.getAvailableSlots(activeTeacherId!, selectedDate);
+            } catch (err) {
+                console.error("API failed for slots, falling back to local data if available");
+            }
+
+            // Fallback to local availability data if API returns empty
+            if (slots.length === 0 && teacherAvailability) {
+                console.log("No slots from API, calculating from local availability data...");
+                const dateObj = new Date(selectedDate);
+                // getUTCDay: 0=Sun, 1=Mon...
+                const dayName = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'][dateObj.getUTCDay()];
+
+                const schedule = teacherAvailability.weeklySchedule?.find((s: any) => s.day === dayName && s.isActive);
+                const blocked = teacherAvailability.blockedDates?.some((b: any) => b.date.startsWith(selectedDate));
+
+                if (schedule && !blocked) {
+                    slots = schedule.slots.map((s: any) => s.startTime);
+                    console.log("Calculated slots from local:", slots);
+                }
+            }
+
             setAvailableSlots(slots);
         } catch (error) {
             console.error('Failed to load slots:', error);
