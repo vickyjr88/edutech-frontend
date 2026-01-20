@@ -19,7 +19,7 @@ export default defineConfig(({ mode }) => ({
   preview: {
     host: "::",
     port: parseInt(process.env.PORT || '80'),
-    allowedHosts: ['demo.kidato.com', 'localhost', '127.0.0.1'],
+    allowedHosts: ['demo.kidato.com', 'localhost', '127.0.0.1', 'kidato-edutech-frontend.onrender.com'],
     headers: {
       'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
       'X-Content-Type-Options': 'nosniff',
