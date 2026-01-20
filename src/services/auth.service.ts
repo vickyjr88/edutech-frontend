@@ -230,6 +230,43 @@ class AuthService {
   }
 
   async submitLoginFlow(flowId: string, values: Record<string, any>): Promise<AuthResponse> { // Changed return type
+    // Check if ORY is disabled - use native auth directly
+    const isOryEnabled = import.meta.env.VITE_ENABLE_ORY === 'true';
+    if (!isOryEnabled) {
+      console.log('ORY disabled, using native login');
+      try {
+        const legacyResponse = await this.loginLegacy(values.identifier, values.password);
+        if (legacyResponse.accessToken && legacyResponse.refreshToken && legacyResponse.user) {
+          localStorage.setItem('kidato_user', JSON.stringify(legacyResponse.user));
+          localStorage.setItem('kidato_access_token', legacyResponse.accessToken);
+          localStorage.setItem('kidato_refresh_token', legacyResponse.refreshToken);
+          return {
+            data: {
+              user: {
+                id: legacyResponse.user.id,
+                email: legacyResponse.user.email,
+                fullName: legacyResponse.user.fullName,
+                role: legacyResponse.user.role,
+                teacherId: legacyResponse.user.teacherId,
+                studentId: legacyResponse.user.studentId,
+                parentId: legacyResponse.user.parentId,
+              },
+              accessToken: legacyResponse.accessToken,
+              refreshToken: legacyResponse.refreshToken,
+              legacy: true
+            }
+          };
+        } else {
+          throw new Error('Login response missing tokens or user data.');
+        }
+      } catch (error: any) {
+        console.error('Native login failed:', error);
+        const errorMessage = error.response?.data?.message || error.message || 'Login failed';
+        throw new Error(errorMessage);
+      }
+    }
+
+    // ORY is enabled - use ORY flow
     try {
       const response = await fetch(`${this.oryProxyUrl}/self-service/login?flow=${flowId}`, {
         method: 'POST',
@@ -318,6 +355,63 @@ class AuthService {
   }
 
   async submitRegistrationFlow(flowId: string, values: Record<string, any>) {
+    // Check if ORY is disabled - use native auth directly
+    const isOryEnabled = import.meta.env.VITE_ENABLE_ORY === 'true';
+    if (!isOryEnabled) {
+      console.log('ORY disabled, using native registration');
+      try {
+        // Extract values from the form (handle both ORY format and direct format)
+        const firstName = values['traits.name.first'] || values.firstName || '';
+        const lastName = values['traits.name.last'] || values.lastName || '';
+        const email = values['traits.email'] || values.email || '';
+        const role = values['traits.role'] || values.role || 'student';
+        const password = values.password || '';
+
+        const legacyResponse = await this.registerLegacy({
+          email,
+          password,
+          fullName: `${firstName} ${lastName}`.trim(),
+          role,
+        });
+
+        if (legacyResponse.accessToken && legacyResponse.refreshToken && legacyResponse.user) {
+          localStorage.setItem('kidato_user', JSON.stringify(legacyResponse.user));
+          localStorage.setItem('kidato_access_token', legacyResponse.accessToken);
+          localStorage.setItem('kidato_refresh_token', legacyResponse.refreshToken);
+          
+          // Return a mock session for compatibility with the form
+          return {
+            session: {
+              id: legacyResponse.user.id,
+              identity: {
+                id: legacyResponse.user.id,
+                traits: {
+                  email: legacyResponse.user.email,
+                  name: {
+                    first: firstName,
+                    last: lastName,
+                  },
+                  role: legacyResponse.user.role,
+                },
+              },
+              expires_at: new Date(Date.now() + 24 * 3600 * 1000).toISOString(),
+            },
+            legacy: true,
+            user: legacyResponse.user,
+            accessToken: legacyResponse.accessToken,
+            refreshToken: legacyResponse.refreshToken,
+          };
+        } else {
+          throw new Error('Registration response missing tokens or user data.');
+        }
+      } catch (error: any) {
+        console.error('Native registration failed:', error);
+        const errorMessage = error.response?.data?.message || error.message || 'Registration failed';
+        throw new Error(errorMessage);
+      }
+    }
+
+    // ORY is enabled - use ORY flow
     try {
       const response = await fetch(`${this.oryProxyUrl}/self-service/registration?flow=${flowId}`, {
         method: 'POST',
@@ -404,6 +498,12 @@ class AuthService {
       }
     }
 
+    // If ORY is disabled, don't try to call ORY API
+    const isOryEnabled = import.meta.env.VITE_ENABLE_ORY === 'true';
+    if (!isOryEnabled) {
+      return null;
+    }
+
     // If no valid tokens in local storage, proceed with Ory API call
     try {
       const response = await fetch(`${this.oryProxyUrl}/sessions/whoami`, {
@@ -459,28 +559,32 @@ class AuthService {
       // Clear local storage immediately
       this.clearLocalSession();
 
-      // Initialize logout flow
-      const response = await fetch(`${this.oryProxyUrl}/self-service/logout/browser`, {
-        method: 'GET',
-        headers: {
-          'Accept': 'application/json',
-        },
-        credentials: 'include',
-      });
+      // Only call ORY logout if ORY is enabled
+      const isOryEnabled = import.meta.env.VITE_ENABLE_ORY === 'true';
+      if (isOryEnabled) {
+        // Initialize logout flow
+        const response = await fetch(`${this.oryProxyUrl}/self-service/logout/browser`, {
+          method: 'GET',
+          headers: {
+            'Accept': 'application/json',
+          },
+          credentials: 'include',
+        });
 
-      if (response.ok) {
-        const logoutFlow = await response.json();
-        // Perform server-side logout
-        if (logoutFlow.logout_url) {
-          await fetch(logoutFlow.logout_url, {
-            method: 'GET',
-            credentials: 'include',
-          });
+        if (response.ok) {
+          const logoutFlow = await response.json();
+          // Perform server-side logout
+          if (logoutFlow.logout_url) {
+            await fetch(logoutFlow.logout_url, {
+              method: 'GET',
+              credentials: 'include',
+            });
+          }
         }
-      }
 
-      // Force clear any remaining session data
-      this.clearLocalSession();
+        // Force clear any remaining session data
+        this.clearLocalSession();
+      }
 
       // Navigate to login page after clearing everything
       window.location.href = '/login';
