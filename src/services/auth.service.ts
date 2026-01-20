@@ -88,6 +88,34 @@ class AuthService {
   public readonly oryProxyUrl = import.meta.env.VITE_ORY_SDK_URL || 'http://localhost:4000'; // Use this directly
 
   async initializeLoginFlow(returnTo?: string): Promise<LoginFlow> {
+    const isOryEnabled = import.meta.env.VITE_ENABLE_ORY === 'true';
+    if (!isOryEnabled) {
+      console.log('Ory disabled, returning mock login flow');
+      return {
+        id: 'mock-login-flow',
+        type: 'browser',
+        expires_at: new Date(Date.now() + 3600000).toISOString(),
+        issued_at: new Date().toISOString(),
+        request_url: window.location.href,
+        state: 'choose_method',
+        ui: {
+          action: '',
+          method: 'POST',
+          nodes: [
+            {
+              group: 'default',
+              type: 'input',
+              attributes: {
+                name: 'csrf_token',
+                type: 'hidden',
+                value: 'mock-csrf-token'
+              }
+            }
+          ]
+        }
+      } as LoginFlow;
+    }
+
     try {
       const response = await fetch(`${this.oryProxyUrl}/self-service/login/browser`, {
         method: 'GET',
@@ -131,6 +159,34 @@ class AuthService {
   }
 
   async initializeRegistrationFlow(returnTo?: string): Promise<RegistrationFlow> {
+    const isOryEnabled = import.meta.env.VITE_ENABLE_ORY === 'true';
+    if (!isOryEnabled) {
+      console.log('Ory disabled, returning mock registration flow');
+      return {
+        id: 'mock-registration-flow',
+        type: 'browser',
+        expires_at: new Date(Date.now() + 3600000).toISOString(),
+        issued_at: new Date().toISOString(),
+        request_url: window.location.href,
+        state: 'choose_method',
+        ui: {
+          action: '',
+          method: 'POST',
+          nodes: [
+            {
+              group: 'default',
+              type: 'input',
+              attributes: {
+                name: 'csrf_token',
+                type: 'hidden',
+                value: 'mock-csrf-token'
+              }
+            }
+          ]
+        }
+      } as RegistrationFlow;
+    }
+
     try {
       const response = await fetch(`${this.oryProxyUrl}/self-service/registration/browser`, {
         method: 'GET',
