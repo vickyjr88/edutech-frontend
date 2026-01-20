@@ -12,6 +12,7 @@ import { authService } from '@/services/auth.service';
 import { RegistrationFlow } from '@ory/client-fetch';
 import { GoogleIcon } from '@/components/ui/icons';
 import { LinkedInLoginButton } from './LinkedInLoginButton';
+import { features } from '@/config/features';
 
 interface OryRegistrationFormProps {
   onSuccess?: () => void;
@@ -886,8 +887,8 @@ export const OryRegistrationForm: React.FC<OryRegistrationFormProps> = ({ onSucc
         )}
       </div>
 
-      {/* Google OAuth Registration - only show if NOT already in Google OAuth flow */}
-      {flow && !isGoogleOAuthFlow && (
+      {/* Google OAuth Registration - only show if NOT already in Google OAuth flow AND ORY is enabled */}
+      {features.auth.ory && flow && !isGoogleOAuthFlow && (
         <>
           <div className="relative">
             <div className="absolute inset-0 flex items-center">

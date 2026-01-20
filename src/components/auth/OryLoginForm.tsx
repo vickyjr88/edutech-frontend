@@ -10,6 +10,7 @@ import { authService } from '@/services/auth.service';
 import { LoginFlow } from '@ory/client-fetch';
 import { GoogleIcon } from '@/components/ui/icons';
 import { LinkedInLoginButton } from './LinkedInLoginButton';
+import { features } from '@/config/features';
 
 interface OryLoginFormProps {
   onSuccess?: () => void;
@@ -565,8 +566,8 @@ export const OryLoginForm: React.FC<OryLoginFormProps> = ({ onSuccess, redirectT
         </div>
       )}
 
-      {/* OAuth Login Options */}
-      {flow && !prefilledFields.has('email') && (
+      {/* OAuth Login Options - Only show when ORY is enabled */}
+      {features.auth.ory && flow && !prefilledFields.has('email') && (
         <>
           <div className="relative">
             <div className="absolute inset-0 flex items-center">

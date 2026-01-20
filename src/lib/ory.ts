@@ -1,5 +1,8 @@
 import { Configuration, FrontendApi } from '@ory/client-fetch';
 
+// Check if ORY is enabled via feature flag
+const isOryEnabled = import.meta.env.VITE_ENABLE_ORY === 'true';
+
 // Your Ory Network project's public API URL
 // Replace <project_slug> with your actual project slug from Ory Console
 const ORY_BASE_URL = `https://${import.meta.env.VITE_ORY_PROJECT_SLUG}.projects.oryapis.com`;
@@ -8,15 +11,25 @@ const ORY_BASE_URL = `https://${import.meta.env.VITE_ORY_PROJECT_SLUG}.projects.
 const ORY_PROXY_URL = import.meta.env.VITE_ORY_SDK_URL || 'http://localhost:4000';
 
 // Initialize Ory client for local proxy (used by default for browser flows)
-export const ory = new FrontendApi(
-  new Configuration({
-    basePath: ORY_PROXY_URL,
-    credentials: 'include',
-  }),
-);
+// Only initialize if ORY is enabled
+export const ory = isOryEnabled
+  ? new FrontendApi(
+      new Configuration({
+        basePath: ORY_PROXY_URL,
+        credentials: 'include',
+      }),
+    )
+  : null;
+
+// Export flag for checking if ORY is enabled
+export const oryEnabled = isOryEnabled;
 
 // Utility function to check if Ory Network is reachable
 export async function checkOryAvailability(): Promise<boolean> {
+  // If ORY is disabled via feature flag, return false immediately
+  if (!isOryEnabled) {
+    return false;
+  }
   try {
     const response = await fetch(`${ORY_PROXY_URL}/health/ready`, {
       method: 'GET',

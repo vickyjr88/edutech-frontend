@@ -25,8 +25,12 @@ export const features = {
   auth: {
     enabled: true,
     emailPassword: true,
-    oauth: true,
-    linkedin: getEnvBoolean('VITE_LINKEDIN_CLIENT_ID', false), // Enable when configured
+    // ORY authentication - when disabled, only native auth is used
+    ory: getEnvBoolean('VITE_ENABLE_ORY', false),
+    // OAuth providers - requires ORY to be enabled
+    oauth: getEnvBoolean('VITE_ENABLE_ORY', false), // OAuth depends on ORY
+    google: getEnvBoolean('VITE_ENABLE_ORY', false), // Google login via ORY
+    linkedin: getEnvBoolean('VITE_ENABLE_ORY', false) && getEnvBoolean('VITE_LINKEDIN_CLIENT_ID', false), // LinkedIn when configured
   },
 
   teacher: {
