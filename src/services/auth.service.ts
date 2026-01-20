@@ -608,7 +608,31 @@ class AuthService {
 
   // Enhanced login method with better error handling
   async login(credentials: { email: string; password: string }): Promise<AuthResponse> {
+    const isOryEnabled = import.meta.env.VITE_ENABLE_ORY === 'true';
+
     try {
+      if (!isOryEnabled) {
+        console.log('Ory disabled, using legacy login...');
+        const legacyResponse = await this.loginLegacy(credentials.email, credentials.password);
+        if (legacyResponse.accessToken && legacyResponse.refreshToken && legacyResponse.user) {
+          this.setSession({
+            user: legacyResponse.user,
+            token: legacyResponse.accessToken,
+            refreshToken: legacyResponse.refreshToken,
+            expiresAt: this.calculateExpiryTime(24),
+          });
+          return {
+            data: {
+              user: legacyResponse.user,
+              accessToken: legacyResponse.accessToken,
+              refreshToken: legacyResponse.refreshToken,
+              legacy: true
+            }
+          };
+        }
+        throw new Error('Legacy login response missing tokens or user data.');
+      }
+
       // Attempt Ory login flow
       const flow = await this.initializeLoginFlow();
       const csrfToken = flow.ui.nodes.find(node => node.attributes.name === 'csrf_token')?.attributes.value;
@@ -661,6 +685,31 @@ class AuthService {
       throw new Error('Login failed: No session or user data returned.');
     } catch (error: any) {
       console.error('Login error:', error);
+      // Fallback to legacy login if Ory fails unexpectedly in the catch block (double safety)
+      if (isOryEnabled) {
+        console.log('Ory login failed with error, attempting legacy fallback...');
+        try {
+          const legacyResponse = await this.loginLegacy(credentials.email, credentials.password);
+          if (legacyResponse.accessToken && legacyResponse.refreshToken && legacyResponse.user) {
+            this.setSession({
+              user: legacyResponse.user,
+              token: legacyResponse.accessToken,
+              refreshToken: legacyResponse.refreshToken,
+              expiresAt: this.calculateExpiryTime(24),
+            });
+            return {
+              data: {
+                user: legacyResponse.user,
+                accessToken: legacyResponse.accessToken,
+                refreshToken: legacyResponse.refreshToken,
+                legacy: true
+              }
+            };
+          }
+        } catch (legacyErr) {
+          console.error('Legacy fallback also failed:', legacyErr);
+        }
+      }
       return { error };
     }
   }
@@ -672,7 +721,31 @@ class AuthService {
     fullName: string;
     role: string;
   }): Promise<AuthResponse> {
+    const isOryEnabled = import.meta.env.VITE_ENABLE_ORY === 'true';
+
     try {
+      if (!isOryEnabled) {
+        console.log('Ory disabled, using legacy registration...');
+        const legacyResponse = await this.registerLegacy(userData);
+        if (legacyResponse.accessToken && legacyResponse.refreshToken && legacyResponse.user) {
+          this.setSession({
+            user: legacyResponse.user,
+            token: legacyResponse.accessToken,
+            refreshToken: legacyResponse.refreshToken,
+            expiresAt: this.calculateExpiryTime(24),
+          });
+          return {
+            data: {
+              user: legacyResponse.user,
+              accessToken: legacyResponse.accessToken,
+              refreshToken: legacyResponse.refreshToken,
+              legacy: true
+            }
+          };
+        }
+        throw new Error('Legacy registration response missing tokens or user data.');
+      }
+
       const flow = await this.initializeRegistrationFlow();
       const csrfToken = flow.ui.nodes.find(node => node.attributes.name === 'csrf_token')?.attributes.value;
       const result = await this.submitRegistrationFlow(flow.id, {
@@ -710,9 +783,35 @@ class AuthService {
       throw new Error('No session returned from registration');
     } catch (error: any) {
       console.error('Registration error:', error);
-      if (error.response?.data?.ui) {
+      if (isOryEnabled && error.response?.data?.ui) {
         return error.response.data;
       }
+      // Fallback to legacy registration if Ory fails unexpectedly
+      if (isOryEnabled) {
+        console.log('Ory registration failed, attempting legacy fallback...');
+        try {
+          const legacyResponse = await this.registerLegacy(userData);
+          if (legacyResponse.accessToken && legacyResponse.refreshToken && legacyResponse.user) {
+            this.setSession({
+              user: legacyResponse.user,
+              token: legacyResponse.accessToken,
+              refreshToken: legacyResponse.refreshToken,
+              expiresAt: this.calculateExpiryTime(24),
+            });
+            return {
+              data: {
+                user: legacyResponse.user,
+                accessToken: legacyResponse.accessToken,
+                refreshToken: legacyResponse.refreshToken,
+                legacy: true
+              }
+            };
+          }
+        } catch (legacyErr) {
+          console.error('Legacy fallback registration also failed:', legacyErr);
+        }
+      }
+
       return { error };
     }
   }
