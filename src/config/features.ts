@@ -160,9 +160,11 @@ export const isDevelopment = import.meta.env.DEV;
 export const isProduction = import.meta.env.PROD;
 
 // API URLs
+const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1';
 export const API_CONFIG = {
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1',
-  mvpURL: import.meta.env.VITE_MVP_API_URL || 'http://localhost:3000/api/v1/mvp',
+  baseURL,
+  // Derive mvpURL from baseURL if VITE_MVP_API_URL is not set
+  mvpURL: import.meta.env.VITE_MVP_API_URL || `${baseURL}/mvp`,
   timeout: parseInt(import.meta.env.VITE_API_TIMEOUT || '10000', 10),
 };
 
