@@ -10,7 +10,8 @@ import { cmsApiService, MenuItem } from "@/services/cms-api.service";
 import { useToast } from "@/components/ui/use-toast";
 
 const MenuEditor = () => {
-  const { identifier } = useParams();
+  const { id } = useParams();
+  const identifier = id;
   const navigate = useNavigate();
   const { toast } = useToast();
   const isEdit = !!identifier;
