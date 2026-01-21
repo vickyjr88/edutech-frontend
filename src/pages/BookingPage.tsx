@@ -292,9 +292,10 @@ const BookingPage = () => {
 
             toast.success('Session booked successfully!');
             navigate(`/payment/${booking._id}`);
-        } catch (error) {
+        } catch (error: any) {
             console.error('Booking failed:', error);
-            toast.error('Failed to create booking');
+            const errorMessage = error.response?.data?.message || 'Failed to create booking';
+            toast.error(errorMessage);
         } finally {
             setBookingLoading(false);
         }
