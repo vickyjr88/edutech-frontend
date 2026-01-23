@@ -245,13 +245,14 @@ export const teacherService = {
             if (filters.search) params.search = filters.search;
             if (filters.subject && filters.subject !== 'all') params.subject = filters.subject;
             if (filters.curriculum && filters.curriculum !== 'all') params.curriculum = filters.curriculum;
-            if (filters.grade && filters.grade !== 'all') params.grade = filters.grade;
+            // Map 'grade' to 'gradeLevel' as expected by MVP endpoint
+            if (filters.grade && filters.grade !== 'all') params.gradeLevel = filters.grade;
             if (filters.availabilityDay && filters.availabilityDay !== 'all') params.availabilityDay = filters.availabilityDay;
             if (filters.availabilityStart) params.availabilityStart = filters.availabilityStart;
             if (filters.availabilityEnd) params.availabilityEnd = filters.availabilityEnd;
         }
 
-        return api.get<TeacherProfile[]>('/teachers', { params });
+        return api.get<TeacherProfile[]>('/mvp/teachers/approved', { params });
     },
 
     getCurrentProfile: (): Promise<ApiResponse<TeacherProfile>> => {

@@ -371,7 +371,7 @@ const TeachersList = ({ onViewTeacher, onAddTeacher }: TeachersListProps) => {
                     <TableCell>{teacher.email || 'N/A'}</TableCell>
                     <TableCell>{teacher.phoneNumber || 'N/A'}</TableCell>
                     <TableCell>
-                      <div className="flex gap-1">
+                      <div className="flex gap-1 flex-wrap">
                         {teacher.isSuspended ? (
                           <Badge variant="destructive" className="gap-1">
                             <Shield className="h-3 w-3" />
@@ -381,6 +381,12 @@ const TeachersList = ({ onViewTeacher, onAddTeacher }: TeachersListProps) => {
                           <Badge variant="default" className="bg-green-600">Active</Badge>
                         ) : (
                           <Badge variant="secondary">Inactive</Badge>
+                        )}
+                        {/* Approval Status */}
+                        {teacher.isApproved ? (
+                          <Badge variant="outline" className="text-xs border-blue-500 text-blue-600">Approved</Badge>
+                        ) : (
+                          <Badge variant="outline" className="text-xs border-yellow-500 text-yellow-600 bg-yellow-50">Pending</Badge>
                         )}
                       </div>
                     </TableCell>
