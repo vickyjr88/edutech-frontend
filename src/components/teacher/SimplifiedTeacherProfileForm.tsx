@@ -23,6 +23,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { MvpTeacherService } from '@/integrations/api/services/mvp-teacher.service';
 import useTeachingConfig from '@/hooks/use-teaching-config';
 import { MultiSelectAutocomplete } from '@/components/ui/multi-select-autocomplete';
+import { useQueryClient } from '@tanstack/react-query';
 
 // Validation Schema
 const profileSchema = z.object({
@@ -76,6 +77,7 @@ interface Certification {
 export default function SimplifiedTeacherProfileForm() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   // Load teaching config
   const { curricula, subjects: subjectOptions, gradeLevels: gradeLevelOptions, isLoading: isConfigLoading } = useTeachingConfig();
@@ -107,9 +109,11 @@ export default function SimplifiedTeacherProfileForm() {
 
   // Load existing profile data if available
   useEffect(() => {
+    let didCancel = false;
+
     const loadExistingProfile = async () => {
       if (!user?.id) {
-        setIsLoading(false);
+        if (!didCancel) setIsLoading(false);
         return;
       }
 
@@ -117,7 +121,7 @@ export default function SimplifiedTeacherProfileForm() {
         // Try to get existing profile using MVP endpoint
         const profile = await MvpTeacherService.getCurrentProfile();
 
-        if (profile) {
+        if (profile && !didCancel) {
           console.log('Loaded existing profile:', profile);
           setExistingProfile(profile);
 
@@ -158,12 +162,16 @@ export default function SimplifiedTeacherProfileForm() {
       } catch (error) {
         console.log('No existing profile found, create new one');
       } finally {
-        setIsLoading(false);
+        if (!didCancel) setIsLoading(false);
       }
     };
 
     loadExistingProfile();
-  }, [user?.id, reset]);
+
+    return () => {
+      didCancel = true;
+    };
+  }, [user?.id]);
 
   const selectedCurriculums = watch('curriculums') || [];
   const selectedSubjects = watch('subjects') || [];
@@ -316,6 +324,10 @@ export default function SimplifiedTeacherProfileForm() {
       }
 
       toast.success('Profile saved successfully! Awaiting admin approval.');
+
+      // Invalidate current profile queries to ensure other components see updated data
+      queryClient.invalidateQueries({ queryKey: ['mvpTeacherProfile'] });
+      queryClient.invalidateQueries({ queryKey: ['currentTeacherProfile'] });
 
       // Redirect to dashboard
       setTimeout(() => {

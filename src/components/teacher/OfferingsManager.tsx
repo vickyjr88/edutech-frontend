@@ -29,7 +29,8 @@ import { useToast } from '@/hooks/use-toast';
 import { useConfirmationDialog } from '@/components/ui/confirmation-dialog';
 import { mvpApiClient } from '@/integrations/api/mvp-client';
 import MvpOfferingService, { Offering as ServiceOffering } from '@/integrations/api/services/mvp-offering.service';
-import { useGetCurrentTeacherProfile } from '@/hooks/use-teacher-service';
+import { useGetMvpTeacherProfile } from '@/hooks/use-mvp-teacher-profile';
+import { MvpTeacherService } from '@/integrations/api/services/mvp-teacher.service';
 
 // Offering types for MVP
 export type OfferingType = 'one-time' | 'monthly-package' | 'course';
@@ -80,7 +81,7 @@ export default function OfferingsManager() {
   const initialLoadDone = useRef(false);
 
   // Fetch teacher profile to get subjects, curricula, and grade levels
-  const { data: teacherProfile, isLoading: isProfileLoading } = useGetCurrentTeacherProfile();
+  const { data: teacherProfile, isLoading: isProfileLoading } = useGetMvpTeacherProfile();
 
   const {
     register,
@@ -107,19 +108,38 @@ export default function OfferingsManager() {
   // Extract unique subjects, curricula, and grade levels from teacher profile
   const getUniqueSubjects = () => {
     if (!teacherProfile?.subjects) return [];
+
+    // MVP Structure (string[])
+    if (Array.isArray(teacherProfile.subjects) && (teacherProfile.subjects.length === 0 || typeof teacherProfile.subjects[0] === 'string')) {
+      return teacherProfile.subjects as string[];
+    }
+
+    // Legacy Structure (object array) Fallback
     const subjects = new Set<string>();
-    teacherProfile.subjects.forEach((subject: any) => {
-      if (subject.subject) subjects.add(subject.subject);
+    (teacherProfile.subjects as any[]).forEach((subject: any) => {
+      if (typeof subject === 'string') subjects.add(subject);
+      else if (subject && subject.subject) subjects.add(subject.subject);
     });
     return Array.from(subjects).sort();
   };
 
   const getUniqueCurricula = () => {
-    if (!teacherProfile?.subjects) return [];
+    if (!teacherProfile?.curriculums && !teacherProfile?.subjects) return [];
+
     const curricula = new Set<string>();
-    teacherProfile.subjects.forEach((subject: any) => {
-      if (subject.curriculum) curricula.add(subject.curriculum);
-    });
+
+    // MVP Structure (curriculums: string[])
+    if (Array.isArray(teacherProfile.curriculums)) {
+      teacherProfile.curriculums.forEach(c => curricula.add(c));
+    }
+
+    // Legacy Structure (subjects[].curriculum)
+    if (Array.isArray(teacherProfile.subjects)) {
+      teacherProfile.subjects.forEach((subject: any) => {
+        if (subject && subject.curriculum) curricula.add(subject.curriculum);
+      });
+    }
+
     // Also check experience for curricula
     if (teacherProfile?.experience) {
       teacherProfile.experience.forEach((exp: any) => {
@@ -132,11 +152,22 @@ export default function OfferingsManager() {
   };
 
   const getUniqueGradeLevels = () => {
-    if (!teacherProfile?.subjects) return [];
+    if (!teacherProfile?.gradeLevels && !teacherProfile?.subjects) return [];
+
     const gradeLevels = new Set<string>();
-    teacherProfile.subjects.forEach((subject: any) => {
-      if (subject.gradeLevel) gradeLevels.add(subject.gradeLevel);
-    });
+
+    // MVP Structure (gradeLevels: string[])
+    if (Array.isArray(teacherProfile.gradeLevels)) {
+      teacherProfile.gradeLevels.forEach(g => gradeLevels.add(g));
+    }
+
+    // Legacy Structure (subjects[].gradeLevel)
+    if (Array.isArray(teacherProfile.subjects)) {
+      teacherProfile.subjects.forEach((subject: any) => {
+        if (subject && subject.gradeLevel) gradeLevels.add(subject.gradeLevel);
+      });
+    }
+
     // Also check experience for grades
     if (teacherProfile?.experience) {
       teacherProfile.experience.forEach((exp: any) => {
@@ -377,7 +408,7 @@ export default function OfferingsManager() {
                       </h3>
                       <p className="mt-2 text-sm text-amber-700">
                         To create offerings, you need to add your teaching expertise (subjects, curricula, and grade levels) in your profile first.
-                        Visit your <a href="/teacher-profile-journey" className="font-medium underline">Teaching Expertise</a> section to add this information.
+                        Visit your <a href="/teacher-profile-setup" className="font-medium underline">Teaching Expertise</a> section to add this information.
                       </p>
                     </div>
                   </div>

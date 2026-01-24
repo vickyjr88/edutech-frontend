@@ -3,6 +3,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode, useRe
 import { Session } from "@ory/client-fetch";
 import { authService } from "../services/auth.service";
 import api from "../lib/axios";
+import { tokenRefreshManager } from "../integrations/api/auth-refresh";
 
 interface User {
   id: string;
@@ -114,26 +115,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (storedAccessToken && storedRefreshToken && storedUser) {
         try {
           const user = JSON.parse(storedUser);
-          // Try to refresh the legacy tokens to get updated user data with teacherId
-          const refreshResponse = await api.post('/auth/refresh-token', {
-            refreshToken: storedRefreshToken
-          });
+          // Use the unified refresh manager to get updated tokens and user data
+          const accessToken = await tokenRefreshManager.refreshToken();
+          const refreshedUserJson = localStorage.getItem('kidato_user');
+          const refreshedUser = refreshedUserJson ? JSON.parse(refreshedUserJson) : null;
 
-          if (refreshResponse.status === 200) {
-            const refreshData = refreshResponse.data;
-            if (refreshData.user && refreshData.accessToken && refreshData.refreshToken) {
-              // Update localStorage with fresh tokens and user data
-              localStorage.setItem('kidato_access_token', refreshData.accessToken);
-              localStorage.setItem('kidato_refresh_token', refreshData.refreshToken);
-              localStorage.setItem('kidato_user', JSON.stringify(refreshData.user));
-
-              return {
-                id: refreshData.user.id,
-                teacherId: refreshData.user.teacherId,
-                studentId: refreshData.user.studentId,
-                parentId: refreshData.user.parentId,
-              };
-            }
+          if (refreshedUser) {
+            return {
+              id: refreshedUser.id,
+              teacherId: refreshedUser.teacherId,
+              studentId: refreshedUser.studentId,
+              parentId: refreshedUser.parentId,
+            };
           }
 
           // If refresh fails but we have stored user data, use it
@@ -211,26 +204,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setSession(null);
   };
 
-  const updateUserAndTokens = (data: { user: any; accessToken: string; refreshToken: string }) => {
-    const { user: newUserData, accessToken, refreshToken } = data;
-    const savedUser = localStorage.getItem('kidato_user');
-    if (savedUser) {
-      const user = JSON.parse(savedUser);
-      // Update all user fields including role-specific IDs
-      user.id = newUserData.id;
-      user.teacherId = newUserData.teacherId;
-      user.studentId = newUserData.studentId;
-      user.parentId = newUserData.parentId;
-      user.phoneNumber = newUserData.phoneNumber;
-      user.alternativePhoneNumber = newUserData.alternativePhoneNumber;
-      user.bio = newUserData.bio;
-      user.fullName = newUserData.fullName || user.fullName;
-      setUser(user);
-      localStorage.setItem('kidato_user', JSON.stringify(user));
-    }
-    localStorage.setItem('kidato_access_token', accessToken);
-    localStorage.setItem('kidato_refresh_token', refreshToken);
-  };
 
   useEffect(() => {
     if (hasCheckedSession.current) {
@@ -249,7 +222,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           };
           const storedUser = localStorage.getItem('kidato_user');
           const isLegacyUser = storedUser ? JSON.parse(storedUser).legacy : false;
-          if (!isLegacyUser) await constructAndPersistUser(fixedSession as Session);
+          if (!isLegacyUser) await constructAndPersistUser(fixedSession as any as Session);
         } else {
           console.log('No session found, clearing user data');
           clearUserData();
@@ -265,7 +238,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     checkSession();
   }, []);
 
-  const signOut = async () => {
+  const signOut = React.useCallback(async () => {
     try {
       // Clear user data first to prevent any authentication loops
       clearUserData();
@@ -283,9 +256,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         window.location.href = '/login';
       }
     }
-  };
+  }, []);
 
-  const retryBackendUserFetch = async () => {
+  const updateUserAndTokens = React.useCallback((data: { user: any; accessToken: string; refreshToken: string }) => {
+    const { user: newUserData, accessToken, refreshToken } = data;
+    const savedUser = localStorage.getItem('kidato_user');
+    if (savedUser) {
+      const user = JSON.parse(savedUser);
+      // Update all user fields including role-specific IDs
+      const updatedUser = {
+        ...user,
+        id: newUserData.id,
+        teacherId: newUserData.teacherId,
+        studentId: newUserData.studentId,
+        parentId: newUserData.parentId,
+        phoneNumber: newUserData.phoneNumber,
+        alternativePhoneNumber: newUserData.alternativePhoneNumber,
+        bio: newUserData.bio,
+        fullName: newUserData.fullName || user.fullName,
+      };
+      setUser(updatedUser);
+      localStorage.setItem('kidato_user', JSON.stringify(updatedUser));
+    }
+    localStorage.setItem('kidato_access_token', accessToken);
+    localStorage.setItem('kidato_refresh_token', refreshToken);
+  }, []);
+
+  const retryBackendUserFetch = React.useCallback(async () => {
     if (!session && !user) {
       console.error('No active session or user to retry backend user fetch');
       return;
@@ -359,10 +356,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [user, session]);
+
+  const contextValue = React.useMemo(() => ({
+    user,
+    session,
+    isLoading,
+    signOut,
+    updateUserAndTokens,
+    retryBackendUserFetch
+  }), [user, session, isLoading, signOut, updateUserAndTokens, retryBackendUserFetch]);
 
   return (
-    <AuthContext.Provider value={{ user, session, isLoading, signOut, updateUserAndTokens, retryBackendUserFetch }}>
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   );

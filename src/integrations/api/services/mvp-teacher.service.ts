@@ -109,16 +109,31 @@ export const MvpTeacherService = {
     /**
      * Get current user's teacher profile
      */
+    currentProfilePromise: null as Promise<MvpTeacherProfileResponse | null> | null,
+
     getCurrentProfile: async (): Promise<MvpTeacherProfileResponse | null> => {
-        try {
-            return await mvpApiClient.get<MvpTeacherProfileResponse>('/teacher-profiles/me');
-        } catch (error: any) {
-            // Return null if profile not found
-            if (error.response?.status === 404) {
-                return null;
-            }
-            throw error;
+        if (MvpTeacherService.currentProfilePromise) {
+            return MvpTeacherService.currentProfilePromise;
         }
+
+        MvpTeacherService.currentProfilePromise = (async () => {
+            try {
+                return await mvpApiClient.get<MvpTeacherProfileResponse>('/teacher-profiles/me');
+            } catch (error: any) {
+                // Return null if profile not found
+                if (error.response?.status === 404) {
+                    return null;
+                }
+                throw error;
+            } finally {
+                // Reset the promise after it completes (with a small delay to catch near-simultaneous calls)
+                setTimeout(() => {
+                    MvpTeacherService.currentProfilePromise = null;
+                }, 1000);
+            }
+        })();
+
+        return MvpTeacherService.currentProfilePromise;
     },
 
     /**

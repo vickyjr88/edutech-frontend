@@ -2,6 +2,7 @@
 import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
 import { authService } from './services/auth.service';
 import { API_CONFIG } from '@/config/features';
+import { tokenRefreshManager } from './auth-refresh';
 
 export interface ApiResponse<T> {
     data: T | null;
@@ -42,32 +43,15 @@ class ApiClient {
                     originalRequest._retry = true;
 
                     try {
-                        const refreshToken = localStorage.getItem('kidato_refresh_token');
-                        if (refreshToken) {
-                            const response = await this.client.post('/auth/refresh-token', {
-                                refreshToken: refreshToken
-                            });
+                        const accessToken = await tokenRefreshManager.refreshToken();
 
-                            const { accessToken, refreshToken: newRefreshToken } = response.data;
-                            
-                            // Update stored tokens
-                            localStorage.setItem('kidato_access_token', accessToken);
-                            if (newRefreshToken) {
-                                localStorage.setItem('kidato_refresh_token', newRefreshToken);
-                            }
-
-                            // Update the Authorization header and retry the original request
-                            originalRequest.headers.Authorization = `Bearer ${accessToken}`;
-                            return this.client(originalRequest);
-                        }
+                        // Update the Authorization header and retry the original request
+                        originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+                        return this.client(originalRequest);
                     } catch (refreshError) {
-                        // Refresh failed, clear tokens and redirect to login
-                        localStorage.removeItem('kidato_access_token');
-                        localStorage.removeItem('kidato_refresh_token');
-                        localStorage.removeItem('kidato_user');
-                        
-                        // You may want to redirect to login page here
+                        // Refresh failed, manager already cleared tokens
                         window.location.href = '/login';
+                        return Promise.reject(refreshError);
                     }
                 }
 

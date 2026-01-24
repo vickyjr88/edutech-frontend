@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 const TopBar = ({ toggleSidebar }: { toggleSidebar?: () => void }) => {
-    const { user, signOut } = useAuth();
+    const { user, signOut, isLoading } = useAuth();
     const location = useLocation();
     const [unreadCount, setUnreadCount] = useState(0);
 
@@ -54,12 +54,14 @@ const TopBar = ({ toggleSidebar }: { toggleSidebar?: () => void }) => {
     };
 
     useEffect(() => {
-        if (!user) return;
+        if (!user?.id || isLoading) return;
 
         const fetchStats = async () => {
             try {
                 const stats = await notificationService.getStats();
-                setUnreadCount(stats.unreadCount);
+                if (stats) {
+                    setUnreadCount(stats.unreadCount);
+                }
             } catch (error) {
                 console.error("Failed to fetch notification stats", error);
             }
@@ -70,7 +72,7 @@ const TopBar = ({ toggleSidebar }: { toggleSidebar?: () => void }) => {
         // Simple polling for now
         const interval = setInterval(fetchStats, 60000);
         return () => clearInterval(interval);
-    }, [user]);
+    }, [user?.id, isLoading]);
 
     if (!user) return null;
 

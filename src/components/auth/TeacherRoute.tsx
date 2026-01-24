@@ -51,15 +51,15 @@ const TeacherRoute = ({ children, requireProfileComplete = true }: TeacherRouteP
     };
 
     checkTeacherProfile();
-  }, [user, isLoading]);
+  }, [user?.id, user?.teacherId, isLoading]);
 
-  // Show loading indicator while checking authentication and profile
-  if (isLoading || isCheckingProfile) {
+  // Show loading indicator while checking authentication
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-          <p className="text-gray-500">Loading your profile...</p>
+          <p className="text-gray-500">Authenticating...</p>
         </div>
       </div>
     );
@@ -73,6 +73,18 @@ const TeacherRoute = ({ children, requireProfileComplete = true }: TeacherRouteP
   // Redirect to student dashboard if not a teacher
   if (user.role !== 'teacher') {
     return <Navigate to="/student-dashboard" replace />;
+  }
+
+  // Show loading indicator ONLY if we strictly require a complete profile and are still checking
+  if (requireProfileComplete && isCheckingProfile) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+          <p className="text-gray-500">Checking profile status...</p>
+        </div>
+      </div>
+    );
   }
 
   // if (!user.teacherId) {

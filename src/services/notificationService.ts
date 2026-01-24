@@ -84,10 +84,27 @@ export const notificationService = {
         };
     },
 
+    statsPromise: null as Promise<NotificationStats> | null,
+
     async getStats(): Promise<NotificationStats> {
-        const response = await api.get<NotificationStats>('/notifications/me/stats');
-        if (response.error) throw new Error(response.error.message);
-        return response.data as NotificationStats;
+        if (notificationService.statsPromise) {
+            return notificationService.statsPromise;
+        }
+
+        notificationService.statsPromise = (async () => {
+            try {
+                const response = await api.get<NotificationStats>('/notifications/me/stats');
+                if (response.error) throw new Error(response.error.message);
+                return response.data as NotificationStats;
+            } finally {
+                // Reset promise after a short time
+                setTimeout(() => {
+                    notificationService.statsPromise = null;
+                }, 1000);
+            }
+        })();
+
+        return notificationService.statsPromise;
     },
 
     async markAsRead(notificationIds: string[]): Promise<{ modifiedCount: number }> {

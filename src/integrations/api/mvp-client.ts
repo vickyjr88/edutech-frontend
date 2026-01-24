@@ -9,6 +9,7 @@
 
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 import { API_CONFIG } from '@/config/features';
+import { tokenRefreshManager } from './auth-refresh';
 
 class MVPApiClient {
   private client: AxiosInstance;
@@ -48,25 +49,13 @@ class MVPApiClient {
           originalRequest._retry = true;
 
           try {
-            const refreshToken = localStorage.getItem('refreshToken');
-            if (refreshToken) {
-              // Try to refresh token
-              const response = await axios.post(
-                `${API_CONFIG.baseURL}/auth/refresh`,
-                { refreshToken }
-              );
+            const accessToken = await tokenRefreshManager.refreshToken();
 
-              const { accessToken } = response.data;
-              localStorage.setItem('accessToken', accessToken);
-
-              // Retry original request with new token
-              originalRequest.headers.Authorization = `Bearer ${accessToken}`;
-              return this.client(originalRequest);
-            }
+            // Retry original request with new token
+            originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+            return this.client(originalRequest);
           } catch (refreshError) {
-            // Refresh failed, logout user
-            localStorage.removeItem('accessToken');
-            localStorage.removeItem('refreshToken');
+            // Refresh failed, manager already cleared tokens
             window.location.href = '/login';
             return Promise.reject(refreshError);
           }

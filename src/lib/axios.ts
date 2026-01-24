@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { tokenRefreshManager } from '../integrations/api/auth-refresh';
 
 // Create axios instance with default configuration
 const api = axios.create({
@@ -17,7 +18,7 @@ api.interceptors.request.use(
     if (accessToken) {
       config.headers.Authorization = `Bearer ${accessToken}`;
     }
-    
+
     return config;
   },
   (error) => {
@@ -38,32 +39,15 @@ api.interceptors.response.use(
       originalRequest._retry = true;
 
       try {
-        const refreshToken = localStorage.getItem('kidato_refresh_token');
-        if (refreshToken) {
-          const refreshResponse = await axios.post(
-            `${import.meta.env.VITE_API_URL}/auth/refresh-token`,
-            { refreshToken },
-            { headers: { 'Content-Type': 'application/json' } }
-          );
+        const accessToken = await tokenRefreshManager.refreshToken();
 
-          if (refreshResponse.data.accessToken) {
-            localStorage.setItem('kidato_access_token', refreshResponse.data.accessToken);
-            localStorage.setItem('kidato_refresh_token', refreshResponse.data.refreshToken);
-            
-            // Update the original request with new token
-            originalRequest.headers.Authorization = `Bearer ${refreshResponse.data.accessToken}`;
-            
-            // Retry the original request
-            return api(originalRequest);
-          }
-        }
+        // Update the original request with new token
+        originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+
+        // Retry the original request
+        return api(originalRequest);
       } catch (refreshError) {
-        // Refresh failed, redirect to login
-        localStorage.removeItem('kidato_access_token');
-        localStorage.removeItem('kidato_refresh_token');
-        localStorage.removeItem('kidato_user');
-        localStorage.removeItem('kidato_session_id');
-        
+        // Refresh failed, manager already cleared tokens
         // Redirect to login page
         window.location.href = '/login';
         return Promise.reject(refreshError);
