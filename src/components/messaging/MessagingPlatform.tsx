@@ -421,13 +421,15 @@ export default function MessagingPlatform() {
   return (
     <div className="bg-white rounded-lg shadow overflow-hidden h-[calc(100vh-140px)] flex">
       {/* Left sidebar - Channels and DMs */}
-      <div className="w-64 bg-gray-900 text-white flex flex-col border-r border-gray-800">
-        <div className="p-4 border-b border-gray-800">
+      {/* Left sidebar - Channels and DMs */}
+      <div className="w-64 bg-white text-gray-900 flex flex-col border-r border-gray-200">
+        {/* Sidebar Header - Removed as requested */}
+        {/* <div className="p-4 border-b border-gray-200">
           <h2 className="text-xl font-bold">Messages</h2>
-          <p className="text-xs text-gray-400 mt-1 uppercase tracking-wide">
+          <p className="text-xs text-gray-500 mt-1 uppercase tracking-wide">
             {user?.role ? `${user.role} Dashboard` : 'Dashboard'}
           </p>
-        </div>
+        </div> */}
 
         <Tabs
           defaultValue="channels"
@@ -435,18 +437,18 @@ export default function MessagingPlatform() {
           value={activeTab}
           onValueChange={setActiveTab}
         >
-          <div className="px-2 py-3 bg-gray-900">
-            <TabsList className="w-full bg-gray-800 text-gray-400">
+          <div className="px-2 py-3 bg-white">
+            <TabsList className="w-full bg-gray-100 text-gray-500">
               <TabsTrigger
                 value="channels"
-                className="w-1/2 data-[state=active]:bg-gray-700 data-[state=active]:text-white"
+                className="w-1/2 data-[state=active]:bg-white data-[state=active]:text-indigo-600 data-[state=active]:shadow-sm"
               >
                 <Hash className="h-4 w-4 mr-2" />
                 Channels
               </TabsTrigger>
               <TabsTrigger
                 value="dms"
-                className="w-1/2 data-[state=active]:bg-gray-700 data-[state=active]:text-white"
+                className="w-1/2 data-[state=active]:bg-white data-[state=active]:text-indigo-600 data-[state=active]:shadow-sm"
               >
                 <MessageCircle className="h-4 w-4 mr-2" />
                 DMs
@@ -476,18 +478,18 @@ export default function MessagingPlatform() {
         </Tabs>
 
         {/* User Profile Footer */}
-        <div className="p-4 bg-gray-800 border-t border-gray-700">
+        <div className="p-4 bg-gray-50 border-t border-gray-200">
           <div className="flex items-center">
-            <Avatar className="h-9 w-9 border border-gray-600">
+            <Avatar className="h-9 w-9 border border-gray-200">
               <AvatarFallback className="bg-indigo-600 text-white font-medium">
                 {user?.fullName ? user.fullName.split(" ").map(n => n[0]).join("") : "ME"}
               </AvatarFallback>
             </Avatar>
             <div className="ml-3 overflow-hidden">
-              <p className="text-sm font-medium text-white truncate">{user?.fullName || "User"}</p>
-              <p className="text-xs text-gray-400 truncate capitalize">{user?.role || "Student"}</p>
+              <p className="text-sm font-medium text-gray-900 truncate">{user?.fullName || "User"}</p>
+              <p className="text-xs text-gray-500 truncate capitalize">{user?.role || "Student"}</p>
             </div>
-            <Button variant="ghost" size="icon" className="ml-auto text-gray-400 hover:text-white hover:bg-gray-700">
+            <Button variant="ghost" size="icon" className="ml-auto text-gray-400 hover:text-gray-900 hover:bg-gray-200">
               <Settings className="h-4 w-4" />
             </Button>
           </div>
@@ -497,7 +499,8 @@ export default function MessagingPlatform() {
       {/* Main content - Messages */}
       <div className="flex-1 flex flex-col bg-white">
         {/* Chat header */}
-        <ChannelHeader
+        {/* Chat header - Removed as requested to blend in */}
+        {/* <ChannelHeader
           title={activeConversationTitle}
           isChannel={activeTab === "channels"}
           members={channelMembers}
@@ -505,7 +508,7 @@ export default function MessagingPlatform() {
           onToggleNotifications={handleToggleNotifications}
           notificationsEnabled={notificationsEnabled}
           onSearch={handleSearch}
-        />
+        /> */}
 
         {/* Messages area */}
         <div

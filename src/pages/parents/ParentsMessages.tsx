@@ -110,10 +110,10 @@ const ParentsMessages = () => {
         <main className="p-6 flex-1">
           <div className="max-w-3xl mx-auto">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-              <div className="flex items-center gap-2">
+              {/* <div className="flex items-center gap-2">
                 <MessageSquare className="h-6 w-6 text-kidato-purple" />
                 <h1 className="text-2xl font-bold">Messages</h1>
-              </div>
+              </div> */}
 
               <div className="relative w-full sm:w-64">
                 <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />

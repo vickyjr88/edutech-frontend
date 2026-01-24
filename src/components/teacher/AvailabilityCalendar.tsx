@@ -63,7 +63,7 @@ export default function AvailabilityCalendar() {
   const [isLoading, setIsLoading] = useState(true);
   const [weeklySchedule, setWeeklySchedule] = useState<WeeklySchedule[]>([]);
   const [blockedDates, setBlockedDates] = useState<BlockedDate[]>([]);
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+  const [selectedDates, setSelectedDates] = useState<Date[]>([]);
   const [blockReason, setBlockReason] = useState('');
   const [isSaving, setIsSaving] = useState(false);
 
@@ -190,44 +190,59 @@ export default function AvailabilityCalendar() {
     );
   };
 
-  const handleBlockDate = async () => {
-    if (!selectedDate) {
+  const handleBlockDates = async () => {
+    if (selectedDates.length === 0) {
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: 'Please select a date to block.',
+        description: 'Please select at least one date to block.',
       });
       return;
     }
 
     try {
-      const dateStr = format(selectedDate, 'yyyy-MM-dd');
+      // Prepare dates to block (only those not already blocked)
+      const datesToBlock = selectedDates.filter(date => !isDateBlocked(date));
+
+      if (datesToBlock.length === 0) {
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'All selected dates are already blocked.',
+        });
+        return;
+      }
+
+      const dateStrings = datesToBlock.map(date => format(date, 'yyyy-MM-dd'));
 
       // Optimistic update
-      const newBlockedDate: BlockedDate = {
-        _id: dateStr,
-        date: selectedDate,
+      const newBlockedDates: BlockedDate[] = datesToBlock.map(date => ({
+        _id: format(date, 'yyyy-MM-dd'),
+        date: date,
         reason: blockReason || 'Unavailable',
-      };
-      setBlockedDates(prev => [...prev, newBlockedDate]);
+      }));
+      setBlockedDates(prev => [...prev, ...newBlockedDates]);
 
       await MvpAvailabilityService.blockDates({
-        blockedDates: [{ date: dateStr, reason: blockReason }]
+        blockedDates: dateStrings.map(dateStr => ({
+          date: dateStr,
+          reason: blockReason
+        }))
       });
 
-      setSelectedDate(undefined);
+      setSelectedDates([]);
       setBlockReason('');
 
       toast({
-        title: 'Date blocked',
-        description: `${format(selectedDate, 'PPP')} has been blocked.`,
+        title: 'Dates blocked',
+        description: `${datesToBlock.length} date${datesToBlock.length > 1 ? 's' : ''} blocked successfully.`,
       });
     } catch (error) {
-      console.error('Error blocking date:', error);
+      console.error('Error blocking dates:', error);
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: 'Failed to block date.',
+        description: 'Failed to block dates.',
       });
       // Revert optimistic update
       loadAvailability();
@@ -306,6 +321,40 @@ export default function AvailabilityCalendar() {
       blocked =>
         format(blocked.date, 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd')
     );
+  };
+
+  const isDateSelected = (date: Date) => {
+    return selectedDates.some(
+      selected =>
+        format(selected, 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd')
+    );
+  };
+
+  const handleDateClick = (date: Date | undefined) => {
+    if (!date) return;
+
+    // Don't allow selecting already blocked dates
+    if (isDateBlocked(date)) return;
+
+    const dateStr = format(date, 'yyyy-MM-dd');
+    const isAlreadySelected = selectedDates.some(
+      d => format(d, 'yyyy-MM-dd') === dateStr
+    );
+
+    if (isAlreadySelected) {
+      // Deselect the date
+      setSelectedDates(prev =>
+        prev.filter(d => format(d, 'yyyy-MM-dd') !== dateStr)
+      );
+    } else {
+      // Add the date to selection
+      setSelectedDates(prev => [...prev, date]);
+    }
+  };
+
+  const handleClearSelection = () => {
+    setSelectedDates([]);
+    setBlockReason('');
   };
 
   if (isLoading) {
@@ -469,10 +518,11 @@ export default function AvailabilityCalendar() {
             <div className="flex justify-center">
               <Calendar
                 mode="single"
-                selected={selectedDate}
-                onSelect={setSelectedDate}
+                selected={selectedDates[0]}
+                onSelect={handleDateClick}
                 modifiers={{
                   blocked: (date) => isDateBlocked(date),
+                  selected: (date) => isDateSelected(date),
                 }}
                 modifiersStyles={{
                   blocked: {
@@ -480,17 +530,55 @@ export default function AvailabilityCalendar() {
                     color: '#991B1B',
                     textDecoration: 'line-through',
                   },
+                  selected: {
+                    backgroundColor: '#DBEAFE',
+                    color: '#1E40AF',
+                    fontWeight: 'bold',
+                  },
                 }}
                 className="rounded-md border"
               />
             </div>
 
             {/* Block Date Form */}
-            {selectedDate && !isDateBlocked(selectedDate) && (
-              <div className="space-y-3 p-4 bg-gray-50 rounded-lg">
-                <p className="text-sm font-medium">
-                  Block {format(selectedDate, 'PPP')}
-                </p>
+            {selectedDates.length > 0 && (
+              <div className="space-y-3 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-medium text-blue-900">
+                    {selectedDates.length} date{selectedDates.length > 1 ? 's' : ''} selected
+                  </p>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={handleClearSelection}
+                    className="h-6 text-xs"
+                  >
+                    Clear
+                  </Button>
+                </div>
+
+                {/* Selected Dates List */}
+                <div className="space-y-1 max-h-32 overflow-y-auto">
+                  {selectedDates
+                    .sort((a, b) => a.getTime() - b.getTime())
+                    .map((date, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center justify-between text-xs bg-white px-2 py-1 rounded"
+                      >
+                        <span>{format(date, 'PPP')}</span>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleDateClick(date)}
+                          className="h-5 w-5 p-0"
+                        >
+                          <Trash2 className="h-3 w-3 text-gray-500" />
+                        </Button>
+                      </div>
+                    ))}
+                </div>
+
                 <Input
                   placeholder="Reason (optional)"
                   value={blockReason}
@@ -499,9 +587,9 @@ export default function AvailabilityCalendar() {
                 <Button
                   size="sm"
                   className="w-full"
-                  onClick={handleBlockDate}
+                  onClick={handleBlockDates}
                 >
-                  Block This Date
+                  Block {selectedDates.length} Date{selectedDates.length > 1 ? 's' : ''}
                 </Button>
               </div>
             )}
@@ -535,9 +623,9 @@ export default function AvailabilityCalendar() {
               </div>
             )}
 
-            {blockedDates.length === 0 && (
+            {blockedDates.length === 0 && selectedDates.length === 0 && (
               <p className="text-sm text-gray-500 text-center py-4">
-                No blocked dates. Select a date on the calendar to block it.
+                No blocked dates. Click dates on the calendar to select and block them.
               </p>
             )}
           </CardContent>
@@ -554,6 +642,7 @@ export default function AvailabilityCalendar() {
             </p>
             <ul className="text-sm text-blue-800 space-y-1">
               <li>• Set your weekly recurring schedule for each day</li>
+              <li>• Click multiple dates on the calendar to select them</li>
               <li>• Block specific dates for holidays or personal time</li>
               <li>• Parents can only book during your available time slots</li>
               <li>• Remember to save your changes!</li>
