@@ -49,7 +49,6 @@ const UserSidebar = () => {
   const getNavigationItems = (): SidebarItem[] => {
     const commonItems: SidebarItem[] = [
       { name: "Dashboard", href: getDashboardLink(), icon: LayoutDashboard },
-      { name: "Profile", href: getProfileLink(), icon: User },
     ];
 
     const roleSpecificItems: Record<string, SidebarItem[]> = {
@@ -92,6 +91,7 @@ const UserSidebar = () => {
     const items = [
       ...commonItems,
       ...(roleSpecificItems[user.role] || []),
+      { name: "Profile", href: getProfileLink(), icon: User },
     ];
 
     return items;
@@ -168,8 +168,11 @@ const UserSidebar = () => {
         <nav className="flex-1 overflow-y-auto py-4">
           <div className="space-y-1 px-2">
             {navigationItems.map((item) => {
-              const isActive = location.pathname === item.href ||
-                location.pathname.startsWith(item.href + '/');
+              // Special handling for Dashboard to avoid highlighting it for all sub-routes
+              const isDashboard = item.name === "Dashboard";
+              const isActive = isDashboard
+                ? location.pathname === item.href
+                : location.pathname === item.href || location.pathname.startsWith(item.href + '/');
               const Icon = item.icon;
 
               return (

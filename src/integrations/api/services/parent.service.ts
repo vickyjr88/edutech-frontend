@@ -47,6 +47,8 @@ export interface Child {
   curriculum?: string;
   age?: number;
   role: 'student';
+  interests?: string[] | string;
+  aboutMe?: string;
 }
 
 export interface ParentProfile {
