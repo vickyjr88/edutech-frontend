@@ -68,7 +68,7 @@ import ParentsBilling from "../pages/parents/ParentsBilling";
 import ParentsCourses from "../pages/parents/ParentsCourses";
 import ChildDashboard from "../pages/parents/ChildDashboard";
 import ParentProfile from "../pages/parents/ParentProfile"; // MVP: Parent profile
-import ParentsChildren from "../pages/parents/ParentsChildren"; // MVP: My children page
+
 import ParentsSchedule from "../pages/parents/ParentsSchedule"; // MVP: Schedule page
 import ParentMessaging from "../pages/parents/ParentMessaging";
 import WishlistPage from "../pages/WishlistPage";
@@ -516,14 +516,7 @@ const MVPAppRoutes = () => {
           </ProtectedRoute>
         }
       />
-      <Route
-        path="/parents-dashboard/children"
-        element={
-          <ProtectedRoute>
-            <ParentsChildren />
-          </ProtectedRoute>
-        }
-      />
+
       <Route
         path="/parents-dashboard/schedule"
         element={

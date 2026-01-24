@@ -65,11 +65,10 @@ const UserSidebar = () => {
         { name: "Support", href: "/support", icon: HelpCircle },
       ],
       parent: [
-        { name: "My Children", href: "/parents-dashboard/children", icon: Users },
         { name: "Classes", href: "/parents-dashboard/courses", icon: BookOpen },
+        { name: "Schedule", href: "/parents-dashboard/schedule", icon: Calendar },
         { name: "Wishlist", href: "/parents-dashboard/wishlist", icon: Heart },
         { name: "Billing", href: "/parents-dashboard/billing", icon: DollarSign },
-        { name: "Schedule", href: "/parents-dashboard/schedule", icon: Calendar },
         { name: "Messages", href: "/parent/messages", icon: MessageSquare },
         { name: "Support", href: "/support", icon: HelpCircle },
       ],

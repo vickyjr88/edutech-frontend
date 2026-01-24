@@ -1,21 +1,24 @@
 import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
 import PageWrapper from "@/components/PageWrapper";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { User, Mail, Phone, MapPin, Save, Loader2 } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { User, Mail, Phone, Save, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { parentService } from "@/integrations/api/services/parent.service";
 import { userService } from "@/integrations/api/services/user.service";
+import ChildrenManager from "@/components/parents/ChildrenManager";
 
 const ParentProfile = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const [searchParams] = useSearchParams();
+  const defaultTab = searchParams.get('tab') || 'personal';
 
   const [formData, setFormData] = useState({
     fullName: user?.fullName || "",
@@ -146,122 +149,135 @@ const ParentProfile = () => {
           <div className="mb-6">
             <h1 className="text-3xl font-bold text-gray-900">My Profile</h1>
             <p className="mt-2 text-sm text-gray-600">
-              Manage your personal information and preferences
+              Manage your personal information and children's profiles
             </p>
           </div>
 
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle>Personal Information</CardTitle>
-                  <CardDescription>
-                    Update your profile details below
-                  </CardDescription>
-                </div>
-                {!isEditing ? (
-                  <Button onClick={() => setIsEditing(true)} variant="outline">
-                    Edit Profile
-                  </Button>
-                ) : (
-                  <div className="space-x-2">
-                    <Button onClick={() => setIsEditing(false)} variant="outline">
-                      Cancel
-                    </Button>
-                    <Button onClick={handleSave} disabled={isSaving}>
-                      <Save className="h-4 w-4 mr-2" />
-                      {isSaving ? "Saving..." : "Save Changes"}
-                    </Button>
+          <Tabs defaultValue={defaultTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-2 mb-8">
+              <TabsTrigger value="personal">Personal Information</TabsTrigger>
+              <TabsTrigger value="children">Children</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="personal">
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle>Personal Information</CardTitle>
+                      <CardDescription>
+                        Update your profile details below
+                      </CardDescription>
+                    </div>
+                    {!isEditing ? (
+                      <Button onClick={() => setIsEditing(true)} variant="outline">
+                        Edit Profile
+                      </Button>
+                    ) : (
+                      <div className="space-x-2">
+                        <Button onClick={() => setIsEditing(false)} variant="outline">
+                          Cancel
+                        </Button>
+                        <Button onClick={handleSave} disabled={isSaving}>
+                          <Save className="h-4 w-4 mr-2" />
+                          {isSaving ? "Saving..." : "Save Changes"}
+                        </Button>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Full Name */}
-              <div className="space-y-2">
-                <Label htmlFor="fullName">
-                  <User className="inline h-4 w-4 mr-2" />
-                  Full Name
-                </Label>
-                <Input
-                  id="fullName"
-                  name="fullName"
-                  value={formData.fullName}
-                  onChange={handleChange}
-                  disabled={!isEditing}
-                  placeholder="Enter your full name"
-                />
-              </div>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  {/* Full Name */}
+                  <div className="space-y-2">
+                    <Label htmlFor="fullName">
+                      <User className="inline h-4 w-4 mr-2" />
+                      Full Name
+                    </Label>
+                    <Input
+                      id="fullName"
+                      name="fullName"
+                      value={formData.fullName}
+                      onChange={handleChange}
+                      disabled={!isEditing}
+                      placeholder="Enter your full name"
+                    />
+                  </div>
 
-              {/* Email */}
-              <div className="space-y-2">
-                <Label htmlFor="email">
-                  <Mail className="inline h-4 w-4 mr-2" />
-                  Email
-                </Label>
-                <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  disabled={true}
-                  placeholder="Enter your email"
-                />
-                <p className="text-xs text-gray-500">
-                  Email cannot be changed. Contact support if you need to update it.
-                </p>
-              </div>
+                  {/* Email */}
+                  <div className="space-y-2">
+                    <Label htmlFor="email">
+                      <Mail className="inline h-4 w-4 mr-2" />
+                      Email
+                    </Label>
+                    <Input
+                      id="email"
+                      name="email"
+                      type="email"
+                      value={formData.email}
+                      onChange={handleChange}
+                      disabled={true}
+                      placeholder="Enter your email"
+                    />
+                    <p className="text-xs text-gray-500">
+                      Email cannot be changed. Contact support if you need to update it.
+                    </p>
+                  </div>
 
-              {/* Phone Number */}
-              <div className="space-y-2">
-                <Label htmlFor="phoneNumber">
-                  <Phone className="inline h-4 w-4 mr-2" />
-                  Phone Number
-                </Label>
-                <Input
-                  id="phoneNumber"
-                  name="phoneNumber"
-                  type="tel"
-                  value={formData.phoneNumber}
-                  onChange={handleChange}
-                  disabled={!isEditing}
-                  placeholder="Enter your phone number"
-                />
-              </div>
+                  {/* Phone Number */}
+                  <div className="space-y-2">
+                    <Label htmlFor="phoneNumber">
+                      <Phone className="inline h-4 w-4 mr-2" />
+                      Phone Number
+                    </Label>
+                    <Input
+                      id="phoneNumber"
+                      name="phoneNumber"
+                      type="tel"
+                      value={formData.phoneNumber}
+                      onChange={handleChange}
+                      disabled={!isEditing}
+                      placeholder="Enter your phone number"
+                    />
+                  </div>
 
-              {/* Alternative Contact Number */}
-              <div className="space-y-2">
-                <Label htmlFor="alternativePhoneNumber">
-                  <Phone className="inline h-4 w-4 mr-2" />
-                  Alternative Contact Number
-                </Label>
-                <Input
-                  id="alternativePhoneNumber"
-                  name="alternativePhoneNumber"
-                  type="tel"
-                  value={formData.alternativePhoneNumber}
-                  onChange={handleChange}
-                  disabled={!isEditing}
-                  placeholder="Enter alternative contact number"
-                />
-              </div>
+                  {/* Alternative Contact Number */}
+                  <div className="space-y-2">
+                    <Label htmlFor="alternativePhoneNumber">
+                      <Phone className="inline h-4 w-4 mr-2" />
+                      Alternative Contact Number
+                    </Label>
+                    <Input
+                      id="alternativePhoneNumber"
+                      name="alternativePhoneNumber"
+                      type="tel"
+                      value={formData.alternativePhoneNumber}
+                      onChange={handleChange}
+                      disabled={!isEditing}
+                      placeholder="Enter alternative contact number"
+                    />
+                  </div>
 
-              {/* Bio */}
-              <div className="space-y-2">
-                <Label htmlFor="bio">Bio</Label>
-                <Textarea
-                  id="bio"
-                  name="bio"
-                  value={formData.bio}
-                  onChange={handleChange}
-                  disabled={!isEditing}
-                  placeholder="Tell us a bit about yourself and your children"
-                  rows={4}
-                />
-              </div>
-            </CardContent>
-          </Card>
+                  {/* Bio */}
+                  <div className="space-y-2">
+                    <Label htmlFor="bio">Bio</Label>
+                    <Textarea
+                      id="bio"
+                      name="bio"
+                      value={formData.bio}
+                      onChange={handleChange}
+                      disabled={!isEditing}
+                      placeholder="Tell us a bit about yourself and your children"
+                      rows={4}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="children">
+              <ChildrenManager />
+            </TabsContent>
+          </Tabs>
         </div>
       </div>
     </PageWrapper>

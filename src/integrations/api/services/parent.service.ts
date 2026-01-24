@@ -44,6 +44,8 @@ export interface Child {
   dateOfBirth?: string;
   grade?: string;
   school?: string;
+  curriculum?: string;
+  age?: number;
   role: 'student';
 }
 
@@ -79,6 +81,7 @@ export interface CreateChildDto {
   dateOfBirth?: string;
   grade?: string;
   school?: string;
+  curriculum?: string;
 }
 
 export const parentService = {
@@ -182,7 +185,7 @@ export const parentService = {
    * Create a child user and add to parent profile
    */
   createChild: (data: CreateChildDto): Promise<ApiResponse<Child>> => {
-    return api.post<Child>('/users/create-child', data);
+    return api.post<Child>('/mvp/parent/children', data);
   },
 
   /**
@@ -196,6 +199,13 @@ export const parentService = {
    * Remove child from parent profile
    */
   removeChild: (parentId: string, childId: string): Promise<ApiResponse<ParentProfile>> => {
-    return api.delete<ParentProfile>(`/parents/${parentId}/children/${childId}`);
+    return api.delete<ParentProfile>(`/mvp/parent/children/${childId}`);
+  },
+
+  /**
+   * Update child details
+   */
+  updateChild: (childId: string, data: any): Promise<ApiResponse<any>> => {
+    return api.patch<any>(`/mvp/parent/children/${childId}`, data);
   },
 };

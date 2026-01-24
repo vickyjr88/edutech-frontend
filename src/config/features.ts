@@ -160,7 +160,7 @@ export const isDevelopment = import.meta.env.DEV;
 export const isProduction = import.meta.env.PROD;
 
 // API URLs
-const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1';
+const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:8081/api/v1';
 export const API_CONFIG = {
   baseURL,
   // Derive mvpURL from baseURL if VITE_MVP_API_URL is not set

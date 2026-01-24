@@ -42,14 +42,14 @@ const TopBar = ({ toggleSidebar }: { toggleSidebar?: () => void }) => {
     // Determine page title based on path
     const getPageTitle = () => {
         const p = location.pathname;
-        if (p.includes("student-dashboard")) return "Student Dashboard ✨";
-        if (p.includes("teacher-dashboard")) return "Teacher Dashboard 🍎";
-        if (p.includes("parents-dashboard")) return "Parent Dashboard 👨‍👩‍👧‍👦";
-        if (p.includes("admin")) return "Admin Dashboard 🛡️";
-        if (p.includes("notifications")) return "Notifications 🔔";
-        if (p.includes("settings")) return "Settings ⚙️";
-        if (p.includes("profile")) return "Profile 👤";
-        if (p.includes("messages")) return "Messages 💬";
+        if (p.includes("student-dashboard")) return "Student Dashboard";
+        if (p.includes("teacher-dashboard")) return "Teacher Dashboard";
+        if (p.includes("parents-dashboard")) return "Parent Dashboard";
+        if (p.includes("admin")) return "Admin Dashboard";
+        if (p.includes("notifications")) return "Notifications";
+        if (p.includes("settings")) return "Settings";
+        if (p.includes("profile")) return "Profile";
+        if (p.includes("messages")) return "Messages";
         return "Dashboard";
     };
 
