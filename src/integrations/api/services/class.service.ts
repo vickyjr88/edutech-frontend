@@ -30,6 +30,7 @@ export interface Class {
     totalReviews: number;
     discount: number;
     isFeatured: boolean;
+    currency?: string;
     thumbnailUrl?: string;
     status?: 'draft' | 'pending_review' | 'archived' | 'published';
     createdAt: string;
@@ -55,6 +56,12 @@ export interface Cohort {
     currentStudents: number;
     enrollmentDeadline: string; // ISO date string
     price: number;
+    pricing?: {
+        currency: string;
+        pricePerLesson: number;
+        totalLessons: number;
+        finalPrice: number;
+    };
     discount: number;
     classDates: string[]; // Probably ISO date strings
     _id: string;

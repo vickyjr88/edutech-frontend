@@ -2,7 +2,7 @@ import { teacherService } from "@/integrations/api/services/teacher.service";
 import { formatDateForDatabase } from "./educationUtils";
 
 export type CertificationItem = {
-  isCertified: string;
+  isCertified: boolean;
   _id: string;
   name: string;
   issuer: string;
@@ -67,7 +67,7 @@ export const fetchCertifications = async (teacherId: string): Promise<Certificat
     }
 
     return data.map(item => ({
-      _id: item._id  || '',
+      _id: item._id || '',
       name: item.name || '',
       issuer: item.issuer || '',
       issueDate: item.issueDate || '',

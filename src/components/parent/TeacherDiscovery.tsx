@@ -432,7 +432,7 @@ export default function TeacherDiscovery() {
 
                 {/* Action Button */}
                 <Button className="w-full" asChild>
-                  <Link to={`/teacher/${teacher._id}`}>View Profile & Book</Link>
+                  <Link to={`/teacher/${teacher.userId}`}>View Profile & Book</Link>
                 </Button>
               </CardContent>
             </Card>

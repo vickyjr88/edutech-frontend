@@ -8,7 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { PlusCircle, Trash2, Award, Medal, Calendar, FileText, Link, ExternalLink, GraduationCap, Edit, Shield, BadgeCheck, Upload, CheckCircle, Loader2 } from "lucide-react";
 import { teacherService } from "@/integrations/api/services/teacher.service";
-import { 
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuGroup,
@@ -23,10 +23,10 @@ import {
   TabsList,
   TabsTrigger
 } from "@/components/ui/tabs";
-import { 
-  CertificationItem, 
-  CERTIFICATE_CATEGORIES, 
-  CERTIFICATE_TYPES, 
+import {
+  CertificationItem,
+  CERTIFICATE_CATEGORIES,
+  CERTIFICATE_TYPES,
   fetchCertifications,
   saveCertification,
   updateCertification,
@@ -84,20 +84,20 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
       setExpandedItems({ [certifications[0]._id]: true });
     }
   }, [certifications]);
-  
+
   // Fetch existing verification document URLs
   useEffect(() => {
     const fetchProfile = async () => {
       if (!user?.teacherId) return;
-      
+
       try {
         const { data } = await teacherService.getProfileById(user.teacherId);
         if (data) {
-          console.log("Profile data for verification documents:", { 
-            backgroundCheck: data.backgroundCheckFile, 
-            idVerification: data.governmentIdFile 
+          console.log("Profile data for verification documents:", {
+            backgroundCheck: data.backgroundCheckFile,
+            idVerification: data.governmentIdFile
           });
-          
+
           // Check if background check document exists and update state without triggering callback
           if (data.backgroundCheckFile) {
             setBackgroundCheckUrl(data.backgroundCheckFile);
@@ -106,7 +106,7 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
               backgroundCheck: true
             }));
           }
-          
+
           // Check if government ID document exists and update state without triggering callback
           if (data.governmentIdFile) {
             setGovernmentIdUrl(data.governmentIdFile);
@@ -120,13 +120,13 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
         console.error("Error fetching teacher profile:", error);
       }
     };
-    
+
     fetchProfile();
   }, [user?.teacherId]); // Remove onCertificationsChange from the dependency array to prevent loop
-  
+
   const loadCertifications = async () => {
     if (!user?.teacherId) return;
-    
+
     setIsLoading(true);
     try {
       const loadedCertifications = await fetchCertifications(user.teacherId);
@@ -151,13 +151,13 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
       issuer: "",
       issueDate: "",
       certificateType: "Teaching License",
-      isCertified:false,
+      isCertified: false,
       description: "",
       isVerifiable: false,
       credentialUrl: ""
     };
     setCertifications([...certifications, newItem]);
-    
+
     // Expand the newly added item
     setExpandedItems(prev => ({
       ...prev,
@@ -167,16 +167,16 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
 
   const removeItem = async (id: string) => {
     if (certifications.length === 1) return;
-    
+
     const certToDelete = certifications.find(cert => cert._id === id);
     if (!certToDelete) return;
-    
+
     // If it's a temporary item (not saved to the database yet)
     if (id.startsWith('temp-')) {
       setCertifications(certifications.filter(item => item._id !== id));
       return;
     }
-    
+
     if (!user?.teacherId) {
       toast({
         title: "Error",
@@ -185,23 +185,23 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
       });
       return;
     }
-    
+
     if (!confirm(`Are you sure you want to delete "${certToDelete.name || 'this certification'}"?`)) {
       return;
     }
-    
+
     setIsLoading(true);
     try {
       const result = await deleteCertification(user.teacherId, id);
-      
+
       if (result.success) {
         setCertifications(prev => prev.filter(item => item._id !== id));
-        
+
         toast({
           title: "Success",
           description: "Certification deleted successfully"
         });
-        
+
         if (onCertificationsChange) {
           onCertificationsChange();
         }
@@ -222,8 +222,8 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
 
   const updateItem = (id: string, field: keyof CertificationItem, value: string | boolean) => {
     if (!certifications) return;
-    
-    setCertifications(certifications.map(item => 
+
+    setCertifications(certifications.map(item =>
       item._id === id ? { ...item, [field]: value } : item
     ));
   };
@@ -233,8 +233,8 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
       <div className="flex items-center">
         {getCertificateIcon(cert.certificateType)}
         <h4 className="font-medium ml-2">
-          {(cert.certificateType?.includes("Award") || cert.certificateType?.includes("Honor")) 
-            ? `Award ${index + 1}` 
+          {(cert.certificateType?.includes("Award") || cert.certificateType?.includes("Honor"))
+            ? `Award ${index + 1}`
             : `${cert.certificateType || "Certification"} ${index + 1}`}
         </h4>
       </div>
@@ -244,7 +244,7 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
   // Format dates for display
   const formatDateForDisplay = (dateString: string | undefined) => {
     if (!dateString) return "";
-    
+
     // Handle YYYY-MM or YYYY-MM-DD format
     const match = dateString.match(/^(\d{4})-(\d{2})(?:-(\d{2}))?/);
     if (match) {
@@ -252,7 +252,7 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
       const month = new Date(`${match[1]}-${match[2]}-01`).toLocaleString('default', { month: 'long' });
       return `${month} ${year}`;
     }
-    
+
     return dateString;
   };
 
@@ -261,11 +261,10 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
       toast({
         title: "Authentication Required",
         description: "You must be logged in to save certifications",
-        variant: "destructive"
       });
       return;
     }
-    
+
     // Check if certifications are defined
     if (!certifications || certifications.length === 0) {
       toast({
@@ -275,43 +274,43 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
       });
       return;
     }
-    
+
     setIsSaving(true);
-    
+
     try {
       // Process each certification
       for (const cert of certifications) {
         // Skip items with no name (empty entries)
         if (!cert.name) continue;
-        
+
         const isNew = cert._id.startsWith('temp-');
-        
+
         if (isNew) {
           // Create new certification
           const { _id, ...newCert } = cert;
           const result = await saveCertification(user.teacherId, newCert);
-          
+
           if (!result.success) {
             throw new Error(result.error || `Failed to save certification: ${cert.name}`);
           }
         } else {
           // Update existing certification
           const result = await updateCertification(user.teacherId, cert);
-          
+
           if (!result.success) {
             throw new Error(result.error || `Failed to update certification: ${cert.name}`);
           }
         }
       }
-      
+
       // Reload certifications to get latest data
       await loadCertifications();
-      
+
       // Notify parent component if needed
       if (onCertificationsChange) {
         onCertificationsChange();
       }
-      
+
       toast({
         title: "Success",
         description: "Your teaching certifications and awards have been saved",
@@ -328,18 +327,17 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
       setIsSaving(false);
     }
   };
-  
+
   // Save an individual certification
   const saveCertificationItem = async (cert: CertificationItem) => {
     if (!user?.teacherId) {
       toast({
         title: "Authentication Required",
         description: "You must be logged in to save this certification",
-        variant: "destructive"
       });
       return;
     }
-    
+
     if (!cert.name) {
       toast({
         title: "Validation Error",
@@ -348,13 +346,13 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
       });
       return;
     }
-    
+
     setIsSaving(true);
-    
+
     try {
       const isNew = cert._id.startsWith('temp-');
       let result;
-      
+
       if (isNew) {
         // Create new certification
         const { _id, ...newCert } = cert;
@@ -363,19 +361,19 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
         // Update existing certification
         result = await updateCertification(user.teacherId, cert);
       }
-      
+
       if (!result.success) {
         throw new Error(result.error || `Failed to save certification: ${cert.name}`);
       }
-      
+
       // Reload certifications to get latest data
       await loadCertifications();
-      
+
       // Notify parent component if needed
       if (onCertificationsChange) {
         onCertificationsChange();
       }
-      
+
       toast({
         title: "Success",
         description: `${cert.name} has been saved successfully`,
@@ -414,7 +412,7 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
   const [uploadingGovId, setUploadingGovId] = useState(false);
   const [backgroundCheckUrl, setBackgroundCheckUrl] = useState<string | null>(null);
   const [governmentIdUrl, setGovernmentIdUrl] = useState<string | null>(null);
-  
+
   // References to file inputs
   const backgroundCheckInputRef = useRef<HTMLInputElement>(null);
   const governmentIdInputRef = useRef<HTMLInputElement>(null);
@@ -425,7 +423,7 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
       [field]: value
     }));
   };
-  
+
   // Handle file selection and conversion to base64
   const fileToBase64 = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
@@ -443,12 +441,12 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
       reader.onerror = error => reject(error);
     });
   };
-  
+
   // Handle background check file upload
   const handleBackgroundCheckUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (!files || files.length === 0 || !user?.teacherId) return;
-    
+
     const file = files[0];
     // Check file type - only accept PDFs and images
     const validTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg'];
@@ -460,7 +458,7 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
       });
       return;
     }
-    
+
     // Check file size (max 5MB)
     const maxSize = 5 * 1024 * 1024; // 5MB in bytes
     if (file.size > maxSize) {
@@ -471,35 +469,35 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
       });
       return;
     }
-    
+
     try {
       setUploadingBackgroundCheck(true);
       // Convert file to base64
       const base64Data = await fileToBase64(file);
-      
+
       // Upload to API
       const response = await teacherService.uploadVerificationFile(
         user.teacherId,
         'background_check',
         base64Data
       );
-      
+
       if (response.data?.fileUrl) {
         setBackgroundCheckUrl(response.data.fileUrl);
         // Update teacher profile with the file URL
         await teacherService.updateVerificationStatus(user.teacherId, {
           backgroundCheckFile: response.data.fileUrl
         });
-        
+
         // Update the verification control state
         setVerificationControls(prev => ({
           ...prev,
           backgroundCheck: true
         }));
-        
+
         // Note: We removed the onCertificationsChange call here to prevent infinite loops
         // The "Save Verification Information" button should be used to trigger parent updates
-        
+
         toast({
           title: "Success",
           description: "Background check document uploaded successfully"
@@ -516,12 +514,12 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
       setUploadingBackgroundCheck(false);
     }
   };
-  
+
   // Handle government ID file upload
   const handleGovernmentIdUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (!files || files.length === 0 || !user?.teacherId) return;
-    
+
     const file = files[0];
     // Check file type - only accept PDFs and images
     const validTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg'];
@@ -533,7 +531,7 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
       });
       return;
     }
-    
+
     // Check file size (max 5MB)
     const maxSize = 5 * 1024 * 1024; // 5MB in bytes
     if (file.size > maxSize) {
@@ -544,35 +542,35 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
       });
       return;
     }
-    
+
     try {
       setUploadingGovId(true);
       // Convert file to base64
       const base64Data = await fileToBase64(file);
-      
+
       // Upload to API
       const response = await teacherService.uploadVerificationFile(
         user.teacherId,
         'government_id',
         base64Data
       );
-      
+
       if (response.data?.fileUrl) {
         setGovernmentIdUrl(response.data.fileUrl);
         // Update teacher profile with the file URL
         await teacherService.updateVerificationStatus(user.teacherId, {
           governmentIdFile: response.data.fileUrl
         });
-        
+
         // Update the verification control state
         setVerificationControls(prev => ({
           ...prev,
           idVerification: true
         }));
-        
+
         // Note: We removed the onCertificationsChange call here to prevent infinite loops
         // The "Save Verification Information" button should be used to trigger parent updates
-        
+
         toast({
           title: "Success",
           description: "Government ID document uploaded successfully"
@@ -618,19 +616,19 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
             <span>Verification</span>
           </TabsTrigger>
         </TabsList>
-        
+
         {/* Certifications Tab */}
         <TabsContent value="certifications" className="mt-6">
           {filteredCertifications('certifications').length > 0 ? (
             <div className="space-y-6">
               {filteredCertifications('certifications').map((cert, index) => (
-                <div 
-                  key={cert._id} 
+                <div
+                  key={cert._id}
                   className="border rounded-lg bg-white shadow-sm transition-all hover:shadow-md overflow-hidden border-blue-200 w-full"
                 >
                   <div className="px-4 py-3 flex justify-between items-center border-b bg-blue-50">
-                    <div 
-                      className="flex items-center cursor-pointer flex-grow" 
+                    <div
+                      className="flex items-center cursor-pointer flex-grow"
                       onClick={() => toggleExpanded(cert._id)}
                     >
                       {getCertificateIcon(cert.certificateType || "")}
@@ -644,8 +642,8 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
                       </div>
                     </div>
                     <div className="flex items-center gap-1 ml-2">
-                      <Button 
-                        variant="ghost" 
+                      <Button
+                        variant="ghost"
                         size="sm"
                         className="h-7 w-7 p-0 rounded-full"
                         onClick={() => toggleExpanded(cert._id)}
@@ -658,8 +656,8 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
                           <Edit className="h-4 w-4 text-gray-500" />
                         )}
                       </Button>
-                      <Button 
-                        variant="ghost" 
+                      <Button
+                        variant="ghost"
                         size="sm"
                         className="h-7 w-7 p-0 rounded-full"
                         onClick={() => removeItem(cert._id)}
@@ -669,7 +667,7 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
                       </Button>
                     </div>
                   </div>
-                  
+
                   <div className="p-4">
                     <div className="flex justify-between items-center mb-2">
                       {cert.issueDate ? (
@@ -690,17 +688,17 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
                         </span>
                       )}
                     </div>
-                    
+
                     {cert.description && !expandedItems[cert._id] && (
                       <p className="text-sm text-gray-600 mt-2">{cert.description}</p>
                     )}
-                    
+
                     {cert.credentialUrl && !expandedItems[cert._id] && (
                       <span className="mt-3 block">
-                        <a 
-                          href={cert.credentialUrl} 
-                          target="_blank" 
-                          rel="noopener noreferrer" 
+                        <a
+                          href={cert.credentialUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
                           className="text-sm text-blue-600 hover:underline flex items-center"
                         >
                           <ExternalLink className="h-4 w-4 mr-1" />
@@ -709,12 +707,12 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
                       </span>
                     )}
                   </div>
-              
+
                   {expandedItems[cert._id] && (
                     <div className="mt-3 pt-3 space-y-6 border-t px-4 pb-4 bg-gray-50">
                       <div className="flex justify-end">
-                        <Button 
-                          variant="outline" 
+                        <Button
+                          variant="outline"
                           size="sm"
                           onClick={() => saveCertificationItem(cert)}
                           disabled={isSaving}
@@ -756,7 +754,7 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
                                   <DropdownMenuSeparator />
                                   <DropdownMenuGroup>
                                     {types.map(type => (
-                                      <DropdownMenuItem 
+                                      <DropdownMenuItem
                                         key={type}
                                         onClick={() => updateItem(cert._id, 'certificateType', type)}
                                         className="cursor-pointer"
@@ -779,7 +777,7 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
 
                         <div>
                           <Label htmlFor={`cert-name-${cert._id}`} className="mb-2 block text-sm font-medium">Name/Title</Label>
-                          <Input 
+                          <Input
                             id={`cert-name-${cert._id}`}
                             value={cert.name}
                             onChange={(e) => updateItem(cert._id, 'name', e.target.value)}
@@ -788,7 +786,7 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
                           />
                         </div>
                       </div>
-                      
+
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                           <Label htmlFor={`cert-issuer-${cert._id}`} className="mb-2 block text-sm font-medium">Issuing Organization</Label>
@@ -866,8 +864,8 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
                               className="flex-1"
                             />
                             {cert.credentialUrl && cert.credentialUrl.startsWith('http') && (
-                              <Button 
-                                variant="outline" 
+                              <Button
+                                variant="outline"
                                 size="sm"
                                 className="ml-2"
                                 onClick={() => window.open(cert.credentialUrl, '_blank')}
@@ -883,7 +881,7 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
                   )}
                 </div>
               ))}
-              
+
               <div className="flex justify-center mt-6">
                 <Button
                   variant="outline"
@@ -894,14 +892,14 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
                       name: "",
                       issuer: "",
                       issueDate: "",
-                      isCertified:false,
+                      isCertified: false,
                       certificateType: "Teaching License",
                       description: "",
                       isVerifiable: false,
                       credentialUrl: ""
                     };
                     setCertifications([...certifications, newItem]);
-                    
+
                     // Expand the newly added item
                     setExpandedItems(prev => ({
                       ...prev,
@@ -931,12 +929,13 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
                     issuer: "",
                     issueDate: "",
                     certificateType: "Teaching License",
+                    isCertified: false,
                     description: "",
                     isVerifiable: false,
                     credentialUrl: ""
                   };
                   setCertifications([...certifications, newItem]);
-                  
+
                   // Expand the newly added item
                   setExpandedItems(prev => ({
                     ...prev,
@@ -951,19 +950,19 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
             </div>
           )}
         </TabsContent>
-        
+
         {/* Awards Tab */}
         <TabsContent value="awards" className="mt-6">
           {filteredCertifications('awards').length > 0 ? (
             <div className="space-y-6">
               {filteredCertifications('awards').map((cert, index) => (
-                <div 
-                  key={cert._id} 
+                <div
+                  key={cert._id}
                   className="border rounded-lg bg-white shadow-sm transition-all hover:shadow-md overflow-hidden border-amber-200 w-full"
                 >
                   <div className="px-4 py-3 flex justify-between items-center border-b bg-amber-50">
-                    <div 
-                      className="flex items-center cursor-pointer flex-grow" 
+                    <div
+                      className="flex items-center cursor-pointer flex-grow"
                       onClick={() => toggleExpanded(cert._id)}
                     >
                       <Award className="h-5 w-5 text-amber-500" />
@@ -977,8 +976,8 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
                       </div>
                     </div>
                     <div className="flex items-center gap-1 ml-2">
-                      <Button 
-                        variant="ghost" 
+                      <Button
+                        variant="ghost"
                         size="sm"
                         className="h-7 w-7 p-0 rounded-full"
                         onClick={() => toggleExpanded(cert._id)}
@@ -991,8 +990,8 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
                           <Edit className="h-4 w-4 text-gray-500" />
                         )}
                       </Button>
-                      <Button 
-                        variant="ghost" 
+                      <Button
+                        variant="ghost"
                         size="sm"
                         className="h-7 w-7 p-0 rounded-full"
                         onClick={() => removeItem(cert._id)}
@@ -1002,7 +1001,7 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
                       </Button>
                     </div>
                   </div>
-                  
+
                   <div className="p-4">
                     <div className="flex justify-between items-center mb-2">
                       {cert.issueDate ? (
@@ -1020,17 +1019,17 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
                         </span>
                       )}
                     </div>
-                    
+
                     {cert.description && !expandedItems[cert._id] && (
                       <p className="text-sm text-gray-600 mt-2">{cert.description}</p>
                     )}
-                    
+
                     {cert.credentialUrl && !expandedItems[cert._id] && (
                       <span className="mt-3 block">
-                        <a 
-                          href={cert.credentialUrl} 
-                          target="_blank" 
-                          rel="noopener noreferrer" 
+                        <a
+                          href={cert.credentialUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
                           className="text-sm text-blue-600 hover:underline flex items-center"
                         >
                           <ExternalLink className="h-4 w-4 mr-1" />
@@ -1039,12 +1038,12 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
                       </span>
                     )}
                   </div>
-              
+
                   {expandedItems[cert._id] && (
                     <div className="mt-3 pt-3 space-y-6 border-t px-4 pb-4 bg-gray-50">
                       <div className="flex justify-end">
-                        <Button 
-                          variant="outline" 
+                        <Button
+                          variant="outline"
                           size="sm"
                           onClick={() => saveCertificationItem(cert)}
                           disabled={isSaving}
@@ -1084,7 +1083,7 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
                               <DropdownMenuSeparator />
                               <DropdownMenuGroup>
                                 {["Teaching Award", "Honor & Recognition", "Excellence Award", "Community Service Award"].map(type => (
-                                  <DropdownMenuItem 
+                                  <DropdownMenuItem
                                     key={type}
                                     onClick={() => updateItem(cert._id, 'certificateType', type)}
                                     className="cursor-pointer"
@@ -1102,7 +1101,7 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
 
                         <div>
                           <Label htmlFor={`cert-name-${cert._id}`} className="mb-2 block text-sm font-medium">Award Title</Label>
-                          <Input 
+                          <Input
                             id={`cert-name-${cert._id}`}
                             value={cert.name}
                             onChange={(e) => updateItem(cert._id, 'name', e.target.value)}
@@ -1111,7 +1110,7 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
                           />
                         </div>
                       </div>
-                      
+
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                           <Label htmlFor={`cert-issuer-${cert._id}`} className="mb-2 block text-sm font-medium">Awarded By</Label>
@@ -1175,8 +1174,8 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
                               className="flex-1"
                             />
                             {cert.credentialUrl && cert.credentialUrl.startsWith('http') && (
-                              <Button 
-                                variant="outline" 
+                              <Button
+                                variant="outline"
                                 size="sm"
                                 className="ml-2"
                                 onClick={() => window.open(cert.credentialUrl, '_blank')}
@@ -1192,7 +1191,7 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
                   )}
                 </div>
               ))}
-              
+
               <div className="flex justify-center mt-6">
                 <Button
                   variant="outline"
@@ -1204,12 +1203,13 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
                       issuer: "",
                       issueDate: "",
                       certificateType: "Teaching Award",
+                      isCertified: false,
                       description: "",
                       isVerifiable: false,
                       credentialUrl: ""
                     };
                     setCertifications([...certifications, newItem]);
-                    
+
                     // Expand the newly added item
                     setExpandedItems(prev => ({
                       ...prev,
@@ -1238,14 +1238,14 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
                     name: "",
                     issuer: "",
                     issueDate: "",
-                    isCertified:false,
+                    isCertified: false,
                     certificateType: "Teaching Award",
                     description: "",
                     isVerifiable: false,
                     credentialUrl: ""
                   };
                   setCertifications([...certifications, newItem]);
-                  
+
                   // Expand the newly added item
                   setExpandedItems(prev => ({
                     ...prev,
@@ -1260,7 +1260,7 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
             </div>
           )}
         </TabsContent>
-        
+
         {/* Verification Tab */}
         <TabsContent value="verification" className="mt-6">
           <div className="bg-white border border-gray-200 rounded-lg p-6">
@@ -1275,7 +1275,7 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
                 </p>
               </div>
             </div>
-            
+
             <div className="space-y-6">
               <div className="flex items-center p-4 border rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
                 <div className="mr-4">
@@ -1293,17 +1293,17 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
                 </div>
                 <div>
                   {/* Hidden file input */}
-                  <input 
-                    type="file" 
+                  <input
+                    type="file"
                     ref={backgroundCheckInputRef}
                     onChange={handleBackgroundCheckUpload}
                     accept="application/pdf,image/jpeg,image/png,image/jpg"
                     className="hidden"
                   />
-                  
+
                   {backgroundCheckUrl ? (
                     <div className="flex items-center">
-                      <Button 
+                      <Button
                         variant="link"
                         size="sm"
                         className="text-xs text-blue-600 hover:underline flex items-center mr-2 h-auto p-0"
@@ -1315,23 +1315,23 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
                               title: "Loading document",
                               description: "Preparing document for viewing..."
                             });
-                            
+
                             // Get signed URL for document viewing
                             const signedUrl = await teacherService.getDocumentViewUrl(
                               user.teacherId,
                               'background_check'
                             );
-                            
+
                             // Open the signed URL in a new tab
                             window.open(signedUrl, '_blank');
-                            
+
                             // Show success toast
                             toast({
                               title: "Success",
                               description: "Document link generated successfully",
                               variant: "default"
                             });
-                          
+
                           } catch (error) {
                             console.error("Error getting document URL:", error);
                             toast({
@@ -1345,8 +1345,8 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
                         <FileText className="h-4 w-4 mr-1" />
                         View Document
                       </Button>
-                      <Button 
-                        variant="ghost" 
+                      <Button
+                        variant="ghost"
                         size="sm"
                         onClick={() => backgroundCheckInputRef.current?.click()}
                         disabled={uploadingBackgroundCheck}
@@ -1356,9 +1356,9 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
                       </Button>
                     </div>
                   ) : (
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
+                    <Button
+                      variant="ghost"
+                      size="sm"
                       onClick={() => backgroundCheckInputRef.current?.click()}
                       disabled={uploadingBackgroundCheck}
                       className="ml-1"
@@ -1378,7 +1378,7 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
                   )}
                 </div>
               </div>
-              
+
               <div className="flex items-center p-4 border rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
                 <div className="mr-4">
                   <Switch
@@ -1395,17 +1395,17 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
                 </div>
                 <div>
                   {/* Hidden file input */}
-                  <input 
-                    type="file" 
+                  <input
+                    type="file"
                     ref={governmentIdInputRef}
                     onChange={handleGovernmentIdUpload}
                     accept="application/pdf,image/jpeg,image/png,image/jpg"
                     className="hidden"
                   />
-                  
+
                   {governmentIdUrl ? (
                     <div className="flex items-center">
-                      <Button 
+                      <Button
                         variant="link"
                         size="sm"
                         className="text-xs text-blue-600 hover:underline flex items-center mr-2 h-auto p-0"
@@ -1417,23 +1417,23 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
                               title: "Loading document",
                               description: "Preparing document for viewing..."
                             });
-                            
+
                             // Get signed URL for document viewing
                             const signedUrl = await teacherService.getDocumentViewUrl(
                               user.teacherId,
                               'government_id'
                             );
-                            
+
                             // Open the signed URL in a new tab
                             window.open(signedUrl, '_blank');
-                            
+
                             // Show success toast
                             toast({
                               title: "Success",
                               description: "Document link generated successfully",
                               variant: "default"
                             });
-                          
+
                           } catch (error) {
                             console.error("Error getting document URL:", error);
                             toast({
@@ -1447,8 +1447,8 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
                         <FileText className="h-4 w-4 mr-1" />
                         View Document
                       </Button>
-                      <Button 
-                        variant="ghost" 
+                      <Button
+                        variant="ghost"
                         size="sm"
                         onClick={() => governmentIdInputRef.current?.click()}
                         disabled={uploadingGovId}
@@ -1458,9 +1458,9 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
                       </Button>
                     </div>
                   ) : (
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
+                    <Button
+                      variant="ghost"
+                      size="sm"
                       onClick={() => governmentIdInputRef.current?.click()}
                       disabled={uploadingGovId}
                       className="ml-1"
@@ -1480,7 +1480,7 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
                   )}
                 </div>
               </div>
-              
+
               <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
                 <div className="flex">
                   <div className="mr-3 mt-0.5">
@@ -1489,15 +1489,15 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
                   <div>
                     <h4 className="font-medium text-blue-800 mb-1">Why Verification Matters</h4>
                     <p className="text-sm text-blue-700">
-                      Complete verification to increase your credibility and trustworthiness. 
+                      Complete verification to increase your credibility and trustworthiness.
                       Verified teachers typically receive more student enrollments and higher ratings.
                     </p>
                   </div>
                 </div>
               </div>
-              
+
               <div className="flex justify-end">
-                <Button 
+                <Button
                   className="bg-indigo-600 hover:bg-indigo-700"
                   onClick={async () => {
                     if (!user?.teacherId) {
@@ -1508,20 +1508,20 @@ const CertificationsStep = ({ certifications, setCertifications, onCertification
                       });
                       return;
                     }
-                    
+
                     try {
                       const updates = {
                         backgroundCheckFile: backgroundCheckUrl || undefined,
                         governmentIdFile: governmentIdUrl || undefined
                       };
-                      
+
                       await teacherService.updateVerificationStatus(user.teacherId, updates);
-                      
+
                       // Update verification state in parent component
                       if (onCertificationsChange) {
                         onCertificationsChange();
                       }
-                      
+
                       toast({
                         title: "Success",
                         description: "Verification information saved successfully",

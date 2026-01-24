@@ -21,24 +21,14 @@ const queryClient = new QueryClient();
 
 const App = () => {
   return (
-    <React.StrictMode>
-      <QueryClientProvider client={queryClient}>
-        <BrowserRouter>
-          <AuthProvider>
-            {intercomConfig ? (
-              <IntercomProvider
-                config={intercomConfig}
-                autoboot={true}
-              >
-                <TooltipProvider>
-                  <Layout>
-                    <AppRoutes />
-                  </Layout>
-                  <Toaster />
-                  <Sonner />
-                </TooltipProvider>
-              </IntercomProvider>
-            ) : (
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <AuthProvider>
+          {intercomConfig ? (
+            <IntercomProvider
+              config={intercomConfig}
+              autoboot={true}
+            >
               <TooltipProvider>
                 <Layout>
                   <AppRoutes />
@@ -46,11 +36,19 @@ const App = () => {
                 <Toaster />
                 <Sonner />
               </TooltipProvider>
-            )}
-          </AuthProvider>
-        </BrowserRouter>
-      </QueryClientProvider>
-    </React.StrictMode>
+            </IntercomProvider>
+          ) : (
+            <TooltipProvider>
+              <Layout>
+                <AppRoutes />
+              </Layout>
+              <Toaster />
+              <Sonner />
+            </TooltipProvider>
+          )}
+        </AuthProvider>
+      </BrowserRouter>
+    </QueryClientProvider>
   );
 };
 

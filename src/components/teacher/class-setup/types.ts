@@ -41,6 +41,7 @@ export const curriculumLevelMap: { [key: string]: CurriculumLevel } = {};
 export const subjectsMap: { [key: string]: Subject } = {};
 
 export const classSchema = z.object({
+  id: z.string().optional(),
   type: z.enum(["academic", "afterschool"]),
   title: z.string().min(3, { message: "Class title must be at least 3 characters" }),
   subject: z.string().min(1, { message: "Subject is required" }),
@@ -62,16 +63,16 @@ export const classSchema = z.object({
   status: z.string().optional().default("draft"),
   hasCohorts: z.boolean().default(false),
   hasTeamTeaching: z.boolean().default(false),
-  
+
   // Media fields (aligns with backend ClassDetail.media)
   introVideoUrl: z.string().url().optional().or(z.literal("")),
   thumbnailUrl: z.string().optional(),
-  
+
   // Course materials files
   courseOutlineFile: z.string().optional(), // Store file URL/path
   syllabusFile: z.string().optional(), // Store file URL/path  
   schemeOfWorkFile: z.string().optional(), // Store file URL/path
-  
+
   // Materials and resources (aligns with backend ClassDetail.materials)
   materials: z.array(z.object({
     id: z.string(),
@@ -82,7 +83,7 @@ export const classSchema = z.object({
     file: z.string().optional(), // Store file URL/path
     cost: z.string().optional()
   })).default([]),
-  
+
   // Resource links for additional learning materials
   resourceLinks: z.array(z.object({
     id: z.string(),
@@ -91,7 +92,7 @@ export const classSchema = z.object({
     description: z.string().optional(),
     type: z.enum(["article", "video", "document", "website", "tool"]).default("website")
   })).default([]),
-  
+
   lessonPlans: z.array(z.object({
     id: z.string(),
     title: z.string().optional(),
@@ -107,7 +108,7 @@ export type ClassFormValues = z.infer<typeof classSchema>;
 export type CohortData = {
   _id?: string; // Make it optional for new cohorts
   id?: string;  // Keep for backward compatibility
-  name: string; 
+  name: string;
   startDate: Date | null;
   endDate: Date | null;
   startTime: string;
@@ -116,12 +117,13 @@ export type CohortData = {
   price: string;
   discount: string;
   isActive: boolean;
+  currency?: string;
   lessonSchedules: LessonSchedule[];
   hasFlexibleSchedule: boolean;
-  
+
   // New fields for repeating lessons
   repeatSchedule: RepeatSchedule;
-  
+
   // New fields for enrollment limits and deadline
   minStudents: number;
   maxStudents: number;

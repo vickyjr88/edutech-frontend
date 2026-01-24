@@ -17,11 +17,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Progress } from "@/components/ui/progress";
-import { 
-  PlusCircle, 
-  CalendarIcon, 
-  Clock, 
-  Users, 
+import {
+  PlusCircle,
+  CalendarIcon,
+  Clock,
+  Users,
   InfoIcon,
   Info,
   Settings,
@@ -101,7 +101,7 @@ const CohortFormDialog: React.FC<CohortFormDialogProps> = ({
   const [dailySchedules, setDailySchedules] = useState<Record<string, { enabled: boolean; startTime: string; endTime: string; duration: number }>>({});
   const [isDirty, setIsDirty] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  
+
   const sections = [
     { id: "basic", title: "Cohort Details", icon: Settings, description: "Set up the basic information for your cohort" },
     { id: "schedule", title: "Class Schedule", icon: CalendarIcon, description: "Define when and how often your cohort meets" },
@@ -109,7 +109,7 @@ const CohortFormDialog: React.FC<CohortFormDialogProps> = ({
     { id: "pricing", title: "Course Pricing", icon: DollarSign, description: "Set the cost and any discounts for this cohort" },
     { id: "sessions", title: "Session Planning", icon: BookOpen, description: "Plan your class dates and virtual meeting setup" }
   ];
-  
+
   // Initialize daily schedules for each day
   useEffect(() => {
     const initialSchedules: Record<string, { enabled: boolean; startTime: string; endTime: string; duration: number }> = {};
@@ -145,7 +145,7 @@ const CohortFormDialog: React.FC<CohortFormDialogProps> = ({
       setErrors({});
     }
   }, [isOpen, cohort, totalNumberOfLessons]);
-  
+
   // Calculate weekly hours based on daily schedules
   useEffect(() => {
     const totalHours = Object.values(dailySchedules)
@@ -155,17 +155,17 @@ const CohortFormDialog: React.FC<CohortFormDialogProps> = ({
   }, [dailySchedules]);
 
   // Calculate end date when needed, not in useEffect to avoid infinite loop
-  const calculatedEndDate = formData.startDate ? 
-    calculateEndDate(formData.startDate, totalNumberOfLessons, formData.repeatSchedule) : 
+  const calculatedEndDate = formData.startDate ?
+    calculateEndDate(formData.startDate, totalNumberOfLessons, formData.repeatSchedule) :
     null;
-  
+
   const updateFormField = (field: keyof CohortData, value: any) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
     }));
     setIsDirty(true);
-    
+
     // Clear error for the field if it exists
     if (errors[field]) {
       setErrors(prev => {
@@ -175,7 +175,7 @@ const CohortFormDialog: React.FC<CohortFormDialogProps> = ({
       });
     }
   };
-  
+
   const updateRepeatScheduleField = (field: keyof RepeatSchedule, value: any) => {
     setFormData(prev => ({
       ...prev,
@@ -186,13 +186,13 @@ const CohortFormDialog: React.FC<CohortFormDialogProps> = ({
     }));
     setIsDirty(true);
   };
-  
+
   const toggleDayOfWeek = (day: string) => {
     const currentDays = formData.repeatSchedule.daysOfWeek;
     const updatedDays = currentDays.includes(day)
       ? currentDays.filter(d => d !== day)
       : [...currentDays, day];
-    
+
     updateRepeatScheduleField("daysOfWeek", updatedDays);
   };
 
@@ -266,91 +266,91 @@ const CohortFormDialog: React.FC<CohortFormDialogProps> = ({
 
   const completedSections = Object.values(completionStatus).filter(Boolean).length;
   const completionPercentage = (completedSections / sections.length) * 100;
-  
+
   // Validate individual section without updating errors state (to prevent infinite loops)
   const isValidSection = useCallback((sectionId: string): boolean => {
     if (sectionId === "basic") {
       return !!(formData.name);
     }
-    
+
     if (sectionId === "schedule") {
       return !!(formData.startDate && formData.repeatSchedule.daysOfWeek.length > 0 &&
         !(formData.repeatSchedule.pattern === "twice-weekly" && formData.repeatSchedule.daysOfWeek.length !== 2) &&
-        !(formData.repeatSchedule.pattern === "custom" && 
+        !(formData.repeatSchedule.pattern === "custom" &&
           (formData.repeatSchedule.repeatEvery <= 0 || formData.repeatSchedule.repeatEvery > 4)));
     }
-    
+
     if (sectionId === "enrollment") {
       return !!(formData.minStudents > 0 && formData.maxStudents >= formData.minStudents &&
-        !(formData.enrollmentDeadline && formData.startDate && 
+        !(formData.enrollmentDeadline && formData.startDate &&
           formData.enrollmentDeadline > formData.startDate));
     }
-    
+
     if (sectionId === "pricing") {
       return !!(formData.price && !isNaN(parseFloat(formData.price)) &&
         (!formData.discount || (!isNaN(parseFloat(formData.discount)) && parseFloat(formData.discount) >= 0 && parseFloat(formData.discount) <= 100)));
     }
-    
+
     return true;
   }, [formData.name, formData.startDate, formData.repeatSchedule.daysOfWeek.length, formData.repeatSchedule.pattern, formData.repeatSchedule.repeatEvery, formData.minStudents, formData.maxStudents, formData.enrollmentDeadline, formData.price, formData.discount]);
 
   // Validate individual section and update errors (only called when explicitly validating)
   const validateSection = (sectionId: string): boolean => {
     const newErrors: Record<string, string> = {};
-    
+
     if (sectionId === "basic") {
       if (!formData.name) {
         newErrors.name = "Cohort name is required";
       }
     }
-    
+
     if (sectionId === "schedule") {
       if (!formData.startDate) {
         newErrors.startDate = "Start date is required";
       }
-      
+
       if (formData.repeatSchedule.daysOfWeek.length === 0) {
         newErrors.daysOfWeek = "At least one day of the week must be selected";
       }
-      
+
       // Pattern validation
       if (formData.repeatSchedule.pattern === "twice-weekly" && formData.repeatSchedule.daysOfWeek.length !== 2) {
         newErrors.repeatPattern = "Twice-weekly schedule requires exactly 2 days";
       }
-      
+
       // If custom pattern, ensure repeatEvery is valid
-      if (formData.repeatSchedule.pattern === "custom" && 
-          (formData.repeatSchedule.repeatEvery <= 0 || formData.repeatSchedule.repeatEvery > 4)) {
+      if (formData.repeatSchedule.pattern === "custom" &&
+        (formData.repeatSchedule.repeatEvery <= 0 || formData.repeatSchedule.repeatEvery > 4)) {
         newErrors.repeatEvery = "Repeat interval must be between 1 and 4 weeks";
       }
     }
-    
+
     if (sectionId === "enrollment") {
       if (formData.minStudents <= 0) {
         newErrors.minStudents = "Minimum students must be at least 1";
       }
-      
+
       if (formData.maxStudents < formData.minStudents) {
         newErrors.maxStudents = "Maximum students must be greater than or equal to minimum students";
       }
-      
+
       // Deadline validation
-      if (formData.enrollmentDeadline && formData.startDate && 
-          formData.enrollmentDeadline > formData.startDate) {
+      if (formData.enrollmentDeadline && formData.startDate &&
+        formData.enrollmentDeadline > formData.startDate) {
         newErrors.enrollmentDeadline = "Enrollment deadline should be on or before the start date";
       }
     }
-    
+
     if (sectionId === "pricing") {
       if (!formData.price || isNaN(parseFloat(formData.price))) {
         newErrors.price = "Price must be a valid number";
       }
-      
+
       if (formData.discount && (isNaN(parseFloat(formData.discount)) || parseFloat(formData.discount) < 0 || parseFloat(formData.discount) > 100)) {
         newErrors.discount = "Discount must be a valid percentage (0-100)";
       }
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -358,7 +358,7 @@ const CohortFormDialog: React.FC<CohortFormDialogProps> = ({
   const validateForm = (): boolean => {
     return sections.every(section => validateSection(section.id));
   };
-  
+
   const handleNext = () => {
     const currentIndex = sections.findIndex(s => s.id === activeSection);
     if (validateSection(activeSection)) {
@@ -383,17 +383,17 @@ const CohortFormDialog: React.FC<CohortFormDialogProps> = ({
     if (validateForm()) {
       // Calculate the end date based on the start date, number of lessons, and repeat schedule
       const calculatedEndDate = calculateEndDate(formData.startDate, totalNumberOfLessons, formData.repeatSchedule);
-      
+
       const finalCohort = {
         ...formData,
         endDate: calculatedEndDate,
         numberOfLessons: totalNumberOfLessons
       };
-      
+
       onSave(finalCohort);
       onOpenChange(false);
       setIsDirty(false);
-      
+
       // Reset form state
       setFormData(defaultCohort);
       setActiveSection("basic");
@@ -404,7 +404,7 @@ const CohortFormDialog: React.FC<CohortFormDialogProps> = ({
       setWeeklyHours(0);
     }
   };
-  
+
   // SECTION 1: BASIC INFORMATION
   const renderBasicSection = () => (
     <div className="space-y-6">
@@ -523,7 +523,7 @@ const CohortFormDialog: React.FC<CohortFormDialogProps> = ({
               </p>
               {errors.minStudents && <p className="text-red-500 text-sm">{errors.minStudents}</p>}
             </div>
-            
+
             <div className="space-y-3">
               <Label htmlFor="max-students" className="text-base font-medium text-gray-700">
                 Maximum Students <span className="text-red-500">*</span>
@@ -542,7 +542,7 @@ const CohortFormDialog: React.FC<CohortFormDialogProps> = ({
               {errors.maxStudents && <p className="text-red-500 text-sm">{errors.maxStudents}</p>}
             </div>
           </div>
-          
+
           {/* Capacity Indicator */}
           <div className="p-4 bg-white rounded-lg border border-emerald-200">
             <div className="flex items-center justify-between mb-2">
@@ -595,15 +595,15 @@ const CohortFormDialog: React.FC<CohortFormDialogProps> = ({
                 {errors.enrollmentDeadline}
               </p>
             )}
-            {formData.enrollmentDeadline && formData.startDate && 
-             formData.enrollmentDeadline > formData.startDate && !errors.enrollmentDeadline && (
-              <div className="flex items-center gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg">
-                <AlertCircle className="h-4 w-4 text-amber-600" />
-                <p className="text-amber-700 text-sm">
-                  Warning: Deadline is after start date
-                </p>
-              </div>
-            )}
+            {formData.enrollmentDeadline && formData.startDate &&
+              formData.enrollmentDeadline > formData.startDate && !errors.enrollmentDeadline && (
+                <div className="flex items-center gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                  <AlertCircle className="h-4 w-4 text-amber-600" />
+                  <p className="text-amber-700 text-sm">
+                    Warning: Deadline is after start date
+                  </p>
+                </div>
+              )}
           </div>
         </div>
       </div>
@@ -624,62 +624,84 @@ const CohortFormDialog: React.FC<CohortFormDialogProps> = ({
       </div>
 
       <div className="space-y-6 p-6 bg-gradient-to-br from-purple-50 to-white rounded-2xl border border-purple-200 shadow-sm">
-        {/* Price Per Lesson and Total */}
+        {/* Currency and Price */}
         <div className="space-y-4">
           <Label className="text-lg font-semibold text-purple-800">Course Pricing</Label>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="space-y-3">
+              <Label htmlFor="cohort-currency" className="text-base font-medium text-gray-700">
+                Currency <span className="text-red-500">*</span>
+              </Label>
+              <Select
+                value={formData.currency || 'KES'}
+                onValueChange={(val) => updateFormField("currency", val)}
+              >
+                <SelectTrigger id="cohort-currency" className="h-12 border-2 border-purple-200 focus:border-purple-500 rounded-xl bg-white">
+                  <SelectValue placeholder="Select currency" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="KES">Kenyan Shilling (KES)</SelectItem>
+                  <SelectItem value="USD">US Dollar (USD)</SelectItem>
+                  <SelectItem value="GBP">British Pound (GBP)</SelectItem>
+                  <SelectItem value="EUR">Euro (EUR)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-3">
               <Label htmlFor="cohort-price" className="text-base font-medium text-gray-700">
-                Price for Entire Course (USD) <span className="text-red-500">*</span>
+                Price for Entire Course ({formData.currency || 'KES'}) <span className="text-red-500">*</span>
               </Label>
               <div className="relative">
-                <span className="absolute left-3 top-3.5 text-gray-500 text-base">$</span>
+                <span className="absolute left-3 top-3.5 text-gray-500 text-base">{formData.currency || 'KES'}</span>
                 <Input
                   id="cohort-price"
-                  className={cn("pl-12 h-12 text-base border-2 border-purple-200 focus:border-purple-500 focus:ring-purple-500 rounded-xl", errors.price && "border-red-500")}
+                  className={cn("pl-16 h-12 text-base border-2 border-purple-200 focus:border-purple-500 focus:ring-purple-500 rounded-xl", errors.price && "border-red-500")}
                   type="number"
                   min="0"
-                  step="100"
+                  step="1"
                   value={formData.price}
                   onChange={(e) => updateFormField("price", e.target.value)}
-                  placeholder="150"
+                  placeholder="1000"
                 />
               </div>
               <p className="text-sm text-gray-600">
-                Total price for all {totalNumberOfLessons} lessons in USD
+                Total price for all {totalNumberOfLessons} lessons
               </p>
               {errors.price && <p className="text-red-500 text-sm">{errors.price}</p>}
             </div>
-            
-            <div className="space-y-3">
-              <Label htmlFor="cohort-discount" className="text-base font-medium text-gray-700">
-                Discount (%)
-              </Label>
-              <Input
-                id="cohort-discount"
-                type="number"
-                min="0"
-                max="100"
-                value={formData.discount}
-                onChange={(e) => updateFormField("discount", e.target.value)}
-                placeholder="10"
-                className={cn("h-12 text-base border-2 border-purple-200 focus:border-purple-500 focus:ring-purple-500 rounded-xl", errors.discount ? "border-red-500" : "")}
-              />
-              <p className="text-sm text-gray-600">
-                Discount for siblings, friends, or early enrollment
-              </p>
-              {errors.discount && <p className="text-red-500 text-sm">{errors.discount}</p>}
-            </div>
           </div>
         </div>
-        
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="space-y-3">
+            <Label htmlFor="cohort-discount" className="text-base font-medium text-gray-700">
+              Discount (%)
+            </Label>
+            <Input
+              id="cohort-discount"
+              type="number"
+              min="0"
+              max="100"
+              value={formData.discount}
+              onChange={(e) => updateFormField("discount", e.target.value)}
+              placeholder="10"
+              className={cn("h-12 text-base border-2 border-purple-200 focus:border-purple-500 focus:ring-purple-500 rounded-xl", errors.discount ? "border-red-500" : "")}
+            />
+            <p className="text-sm text-gray-600">
+              Discount for siblings, friends, or early enrollment
+            </p>
+            {errors.discount && <p className="text-red-500 text-sm">{errors.discount}</p>}
+          </div>
+        </div>
+
         {/* Pricing Summary */}
         <div className="p-6 bg-white rounded-2xl border border-purple-200 shadow-sm">
           <h4 className="text-lg font-semibold text-purple-800 mb-4">Pricing Summary</h4>
           <div className="space-y-3">
             <div className="flex justify-between items-center">
               <span className="text-gray-700">Price per lesson:</span>
-              <span className="font-medium">${formData.price ? (parseFloat(formData.price) / totalNumberOfLessons).toFixed(0) : '0'}</span>
+              <span className="font-medium">{formData.currency || 'KES'} {formData.price ? (parseFloat(formData.price) / totalNumberOfLessons).toFixed(0) : '0'}</span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-gray-700">Total lessons:</span>
@@ -687,19 +709,19 @@ const CohortFormDialog: React.FC<CohortFormDialogProps> = ({
             </div>
             <div className="flex justify-between items-center">
               <span className="text-gray-700">Subtotal:</span>
-              <span className="font-medium">${formData.price || '0'}</span>
+              <span className="font-medium">{formData.currency || 'KES'} {formData.price || '0'}</span>
             </div>
             {formData.discount && parseFloat(formData.discount) > 0 && (
               <div className="flex justify-between items-center">
                 <span className="text-gray-700">Discount ({formData.discount}%):</span>
-                <span className="font-medium text-red-600">- ${formData.price ? ((parseFloat(formData.price) * parseFloat(formData.discount)) / 100).toFixed(0) : '0'}</span>
+                <span className="font-medium text-red-600">- {formData.currency || 'KES'} {formData.price ? ((parseFloat(formData.price) * parseFloat(formData.discount)) / 100).toFixed(0) : '0'}</span>
               </div>
             )}
             <Separator />
             <div className="flex justify-between items-center text-lg">
               <span className="font-bold text-purple-800">Final Course Price:</span>
               <span className="font-bold text-purple-800">
-                ${formData.price ? (parseFloat(formData.price) - ((parseFloat(formData.price) * parseFloat(formData.discount || '0')) / 100)).toFixed(0) : '0'}
+                {formData.currency || 'KES'} {formData.price ? (parseFloat(formData.price) - ((parseFloat(formData.price) * parseFloat(formData.discount || '0')) / 100)).toFixed(0) : '0'}
               </span>
             </div>
           </div>
@@ -807,7 +829,7 @@ const CohortFormDialog: React.FC<CohortFormDialogProps> = ({
               </Popover>
               {errors.startDate && <p className="text-red-500 text-sm mt-2">{errors.startDate}</p>}
             </div>
-            
+
             <div className="space-y-3">
               <div className="flex items-center gap-2">
                 <Label className="text-base font-medium text-gray-700">
@@ -843,19 +865,19 @@ const CohortFormDialog: React.FC<CohortFormDialogProps> = ({
               <div className="text-lg font-bold text-green-600">{weeklyHours.toFixed(1)} hours</div>
             </div>
           </div>
-          
+
           <div className="space-y-3">
             {daysOfWeek.map((day) => {
               const schedule = dailySchedules[day.value] || { enabled: false, startTime: "09:00", endTime: "10:00", duration: 60 };
               const isSelected = formData.repeatSchedule.daysOfWeek.includes(day.value);
-              
+
               return (
-                <div 
-                  key={day.value} 
+                <div
+                  key={day.value}
                   className={cn(
                     "flex items-center justify-between p-4 rounded-lg border-2 transition-all",
-                    isSelected 
-                      ? "border-green-500 bg-green-50" 
+                    isSelected
+                      ? "border-green-500 bg-green-50"
                       : "border-gray-200 bg-white hover:border-gray-300"
                   )}
                 >
@@ -872,7 +894,7 @@ const CohortFormDialog: React.FC<CohortFormDialogProps> = ({
                       {day.label}
                     </Label>
                   </div>
-                  
+
                   {isSelected && (
                     <div className="flex items-center gap-3">
                       <Input
@@ -893,7 +915,7 @@ const CohortFormDialog: React.FC<CohortFormDialogProps> = ({
                       </Badge>
                     </div>
                   )}
-                  
+
                   {!isSelected && (
                     <div className="text-sm text-gray-400 italic">Click to enable</div>
                   )}
@@ -901,7 +923,7 @@ const CohortFormDialog: React.FC<CohortFormDialogProps> = ({
               );
             })}
           </div>
-          
+
           {errors.daysOfWeek && <p className="text-red-500 text-sm mt-2">{errors.daysOfWeek}</p>}
         </div>
 
@@ -938,7 +960,7 @@ const CohortFormDialog: React.FC<CohortFormDialogProps> = ({
             </div>
           </RadioGroup>
           {errors.repeatPattern && <p className="text-red-500 text-sm mt-2">{errors.repeatPattern}</p>}
-          
+
           {formData.repeatSchedule.pattern === "custom" && (
             <div className="space-y-3 mt-4">
               <Label className="text-base font-medium text-gray-700">
@@ -972,14 +994,14 @@ const CohortFormDialog: React.FC<CohortFormDialogProps> = ({
           <div className="text-sm text-blue-700">
             {formData.repeatSchedule.daysOfWeek.length > 0 ? (
               <>
-                Classes on: {formData.repeatSchedule.daysOfWeek.map(day => 
+                Classes on: {formData.repeatSchedule.daysOfWeek.map(day =>
                   daysOfWeek.find(d => d.value === day)?.label
                 ).join(", ")}
                 <br />
                 Total weekly hours: {weeklyHours.toFixed(1)} hours
                 <br />
-                Pattern: {formData.repeatSchedule.pattern === "custom" 
-                  ? `Every ${formData.repeatSchedule.repeatEvery} week(s)` 
+                Pattern: {formData.repeatSchedule.pattern === "custom"
+                  ? `Every ${formData.repeatSchedule.repeatEvery} week(s)`
                   : formData.repeatSchedule.pattern}
               </>
             ) : (
@@ -1024,7 +1046,7 @@ const CohortFormDialog: React.FC<CohortFormDialogProps> = ({
               Auto-Generate Dates
             </Button>
           </div>
-          
+
           {/* Class Dates Preview */}
           <div className="bg-white rounded-lg border border-orange-200 p-4">
             <div className="text-sm text-gray-600 mb-3">Upcoming Sessions Preview</div>
@@ -1083,7 +1105,7 @@ const CohortFormDialog: React.FC<CohortFormDialogProps> = ({
                   Automatically sync your cohort sessions with Google Calendar to stay organized and send calendar invites to students.
                 </p>
                 <div className="flex items-center gap-3">
-                  <Button 
+                  <Button
                     type="button"
                     size="sm"
                     className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-md"
@@ -1095,7 +1117,7 @@ const CohortFormDialog: React.FC<CohortFormDialogProps> = ({
                     <Globe className="h-4 w-4 mr-2" />
                     Connect Google Calendar
                   </Button>
-                  <Button 
+                  <Button
                     type="button"
                     variant="ghost"
                     size="sm"
@@ -1121,8 +1143,8 @@ const CohortFormDialog: React.FC<CohortFormDialogProps> = ({
           </div>
           <div className="text-sm text-orange-700 space-y-1">
             <div>Total sessions: {totalNumberOfLessons}</div>
-            <div>Duration: {formData.startDate && formData.endDate ? 
-              `${Math.ceil((formData.endDate.getTime() - formData.startDate.getTime()) / (1000 * 60 * 60 * 24))} days` : 
+            <div>Duration: {formData.startDate && formData.endDate ?
+              `${Math.ceil((formData.endDate.getTime() - formData.startDate.getTime()) / (1000 * 60 * 60 * 24))} days` :
               'Not calculated yet'
             }</div>
             <div>Weekly commitment: {weeklyHours.toFixed(1)} hours</div>
@@ -1131,7 +1153,7 @@ const CohortFormDialog: React.FC<CohortFormDialogProps> = ({
       </div>
     </div>
   );
-  
+
   return (
     <>
       {buttonText && (
@@ -1140,12 +1162,12 @@ const CohortFormDialog: React.FC<CohortFormDialogProps> = ({
           {buttonText}
         </Button>
       )}
-      
+
       {/* Full-screen overlay */}
       {isOpen && (
         <div className="fixed inset-0 z-50 bg-gradient-to-br from-kidato-indigo-900/80 via-black/60 to-kidato-purple-900/80 backdrop-blur-sm flex items-center justify-center p-4">
           {/* Main popup container - 70% viewport */}
-          <div 
+          <div
             className="bg-gradient-to-br from-white via-kidato-indigo-50/50 to-white rounded-2xl shadow-2xl border border-kidato-indigo-200/50 w-[70%] h-full flex flex-col overflow-hidden animate-in fade-in-0 zoom-in-95 duration-300"
             onClick={(e) => e.stopPropagation()}
           >
@@ -1183,70 +1205,70 @@ const CohortFormDialog: React.FC<CohortFormDialogProps> = ({
                 </Button>
               </div>
             </div>
-        
-        {/* Progress indicator */}
-        <div className="px-6 py-4 bg-gradient-to-r from-kidato-indigo-50 to-white">
-          <div className="flex items-center justify-between mb-4">
-            <div className="text-sm text-gray-600">
-              {completedSections} of {sections.length} sections completed
-            </div>
-            <div className="text-sm font-medium text-kidato-indigo-600">
-              {completionPercentage.toFixed(0)}% complete
-            </div>
-          </div>
-          <Progress value={completionPercentage} className="h-2" />
-        </div>
-        
-        <div className="flex-grow overflow-hidden py-4">
-          <ScrollArea className="h-full">
-            <div className="px-6">
-              <Tabs value={activeSection} onValueChange={setActiveSection}>
-                {/* Section Navigation */}
-                <div className="mb-6">
-                  <TabsList className="grid w-full grid-cols-5 h-auto p-2 bg-gradient-to-r from-kidato-spindle-300 via-kidato-gray-100 to-kidato-spindle-300 rounded-xl border border-kidato-indigo/20 shadow-sm">
-                    {sections.map((section) => {
-                      const Icon = section.icon;
-                      const isCompleted = completionStatus[section.id as keyof typeof completionStatus];
-                      return (
-                        <TabsTrigger
-                          key={section.id}
-                          value={section.id}
-                          onClick={() => setActiveSection(section.id)}
-                          className="flex flex-col items-center gap-2 px-3 py-4 text-sm data-[state=active]:bg-gradient-to-br data-[state=active]:from-kidato-indigo data-[state=active]:to-kidato-orange data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:border data-[state=active]:border-kidato-indigo/30 rounded-lg transition-all duration-200 hover:bg-gradient-to-br hover:from-kidato-spindle-100 hover:to-kidato-gray-50 cursor-pointer"
-                        >
-                          <div className="flex items-center gap-1">
-                            <Icon className={`h-5 w-5 ${isCompleted ? 'text-green-400' : activeSection === section.id ? 'text-white' : 'text-gray-500'}`} />
-                            {isCompleted && <CheckCircle2 className={`h-4 w-4 ${activeSection === section.id ? 'text-green-200' : 'text-green-600'}`} />}
-                          </div>
-                          <span className={`font-medium text-center leading-tight ${activeSection === section.id ? 'text-white' : 'text-gray-700'}`}>
-                            {section.title}
-                          </span>
-                        </TabsTrigger>
-                      );
-                    })}
-                  </TabsList>
-                </div>
 
-                <TabsContent value="basic" className="mt-0">
-                  {renderBasicSection()}
-                </TabsContent>
-                <TabsContent value="schedule" className="mt-0">
-                  {renderScheduleSection()}
-                </TabsContent>
-                <TabsContent value="enrollment" className="mt-0">
-                  {renderEnrollmentSection()}
-                </TabsContent>
-                <TabsContent value="pricing" className="mt-0">
-                  {renderPricingSection()}
-                </TabsContent>
-                <TabsContent value="sessions" className="mt-0">
-                  {renderSessionsSection()}
-                </TabsContent>
-              </Tabs>
+            {/* Progress indicator */}
+            <div className="px-6 py-4 bg-gradient-to-r from-kidato-indigo-50 to-white">
+              <div className="flex items-center justify-between mb-4">
+                <div className="text-sm text-gray-600">
+                  {completedSections} of {sections.length} sections completed
+                </div>
+                <div className="text-sm font-medium text-kidato-indigo-600">
+                  {completionPercentage.toFixed(0)}% complete
+                </div>
+              </div>
+              <Progress value={completionPercentage} className="h-2" />
             </div>
-          </ScrollArea>
-        </div>
-        
+
+            <div className="flex-grow overflow-hidden py-4">
+              <ScrollArea className="h-full">
+                <div className="px-6">
+                  <Tabs value={activeSection} onValueChange={setActiveSection}>
+                    {/* Section Navigation */}
+                    <div className="mb-6">
+                      <TabsList className="grid w-full grid-cols-5 h-auto p-2 bg-gradient-to-r from-kidato-spindle-300 via-kidato-gray-100 to-kidato-spindle-300 rounded-xl border border-kidato-indigo/20 shadow-sm">
+                        {sections.map((section) => {
+                          const Icon = section.icon;
+                          const isCompleted = completionStatus[section.id as keyof typeof completionStatus];
+                          return (
+                            <TabsTrigger
+                              key={section.id}
+                              value={section.id}
+                              onClick={() => setActiveSection(section.id)}
+                              className="flex flex-col items-center gap-2 px-3 py-4 text-sm data-[state=active]:bg-gradient-to-br data-[state=active]:from-kidato-indigo data-[state=active]:to-kidato-orange data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:border data-[state=active]:border-kidato-indigo/30 rounded-lg transition-all duration-200 hover:bg-gradient-to-br hover:from-kidato-spindle-100 hover:to-kidato-gray-50 cursor-pointer"
+                            >
+                              <div className="flex items-center gap-1">
+                                <Icon className={`h-5 w-5 ${isCompleted ? 'text-green-400' : activeSection === section.id ? 'text-white' : 'text-gray-500'}`} />
+                                {isCompleted && <CheckCircle2 className={`h-4 w-4 ${activeSection === section.id ? 'text-green-200' : 'text-green-600'}`} />}
+                              </div>
+                              <span className={`font-medium text-center leading-tight ${activeSection === section.id ? 'text-white' : 'text-gray-700'}`}>
+                                {section.title}
+                              </span>
+                            </TabsTrigger>
+                          );
+                        })}
+                      </TabsList>
+                    </div>
+
+                    <TabsContent value="basic" className="mt-0">
+                      {renderBasicSection()}
+                    </TabsContent>
+                    <TabsContent value="schedule" className="mt-0">
+                      {renderScheduleSection()}
+                    </TabsContent>
+                    <TabsContent value="enrollment" className="mt-0">
+                      {renderEnrollmentSection()}
+                    </TabsContent>
+                    <TabsContent value="pricing" className="mt-0">
+                      {renderPricingSection()}
+                    </TabsContent>
+                    <TabsContent value="sessions" className="mt-0">
+                      {renderSessionsSection()}
+                    </TabsContent>
+                  </Tabs>
+                </div>
+              </ScrollArea>
+            </div>
+
             {/* Footer */}
             <div className="px-6 py-4 border-t bg-gradient-to-r from-kidato-indigo-50 via-white to-kidato-purple-50 flex items-center justify-between">
               <div className="flex items-center gap-4">

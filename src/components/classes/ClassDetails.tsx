@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Link } from "react-router-dom";
-import { ArrowLeft, Heart, BookOpen, Clock, Users, Calendar, CheckCircle, User as UserIcon, Globe, Monitor, Video, FileText } from "lucide-react";
+import { ArrowLeft, Heart, BookOpen, Clock, Users, Calendar, CheckCircle, User as UserIcon, Globe, Monitor, Video, FileText, Star, Award, GraduationCap, LogIn, Lock } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,6 +12,7 @@ import { useClassById } from "@/hooks/use-class-service";
 import { classService } from "@/integrations/api/services/class.service";
 import { userService } from "@/integrations/api/services/user.service";
 import MvpOfferingService from "@/integrations/api/services/mvp-offering.service";
+import { teacherService } from "@/integrations/api/services/teacher.service";
 import { ClassItemProps } from "@/components/common/ClassCard";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -59,15 +60,83 @@ const ClassDetails = () => {
     retry: false
   });
 
-  const classDetail = response?.data;
-  const isLoading = (isClassLoading && isOfferingLoading) || (isSlug && !resolvedId && !allClasses);
+  const classDetail = response?.data as any;
+  const offeringData = offering as any;
+
+  // Extract teacherId from offering or class detail
+  const extractedTeacherId = offeringData?.teacherId || classDetail?.teacher?._id || classDetail?.teacher?.id || classDetail?.teacherId;
+
+  // Fetch teacher profile if we have a teacherId
+  // Offerings store User ID in teacherId, while Classes store TeacherProfile ID
+  const { data: teacherProfileData, isLoading: isTeacherLoading } = useQuery({
+    queryKey: ['teacherProfile', extractedTeacherId, !!offeringData],
+    queryFn: async () => {
+      if (!extractedTeacherId) return null;
+
+      try {
+        // If we have offeringData, the extractedTeacherId is a User ID
+        if (offeringData) {
+          const result = await teacherService.getProfileByUserId(extractedTeacherId);
+          return result.data;
+        }
+
+        // Otherwise try as a profile ID
+        const result = await teacherService.getProfileById(extractedTeacherId);
+        return result.data;
+      } catch (err) {
+        console.error("Error fetching teacher profile:", err);
+
+        // Fallback: try the other way if the first one failed
+        try {
+          if (offeringData) {
+            const result = await teacherService.getProfileById(extractedTeacherId);
+            return result.data;
+          } else {
+            const result = await teacherService.getProfileByUserId(extractedTeacherId);
+            return result.data;
+          }
+        } catch (fallbackErr) {
+          return null;
+        }
+      }
+    },
+    enabled: !!extractedTeacherId,
+    retry: false
+  });
+
+  const isLoading = (isClassLoading && isOfferingLoading) || (isSlug && !resolvedId && !allClasses) || isTeacherLoading;
   const error = classError && offeringError;
 
   const handleBookmark = async () => {
     if (!user) {
       toast({
-        title: "Authentication Required",
-        description: "Please log in to save classes to your wishlist.",
+        title: "Sign in required",
+        description: (
+          <div className="flex items-start gap-2 pt-1">
+            <Lock className="h-4 w-4 text-kidato-purple shrink-0 mt-0.5" />
+            <span>Log in to save classes to your personal wishlist and track your interests.</span>
+          </div>
+        ),
+        className: "border-l-4 border-l-kidato-purple bg-white shadow-xl",
+        action: (
+          <div className="flex flex-col gap-2 min-w-[100px]">
+            <Button size="sm" onClick={() => navigate('/login')} className="bg-kidato-purple hover:bg-kidato-dark-blue shadow-sm">
+              Log In
+            </Button>
+            <Button size="sm" variant="ghost" onClick={() => navigate('/signup')} className="text-xs text-muted-foreground hover:text-kidato-purple h-auto py-1">
+              Create account
+            </Button>
+          </div>
+        )
+      });
+      return;
+    }
+
+    // Check if user is parent or student
+    if (user.role !== 'parent' && user.role !== 'student') {
+      toast({
+        title: "Access Restricted",
+        description: "Only parents and students can save classes to wishlist.",
         variant: "destructive",
       });
       return;
@@ -96,6 +165,44 @@ const ClassDetails = () => {
     }
   };
 
+  const handleEnroll = () => {
+    if (!user) {
+      toast({
+        title: "Almost there!",
+        description: (
+          <div className="flex items-start gap-2 pt-1">
+            <Lock className="h-4 w-4 text-kidato-purple shrink-0 mt-0.5" />
+            <span>Please sign in or create an account to enroll in this class and start learning.</span>
+          </div>
+        ),
+        className: "border-l-4 border-l-kidato-purple bg-white shadow-xl",
+        action: (
+          <div className="flex flex-col gap-2 min-w-[100px]">
+            <Button size="sm" onClick={() => navigate('/login')} className="bg-kidato-purple hover:bg-kidato-dark-blue shadow-sm">
+              Log In
+            </Button>
+            <Button size="sm" variant="ghost" onClick={() => navigate('/signup')} className="text-xs text-muted-foreground hover:text-kidato-purple h-auto py-1">
+              Create account
+            </Button>
+          </div>
+        )
+      });
+      return;
+    }
+
+    // Check if user is parent or student
+    if (user.role !== 'parent' && user.role !== 'student') {
+      toast({
+        title: "Access Restricted",
+        description: "Only parents and students can enroll in classes.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    navigate(`/book/${resolvedId || id}`);
+  };
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-[50vh]">
@@ -104,8 +211,21 @@ const ClassDetails = () => {
     );
   }
 
-  // Use either classDetail OR offering
-  const displayItem = (classDetail || offering) as any;
+  // Use either classDetail OR offering and merge with teacher profile
+  const baseItem = (classDetail || offering) as any;
+
+  // Merge teacher profile data into displayItem
+  const displayItem = {
+    ...baseItem,
+    teacher: teacherProfileData || baseItem?.teacher
+  };
+
+  // Debug logging
+  console.log('Class Detail Data:', classDetail);
+  console.log('Offering Data:', offering);
+  console.log('Teacher Profile Data:', teacherProfileData);
+  console.log('Display Item:', displayItem);
+  console.log('Teacher Data:', displayItem?.teacher);
 
   if ((!classDetail && !offering) || (classError && offeringError)) {
     return (
@@ -134,11 +254,60 @@ const ClassDetails = () => {
   // Adapt for both ClassDetail and Offering shapes
   const activeCohort = classDetail?.cohorts?.[0];
 
+  // Extract teacher ID with multiple fallbacks
+  const getTeacherId = (): string => {
+    // If teacher is a populated object
+    if (displayItem.teacher && typeof displayItem.teacher === 'object') {
+      // Prioritize User ID as the TeacherProfilePage expects User ID for lookup
+      return displayItem.teacher.userId ||
+        displayItem.teacher.user?._id ||
+        displayItem.teacher.user?.id ||
+        displayItem.teacher._id ||
+        displayItem.teacher.id || '';
+    }
+    // If teacher is just an ID string
+    if (displayItem.teacher && typeof displayItem.teacher === 'string') {
+      return displayItem.teacher;
+    }
+    // Alternative fields
+    return displayItem.teacherId || displayItem.teacherProfileId || displayItem.createdBy || '';
+  };
+
+  // Extract teacher name with multiple fallbacks
+  const getTeacherName = (): string => {
+    // First try the fetched teacher profile data
+    if (teacherProfileData) {
+      return teacherProfileData.user?.fullName ||
+        teacherProfileData.fullName ||
+        teacherProfileData.name ||
+        teacherProfileData.user?.name ||
+        "Expert Teacher";
+    }
+
+    // Then try the displayItem.teacher object
+    if (displayItem.teacher && typeof displayItem.teacher === 'object') {
+      return displayItem.teacher.user?.fullName ||
+        displayItem.teacher.fullName ||
+        displayItem.teacher.name ||
+        displayItem.teacher.user?.name ||
+        "Expert Teacher";
+    }
+
+    return displayItem.teacherName || "Expert Teacher";
+  };
+
+  const teacherId = getTeacherId();
+  const teacherName = getTeacherName();
+
+  console.log('Extracted Teacher ID:', teacherId);
+  console.log('Extracted Teacher Name:', teacherName);
+  console.log('Teacher Profile Data for name:', teacherProfileData);
+
   const classItem = {
     title: displayItem.title,
     subject: displayItem.subject || displayItem.curriculum,
     level: displayItem.gradeLevel || displayItem.level,
-    teacher: displayItem.teacher?.user?.fullName || displayItem.teacher?.name || "Expert Teacher",
+    teacher: teacherName,
     rating: displayItem.rating || 5.0,
     time: activeCohort
       ? `${activeCohort.daysOfWeek.join(' & ')}, ${activeCohort.startTime}`
@@ -147,7 +316,9 @@ const ClassDetails = () => {
     spots: activeCohort
       ? `${activeCohort.maximumStudents - activeCohort.currentStudents} spots left`
       : "Open",
-    price: activeCohort ? `$${activeCohort.price}/class` : (displayItem.price ? `$${displayItem.price}` : "Price Varies")
+    price: activeCohort
+      ? `${displayItem.currency || 'KES'} ${activeCohort.price}/class`
+      : (displayItem.price ? `${displayItem.currency || 'KES'} ${displayItem.price}` : "Price Varies")
   };
 
   // Student/parent view
@@ -182,9 +353,16 @@ const ClassDetails = () => {
           <Button
             size="lg"
             className="bg-kidato-purple hover:bg-kidato-dark-blue flex-1 md:flex-none"
-            onClick={() => navigate(`/book/${resolvedId || id}`)}
+            onClick={handleEnroll}
           >
-            Enroll Now
+            {!user ? (
+              <>
+                <LogIn className="h-4 w-4 mr-2" />
+                Log In to Enroll
+              </>
+            ) : (
+              'Enroll Now'
+            )}
           </Button>
 
           <Button
@@ -212,6 +390,56 @@ const ClassDetails = () => {
             <div className="prose max-w-none text-gray-700 whitespace-pre-wrap">
               {displayItem.description || displayItem.summary || "No description available for this class."}
             </div>
+          </section>
+
+          <Separator />
+
+          {/* Class Overview Stats */}
+          <section className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex flex-col items-center text-center">
+                  <Users className="h-8 w-8 text-kidato-purple mb-2" />
+                  <p className="text-2xl font-bold text-gray-900">
+                    {activeCohort?.currentStudents || 0}
+                  </p>
+                  <p className="text-sm text-gray-600">Students Enrolled</p>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex flex-col items-center text-center">
+                  <BookOpen className="h-8 w-8 text-kidato-purple mb-2" />
+                  <p className="text-2xl font-bold text-gray-900">
+                    {displayItem.numberOfLessons || displayItem.numberOfSessions || 1}
+                  </p>
+                  <p className="text-sm text-gray-600">Total Lessons</p>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex flex-col items-center text-center">
+                  <Clock className="h-8 w-8 text-kidato-purple mb-2" />
+                  <p className="text-2xl font-bold text-gray-900">
+                    {displayItem.sessionDuration || 60}
+                  </p>
+                  <p className="text-sm text-gray-600">Minutes/Lesson</p>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex flex-col items-center text-center">
+                  <Star className="h-8 w-8 text-yellow-400 mb-2" />
+                  <p className="text-2xl font-bold text-gray-900">
+                    {displayItem.rating || classItem.rating || 5.0}
+                  </p>
+                  <p className="text-sm text-gray-600">Rating</p>
+                </div>
+              </CardContent>
+            </Card>
           </section>
 
           <Separator />
@@ -255,29 +483,112 @@ const ClassDetails = () => {
             </section>
           )}
 
-          {/* Teacher Profile */}
+          {/* Teacher Profile - Enhanced */}
           <section className="bg-white border rounded-xl p-6 shadow-sm">
-            <h2 className="text-xl font-bold text-gray-900 mb-6">Meet Your Teacher</h2>
+            <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+              <GraduationCap className="h-5 w-5 text-kidato-purple" />
+              Meet Your Teacher
+            </h2>
             <div className="flex flex-col sm:flex-row gap-6 items-start">
-              <Avatar className="h-24 w-24 border-2 border-gray-100">
-                <AvatarImage src={displayItem.teacher?.user?.profileImage || displayItem.teacher?.profileImage} />
-                <AvatarFallback className="text-xl bg-indigo-100 text-indigo-700">
-                  {classItem.teacher.charAt(0)}
-                </AvatarFallback>
-              </Avatar>
-              <div className="space-y-2">
-                <h3 className="text-lg font-bold">{classItem.teacher}</h3>
-                <div className="flex items-center gap-2 text-sm text-gray-500">
-                  <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Verified Teacher</Badge>
-                  <span>•</span>
-                  <span>Joined {new Date().getFullYear()}</span>
+              {teacherId ? (
+                <Link
+                  to={`/teacher/${teacherId}`}
+                  className="flex-shrink-0"
+                >
+                  <Avatar className="h-24 w-24 border-2 border-kidato-purple hover:border-kidato-dark-blue transition-colors cursor-pointer">
+                    <AvatarImage src={displayItem.teacher?.user?._signedProfileImage || displayItem.teacher?.user?.profileImage || displayItem.teacher?.profileImage} />
+                    <AvatarFallback className="text-xl bg-indigo-100 text-indigo-700">
+                      {classItem.teacher.charAt(0)}
+                    </AvatarFallback>
+                  </Avatar>
+                </Link>
+              ) : (
+                <Avatar className="h-24 w-24 border-2 border-gray-200">
+                  <AvatarImage src={displayItem.teacher?.user?._signedProfileImage || displayItem.teacher?.user?.profileImage || displayItem.teacher?.profileImage} />
+                  <AvatarFallback className="text-xl bg-indigo-100 text-indigo-700">
+                    {classItem.teacher.charAt(0)}
+                  </AvatarFallback>
+                </Avatar>
+              )}
+              <div className="space-y-3 flex-1">
+                <div>
+                  {teacherId ? (
+                    <Link
+                      to={`/teacher/${teacherId}`}
+                      className="text-lg font-bold hover:text-kidato-purple transition-colors"
+                    >
+                      {classItem.teacher}
+                    </Link>
+                  ) : (
+                    <h3 className="text-lg font-bold">{classItem.teacher}</h3>
+                  )}
+                  <div className="flex flex-wrap items-center gap-2 mt-2 text-sm">
+                    <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                      <Award className="h-3 w-3 mr-1" />
+                      Verified Teacher
+                    </Badge>
+                    {displayItem.teacher?.rating && (
+                      <div className="flex items-center gap-1 text-gray-600">
+                        <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                        <span className="font-medium">{displayItem.teacher.rating.toFixed(1)}</span>
+                        {displayItem.teacher?.totalReviews && (
+                          <span className="text-gray-500">({displayItem.teacher.totalReviews} reviews)</span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  {/* Teacher stats */}
+                  {(displayItem.teacher?.totalStudents || displayItem.teacher?.totalClasses || displayItem.teacher?.totalHours) && (
+                    <div className="flex flex-wrap gap-4 mt-3 text-sm text-gray-600">
+                      {displayItem.teacher?.totalStudents && (
+                        <div className="flex items-center gap-1">
+                          <Users className="h-4 w-4" />
+                          <span>{displayItem.teacher.totalStudents}+ students</span>
+                        </div>
+                      )}
+                      {displayItem.teacher?.totalClasses && (
+                        <div className="flex items-center gap-1">
+                          <BookOpen className="h-4 w-4" />
+                          <span>{displayItem.teacher.totalClasses} classes</span>
+                        </div>
+                      )}
+                      {displayItem.teacher?.totalHours && (
+                        <div className="flex items-center gap-1">
+                          <Clock className="h-4 w-4" />
+                          <span>{displayItem.teacher.totalHours}+ hours taught</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
                 <p className="text-gray-600 leading-relaxed">
                   {displayItem.teacher?.user?.bio || displayItem.teacher?.bio || "Passionate educator dedicated to inspiring students and creating engaging learning experiences."}
                 </p>
-                <Button variant="link" className="p-0 h-auto text-kidato-purple">
-                  View Full Profile
-                </Button>
+                {/* Teacher subjects/expertise */}
+                {displayItem.teacher?.subjects && displayItem.teacher.subjects.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {displayItem.teacher.subjects.slice(0, 3).map((subject: any, idx: number) => (
+                      <Badge key={idx} variant="secondary" className="text-xs">
+                        {typeof subject === 'string' ? subject : subject.subject || subject.name}
+                      </Badge>
+                    ))}
+                    {displayItem.teacher.subjects.length > 3 && (
+                      <Badge variant="secondary" className="text-xs">
+                        +{displayItem.teacher.subjects.length - 3} more
+                      </Badge>
+                    )}
+                  </div>
+                )}
+                {teacherId && (
+                  <Link
+                    to={`/teacher/${teacherId}`}
+                    className="inline-block"
+                  >
+                    <Button variant="outline" className="text-kidato-purple border-kidato-purple hover:bg-kidato-purple hover:text-white">
+                      View Full Profile →
+                    </Button>
+                  </Link>
+                )}
               </div>
             </div>
           </section>
@@ -337,12 +648,19 @@ const ClassDetails = () => {
 
               <Button
                 className="w-full bg-kidato-purple hover:bg-kidato-dark-blue"
-                onClick={() => navigate(`/book/${resolvedId || id}`)}
+                onClick={handleEnroll}
               >
-                Enroll Now
+                {!user ? (
+                  <>
+                    <LogIn className="h-4 w-4 mr-2" />
+                    Log In to Enroll
+                  </>
+                ) : (
+                  'Enroll Now'
+                )}
               </Button>
               <p className="text-xs text-center text-gray-500 mt-2">
-                100% Satisfaction Guarantee
+                {user ? '100% Satisfaction Guarantee' : 'Create an account to get started'}
               </p>
             </CardContent>
           </Card>

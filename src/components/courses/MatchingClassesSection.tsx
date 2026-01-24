@@ -87,7 +87,7 @@ const MatchingClassesSection = ({ course }: MatchingClassesSectionProps) => {
 
             <div className="flex justify-end space-x-2">
               <Button variant="outline" asChild>
-                <Link to={`/teacher/${matchingTeacher._id}`}>
+                <Link to={`/teacher/${matchingTeacher.user?._id || matchingTeacher.user}`}>
                   View Profile
                 </Link>
               </Button>
@@ -135,7 +135,7 @@ const MatchingClassesSection = ({ course }: MatchingClassesSectionProps) => {
                   <span className="font-medium">{course.rating}</span>
                 </div>
                 <div className="flex items-center text-gray-700">
-                  <DollarSign className="h-3.5 w-3.5 text-gray-500 mr-0.5" />
+                  <span className="text-gray-500 mr-1 font-medium">{cohort?.pricing?.currency || course.currency || 'KES'}</span>
                   <span>{cohort?.price || 'Free'}/class</span>
                 </div>
               </div>

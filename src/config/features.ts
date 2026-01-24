@@ -165,7 +165,7 @@ export const API_CONFIG = {
   baseURL,
   // Derive mvpURL from baseURL if VITE_MVP_API_URL is not set
   mvpURL: import.meta.env.VITE_MVP_API_URL || `${baseURL}/mvp`,
-  timeout: parseInt(import.meta.env.VITE_API_TIMEOUT || '10000', 10),
+  timeout: parseInt(import.meta.env.VITE_API_TIMEOUT || '30000', 10),
 };
 
 // Regional Settings

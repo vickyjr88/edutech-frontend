@@ -7,7 +7,7 @@
  * - Course (series of lessons)
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -29,6 +29,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useConfirmationDialog } from '@/components/ui/confirmation-dialog';
 import { mvpApiClient } from '@/integrations/api/mvp-client';
 import MvpOfferingService, { Offering as ServiceOffering } from '@/integrations/api/services/mvp-offering.service';
+import { useGetCurrentTeacherProfile } from '@/hooks/use-teacher-service';
 
 // Offering types for MVP
 export type OfferingType = 'one-time' | 'monthly-package' | 'course';
@@ -75,6 +76,12 @@ export default function OfferingsManager() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
 
+  // Ref to prevent duplicate API calls in StrictMode
+  const initialLoadDone = useRef(false);
+
+  // Fetch teacher profile to get subjects, curricula, and grade levels
+  const { data: teacherProfile, isLoading: isProfileLoading } = useGetCurrentTeacherProfile();
+
   const {
     register,
     handleSubmit,
@@ -97,8 +104,60 @@ export default function OfferingsManager() {
   // Fetch stats separately
   const [stats, setStats] = useState<any[]>([]);
 
+  // Extract unique subjects, curricula, and grade levels from teacher profile
+  const getUniqueSubjects = () => {
+    if (!teacherProfile?.subjects) return [];
+    const subjects = new Set<string>();
+    teacherProfile.subjects.forEach((subject: any) => {
+      if (subject.subject) subjects.add(subject.subject);
+    });
+    return Array.from(subjects).sort();
+  };
+
+  const getUniqueCurricula = () => {
+    if (!teacherProfile?.subjects) return [];
+    const curricula = new Set<string>();
+    teacherProfile.subjects.forEach((subject: any) => {
+      if (subject.curriculum) curricula.add(subject.curriculum);
+    });
+    // Also check experience for curricula
+    if (teacherProfile?.experience) {
+      teacherProfile.experience.forEach((exp: any) => {
+        if (exp.curriculums && Array.isArray(exp.curriculums)) {
+          exp.curriculums.forEach((curr: string) => curricula.add(curr));
+        }
+      });
+    }
+    return Array.from(curricula).sort();
+  };
+
+  const getUniqueGradeLevels = () => {
+    if (!teacherProfile?.subjects) return [];
+    const gradeLevels = new Set<string>();
+    teacherProfile.subjects.forEach((subject: any) => {
+      if (subject.gradeLevel) gradeLevels.add(subject.gradeLevel);
+    });
+    // Also check experience for grades
+    if (teacherProfile?.experience) {
+      teacherProfile.experience.forEach((exp: any) => {
+        if (exp.grades && Array.isArray(exp.grades)) {
+          exp.grades.forEach((grade: string) => gradeLevels.add(grade));
+        }
+      });
+    }
+    return Array.from(gradeLevels).sort();
+  };
+
+  const availableSubjects = getUniqueSubjects();
+  const availableCurricula = getUniqueCurricula();
+  const availableGradeLevels = getUniqueGradeLevels();
+
   // Load offerings and stats on mount
   useEffect(() => {
+    // Prevent duplicate calls in StrictMode
+    if (initialLoadDone.current) return;
+
+    initialLoadDone.current = true;
     loadOfferings();
     loadStats();
   }, []);
@@ -118,11 +177,6 @@ export default function OfferingsManager() {
       const data = await MvpOfferingService.getMyOfferings();
       // Cast the response to Offering[] to satisfy local interface
       setOfferings(data as unknown as Offering[]);
-
-      toast({
-        title: 'Offerings loaded',
-        description: 'Your offerings have been loaded successfully.',
-      });
     } catch (error) {
       console.error('Error loading offerings:', error);
       toast({
@@ -267,7 +321,7 @@ export default function OfferingsManager() {
     }
   };
 
-  if (isLoading) {
+  if (isLoading || isProfileLoading) {
     return (
       <div className="flex justify-center items-center min-h-[400px]">
         <div className="flex flex-col items-center">
@@ -308,6 +362,28 @@ export default function OfferingsManager() {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+              {/* Profile Completion Notice */}
+              {availableSubjects.length === 0 && (
+                <div className="p-4 bg-amber-50 border-l-4 border-amber-500 rounded-md">
+                  <div className="flex items-start">
+                    <div className="flex-shrink-0">
+                      <svg className="h-5 w-5 text-amber-400" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <div className="ml-3">
+                      <h3 className="text-sm font-medium text-amber-800">
+                        Complete Your Teaching Profile First
+                      </h3>
+                      <p className="mt-2 text-sm text-amber-700">
+                        To create offerings, you need to add your teaching expertise (subjects, curricula, and grade levels) in your profile first.
+                        Visit your <a href="/teacher-profile-journey" className="font-medium underline">Teaching Expertise</a> section to add this information.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Offering Type */}
               <div className="space-y-2">
                 <Label htmlFor="type">Offering Type *</Label>
@@ -375,11 +451,29 @@ export default function OfferingsManager() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="subject">Subject *</Label>
-                  <Input
-                    id="subject"
-                    placeholder="e.g., Mathematics"
-                    {...register('subject')}
-                  />
+                  {availableSubjects.length > 0 ? (
+                    <Select
+                      value={watch('subject')}
+                      onValueChange={(value) => setValue('subject', value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select subject from your profile" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {availableSubjects.map((subject) => (
+                          <SelectItem key={subject} value={subject}>
+                            {subject}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <div className="p-3 bg-amber-50 border border-amber-200 rounded-md">
+                      <p className="text-sm text-amber-800">
+                        No subjects found in your profile. Please add subjects in your Teaching Expertise section first.
+                      </p>
+                    </div>
+                  )}
                   {errors.subject && (
                     <p className="text-sm text-red-600">{errors.subject.message}</p>
                   )}
@@ -387,31 +481,58 @@ export default function OfferingsManager() {
 
                 <div className="space-y-2">
                   <Label htmlFor="curriculum">Curriculum</Label>
-                  <Select
-                    onValueChange={(value) => setValue('curriculum', value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select curriculum" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="CBC">CBC (Competency Based Curriculum)</SelectItem>
-                      <SelectItem value="8-4-4">8-4-4 System</SelectItem>
-                      <SelectItem value="IGCSE">IGCSE</SelectItem>
-                      <SelectItem value="IB">International Baccalaureate</SelectItem>
-                      <SelectItem value="American">American Curriculum</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  {availableCurricula.length > 0 ? (
+                    <Select
+                      value={watch('curriculum')}
+                      onValueChange={(value) => setValue('curriculum', value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select curriculum from your profile" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {availableCurricula.map((curriculum) => (
+                          <SelectItem key={curriculum} value={curriculum}>
+                            {curriculum}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <div className="p-3 bg-blue-50 border border-blue-200 rounded-md">
+                      <p className="text-sm text-blue-800">
+                        No curricula found. You can leave this blank or add curricula to your profile.
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
 
               {/* Grade Level */}
               <div className="space-y-2">
                 <Label htmlFor="gradeLevel">Grade Level</Label>
-                <Input
-                  id="gradeLevel"
-                  placeholder="e.g., Grade 8, Form 3, Year 10"
-                  {...register('gradeLevel')}
-                />
+                {availableGradeLevels.length > 0 ? (
+                  <Select
+                    value={watch('gradeLevel')}
+                    onValueChange={(value) => setValue('gradeLevel', value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select grade level from your profile" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availableGradeLevels.map((grade) => (
+                        <SelectItem key={grade} value={grade}>
+                          {grade}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <div className="p-3 bg-blue-50 border border-blue-200 rounded-md">
+                    <p className="text-sm text-blue-800">
+                      No grade levels found. You can leave this blank or add grade levels to your profile.
+                    </p>
+                  </div>
+                )}
               </div>
 
               {/* Session Duration and Sessions */}
@@ -511,7 +632,10 @@ export default function OfferingsManager() {
 
               {/* Form Actions */}
               <div className="flex gap-3 pt-4">
-                <Button type="submit" disabled={isSubmitting}>
+                <Button
+                  type="submit"
+                  disabled={isSubmitting || availableSubjects.length === 0}
+                >
                   {isSubmitting ? 'Saving...' : editingId ? 'Update Offering' : 'Create Offering'}
                 </Button>
                 <Button type="button" variant="outline" onClick={handleCancel}>

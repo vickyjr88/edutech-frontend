@@ -7,7 +7,7 @@
  * - Approve or reject with comments
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -72,22 +72,38 @@ export default function TeacherApprovalQueue() {
   const [reviewComments, setReviewComments] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const isFetching = useRef(false);
+  const initialLoadDone = useRef(false);
+
   useEffect(() => {
+    // Prevent duplicate calls in StrictMode
+    if (initialLoadDone.current) return;
+
+    initialLoadDone.current = true;
     loadPendingTeachers();
   }, []);
 
   const loadPendingTeachers = async () => {
+    if (isFetching.current) return;
+
     try {
+      isFetching.current = true;
       setIsLoading(true);
 
       // Fetch pending teachers from API
-      const { data, error } = await mvpApiClient.get<PendingTeacher[]>('/teachers/pending');
+      const result = await mvpApiClient.get<any>('/teachers/pending');
 
-      if (error) {
-        throw new Error(error.message || 'Failed to fetch pending teachers');
+      // Handle both { data, error } and direct array formats
+      let data: PendingTeacher[] = [];
+      if (Array.isArray(result)) {
+        data = result;
+      } else if (result && result.data && Array.isArray(result.data)) {
+        data = result.data;
+      } else if (result && result.error) {
+        throw new Error(result.error.message || 'Failed to fetch pending teachers');
       }
 
-      setPendingTeachers(data || []);
+      setPendingTeachers(data);
     } catch (error) {
       console.error('Error loading pending teachers:', error);
       toast({
@@ -98,6 +114,7 @@ export default function TeacherApprovalQueue() {
       setPendingTeachers([]);
     } finally {
       setIsLoading(false);
+      isFetching.current = false;
     }
   };
 

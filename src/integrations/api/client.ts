@@ -1,6 +1,7 @@
 // src/api/client.ts
 import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
 import { authService } from './services/auth.service';
+import { API_CONFIG } from '@/config/features';
 
 export interface ApiResponse<T> {
     data: T | null;
@@ -14,6 +15,7 @@ class ApiClient {
         // Create axios instance with base configuration
         this.client = axios.create({
             baseURL: import.meta.env.VITE_API_URL,
+            timeout: API_CONFIG.timeout,
             withCredentials: true, // Include cookies for Ory session
             headers: {
                 'Content-Type': 'application/json'

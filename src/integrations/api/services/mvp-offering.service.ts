@@ -19,8 +19,15 @@ export interface Offering {
     numberOfSessions?: number;
     sessionsPerMonth?: number;
     isActive: boolean;
+    teacher?: string | any; // Teacher ID or populated teacher object
+    teacherId?: string; // Alternative teacher ID field
+    teacherProfileId?: string; // Teacher profile ID
     createdAt?: string;
     updatedAt?: string;
+    rating?: number;
+    currency?: string;
+    objectives?: string[] | any[];
+    technicalRequirements?: string[] | any[];
 }
 
 export interface CreateOfferingRequest {

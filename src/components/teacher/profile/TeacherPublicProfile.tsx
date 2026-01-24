@@ -32,7 +32,7 @@ const TeacherPublicProfile: React.FC<TeacherPublicProfileProps> = ({
   hideReviewsSection = false
 }) => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('about');
+  const [activeTab, setActiveTab] = useState('classes');
   const [showMessageDialog, setShowMessageDialog] = useState(false);
   const [showVideoDialog, setShowVideoDialog] = useState(false);
 
@@ -317,32 +317,44 @@ const TeacherPublicProfile: React.FC<TeacherPublicProfileProps> = ({
           teacherPhone={teacher.phoneNumber}
         />
 
-        {/* Key Info Section */}
-        <div className="bg-white rounded-xl shadow-md p-6 mb-8">
-          <h2 className="font-semibold text-lg mb-4">Key Information</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="flex items-start">
-              <Clock className="w-5 h-5 text-kidato-purple mr-3 mt-0.5" />
-              <div>
-                <h3 className="font-medium">Hourly Rate</h3>
-                <p className="text-gray-600">{teacher.hourlyRate}</p>
+        {/* Key Info Section - Compact */}
+        <div className="bg-white rounded-xl shadow-md p-4 mb-6">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3 text-sm">
+            <div className="flex items-center gap-2">
+              <Clock className="w-4 h-4 text-kidato-purple flex-shrink-0" />
+              <div className="min-w-0">
+                <p className="text-xs text-gray-500">Hourly Rate</p>
+                <p className="font-medium truncate">{teacher.hourlyRate}</p>
               </div>
             </div>
-            <div className="flex items-start">
-              <Calendar className="w-5 h-5 text-kidato-purple mr-3 mt-0.5" />
-              <div>
-                <h3 className="font-medium">Availability</h3>
-                <p className="text-gray-600">{teacher.availability}</p>
+            <div className="flex items-center gap-2">
+              <Calendar className="w-4 h-4 text-kidato-purple flex-shrink-0" />
+              <div className="min-w-0">
+                <p className="text-xs text-gray-500">Availability</p>
+                <p className="font-medium truncate">{teacher.availability}</p>
               </div>
             </div>
-            <div className="flex items-start">
-              <Globe className="w-5 h-5 text-kidato-purple mr-3 mt-0.5" />
-              <div>
-                <h3 className="font-medium">Languages</h3>
-                <p className="text-gray-600">
-                  {teacher.languages?.slice(0, 2).map((lang: any) => lang.language).join(', ') || "Not specified"}
-                  {(teacher.languages?.length || 0) > 2 && ` +${teacher.languages.length - 2} more`}
+            <div className="flex items-center gap-2">
+              <Globe className="w-4 h-4 text-kidato-purple flex-shrink-0" />
+              <div className="min-w-0">
+                <p className="text-xs text-gray-500">Languages</p>
+                <p className="font-medium truncate">
+                  {teacher.languages?.length > 0 ? teacher.languages[0].language : "Not specified"}
                 </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <BookOpen className="w-4 h-4 text-kidato-purple flex-shrink-0" />
+              <div className="min-w-0">
+                <p className="text-xs text-gray-500">Subjects</p>
+                <p className="font-medium truncate">{teacher.subjects?.length || 0}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Star className="w-4 h-4 text-kidato-purple flex-shrink-0" />
+              <div className="min-w-0">
+                <p className="text-xs text-gray-500">Experience</p>
+                <p className="font-medium truncate">{teacher.yearsOfExperience || 0}+ years</p>
               </div>
             </div>
           </div>
@@ -361,15 +373,19 @@ const TeacherPublicProfile: React.FC<TeacherPublicProfileProps> = ({
 
         {/* Main Content Tabs */}
         <div className="bg-white rounded-xl shadow-md mb-8">
-          <Tabs defaultValue="about" onValueChange={setActiveTab}>
+          <Tabs defaultValue="classes" onValueChange={setActiveTab}>
             <div className="px-6 pt-6">
               <TabsList className="grid grid-cols-4 mb-8">
+                <TabsTrigger value="classes">Classes</TabsTrigger>
                 <TabsTrigger value="about">About</TabsTrigger>
                 <TabsTrigger value="experience">Experience</TabsTrigger>
-                <TabsTrigger value="classes">Classes</TabsTrigger>
                 <TabsTrigger value="qualifications">Qualifications</TabsTrigger>
               </TabsList>
             </div>
+
+            <TabsContent value="classes" className="px-6 pb-6">
+              <TeacherClassesSection teacher={teacher} />
+            </TabsContent>
 
             <TabsContent value="about" className="px-6 pb-6">
               <TeacherAboutSection teacher={teacher} />
@@ -377,10 +393,6 @@ const TeacherPublicProfile: React.FC<TeacherPublicProfileProps> = ({
 
             <TabsContent value="experience" className="px-6 pb-6">
               <TeacherExperienceSection teacher={teacher} />
-            </TabsContent>
-
-            <TabsContent value="classes" className="px-6 pb-6">
-              <TeacherClassesSection teacher={teacher} />
             </TabsContent>
 
             <TabsContent value="qualifications" className="px-6 pb-6">

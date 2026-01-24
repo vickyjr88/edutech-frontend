@@ -136,6 +136,33 @@ const TeacherProfilesPage = () => {
   // Transform API teacher data to our component format
   const transformTeacherData = (apiTeacher: any): Teacher => {
     console.log("Processing teacher data:", apiTeacher);
+    console.log("Name fields available:", {
+      user_fullName: apiTeacher.user?.fullName,
+      fullName: apiTeacher.fullName,
+      name: apiTeacher.name,
+      user_firstName_lastName: `${apiTeacher.user?.firstName} ${apiTeacher.user?.lastName}`,
+      firstName_lastName: `${apiTeacher.firstName} ${apiTeacher.lastName}`
+    });
+    console.log("Bio fields available:", {
+      user_bio: apiTeacher.user?.bio,
+      bio: apiTeacher.bio,
+      description: apiTeacher.description,
+      summary: apiTeacher.summary,
+      about: apiTeacher.about
+    });
+    console.log("Position fields available:", {
+      experience: apiTeacher.experience,
+      position: apiTeacher.position,
+      role: apiTeacher.role,
+      title: apiTeacher.title,
+      yearsOfExperience: apiTeacher.yearsOfExperience
+    });
+    console.log("Image fields available:", {
+      user_signedProfileImage: apiTeacher.user?._signedProfileImage,
+      root_signedProfileImage: apiTeacher._signedProfileImage,
+      user_profileImage: apiTeacher.user?.profileImage,
+      root_profileImage: apiTeacher.profileImage
+    });
 
     // Extract subjects, curriculums, and grades from teacher profile
     const extractTeachingInfo = () => {
@@ -220,9 +247,30 @@ const TeacherProfilesPage = () => {
 
     // Extract position/role from experience or use a default
     const extractPosition = (): string => {
+      // Try to get from most recent experience
       if (apiTeacher.experience && Array.isArray(apiTeacher.experience) && apiTeacher.experience.length > 0) {
-        return apiTeacher.experience[0].position || "Educator";
+        const position = apiTeacher.experience[0].position || apiTeacher.experience[0].role;
+        if (position) return position;
       }
+
+      // Try direct position field
+      if (apiTeacher.position) return apiTeacher.position;
+      if (apiTeacher.role) return apiTeacher.role;
+      if (apiTeacher.title) return apiTeacher.title;
+
+      // Try from user object
+      if (apiTeacher.user?.position) return apiTeacher.user.position;
+      if (apiTeacher.user?.role) return apiTeacher.user.role;
+      if (apiTeacher.user?.title) return apiTeacher.user.title;
+
+      // Check for years of experience to create a more specific title
+      const yearsExp = apiTeacher.yearsOfExperience || apiTeacher.yearsExperience || apiTeacher.user?.yearsOfExperience;
+      if (yearsExp) {
+        if (yearsExp >= 10) return "Senior Educator";
+        if (yearsExp >= 5) return "Experienced Educator";
+        return "Educator";
+      }
+
       return "Educator";
     };
 
@@ -250,16 +298,66 @@ const TeacherProfilesPage = () => {
         .replace(/\s+/g, "-");
     };
 
-    // Get the user's full name
-    const name = apiTeacher.user?.fullName || "Teacher";
+    // Get the user's full name with multiple fallbacks
+    const name = apiTeacher.user?.fullName
+      || apiTeacher.fullName
+      || apiTeacher.name
+      || `${apiTeacher.user?.firstName || ''} ${apiTeacher.user?.lastName || ''}`.trim()
+      || `${apiTeacher.firstName || ''} ${apiTeacher.lastName || ''}`.trim()
+      || "Teacher";
+
+    // Get profile image with multiple fallbacks
+    const getProfileImage = (): string => {
+      // Try signed URLs first (preferred for S3/storage)
+      if (apiTeacher.user?._signedProfileImage) {
+        return apiTeacher.user._signedProfileImage;
+      }
+      if (apiTeacher._signedProfileImage) {
+        return apiTeacher._signedProfileImage;
+      }
+
+      // Try regular profile image URLs
+      if (apiTeacher.user?.profileImage) {
+        return apiTeacher.user.profileImage;
+      }
+      if (apiTeacher.profileImage) {
+        return apiTeacher.profileImage;
+      }
+
+      // Default placeholder
+      return "https://via.placeholder.com/150";
+    };
+
+    // Get bio with multiple fallbacks
+    const getBio = (): string => {
+      if (apiTeacher.user?.bio) return apiTeacher.user.bio;
+      if (apiTeacher.bio) return apiTeacher.bio;
+      if (apiTeacher.description) return apiTeacher.description;
+      if (apiTeacher.summary) return apiTeacher.summary;
+      if (apiTeacher.about) return apiTeacher.about;
+
+      // Generate bio from available data
+      const subjects = teachingInfo.subjects;
+      const yearsExp = apiTeacher.yearsOfExperience || apiTeacher.yearsExperience || apiTeacher.user?.yearsOfExperience;
+
+      if (subjects.length > 0 && yearsExp) {
+        return `Experienced educator with ${yearsExp} years teaching ${subjects.slice(0, 2).join(', ')}${subjects.length > 2 ? ' and more' : ''}.`;
+      } else if (subjects.length > 0) {
+        return `Passionate educator specializing in ${subjects.slice(0, 2).join(', ')}${subjects.length > 2 ? ' and more' : ''}.`;
+      } else if (yearsExp) {
+        return `Experienced educator with ${yearsExp} years of teaching experience.`;
+      }
+
+      return "Experienced educator passionate about student success.";
+    };
 
     return {
       id: apiTeacher.user?._id || apiTeacher.userId || apiTeacher._id || "",
       urlName: generateUrlName(name),
       name,
       position: extractPosition(),
-      imageSrc: apiTeacher.user?._signedProfileImage || "https://via.placeholder.com/150",
-      bio: apiTeacher.user?.bio || "Experienced educator passionate about student success.",
+      imageSrc: getProfileImage(),
+      bio: getBio(),
       subjects: teachingInfo.subjects,
       curriculums: teachingInfo.curriculums,
       gradeLevels: teachingInfo.gradeLevels,

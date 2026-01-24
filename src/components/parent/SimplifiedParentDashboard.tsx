@@ -222,7 +222,7 @@ export default function SimplifiedParentDashboard() {
                   <h4 className="font-medium text-sm text-gray-900 group-hover:text-kidato-purple line-clamp-1 mb-1">{offering.title}</h4>
                   <p className="text-xs text-gray-500 line-clamp-1 mb-2">{offering.subject} • {offering.gradeLevel}</p>
                   <div className="flex items-center justify-between">
-                    <span className="font-bold text-sm text-gray-900">KES {offering.price}</span>
+                    <span className="font-bold text-sm text-gray-900">{offering.currency || 'KES'} {offering.price}</span>
                     <span className="text-[10px] bg-gray-100 px-1.5 py-0.5 rounded text-gray-600">
                       {offering.sessionDuration}m
                     </span>

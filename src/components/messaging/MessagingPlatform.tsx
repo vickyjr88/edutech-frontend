@@ -132,6 +132,7 @@ export default function MessagingPlatform() {
       }
     } catch (error) {
       console.error("Failed to fetch messaging data:", error);
+      // Use toast from the hook directly without it being a dependency hook
       toast({
         title: "Error",
         description: "Failed to load messaging data.",
@@ -141,7 +142,7 @@ export default function MessagingPlatform() {
       setIsLoading(false);
       setIsInitialLoad(false);
     }
-  }, [toast]);
+  }, []); // Remove toast from dependencies as it's not stable
 
   // Initial data fetch - run only once on mount
   useEffect(() => {

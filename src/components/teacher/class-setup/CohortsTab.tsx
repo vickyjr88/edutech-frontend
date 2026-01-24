@@ -634,7 +634,7 @@ const CohortsTab = ({
                                   <span className="font-medium">Class Price</span>
                                 </p>
                                 <div className="flex items-baseline mt-1">
-                                  <p className="text-2xl font-bold">${cohort.price}</p>
+                                  <p className="text-2xl font-bold">{cohort.currency || 'KES'} {cohort.price}</p>
                                   <p className="ml-2 text-xs text-gray-500">for all {totalNumberOfLessons} lessons</p>
                                 </div>
                               </>
@@ -656,7 +656,7 @@ const CohortsTab = ({
                               </Badge>
                               {cohort.price && (
                                 <p className="text-xs text-gray-500 ml-2">
-                                  Final price: ${(parseFloat(cohort.price) * (1 - parseInt(cohort.discount) / 100)).toFixed(2)}
+                                  Final price: {cohort.currency || 'KES'} {(parseFloat(cohort.price) * (1 - parseInt(cohort.discount) / 100)).toFixed(2)}
                                 </p>
                               )}
                             </div>
