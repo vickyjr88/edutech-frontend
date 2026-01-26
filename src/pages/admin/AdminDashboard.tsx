@@ -23,6 +23,7 @@ import {
   LayoutDashboard,
   Settings,
   History,
+  Star,
 } from "lucide-react";
 
 /**
@@ -166,6 +167,12 @@ const AdminDashboard = () => {
       href: "/admin/teaching-config",
       icon: Settings,
       current: location.pathname.startsWith("/admin/teaching-config"),
+    },
+    {
+      name: "Ratings & Reviews",
+      href: "/admin/ratings",
+      icon: Star,
+      current: location.pathname.startsWith("/admin/ratings"),
     },
     {
       name: "Associations",

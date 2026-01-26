@@ -1254,6 +1254,16 @@ const TeacherDashboard = () => {
             <Settings className="mr-3 h-5 w-5" />
             Settings
           </Link>
+          <Link
+            to="/teacher-dashboard/ratings"
+            className={`flex items-center px-4 py-3 text-sm font-medium rounded-md w-full text-left ${activeTab === "ratings"
+              ? "bg-kidato-light-blue text-kidato-purple"
+              : "text-gray-700 hover:bg-gray-100"
+              }`}
+          >
+            <Star className="mr-3 h-5 w-5" />
+            Ratings & Reviews
+          </Link>
         </nav>
         <div className="p-4 border-t border-gray-200">
           <Button

@@ -29,7 +29,7 @@ export const RoleBasedDashboardRouter: React.FC = () => {
 
     switch (role) {
       case 'admin':
-        navigate('/admin/pages', { replace: true });
+        navigate('/admin/dashboard', { replace: true });
         break;
 
       case 'teacher':

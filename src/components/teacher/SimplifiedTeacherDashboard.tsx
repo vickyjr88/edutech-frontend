@@ -24,6 +24,7 @@ import {
   Edit,
   Eye,
   HelpCircle,
+  Star,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import MvpTeacherService from '@/integrations/api/services/mvp-teacher.service';
@@ -210,6 +211,14 @@ export default function SimplifiedTeacherDashboard() {
       bgColor: 'bg-teal-100',
       path: '/support',
       description: 'Get help'
+    },
+    {
+      title: 'Ratings',
+      icon: Star,
+      color: 'text-yellow-600',
+      bgColor: 'bg-yellow-100',
+      path: '/teacher-dashboard/ratings',
+      description: 'View student reviews'
     }
   ];
 

@@ -90,6 +90,8 @@ import AdminMessaging from "../pages/admin/AdminMessaging";
 import UsersManagement from "../pages/admin/UsersManagement";
 import UserDetailsPage from "../pages/admin/UserDetailsPage";
 import AdminParentStudentAssociations from "../pages/admin/AdminParentStudentAssociations";
+import RatingsManagement from "../pages/admin/RatingsManagement";
+import TeacherRatingsPage from "../pages/teacher/TeacherRatingsPage";
 import CompleteProfile from "../pages/CompleteProfile";
 
 const AppRoutes = () => {
@@ -232,6 +234,11 @@ const AppRoutes = () => {
           <TeacherEarningsPage />
         </TeacherRoute>
       } />
+      <Route path="/teacher-ratings" element={
+        <TeacherRoute requireProfileComplete={true}>
+          <TeacherRatingsPage />
+        </TeacherRoute>
+      } />
       <Route path="/parents-dashboard" element={
         <ProtectedRoute>
           <ParentsDashboard />
@@ -369,6 +376,7 @@ const AppRoutes = () => {
         <Route path="users/:userId" element={<UserDetailsPage />} />
         <Route path="teaching-config" element={<TeachingConfigManagement />} />
         <Route path="associations" element={<AdminParentStudentAssociations />} />
+        <Route path="ratings" element={<RatingsManagement />} />
       </Route>
 
       {/* Document Viewers - Public (uses signed URL for security) */}

@@ -61,6 +61,7 @@ const UserSidebar = () => {
         { name: "Students", href: "/teacher-students", icon: Users },
         { name: "Resources", href: "/teacher-resources", icon: FileText },
         { name: "Messages", href: "/teacher/messages", icon: MessageSquare },
+        { name: "Ratings & Reviews", href: "/teacher-dashboard/ratings", icon: Star },
         { name: "Support", href: "/support", icon: HelpCircle },
       ],
       parent: [

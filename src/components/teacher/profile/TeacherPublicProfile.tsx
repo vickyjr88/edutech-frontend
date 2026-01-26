@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { BookOpen, Calendar, Check, Clock, Globe, MapPin, MessageSquare, Play, Star, Video as VideoIcon } from 'lucide-react';
+import { BookOpen, Calendar, Check, Clock, Globe, MapPin, MessageSquare, Play, Star, Video as VideoIcon, Share2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from '@
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { teacherFeatures, reviewFeatures } from '@/config/features';
+import { useToast } from '@/hooks/use-toast';
 
 // Section components
 import TeacherHighlights from './TeacherHighlights';
@@ -17,6 +18,7 @@ import TeacherExperienceSection from './public-profile/TeacherExperienceSection'
 import TeacherClassesSection from './public-profile/TeacherClassesSection';
 import TeacherQualificationsSection from './public-profile/TeacherQualificationsSection';
 import MessageTeacherDialog from './MessageTeacherDialog';
+import { RatingDisplay } from '@/components/ratings/RatingDisplay';
 
 interface TeacherPublicProfileProps {
   teacher: any;
@@ -36,8 +38,45 @@ const TeacherPublicProfile: React.FC<TeacherPublicProfileProps> = ({
   const [showMessageDialog, setShowMessageDialog] = useState(false);
   const [showVideoDialog, setShowVideoDialog] = useState(false);
 
+  const { toast } = useToast();
+
   const handleBookSession = () => {
     navigate(`/book/${teacher.id || teacher._id}`);
+  };
+
+  const handleShare = async () => {
+    const shareText = `Check out ${teacher.name}'s profile on Kidato!`;
+    const shareUrl = window.location.href;
+    const shareData = {
+      title: `${teacher.name} - Teacher on Kidato`,
+      text: shareText,
+      url: shareUrl,
+    };
+
+    if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+      try {
+        await navigator.share(shareData);
+      } catch (err) {
+        if ((err as Error).name !== 'AbortError') {
+          console.error('Error sharing:', err);
+        }
+      }
+    } else {
+      try {
+        await navigator.clipboard.writeText(`${shareText}\n${shareUrl}`);
+        toast({
+          title: "Link copied!",
+          description: "Teacher details and link have been copied to your clipboard.",
+        });
+      } catch (err) {
+        console.error('Failed to copy:', err);
+        toast({
+          title: "Copy failed",
+          description: "Please copy the URL from your browser address bar.",
+          variant: "destructive",
+        });
+      }
+    }
   };
 
   // Helper function to format video URLs for embedding
@@ -248,6 +287,14 @@ const TeacherPublicProfile: React.FC<TeacherPublicProfileProps> = ({
                   <MessageSquare className="w-4 h-4 mr-2" />
                   Contact Teacher
                 </Button>
+                <Button
+                  variant="outline"
+                  onClick={handleShare}
+                  className="border-gray-300 text-gray-700 hover:bg-gray-50"
+                >
+                  <Share2 className="w-4 h-4 mr-2" />
+                  Share Profile
+                </Button>
               </div>
             )}
           </div>
@@ -404,7 +451,13 @@ const TeacherPublicProfile: React.FC<TeacherPublicProfileProps> = ({
         {/* Reviews Section */}
         {!hideReviewsSection && (
           <div className="mb-8">
-            <TeacherReviews reviews={teacher.reviews} />
+            <RatingDisplay
+              type="teacher"
+              id={teacher._id || teacher.id}
+              showStats={true}
+              showReviews={true}
+              initialLimit={10}
+            />
           </div>
         )}
 
@@ -430,6 +483,15 @@ const TeacherPublicProfile: React.FC<TeacherPublicProfileProps> = ({
                 className="border-kidato-purple text-kidato-purple hover:bg-blue-50"
               >
                 Ask a Question
+              </Button>
+              <Button
+                variant="outline"
+                onClick={handleShare}
+                size="lg"
+                className="border-gray-300 text-gray-700 hover:bg-gray-50"
+              >
+                <Share2 className="w-4 h-4 mr-2" />
+                Share Profile
               </Button>
             </div>
           </div>

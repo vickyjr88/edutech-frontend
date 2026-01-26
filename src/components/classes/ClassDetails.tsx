@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Link } from "react-router-dom";
-import { ArrowLeft, Heart, BookOpen, Clock, Users, Calendar, CheckCircle, User as UserIcon, Globe, Monitor, Video, FileText, Star, Award, GraduationCap, LogIn, Lock } from "lucide-react";
+import { ArrowLeft, Heart, BookOpen, Clock, Users, Calendar, CheckCircle, User as UserIcon, Globe, Monitor, Video, FileText, Star, Award, GraduationCap, LogIn, Lock, Share2 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,6 +17,8 @@ import { ClassItemProps } from "@/components/common/ClassCard";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import TeacherClassView from "@/components/teacher/class-view/TeacherClassView";
+import { RatingForm } from "@/components/ratings/RatingForm";
+import { RatingDisplay } from "@/components/ratings/RatingDisplay";
 
 const ClassDetails = () => {
   const { id } = useParams<{ id: string }>();
@@ -162,6 +164,41 @@ const ClassDetails = () => {
         description: "Failed to update wishlist. Please try again.",
         variant: "destructive",
       });
+    }
+  };
+
+  const handleShare = async () => {
+    const shareText = `Check out this class: ${classItem?.title || "Class"} on Kidato!`;
+    const shareUrl = window.location.href;
+    const shareData = {
+      title: classItem?.title || "Class on Kidato",
+      text: shareText,
+      url: shareUrl,
+    };
+
+    if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+      try {
+        await navigator.share(shareData);
+      } catch (err) {
+        if ((err as Error).name !== 'AbortError') {
+          console.error('Error sharing:', err);
+        }
+      }
+    } else {
+      try {
+        await navigator.clipboard.writeText(`${shareText}\n${shareUrl}`);
+        toast({
+          title: "Link copied!",
+          description: "Class details and link have been copied to your clipboard.",
+        });
+      } catch (err) {
+        console.error('Failed to copy:', err);
+        toast({
+          title: "Copy failed",
+          description: "Please copy the URL from your browser address bar.",
+          variant: "destructive",
+        });
+      }
     }
   };
 
@@ -372,7 +409,17 @@ const ClassDetails = () => {
             onClick={handleBookmark}
           >
             <Heart className={`h-5 w-5 ${isBookmarked ? "fill-red-500 text-red-500" : ""}`} />
-            {isBookmarked ? "Saved" : "Save"}
+            <span className="hidden sm:inline">{isBookmarked ? "Saved" : "Save"}</span>
+          </Button>
+
+          <Button
+            variant="outline"
+            size="lg"
+            className="flex items-center gap-2"
+            onClick={handleShare}
+          >
+            <Share2 className="h-5 w-5" />
+            <span className="hidden sm:inline">Share</span>
           </Button>
         </div>
       </div>
@@ -593,6 +640,40 @@ const ClassDetails = () => {
             </div>
           </section>
 
+          <Separator />
+
+          {/* Ratings Section */}
+          <section className="space-y-6">
+            <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+              <Star className="h-5 w-5 text-yellow-400" />
+              Ratings & Reviews
+            </h2>
+
+            {/* Display existing ratings */}
+            <RatingDisplay
+              type="offering"
+              id={resolvedId || id || ''}
+              showStats={true}
+              showReviews={true}
+              initialLimit={5}
+            />
+
+            {/* Rating form for eligible users */}
+            {user && (user.role === 'parent' || user.role === 'student') && (
+              <div className="mt-6">
+                <RatingForm
+                  offeringId={resolvedId || id || ''}
+                  teacherId={extractedTeacherId || ''}
+                  offeringTitle={classItem?.title || 'this class'}
+                  onSuccess={() => {
+                    // Refresh ratings display after successful submission
+                    window.location.reload();
+                  }}
+                />
+              </div>
+            )}
+          </section>
+
         </div>
 
         {/* Right Sidebar */}
@@ -658,6 +739,15 @@ const ClassDetails = () => {
                 ) : (
                   'Enroll Now'
                 )}
+              </Button>
+
+              <Button
+                variant="outline"
+                className="w-full mt-3 border-kidato-purple text-kidato-purple hover:bg-blue-50"
+                onClick={handleShare}
+              >
+                <Share2 className="h-4 w-4 mr-2" />
+                Share this class
               </Button>
               <p className="text-xs text-center text-gray-500 mt-2">
                 {user ? '100% Satisfaction Guarantee' : 'Create an account to get started'}

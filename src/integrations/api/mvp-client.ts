@@ -48,16 +48,27 @@ class MVPApiClient {
         if (error.response?.status === 401 && !originalRequest._retry) {
           originalRequest._retry = true;
 
-          try {
-            const accessToken = await tokenRefreshManager.refreshToken();
+          // Only try to refresh if user was actually logged in
+          const hadToken = localStorage.getItem('kidato_access_token') || localStorage.getItem('accessToken');
 
-            // Retry original request with new token
-            originalRequest.headers.Authorization = `Bearer ${accessToken}`;
-            return this.client(originalRequest);
-          } catch (refreshError) {
-            // Refresh failed, manager already cleared tokens
-            window.location.href = '/login';
-            return Promise.reject(refreshError);
+          if (hadToken) {
+            try {
+              const accessToken = await tokenRefreshManager.refreshToken();
+
+              // Retry original request with new token
+              originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+              return this.client(originalRequest);
+            } catch (refreshError) {
+              // Refresh failed, manager already cleared tokens
+              // Only redirect if we're not on a public page
+              const publicPages = ['/class/', '/teacher/', '/teachers', '/all-classes', '/'];
+              const isPublicPage = publicPages.some(page => window.location.pathname.startsWith(page));
+
+              if (!isPublicPage) {
+                window.location.href = '/login';
+              }
+              return Promise.reject(refreshError);
+            }
           }
         }
 

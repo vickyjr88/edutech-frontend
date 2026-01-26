@@ -60,6 +60,7 @@ import TeacherStudentsPage from "../pages/TeacherStudentsPage"; // MVP: Students
 import TeacherMessagingPage from "../pages/TeacherMessagingPage";
 import TeacherBookingsPage from "../pages/TeacherBookingsPage";
 import TeacherCustomClassRequests from "../pages/teacher/TeacherCustomClassRequests";
+import TeacherRatingsPage from "../pages/teacher/TeacherRatingsPage";
 
 // Parent Pages
 import ParentsDashboard from "../pages/ParentsDashboard";
@@ -105,6 +106,7 @@ import TicketsManagement from "../pages/admin/TicketsManagement";
 import AdminMessaging from "../pages/admin/AdminMessaging";
 import AdminReportsPage from "../pages/admin/AdminReportsPage";
 import AdminCustomClassRequests from "../pages/admin/AdminCustomClassRequests";
+import RatingsManagement from "../pages/admin/RatingsManagement";
 
 // Admin CMS & Content (Kept for marketing)
 import PagesList from "../pages/admin/PagesList";
@@ -390,6 +392,15 @@ const MVPAppRoutes = () => {
       />
 
 
+      <Route
+        path="/teacher-dashboard/ratings"
+        element={
+          <TeacherRoute requireProfileComplete={true}>
+            <TeacherRatingsPage />
+          </TeacherRoute>
+        }
+      />
+
       {/* ===== STUDENT ROUTES (MVP) ===== */}
 
       <Route
@@ -565,90 +576,95 @@ const MVPAppRoutes = () => {
 
       {/* ===== ADMIN ROUTES ===== */}
 
-      {features.admin.enabled && (
-        <Route
-          path="/admin"
-          element={
-            <AdminRoute>
-              <AdminDashboard />
-            </AdminRoute>
-          }
-        >
-          {/* Dashboard - Index Route */}
-          <Route index element={<AdminDashboardPage />} />
-          <Route path="dashboard" element={<AdminDashboardPage />} />
+      {
+        features.admin.enabled && (
+          <Route
+            path="/admin"
+            element={
+              <AdminRoute>
+                <AdminDashboard />
+              </AdminRoute>
+            }
+          >
+            {/* Dashboard - Index Route */}
+            <Route index element={<AdminDashboardPage />} />
+            <Route path="dashboard" element={<AdminDashboardPage />} />
 
-          {/* User Management */}
-          <Route path="users" element={<UsersManagement />} />
-          <Route path="users/:userId" element={<UserDetailsPage />} />
-          <Route path="audit-logs" element={<AuditLogsManagement />} />
-          <Route path="teachers" element={<TeachersManagement />} />
-          <Route path="teacher-approvals" element={<TeacherApprovalPage />} />
-          <Route path="parents" element={<ParentsManagement />} />
-          <Route path="students" element={<StudentsManagement />} />
+            {/* User Management */}
+            <Route path="users" element={<UsersManagement />} />
+            <Route path="users/:userId" element={<UserDetailsPage />} />
+            <Route path="audit-logs" element={<AuditLogsManagement />} />
+            <Route path="teachers" element={<TeachersManagement />} />
+            <Route path="teacher-approvals" element={<TeacherApprovalPage />} />
+            <Route path="parents" element={<ParentsManagement />} />
+            <Route path="students" element={<StudentsManagement />} />
+            <Route path="ratings" element={<RatingsManagement />} />
 
-          {/* Class/Booking Management */}
-          <Route path="classes" element={<ClassesManagement />} />
-          <Route path="bookings" element={<BookingsManagement />} />
-          <Route path="tickets" element={<TicketsManagement />} />
-          <Route path="messaging" element={<AdminMessaging />} />
+            {/* Class/Booking Management */}
+            <Route path="classes" element={<ClassesManagement />} />
+            <Route path="bookings" element={<BookingsManagement />} />
+            <Route path="tickets" element={<TicketsManagement />} />
+            <Route path="messaging" element={<AdminMessaging />} />
 
-          {/* CMS & Content (KEPT for marketing) */}
-          {features.marketing.cms && (
-            <>
-              <Route path="pages" element={<PagesList />} />
-              <Route path="pages/new" element={<PageEditor />} />
-              <Route path="pages/:slug/edit" element={<PageEditor />} />
-              <Route path="pages/:id/versions" element={<VersionHistory />} />
-              <Route path="menus" element={<MenusList />} />
-              <Route path="menus/new" element={<MenuEditor />} />
-              <Route path="menus/:id/edit" element={<MenuEditor />} />
-              <Route path="social-links" element={<SocialLinksManager />} />
-            </>
-          )}
+            {/* CMS & Content (KEPT for marketing) */}
+            {features.marketing.cms && (
+              <>
+                <Route path="pages" element={<PagesList />} />
+                <Route path="pages/new" element={<PageEditor />} />
+                <Route path="pages/:slug/edit" element={<PageEditor />} />
+                <Route path="pages/:id/versions" element={<VersionHistory />} />
+                <Route path="menus" element={<MenusList />} />
+                <Route path="menus/new" element={<MenuEditor />} />
+                <Route path="menus/:id/edit" element={<MenuEditor />} />
+                <Route path="social-links" element={<SocialLinksManager />} />
+              </>
+            )}
 
-          {/* Blog Management (KEPT for marketing) */}
-          {features.marketing.blog && (
-            <>
-              <Route path="blog/posts" element={<BlogPostsList />} />
-              <Route path="blog/posts/new" element={<BlogPostEditor />} />
-              <Route path="blog/posts/:id/edit" element={<BlogPostEditor />} />
-              <Route path="blog/categories" element={<BlogCategoriesList />} />
-              <Route path="blog/tags" element={<BlogTagsList />} />
-              <Route path="blog/authors" element={<BloggersList />} />
-            </>
-          )}
+            {/* Blog Management (KEPT for marketing) */}
+            {features.marketing.blog && (
+              <>
+                <Route path="blog/posts" element={<BlogPostsList />} />
+                <Route path="blog/posts/new" element={<BlogPostEditor />} />
+                <Route path="blog/posts/:id/edit" element={<BlogPostEditor />} />
+                <Route path="blog/categories" element={<BlogCategoriesList />} />
+                <Route path="blog/tags" element={<BlogTagsList />} />
+                <Route path="blog/authors" element={<BloggersList />} />
+              </>
+            )}
 
-          {/* Newsletter (KEPT for marketing) */}
-          {features.marketing.newsletter && (
-            <Route path="newsletter-subscribers" element={<NewsletterSubscribersPage />} />
-          )}
+            {/* Newsletter (KEPT for marketing) */}
+            {features.marketing.newsletter && (
+              <Route path="newsletter-subscribers" element={<NewsletterSubscribersPage />} />
+            )}
 
-          {/* Inquiries */}
-          <Route path="inquiries" element={<InquiriesPage />} />
+            {/* Inquiries */}
+            <Route path="inquiries" element={<InquiriesPage />} />
 
-          {/* Teaching Config */}
-          <Route path="teaching-config" element={<TeachingConfigManagement />} />
+            {/* Teaching Config */}
+            <Route path="teaching-config" element={<TeachingConfigManagement />} />
 
-          {/* Parent-Student Associations */}
-          <Route path="associations" element={<AdminParentStudentAssociations />} />
+            {/* Parent-Student Associations */}
+            <Route path="associations" element={<AdminParentStudentAssociations />} />
 
-          {/* Reports */}
-          <Route path="reports" element={<AdminReportsPage />} />
+            {/* Reports */}
+            <Route path="reports" element={<AdminReportsPage />} />
 
-          {/* Custom Class Requests (MVP) */}
-          <Route path="custom-requests" element={<AdminCustomClassRequests />} />
-        </Route>
-      )}
+            {/* Custom Class Requests (MVP) */}
+            <Route path="custom-requests" element={<AdminCustomClassRequests />} />
+          </Route>
+        )
+      }
 
       {/* ===== DYNAMIC CMS PAGES ===== */}
-      {features.marketing.cms && (
-        <Route path="/page/:slug" element={<DynamicPage />} />
-      )}
+      {
+        features.marketing.cms && (
+          <Route path="/page/:slug" element={<DynamicPage />} />
+        )
+      }
 
       {/* ===== 404 NOT FOUND ===== */}
       <Route path="*" element={<NotFound />} />
-    </Routes>
+    </Routes >
   );
 };
 

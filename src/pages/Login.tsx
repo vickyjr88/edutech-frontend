@@ -24,7 +24,7 @@ const Login = () => {
       if (user) {
         const userRole = user?.role;
         if (userRole === "admin") {
-          navigate("/admin/pages");
+          navigate("/admin/dashboard");
         } else if (userRole === "teacher" && user.id) {
           try {
             // Check if the teacher profile is complete
