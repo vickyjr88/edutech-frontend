@@ -66,6 +66,7 @@ export const classSchema = z.object({
 
   // Media fields (aligns with backend ClassDetail.media)
   introVideoUrl: z.string().url().optional().or(z.literal("")),
+  meetingLink: z.string().url().optional().or(z.literal("")),
   thumbnailUrl: z.string().optional(),
 
   // Course materials files

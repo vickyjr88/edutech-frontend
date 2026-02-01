@@ -44,6 +44,7 @@ export interface CreateMvpTeacherProfileRequest {
     location: MvpLocation;
     bio: string;
     introVideoUrl?: string;
+    meetingLink?: string;
     curriculums: string[];
     subjects: string[];
     gradeLevels: string[];
@@ -60,6 +61,7 @@ export interface UpdateMvpTeacherProfileRequest {
     location?: MvpLocation;
     bio?: string;
     introVideoUrl?: string;
+    meetingLink?: string;
     curriculums?: string[];
     subjects?: string[];
     gradeLevels?: string[];
@@ -80,6 +82,7 @@ export interface MvpTeacherProfileResponse {
     profileImage?: string;
     location: MvpLocation;
     introVideoUrl?: string;
+    meetingLink?: string;
     curriculums: string[];
     subjects: string[];
     gradeLevels: string[];

@@ -313,22 +313,59 @@ Kidato Teacher`
   };
 
   // Handle sending review requests
-  const handleSendRequest = () => {
+  const handleSendRequest = async () => {
     setIsSubmitting(true);
 
-    // In a real implementation, this would call an API endpoint to send emails/messages.
-    // For now, we simulate the network request but use the real data we gathered.
-    // Ideally use messageAnalyticsService.createCampaign()
-    setTimeout(() => {
+    try {
       let recipientsCount = 0;
 
       if (messageMethod === 'email') {
         if (isBulkRequest) {
+          // Send bulk review requests
+          const recipients = selectedRecipients.map(id => {
+            const recipient = availableRecipients.find(r => r.id === id);
+            return {
+              email: recipient?.email || '',
+              name: recipient?.name || '',
+              recipientType: targetType,
+            };
+          }).filter(r => r.email);
+
+          const response = await teacherService.sendBulkReviewRequests({
+            recipients,
+            subject: messageSubject,
+            message: messageContent,
+            reviewLink: reviewLink,
+          });
+
+          if (response.error) {
+            throw new Error(typeof response.error === 'string' ? response.error : response.error.message || 'Failed to send review requests');
+          }
+
           recipientsCount = selectedRecipients.length;
-          console.log("Sending to IDs:", selectedRecipients);
         } else {
+          // Send single review request
+          const emailToSend = targetType === 'teacher' && !student
+            ? recipientEmail
+            : (student?.email || '');
+          const nameToSend = targetType === 'teacher' && !student
+            ? recipientName
+            : (student?.name || '');
+
+          const response = await teacherService.sendReviewRequest({
+            recipientEmail: emailToSend,
+            recipientName: nameToSend,
+            recipientType: targetType,
+            subject: messageSubject,
+            message: messageContent,
+            reviewLink: reviewLink,
+          });
+
+          if (response.error) {
+            throw new Error(typeof response.error === 'string' ? response.error : response.error.message || 'Failed to send review request');
+          }
+
           recipientsCount = 1;
-          console.log("Sending to:", targetType === 'teacher' && !student ? recipientEmail : student?.email);
         }
       }
 
@@ -339,10 +376,19 @@ Kidato Teacher`
           : "Review link has been copied to your clipboard.",
       });
 
-      setIsSubmitting(false);
       onClose();
-    }, 1500);
+    } catch (error) {
+      console.error('Error sending review requests:', error);
+      toast({
+        title: "Failed to send review requests",
+        description: error instanceof Error ? error.message : "Please try again later.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
+
 
   // Handle recipient selection for bulk emails
   const toggleRecipient = (id: string) => {

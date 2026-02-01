@@ -2,7 +2,7 @@ import { format } from "date-fns";
 import { ScheduleEvent } from "@/types/calendar";
 import { cn } from "@/lib/utils";
 import { EventActions } from "../EventActions";
-import { Plus } from "lucide-react";
+import { Plus, Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface DayViewProps {
@@ -75,7 +75,22 @@ export function DayView({ date, events, onAddEvent, onEventClick, onDeleteEvent 
                     >
                       <div className="font-medium">{event.title}</div>
                       <div className="text-sm">{event.time}</div>
-                      <div className="text-sm">{event.location}</div>
+                      {event.meetingLink ? (
+                        <div className="mt-1 mb-1">
+                          <a
+                            href={event.meetingLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center text-xs bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700 transition w-auto z-10 relative"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <Video className="w-3 h-3 mr-1" />
+                            Join Class
+                          </a>
+                        </div>
+                      ) : (
+                        <div className="text-sm">{event.location}</div>
+                      )}
                       {event.description && (
                         <div className="text-sm mt-1 text-gray-600">{event.description}</div>
                       )}

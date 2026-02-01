@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from "react";
-import { 
-  Search, Filter, Users, TrendingUp, Star, Brain, 
+import {
+  Search, Filter, Users, TrendingUp, Star, Brain,
   MessageCircle, UserPlus, Share2, Award, Clock,
   ChevronDown, Check, AlertTriangle, Activity,
   BarChart3, Zap, Target, Sparkles, Mail, Phone,
@@ -16,19 +16,21 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuLabel, 
-  DropdownMenuSeparator, 
-  DropdownMenuTrigger 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 import { Progress } from "@/components/ui/progress";
 import { Checkbox } from "@/components/ui/checkbox";
 import { SmartMessageComposer } from "../messaging/SmartMessageComposer";
 import { MessageAnalyticsDashboard } from "../messaging/MessageAnalyticsDashboard";
 import InviteStudentModal from "./InviteStudentModal";
+import ShareClassLinkModal from "./ShareClassLinkModal";
+import RequestReviewModal from "./RequestReviewModal";
 
 // Types
 interface Student {
@@ -51,8 +53,8 @@ interface AIStudentsPageProps {
   onEnrollStudents?: () => void;
 }
 
-const AIStudentsPage: React.FC<AIStudentsPageProps> = ({ 
-  onViewProfile, 
+const AIStudentsPage: React.FC<AIStudentsPageProps> = ({
+  onViewProfile,
   onEnrollStudents
 }) => {
   const { user } = useAuth();
@@ -76,12 +78,14 @@ const AIStudentsPage: React.FC<AIStudentsPageProps> = ({
   const [showMessageComposer, setShowMessageComposer] = useState(false);
   const [showAnalyticsDashboard, setShowAnalyticsDashboard] = useState(false);
   const [showInviteModal, setShowInviteModal] = useState(false);
+  const [showShareLinkModal, setShowShareLinkModal] = useState(false);
+  const [showRequestReviewModal, setShowRequestReviewModal] = useState(false);
 
   // Generate enhanced class data from teacher summary
   const { classData, enrichedClasses } = useMemo(() => {
     const totalStudents = studentsData?.students?.length || 0;
     const allClassesItem = { name: "All Classes", count: totalStudents, active: true };
-    
+
     if (!summaryData?.classes || summaryData.classes.length === 0) {
       // Use enhanced fallback data when no classes available
       const totalClasses = statsData?.totalClasses || 4;
@@ -97,7 +101,7 @@ const AIStudentsPage: React.FC<AIStudentsPageProps> = ({
         enrichedClasses: []
       };
     }
-    
+
     // Generate enhanced class data from teacher summary
     const classItems = summaryData.classes.map(classItem => ({
       name: classItem.title,
@@ -113,7 +117,7 @@ const AIStudentsPage: React.FC<AIStudentsPageProps> = ({
       nextSession: classItem.nextSession,
       classState: classItem.classState
     }));
-    
+
     return {
       classData: [allClassesItem, ...classItems],
       enrichedClasses: summaryData.classes
@@ -123,17 +127,17 @@ const AIStudentsPage: React.FC<AIStudentsPageProps> = ({
   // Filter students based on selections
   const filteredStudents = useMemo(() => {
     if (!studentsData?.students) return [];
-    
+
     return studentsData.students.filter(student => {
-      const matchesSearch = !searchQuery || 
+      const matchesSearch = !searchQuery ||
         student.name.toLowerCase().includes(searchQuery.toLowerCase());
-      
-      const matchesFilter = selectedFilter === "All" || 
+
+      const matchesFilter = selectedFilter === "All" ||
         (selectedFilter === "Need Attention" && (student.status === "Needs Attention" || student.status === "Inactive")) ||
         (selectedFilter === "High Performers" && student.status === "Active") ||
         (selectedFilter === "Inactive" && student.status === "Inactive") ||
         (selectedFilter === "Recent Activity" && student.lastActivity.includes("hour"));
-      
+
       return matchesSearch && matchesFilter;
     });
   }, [studentsData, searchQuery, selectedFilter]);
@@ -152,11 +156,11 @@ const AIStudentsPage: React.FC<AIStudentsPageProps> = ({
     const priorityStudents = studentsData.performanceSummary.needsAttention;
     const highPerformers = studentsData.performanceSummary.highPerformers;
     const inactiveStudents = studentsData.performanceSummary.inactive;
-    const avgPerformance = studentsData.students ? 
+    const avgPerformance = studentsData.students ?
       Math.round(studentsData.students.reduce((sum, s) => sum + (s.attendance.percentage || 0), 0) / studentsData.students.length) : 0;
-    const avgEngagement = studentsData.students ? 
+    const avgEngagement = studentsData.students ?
       Math.round(studentsData.students.reduce((sum, s) => sum + (s.assignments.completionRate || 0), 0) / studentsData.students.length) : 0;
-    
+
     return {
       priorityStudents,
       highPerformers,
@@ -190,13 +194,13 @@ const AIStudentsPage: React.FC<AIStudentsPageProps> = ({
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'Active': 
+      case 'Active':
         return <Badge className="bg-[#5e6ad2] hover:bg-[#5e6ad2]/90 text-white">Active</Badge>;
-      case 'Needs Attention': 
+      case 'Needs Attention':
         return <Badge className="bg-[#f99325] hover:bg-[#f99325]/90 text-white">Needs Attention</Badge>;
-      case 'Inactive': 
+      case 'Inactive':
         return <Badge className="bg-red-500 hover:bg-red-500/90 text-white">Inactive</Badge>;
-      default: 
+      default:
         return <Badge variant="outline">{status}</Badge>;
     }
   };
@@ -204,7 +208,7 @@ const AIStudentsPage: React.FC<AIStudentsPageProps> = ({
   // Convert student data for messaging component
   const messagingStudents = useMemo(() => {
     if (!studentsData?.students) return [];
-    
+
     return studentsData.students.map(student => ({
       id: student.studentId,
       name: student.name,
@@ -362,11 +366,10 @@ const AIStudentsPage: React.FC<AIStudentsPageProps> = ({
               <Button
                 key={classItem.name}
                 variant={selectedClass === classItem.name ? "default" : "outline"}
-                className={`${
-                  selectedClass === classItem.name 
-                    ? "bg-[#5e6ad2] hover:bg-[#5e6ad2]/90 text-white" 
+                className={`${selectedClass === classItem.name
+                    ? "bg-[#5e6ad2] hover:bg-[#5e6ad2]/90 text-white"
                     : "hover:bg-[#5e6ad2]/10"
-                } transition-all duration-200`}
+                  } transition-all duration-200`}
                 onClick={() => setSelectedClass(classItem.name)}
               >
                 {classItem.name} ({classItem.count})
@@ -395,11 +398,10 @@ const AIStudentsPage: React.FC<AIStudentsPageProps> = ({
                   key={filter}
                   variant={selectedFilter === filter ? "default" : "outline"}
                   size="sm"
-                  className={`${
-                    selectedFilter === filter 
-                      ? "bg-[#5e6ad2] hover:bg-[#5e6ad2]/90 text-white" 
+                  className={`${selectedFilter === filter
+                      ? "bg-[#5e6ad2] hover:bg-[#5e6ad2]/90 text-white"
                       : "hover:bg-[#5e6ad2]/10"
-                  } transition-all duration-200`}
+                    } transition-all duration-200`}
                   onClick={() => setSelectedFilter(filter)}
                 >
                   {filter}
@@ -422,18 +424,18 @@ const AIStudentsPage: React.FC<AIStudentsPageProps> = ({
                 <span className="font-medium">{selectedStudents.length} students selected</span>
               </div>
               <div className="flex gap-2">
-                <Button 
-                  variant="secondary" 
-                  size="sm" 
+                <Button
+                  variant="secondary"
+                  size="sm"
                   className="bg-white/20 hover:bg-white/30 text-white border-0"
                   onClick={handleBulkMessage}
                 >
                   <MessageCircle className="w-4 h-4 mr-2" />
                   Send Message
                 </Button>
-                <Button 
-                  variant="secondary" 
-                  size="sm" 
+                <Button
+                  variant="secondary"
+                  size="sm"
                   className="bg-white/20 hover:bg-white/30 text-white border-0"
                   onClick={() => setShowAnalyticsDashboard(true)}
                 >
@@ -444,9 +446,9 @@ const AIStudentsPage: React.FC<AIStudentsPageProps> = ({
                   <Users className="w-4 h-4 mr-2" />
                   Create Group
                 </Button>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
+                <Button
+                  variant="ghost"
+                  size="sm"
                   className="text-white hover:bg-white/20"
                   onClick={() => setSelectedStudents([])}
                 >
@@ -461,8 +463,8 @@ const AIStudentsPage: React.FC<AIStudentsPageProps> = ({
       {/* Students Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {filteredStudents.map((student) => (
-          <Card 
-            key={student.studentId} 
+          <Card
+            key={student.studentId}
             className={`bg-white/70 backdrop-blur-sm border-0 shadow-sm hover:shadow-lg hover:scale-[1.02] transition-all duration-300 ${getStatusColor(student.status)} overflow-hidden group`}
           >
             <CardContent className="p-6">
@@ -480,11 +482,10 @@ const AIStudentsPage: React.FC<AIStudentsPageProps> = ({
                   </Avatar>
                 </div>
                 <div className="flex items-center gap-1">
-                  <div className={`w-2 h-2 rounded-full ${
-                    student.status === 'Active' ? 'bg-[#5e6ad2]' :
-                    student.status === 'Needs Attention' ? 'bg-[#f99325]' :
-                    student.status === 'Inactive' ? 'bg-red-500' : 'bg-green-500'
-                  }`} />
+                  <div className={`w-2 h-2 rounded-full ${student.status === 'Active' ? 'bg-[#5e6ad2]' :
+                      student.status === 'Needs Attention' ? 'bg-[#f99325]' :
+                        student.status === 'Inactive' ? 'bg-red-500' : 'bg-green-500'
+                    }`} />
                   <Sparkles className="w-4 h-4 text-[#5e6ad2]" />
                 </div>
               </div>
@@ -509,7 +510,7 @@ const AIStudentsPage: React.FC<AIStudentsPageProps> = ({
                     <span className="font-medium">{student.attendance.percentage}%</span>
                   </div>
                   <Progress value={student.attendance.percentage} className="h-1.5 bg-gray-100">
-                    <div 
+                    <div
                       className="h-full bg-gradient-to-r from-[#5e6ad2] to-[#abb4dd] transition-all duration-300"
                       style={{ width: `${student.attendance.percentage}%` }}
                     />
@@ -553,18 +554,18 @@ const AIStudentsPage: React.FC<AIStudentsPageProps> = ({
                 )}
 
                 <div className="flex gap-2 pt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                  <Button 
-                    size="sm" 
-                    variant="ghost" 
+                  <Button
+                    size="sm"
+                    variant="ghost"
                     className="flex-1 text-[#5e6ad2] hover:bg-[#5e6ad2]/10"
                     onClick={() => onViewProfile && onViewProfile(student.studentId)}
                   >
                     <Eye className="w-4 h-4 mr-1" />
                     View
                   </Button>
-                  <Button 
-                    size="sm" 
-                    variant="ghost" 
+                  <Button
+                    size="sm"
+                    variant="ghost"
                     className="flex-1 text-[#f99325] hover:bg-[#f99325]/10"
                     onClick={() => handleMessageStudent(student.studentId)}
                   >
@@ -595,14 +596,18 @@ const AIStudentsPage: React.FC<AIStudentsPageProps> = ({
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 gap-3">
-              <Button 
+              <Button
                 className="bg-[#5e6ad2] hover:bg-[#5e6ad2]/90 text-white"
                 onClick={() => setShowInviteModal(true)}
               >
                 <Mail className="w-4 h-4 mr-2" />
                 Send Invitations
               </Button>
-              <Button variant="outline" className="hover:bg-[#5e6ad2]/10">
+              <Button
+                variant="outline"
+                className="hover:bg-[#5e6ad2]/10"
+                onClick={() => setShowShareLinkModal(true)}
+              >
                 <Share2 className="w-4 h-4 mr-2" />
                 Share Class Link
               </Button>
@@ -638,7 +643,10 @@ const AIStudentsPage: React.FC<AIStudentsPageProps> = ({
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 gap-3">
-              <Button className="bg-[#f99325] hover:bg-[#f99325]/90 text-white">
+              <Button
+                className="bg-[#f99325] hover:bg-[#f99325]/90 text-white"
+                onClick={() => setShowRequestReviewModal(true)}
+              >
                 <Star className="w-4 h-4 mr-2" />
                 Request Reviews
               </Button>
@@ -750,6 +758,21 @@ const AIStudentsPage: React.FC<AIStudentsPageProps> = ({
         onClose={() => setShowInviteModal(false)}
         classes={enrichedClasses}
         onInviteSuccess={handleInviteSuccess}
+      />
+
+      {/* Share Class Link Modal */}
+      <ShareClassLinkModal
+        isOpen={showShareLinkModal}
+        onClose={() => setShowShareLinkModal(false)}
+        classes={enrichedClasses}
+      />
+
+      {/* Request Review Modal */}
+      <RequestReviewModal
+        isOpen={showRequestReviewModal}
+        onClose={() => setShowRequestReviewModal(false)}
+        targetType="student"
+        isBulkRequest={true}
       />
     </div>
   );

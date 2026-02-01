@@ -10,6 +10,7 @@ import { UseFormReturn } from "react-hook-form";
 import { ClassFormValues, Curriculum, CurriculumLevel, Subject, curriculaMap, curriculumLevelMap, subjectsMap } from "./types";
 import { Label } from "@/components/ui/label";
 import { platformService } from "@/integrations/api";
+import { MvpTeacherService } from "@/integrations/api/services/mvp-teacher.service";
 import { useClassForm } from "./ClassFormContext";
 import { getCachedCurricula, getCachedSubjects } from "./utils/apiCache";
 
@@ -26,10 +27,26 @@ const BasicInformationTab = ({ form, onNextTab }: BasicInformationTabProps) => {
   const [loadingCurricula, setLoadingCurricula] = useState(false);
   const [loadingSubjects, setLoadingSubjects] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [teacherProfileLink, setTeacherProfileLink] = useState<string | null>(null);
   const { isSubmitting, saveBasicInfoAndContinue } = useClassForm();
 
   const selectedCurriculum = form.watch("curriculum");
   const selectedLevel = form.watch("curriculumLevel");
+
+  // Fetch teacher profile to get default meeting link
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const profile = await MvpTeacherService.getCurrentProfile();
+        if (profile?.meetingLink) {
+          setTeacherProfileLink(profile.meetingLink);
+        }
+      } catch (err) {
+        console.error("Failed to fetch profile", err);
+      }
+    };
+    fetchProfile();
+  }, []);
 
   // Fetch curricula on component mount
   useEffect(() => {
@@ -787,7 +804,36 @@ const BasicInformationTab = ({ form, onNextTab }: BasicInformationTabProps) => {
       />
 
       <div className="space-y-4 border rounded-lg p-4">
-        <h3 className="text-lg font-medium">Class Settings</h3>
+        <h3 className="text-lg font-medium">Class Link & Settings</h3>
+
+        <FormField
+          control={form.control}
+          name="meetingLink"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Class Link (Google Meet / Zoom)</FormLabel>
+              <div className="flex gap-2">
+                <FormControl>
+                  <Input placeholder="https://meet.google.com/..." {...field} value={field.value || ""} />
+                </FormControl>
+                {teacherProfileLink && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => form.setValue("meetingLink", teacherProfileLink)}
+                    title="Use link from my profile"
+                  >
+                    Use Profile Link
+                  </Button>
+                )}
+              </div>
+              <FormDescription>
+                The link students will use to join the class.
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
         <FormField
           control={form.control}

@@ -39,6 +39,7 @@ const profileSchema = z.object({
   // Bio & Media
   bio: z.string().min(50, 'Bio must be at least 50 characters').max(500, 'Bio must be max 500 words'),
   introVideoUrl: z.string().url('Valid video URL required').optional().or(z.literal('')),
+  meetingLink: z.string().url('Valid URL required').optional().or(z.literal('')),
 
   // Teaching Info
   curriculums: z.array(z.string()).min(1, 'Select at least one curriculum'),
@@ -134,6 +135,7 @@ export default function SimplifiedTeacherProfileForm() {
             city: profile.location?.city || '',
             bio: profile.bio || '',
             introVideoUrl: profile.introVideoUrl || '',
+            meetingLink: profile.meetingLink || '',
             curriculums: profile.curriculums || [],
             subjects: profile.subjects || [],
             gradeLevels: profile.gradeLevels || [],
@@ -266,6 +268,7 @@ export default function SimplifiedTeacherProfileForm() {
         },
         // Teaching info
         introVideoUrl: data.introVideoUrl || '',
+        meetingLink: data.meetingLink || '',
         yearsOfExperience: data.yearsOfExperience,
         curriculums: data.curriculums,
         subjects: data.subjects,
@@ -508,6 +511,22 @@ export default function SimplifiedTeacherProfileForm() {
               )}
               <p className="text-sm text-muted-foreground mt-1">
                 Upload your intro video to YouTube/Vimeo and paste the link here
+              </p>
+            </div>
+
+            {/* Default Class Link */}
+            <div>
+              <Label htmlFor="meetingLink">Default Class Link (Google Meet / Zoom) (Optional)</Label>
+              <Input
+                id="meetingLink"
+                {...register('meetingLink')}
+                placeholder="e.g. https://meet.google.com/abc-defg-hij"
+              />
+              {errors.meetingLink && (
+                <p className="text-sm text-red-500 mt-1">{errors.meetingLink.message}</p>
+              )}
+              <p className="text-sm text-muted-foreground mt-1">
+                This link can be used as a default for your classes. You can override it when creating a class.
               </p>
             </div>
           </CardContent>

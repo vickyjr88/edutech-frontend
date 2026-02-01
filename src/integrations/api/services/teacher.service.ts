@@ -1003,4 +1003,64 @@ export const teacherService = {
     getActiveGradeLevels: (): Promise<ApiResponse<any[]>> => {
         return api.get<any[]>('/teaching-config/grade-levels/active');
     },
+
+    // Review Request Methods
+    sendReviewRequest: (data: {
+        recipientEmail: string;
+        recipientName: string;
+        recipientType: 'student' | 'parent' | 'teacher';
+        subject: string;
+        message: string;
+        reviewLink: string;
+    }): Promise<ApiResponse<{ success: boolean; messageId?: string }>> => {
+        return api.post<{ success: boolean; messageId?: string }>('/notifications', {
+            type: 'review_request',
+            recipient: data.recipientEmail,
+            title: data.subject,
+            message: data.message,
+            actionUrl: data.reviewLink,
+            actionText: 'Leave a Review',
+            metadata: {
+                recipientName: data.recipientName,
+                recipientType: data.recipientType,
+            }
+        });
+    },
+
+    sendBulkReviewRequests: (data: {
+        recipients: Array<{
+            email: string;
+            name: string;
+            recipientType: 'student' | 'parent' | 'teacher';
+        }>;
+        subject: string;
+        message: string;
+        reviewLink: string;
+    }): Promise<ApiResponse<{ success: boolean; sent: number; failed: number }>> => {
+        const notifications = data.recipients.map(recipient => ({
+            type: 'review_request',
+            recipient: recipient.email,
+            title: data.subject,
+            message: data.message.replace('{name}', recipient.name),
+            actionUrl: data.reviewLink,
+            actionText: 'Leave a Review',
+            metadata: {
+                recipientName: recipient.name,
+                recipientType: recipient.recipientType,
+            }
+        }));
+        return api.post<{ success: boolean; sent: number; failed: number }>('/notifications/bulk', notifications);
+    },
+
+    // Get teacher review link
+    getTeacherReviewLink: (teacherId: string): string => {
+        const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://kidato.com';
+        return `${baseUrl}/review/teacher/${teacherId}`;
+    },
+
+    // Get class review link  
+    getClassReviewLink: (classId: string): string => {
+        const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://kidato.com';
+        return `${baseUrl}/review/class/${classId}`;
+    },
 };
